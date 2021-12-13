@@ -165,7 +165,8 @@ public final class LayoutUtils {
     public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
         applyBorderAndBackground(editText, textInput);
         applyTextAppearance(editText, textInput.getTextAppearance());
-        addPadding(editText, (int) dpToPx(editText.getContext(), 4));
+        int padding = (int) dpToPx(editText.getContext(), 8);
+        editText.setPadding(padding, padding, padding, padding);
 
         editText.setInputType(textInput.getInputType().getTypeMask());
         editText.setSingleLine(textInput.getInputType() != FormInputType.TEXT_MULTILINE);
@@ -312,6 +313,19 @@ public final class LayoutUtils {
         );
 
         requestApplyInsetsWhenAttached(view);
+    }
+
+    public static void doOnAttachToWindow(@NonNull View view, @NonNull Runnable callback) {
+        view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {
+                v.removeOnAttachStateChangeListener(this);
+                callback.run();
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View v) { /* no-op */ }
+        });
     }
 
     public static void addPadding(@NonNull View view, int padding) {

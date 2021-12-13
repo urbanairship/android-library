@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.reporting;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
@@ -34,4 +35,22 @@ public class LayoutData {
         return pagerData;
     }
 
+    @NonNull
+    public LayoutData withFormId(@NonNull String id) {
+        return new LayoutData(id, pagerData);
+    }
+
+    @NonNull
+    public LayoutData withPagerData(@NonNull PagerData data) {
+        return new LayoutData(formId, data);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "LayoutData{" +
+            "formId='" + formId + '\'' +
+            ", pagerData=" + pagerData +
+            '}';
+    }
 }

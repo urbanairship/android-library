@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.event.TextInputEvent;
 import com.urbanairship.android.layout.property.Border;
@@ -125,6 +126,10 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
 
     public void onConfigured() {
         bubbleEvent(new TextInputEvent.Init(identifier, isValid()));
+    }
+
+    public void onAttachedToWindow() {
+        bubbleEvent(new Event.ViewAttachedToWindow(this));
     }
 
     public void onInputChange(@NonNull String value) {

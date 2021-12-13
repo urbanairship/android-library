@@ -4,7 +4,7 @@ presentation:
   type: modal
   default_placement:
     size:
-      width: 70%
+      width: 90%
       height: 80%
     shade_color:
       default:
@@ -60,6 +60,27 @@ view:
                     hex: "#000000"
                     alpha: 1
                 text_size: 14
+          - position:
+              horizontal: end
+              vertical: top
+            size:
+              height: 24
+              width: 24
+            margin:
+              top: 8
+              end: 8
+            view:
+              type: image_button
+              identifier: close_button_1
+              button_click: [ dismiss ]
+              image:
+                type: icon
+                icon: close
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+
         - type: container
           background_color:
             default:
@@ -82,6 +103,28 @@ view:
                     hex: "#000000"
                     alpha: 1
                 text_size: 14
+
+          - position:
+              horizontal: end
+              vertical: top
+            size:
+              height: 24
+              width: 24
+            margin:
+              top: 8
+              end: 8
+            view:
+              type: image_button
+              identifier: close_button_2
+              button_click: [ dismiss ]
+              image:
+                type: icon
+                icon: close
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+
         - type: container
           background_color:
             default:
@@ -95,15 +138,101 @@ view:
               height: auto
               width: auto
             view:
-              type: label
-              text: That's not all! There's a third page, too!
-              text_appearance:
-                alignment: center
+              type: nps_form_controller
+              identifier: page_3_nps_form
+              nps_identifier: score_identifier
+              submit: submit_event
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  margin:
+                    start: 8
+                    end: 8
+                  view:
+                    type: score
+                    identifier: score_identifier
+                    required: true
+                    style:
+                      type: nps
+                      spacing: 2
+                      bindings:
+                        selected:
+                          shapes:
+                          - type: ellipse
+                            color:
+                              default:
+                                hex: "#FFFFFF"
+                                alpha: 0
+                          text_appearance:
+                            font_size: 14
+                            color:
+                              default:
+                                hex: "#000000"
+                                alpha: 1
+                        unselected:
+                          shapes:
+                          - type: ellipse
+                            color:
+                              default:
+                                hex: "#000000"
+                                alpha: 1
+                          text_appearance:
+                            font_size: 14
+                            color:
+                              default:
+                                hex: "#ffffff"
+                                alpha: 1
+                - size:
+                    width: auto
+                    height: auto
+                  margin:
+                    start: 16
+                    end: 16
+                  view:
+                    type: label_button
+                    identifier: submit_button
+                    background_color:
+                      default:
+                        hex: "#ffffff"
+                        alpha: 1
+                    button_click: ["form_submit", "cancel"]
+                    enabled: ["form_validation"]
+                    label:
+                      type: label
+                      text: SuBmIt!1!1@
+                      text_appearance:
+                        font_size: 14
+                        alignment: center
+                        color:
+                          default:
+                            hex: "#000000"
+                            alpha: 1
+
+          - position:
+              horizontal: end
+              vertical: top
+            size:
+              height: 24
+              width: 24
+            margin:
+              top: 8
+              end: 8
+            view:
+              type: image_button
+              identifier: close_button_3
+              button_click: [ dismiss ]
+              image:
+                type: icon
+                icon: close
                 color:
                   default:
                     hex: "#000000"
                     alpha: 1
-                text_size: 14
+
     - size:
         height: 16
         width: auto

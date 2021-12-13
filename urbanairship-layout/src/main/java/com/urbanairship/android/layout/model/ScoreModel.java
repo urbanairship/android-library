@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.event.ScoreEvent;
 import com.urbanairship.android.layout.property.Border;
@@ -12,6 +13,7 @@ import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -94,23 +96,22 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
         return style;
     }
 
-    @Nullable
-    public AttributeName getAttributeName() {
-        return attributeName;
-    }
-
     @Override
     public boolean isValid() {
         return selectedScore > -1 || !isRequired;
     }
 
-    public void onInit() {
+    public void onConfigured() {
         bubbleEvent(new ScoreEvent.Init(identifier, isValid()));
+    }
+
+    public void onAttachedToWindow() {
+        bubbleEvent(new Event.ViewAttachedToWindow(this));
     }
 
     public void onScoreChange(int score) {
         selectedScore = score;
 
-        bubbleEvent(new FormEvent.DataChange(identifier, new FormData.Score(score), isValid()));
+        bubbleEvent(new FormEvent.DataChange(identifier, new FormData.Score(score), isValid(), attributeName, JsonValue.wrap(score)));
     }
 }

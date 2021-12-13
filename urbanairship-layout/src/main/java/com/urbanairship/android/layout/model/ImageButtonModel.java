@@ -59,12 +59,16 @@ public class ImageButtonModel extends ButtonModel {
         );
     }
 
-    //
-    // Fields
-    //
-
     @NonNull
     public Image getImage() {
         return image;
+    }
+
+    @NonNull
+    @Override
+    public String reportingDescription() {
+        return getContentDescription() != null
+            ? getContentDescription()
+            : "";
     }
 }

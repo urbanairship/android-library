@@ -2,7 +2,6 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.event.EventSource;
@@ -108,8 +107,6 @@ public abstract class BaseModel implements EventSource, EventListener {
         for (EventListener listener : listeners) {
             if (listener.onEvent(event)) { return true; }
         }
-
-        Logger.debug("Unhandled event: %s", event);
         return false;
     }
 

@@ -2,7 +2,6 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.RadioEvent;
 import com.urbanairship.android.layout.property.Border;
@@ -24,9 +23,6 @@ public class RadioInputModel extends CheckableModel {
     private final JsonValue reportingValue;
     @NonNull
     private final JsonValue attributeValue;
-
-    @Nullable
-    private Listener listener;
 
     public RadioInputModel(
         @NonNull ToggleStyle style,
@@ -79,8 +75,6 @@ public class RadioInputModel extends CheckableModel {
 
     @Override
     public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event.getType());
-
         switch (event.getType()) {
             case RADIO_VIEW_UPDATE:
                 RadioEvent.ViewUpdate update = (RadioEvent.ViewUpdate) event;

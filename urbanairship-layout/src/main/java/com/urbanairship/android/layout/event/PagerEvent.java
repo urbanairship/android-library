@@ -14,7 +14,7 @@ public abstract class PagerEvent extends Event {
     }
 
     /** Event emitted by Pager views, announcing their size and current position. */
-    public static final class Init extends Event {
+    public static final class Init extends PagerEvent {
         private final int size;
         private final int position;
         private final boolean hasNext;
@@ -66,6 +66,17 @@ public abstract class PagerEvent extends Event {
         public boolean hasPrevious() {
             return hasPrev;
         }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "PagerEvent.Init{" +
+                "size=" + size +
+                ", position=" + position +
+                ", hasNext=" + hasNext +
+                ", hasPrev=" + hasPrev +
+                '}';
+        }
     }
 
     /** Event emitted by Pager indicator views on init. */
@@ -73,13 +84,21 @@ public abstract class PagerEvent extends Event {
         public IndicatorInit(@NonNull BaseModel model) {
             super(model);
         }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "PagerEvent.IndicatorInit{}";
+        }
     }
 
     /** Event emitted by Pager views on scroll to the next or previous page. */
     public static final class Scroll extends PagerEvent {
         private final int position;
+        private final int previousPosition;
         private final boolean hasNext;
         private final boolean hasPrev;
+        private final boolean isInternalScroll;
 
         /**
          * Constructs a {@code PagerScroll} event.
@@ -87,11 +106,13 @@ public abstract class PagerEvent extends Event {
          * @param model The pager model.
          * @param position The position of the item being displayed.
          */
-        public Scroll(@NonNull PagerModel model, int position) {
+        public Scroll(@NonNull PagerModel model, int position, int previousPosition, boolean isInternalScroll) {
             super(EventType.PAGER_SCROLL);
             this.position = position;
+            this.previousPosition = previousPosition;
             this.hasNext = position < model.getItems().size() - 1;
             this.hasPrev = position > 0;
+            this.isInternalScroll = isInternalScroll;
         }
 
         /**
@@ -101,6 +122,11 @@ public abstract class PagerEvent extends Event {
          */
         public int getPosition() {
             return position;
+        }
+
+        /** Gets the position of the previously displayed item. */
+        public int getPreviousPosition() {
+            return previousPosition;
         }
 
         /**
@@ -117,6 +143,23 @@ public abstract class PagerEvent extends Event {
          */
         public boolean hasPrevious() {
             return hasPrev;
+        }
+
+        /** Returns true if this scroll event was the result of programmatic scrolling. */
+        public boolean isInternal() {
+            return isInternalScroll;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "PagerEvent.Scroll{" +
+                "position=" + position +
+                ", previousPosition=" + previousPosition +
+                ", hasNext=" + hasNext +
+                ", hasPrev=" + hasPrev +
+                ", isInternalScroll=" + isInternalScroll +
+                '}';
         }
     }
 }

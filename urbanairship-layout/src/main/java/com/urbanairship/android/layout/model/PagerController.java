@@ -5,7 +5,10 @@ package com.urbanairship.android.layout.model;
 import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.event.Event;
+import com.urbanairship.android.layout.event.PagerEvent;
+import com.urbanairship.android.layout.event.ReportingEvent;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
@@ -24,6 +27,10 @@ public class PagerController extends LayoutModel implements Identifiable {
     private final BaseModel view;
     @NonNull
     private final String identifier;
+
+    private int index = -1;
+    private int count = -1;
+    private boolean completed = false;
 
     public PagerController(@NonNull BaseModel view, @NonNull String identifier) {
         super(ViewType.PAGER_CONTROLLER, null, null);
@@ -61,15 +68,29 @@ public class PagerController extends LayoutModel implements Identifiable {
 
     @Override
     public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event.getType());
+        Logger.verbose("onEvent: %s", event);
 
         switch (event.getType()) {
             case PAGER_INIT:
+                trickleEvent(event);
+                reducePagerState((PagerEvent) event);
+                reportPageView();
+                return true;
+
             case PAGER_SCROLL:
+                PagerEvent.Scroll scroll = (PagerEvent.Scroll) event;
+                trickleEvent(scroll);
+                reducePagerState(scroll);
+                reportPageView();
+                if (!scroll.isInternal()) {
+                    reportPageSwipe(scroll);
+                }
+                return true;
+
             case BUTTON_BEHAVIOR_PAGER_NEXT:
             case BUTTON_BEHAVIOR_PAGER_PREVIOUS:
                 trickleEvent(event);
-                return true;
+                return false;
 
             case VIEW_INIT:
                 switch (((Event.ViewInit) event).getViewType()) {
@@ -80,9 +101,42 @@ public class PagerController extends LayoutModel implements Identifiable {
                         return super.onEvent(event);
                 }
 
+            case REPORTING_EVENT:
+                // Update the event with our pager data and continue bubbling it up.
+                ReportingEvent updatedEvent = ((ReportingEvent) event).overrideState(buildPagerData());
+                return super.onEvent(updatedEvent);
+
             default:
                 // Pass along any other events.
                 return super.onEvent(event);
         }
+    }
+
+    private void reducePagerState(PagerEvent event) {
+        switch (event.getType()) {
+            case PAGER_INIT:
+                PagerEvent.Init init = (PagerEvent.Init) event;
+                this.count = init.getSize();
+                this.index = init.getPosition();
+                break;
+            case PAGER_SCROLL:
+                PagerEvent.Scroll scroll = (PagerEvent.Scroll) event;
+                this.index = scroll.getPosition();
+                this.completed = this.completed || this.index == this.count - 1;
+                break;
+        }
+    }
+
+    private void reportPageView() {
+        bubbleEvent(new ReportingEvent.PageView(buildPagerData()));
+    }
+
+    private void reportPageSwipe(PagerEvent.Scroll event) {
+        PagerData data = buildPagerData();
+        bubbleEvent(new ReportingEvent.PageSwipe(data, event.getPreviousPosition(), event.getPosition()));
+    }
+
+    private PagerData buildPagerData() {
+        return new PagerData(identifier, index, count, completed);
     }
 }

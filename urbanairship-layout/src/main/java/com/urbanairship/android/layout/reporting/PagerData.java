@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.reporting;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -37,5 +38,16 @@ public class PagerData {
 
     public boolean isCompleted() {
         return completed;
+    }
+
+    @Override
+    @NonNull
+    public String toString() {
+        return "PagerData{" +
+            "identifier='" + identifier + '\'' +
+            ", index=" + index +
+            ", count=" + count +
+            ", completed=" + completed +
+            '}';
     }
 }

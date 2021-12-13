@@ -10,6 +10,8 @@ public enum EventType {
 
     /** Event emitted when views have been configured. */
     VIEW_INIT,
+    /** Event emitted when views have been attached to window. Currently only needed for form inputs. */
+    VIEW_ATTACHED,
 
     /* Button events. */
 
@@ -54,5 +56,9 @@ public enum EventType {
     /** Text input events. */
     TEXT_INPUT_CHANGE,
     /** Score input events. */
-    SCORE_INPUT_CHANGE
+    SCORE_INPUT_CHANGE,
+
+    /* Reporting events */
+
+    REPORTING_EVENT
 }

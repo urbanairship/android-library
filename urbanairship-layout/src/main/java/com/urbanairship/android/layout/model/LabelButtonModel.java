@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.util.UAStringUtil;
 
 import java.util.List;
 
@@ -58,12 +59,16 @@ public class LabelButtonModel extends ButtonModel {
         );
     }
 
-    //
-    // Fields
-    //
-
     @NonNull
     public LabelModel getLabel() {
         return label;
+    }
+
+    @NonNull
+    @Override
+    public String reportingDescription() {
+        return !UAStringUtil.isEmpty(getContentDescription())
+            ? getContentDescription()
+            : getLabel().getText();
     }
 }

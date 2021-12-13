@@ -25,7 +25,11 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
 public abstract class CheckableView<M extends CheckableModel> extends FrameLayout implements BaseView<M> {
     @Dimension(unit = Dimension.DP)
-    private static final int CHECKBOX_MIN_SIZE = 24;
+    private static final int CHECKBOX_MIN_DIMENSION = 24;
+    @Dimension(unit = Dimension.DP)
+    private static final int SWITCH_MIN_HEIGHT = 24;
+    @Dimension(unit = Dimension.DP)
+    private static final int SWITCH_MIN_WIDTH = 48;
     private static final int NO_MIN_SIZE = -1;
 
     private M model;
@@ -51,10 +55,23 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
         setId(generateViewId());
     }
 
-    protected int getMinimumSize() {
+    protected int getMinWidth() {
         switch (model.getToggleType()) {
             case CHECKBOX:
-                return CHECKBOX_MIN_SIZE;
+                return CHECKBOX_MIN_DIMENSION;
+            case SWITCH:
+                return SWITCH_MIN_WIDTH;
+            default:
+                return NO_MIN_SIZE;
+        }
+    }
+
+    protected int getMinHeight() {
+        switch (model.getToggleType()) {
+            case CHECKBOX:
+                return CHECKBOX_MIN_DIMENSION;
+            case SWITCH:
+                return SWITCH_MIN_HEIGHT;
             default:
                 return NO_MIN_SIZE;
         }
@@ -62,20 +79,26 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int minSizeDp = getMinimumSize();
-        if (minSizeDp == NO_MIN_SIZE) {
+        int minWidthDp = getMinWidth();
+        int minHeightDp = getMinHeight();
+        if (minWidthDp == NO_MIN_SIZE && minHeightDp == NO_MIN_SIZE) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         } else {
-            int minSize = (int) ResourceUtils.dpToPx(getContext(), minSizeDp);
-
             int widthSpec = widthMeasureSpec;
             int heightSpec = heightMeasureSpec;
 
-            if (MeasureSpec.getMode(widthMeasureSpec) != EXACTLY) {
-                widthSpec = MeasureSpec.makeMeasureSpec(minSize, EXACTLY);
+            if (minWidthDp != NO_MIN_SIZE) {
+                int minWidth = (int) ResourceUtils.dpToPx(getContext(), minWidthDp);
+                if (MeasureSpec.getMode(widthMeasureSpec) != EXACTLY) {
+                    widthSpec = MeasureSpec.makeMeasureSpec(minWidth, EXACTLY);
+                }
             }
-            if (MeasureSpec.getMode(heightMeasureSpec) != EXACTLY) {
-                heightSpec = MeasureSpec.makeMeasureSpec(minSize, EXACTLY);
+
+            if (minHeightDp != NO_MIN_SIZE) {
+                int minHeight = (int) ResourceUtils.dpToPx(getContext(), minHeightDp);
+                if (MeasureSpec.getMode(heightMeasureSpec) != EXACTLY) {
+                    heightSpec = MeasureSpec.makeMeasureSpec(minHeight, EXACTLY);
+                }
             }
 
             super.onMeasure(widthSpec, heightSpec);
@@ -116,7 +139,8 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
             view.setContentDescription(model.getContentDescription());
         }
 
-        model.onInit();
+        model.onConfigured();
+        LayoutUtils.doOnAttachToWindow(this, model::onAttachedToWindow);
     }
 
     protected void configureSwitch(SwitchStyle style) {

@@ -6,8 +6,10 @@ import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.FormEvent;
+import com.urbanairship.android.layout.event.ReportingEvent;
 import com.urbanairship.android.layout.property.FormBehaviorType;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -39,7 +41,12 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     private final Map<String, FormData<?>> formData = new HashMap<>();
 
     @NonNull
+    private final Map<AttributeName, JsonValue> attributes = new HashMap<>();
+
+    @NonNull
     private final Map<String, Boolean> inputValidity = new HashMap<>();
+
+    private boolean isDisplayReported = false;
 
     public BaseFormController(
         @NonNull ViewType viewType,
@@ -67,9 +74,8 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
         return view;
     }
 
-    @Nullable
-    public FormBehaviorType getSubmitBehavior() {
-        return submitBehavior;
+    public boolean hasSubmitBehavior() {
+        return submitBehavior != null;
     }
 
     @Override
@@ -86,63 +92,128 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
         return Thomas.model(viewJson);
     }
 
+    @Nullable
     protected static FormBehaviorType submitBehaviorFromJson(@NonNull JsonMap json) {
-        String submitString = json.opt("submit").optString();
-        return FormBehaviorType.from(submitString);
+        String submitString = json.opt("submit").getString();
+        return submitString != null ? FormBehaviorType.from(submitString) : null;
     }
 
     @Override
     public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event.getType());
-
+        Logger.debug("onEvent: %s", event);
         switch (event.getType()) {
+            case FORM_INIT:
+                onNestedFormInit((FormEvent.Init) event);
+                return hasSubmitBehavior() || super.onEvent(event);
+
             case FORM_INPUT_INIT:
-                reduceFormInputInit((FormEvent.InputInit) event);
+                onInputInit((FormEvent.InputInit) event);
                 return true;
+
             case FORM_DATA_CHANGE:
-                reduceFormDataChange((FormEvent.DataChange) event);
+                onDataChange((FormEvent.DataChange) event);
                 return true;
+
+            case VIEW_ATTACHED:
+                onViewAttached((Event.ViewAttachedToWindow) event);
+                if (hasSubmitBehavior()) {
+                    return true;
+                }
+                return super.onEvent(event);
+
             case BUTTON_BEHAVIOR_FORM_SUBMIT:
-                submitForm();
-                return true;
+                // Submit form if this controller has a submit behavior.
+                if (hasSubmitBehavior()) {
+                    onSubmit();
+                    return true;
+                }
+                // Otherwise let parent form controller handle it.
+                return super.onEvent(event);
+
+            case REPORTING_EVENT:
+                // Update the event with our form data and continue bubbling it up.
+                ReportingEvent updatedEvent = ((ReportingEvent) event).overrideState(identifier);
+                return super.onEvent(updatedEvent);
+
+            default:
+                return super.onEvent(event);
         }
-
-        return super.onEvent(event);
     }
 
-    protected void submitForm() {
-        Logger.debug("FormData = %s", JsonValue.wrapOpt(formData).toString());
+    private void onSubmit() {
+        bubbleEvent(getFormResultEvent());
     }
 
-    private void reduceFormInputInit(FormEvent.InputInit init) {
-        inputValidity.put(init.getIdentifier(), init.isValid());
-        trickleValidationUpdate();
+    protected abstract FormEvent.Init getInitEvent();
+    protected abstract FormEvent.DataChange getFormDataChangeEvent();
+    protected abstract ReportingEvent.FormResult getFormResultEvent();
+
+    private void onNestedFormInit(FormEvent.Init init) {
+        updateFormValidity(init.getIdentifier(), init.isValid());
     }
 
-    private void reduceFormDataChange(FormEvent.DataChange data) {
+    private void onInputInit(FormEvent.InputInit init) {
+        updateFormValidity(init.getIdentifier(), init.isValid());
+
+        if (inputValidity.size() == 1) {
+            if (!hasSubmitBehavior()) {
+                // This is a nested form, since it has no submit behavior.
+                // Bubble an init event to announce this form to a parent form controller.
+                bubbleEvent(getInitEvent());
+            }
+        }
+    }
+
+    private void onViewAttached(Event.ViewAttachedToWindow attach) {
+        if (attach.getViewType().isFormInput() && !isDisplayReported) {
+            isDisplayReported = true;
+            bubbleEvent(new ReportingEvent.FormDisplay(getIdentifier()));
+        }
+    }
+
+    private void onDataChange(FormEvent.DataChange data) {
         String identifier = data.getIdentifier();
         boolean isValid = data.isValid();
-        inputValidity.put(identifier, isValid);
 
         if (isValid) {
             formData.put(identifier, data.getValue());
+            attributes.putAll(data.getAttributes());
         } else {
             formData.remove(identifier);
+            for (AttributeName key : data.getAttributes().keySet()) {
+                attributes.remove(key);
+            }
         }
 
-        trickleValidationUpdate();
+        updateFormValidity(identifier, isValid);
+
+        if (!hasSubmitBehavior()) {
+            // Update parent controller if this is a child form
+            bubbleEvent(getFormDataChangeEvent());
+        }
     }
 
-    private void trickleValidationUpdate() {
+    private void updateFormValidity(@NonNull String inputId, boolean isValid) {
+        inputValidity.put(inputId, isValid);
         trickleEvent(new FormEvent.ValidationUpdate(isFormValid()));
     }
 
-    private boolean isFormValid() {
+    protected boolean isFormValid() {
         for (Map.Entry<String, Boolean> validity : inputValidity.entrySet()) {
             if (!validity.getValue()) {
                 return false;
             }
         }
         return true;
+    }
+
+    @NonNull
+    protected Map<String, FormData<?>> getFormData() {
+        return formData;
+    }
+
+    @NonNull
+    protected Map<AttributeName, JsonValue> getAttributes() {
+        return attributes;
     }
 }

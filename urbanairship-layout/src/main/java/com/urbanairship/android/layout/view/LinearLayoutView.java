@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.View;
 
 import com.urbanairship.android.layout.Thomas;
@@ -65,6 +66,7 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
         LayoutUtils.applyBorderAndBackground(this, model);
 
         setOrientation(model.getDirection() == Direction.VERTICAL ? VERTICAL : HORIZONTAL);
+        setGravity(model.getDirection() == Direction.VERTICAL ? Gravity.CENTER_HORIZONTAL : Gravity.CENTER_VERTICAL);
 
         addItems(model.getItems());
 

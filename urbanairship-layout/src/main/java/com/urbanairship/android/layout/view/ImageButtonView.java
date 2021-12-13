@@ -13,7 +13,6 @@ import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.model.ImageButtonModel;
 import com.urbanairship.android.layout.property.Image;
-import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.images.ImageRequestOptions;
 import com.urbanairship.util.UAStringUtil;
@@ -24,7 +23,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.core.content.ContextCompat;
-import androidx.core.util.ObjectsCompat;
 
 public class ImageButtonView extends AppCompatImageButton implements BaseView<ImageButtonModel> {
     private ImageButtonModel model;

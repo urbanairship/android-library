@@ -2,6 +2,8 @@
 
 package com.urbanairship.android.layout.property;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
@@ -30,6 +32,12 @@ public enum ViewType {
     SCORE("score"),
     UNKNOWN("");
 
+    /** View types that provide values for forms (possibly via an intermediate controller). */
+    private static final List<ViewType> FORM_INPUTS = Arrays.asList(
+        CHECKBOX_CONTROLLER, CHECKBOX, RADIO_INPUT_CONTROLLER, RADIO_INPUT,
+        TOGGLE, TEXT_INPUT, SCORE, FORM_CONTROLLER, NPS_FORM_CONTROLLER
+    );
+
     @NonNull
     private final String value;
 
@@ -55,6 +63,10 @@ public enum ViewType {
             }
         }
         return UNKNOWN;
+    }
+
+    public boolean isFormInput() {
+        return FORM_INPUTS.contains(this);
     }
 
     @NonNull

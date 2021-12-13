@@ -2,11 +2,11 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.ButtonEvent;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.event.PagerEvent;
+import com.urbanairship.android.layout.event.ReportingEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
 import com.urbanairship.android.layout.property.ButtonEnableBehaviorType;
@@ -132,11 +132,20 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
         if (hasActions()) {
             bubbleEvent(new ButtonEvent.Actions(this));
         }
+
+        // Report button tap event.
+        bubbleEvent(new ReportingEvent.ButtonTap(identifier));
+
+        // Note: Button dismiss events are reported at the top level when handled.
+        // We can't send them directly from here because we need to include
+        // the display time, which is tracked by the hosting Activity.
     }
+
+    @NonNull
+    public abstract String reportingDescription();
 
     @Override
     public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event.getType());
         switch (event.getType()) {
             case FORM_VALIDATION:
                return handleFormSubmitUpdate((FormEvent.ValidationUpdate) event);

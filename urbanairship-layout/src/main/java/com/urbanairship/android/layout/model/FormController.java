@@ -2,8 +2,11 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.android.layout.event.FormEvent;
+import com.urbanairship.android.layout.event.ReportingEvent;
 import com.urbanairship.android.layout.property.FormBehaviorType;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
@@ -33,8 +36,17 @@ public class FormController extends BaseFormController {
     }
 
     @Override
-    protected void submitForm() {
-        super.submitForm();
-        // TODO: submit form
+    protected FormEvent.Init getInitEvent() {
+        return new FormEvent.Init(getIdentifier(), isFormValid());
+    }
+
+    @Override
+    protected FormEvent.DataChange getFormDataChangeEvent() {
+        return new FormEvent.DataChange(getIdentifier(), new FormData.Form(getIdentifier(), getFormData()), isFormValid());
+    }
+
+    @Override
+    protected ReportingEvent.FormResult getFormResultEvent() {
+        return new ReportingEvent.FormResult(new FormData.Form(getIdentifier(), getFormData()), getAttributes());
     }
 }

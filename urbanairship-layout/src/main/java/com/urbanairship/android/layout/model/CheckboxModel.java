@@ -48,11 +48,6 @@ public class CheckboxModel extends CheckableModel {
     }
 
     @NonNull
-    public JsonValue getReportingValue() {
-        return reportingValue;
-    }
-
-    @NonNull
     @Override
     public Event buildInputChangeEvent(boolean isChecked) {
         return new CheckboxEvent.InputChange(reportingValue, isChecked);

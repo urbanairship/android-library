@@ -42,5 +42,41 @@ public abstract class Event {
         public BaseModel getModel() {
             return model;
         }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "ViewInit{" +
+                ", viewType=" + getViewType() +
+                ", model=" + model +
+                '}';
+        }
     }
+
+    public static class ViewAttachedToWindow extends Event {
+        private final BaseModel model;
+
+        public ViewAttachedToWindow(@NonNull BaseModel model) {
+            super(EventType.VIEW_ATTACHED);
+            this.model = model;
+        }
+
+        public ViewType getViewType() {
+            return model.getType();
+        }
+
+        public BaseModel getModel() {
+            return model;
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "ViewAttachedToWindow{" +
+                ", viewType=" + getViewType() +
+                ", model=" + model +
+                '}';
+        }
+    }
+
 }

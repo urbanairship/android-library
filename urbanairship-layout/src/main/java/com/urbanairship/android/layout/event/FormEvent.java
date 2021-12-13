@@ -3,14 +3,51 @@
 package com.urbanairship.android.layout.event;
 
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonValue;
 
-import androidx.annotation.NonNull;
+import java.util.HashMap;
+import java.util.Map;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class FormEvent extends Event {
     protected FormEvent(@NonNull EventType type) {
         super(type);
+    }
+
+    public static class Init extends FormEvent {
+        @NonNull
+        private final String identifier;
+        private final boolean isValid;
+
+        public Init(@NonNull String identifier, boolean isValid) {
+            super(EventType.FORM_INIT);
+            this.identifier = identifier;
+            this.isValid = isValid;
+        }
+
+        @NonNull
+        public String getIdentifier() {
+            return identifier;
+        }
+
+        public boolean isValid() {
+            return isValid;
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "FormEvent.Init{" +
+                "identifier='" + identifier + '\'' +
+                ", isValid=" + isValid +
+                '}';
+        }
     }
 
     public abstract static class InputInit extends FormEvent {
@@ -45,9 +82,19 @@ public abstract class FormEvent extends Event {
         public boolean isValid() {
             return isValid;
         }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "FormEvent.InputInit{" +
+                "viewType=" + viewType +
+                ", identifier='" + identifier + '\'' +
+                ", isValid=" + isValid +
+                '}';
+        }
     }
 
-    public abstract static class InputChange<T> extends FormEvent {
+    private abstract static class InputChange<T> extends FormEvent {
         @NonNull
         protected final T value;
 
@@ -59,6 +106,14 @@ public abstract class FormEvent extends Event {
         @NonNull
         public T getValue() {
             return value;
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "FormEvent.InputChange{" +
+                "value=" + value +
+                '}';
         }
     }
 
@@ -73,6 +128,15 @@ public abstract class FormEvent extends Event {
         public boolean isChecked() {
             return isChecked;
         }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "FormEvent.CheckedChange{" +
+                "value=" + value +
+                ", isChecked=" + isChecked +
+                '}';
+        }
     }
 
 
@@ -81,15 +145,55 @@ public abstract class FormEvent extends Event {
         @NonNull
         private final String identifier;
         private final boolean isValid;
+        @NonNull
+        private final Map<AttributeName, JsonValue> attributes = new HashMap<>();
 
         public DataChange(
             @NonNull String identifier,
             @NonNull FormData<?> value,
             boolean isValid
         ) {
+            this(identifier, value, isValid, null, null);
+        }
+
+        public DataChange(
+            @NonNull String identifier,
+            @NonNull FormData<?> value,
+            boolean isValid,
+            @Nullable AttributeName attributeName
+            ) {
+            this(identifier, value, isValid, attributeName, null);
+        }
+
+        public DataChange(
+            @NonNull String identifier,
+            @NonNull FormData<?> value,
+            boolean isValid,
+            @Nullable AttributeName attributeName,
+            @Nullable JsonValue attributeValue
+        ) {
+            this(
+                identifier,
+                value,
+                isValid,
+                attributeName != null && attributeValue != null
+                    ? new HashMap<AttributeName, JsonValue>() {{ put(attributeName, attributeValue); }}
+                    : null
+            );
+        }
+
+        public DataChange(
+            @NonNull String identifier,
+            @NonNull FormData<?> value,
+            boolean isValid,
+            @Nullable Map<AttributeName, JsonValue> attributes
+        ) {
             super(EventType.FORM_DATA_CHANGE, value);
             this.identifier = identifier;
             this.isValid = isValid;
+            if (attributes != null) {
+                this.attributes.putAll(attributes);
+            }
         }
 
         public boolean isValid() {
@@ -99,6 +203,20 @@ public abstract class FormEvent extends Event {
         @NonNull
         public String getIdentifier() {
             return identifier;
+        }
+
+        @NonNull
+        public Map<AttributeName, JsonValue> getAttributes() {
+            return attributes;
+        }
+
+        @Override
+        public String toString() {
+            return "DataChange{" +
+                "identifier='" + identifier + '\'' +
+                ", isValid=" + isValid +
+                ", attributes=" + attributes +
+                '}';
         }
     }
 
@@ -114,6 +232,14 @@ public abstract class FormEvent extends Event {
 
         public boolean isValid() {
             return isValid;
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "FormEvent.ValidationUpdate{" +
+                "isValid=" + isValid +
+                '}';
         }
     }
 }

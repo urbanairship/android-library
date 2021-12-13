@@ -180,7 +180,7 @@ public class PagerIndicatorModel extends BaseModel {
 
     @Override
     public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event.getType());
+        Logger.verbose("onEvent: %s", event);
 
         switch (event.getType()) {
             case PAGER_INIT:

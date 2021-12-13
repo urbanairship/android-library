@@ -12,16 +12,20 @@ import com.urbanairship.android.layout.util.LayoutUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PagerView extends RecyclerView implements BaseView<PagerModel> {
     private PagerModel model;
     private Environment environment;
     private PagerAdapter adapter;
     private LinearLayoutManager layoutManager;
     private PagerSnapHelper snapHelper;
+
+    private boolean isInternalScroll = false;
 
     public PagerView(@NonNull Context context) {
         super(context);
@@ -42,9 +46,11 @@ public class PagerView extends RecyclerView implements BaseView<PagerModel> {
         setId(generateViewId());
 
         layoutManager = new LinearLayoutManager(context, HORIZONTAL, false);
-        snapHelper = new PagerSnapHelper();
-
+        // Disable prefetch so we won't get display events from items that aren't yet visible.
+        layoutManager.setItemPrefetchEnabled(false);
         setLayoutManager(layoutManager);
+
+        snapHelper = new PagerSnapHelper();
         snapHelper.attachToRecyclerView(this);
 
         setHorizontalScrollBarEnabled(false);
@@ -84,6 +90,12 @@ public class PagerView extends RecyclerView implements BaseView<PagerModel> {
         return snapView != null ? getChildAdapterPosition(snapView) : 0;
     }
 
+    @Override
+    public void smoothScrollToPosition(int position) {
+        isInternalScroll = true;
+        super.smoothScrollToPosition(position);
+    }
+
     private final PagerModel.Listener modelListener = new PagerModel.Listener() {
         @Override
         public void onScrollToNext() {
@@ -115,9 +127,10 @@ public class PagerView extends RecyclerView implements BaseView<PagerModel> {
 
             int position = getDisplayedItemPosition();
             if (position != NO_POSITION && position != previousPosition) {
-                model.onScrollTo(position);
+                model.onScrollTo(position, isInternalScroll);
             }
             previousPosition = position;
+            isInternalScroll = false;
         }
     };
 }

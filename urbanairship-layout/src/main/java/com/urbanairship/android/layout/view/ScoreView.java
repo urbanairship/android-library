@@ -81,7 +81,9 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
         }
 
         constraints.build().applyTo(this);
-        model.onInit();
+
+        model.onConfigured();
+        LayoutUtils.doOnAttachToWindow(this, model::onAttachedToWindow);
     }
 
     private void configureNpsScore(@NonNull ScoreStyle style, @NonNull ConstraintSetBuilder constraints) {
@@ -105,7 +107,7 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
             button.setOnClickListener(v -> onScoreClick(v, score));
 
             constraints.squareAspectRatio(viewId);
-            constraints.minHeight(viewId, 28);
+            constraints.minHeight(viewId, 16);
             addView(button, new LayoutParams(LayoutParams.MATCH_CONSTRAINT, LayoutParams.MATCH_CONSTRAINT));
         }
 

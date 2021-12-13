@@ -2,7 +2,6 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.event.CheckboxEvent;
 import com.urbanairship.android.layout.event.Event;
@@ -105,16 +104,6 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
         return view;
     }
 
-    @Nullable
-    public Integer getMinSelection() {
-        return minSelection;
-    }
-
-    @Nullable
-    public Integer getMaxSelection() {
-        return maxSelection;
-    }
-
     @Override
     public boolean isValid() {
         int count = selectedValues.size();
@@ -137,11 +126,10 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
 
     @Override
     public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event.getType());
-
         switch (event.getType()) {
             case VIEW_INIT:
                 return onViewInit((Event.ViewInit) event);
+
             case CHECKBOX_INPUT_CHANGE:
                 return onCheckboxInputChange((CheckboxEvent.InputChange) event);
 
@@ -177,9 +165,7 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
         }
 
         trickleEvent(new CheckboxEvent.ViewUpdate(event.getValue(), event.isChecked()));
-
         bubbleEvent(new FormEvent.DataChange(identifier, new FormData.CheckboxController(selectedValues), isValid()));
-
         return true;
     }
 }

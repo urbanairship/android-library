@@ -318,6 +318,8 @@ view:
             type: radio_input_controller
             identifier: radio_types
             required: true
+            attribute_name:
+              channel: "radio-attribute-name-channel"
             view:
               type: linear_layout
               direction: vertical
@@ -598,6 +600,9 @@ view:
                 type: toggle
                 identifier: toggle-switch
                 required: true
+                attribute_name:
+                  contact: "toggle-attribute-name-contact"
+                attribute_value: "attribute-value-toggle-switch"
                 background_color:
                   default:
                     hex: "#000000"
@@ -613,90 +618,148 @@ view:
                       default:
                         hex: "#FF0000"
                         alpha: 1
-
-        - size:
-            width: 100%
-            height: 48
-          margin:
-            start: 16
-            end: 16
-          view:
-            type: label
-            text: Choose a score!
-            text_appearance:
-              color:
-                default:
-                  hex: "#000000"
-                  alpha: 1
-              alignment: start
-              font_size: 18
+        # Nested NPS form
         - size:
             width: 100%
             height: auto
-          margin:
-            start: 16
-            end: 16
           view:
-            type: score
-            identifier: "nps_rating"
-            required: true
-            style:
-              type: nps
-              spacing: 8
-              bindings:
-                selected:
-                  shapes:
-                  - type: rectangle
-                    aspect_ratio: 1
-                    scale: 1
+            type: nps_form_controller
+            identifier: cool_nps_form
+            nps_identifier: "nps_rating"
+            view:
+              type: linear_layout
+              direction: vertical
+              items:
+              - size:
+                  width: 100%
+                  height: 48
+                margin:
+                  start: 16
+                  end: 16
+                view:
+                  type: label
+                  text: Choose a score!
+                  text_appearance:
                     color:
                       default:
                         hex: "#000000"
                         alpha: 1
-                  - type: ellipse
-                    aspect_ratio: 1.5
-                    scale: 1
-                    border:
-                      stroke_width: 2
-                      stroke_color:
-                        default:
-                          hex: "#999999"
-                          alpha: 1
-                    color:
-                      default:
-                        hex: "#FFFFFF"
-                        alpha: 0
+                    alignment: start
+                    font_size: 18
+              - size:
+                  width: 100%
+                  height: auto
+                margin:
+                  start: 16
+                  end: 16
+                view:
+                  type: score
+                  identifier: "nps_rating"
+                  required: true
+                  attribute_name:
+                    channel: "nps-feedback-attribute-name-channel"
+                  style:
+                    type: nps
+                    spacing: 4
+                    bindings:
+                      selected:
+                        shapes:
+                        - type: rectangle
+                          aspect_ratio: 1
+                          scale: 1
+                          color:
+                            default:
+                              hex: "#000000"
+                              alpha: 1
+                        - type: ellipse
+                          aspect_ratio: 1.5
+                          scale: 1
+                          border:
+                            stroke_width: 2
+                            stroke_color:
+                              default:
+                                hex: "#999999"
+                                alpha: 1
+                          color:
+                            default:
+                              hex: "#FFFFFF"
+                              alpha: 0
+                        text_appearance:
+                          font_size: 14
+                          color:
+                            default:
+                              hex: "#FFFFFF"
+                              alpha: 1
+                          font_families:
+                          - permanent_marker
+                      unselected:
+                        shapes:
+                        - type: ellipse
+                          aspect_ratio: 1.5
+                          scale: 1
+                          border:
+                            stroke_width: 2
+                            stroke_color:
+                              default:
+                                hex: "#999999"
+                                alpha: 1
+                          color:
+                            default:
+                              hex: "#FFFFFF"
+                              alpha: 1
+                        text_appearance:
+                          font_size: 14
+                          styles:
+                          - bold
+                          color:
+                            default:
+                              hex: "#333333"
+                              alpha: 1
+              - size:
+                  width: 100%
+                  height: 48
+                margin:
+                  start: 16
+                  end: 16
+                view:
+                  type: label
+                  text: Type stuff!
                   text_appearance:
-                    font_size: 14
                     color:
                       default:
-                        hex: "#FFFFFF"
+                        hex: "#000000"
                         alpha: 1
-                    font_families:
-                    - permanent_marker
-                unselected:
-                  shapes:
-                  - type: ellipse
-                    aspect_ratio: 1.5
-                    scale: 1
-                    border:
-                      stroke_width: 2
-                      stroke_color:
-                        default:
-                          hex: "#999999"
-                          alpha: 1
-                    color:
+                    alignment: start
+                    font_size: 18
+              - size:
+                  width: 100%
+                  height: 48
+                margin:
+                  start: 16
+                  end: 16
+                view:
+                  type: text_input
+                  identifier: nps_feedback
+                  input_type: text_multiline
+                  place_holder: blah blah blah...
+                  required: true
+                  border:
+                    stroke_width: 2
+                    stroke_color:
                       default:
-                        hex: "#FFFFFF"
+                        hex: "#666666"
                         alpha: 1
+                  background_color:
+                    default:
+                      hex: "#ffffff"
+                      alpha: 1
                   text_appearance:
-                    font_size: 14
-                    styles:
-                    - bold
                     color:
                       default:
-                        hex: "#333333"
+                        hex: "#000000"
                         alpha: 1
+                    alignment: start
+                    font_size: 12
 
         # BOTTOM-PINNED BUTTON
         - size:

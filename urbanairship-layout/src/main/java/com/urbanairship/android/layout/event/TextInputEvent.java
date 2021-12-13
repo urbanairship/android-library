@@ -14,5 +14,11 @@ public class TextInputEvent {
         public Init(@NonNull String identifier, boolean isValid) {
             super(EventType.FORM_INPUT_INIT, ViewType.TEXT_INPUT, identifier, isValid);
         }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "TextInputEvent.Init{}";
+        }
     }
 }

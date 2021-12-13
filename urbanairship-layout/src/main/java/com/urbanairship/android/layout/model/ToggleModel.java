@@ -15,6 +15,8 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
+import java.util.Objects;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -88,13 +90,13 @@ public class ToggleModel extends CheckableModel implements Identifiable, Validat
 
     @Override
     public boolean isValid() {
-        return value != null || !isRequired;
+        return Objects.equals(value, true) || !isRequired;
     }
 
     @NonNull
     @Override
     public Event buildInputChangeEvent(boolean isChecked) {
-        return new FormEvent.DataChange(identifier, new FormData.Toggle(isChecked), isValid());
+        return new FormEvent.DataChange(identifier, new FormData.Toggle(isChecked), isValid(), attributeName, attributeValue);
     }
 
     @NonNull

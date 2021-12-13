@@ -25,7 +25,7 @@ public abstract class FormData<T> implements JsonSerializable {
 
     private enum Type implements JsonSerializable {
         FORM("form"),
-        NPS("nps"),
+        NPS_FORM("nps"),
         TOGGLE("toggle"),
         MULTIPLE_CHOICE("multiple_choice"),
         SINGLE_CHOICE("single_choice"),
@@ -147,7 +147,7 @@ public abstract class FormData<T> implements JsonSerializable {
         private final String scoreId;
 
         public Nps(@NonNull String identifier, @NonNull String scoreId, @NonNull Map<String, FormData<?>> children) {
-            super(Type.FORM, identifier, children);
+            super(Type.NPS_FORM, identifier, children);
             this.scoreId = scoreId;
         }
 

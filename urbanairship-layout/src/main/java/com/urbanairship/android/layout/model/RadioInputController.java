@@ -2,7 +2,6 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.FormEvent;
@@ -105,15 +104,9 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
         return view;
     }
 
-    @Nullable
-    public AttributeName getAttributeName() {
-        return attributeName;
-    }
-
     public boolean isValid() {
         return selectedValue != null || !isRequired;
     }
-
 
     @NonNull
     @VisibleForTesting
@@ -130,8 +123,6 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
 
     @Override
     public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event.getType());
-
         switch (event.getType()) {
             case VIEW_INIT:
                 return onViewInit((Event.ViewInit) event);
@@ -161,7 +152,7 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
         if (event.isChecked() && !event.getValue().equals(selectedValue)) {
             selectedValue = event.getValue();
             trickleEvent(new RadioEvent.ViewUpdate(event.getValue(), event.isChecked()));
-            bubbleEvent(new FormEvent.DataChange(identifier, new FormData.RadioInputController(event.getValue()), isValid()));
+            bubbleEvent(new FormEvent.DataChange(identifier, new FormData.RadioInputController(event.getValue()), isValid(), attributeName, JsonValue.wrap(selectedValue)));
         }
 
         return true;

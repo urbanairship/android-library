@@ -143,7 +143,7 @@ public abstract class Shape {
         if (getColor() != null) {
             drawable.setFillColor(ColorStateList.valueOf(getColor().resolve(context)));
         } else {
-            drawable.setFillColor(ColorStateList.valueOf(android.graphics.Color.BLACK));
+            drawable.setFillColor(ColorStateList.valueOf(android.graphics.Color.TRANSPARENT));
         }
 
         if (border != null && border.getStrokeWidth() != null) {

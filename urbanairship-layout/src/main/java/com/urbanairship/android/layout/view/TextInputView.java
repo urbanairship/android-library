@@ -42,6 +42,7 @@ public class TextInputView extends AppCompatEditText implements BaseView<TextInp
 
     private void init() {
         setId(generateViewId());
+        setBackground(null);
     }
 
     @NonNull
@@ -70,6 +71,7 @@ public class TextInputView extends AppCompatEditText implements BaseView<TextInp
         setMovementMethod(new ScrollingMovementMethod());
 
         model.onConfigured();
+        LayoutUtils.doOnAttachToWindow(this, model::onAttachedToWindow);
     }
 
     private final TextWatcher textWatcher = new TextWatcher() {

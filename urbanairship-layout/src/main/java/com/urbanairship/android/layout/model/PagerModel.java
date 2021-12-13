@@ -27,11 +27,17 @@ public class PagerModel extends LayoutModel {
     @Nullable
     private Listener listener;
 
+    private int lastIndex = 0;
+
     public PagerModel(@NonNull List<BaseModel> items, @Nullable Boolean disableSwipe, @Nullable Color backgroundColor, @Nullable Border border) {
         super(ViewType.PAGER, backgroundColor, border);
 
         this.items = items;
         this.disableSwipe = disableSwipe;
+
+        for (BaseModel item : items) {
+            item.addListener(this);
+        }
     }
 
     @NonNull
@@ -87,8 +93,10 @@ public class PagerModel extends LayoutModel {
     // View Actions
     //
 
-    public void onScrollTo(int position) {
-        bubbleEvent(new PagerEvent.Scroll(this, position));
+    public void onScrollTo(int position, boolean isInternalScroll) {
+        bubbleEvent(new PagerEvent.Scroll(this, position, lastIndex, isInternalScroll));
+
+        lastIndex = position;
     }
 
     public void onConfigured(int position) {

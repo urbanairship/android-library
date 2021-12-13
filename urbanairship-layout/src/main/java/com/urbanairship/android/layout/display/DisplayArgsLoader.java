@@ -24,8 +24,8 @@ import androidx.annotation.RestrictTo;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-public class DisplayArgsLoader implements Parcelable {
-    private final static Map<String, DisplayArgs> cached = new HashMap<>();
+public final class DisplayArgsLoader implements Parcelable {
+    private static final Map<String, DisplayArgs> cached = new HashMap<>();
 
     private final String id;
 

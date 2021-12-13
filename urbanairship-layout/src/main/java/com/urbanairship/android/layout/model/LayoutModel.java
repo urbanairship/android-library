@@ -2,7 +2,6 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
@@ -14,7 +13,9 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class LayoutModel extends BaseModel {
 
     public LayoutModel(@NonNull ViewType viewType, @Nullable Color backgroundColor, @Nullable Border border) {
@@ -54,10 +55,6 @@ public abstract class LayoutModel extends BaseModel {
      */
     public abstract List<BaseModel> getChildren();
 
-    //
-    // BaseModel overrides
-    //
-
     /**
      * {@inheritDoc}
      * <p>
@@ -65,8 +62,6 @@ public abstract class LayoutModel extends BaseModel {
      */
     @Override
     public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("%s - onEvent: bubbling up %s", getType(), event.getType().name());
-
         return bubbleEvent(event);
     }
 
@@ -78,12 +73,9 @@ public abstract class LayoutModel extends BaseModel {
      */
     @Override
     public boolean trickleEvent(@NonNull Event event) {
-        Logger.verbose("%s - trickleEvent: %s", getType(), event.getType().name());
-
         for (BaseModel child : getChildren()) {
             if (child.trickleEvent(event)) { return true; }
         }
-
         return false;
     }
 }

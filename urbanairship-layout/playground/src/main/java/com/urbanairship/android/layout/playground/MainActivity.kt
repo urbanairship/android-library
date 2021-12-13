@@ -13,7 +13,11 @@ import androidx.core.content.edit
 import com.urbanairship.Logger
 import com.urbanairship.android.layout.BasePayload
 import com.urbanairship.android.layout.Thomas
+import com.urbanairship.android.layout.ThomasListener
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
+import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.util.ResourceUtils
 
 class MainActivity : AppCompatActivity() {
@@ -91,10 +95,42 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             val payload = BasePayload.fromJson(jsonMap)
-            Thomas.prepareDisplay(payload).display(this)
+            Thomas.prepareDisplay(payload)
+                .setListener(thomasListener)
+                .display(this)
         } catch (e: Exception) {
             Logger.error(e)
             Toast.makeText(this, "Error trying to display layout", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private val thomasListener = object : ThomasListener {
+        override fun onPageView(pagerData: PagerData, state: LayoutData?) {
+            Logger.debug("onPageView(pagerData: $pagerData, state: $state)")
+        }
+
+        override fun onPageSwipe(pagerData: PagerData, toIndex: Int, fromIndex: Int, state: LayoutData?) {
+            Logger.debug("onPageSwipe(pagerData: $pagerData, toIndex: $toIndex, fromIndex: $fromIndex, state: $state)")
+        }
+
+        override fun onButtonTap(buttonId: String, state: LayoutData?) {
+            Logger.debug("onButtonTap(buttonId: $buttonId, state: $state)")
+        }
+
+        override fun onDismiss(displayTime: Long) {
+            Logger.debug("onDismiss(displayTime: $displayTime)")
+        }
+
+        override fun onDismiss(buttonId: String, buttonDescription: String?, cancel: Boolean, displayTime: Long, state: LayoutData?) {
+            Logger.debug("onDismiss(buttonId: $buttonId, buttonDescription: $buttonDescription, cancel: $cancel, displayTime: $displayTime, state: $state")
+        }
+
+        override fun onFormResult(formData: FormData<*>, state: LayoutData?) {
+            Logger.debug("onFormResult(formData: ${formData.toJsonValue()}, state: $state)")
+        }
+
+        override fun onFormDisplay(formId: String, state: LayoutData?) {
+            Logger.debug("onFormDisplay(formId: $formId, state: $state)")
         }
     }
 }

@@ -69,8 +69,12 @@ public abstract class CheckableModel extends BaseModel implements Accessible {
         }
     }
 
-    public void onInit() {
+    public void onConfigured() {
         bubbleEvent(buildInitEvent());
+    }
+
+    public void onAttachedToWindow() {
+        bubbleEvent(new Event.ViewAttachedToWindow(this));
     }
 
     public void onCheckedChange(boolean isChecked) {

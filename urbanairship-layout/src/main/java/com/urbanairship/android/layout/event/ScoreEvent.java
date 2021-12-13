@@ -13,5 +13,11 @@ public class ScoreEvent {
         public Init(@NonNull String identifier, boolean isValid) {
             super(EventType.FORM_INPUT_INIT, ViewType.SCORE, identifier, isValid);
         }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "ScoreEvent.Init{}";
+        }
     }
 }

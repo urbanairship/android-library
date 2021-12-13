@@ -9,19 +9,33 @@ import com.urbanairship.json.JsonMap;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class ButtonEvent extends Event {
     @NonNull
     private final String identifier;
+    @NonNull
+    private final String reportingDescription;
 
-    public ButtonEvent(@NonNull EventType type, @NonNull String identifier) {
+    public ButtonEvent(@NonNull EventType type, @NonNull String identifier, @NonNull String reportingDescription) {
         super(type);
         this.identifier = identifier;
+        this.reportingDescription = reportingDescription;
     }
 
     @NonNull
     public String getIdentifier() {
         return identifier;
+    }
+
+    @NonNull
+    public String getReportingDescription() {
+        return reportingDescription;
+    }
+
+    public boolean isCancel() {
+        return false;
     }
 
     public static ButtonEvent fromBehavior(@NonNull ButtonClickBehaviorType behavior, @NonNull ButtonModel model) {
@@ -43,31 +57,81 @@ public abstract class ButtonEvent extends Event {
 
     public static class Dismiss extends ButtonEvent {
         public Dismiss(@NonNull ButtonModel button) {
-            super(EventType.BUTTON_BEHAVIOR_DISMISS, button.getIdentifier());
+            super(EventType.BUTTON_BEHAVIOR_DISMISS, button.getIdentifier(), button.reportingDescription());
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "ButtonEvent.Dismiss{" +
+                "identifier='" + getIdentifier() + '\'' +
+                ", reportingDescription='" + getReportingDescription() + '\'' +
+                '}';
         }
     }
 
     public static class Cancel extends ButtonEvent {
         public Cancel(@NonNull ButtonModel button) {
-            super(EventType.BUTTON_BEHAVIOR_CANCEL, button.getIdentifier());
+            super(EventType.BUTTON_BEHAVIOR_CANCEL, button.getIdentifier(), button.reportingDescription());
+        }
+
+        @Override
+        public boolean isCancel() {
+            return true;
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "ButtonEvent.Cancel{" +
+                "identifier='" + getIdentifier() + '\'' +
+                ", reportingDescription='" + getReportingDescription() + '\'' +
+                '}';
         }
     }
 
     public static class PagerNext extends ButtonEvent {
         public PagerNext(@NonNull ButtonModel button) {
-            super(EventType.BUTTON_BEHAVIOR_PAGER_NEXT, button.getIdentifier());
+            super(EventType.BUTTON_BEHAVIOR_PAGER_NEXT, button.getIdentifier(), button.reportingDescription());
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "ButtonEvent.PagerNext{" +
+                "identifier='" + getIdentifier() + '\'' +
+                ", reportingDescription='" + getReportingDescription() + '\'' +
+                '}';
         }
     }
 
     public static class PagerPrevious extends ButtonEvent {
         public PagerPrevious(@NonNull ButtonModel button) {
-            super(EventType.BUTTON_BEHAVIOR_PAGER_PREVIOUS, button.getIdentifier());
+            super(EventType.BUTTON_BEHAVIOR_PAGER_PREVIOUS, button.getIdentifier(), button.reportingDescription());
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "ButtonEvent.PagerPrevious{" +
+                "identifier='" + getIdentifier() + '\'' +
+                ", reportingDescription='" + getReportingDescription() + '\'' +
+                '}';
         }
     }
 
     public static class FormSubmit extends ButtonEvent {
         public FormSubmit(@NonNull ButtonModel button) {
-            super(EventType.BUTTON_BEHAVIOR_FORM_SUBMIT, button.getIdentifier());
+            super(EventType.BUTTON_BEHAVIOR_FORM_SUBMIT, button.getIdentifier(), button.reportingDescription());
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "ButtonEvent.FormSubmit{" +
+                "identifier='" + getIdentifier() + '\'' +
+                ", reportingDescription='" + getReportingDescription() + '\'' +
+                '}';
         }
     }
 
@@ -76,13 +140,23 @@ public abstract class ButtonEvent extends Event {
         private final List<JsonMap> actions;
 
         public Actions(@NonNull ButtonModel button) {
-            super(EventType.BUTTON_ACTIONS, button.getIdentifier());
+            super(EventType.BUTTON_ACTIONS, button.getIdentifier(), button.reportingDescription());
             this.actions = button.getActions();
         }
 
         @NonNull
         public List<JsonMap> getActions() {
             return actions;
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "ButtonEvent.Actions{" +
+                "identifier='" + getIdentifier() + '\'' +
+                ", reportingDescription='" + getReportingDescription() + '\'' +
+                ", actions=" + getActions() +
+                '}';
         }
     }
 }
