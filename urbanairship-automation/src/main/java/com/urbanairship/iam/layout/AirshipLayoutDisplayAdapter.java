@@ -31,6 +31,7 @@ import com.urbanairship.util.Network;
 import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -62,8 +63,10 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
     private final DisplayRequestCallback prepareDisplayCallback;
     private final Supplier<Boolean> isConnectedSupplier;
     private final UrlAllowList urlAllowList;
-
+    private final List<UrlInfo> urlInfoList;
+    private final Map<String, String> assetCacheMap = new HashMap<>();
     private DisplayRequest displayRequest;
+
 
     @VisibleForTesting
     AirshipLayoutDisplayAdapter(@NonNull InAppMessage message,
@@ -77,6 +80,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         this.prepareDisplayCallback = prepareDisplayCallback;
         this.urlAllowList = urlAllowList;
         this.isConnectedSupplier = isConnectedSupplier;
+        this.urlInfoList = UrlInfo.from(displayContent.getPayload().getView());
     }
 
     /**
@@ -104,39 +108,23 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
     @PrepareResult
     @Override
     public int onPrepare(@NonNull Context context, @NonNull Assets assets) {
-        boolean isConnected = isConnectedSupplier.get();
-        Map<String, String> assetCacheMap = new HashMap<>();
-
-        for (UrlInfo urlInfo : UrlInfo.from(displayContent.getPayload().getView())) {
+        assetCacheMap.clear();
+        for (UrlInfo urlInfo : this.urlInfoList) {
             if (!urlAllowList.isAllowed(urlInfo.getUrl(), UrlAllowList.SCOPE_OPEN_URL)) {
                 Logger.error("Url not allowed: %s. Unable to display message %s.", urlInfo.getUrl(), message.getName());
                 return CANCEL;
             }
 
-            switch (urlInfo.getType()) {
-                case VIDEO:
-                case WEB_PAGE:
-                    if (!isConnected) {
-                        Logger.error("Message not ready. Device is not connected and the message contains a webpage or video.", urlInfo.getUrl(), message);
-                        return RETRY;
-                    }
-                    break;
-
-                case IMAGE:
-                    File file = assets.file(urlInfo.getUrl());
-                    if (file.exists()) {
-                        assetCacheMap.put(urlInfo.getUrl(), Uri.fromFile(file).toString());
-                    } else if (!isConnected) {
-                        Logger.error("Message not ready. Device is not connected and the message contains an image that is not cached.", urlInfo.getUrl(), message);
-                        return RETRY;
-                    }
-                    break;
+            if (urlInfo.getType() == UrlInfo.UrlType.IMAGE) {
+                File file = assets.file(urlInfo.getUrl());
+                if (file.exists()) {
+                    assetCacheMap.put(urlInfo.getUrl(), Uri.fromFile(file).toString());
+                }
             }
         }
 
         try {
-            this.displayRequest = this.prepareDisplayCallback.prepareDisplay(displayContent.getPayload())
-                                                             .setImageCache(new AssetImageCache(assetCacheMap));
+            this.displayRequest = this.prepareDisplayCallback.prepareDisplay(displayContent.getPayload());
         } catch (DisplayException e) {
             Logger.error("Unable to display layout", e);
             return InAppMessageAdapter.CANCEL;
@@ -145,8 +133,39 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
     }
 
     @Override
+    public boolean isReady(@NonNull Context context) {
+        boolean isConnected = isConnectedSupplier.get();
+
+        for (UrlInfo urlInfo : this.urlInfoList) {
+            switch (urlInfo.getType()) {
+                case VIDEO:
+                case WEB_PAGE:
+                    if (!isConnected) {
+                        Logger.error("Message not ready. Device is not connected and the message contains a webpage or video.", urlInfo.getUrl(), message);
+                        return false;
+                    }
+                    break;
+
+                case IMAGE:
+                    if (assetCacheMap.get(urlInfo.getUrl()) != null) {
+                        continue;
+                    }
+
+                    if (!isConnected) {
+                        Logger.error("Message not ready. Device is not connected and the message contains a webpage or video.", urlInfo.getUrl(), message);
+                        return false;
+                    }
+                    break;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
     public void onDisplay(@NonNull Context context, @NonNull DisplayHandler displayHandler) {
         this.displayRequest.setListener(new Listener(message, displayHandler))
+                           .setImageCache(new AssetImageCache(assetCacheMap))
                            .setWebViewClientFactory(() -> new InAppMessageWebViewClient(message))
                            .display(context);
     }

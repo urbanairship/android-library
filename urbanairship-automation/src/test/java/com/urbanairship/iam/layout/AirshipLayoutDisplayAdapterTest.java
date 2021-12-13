@@ -39,6 +39,7 @@ import androidx.core.util.Supplier;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -183,23 +184,23 @@ public class AirshipLayoutDisplayAdapterTest {
     }
 
     @Test
-    public void testPrepareNotConnectedOrCached() {
-        isConnected = false;
+    public void testIsReadyNotConnectedOrCached() {
         when(allowList.isAllowed(anyString(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
-        assertEquals(InAppMessageAdapter.RETRY, adapter.onPrepare(context, assets));
+        assertEquals(InAppMessageAdapter.OK, adapter.onPrepare(context, assets));
+        assertFalse(adapter.isReady(context));
     }
 
     @Test
-    public void testPrepareConnectedNotCached() {
+    public void testIsReadyConnectedNotCached() {
         isConnected = true;
         when(allowList.isAllowed(anyString(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
         assertEquals(InAppMessageAdapter.OK, adapter.onPrepare(context, assets));
+        assertTrue(adapter.isReady(context));
     }
 
     @Test
     public void testImageCache() {
         isConnected = true;
-
         File mockImageButtonFile = mock(File.class);
         when(mockImageButtonFile.exists()).thenReturn(true);
         when(mockImageButtonFile.getAbsolutePath()).thenReturn("button-image");
