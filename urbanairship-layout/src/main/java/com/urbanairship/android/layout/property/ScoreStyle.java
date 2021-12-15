@@ -14,32 +14,73 @@ import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
 
 /** Styling info for score views. */
-public class ScoreStyle {
+public abstract class ScoreStyle {
     @NonNull
     private final ScoreType type;
-    private final int spacing;
-    @NonNull
-    private final Bindings bindings;
 
-    public ScoreStyle(
-        @NonNull ScoreType type,
-        int spacing,
-        @NonNull Bindings bindings
-    ) {
+    ScoreStyle(@NonNull ScoreType type) {
         this.type = type;
-        this.spacing = spacing;
-        this.bindings = bindings;
     }
 
     @NonNull
-    public static ScoreStyle fromJson(JsonMap json) throws JsonException {
+    public static ScoreStyle fromJson(@NonNull JsonMap json) throws JsonException {
         String typeString = json.opt("type").optString();
-        ScoreType type = ScoreType.from(typeString);
-        int spacing = json.opt("spacing").getInt(0);
-        JsonMap bindingsJson = json.opt("bindings").optMap();
-        Bindings bindings = Bindings.fromJson(bindingsJson);
+        switch (ScoreType.from(typeString)) {
+            case NUMBER_RANGE:
+                return NumberRange.fromJson(json);
+        }
+        throw new JsonException("Failed to parse ScoreStyle! Unknown type: " + typeString);
+    }
 
-        return new ScoreStyle(type, spacing, bindings);
+
+    public static class NumberRange extends ScoreStyle {
+        private final int start;
+        private final int end;
+        private final int spacing;
+        @NonNull
+        private final Bindings bindings;
+
+        public NumberRange(
+            int start,
+            int end,
+            int spacing,
+            @NonNull Bindings bindings
+        ) {
+            super(ScoreType.NUMBER_RANGE);
+            this.start = start;
+            this.end = end;
+            this.spacing = spacing;
+            this.bindings = bindings;
+        }
+
+        @NonNull
+        public static ScoreStyle fromJson(JsonMap json) throws JsonException {
+            int start = json.opt("start").getInt(0);
+            int end = json.opt("end").getInt(10);
+            int spacing = json.opt("spacing").getInt(0);
+            JsonMap bindingsJson = json.opt("bindings").optMap();
+            Bindings bindings = Bindings.fromJson(bindingsJson);
+
+            return new NumberRange(start, end, spacing, bindings);
+        }
+
+        public int getStart() {
+            return start;
+        }
+
+        public int getEnd() {
+            return end;
+        }
+
+        @Dimension(unit = Dimension.DP)
+        public int getSpacing() {
+            return spacing;
+        }
+
+        @NonNull
+        public Bindings getBindings() {
+            return bindings;
+        }
     }
 
     public static class Bindings {
@@ -114,15 +155,5 @@ public class ScoreStyle {
     @NonNull
     public ScoreType getType() {
         return type;
-    }
-
-    @Dimension(unit = Dimension.DP)
-    public int getSpacing() {
-        return spacing;
-    }
-
-    @NonNull
-    public Bindings getBindings() {
-        return bindings;
     }
 }

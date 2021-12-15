@@ -22,6 +22,7 @@ import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.property.ModalPlacement;
 import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.DisplayTimer;
+import com.urbanairship.android.layout.util.ActionsRunner;
 import com.urbanairship.android.layout.view.ModalView;
 import com.urbanairship.channel.AttributeEditor;
 import com.urbanairship.json.JsonValue;
@@ -58,7 +59,11 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
     @Nullable
     private ThomasListener externalListener;
 
+    @Nullable
+    private ActionsRunner actionsRunner;
+
     private DisplayTimer displayTimer;
+    private boolean disableBackButton = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -80,6 +85,7 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             }
 
             this.externalListener = args.getListener();
+            this.actionsRunner = args.getActionsRunner();
 
             ModalPresentation presentation = (ModalPresentation) args.getPayload().getPresentation();
 
@@ -110,6 +116,8 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
                 });
             }
 
+            disableBackButton = presentation.isDisableBackButton();
+
             long restoredTime = savedInstanceState != null ? savedInstanceState.getLong(KEY_DISPLAY_TIME) : 0;
             this.displayTimer = new DisplayTimer(this, restoredTime);
 
@@ -137,8 +145,10 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-        onEvent(new ReportingEvent.DismissFromOutside(displayTimer.getTime()));
+        if (!disableBackButton) {
+            super.onBackPressed();
+            onEvent(new ReportingEvent.DismissFromOutside(displayTimer.getTime()));
+        }
     }
 
     @Override
@@ -151,6 +161,9 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
                 finish();
                 return true;
 
+            case BUTTON_ACTIONS:
+                return runButtonActions((ButtonEvent.Actions) event);
+
             case REPORTING_EVENT:
                 if (((ReportingEvent) event).getReportType() == FORM_RESULT) {
                     applyAttributeUpdates((ReportingEvent.FormResult) event);
@@ -162,6 +175,14 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             if (listener.onEvent(event)) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    private boolean runButtonActions(ButtonEvent.Actions event) {
+        if (actionsRunner != null) {
+            actionsRunner.run(event.getActions());
+            return true;
         }
         return false;
     }

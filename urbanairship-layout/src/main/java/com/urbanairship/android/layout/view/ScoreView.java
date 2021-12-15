@@ -25,8 +25,6 @@ import androidx.constraintlayout.widget.ConstraintLayout;
  * Form input that presents a set of numeric options representing a score.
  */
 public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> {
-    private static final int NPS_SCORE_ITEMS = 10;
-
     private ScoreModel model;
 
     @Nullable
@@ -71,8 +69,8 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
 
         ScoreStyle style = model.getStyle();
         switch (style.getType()) {
-            case NPS:
-                configureNpsScore(style, constraints);
+            case NUMBER_RANGE:
+                configureNumberRange((ScoreStyle.NumberRange) style, constraints);
                 break;
         }
 
@@ -86,11 +84,12 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
         LayoutUtils.doOnAttachToWindow(this, model::onAttachedToWindow);
     }
 
-    private void configureNpsScore(@NonNull ScoreStyle style, @NonNull ConstraintSetBuilder constraints) {
+    private void configureNumberRange(@NonNull ScoreStyle.NumberRange style, @NonNull ConstraintSetBuilder constraints) {
         ScoreStyle.Bindings bindings = style.getBindings();
-
-        int[] viewIds = new int[NPS_SCORE_ITEMS + 1];
-        for (int i = 0; i <= NPS_SCORE_ITEMS; i++) {
+        int start = style.getStart();
+        int end = style.getEnd();
+        int[] viewIds = new int[(end - start) + 1];
+        for (int i = start; i <= end; i++) {
             int score = i;
             ShapeButton button = new ShapeButton(
                 getContext(),
@@ -102,7 +101,7 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
             );
 
             int viewId = button.getId();
-            viewIds[i] = viewId;
+            viewIds[i - start] = viewId;
 
             button.setOnClickListener(v -> onScoreClick(v, score));
 

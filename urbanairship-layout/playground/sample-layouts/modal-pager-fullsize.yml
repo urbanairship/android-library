@@ -157,7 +157,9 @@ view:
                     identifier: score_identifier
                     required: true
                     style:
-                      type: nps
+                      type: number_range
+                      start: 0
+                      end: 10
                       spacing: 2
                       bindings:
                         selected:

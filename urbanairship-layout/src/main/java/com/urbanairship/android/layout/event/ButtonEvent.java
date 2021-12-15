@@ -4,9 +4,9 @@ package com.urbanairship.android.layout.event;
 
 import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
-import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
-import java.util.List;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -137,7 +137,7 @@ public abstract class ButtonEvent extends Event {
 
     public static class Actions extends ButtonEvent {
         @NonNull
-        private final List<JsonMap> actions;
+        private final Map<String, JsonValue> actions;
 
         public Actions(@NonNull ButtonModel button) {
             super(EventType.BUTTON_ACTIONS, button.getIdentifier(), button.reportingDescription());
@@ -145,7 +145,7 @@ public abstract class ButtonEvent extends Event {
         }
 
         @NonNull
-        public List<JsonMap> getActions() {
+        public Map<String, JsonValue> getActions() {
             return actions;
         }
 

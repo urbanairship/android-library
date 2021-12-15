@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 
 /** Types of Score views, used in {@code ScoreStyle}. */
 public enum ScoreType {
-    NPS("nps");
+    NUMBER_RANGE("number_range");
 
     @NonNull
     private final String value;

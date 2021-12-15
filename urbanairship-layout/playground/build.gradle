@@ -10,8 +10,6 @@ buildscript {
         google()
         mavenCentral()
         gradlePluginPortal()
-        // For spoon snapshots
-        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     }
 
     dependencies {
@@ -72,6 +70,7 @@ android {
 
 dependencies {
     implementation project(":urbanairship-layout")
+    implementation project(":urbanairship-automation")
 
     implementation "androidx.core:core-ktx:${rootProject.androidxCoreVersion}"
     implementation "androidx.appcompat:appcompat:${rootProject.androidxAppCompatVersion}"

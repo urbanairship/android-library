@@ -19,6 +19,7 @@ import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.iam.InAppActionUtils
 
 class MainActivity : AppCompatActivity() {
 
@@ -97,6 +98,7 @@ class MainActivity : AppCompatActivity() {
             val payload = BasePayload.fromJson(jsonMap)
             Thomas.prepareDisplay(payload)
                 .setListener(thomasListener)
+                .setActionsRunner(InAppActionUtils::runActions)
                 .display(this)
         } catch (e: Exception) {
             Logger.error(e)

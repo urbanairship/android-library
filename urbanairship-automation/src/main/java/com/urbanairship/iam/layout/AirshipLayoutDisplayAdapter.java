@@ -19,6 +19,7 @@ import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.android.layout.util.UrlInfo;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.ForegroundDisplayAdapter;
+import com.urbanairship.iam.InAppActionUtils;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.InAppMessageWebViewClient;
@@ -56,7 +57,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
     }
 
-    private static DisplayRequestCallback DEFAULT_CALLBACK = Thomas::prepareDisplay;
+    private static final DisplayRequestCallback DEFAULT_CALLBACK = Thomas::prepareDisplay;
 
     private final InAppMessage message;
     private final AirshipLayoutDisplayContent displayContent;
@@ -167,6 +168,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         this.displayRequest.setListener(new Listener(message, displayHandler))
                            .setImageCache(new AssetImageCache(assetCacheMap))
                            .setWebViewClientFactory(() -> new InAppMessageWebViewClient(message))
+                           .setActionsRunner(InAppActionUtils::runActions)
                            .display(context);
     }
 
@@ -276,7 +278,5 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
             displayHandler.addEvent(event);
         }
-
     }
-
 }

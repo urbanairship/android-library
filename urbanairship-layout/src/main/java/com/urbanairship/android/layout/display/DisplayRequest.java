@@ -6,6 +6,7 @@ import android.content.Context;
 
 import com.urbanairship.android.layout.BasePayload;
 import com.urbanairship.android.layout.ThomasListener;
+import com.urbanairship.android.layout.util.ActionsRunner;
 import com.urbanairship.android.layout.util.Factory;
 import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.webkit.AirshipWebViewClient;
@@ -25,6 +26,7 @@ public class DisplayRequest {
     private ThomasListener listener;
     private ImageCache imageCache;
     private Factory<AirshipWebViewClient> webViewClientFactory;
+    private ActionsRunner actionsRunner;
 
     public interface Callback {
         void display(@NonNull Context context, @NonNull DisplayArgs args);
@@ -54,8 +56,14 @@ public class DisplayRequest {
         return this;
     }
 
+    @NonNull
+    public DisplayRequest setActionsRunner(@Nullable ActionsRunner actionsRunner) {
+        this.actionsRunner = actionsRunner;
+        return this;
+    }
+
     public void display(@NonNull Context context) {
-        DisplayArgs args = new DisplayArgs(payload, listener, webViewClientFactory, imageCache);
+        DisplayArgs args = new DisplayArgs(payload, listener, webViewClientFactory, imageCache, actionsRunner);
         callback.display(context, args);
     }
 }

@@ -27,17 +27,20 @@ public class ModalPresentation extends BasePresentation {
     @Nullable
     private final List<ModalPlacementSelector> placementSelectors;
     private final boolean dismissOnTouchOutside;
+    private final boolean disableBackButton;
 
     public ModalPresentation(
         @NonNull ModalPlacement defaultPlacement,
         @Nullable List<ModalPlacementSelector> placementSelectors,
-        boolean dismissOnTouchOutside
+        boolean dismissOnTouchOutside,
+        boolean disableBackButton
     ) {
         super(PresentationType.MODAL);
 
         this.defaultPlacement = defaultPlacement;
         this.placementSelectors = placementSelectors;
         this.dismissOnTouchOutside = dismissOnTouchOutside;
+        this.disableBackButton = disableBackButton;
     }
 
     @NonNull
@@ -52,8 +55,9 @@ public class ModalPresentation extends BasePresentation {
             placementSelectorsJson.isEmpty() ? null : ModalPlacementSelector.fromJsonList(placementSelectorsJson);
 
         boolean dismissOnTouchOutside = json.opt("dismiss_on_touch_outside").getBoolean(false);
+        boolean disableBackButton = json.opt("disable_back_button").getBoolean(false);
 
-        return new ModalPresentation(defaultPlacement, placementSelectors, dismissOnTouchOutside);
+        return new ModalPresentation(defaultPlacement, placementSelectors, dismissOnTouchOutside, disableBackButton);
     }
 
     @NonNull
@@ -68,6 +72,10 @@ public class ModalPresentation extends BasePresentation {
 
     public boolean isDismissOnTouchOutside() {
         return dismissOnTouchOutside;
+    }
+
+    public boolean isDisableBackButton() {
+        return disableBackButton;
     }
 
     @NonNull
