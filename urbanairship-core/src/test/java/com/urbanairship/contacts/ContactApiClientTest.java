@@ -190,6 +190,27 @@ public class ContactApiClientTest extends BaseTestCase {
         assertEquals("fake_channel_id", response.getResult());
     }
 
+
+    /**
+     * Test uninstall email channel request succeeds if status is 200.
+     */
+    @Test
+    public void testUninstallEmail() throws RequestException, JsonException {
+        testRequest.responseBody = "{ \"ok\": true }";
+        testRequest.responseStatus = 200;
+
+        JsonMap expected = JsonMap.newBuilder()
+                                  .put("email_address", fakeEmail)
+                                  .build();
+
+        Response<Void> response = client.uninstallEmail(fakeEmail);
+
+        assertEquals(200, response.getStatus());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://example.com/api/channels/email/uninstall", testRequest.getUrl().toString());
+        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
+    }
+
     /**
      * Test register sms channel request succeeds if status is 200.
      */
@@ -244,6 +265,28 @@ public class ContactApiClientTest extends BaseTestCase {
         assertEquals(200, response.getStatus());
         assertEquals("PUT", testRequest.getRequestMethod());
         assertEquals("https://example.com/api/channels/sms/fake_channel_id", testRequest.getUrl().toString());
+        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
+    }
+
+
+    /**
+     * Test uninstall sms channel request succeeds if status is 200.
+     */
+    @Test
+    public void testUninstallSms() throws RequestException, JsonException {
+        testRequest.responseBody = "{ \"ok\": true }";
+        testRequest.responseStatus = 200;
+
+        JsonMap expected = JsonMap.newBuilder()
+                                  .put("sender", "55555")
+                                  .put("msisdn", "123456789")
+                                  .build();
+
+        Response<Void> response = client.uninstallSms("123456789","55555");
+
+        assertEquals(200, response.getStatus());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://example.com/api/channels/sms/uninstall", testRequest.getUrl().toString());
         assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
     }
 

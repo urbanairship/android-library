@@ -45,6 +45,7 @@ class ContactApiClient {
     private static final String UPDATE_PATH = "api/contacts/";
     private static final String EMAIL_PATH = "api/channels/email/";
     private static final String SMS_PATH = "api/channels/sms/";
+    private static final String UNINSTALL_PATH = "uninstall";
 
 
     private static final String NAMED_USER_ID = "named_user_id";
@@ -64,6 +65,7 @@ class ContactApiClient {
     private static final String TRANSACTIONAL_OPTED_OUT = "transactional_opted_out";
     private static final String TIMEZONE = "timezone";
     private static final String ADDRESS = "address";
+    private static final String EMAIL_ADDRESS = "email_address";
     private static final String LOCALE_COUNTRY = "locale_country";
     private static final String LOCALE_LANGUAGE = "locale_language";
     private static final String MSISDN_KEY = "msisdn";
@@ -222,7 +224,27 @@ class ContactApiClient {
     }
 
     @NonNull
-    Response<String> registerSms(@NonNull String msisdn, @NonNull String sender, @Nullable boolean optinStatus) throws RequestException {
+    Response<Void> uninstallEmail(@NonNull String emailAddress) throws RequestException {
+        Uri url = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(EMAIL_PATH + UNINSTALL_PATH)
+                               .build();
+
+        JsonMap payload = JsonMap.newBuilder()
+                                 .put(EMAIL_ADDRESS, emailAddress)
+                                 .build();
+
+        return requestFactory.createRequest()
+                             .setOperation("POST", url)
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(payload)
+                             .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
+                             .execute();
+    }
+
+    @NonNull
+    Response<String> registerSms(@NonNull String msisdn, @NonNull String sender, @NonNull boolean optinStatus) throws RequestException {
         Uri url = runtimeConfig.getUrlConfig()
                                .deviceUrl()
                                .appendEncodedPath(SMS_PATH)
@@ -258,7 +280,7 @@ class ContactApiClient {
     }
 
     @NonNull
-    Response<Void> updateSms(@NonNull String msisdn, @NonNull String sender, @Nullable boolean optinStatus, @NonNull String channelId) throws RequestException {
+    Response<Void> updateSms(@NonNull String msisdn, @NonNull String sender, @NonNull boolean optinStatus, @NonNull String channelId) throws RequestException {
         Uri url = runtimeConfig.getUrlConfig()
                                .deviceUrl()
                                .appendEncodedPath(SMS_PATH + channelId)
@@ -281,6 +303,27 @@ class ContactApiClient {
 
         return requestFactory.createRequest()
                              .setOperation("PUT", url)
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(payload)
+                             .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
+                             .execute();
+    }
+
+    @NonNull
+    Response<Void> uninstallSms(@NonNull String msisdn, @NonNull String sender) throws RequestException {
+        Uri url = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(SMS_PATH + UNINSTALL_PATH)
+                               .build();
+
+        JsonMap payload = JsonMap.newBuilder()
+                                 .put(SENDER_KEY, sender)
+                                 .put(MSISDN_KEY, msisdn)
+                                 .build();
+
+        return requestFactory.createRequest()
+                             .setOperation("POST", url)
                              .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
                              .setRequestBody(payload)
                              .setAirshipJsonAcceptsHeader()
