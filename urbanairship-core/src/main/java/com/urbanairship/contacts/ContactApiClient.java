@@ -46,6 +46,7 @@ class ContactApiClient {
     private static final String EMAIL_PATH = "api/channels/email/";
     private static final String SMS_PATH = "api/channels/sms/";
     private static final String UNINSTALL_PATH = "uninstall";
+    private static final String OPTOUT_PATH = "opt-out";
 
 
     private static final String NAMED_USER_ID = "named_user_id";
@@ -277,6 +278,27 @@ class ContactApiClient {
                                  }
                                  return null;
                              });
+    }
+
+    @NonNull
+    Response<Void> optOutSms(@NonNull String msisdn, @NonNull String sender) throws RequestException {
+        Uri url = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(SMS_PATH + OPTOUT_PATH)
+                               .build();
+
+        JsonMap payload = JsonMap.newBuilder()
+                                 .put(MSISDN_KEY, msisdn)
+                                 .put(SENDER_KEY, sender)
+                                 .build();
+
+        return requestFactory.createRequest()
+                             .setOperation("POST", url)
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(payload)
+                             .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
+                             .execute();
     }
 
     @NonNull

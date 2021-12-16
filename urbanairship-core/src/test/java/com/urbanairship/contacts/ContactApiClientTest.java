@@ -268,6 +268,27 @@ public class ContactApiClientTest extends BaseTestCase {
         assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
     }
 
+    /**
+     * Test optout sms channel request succeeds if status is 200.
+     */
+    @Test
+    public void testOptOutSms() throws RequestException, JsonException {
+        testRequest.responseBody = "{ \"ok\": true }";
+        testRequest.responseStatus = 200;
+
+        JsonMap expected = JsonMap.newBuilder()
+                                  .put("sender", "55555")
+                                  .put("msisdn", "123456789")
+                                  .build();
+
+        Response<Void> response = client.optOutSms("123456789","55555");
+
+        assertEquals(200, response.getStatus());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://example.com/api/channels/sms/opt-out", testRequest.getUrl().toString());
+        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
+    }
+
 
     /**
      * Test uninstall sms channel request succeeds if status is 200.
