@@ -4,6 +4,7 @@ package com.urbanairship.contacts;
 
 import android.net.Uri;
 
+import androidx.annotation.AnyRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -22,8 +23,13 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.PlatformUtils;
 import com.urbanairship.util.UAHttpStatusUtil;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * A high level abstraction for performing Contact API requests.
@@ -37,16 +43,32 @@ class ContactApiClient {
     private static final String IDENTIFY_PATH = "api/contacts/identify/";
     private static final String RESET_PATH = "api/contacts/reset/";
     private static final String UPDATE_PATH = "api/contacts/";
+    private static final String EMAIL_PATH = "api/channels/email/";
+    private static final String SMS_PATH = "api/channels/sms/";
+
 
     private static final String NAMED_USER_ID = "named_user_id";
     private static final String CHANNEL_ID = "channel_id";
+    private static final String CHANNEL_KEY = "channel";
     private static final String DEVICE_TYPE = "device_type";
+    private static final String TYPE = "type";
     private static final String CONTACT_ID = "contact_id";
     private static final String IS_ANONYMOUS = "is_anonymous";
     private static final String TAGS = "tags";
     private static final String ATTRIBUTES = "attributes";
     private static final String TAG_WARNINGS= "tag_warnings";
     private static final String ATTRIBUTE_WARNINGS= "attribute_warnings";
+    private static final String COMMERCIAL_OPTED_IN = "commercial_opted_in";
+    private static final String COMMERCIAL_OPTED_OUT = "commercial_opted_out";
+    private static final String TRANSACTIONAL_OPTED_IN = "transactional_opted_in";
+    private static final String TRANSACTIONAL_OPTED_OUT = "transactional_opted_out";
+    private static final String TIMEZONE = "timezone";
+    private static final String ADDRESS = "address";
+    private static final String LOCALE_COUNTRY = "locale_country";
+    private static final String LOCALE_LANGUAGE = "locale_language";
+    private static final String MSISDN_KEY = "msisdn";
+    private static final String SENDER_KEY = "sender";
+    private static final String OPTED_IN_KEY = "opted_in";
 
     ContactApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
         this(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY);
@@ -128,6 +150,144 @@ class ContactApiClient {
                     }
                 });
     }
+
+    @NonNull
+    Response<String> registerEmail(@NonNull String emailAddress, @Nullable String optInOption) throws RequestException {
+        Uri url = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(EMAIL_PATH)
+                               .build();
+
+        JsonMap.Builder builder = JsonMap.newBuilder()
+                .put(TYPE, "email")
+                .put(ADDRESS, emailAddress)
+                .put(TIMEZONE, TimeZone.getDefault().getID())
+                .put(LOCALE_LANGUAGE, Locale.getDefault().getLanguage())
+                .put(LOCALE_COUNTRY, Locale.getDefault().getCountry());
+
+                if (optInOption != null) {
+                    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                    String date = df.format(Calendar.getInstance().getTime());
+                    builder.put(optInOption, date);
+                }
+
+        JsonMap payloadContent = builder.build();
+
+        JsonMap payload = JsonMap.newBuilder()
+                            .put(CHANNEL_KEY, payloadContent)
+                            .build();
+
+        return requestFactory.createRequest()
+                .setOperation("POST", url)
+                .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                .setRequestBody(payload)
+                .setAirshipJsonAcceptsHeader()
+                .setAirshipUserAgent(runtimeConfig)
+                .execute((status, headers, responseBody) -> {
+                    if (UAHttpStatusUtil.inSuccessRange(status)) {
+                        return JsonValue.parseString(responseBody).optMap().opt(CHANNEL_ID).getString();
+                    }
+                    return null;
+                });
+    }
+
+    @NonNull
+    Response<String> updateEmail(@NonNull String emailAddress, @NonNull String channelId) throws RequestException {
+        Uri url = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(EMAIL_PATH + channelId)
+                               .build();
+
+        JsonMap payloadContent = JsonMap.newBuilder()
+                                         .put(TYPE, "email")
+                                         .put(ADDRESS, emailAddress)
+                                         .build();
+
+        JsonMap payload = JsonMap.newBuilder()
+                                 .put(CHANNEL_KEY, payloadContent)
+                                 .build();
+
+        return requestFactory.createRequest()
+                             .setOperation("PUT", url)
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(payload)
+                             .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
+                             .execute((status, headers, responseBody) -> {
+                                 if (UAHttpStatusUtil.inSuccessRange(status)) {
+                                     return JsonValue.parseString(responseBody).optMap().opt(CHANNEL_ID).getString();
+                                 }
+                                 return null;
+                             });
+    }
+
+    @NonNull
+    Response<String> registerSms(@NonNull String msisdn, @NonNull String sender, @Nullable boolean optinStatus) throws RequestException {
+        Uri url = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(SMS_PATH)
+                               .build();
+
+        JsonMap.Builder builder = JsonMap.newBuilder()
+                                         .put(MSISDN_KEY, msisdn)
+                                         .put(SENDER_KEY, sender)
+                                         .put(TIMEZONE, TimeZone.getDefault().getID())
+                                         .put(LOCALE_LANGUAGE, Locale.getDefault().getLanguage())
+                                         .put(LOCALE_COUNTRY, Locale.getDefault().getCountry());
+
+        if (optinStatus) {
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            String date = df.format(Calendar.getInstance().getTime());
+            builder.put(OPTED_IN_KEY, date);
+        }
+
+        JsonMap payload = builder.build();
+
+        return requestFactory.createRequest()
+                             .setOperation("POST", url)
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(payload)
+                             .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
+                             .execute((status, headers, responseBody) -> {
+                                 if (UAHttpStatusUtil.inSuccessRange(status)) {
+                                     return JsonValue.parseString(responseBody).optMap().opt(CHANNEL_ID).getString();
+                                 }
+                                 return null;
+                             });
+    }
+
+    @NonNull
+    Response<Void> updateSms(@NonNull String msisdn, @NonNull String sender, @Nullable boolean optinStatus, @NonNull String channelId) throws RequestException {
+        Uri url = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(SMS_PATH + channelId)
+                               .build();
+
+        JsonMap.Builder builder = JsonMap.newBuilder()
+                                         .put(MSISDN_KEY, msisdn)
+                                         .put(SENDER_KEY, sender)
+                                         .put(TIMEZONE, TimeZone.getDefault().getID())
+                                         .put(LOCALE_LANGUAGE, Locale.getDefault().getLanguage())
+                                         .put(LOCALE_COUNTRY, Locale.getDefault().getCountry());
+
+        if (optinStatus) {
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            String date = df.format(Calendar.getInstance().getTime());
+            builder.put(OPTED_IN_KEY, date);
+        }
+
+        JsonMap payload = builder.build();
+
+        return requestFactory.createRequest()
+                             .setOperation("PUT", url)
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setRequestBody(payload)
+                             .setAirshipJsonAcceptsHeader()
+                             .setAirshipUserAgent(runtimeConfig)
+                             .execute();
+    }
+
 
     @NonNull
     Response<ContactIdentity> reset(@NonNull String channelId) throws RequestException {
