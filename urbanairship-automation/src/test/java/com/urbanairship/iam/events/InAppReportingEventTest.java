@@ -252,8 +252,8 @@ public class InAppReportingEventTest {
                                                         .put("message_id", "schedule ID")
                                                         .build())
                                       .put("pager_identifier", "pager id")
-                                      .put("to_index", 1)
-                                      .put("from_index", 0)
+                                      .put("to_page_index", 1)
+                                      .put("from_page_index", 0)
                                       .build();
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_PAGE_SWIPE, expectedData)));

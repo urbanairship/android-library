@@ -53,8 +53,8 @@ public class InAppReportingEvent {
     private static final String PAGER_INDEX = "page_index";
     private static final String PAGER_COUNT = "page_count";
     private static final String PAGER_COMPLETED = "completed";
-    private static final String PAGER_TO_INDEX = "to_index";
-    private static final String PAGER_FROM_INDEX = "from_index";
+    private static final String PAGER_TO_INDEX = "to_page_index";
+    private static final String PAGER_FROM_INDEX = "from_page_index";
 
     // Button keys
     private static final String BUTTON_IDENTIFIER = "button_identifier";
