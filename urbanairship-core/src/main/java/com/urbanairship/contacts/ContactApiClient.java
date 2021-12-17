@@ -60,10 +60,6 @@ class ContactApiClient {
     private static final String ATTRIBUTES = "attributes";
     private static final String TAG_WARNINGS= "tag_warnings";
     private static final String ATTRIBUTE_WARNINGS= "attribute_warnings";
-    private static final String COMMERCIAL_OPTED_IN = "commercial_opted_in";
-    private static final String COMMERCIAL_OPTED_OUT = "commercial_opted_out";
-    private static final String TRANSACTIONAL_OPTED_IN = "transactional_opted_in";
-    private static final String TRANSACTIONAL_OPTED_OUT = "transactional_opted_out";
     private static final String TIMEZONE = "timezone";
     private static final String ADDRESS = "address";
     private static final String EMAIL_ADDRESS = "email_address";
@@ -72,6 +68,13 @@ class ContactApiClient {
     private static final String MSISDN_KEY = "msisdn";
     private static final String SENDER_KEY = "sender";
     private static final String OPTED_IN_KEY = "opted_in";
+
+    public enum EmailType {
+        COMMERCIAL_OPTED_IN,
+        COMMERCIAL_OPTED_OUT,
+        TRANSACTIONAL_OPTED_IN,
+        TRANSACTIONAL_OPTED_OUT
+    }
 
     ContactApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
         this(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY);
@@ -155,7 +158,7 @@ class ContactApiClient {
     }
 
     @NonNull
-    Response<String> registerEmail(@NonNull String emailAddress, @Nullable String optInOption) throws RequestException {
+    Response<String> registerEmail(@NonNull String emailAddress, @Nullable EmailType optInOption) throws RequestException {
         Uri url = runtimeConfig.getUrlConfig()
                                .deviceUrl()
                                .appendEncodedPath(EMAIL_PATH)
@@ -171,7 +174,7 @@ class ContactApiClient {
                 if (optInOption != null) {
                     DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
                     String date = df.format(Calendar.getInstance().getTime());
-                    builder.put(optInOption, date);
+                    builder.put(optInOption.toString().toLowerCase(), date);
                 }
 
         JsonMap payloadContent = builder.build();

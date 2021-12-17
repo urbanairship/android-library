@@ -155,7 +155,7 @@ public class ContactApiClientTest extends BaseTestCase {
                                     .put("channel", payloadContent)
                                     .build();
 
-        Response<String> response = client.registerEmail(fakeEmail, "commercial_opted_in");
+        Response<String> response = client.registerEmail(fakeEmail, ContactApiClient.EmailType.COMMERCIAL_OPTED_IN);
 
         assertEquals(200, response.getStatus());
         assertEquals("POST", testRequest.getRequestMethod());
