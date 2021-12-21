@@ -158,7 +158,7 @@ class ContactApiClient {
     }
 
     @NonNull
-    Response<String> registerEmail(@NonNull String emailAddress, @Nullable EmailType optInOption) throws RequestException {
+    Response<String> registerEmail(@NonNull String emailAddress, @Nullable List<EmailType> optInOptions) throws RequestException {
         Uri url = runtimeConfig.getUrlConfig()
                                .deviceUrl()
                                .appendEncodedPath(EMAIL_PATH)
@@ -171,10 +171,13 @@ class ContactApiClient {
                 .put(LOCALE_LANGUAGE, Locale.getDefault().getLanguage())
                 .put(LOCALE_COUNTRY, Locale.getDefault().getCountry());
 
-                if (optInOption != null) {
+                if (optInOptions != null) {
                     DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
                     String date = df.format(Calendar.getInstance().getTime());
-                    builder.put(optInOption.toString().toLowerCase(), date);
+
+                    for (EmailType emailType : optInOptions) {
+                        builder.put(emailType.toString().toLowerCase(), date);
+                    }
                 }
 
         JsonMap payloadContent = builder.build();
@@ -198,16 +201,26 @@ class ContactApiClient {
     }
 
     @NonNull
-    Response<String> updateEmail(@NonNull String emailAddress, @NonNull String channelId) throws RequestException {
+    Response<String> updateEmail(@NonNull String emailAddress, @NonNull String channelId, @Nullable List<EmailType> optInOptions) throws RequestException {
         Uri url = runtimeConfig.getUrlConfig()
                                .deviceUrl()
                                .appendEncodedPath(EMAIL_PATH + channelId)
                                .build();
 
-        JsonMap payloadContent = JsonMap.newBuilder()
+        JsonMap.Builder builder = JsonMap.newBuilder()
                                          .put(TYPE, "email")
-                                         .put(ADDRESS, emailAddress)
-                                         .build();
+                                         .put(ADDRESS, emailAddress);
+
+        if (optInOptions != null) {
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            String date = df.format(Calendar.getInstance().getTime());
+
+            for (EmailType emailType : optInOptions) {
+                builder.put(emailType.toString().toLowerCase(), date);
+            }
+        }
+
+        JsonMap payloadContent = builder.build();
 
         JsonMap payload = JsonMap.newBuilder()
                                  .put(CHANNEL_KEY, payloadContent)
@@ -225,26 +238,6 @@ class ContactApiClient {
                                  }
                                  return null;
                              });
-    }
-
-    @NonNull
-    Response<Void> uninstallEmail(@NonNull String emailAddress) throws RequestException {
-        Uri url = runtimeConfig.getUrlConfig()
-                               .deviceUrl()
-                               .appendEncodedPath(EMAIL_PATH + UNINSTALL_PATH)
-                               .build();
-
-        JsonMap payload = JsonMap.newBuilder()
-                                 .put(EMAIL_ADDRESS, emailAddress)
-                                 .build();
-
-        return requestFactory.createRequest()
-                             .setOperation("POST", url)
-                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                             .setRequestBody(payload)
-                             .setAirshipJsonAcceptsHeader()
-                             .setAirshipUserAgent(runtimeConfig)
-                             .execute();
     }
 
     @NonNull
@@ -334,28 +327,6 @@ class ContactApiClient {
                              .setAirshipUserAgent(runtimeConfig)
                              .execute();
     }
-
-    @NonNull
-    Response<Void> uninstallSms(@NonNull String msisdn, @NonNull String sender) throws RequestException {
-        Uri url = runtimeConfig.getUrlConfig()
-                               .deviceUrl()
-                               .appendEncodedPath(SMS_PATH + UNINSTALL_PATH)
-                               .build();
-
-        JsonMap payload = JsonMap.newBuilder()
-                                 .put(SENDER_KEY, sender)
-                                 .put(MSISDN_KEY, msisdn)
-                                 .build();
-
-        return requestFactory.createRequest()
-                             .setOperation("POST", url)
-                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                             .setRequestBody(payload)
-                             .setAirshipJsonAcceptsHeader()
-                             .setAirshipUserAgent(runtimeConfig)
-                             .execute();
-    }
-
 
     @NonNull
     Response<ContactIdentity> reset(@NonNull String channelId) throws RequestException {
