@@ -38,6 +38,9 @@ public class AirshipLayoutDisplayContent implements DisplayContent {
     @NonNull
     public static AirshipLayoutDisplayContent fromJson(@NonNull JsonValue value) throws JsonException {
         BasePayload basePayload = BasePayload.fromJson(value.optMap().opt(LAYOUT_KEY).optMap());
+        if (!Thomas.isValid(basePayload)) {
+            throw new JsonException("Invalid payload.");
+        }
         return new AirshipLayoutDisplayContent(value, basePayload);
     }
 

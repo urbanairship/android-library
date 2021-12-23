@@ -76,11 +76,34 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Thomas {
+    private static final int MAX_SUPPORTED_VERSION = 1;
+    private static final int MIN_SUPPORTED_VERSION = 1;
 
     private Thomas() {}
 
+    /**
+     * Validates that a payload can be displayed.
+     * @param payload The payload.
+     * @return {@code true} if valid, otherwise {@code false}.
+     */
+    public static boolean isValid(@NonNull BasePayload payload) {
+        if (!(payload.getVersion() >= MIN_SUPPORTED_VERSION && payload.getVersion() <= MAX_SUPPORTED_VERSION)) {
+            return false;
+        }
+
+        if (!(payload.getPresentation() instanceof ModalPresentation)) {
+          return false;
+        }
+
+        return true;
+    }
+
     @NonNull
     public static DisplayRequest prepareDisplay(@NonNull BasePayload payload) throws DisplayException {
+        if (!isValid(payload)) {
+            throw new DisplayException("Payload is not valid: " + payload.getPresentation());
+        }
+
         if (payload.getPresentation() instanceof ModalPresentation) {
             return new DisplayRequest(payload, (context, args) -> {
                 Intent intent = new Intent(context, ModalActivity.class)

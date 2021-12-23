@@ -58,4 +58,38 @@ public class AirshipLayoutDisplayContentTest  {
         JsonValue payload = JsonValue.parseString(payloadString);
         AirshipLayoutDisplayContent content = AirshipLayoutDisplayContent.fromJson(payload);
     }
+
+    @Test(expected = JsonException.class)
+    public void testInvalidVersion() throws JsonException {
+        String payloadString = "{\n" +
+                "    \"layout\": {\n" +
+                "        \"version\": 300,\n" +
+                "        \"presentation\": {\n" +
+                "          \"type\": \"modal\",\n" +
+                "          \"default_placement\": {\n" +
+                "            \"size\": {\n" +
+                "              \"width\": \"100%\",\n" +
+                "              \"height\": \"100%\"\n" +
+                "            },\n" +
+                "            \"position\": { \n" +
+                "                \"horizontal\": \"center\",\n" +
+                "                \"vertical\": \"center\" \n" +
+                "            },\n" +
+                "            \"shade_color\": {\n" +
+                "              \"default\": { \n" +
+                "                  \"type\": \"hex\", \n" +
+                "                  \"hex\": \"#000000\", \n" +
+                "                  \"alpha\": 0.2 }\n" +
+                "            }\n" +
+                "          }\n" +
+                "        },\n" +
+                "        \"view\": {\n" +
+                "            \"type\": \"empty_view\"\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+
+        JsonValue payload = JsonValue.parseString(payloadString);
+        AirshipLayoutDisplayContent.fromJson(payload);
+    }
 }

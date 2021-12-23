@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
@@ -53,6 +54,27 @@ public class ThomasTest {
         for(ContainerLayoutModel.Item item : view.getItems()) {
             assertNotSame(item.getView().getType(), ViewType.UNKNOWN);
         }
+    }
+
+    @Test
+    public void validateVersion() throws JsonException {
+        JsonMap json = readJsonMapResource("modal.json");
+        BasePayload validPayload = BasePayload.fromJson(json);
+        assertTrue(Thomas.isValid(validPayload));
+        assertEquals(1, validPayload.getVersion());
+
+        BasePayload versionZero = new BasePayload(0, validPayload.getPresentation(), validPayload.getView());
+        assertFalse(Thomas.isValid(versionZero));
+
+        BasePayload versionTwo = new BasePayload(2, validPayload.getPresentation(), validPayload.getView());
+        assertFalse(Thomas.isValid(versionTwo));
+    }
+
+    @Test
+    public void validatePresentation() throws JsonException {
+        JsonMap json = readJsonMapResource("banner.json");
+        BasePayload banner = BasePayload.fromJson(json);
+        assertFalse(Thomas.isValid(banner));
     }
 
     @SuppressWarnings("SameParameterValue")

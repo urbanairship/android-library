@@ -1,0 +1,211 @@
+{
+  "version": 1,
+  "context": {
+    "content_types": []
+  },
+  "presentation": {
+    "type": "banner",
+    "default_placement": {
+      "size": {
+        "width": "75%",
+        "height": "60%"
+      },
+      "position": "bottom"
+    }
+  },
+  "view": {
+    "type": "container",
+    "border": {
+      "stroke_color": {
+        "default": {
+          "hex": "#00FF00",
+          "alpha": 1
+        }
+      },
+      "stroke_width": 3
+    },
+    "background_color": {
+      "default": {
+        "hex": "#000000",
+        "alpha": 1
+      }
+    },
+    "items": [
+      {
+        "position": {
+          "horizontal": "center",
+          "vertical": "center"
+        },
+        "size": {
+          "height": "100%",
+          "width": "100%"
+        },
+        "view": {
+          "type": "linear_layout",
+          "direction": "vertical",
+          "items": [
+            {
+              "size": {
+                "width": "100%",
+                "height": "100%"
+              },
+              "view": {
+                "type": "scroll_layout",
+                "direction": "vertical",
+                "view": {
+                  "type": "linear_layout",
+                  "direction": "vertical",
+                  "items": [
+                    {
+                      "position": {
+                        "horizontal": "center",
+                        "vertical": "center"
+                      },
+                      "margin": {
+                        "top": 8,
+                        "bottom": 8,
+                        "start": 8,
+                        "end": 8
+                      },
+                      "size": {
+                        "width": "100%",
+                        "height": "auto"
+                      },
+                      "view": {
+                        "type": "label",
+                        "text": "World Wide Web",
+                        "text_appearance": {
+                          "color": {
+                            "default": {
+                              "hex": "#00FF00",
+                              "alpha": 1
+                            }
+                          },
+                          "alignment": "start",
+                          "font_size": 24,
+                          "font_styles": [
+                            "bold"
+                          ],
+                          "font_families": [
+                            "geo",
+                            "casual"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "position": {
+                        "horizontal": "center",
+                        "vertical": "center"
+                      },
+                      "margin": {
+                        "bottom": 8,
+                        "start": 8,
+                        "end": 8
+                      },
+                      "size": {
+                        "width": "100%",
+                        "height": "auto"
+                      },
+                      "view": {
+                        "type": "label",
+                        "text": "The World Wide Web (WWW), commonly known as the Web, is an information system where documents and other web resources are identified by Uniform Resource Locators (URLs), which may be interlinked by hyperlinks, and are accessible over the Internet. The resources of the Web are transferred via the Hypertext Transfer Protocol (HTTP), may be accessed by users by a software application called a web browser, and are published by a software application called a web server. The World Wide Web is not synonymous with the Internet, which pre-dated the Web in some form by over two decades and upon the technologies of which the Web is built.",
+                        "text_appearance": {
+                          "color": {
+                            "default": {
+                              "hex": "#00FF00",
+                              "alpha": 1
+                            }
+                          },
+                          "alignment": "start",
+                          "font_size": 16,
+                          "font_families": [
+                            "geo",
+                            "casual"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "position": {
+                        "horizontal": "center",
+                        "vertical": "center"
+                      },
+                      "margin": {
+                        "bottom": 8,
+                        "start": 8,
+                        "end": 8
+                      },
+                      "size": {
+                        "width": "100%",
+                        "height": "auto"
+                      },
+                      "view": {
+                        "type": "label",
+                        "text": "English scientist Tim Berners-Lee invented the World Wide Web in 1989. He wrote the first web browser in 1990 while employed at CERN near Geneva, Switzerland. The browser was released outside CERN to other research institutions starting in January 1991, and then to the general public in August 1991. The Web began to enter everyday use in 1993–4, when websites for general use started to become available. The World Wide Web has been central to the development of the Information Age, and is the primary tool billions of people use to interact on the Internet.",
+                        "text_appearance": {
+                          "color": {
+                            "default": {
+                              "hex": "#00FF00",
+                              "alpha": 1
+                            }
+                          },
+                          "alignment": "start",
+                          "font_size": 16,
+                          "font_families": [
+                            "geo",
+                            "casual"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "size": {
+                "width": "100%",
+                "height": "auto"
+              },
+              "view": {
+                "type": "label_button",
+                "identifier": "BUTTON",
+                "button_click": [
+                  "dismiss"
+                ],
+                "background_color": {
+                  "default": {
+                    "hex": "#00FF00",
+                    "alpha": 1
+                  }
+                },
+                "label": {
+                  "type": "label",
+                  "font_size": 24,
+                  "text_appearance": {
+                    "color": {
+                      "default": {
+                        "hex": "#000000",
+                        "alpha": 1
+                      }
+                    },
+                    "text_styles": [
+                      "bold"
+                    ],
+                    "font_families": [
+                      "fake_font_that_doesnt_exist",
+                      "geo",
+                      "casual"
+                    ]
+                  },
+                  "text": "Dial Modem"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
