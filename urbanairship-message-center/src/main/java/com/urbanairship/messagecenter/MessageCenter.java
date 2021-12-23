@@ -2,13 +2,22 @@
 
 package com.urbanairship.messagecenter;
 
+import static com.urbanairship.PrivacyManager.FEATURE_MESSAGE_CENTER;
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
@@ -23,14 +32,6 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
-import static com.urbanairship.PrivacyManager.FEATURE_MESSAGE_CENTER;
 
 /**
  * Airship Message Center.
@@ -159,7 +160,12 @@ public class MessageCenter extends AirshipComponent {
         privacyManager.addListener(new PrivacyManager.Listener() {
             @Override
             public void onEnabledFeaturesChanged() {
-                updateInboxEnabledState();
+                AirshipExecutors.newSerialExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateInboxEnabledState();
+                    }
+                });
             }
         });
 

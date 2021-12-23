@@ -6,6 +6,12 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Cancelable;
@@ -37,12 +43,6 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
 /**
  * The inbox provides access to the device's local inbox data.
@@ -744,6 +744,7 @@ public class Inbox {
         if (notify) {
             notifyInboxUpdated();
         }
+
     }
 
     /**
