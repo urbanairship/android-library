@@ -20,9 +20,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.lang.reflect.Array;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -33,6 +39,7 @@ public class ContactApiClientTest extends BaseTestCase {
     private final String fakeNamedUserId = "fake-named-user-id";
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String fakeContactId = "fake_contact_id";
+    private final String fakeEmail = "fake@email.com";
     private ContactApiClient client;
     private TestRequest testRequest;
     private TestAirshipRuntimeConfig runtimeConfig;
@@ -110,10 +117,10 @@ public class ContactApiClientTest extends BaseTestCase {
         testRequest.responseStatus = 200;
 
         JsonMap expected = JsonMap.newBuilder()
-                .put("named_user_id", fakeNamedUserId)
-                .put("channel_id", fakeChannelId)
-                .put("device_type", "android")
-                .build();
+                                  .put("named_user_id", fakeNamedUserId)
+                                  .put("channel_id", fakeChannelId)
+                                  .put("device_type", "android")
+                                  .build();
 
         Response<ContactIdentity> response = client.identify(fakeNamedUserId, fakeChannelId, null);
 
@@ -123,6 +130,153 @@ public class ContactApiClientTest extends BaseTestCase {
         assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
         assertEquals("fake_contact_id", response.getResult().getContactId());
         assertEquals(false, response.getResult().isAnonymous());
+    }
+
+    /**
+     * Test register email channel request succeeds if status is 200.
+     */
+    @Test
+    public void testRegisterEmailSucceeds() throws RequestException, JsonException {
+        testRequest.responseBody = "{ \"ok\": true, \"channel_id\": \"fake_channel_id\"}";
+        testRequest.responseStatus = 200;
+
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        String date = df.format(Calendar.getInstance().getTime());
+
+        JsonMap payloadContent = JsonMap.newBuilder()
+                                  .put("type", "email")
+                                  .put("commercial_opted_in", date)
+                                  .put("address", fakeEmail)
+                                  .put("timezone", TimeZone.getDefault().getID())
+                                  .put("locale_country", "US")
+                                  .put("locale_language", "en")
+                                  .build();
+
+        JsonMap expected = JsonMap.newBuilder()
+                                    .put("channel", payloadContent)
+                                    .build();
+
+        ArrayList<ContactApiClient.EmailType> optinStatus = new ArrayList<>();
+        optinStatus.add(ContactApiClient.EmailType.COMMERCIAL_OPTED_IN);
+
+        Response<String> response = client.registerEmail(fakeEmail, optinStatus);
+
+        assertEquals(200, response.getStatus());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://example.com/api/channels/email/", testRequest.getUrl().toString());
+        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
+        assertEquals("fake_channel_id", response.getResult());
+    }
+
+    /**
+     * Test update email channel request succeeds if status is 200.
+     */
+    @Test
+    public void testUpdateEmailSucceeds() throws RequestException, JsonException {
+        testRequest.responseBody = "{ \"ok\": true, \"channel_id\": \"fake_channel_id\"}";
+        testRequest.responseStatus = 200;
+
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        String date = df.format(Calendar.getInstance().getTime());
+
+        JsonMap contentPayload = JsonMap.newBuilder()
+                                        .put("type", "email")
+                                        .put("address", fakeEmail)
+                                        .put("commercial_opted_in", date)
+                                        .build();
+
+        JsonMap expected = JsonMap.newBuilder()
+                                    .put("channel", contentPayload)
+                                    .build();
+
+        ArrayList<ContactApiClient.EmailType> optinStatus = new ArrayList<>();
+        optinStatus.add(ContactApiClient.EmailType.COMMERCIAL_OPTED_IN);
+
+        Response<String> response = client.updateEmail(fakeEmail, "fake_channel_id", optinStatus);
+
+        assertEquals(200, response.getStatus());
+        assertEquals("PUT", testRequest.getRequestMethod());
+        assertEquals("https://example.com/api/channels/email/fake_channel_id", testRequest.getUrl().toString());
+        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
+        assertEquals("fake_channel_id", response.getResult());
+    }
+
+    /**
+     * Test register sms channel request succeeds if status is 200.
+     */
+    @Test
+    public void testRegisterSmsSucceeds() throws RequestException, JsonException {
+        testRequest.responseBody = "{ \"ok\": true, \"operation_id\": \"fake_operation_id\", \"channel_id\": \"fake_channel_id\"}";
+        testRequest.responseStatus = 200;
+
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        String date = df.format(Calendar.getInstance().getTime());
+
+        JsonMap expected = JsonMap.newBuilder()
+                                        .put("msisdn", "123456789")
+                                        .put("sender", "28855")
+                                        .put("opted_in", date)
+                                        .put("timezone", TimeZone.getDefault().getID())
+                                        .put("locale_country", "US")
+                                        .put("locale_language", "en")
+                                        .build();
+
+        Response<String> response = client.registerSms("123456789", "28855", true);
+
+        assertEquals(200, response.getStatus());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://example.com/api/channels/sms/", testRequest.getUrl().toString());
+        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
+        assertEquals("fake_channel_id", response.getResult());
+    }
+
+    /**
+     * Test update sms channel request succeeds if status is 200.
+     */
+    @Test
+    public void testUpdateSmsSucceeds() throws RequestException, JsonException {
+        testRequest.responseBody = "{ \"ok\": true, \"channel_id\": \"fake_channel_id\"}";
+        testRequest.responseStatus = 200;
+
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        String date = df.format(Calendar.getInstance().getTime());
+
+        JsonMap expected = JsonMap.newBuilder()
+                                  .put("msisdn", "123456789")
+                                  .put("sender", "28855")
+                                  .put("opted_in", date)
+                                  .put("timezone", TimeZone.getDefault().getID())
+                                  .put("locale_country", "US")
+                                  .put("locale_language", "en")
+                                  .build();
+
+        Response<Void> response = client.updateSms("123456789", "28855", true, "fake_channel_id");
+
+        assertEquals(200, response.getStatus());
+        assertEquals("PUT", testRequest.getRequestMethod());
+        assertEquals("https://example.com/api/channels/sms/fake_channel_id", testRequest.getUrl().toString());
+        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
+    }
+
+    /**
+     * Test optout sms channel request succeeds if status is 200.
+     */
+    @Test
+    public void testOptOutSms() throws RequestException, JsonException {
+        testRequest.responseBody = "{ \"ok\": true }";
+        testRequest.responseStatus = 200;
+
+        JsonMap expected = JsonMap.newBuilder()
+                                  .put("sender", "55555")
+                                  .put("msisdn", "123456789")
+                                  .build();
+
+        Response<Void> response = client.optOutSms("123456789","55555");
+
+        assertEquals(200, response.getStatus());
+        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://example.com/api/channels/sms/opt-out", testRequest.getUrl().toString());
+        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
     }
 
     /**
