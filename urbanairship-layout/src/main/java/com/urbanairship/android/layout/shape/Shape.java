@@ -3,14 +3,12 @@
 package com.urbanairship.android.layout.shape;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.StateSet;
 
-import com.google.android.material.shape.MaterialShapeDrawable;
-import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.Image;
@@ -27,11 +25,11 @@ import androidx.annotation.RestrictTo;
 import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 
 /**
- * Base representation of a Shape.
+ * Representation of a Shape.
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public abstract class Shape {
+public class Shape {
     private static final int[] CHECKED_STATE_SET = { android.R.attr.state_checked };
     private static final int[] EMPTY_STATE_SET = StateSet.NOTHING;
 
@@ -55,24 +53,14 @@ public abstract class Shape {
     @NonNull
     public static Shape fromJson(@NonNull JsonMap json) throws JsonException {
         String typeString = json.opt("type").optString();
+        ShapeType type = ShapeType.from(typeString);
+        float aspectRatio = json.opt("aspect_ratio").getFloat(1f);
+        float scale = json.opt("scale").getFloat(1f);
+        JsonMap borderJson = json.opt("border").optMap();
+        Border border = Border.fromJson(borderJson);
+        Color color = Color.fromJsonField(json, "color");
 
-        switch (ShapeType.from(typeString)) {
-            case RECTANGLE:
-                return Rectangle.fromJson(json);
-            case ELLIPSE:
-                return Ellipse.fromJson(json);
-        }
-
-        throw new JsonException("Failed to parse shape! Unknown type: " + typeString);
-    }
-
-    @NonNull
-    public static StateListDrawable buildStateListDrawable(
-        @NonNull Context context,
-        @NonNull List<Shape> checkedShapes,
-        @NonNull List<Shape> uncheckedShapes
-    ) {
-        return buildStateListDrawable(context, checkedShapes, uncheckedShapes, null, null);
+        return new Shape(type, aspectRatio, scale, border, color);
     }
 
     @NonNull
@@ -114,6 +102,27 @@ public abstract class Shape {
     }
 
     @NonNull
+    public Drawable getDrawable(@NonNull Context context) {
+        int strokeWidth = border != null && border.getStrokeWidth() != null
+            ? (int) dpToPx(context, border.getStrokeWidth())
+            : 0;
+        int strokeColor = border != null && border.getStrokeColor() != null
+            ? border.getStrokeColor().resolve(context)
+            : 0;
+        float radius = border != null && border.getRadius() != null
+            ? dpToPx(context, border.getRadius())
+            : 0;
+
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setShape(type.getDrawableShapeType());
+        drawable.setColor(color != null ? color.resolve(context) : Color.TRANSPARENT);
+        drawable.setStroke(strokeWidth, strokeColor);
+        drawable.setCornerRadius(radius);
+
+        return new ShapeDrawableWrapper(drawable, aspectRatio, scale);
+    }
+
+    @NonNull
     public ShapeType getType() {
         return type;
     }
@@ -135,28 +144,4 @@ public abstract class Shape {
     public float getScale() {
         return scale;
     }
-
-    @NonNull
-    public Drawable getDrawable(@NonNull Context context) {
-        MaterialShapeDrawable drawable = new MaterialShapeDrawable(buildShapeAppearanceModel(context));
-
-        if (getColor() != null) {
-            drawable.setFillColor(ColorStateList.valueOf(getColor().resolve(context)));
-        } else {
-            drawable.setFillColor(ColorStateList.valueOf(android.graphics.Color.TRANSPARENT));
-        }
-
-        if (border != null && border.getStrokeWidth() != null) {
-            drawable.setStrokeWidth(dpToPx(context, border.getStrokeWidth()));
-        }
-
-        if (border != null && border.getStrokeColor() != null) {
-            drawable.setStrokeColor(ColorStateList.valueOf(border.getStrokeColor().resolve(context)));
-        }
-
-        return new ShapeDrawableWrapper(drawable, aspectRatio, scale);
-    }
-
-    @NonNull
-    protected abstract ShapeAppearanceModel buildShapeAppearanceModel(@NonNull Context context);
 }

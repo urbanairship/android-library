@@ -22,6 +22,7 @@ import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.Fonts;
 import com.urbanairship.Logger;
+import com.urbanairship.android.layout.R;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.LabelButtonModel;
 import com.urbanairship.android.layout.model.LabelModel;
@@ -39,6 +40,7 @@ import java.util.List;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.Dimension;
+import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
@@ -68,8 +70,8 @@ public final class LayoutUtils {
     private static final float MATERIAL_ALPHA_LOW = 0.32f;
     private static final float MATERIAL_ALPHA_DISABLED = 0.38f;
 
-    private static final int[] CHECKED_STATE_SET = new int[]{ android.R.attr.state_checked };
-    private static final int[] EMPTY_STATE_SET = new int[]{ };
+    private static final String NBSP = "\u00A0";
+    private static final String NARROW_NBSP = "\u202F";
 
     private LayoutUtils() {}
 
@@ -119,6 +121,15 @@ public final class LayoutUtils {
         }
     }
 
+    public static void resetBorderAndBackground(@NonNull View view) {
+        view.setBackground(null);
+        view.setPadding(0,0,0,0);
+
+        if (view instanceof Clippable) {
+            ((Clippable) view).setClipPathBorderRadius(0);
+        }
+    }
+
     private static void mergeBackground(@NonNull View view, @NonNull Drawable drawable) {
         Drawable background = drawable;
         if (view.getBackground() != null) {
@@ -138,28 +149,62 @@ public final class LayoutUtils {
             ? Color.TRANSPARENT
             : model.getBackgroundColor().resolve(button.getContext());
         int pressedColor = ColorUtils.setAlphaComponent(textColor, Math.round(Color.alpha(textColor) * PRESSED_ALPHA_PERCENT));
+        int disabledColor = generateDisabledColor(backgroundColor);
         int strokeWidth = model.getBorder() == null || model.getBorder().getStrokeWidth() == null
             ? DEFAULT_STROKE_WIDTH_DPS
             : model.getBorder().getStrokeWidth();
         int strokeColor = model.getBorder() == null || model.getBorder().getStrokeColor() == null
             ? backgroundColor
             : model.getBorder().getStrokeColor().resolve(context);
+        int disabledStrokeColor = generateDisabledColor(strokeColor);
         int borderRadius = model.getBorder() == null || model.getBorder().getRadius() == null
             ? DEFAULT_BORDER_RADIUS
             : model.getBorder().getRadius();
 
-        button.setTextColor(textColor);
-        button.setBackgroundTintList(ColorStateList.valueOf(backgroundColor));
+        button.setBackgroundTintList(new ColorStateListBuilder()
+            .add(disabledColor, -android.R.attr.state_enabled)
+            .add(backgroundColor)
+            .build());
         button.setRippleColor(ColorStateList.valueOf(pressedColor));
-        button.setStrokeWidth((int) dpToPx(context, strokeWidth));
-        button.setStrokeColor(ColorStateList.valueOf(strokeColor));
+        int strokeWidthDp = (int) dpToPx(context, strokeWidth);
+        button.setStrokeWidth(strokeWidthDp);
+        if (strokeWidthDp > 0) {
+            addPadding(button, strokeWidthDp);
+        }
+        button.setStrokeColor(new ColorStateListBuilder()
+            .add(disabledStrokeColor, -android.R.attr.state_enabled)
+            .add(strokeColor)
+            .build());
         button.setCornerRadius((int) dpToPx(context, borderRadius));
     }
 
     public static void applyLabelModel(@NonNull TextView textView, @NonNull LabelModel label) {
-        applyTextAppearance(textView, label.getTextAppearance());
+        TextAppearance appearance = label.getTextAppearance();
+        String text = label.getText();
 
-        textView.setText(label.getText());
+        applyTextAppearance(textView, appearance);
+
+        // Work around TextView rendering issues that cause ends of lines to be clipped off when using certain
+        // fancy custom fonts that aren't measured properly. We use a full non-breaking space for italic text and a
+        // narrow non-breaking space for non-italic text to minimize the impact on the overall layout. The issue
+        // also occurs for end-justified multiline text, but that's a bit harder to address in a reasonable way, so
+        // we'll consider it an edge-case for now.
+        Fonts fonts = Fonts.shared(textView.getContext());
+        boolean isCustomFont = false;
+        for (String font : appearance.getFontFamilies()) {
+            if (!fonts.isSystemFont(font)) {
+                isCustomFont = true;
+                break;
+            }
+        }
+        boolean isItalic = appearance.getTextStyles().contains(TextStyle.ITALIC);
+        if (isCustomFont && isItalic) {
+            text += NBSP;
+        } else if (isCustomFont || isItalic) {
+            text += NARROW_NBSP;
+        }
+
+        textView.setText(text);
     }
 
     public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
@@ -185,7 +230,14 @@ public final class LayoutUtils {
         Context context = textView.getContext();
 
         textView.setTextSize(textAppearance.getFontSize());
-        textView.setTextColor(textAppearance.getColor().resolve(context));
+
+        int textColor = textAppearance.getColor().resolve(context);
+        int disabledTextColor = generateDisabledColor(Color.TRANSPARENT, textColor);
+
+        textView.setTextColor(new ColorStateListBuilder()
+            .add(disabledTextColor, -android.R.attr.state_enabled)
+            .add(textColor)
+            .build());
 
         int typefaceFlags = Typeface.NORMAL;
         int paintFlags = Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
@@ -258,11 +310,16 @@ public final class LayoutUtils {
         view.setTrackTintList(checkedColorStateList(trackOn, trackOff));
         view.setThumbTintList(checkedColorStateList(thumbOn, thumbOff));
 
+        view.setBackgroundResource(R.drawable.ua_layout_imagebutton_ripple);
+
         view.setGravity(Gravity.CENTER);
     }
 
     private static ColorStateList checkedColorStateList(@ColorInt int checkedColor, @ColorInt int normalColor) {
-        return new ColorStateList(new int[][]{ CHECKED_STATE_SET, EMPTY_STATE_SET }, new int[]{ checkedColor, normalColor} );
+        return new ColorStateListBuilder()
+            .add(checkedColor, android.R.attr.state_checked)
+            .add(normalColor)
+            .build();
     }
 
     public static void updateLayoutParams(@NonNull View view, Consumer<MarginLayoutParams> block) {
@@ -339,5 +396,36 @@ public final class LayoutUtils {
             view.getPaddingRight() + right,
             view.getPaddingBottom() + bottom
         );
+    }
+
+    @ColorInt
+    public static int generatePressedColor(@ColorInt int baseColor) {
+        return generatePressedColor(baseColor, Color.WHITE);
+    }
+
+    @ColorInt
+    public static int generateDisabledColor(@ColorInt int baseColor) {
+        return generateDisabledColor(baseColor, Color.WHITE);
+    }
+
+    @ColorInt
+    public static int generatePressedColor(@ColorInt int background, @ColorInt int foreground) {
+        return overlayColors(background, foreground, PRESSED_ALPHA_PERCENT);
+    }
+
+    @ColorInt
+    public static int generateDisabledColor(@ColorInt int background, @ColorInt int foreground) {
+        return overlayColors(background, foreground, MATERIAL_ALPHA_DISABLED);
+    }
+
+    @ColorInt
+    private static int overlayColors(
+        @ColorInt int backgroundColor,
+        @ColorInt int overlayColor,
+        @FloatRange(from = 0, to = 1) float overlayAlpha
+    ) {
+        int alpha = Math.round(Color.alpha(overlayColor) * overlayAlpha);
+        int overlay = ColorUtils.setAlphaComponent(overlayColor, alpha);
+        return ColorUtils.compositeColors(overlay, backgroundColor);
     }
 }

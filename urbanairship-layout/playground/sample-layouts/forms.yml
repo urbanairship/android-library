@@ -650,8 +650,10 @@ view:
                 default:
                   hex: "#ff0000"
               style:
-                type: nps
+                type: number_range
                 spacing: 3
+                start: 0
+                end: 10
                 bindings:
                   selected:
                     shapes:

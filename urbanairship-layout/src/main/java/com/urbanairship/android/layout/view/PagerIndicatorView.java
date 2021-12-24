@@ -8,7 +8,6 @@ import android.widget.Checkable;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.PagerIndicatorModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
@@ -80,7 +79,6 @@ public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIn
      */
     public void setCount(int count) {
         Context context = getContext();
-        Logger.debug("setCount: %s", count);
         if (getChildCount() > 0) {
             removeAllViews();
         }

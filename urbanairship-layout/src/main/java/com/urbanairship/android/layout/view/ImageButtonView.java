@@ -13,18 +13,19 @@ import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.model.ImageButtonModel;
 import com.urbanairship.android.layout.property.Image;
+import com.urbanairship.android.layout.util.ColorStateListBuilder;
 import com.urbanairship.android.layout.util.LayoutUtils;
+import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.images.ImageRequestOptions;
 import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.ColorInt;
-import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.core.content.ContextCompat;
 
-public class ImageButtonView extends AppCompatImageButton implements BaseView<ImageButtonModel> {
+public class ImageButtonView extends AppCompatImageButton implements BaseView<ImageButtonModel>, Recyclable {
     private ImageButtonModel model;
     private Environment environment;
 
@@ -50,6 +51,7 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
         setBackgroundDrawable(ripple);
         setClickable(true);
         setFocusable(true);
+        setPadding(0,0,0,0);
     }
 
     @NonNull
@@ -88,11 +90,19 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
                 break;
             case ICON:
                 Image.Icon icon = ((Image.Icon) image);
-                @DrawableRes int resId = icon.getDrawableRes();
-                @ColorInt int tint = icon.getTint().resolve(getContext());
+                setImageDrawable(icon.getDrawable(getContext()));
 
-                setImageResource(resId);
-                setImageTintList(ColorStateList.valueOf(tint));
+                @ColorInt int normalColor = icon.getTint().resolve(getContext());
+                @ColorInt int pressedColor = LayoutUtils.generatePressedColor(normalColor);
+                @ColorInt int disabledColor = LayoutUtils.generateDisabledColor(normalColor);
+
+                ColorStateList tintList = new ColorStateListBuilder()
+                    .add(pressedColor, android.R.attr.state_pressed)
+                    .add(disabledColor, -android.R.attr.state_enabled)
+                    .add(normalColor)
+                    .build();
+
+                setImageTintList(tintList);
                 break;
         }
 
@@ -105,4 +115,15 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
             ImageButtonView.this.setEnabled(isEnabled);
         }
     };
+
+    @Override
+    public void onRecycled() {
+        LayoutUtils.resetBorderAndBackground(this);
+        model.setViewListener(null);
+        setContentDescription(null);
+        setImageDrawable(null);
+        setImageTintList(null);
+        setOnClickListener(null);
+        setEnabled(true);
+    }
 }

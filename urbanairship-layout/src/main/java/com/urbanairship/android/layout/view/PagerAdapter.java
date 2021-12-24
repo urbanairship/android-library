@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.view;
 
+import android.view.View;
 import android.view.ViewGroup;
 
 import com.urbanairship.android.layout.Thomas;
@@ -9,6 +10,7 @@ import com.urbanairship.android.layout.Thomas.LayoutViewHolder;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.widget.Recyclable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +39,15 @@ public class PagerAdapter extends RecyclerView.Adapter<LayoutViewHolder<?, ?>> {
     public void onBindViewHolder(@NonNull LayoutViewHolder holder, int position) {
         BaseModel model = getItemAtPosition(position);
         holder.bind(model, environment);
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull LayoutViewHolder<?, ?> holder) {
+        super.onViewRecycled(holder);
+        View view = holder.itemView;
+        if (view instanceof Recyclable) {
+            ((Recyclable) view).onRecycled();
+        }
     }
 
     @Override

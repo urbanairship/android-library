@@ -11,12 +11,13 @@ import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ScrollLayoutModel;
 import com.urbanairship.android.layout.property.Direction;
 import com.urbanairship.android.layout.util.LayoutUtils;
+import com.urbanairship.android.layout.widget.Recyclable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.widget.NestedScrollView;
 
-public class ScrollLayoutView extends NestedScrollView implements BaseView<ScrollLayoutModel> {
+public class ScrollLayoutView extends NestedScrollView implements BaseView<ScrollLayoutModel>, Recyclable {
     private ScrollLayoutModel model;
     private Environment environment;
 
@@ -37,7 +38,7 @@ public class ScrollLayoutView extends NestedScrollView implements BaseView<Scrol
 
     private void init() {
         setId(generateViewId());
-        setFillViewport(true);
+        setFillViewport(false);
     }
 
     @NonNull
@@ -73,5 +74,11 @@ public class ScrollLayoutView extends NestedScrollView implements BaseView<Scrol
 
         contentView.setLayoutParams(layoutParams);
         addView(contentView);
+    }
+
+    @Override
+    public void onRecycled() {
+        LayoutUtils.resetBorderAndBackground(this);
+        removeAllViews();
     }
 }

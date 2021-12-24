@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.model.ScoreModel;
 import com.urbanairship.android.layout.property.ScoreStyle;
 import com.urbanairship.android.layout.util.ConstraintSetBuilder;
 import com.urbanairship.android.layout.util.LayoutUtils;
+import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.android.layout.widget.ShapeButton;
 import com.urbanairship.util.UAStringUtil;
 
@@ -20,11 +21,12 @@ import java.util.Objects;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 
 /**
  * Form input that presents a set of numeric options representing a score.
  */
-public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> {
+public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel>, Recyclable {
     private ScoreModel model;
 
     @Nullable
@@ -63,7 +65,7 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
     }
 
     private void configure() {
-        LayoutUtils.applyBorderAndBackground(getRootView(),model);
+        LayoutUtils.applyBorderAndBackground(this, model);
 
         ConstraintSetBuilder constraints = ConstraintSetBuilder.newBuilder(getContext());
 
@@ -98,7 +100,12 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
                 String.valueOf(score),
                 bindings.getSelected().getTextAppearance(),
                 bindings.getUnselected().getTextAppearance()
-            );
+            ) {
+                @Override
+                public void toggle() {
+                    // No-op. Checked state is updated by the click listener.
+                }
+            };
 
             int viewId = button.getId();
             viewIds[i - start] = viewId;
@@ -128,5 +135,14 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
         }
         // Notify our model
         model.onScoreChange(score);
+    }
+
+    @Override
+    public void onRecycled() {
+        selectedScore = null;
+        LayoutUtils.resetBorderAndBackground(this);
+        setContentDescription(null);
+        new ConstraintSet().applyTo(this);
+        removeAllViews();
     }
 }

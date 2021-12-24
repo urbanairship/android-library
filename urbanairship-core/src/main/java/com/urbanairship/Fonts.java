@@ -96,7 +96,7 @@ public class Fonts {
             }
         }
 
-        if (systemFonts.contains(fontFamily)) {
+        if (isSystemFont(fontFamily)) {
             Typeface typeface = Typeface.create(fontFamily, Typeface.NORMAL);
             fontCache.put(fontFamily, typeface);
             return typeface;
@@ -105,4 +105,7 @@ public class Fonts {
         return null;
     }
 
+    public boolean isSystemFont(@NonNull String fontFamily) {
+        return systemFonts.contains(fontFamily);
+    }
 }

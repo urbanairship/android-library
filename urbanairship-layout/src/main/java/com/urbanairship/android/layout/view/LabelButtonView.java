@@ -11,16 +11,19 @@ import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.model.LabelButtonModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
+import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class LabelButtonView extends MaterialButton implements BaseView<LabelButtonModel> {
+import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
+
+public class LabelButtonView extends MaterialButton implements BaseView<LabelButtonModel>, Recyclable {
     private LabelButtonModel model;
 
     public LabelButtonView(@NonNull Context context) {
-        super(context, null, R.attr.materialButtonStyle);
+        super(context, null, R.attr.borderlessButtonStyle);
         init();
     }
 
@@ -51,6 +54,21 @@ public class LabelButtonView extends MaterialButton implements BaseView<LabelBut
         configureButton();
     }
 
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        boolean autoHeight = MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY;
+        boolean autoWidth = MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.EXACTLY;
+        if (autoHeight || autoWidth) {
+            int twelveDp = (int) dpToPx(getContext(), 12);
+            int horizontal = autoWidth ? twelveDp : 0;
+            int vertical = autoHeight ? twelveDp : 0;
+            setPadding(horizontal, vertical, horizontal, vertical);
+        } else {
+            setPadding(0, 0, 0, 0);
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
+
     private void configureButton() {
         LayoutUtils.applyButtonModel(this, model);
         model.setViewListener(modelListener);
@@ -60,6 +78,10 @@ public class LabelButtonView extends MaterialButton implements BaseView<LabelBut
         }
 
         setOnClickListener(v -> model.onClick());
+        setMinHeight(0);
+        setMinimumHeight(0);
+        setInsetTop(0);
+        setInsetBottom(0);
     }
 
     private final ButtonModel.Listener modelListener = new ButtonModel.Listener() {
@@ -68,4 +90,14 @@ public class LabelButtonView extends MaterialButton implements BaseView<LabelBut
             LabelButtonView.this.setEnabled(isEnabled);
         }
     };
+
+    @Override
+    public void onRecycled() {
+        model.setViewListener(null);
+        LayoutUtils.resetBorderAndBackground(this);
+        setText(null);
+        setContentDescription(null);
+        setOnClickListener(null);
+        setEnabled(true);
+    }
 }

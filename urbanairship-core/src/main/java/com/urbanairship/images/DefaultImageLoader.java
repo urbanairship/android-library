@@ -50,7 +50,7 @@ public class DefaultImageLoader implements ImageLoader {
     }
 
     @Override
-    public void load(@NonNull Context context, @NonNull ImageView imageView, @NonNull final ImageRequestOptions imageRequestOptions) {
+    public void load(@NonNull Context context, @NonNull ImageView imageView, @NonNull ImageRequestOptions imageRequestOptions) {
         cancelRequest(imageView);
 
         ImageRequest request = new ImageRequest(context, imageCache, imageView, imageRequestOptions) {

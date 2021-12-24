@@ -8,6 +8,7 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -23,6 +24,8 @@ import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.MediaModel;
 import com.urbanairship.android.layout.property.MediaType;
 import com.urbanairship.android.layout.util.LayoutUtils;
+import com.urbanairship.android.layout.util.ResourceUtils;
+import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.images.ImageRequestOptions;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.util.ManifestUtils;
@@ -47,7 +50,7 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class MediaView extends FrameLayout implements BaseView<MediaModel> {
+public class MediaView extends FrameLayout implements BaseView<MediaModel>, Recyclable {
 
     private MediaModel model;
     private Environment environment;
@@ -160,16 +163,36 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
         ImageView imageView = new ImageView(getContext());
         imageView.setLayoutParams(new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
         imageView.setScaleType(model.getScaleType());
-        imageView.setAdjustViewBounds(true);
+
+        getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+                // Update the view to adjust its bounds if height is WRAP_CONTENT, to match image view behavior on iOS.
+                int height = getLayoutParams().height;
+                imageView.setAdjustViewBounds(height == WRAP_CONTENT);
+            }
+        });
+
         if (!UAStringUtil.isEmpty(model.getContentDescription())) {
             imageView.setContentDescription(model.getContentDescription());
         }
 
         addView(imageView);
 
-        UAirship.shared().getImageLoader()
-                .load(getContext(), imageView, ImageRequestOptions.newBuilder(url).build());
+        // Falling back to the screen dimensions keeps the image as large as possible,
+        // while still allowing for sampling to occur.
+        int fallbackWidth = ResourceUtils.getDisplayWidthPixels(getContext());
+        int fallbackHeight = ResourceUtils.getDisplayHeightPixels(getContext());
 
+        ImageRequestOptions options = ImageRequestOptions
+            .newBuilder(url)
+            .setFallbackDimensions(fallbackWidth, fallbackHeight)
+            .build();
+
+        UAirship.shared().getImageLoader()
+                .load(getContext(), imageView, options);
     }
 
     /**
@@ -347,4 +370,9 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
         }
     };
 
+    @Override
+    public void onRecycled() {
+        LayoutUtils.resetBorderAndBackground(this);
+        removeAllViews();
+    }
 }

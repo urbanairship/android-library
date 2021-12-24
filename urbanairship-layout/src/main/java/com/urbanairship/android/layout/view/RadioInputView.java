@@ -44,4 +44,10 @@ public class RadioInputView extends CheckableView<RadioInputModel> {
         getModel().setListener(this::setCheckedInternal);
         getCheckableView().setOnCheckedChangeListener(checkedChangeListener);
     }
+
+    @Override
+    public void onRecycled() {
+        super.onRecycled();
+        getModel().setListener(null);
+    }
 }

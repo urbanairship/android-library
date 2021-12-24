@@ -107,6 +107,14 @@ public final class ResourceUtils {
         return null;
     }
 
+    public static int getDisplayWidthPixels(@NonNull Context context) {
+        return context.getResources().getDisplayMetrics().widthPixels;
+    }
+
+    public static int getDisplayHeightPixels(@NonNull Context context) {
+        return context.getResources().getDisplayMetrics().heightPixels;
+    }
+
     @NonNull
     private static String readStream(@NonNull InputStream inputStream) {
         try(Scanner s = new Scanner(inputStream, "UTF-8").useDelimiter("\\A")) {

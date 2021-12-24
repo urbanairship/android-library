@@ -75,6 +75,7 @@ view:
       type: label
       text: "The Earth orbits the sun once every 365 days and rotates about its axis once every 24 hours. Day and night are due to the Earth rotating on its axis, not its orbiting around the sun."
       text_appearance:
+        font_size: 14
         color:
           selectors:
           - platform: android

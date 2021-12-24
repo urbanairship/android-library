@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.model.ContainerLayoutModel;
 import com.urbanairship.android.layout.util.ConstraintSetBuilder;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout;
+import com.urbanairship.android.layout.widget.Recyclable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.WindowInsetsCompat;
 
-public class ContainerLayoutView extends ClippableConstraintLayout implements BaseView<ContainerLayoutModel> {
+public class ContainerLayoutView extends ClippableConstraintLayout implements BaseView<ContainerLayoutModel>, Recyclable {
     private ContainerLayoutModel model;
     private Environment environment;
 
@@ -101,5 +102,12 @@ public class ContainerLayoutView extends ClippableConstraintLayout implements Ba
         if (!item.shouldIgnoreSafeArea()) {
             windowInsetViews.add(itemView);
         }
+    }
+
+    @Override
+    public void onRecycled() {
+        windowInsetViews.clear();
+        LayoutUtils.resetBorderAndBackground(this);
+        removeAllViews();
     }
 }

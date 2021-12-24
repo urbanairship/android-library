@@ -14,6 +14,7 @@ import com.urbanairship.android.layout.property.Direction;
 import com.urbanairship.android.layout.property.Margin;
 import com.urbanairship.android.layout.property.Size;
 import com.urbanairship.android.layout.util.LayoutUtils;
+import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.android.layout.widget.WeightlessLinearLayout;
 
 import java.util.List;
@@ -24,7 +25,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 
-public class LinearLayoutView extends WeightlessLinearLayout implements BaseView<LinearLayoutModel> {
+public class LinearLayoutView extends WeightlessLinearLayout implements BaseView<LinearLayoutModel>, Recyclable {
 
     private LinearLayoutModel model;
     private Environment environment;
@@ -143,5 +144,11 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
         }
 
         return lp;
+    }
+
+    @Override
+    public void onRecycled() {
+        LayoutUtils.resetBorderAndBackground(this);
+        removeAllViews();
     }
 }

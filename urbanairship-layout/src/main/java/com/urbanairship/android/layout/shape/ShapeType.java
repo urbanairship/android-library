@@ -2,6 +2,8 @@
 
 package com.urbanairship.android.layout.shape;
 
+import android.graphics.drawable.GradientDrawable;
+
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
@@ -13,14 +15,16 @@ import androidx.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public enum ShapeType {
-    RECTANGLE("rectangle"),
-    ELLIPSE("ellipse");
+    RECTANGLE("rectangle", GradientDrawable.RECTANGLE),
+    ELLIPSE("ellipse", GradientDrawable.OVAL);
 
     @NonNull
     private final String value;
+    private final int drawableShape;
 
-    ShapeType(@NonNull String value) {
+    ShapeType(@NonNull String value, int drawableShape) {
         this.value = value;
+        this.drawableShape = drawableShape;
     }
 
     @NonNull
@@ -31,6 +35,10 @@ public enum ShapeType {
             }
         }
         throw new IllegalArgumentException("Unknown ShapeType value: " + value);
+    }
+
+    public int getDrawableShapeType() {
+        return drawableShape;
     }
 
     @NonNull

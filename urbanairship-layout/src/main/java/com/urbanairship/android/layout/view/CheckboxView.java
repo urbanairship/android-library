@@ -10,13 +10,14 @@ import com.urbanairship.android.layout.model.CheckboxModel;
 import com.urbanairship.android.layout.property.CheckboxStyle;
 import com.urbanairship.android.layout.property.SwitchStyle;
 import com.urbanairship.android.layout.widget.CheckableView;
+import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.android.layout.widget.ShapeButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 
-public class CheckboxView extends CheckableView<CheckboxModel> {
+public class CheckboxView extends CheckableView<CheckboxModel> implements Recyclable {
 
     public CheckboxView(@NonNull Context context) {
         super(context);
@@ -66,5 +67,11 @@ public class CheckboxView extends CheckableView<CheckboxModel> {
                 getModel().onCheckedChange(!isChecked());
             }
         };
+    }
+
+    @Override
+    public void onRecycled() {
+        super.onRecycled();
+        getModel().setListener(null);
     }
 }

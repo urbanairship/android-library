@@ -20,18 +20,19 @@ import java.net.URL;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.core.util.ObjectsCompat;
 
 /**
  * A class containing utility methods related to bitmaps.
  */
-public class ImageUtils {
+public final class ImageUtils {
+
+    private ImageUtils() {}
 
     /**
      * Drawable result.
      */
-    public static class DrawableResult {
+    public static final class DrawableResult {
 
         /**
          * The drawable.
@@ -61,9 +62,35 @@ public class ImageUtils {
      * @throws IOException if file fails to be created.
      */
     @Nullable
-    public static DrawableResult fetchScaledDrawable(@NonNull Context context, final @NonNull URL url, final int reqWidth, final int reqHeight) throws IOException {
+    public static DrawableResult fetchScaledDrawable(@NonNull Context context, @NonNull URL url, int reqWidth, int reqHeight) throws IOException {
+        return fetchScaledDrawable(context, url, reqWidth, reqHeight, -1, -1);
+    }
+
+    /**
+     * Fetches a drawable from an image path, using the supplied fallback dimensions if the {@code ImageView} reports
+     * a width or height of zero. Setting the fallback dimensions to {@code -1} will automatically calculate zero
+     * dimensions based on the aspect ratio of the image.
+     *
+     * @param context The application context.
+     * @param url The URL.
+     * @param reqWidth The requested width of the image.
+     * @param reqHeight The requested height of the image.
+     * @param fallbackWidth The width dimension to be used if the ImageView reports a width of zero.
+     * @param fallbackHeight The height dimension to be used if the ImageView reports a height of zero.
+     * @return The result or null if the file was unable to be downloaded.
+     * @throws IOException if file fails to be created.
+     */
+    @Nullable
+    public static DrawableResult fetchScaledDrawable(
+        @NonNull Context context,
+        @NonNull URL url,
+        int reqWidth,
+        int reqHeight,
+        int fallbackWidth,
+        int fallbackHeight
+    ) throws IOException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-            Bitmap bitmap = ImageUtils.fetchScaledBitmap(context, url, reqWidth, reqHeight);
+            Bitmap bitmap = ImageUtils.fetchScaledBitmap(context, url, reqWidth, reqHeight, fallbackWidth, fallbackHeight);
 
             if (bitmap == null) {
                 return null;
@@ -72,36 +99,29 @@ public class ImageUtils {
             Drawable drawable = new BitmapDrawable(context.getResources(), bitmap);
             return new DrawableResult(drawable, bitmap.getByteCount());
         } else {
-            return fetchImage(context, url, new ImageProcessor<DrawableResult>() {
-                @Override
-                public DrawableResult onProcessFile(File imageFile) throws IOException {
-                    ImageDecoder.Source source = ImageDecoder.createSource(imageFile);
-                    Drawable drawable = ImageDecoder.decodeDrawable(source, new ImageDecoder.OnHeaderDecodedListener() {
-                        @RequiresApi(api = Build.VERSION_CODES.P)
-                        @Override
-                        public void onHeaderDecoded(@NonNull ImageDecoder decoder, @NonNull ImageDecoder.ImageInfo info, @NonNull ImageDecoder.Source source) {
-                            int sourceWidth = info.getSize().getWidth();
-                            int sourceHeight = info.getSize().getHeight();
-                            ImageUtils.Size target = calculateTargetSize(
-                                    sourceWidth, sourceHeight, reqWidth, reqHeight);
+            return fetchImage(context, url, imageFile -> {
+                ImageDecoder.Source source = ImageDecoder.createSource(imageFile);
+                Drawable drawable = ImageDecoder.decodeDrawable(source, (decoder, info, source1) -> {
+                    int sourceWidth = info.getSize().getWidth();
+                    int sourceHeight = info.getSize().getHeight();
+                    Size target = calculateTargetSize(
+                        sourceWidth, sourceHeight, reqWidth, reqHeight, fallbackWidth, fallbackHeight);
 
-                            decoder.setTargetSize(target.width, target.height);
-                            decoder.setTargetSampleSize(calculateInSampleSize(sourceWidth, sourceHeight, target.width, target.height));
-                        }
-                    });
+                    decoder.setTargetSampleSize(calculateInSampleSize(sourceWidth, sourceHeight, target.width, target.height));
+                });
 
-                    long byteCount;
-                    if (drawable instanceof BitmapDrawable) {
-                        byteCount = ((BitmapDrawable) drawable).getBitmap().getByteCount();
-                    } else {
-                        byteCount = imageFile.length();
-                    }
-
-                    return new DrawableResult(drawable, byteCount);
+                long byteCount;
+                if (drawable instanceof BitmapDrawable) {
+                    byteCount = ((BitmapDrawable) drawable).getBitmap().getByteCount();
+                } else {
+                    byteCount = imageFile.length();
                 }
+
+                return new DrawableResult(drawable, byteCount);
             });
         }
     }
+
 
     /**
      * Create a scaled bitmap.
@@ -114,43 +134,50 @@ public class ImageUtils {
      * @throws IOException if file fails to be created.
      */
     @Nullable
-    public static Bitmap fetchScaledBitmap(@NonNull Context context, @NonNull URL url, final int reqWidth, final int reqHeight) throws IOException {
-        Bitmap bitmap = fetchImage(context, url, new ImageProcessor<Bitmap>() {
-            @Override
-            public Bitmap onProcessFile(File imageFile) throws IOException {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inJustDecodeBounds = true;
+    public static Bitmap fetchScaledBitmap(@NonNull Context context, @NonNull URL url, int reqWidth, int reqHeight) throws IOException {
+        return fetchScaledBitmap(context, url, reqWidth, reqHeight, -1, -1);
+    }
 
-                    BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+    /**
+     * Create a scaled bitmap.
+     *
+     * @param context The application context.
+     * @param url The URL image.
+     * @param reqWidth The requested width of the image.
+     * @param reqHeight The requested height of the image.
+     * @param fallbackWidth The width dimension to be used if the ImageView reports a width of zero.
+     * @param fallbackHeight The height dimension to be used if the ImageView reports a height of zero.
+     * @return The scaled bitmap.
+     * @throws IOException if file fails to be created.
+     */
+    @Nullable
+    public static Bitmap fetchScaledBitmap(@NonNull Context context, @NonNull URL url, int reqWidth, int reqHeight, int fallbackWidth, int fallbackHeight) throws IOException {
+        Bitmap bitmap = fetchImage(context, url, imageFile -> {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = true;
 
-                    int sourceWidth = options.outWidth;
-                    int sourceHeight = options.outHeight;
-                    ImageUtils.Size target = calculateTargetSize(
-                            sourceWidth, sourceHeight, reqWidth, reqHeight);
+                BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
 
-                    options.inSampleSize = calculateInSampleSize(sourceWidth, sourceHeight, target.width, target.height);
-                    options.inJustDecodeBounds = false;
+                int sourceWidth = options.outWidth;
+                int sourceHeight = options.outHeight;
+                Size target = calculateTargetSize(sourceWidth, sourceHeight, reqWidth, reqHeight, fallbackWidth, fallbackHeight);
 
-                    return BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
-                } else {
+                options.inSampleSize = calculateInSampleSize(sourceWidth, sourceHeight, target.width, target.height);
+                options.inJustDecodeBounds = false;
 
-                    ImageDecoder.Source source = ImageDecoder.createSource(imageFile);
+                return BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+            } else {
 
-                    return ImageDecoder.decodeBitmap(source, new ImageDecoder.OnHeaderDecodedListener() {
-                        @RequiresApi(api = Build.VERSION_CODES.P)
-                        @Override
-                        public void onHeaderDecoded(@NonNull ImageDecoder decoder, @NonNull ImageDecoder.ImageInfo info, @NonNull ImageDecoder.Source source1) {
-                            int sourceWidth = info.getSize().getWidth();
-                            int sourceHeight = info.getSize().getHeight();
-                            ImageUtils.Size target = calculateTargetSize(
-                                    sourceWidth, sourceHeight, reqWidth, reqHeight);
+                ImageDecoder.Source source = ImageDecoder.createSource(imageFile);
 
-                            decoder.setTargetSize(target.width, target.height);
-                            decoder.setTargetSampleSize(calculateInSampleSize(sourceWidth, sourceHeight, target.width, target.height));
-                        }
-                    });
-                }
+                return ImageDecoder.decodeBitmap(source, (decoder, info, source1) -> {
+                    int sourceWidth = info.getSize().getWidth();
+                    int sourceHeight = info.getSize().getHeight();
+                    Size target = calculateTargetSize(sourceWidth, sourceHeight, reqWidth, reqHeight, fallbackWidth, fallbackHeight);
+
+                    decoder.setTargetSampleSize(calculateInSampleSize(sourceWidth, sourceHeight, target.width, target.height));
+                });
             }
         });
 
@@ -178,8 +205,8 @@ public class ImageUtils {
 
         if (height > reqHeight || width > reqWidth) {
 
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
+            int halfHeight = height / 2;
+            int halfWidth = width / 2;
 
             // Calculate the largest inSampleSize value that is a power of 2 and keeps both
             // height and width larger than the requested height and width.
@@ -203,7 +230,7 @@ public class ImageUtils {
      * @return The target Size.
      */
     @NonNull
-    public static Size calculateTargetSize(int width, int height, int reqWidth, int reqHeight) {
+    public static Size calculateTargetSize(int width, int height, int reqWidth, int reqHeight, int fallbackWidth, int fallbackHeight) {
         if (width == 0 || height == 0) {
             throw new IllegalArgumentException("Failed to calculate target size! width and height must be greater than zero.");
         }
@@ -215,13 +242,17 @@ public class ImageUtils {
         int targetHeight;
 
         if (reqWidth == 0) {
-            targetWidth = (int) (reqHeight * (width / (double) height));
+            targetWidth = fallbackWidth > 0
+                ? fallbackWidth
+                : (int) (reqHeight * (width / (double) height));
         } else {
             targetWidth = reqWidth;
         }
 
         if (reqHeight == 0) {
-            targetHeight = (int) (reqWidth * (height / (double) width));
+            targetHeight = fallbackHeight > 0
+                ? fallbackHeight
+                : (int) (reqWidth * (height / (double) width));
         } else {
             targetHeight = reqHeight;
         }

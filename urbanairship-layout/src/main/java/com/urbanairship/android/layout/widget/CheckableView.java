@@ -15,6 +15,7 @@ import com.urbanairship.android.layout.util.ResourceUtils;
 import com.urbanairship.android.layout.view.BaseView;
 import com.urbanairship.util.UAStringUtil;
 
+import androidx.annotation.CallSuper;
 import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,7 +24,7 @@ import androidx.appcompat.widget.SwitchCompat;
 import static android.view.View.MeasureSpec.EXACTLY;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
-public abstract class CheckableView<M extends CheckableModel> extends FrameLayout implements BaseView<M> {
+public abstract class CheckableView<M extends CheckableModel> extends FrameLayout implements BaseView<M>, Recyclable {
     @Dimension(unit = Dimension.DP)
     private static final int CHECKBOX_MIN_DIMENSION = 24;
     @Dimension(unit = Dimension.DP)
@@ -130,10 +131,10 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
                 configureSwitch((SwitchStyle) model.getStyle());
                 break;
             case CHECKBOX:
-                LayoutUtils.applyBorderAndBackground(this, model);
                 configureCheckbox((CheckboxStyle) model.getStyle());
                 break;
         }
+        LayoutUtils.applyBorderAndBackground(this, model);
 
         if (!UAStringUtil.isEmpty(model.getContentDescription())) {
             view.setContentDescription(model.getContentDescription());
@@ -148,7 +149,9 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
         LayoutUtils.applySwitchStyle(switchView, style);
 
         view = new CheckableViewAdapter.Switch(switchView);
-        addView(switchView, MATCH_PARENT, MATCH_PARENT);
+        FrameLayout.LayoutParams lp = new LayoutParams(MATCH_PARENT, MATCH_PARENT);
+        lp.topMargin = -3;
+        addView(switchView, lp);
     }
 
     protected void configureCheckbox(CheckboxStyle style) {
@@ -179,4 +182,13 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
 
     protected final CheckableViewAdapter.OnCheckedChangeListener checkedChangeListener =
         (v, isChecked) -> model.onCheckedChange(isChecked);
+
+    @Override
+    @CallSuper
+    public void onRecycled() {
+        LayoutUtils.resetBorderAndBackground(this);
+        view.setOnCheckedChangeListener(null);
+        view = null;
+        removeAllViews();
+    }
 }

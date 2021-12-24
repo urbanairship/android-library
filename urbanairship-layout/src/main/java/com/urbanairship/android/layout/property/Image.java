@@ -139,10 +139,10 @@ public abstract class Image {
         }
 
         private enum DrawableResource {
-            CLOSE("close", R.drawable.ua_ic_close_white),
-            CHECKMARK("checkmark", R.drawable.ua_ic_notification_button_accept),
-            ARROW_FORWARD("forward_arrow", R.drawable.ua_ic_arrow_forward),
-            ARROW_BACK("back_arrow", R.drawable.ua_ic_arrow_back);
+            CLOSE("close", R.drawable.ua_layout_ic_close),
+            CHECKMARK("checkmark", R.drawable.ua_layout_ic_check),
+            ARROW_FORWARD("forward_arrow", R.drawable.ua_layout_ic_arrow_forward),
+            ARROW_BACK("back_arrow", R.drawable.ua_layout_ic_arrow_back);
 
             @NonNull
             private final String value;

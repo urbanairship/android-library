@@ -202,7 +202,9 @@ abstract class ImageRequest {
             return null;
         }
 
-        ImageUtils.DrawableResult result = ImageUtils.fetchScaledDrawable(context, new URL(imageRequestOptions.getUrl()), width, height);
+        int fallbackWidth = imageRequestOptions.getZeroWidthFallback();
+        int fallbackHeight = imageRequestOptions.getZeroHeightFallback();
+        ImageUtils.DrawableResult result = ImageUtils.fetchScaledDrawable(context, new URL(imageRequestOptions.getUrl()), width, height, fallbackWidth, fallbackHeight);
 
         if (result == null) {
             return null;
