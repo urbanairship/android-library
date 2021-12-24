@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.model;
 
 import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
+import com.urbanairship.android.layout.event.ButtonEvent;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.event.ReportingEvent;
@@ -47,6 +48,7 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     private final Map<String, Boolean> inputValidity = new HashMap<>();
 
     private boolean isDisplayReported = false;
+    private boolean isSubmitted = false;
 
     public BaseFormController(
         @NonNull ViewType viewType,
@@ -127,13 +129,17 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
                     onSubmit();
                     return true;
                 }
-                // Otherwise let parent form controller handle it.
-                return super.onEvent(event);
+                // Otherwise update with our form data and let parent form controller handle it.
+                return super.onEvent(((ButtonEvent) event).overrideState(identifier, isSubmitted));
+
+            case BUTTON_BEHAVIOR_CANCEL:
+            case BUTTON_BEHAVIOR_DISMISS:
+                // Update the event with our form data and continue bubbling it up.
+                return super.onEvent(((ButtonEvent) event).overrideState(identifier, isSubmitted));
 
             case REPORTING_EVENT:
                 // Update the event with our form data and continue bubbling it up.
-                ReportingEvent updatedEvent = ((ReportingEvent) event).overrideState(identifier);
-                return super.onEvent(updatedEvent);
+                return super.onEvent(((ReportingEvent) event).overrideState(identifier, isSubmitted));
 
             default:
                 return super.onEvent(event);
@@ -141,6 +147,7 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     }
 
     private void onSubmit() {
+        isSubmitted = true;
         bubbleEvent(getFormResultEvent());
     }
 

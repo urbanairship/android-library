@@ -41,7 +41,7 @@ class ThomasListenerProxy implements EventListener {
         switch (event.getReportType()) {
             case PAGE_VIEW:
                 ReportingEvent.PageView pageView = (ReportingEvent.PageView) event;
-                listener.onPageView(pageView.getPagerData(), pageView.getState());
+                listener.onPageView(pageView.getPagerData(), pageView.getState(), pageView.getDisplayedAt());
                 return false;
 
             case PAGE_SWIPE:

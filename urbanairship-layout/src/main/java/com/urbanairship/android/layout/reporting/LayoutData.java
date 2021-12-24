@@ -15,13 +15,17 @@ public class LayoutData {
 
     @Nullable
     private final String formId;
+    @Nullable
+    private final Boolean isFormSubmitted;
 
     @Nullable
     private final PagerData pagerData;
 
     public LayoutData(@Nullable String formId,
+                      @Nullable Boolean isFormSubmitted,
                       @Nullable PagerData pagerData) {
         this.formId = formId;
+        this.isFormSubmitted = isFormSubmitted;
         this.pagerData = pagerData;
     }
 
@@ -31,18 +35,23 @@ public class LayoutData {
     }
 
     @Nullable
+    public Boolean getFormSubmitted() {
+        return isFormSubmitted;
+    }
+
+    @Nullable
     public PagerData getPagerData() {
         return pagerData;
     }
 
     @NonNull
-    public LayoutData withFormId(@NonNull String id) {
-        return new LayoutData(id, pagerData);
+    public LayoutData withFormData(@NonNull String id, boolean isSubmitted) {
+        return new LayoutData(id, isSubmitted, pagerData);
     }
 
     @NonNull
     public LayoutData withPagerData(@NonNull PagerData data) {
-        return new LayoutData(formId, data);
+        return new LayoutData(formId, isFormSubmitted, data);
     }
 
     @NonNull
@@ -50,6 +59,7 @@ public class LayoutData {
     public String toString() {
         return "LayoutData{" +
             "formId='" + formId + '\'' +
+            ", isFormSubmitted='" + isFormSubmitted + '\'' +
             ", pagerData=" + pagerData +
             '}';
     }

@@ -9,17 +9,20 @@ import com.urbanairship.json.JsonValue;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
 public enum ButtonClickBehaviorType {
-    DISMISS("dismiss"),
-    CANCEL("cancel"),
+    // When a button is tapped, behaviors will be run in the order they are declared here.
+    // Take care when adding or removing types--form submit needs to occur before dismiss or cancel.
+    FORM_SUBMIT("form_submit"),
     PAGER_NEXT("pager_next"),
     PAGER_PREVIOUS("pager_previous"),
-    FORM_SUBMIT("form_submit");
+    DISMISS("dismiss"),
+    CANCEL("cancel");
 
     @NonNull
     private final String value;
@@ -48,6 +51,7 @@ public enum ButtonClickBehaviorType {
         for (JsonValue value : json) {
             behaviorTypes.add(from(value.optString()));
         }
+        behaviorTypes.sort(Comparator.comparingInt(Enum::ordinal));
         return behaviorTypes;
     }
 

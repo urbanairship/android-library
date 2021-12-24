@@ -35,7 +35,7 @@ public abstract class ReportingEvent extends Event {
     protected ReportingEvent(@NonNull ReportType reportType, @Nullable LayoutData state) {
         super(EventType.REPORTING_EVENT);
         this.reportType = reportType;
-        this.state = state != null ? state : new LayoutData(null, null);
+        this.state = state != null ? state : new LayoutData(null, null, null);
     }
 
     @NonNull
@@ -48,11 +48,11 @@ public abstract class ReportingEvent extends Event {
         return state;
     }
 
-    public abstract ReportingEvent overrideState(@NonNull String formId);
+    public abstract ReportingEvent overrideState(@NonNull String formId, boolean isFormSubmitted);
     public abstract ReportingEvent overrideState(@NonNull PagerData pagerData);
 
-    protected LayoutData copyState(@NonNull String formId) {
-        return state.withFormId(formId);
+    protected LayoutData copyState(@NonNull String formId, boolean isFormSubmitted) {
+        return state.withFormData(formId, isFormSubmitted);
     }
 
     protected LayoutData copyState(@NonNull PagerData data) {
@@ -63,22 +63,30 @@ public abstract class ReportingEvent extends Event {
      * Bubbled up to the top level when a pager changes page.
      */
     public static class PageView extends PagerReportingEvent {
-        public PageView(@NonNull PagerData pagerData) {
-            super(ReportType.PAGE_VIEW, pagerData, new LayoutData(null, pagerData));
+        private final long displayedAt;
+
+        public PageView(@NonNull PagerData pagerData, long displayedAt) {
+            super(ReportType.PAGE_VIEW, pagerData, new LayoutData(null, null, pagerData));
+            this.displayedAt = displayedAt;
         }
 
-        private PageView(@NonNull PagerData pagerData, @Nullable LayoutData state) {
+        private PageView(@NonNull PagerData pagerData, @Nullable LayoutData state, long displayedAt) {
             super(ReportType.PAGE_VIEW, pagerData, state);
+            this.displayedAt = displayedAt;
         }
 
         @Override
-        public ReportingEvent overrideState(@NonNull String formId) {
-            return new PageView(getPagerData(), copyState(formId));
+        public ReportingEvent overrideState(@NonNull String formId, boolean isFormSubmitted) {
+            return new PageView(getPagerData(), copyState(formId, isFormSubmitted), displayedAt);
         }
 
         @Override
         public ReportingEvent overrideState(@NonNull PagerData pagerData) {
-            return new PageView(getPagerData(), copyState(pagerData));
+            return new PageView(getPagerData(), copyState(pagerData), displayedAt);
+        }
+
+        public long getDisplayedAt() {
+            return displayedAt;
         }
 
         @NonNull
@@ -87,6 +95,7 @@ public abstract class ReportingEvent extends Event {
             return "ReportingEvent.PageView{" +
                 "pagerData=" + getPagerData() +
                 ", state=" + getState() +
+                ", displayedAt=" + getDisplayedAt() +
                 '}';
         }
     }
@@ -99,7 +108,7 @@ public abstract class ReportingEvent extends Event {
         private final int toIndex;
 
         public PageSwipe(@NonNull PagerData pagerData, int fromIndex, int toIndex) {
-            this(pagerData, fromIndex, toIndex, new LayoutData(null, pagerData));
+            this(pagerData, fromIndex, toIndex, new LayoutData(null, null, pagerData));
         }
 
         private PageSwipe(@NonNull PagerData pagerData, int fromIndex, int toIndex, @Nullable LayoutData state) {
@@ -117,8 +126,8 @@ public abstract class ReportingEvent extends Event {
         }
 
         @Override
-        public ReportingEvent overrideState(@NonNull String formId) {
-            return new PageSwipe(getPagerData(), fromIndex, toIndex, copyState(formId));
+        public ReportingEvent overrideState(@NonNull String formId, boolean isFormSubmitted) {
+            return new PageSwipe(getPagerData(), fromIndex, toIndex, copyState(formId, isFormSubmitted));
         }
 
         @Override
@@ -160,8 +169,8 @@ public abstract class ReportingEvent extends Event {
         }
 
         @Override
-        public ReportingEvent overrideState(@NonNull String formId) {
-            return new ButtonTap(buttonId, copyState(formId));
+        public ReportingEvent overrideState(@NonNull String formId, boolean isFormSubmitted) {
+            return new ButtonTap(buttonId, copyState(formId, isFormSubmitted));
         }
 
         @Override
@@ -185,7 +194,11 @@ public abstract class ReportingEvent extends Event {
     public static class DismissFromOutside extends DismissReportingEvent {
 
         public DismissFromOutside(long displayTime) {
-            super(ReportType.OUTSIDE_DISMISS, displayTime, null);
+            this(displayTime, null);
+        }
+
+        private DismissFromOutside(long displayTime, @Nullable LayoutData state) {
+            super(ReportType.OUTSIDE_DISMISS, displayTime, state);
         }
 
         @Override
@@ -197,15 +210,14 @@ public abstract class ReportingEvent extends Event {
         }
 
         @Override
-        public ReportingEvent overrideState(@NonNull String formId) {
-            // Nothing to update.
-            return this;
+        public ReportingEvent overrideState(@NonNull String formId, boolean isFormSubmitted) {
+            return new DismissFromOutside(getDisplayTime(), copyState(formId, isFormSubmitted));
+
         }
 
         @Override
         public ReportingEvent overrideState(@NonNull PagerData pagerData) {
-            // Nothing to update.
-            return this;
+            return new DismissFromOutside(getDisplayTime(), copyState(pagerData));
         }
     }
 
@@ -228,7 +240,7 @@ public abstract class ReportingEvent extends Event {
             this(buttonId, buttonDescription, cancel, displayTime, null);
         }
 
-        private DismissFromButton(
+        public DismissFromButton(
             @NonNull String buttonId,
             @Nullable String buttonDescription,
             boolean cancel,
@@ -257,8 +269,8 @@ public abstract class ReportingEvent extends Event {
         }
 
         @Override
-        public ReportingEvent overrideState(@NonNull String formId) {
-            return new DismissFromButton(buttonId, buttonDescription, cancel, getDisplayTime(), copyState(formId));
+        public ReportingEvent overrideState(@NonNull String formId, boolean isFormSubmitted) {
+            return new DismissFromButton(buttonId, buttonDescription, cancel, getDisplayTime(), copyState(formId, isFormSubmitted));
         }
 
         @Override
@@ -287,7 +299,7 @@ public abstract class ReportingEvent extends Event {
         private final Map<AttributeName, JsonValue> attributes;
 
         public FormResult(@NonNull FormData.BaseForm formData, @NonNull Map<AttributeName, JsonValue> attributes) {
-            this(formData, new LayoutData(formData.getIdentifier(), null), attributes);
+            this(formData, new LayoutData(formData.getIdentifier(), true, null), attributes);
         }
 
         private FormResult(@NonNull FormData.BaseForm formData, @Nullable LayoutData state, @NonNull Map<AttributeName, JsonValue> attributes) {
@@ -301,6 +313,7 @@ public abstract class ReportingEvent extends Event {
             return formData;
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "FormResult{" +
@@ -316,15 +329,14 @@ public abstract class ReportingEvent extends Event {
         }
 
         @Override
-        public ReportingEvent overrideState(@NonNull String formId) {
-            return new FormResult(formData, copyState(formId), attributes);
+        public ReportingEvent overrideState(@NonNull String formId, boolean isFormSubmitted) {
+            return new FormResult(formData, copyState(formId, isFormSubmitted), attributes);
         }
 
         @Override
         public ReportingEvent overrideState(@NonNull PagerData pagerData) {
             return new FormResult(formData, copyState(pagerData), attributes);
         }
-
     }
 
     public static class FormDisplay extends ReportingEvent {
@@ -332,7 +344,7 @@ public abstract class ReportingEvent extends Event {
         private final String formId;
 
         public FormDisplay(@NonNull String formId) {
-            this(formId, new LayoutData(formId, null));
+            this(formId, new LayoutData(formId, null, null));
         }
 
         private FormDisplay(@NonNull String formId, @Nullable LayoutData state) {
@@ -347,8 +359,8 @@ public abstract class ReportingEvent extends Event {
 
 
         @Override
-        public ReportingEvent overrideState(@NonNull String formId) {
-            return new FormDisplay(formId, copyState(formId));
+        public ReportingEvent overrideState(@NonNull String formId, boolean isFormSubmitted) {
+            return new FormDisplay(formId, copyState(formId, isFormSubmitted));
         }
 
         @Override

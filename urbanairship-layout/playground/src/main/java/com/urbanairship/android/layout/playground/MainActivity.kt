@@ -107,8 +107,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val thomasListener = object : ThomasListener {
-        override fun onPageView(pagerData: PagerData, state: LayoutData?) {
-            Logger.debug("onPageView(pagerData: $pagerData, state: $state)")
+        override fun onPageView(pagerData: PagerData, state: LayoutData?, displayedAt: Long) {
+            Logger.debug("onPageView(pagerData: $pagerData, state: $state, displayedAt: $displayedAt)")
         }
 
         override fun onPageSwipe(pagerData: PagerData, toIndex: Int, fromIndex: Int, state: LayoutData?) {

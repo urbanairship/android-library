@@ -89,7 +89,11 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
 
             ModalPresentation presentation = (ModalPresentation) args.getPayload().getPresentation();
 
-            Environment environment = new ViewEnvironment(this, args.getWebViewClientFactory(), args.getImageCache());
+            long restoredTime = savedInstanceState != null ? savedInstanceState.getLong(KEY_DISPLAY_TIME) : 0;
+            this.displayTimer = new DisplayTimer(this, restoredTime);
+
+            Environment environment =
+                new ViewEnvironment(this, args.getWebViewClientFactory(), args.getImageCache(), displayTimer);
 
             ModalPlacement placement = presentation.getResolvedPlacement(this);
             if (placement.shouldIgnoreSafeArea()) {
@@ -117,9 +121,6 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             }
 
             disableBackButton = presentation.isDisableBackButton();
-
-            long restoredTime = savedInstanceState != null ? savedInstanceState.getLong(KEY_DISPLAY_TIME) : 0;
-            this.displayTimer = new DisplayTimer(this, restoredTime);
 
             setContentView(modalView);
         } catch (@NonNull DisplayArgsLoader.LoadException e) {
@@ -198,11 +199,13 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
     }
 
     private void reportDismissFromButton(ButtonEvent event) {
+        // Re-wrap the event as a reporting event and run it back through so we'll notify the external listener.
         onEvent(new ReportingEvent.DismissFromButton(
             event.getIdentifier(),
             event.getReportingDescription(),
             event.isCancel(),
-            displayTimer.getTime()
+            displayTimer.getTime(),
+            event.getState()
         ));
     }
 

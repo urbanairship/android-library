@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.model;
 
 import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
+import com.urbanairship.android.layout.event.ButtonEvent;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.PagerEvent;
 import com.urbanairship.android.layout.event.ReportingEvent;
@@ -74,14 +75,14 @@ public class PagerController extends LayoutModel implements Identifiable {
             case PAGER_INIT:
                 trickleEvent(event);
                 reducePagerState((PagerEvent) event);
-                reportPageView();
+                reportPageView((PagerEvent) event);
                 return true;
 
             case PAGER_SCROLL:
                 PagerEvent.Scroll scroll = (PagerEvent.Scroll) event;
                 trickleEvent(scroll);
                 reducePagerState(scroll);
-                reportPageView();
+                reportPageView(scroll);
                 if (!scroll.isInternal()) {
                     reportPageSwipe(scroll);
                 }
@@ -101,10 +102,14 @@ public class PagerController extends LayoutModel implements Identifiable {
                         return super.onEvent(event);
                 }
 
+            case BUTTON_BEHAVIOR_CANCEL:
+            case BUTTON_BEHAVIOR_DISMISS:
+                // Update the event with our pager data and continue bubbling it up.
+                return super.onEvent(((ButtonEvent) event).overrideState(buildPagerData()));
+
             case REPORTING_EVENT:
                 // Update the event with our pager data and continue bubbling it up.
-                ReportingEvent updatedEvent = ((ReportingEvent) event).overrideState(buildPagerData());
-                return super.onEvent(updatedEvent);
+                return super.onEvent(((ReportingEvent) event).overrideState(buildPagerData()));
 
             default:
                 // Pass along any other events.
@@ -127,8 +132,8 @@ public class PagerController extends LayoutModel implements Identifiable {
         }
     }
 
-    private void reportPageView() {
-        bubbleEvent(new ReportingEvent.PageView(buildPagerData()));
+    private void reportPageView(PagerEvent event) {
+        bubbleEvent(new ReportingEvent.PageView(buildPagerData(), event.getTime()));
     }
 
     private void reportPageSwipe(PagerEvent.Scroll event) {

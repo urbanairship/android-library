@@ -82,7 +82,7 @@ public class PagerView extends RecyclerView implements BaseView<PagerModel> {
         model.setListener(modelListener);
 
         // Emit an init event so that we can connect to the indicator view, if one exists.
-        model.onConfigured(getDisplayedItemPosition());
+        model.onConfigured(getDisplayedItemPosition(), environment.displayTimer().getTime());
     }
 
     private int getDisplayedItemPosition() {
@@ -127,7 +127,7 @@ public class PagerView extends RecyclerView implements BaseView<PagerModel> {
 
             int position = getDisplayedItemPosition();
             if (position != NO_POSITION && position != previousPosition) {
-                model.onScrollTo(position, isInternalScroll);
+                model.onScrollTo(position, isInternalScroll, environment.displayTimer().getTime());
             }
             previousPosition = position;
             isInternalScroll = false;

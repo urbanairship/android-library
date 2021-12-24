@@ -30,6 +30,7 @@ import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.util.Network;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -67,7 +68,6 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
     private final List<UrlInfo> urlInfoList;
     private final Map<String, String> assetCacheMap = new HashMap<>();
     private DisplayRequest displayRequest;
-
 
     @VisibleForTesting
     AirshipLayoutDisplayAdapter(@NonNull InAppMessage message,
@@ -197,7 +197,9 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         private final InAppMessage message;
         private final DisplayHandler displayHandler;
         private final String scheduleId;
-        private final Map<String, Set<Integer>> viewedPageIndex = new HashMap<>();
+        private final Set<String> completedPagers = new HashSet<>();
+        private final Map<String, PagerSummary> pagerSummaryMap = new HashMap<>();
+        private final Map<String, Map<Integer, Integer>> pagerViewCounts = new HashMap<>();
 
         private Listener(@NonNull InAppMessage message, @NonNull DisplayHandler displayHandler) {
             this.message = message;
@@ -206,23 +208,29 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         }
 
         @Override
-        public void onPageView(@NonNull PagerData pagerData, @Nullable LayoutData layoutData) {
-            Set<Integer> indexes = viewedPageIndex.get(pagerData.getIdentifier());
-            if (indexes == null) {
-                indexes = new HashSet<>();
-                viewedPageIndex.put(pagerData.getIdentifier(), indexes);
+        public void onPageView(@NonNull PagerData pagerData, @Nullable LayoutData layoutData, long displayedAt) {
+            // View
+            int viewCount = updatePageViewCount(pagerData);
+            InAppReportingEvent viewed = InAppReportingEvent.pageView(scheduleId, message, pagerData, viewCount)
+                                                            .setLayoutData(layoutData);
+            displayHandler.addEvent(viewed);
+
+            // Completed
+            if (pagerData.isCompleted() && !completedPagers.contains(pagerData.getIdentifier())) {
+                completedPagers.add(pagerData.getIdentifier());
+
+                InAppReportingEvent completed = InAppReportingEvent.pagerCompleted(scheduleId, message, pagerData)
+                                                                   .setLayoutData(layoutData);
+                displayHandler.addEvent(completed);
             }
 
-            if (indexes.contains(pagerData.getIndex())) {
-                return;
+            // Summary
+            PagerSummary summary = this.pagerSummaryMap.get(pagerData.getIdentifier());
+            if (summary == null) {
+                summary = new PagerSummary();
+                this.pagerSummaryMap.put(pagerData.getIdentifier(), summary);
             }
-
-            indexes.add(pagerData.getIndex());
-
-            InAppReportingEvent event = InAppReportingEvent.pageView(scheduleId, message, pagerData)
-                                                           .setLayoutData(layoutData);
-
-            displayHandler.addEvent(event);
+            summary.updatePagerData(pagerData, displayedAt);
         }
 
         @Override
@@ -245,6 +253,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         public void onDismiss(long displayTime) {
             ResolutionInfo resolutionInfo = ResolutionInfo.dismissed();
             InAppReportingEvent event = InAppReportingEvent.resolution(scheduleId, message, displayTime, resolutionInfo);
+            sendPageSummaryEvents(null);
             displayHandler.addEvent(event);
             displayHandler.notifyFinished(resolutionInfo);
         }
@@ -255,6 +264,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
             InAppReportingEvent event = InAppReportingEvent.resolution(scheduleId, message, displayTime, resolutionInfo)
                                                            .setLayoutData(layoutData);
 
+            sendPageSummaryEvents(layoutData);
             displayHandler.addEvent(event);
             displayHandler.notifyFinished(resolutionInfo);
 
@@ -277,6 +287,53 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                                                            .setLayoutData(layoutData);
 
             displayHandler.addEvent(event);
+        }
+
+        /**
+         * Updates the pager page view count map.
+         *
+         * @param data PagerData from the page view event.
+         * @return the updated viewed count for the current page index.
+         */
+        private int updatePageViewCount(@NonNull PagerData data) {
+            Map<Integer, Integer> pageViews = pagerViewCounts.computeIfAbsent(data.getIdentifier(), key -> new HashMap<>(data.getCount()));
+            Integer count = pageViews.putIfAbsent(data.getIndex(), 0);
+            count = count != null ? count + 1 : 1;
+
+            pageViews.put(data.getIndex(), count);
+            return count;
+        }
+
+        private void sendPageSummaryEvents(@Nullable LayoutData layoutData) {
+            for (Map.Entry<String, PagerSummary> summaryEntry : this.pagerSummaryMap.entrySet()) {
+                PagerSummary summary = summaryEntry.getValue();
+
+                if (summary.pagerData == null) {
+                    continue;
+                }
+                InAppReportingEvent event = InAppReportingEvent.pagerSummary(scheduleId, message, summary.pagerData, summary.pageViewSummaries)
+                                                               .setLayoutData(layoutData);
+                displayHandler.addEvent(event);
+            }
+        }
+    }
+
+    private static class PagerSummary {
+        @Nullable
+        private PagerData pagerData;
+        private final List<InAppReportingEvent.PageViewSummary> pageViewSummaries = new ArrayList<>();
+
+        private long pageUpdateTime;
+
+        private void updatePagerData(PagerData data, long updateTime) {
+            if (this.pagerData != null) {
+                long duration = updateTime - pageUpdateTime;
+                InAppReportingEvent.PageViewSummary summary = new InAppReportingEvent.PageViewSummary(this.pagerData.getIndex(), duration);
+                this.pageViewSummaries.add(summary);
+            }
+
+            this.pagerData = data;
+            this.pageUpdateTime = updateTime;
         }
     }
 }

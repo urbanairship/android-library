@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.environment;
 
 import android.webkit.WebChromeClient;
 
+import com.urbanairship.android.layout.reporting.DisplayTimer;
 import com.urbanairship.android.layout.util.Factory;
 import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.webkit.AirshipWebChromeClient;
@@ -32,11 +33,17 @@ public class ViewEnvironment implements Environment {
     @NonNull
     private final ImageCache imageCache;
 
+    @NonNull
+    private final DisplayTimer displayTimer;
+
 
     public ViewEnvironment(@NonNull ComponentActivity activity,
                            @Nullable Factory<AirshipWebViewClient> webViewClientFactory,
-                           @Nullable ImageCache imageCache) {
+                           @Nullable ImageCache imageCache,
+                           @NonNull DisplayTimer displayTimer) {
+
         this.activity = activity;
+
         this.webChromeClientFactory = () -> new AirshipWebChromeClient(activity);
 
         if (webViewClientFactory != null) {
@@ -50,6 +57,8 @@ public class ViewEnvironment implements Environment {
         } else {
             this.imageCache = url -> null;
         }
+
+        this.displayTimer = displayTimer;
     }
 
     @NonNull
@@ -75,4 +84,9 @@ public class ViewEnvironment implements Environment {
         return imageCache;
     }
 
+    @NonNull
+    @Override
+    public DisplayTimer displayTimer() {
+        return displayTimer;
+    }
 }

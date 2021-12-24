@@ -5,15 +5,16 @@ package com.urbanairship.iam.events;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
 import com.urbanairship.android.layout.reporting.FormData;
-import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.android.layout.reporting.LayoutData;
+import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,6 +29,26 @@ import androidx.core.util.ObjectsCompat;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class InAppReportingEvent {
 
+    public static class PageViewSummary implements JsonSerializable {
+        private int index;
+        private long durationMs;
+
+        public PageViewSummary(int index, long durationMs) {
+            this.index = index;
+            this.durationMs = durationMs;
+        }
+
+        @NonNull
+        @Override
+        public JsonValue toJsonValue() {
+            return JsonMap.newBuilder()
+                          .put(PAGE_VIEW_INDEX, index)
+                          .put(PAGE_VIEW_DISPLAY_TIME, Event.millisecondsToSecondsString(durationMs))
+                          .build()
+                          .toJsonValue();
+        }
+    }
+
     // Event types
     @NonNull
     public static final String TYPE_RESOLUTION = "in_app_resolution";
@@ -39,6 +60,10 @@ public class InAppReportingEvent {
     public static final String TYPE_PAGE_SWIPE = "in_app_page_swipe";
     @NonNull
     public static final String TYPE_FORM_DISPLAY = "in_app_form_display";
+    @NonNull
+    public static final String TYPES_PAGER_SUMMARY = "in_app_pager_summary";
+    @NonNull
+    public static final String TYPES_PAGER_COMPLETED = "in_app_pager_completed";
     @NonNull
     public static final String TYPE_FORM_RESULT = "in_app_display";
     @NonNull
@@ -52,9 +77,13 @@ public class InAppReportingEvent {
     private static final String PAGER_ID = "pager_identifier";
     private static final String PAGER_INDEX = "page_index";
     private static final String PAGER_COUNT = "page_count";
+    private static final String PAGER_VIEWED_COUNT = "viewed_count";
+    private static final String PAGER_VIEWED_PAGES = "viewed_pages";
     private static final String PAGER_COMPLETED = "completed";
     private static final String PAGER_TO_INDEX = "to_page_index";
     private static final String PAGER_FROM_INDEX = "from_page_index";
+    private static final String PAGE_VIEW_INDEX = "index";
+    private static final String PAGE_VIEW_DISPLAY_TIME = "display_time";
 
     // Button keys
     private static final String BUTTON_IDENTIFIER = "button_identifier";
@@ -81,6 +110,7 @@ public class InAppReportingEvent {
     private static final String REPORTING_CONTEXT = "reporting_context";
     private static final String REPORTING_CONTEXT_FORM = "form";
     private static final String REPORTING_CONTEXT_FORM_ID = "identifier";
+    private static final String REPORTING_CONTEXT_FORM_SUBMITTED = "submitted";
     private static final String REPORTING_CONTEXT_PAGER = "pager";
     private static final String REPORTING_CONTEXT_PAGER_ID = "identifier";
     private static final String REPORTING_CONTEXT_PAGER_INDEX = "index";
@@ -182,13 +212,15 @@ public class InAppReportingEvent {
 
     public static InAppReportingEvent pageView(@NonNull String scheduleId,
                                                @NonNull InAppMessage message,
-                                               @NonNull PagerData pagerData) {
+                                               @NonNull PagerData pagerData,
+                                               int viewCount) {
         return new InAppReportingEvent(TYPE_PAGE_VIEW, scheduleId, message)
                 .setOverrides(JsonMap.newBuilder()
                                      .put(PAGER_COMPLETED, pagerData.isCompleted())
                                      .put(PAGER_ID, pagerData.getIdentifier())
                                      .put(PAGER_COUNT, pagerData.getCount())
                                      .put(PAGER_INDEX, pagerData.getIndex())
+                                     .put(PAGER_VIEWED_COUNT, viewCount)
                                      .build());
     }
 
@@ -203,6 +235,32 @@ public class InAppReportingEvent {
                                      .put(PAGER_ID, pagerData.getIdentifier())
                                      .put(PAGER_TO_INDEX, toIndex)
                                      .put(PAGER_FROM_INDEX, fromIndex)
+                                     .build());
+    }
+
+    public static InAppReportingEvent pagerCompleted(@NonNull String scheduleId,
+                                                     @NonNull InAppMessage message,
+                                                     @NonNull PagerData pagerData) {
+
+        return new InAppReportingEvent(TYPES_PAGER_COMPLETED, scheduleId, message)
+                .setOverrides(JsonMap.newBuilder()
+                                     .put(PAGER_ID, pagerData.getIdentifier())
+                                     .put(PAGER_INDEX, pagerData.getIndex())
+                                     .put(PAGER_COUNT, pagerData.getCount())
+                                     .build());
+    }
+
+    public static InAppReportingEvent pagerSummary(@NonNull String scheduleId,
+                                                   @NonNull InAppMessage message,
+                                                   @NonNull PagerData pagerData,
+                                                   @NonNull List<PageViewSummary> pageViews) {
+
+        return new InAppReportingEvent(TYPES_PAGER_SUMMARY, scheduleId, message)
+                .setOverrides(JsonMap.newBuilder()
+                                     .put(PAGER_ID, pagerData.getIdentifier())
+                                     .put(PAGER_INDEX, pagerData.getIndex())
+                                     .put(PAGER_COUNT, pagerData.getCount())
+                                     .putOpt(PAGER_VIEWED_PAGES, pageViews)
                                      .build());
     }
 
@@ -226,7 +284,6 @@ public class InAppReportingEvent {
         return this;
     }
 
-    @NonNull
     public void record(Analytics analytics) {
         boolean isAppDefined = InAppMessage.SOURCE_APP_DEFINED.equals(source);
         JsonMap.Builder builder = JsonMap.newBuilder()
@@ -268,9 +325,11 @@ public class InAppReportingEvent {
 
         if (layoutState != null) {
             String formId = layoutState.getFormId();
+            boolean isSubmitted = layoutState.getFormSubmitted() != null ? layoutState.getFormSubmitted() : false;
             if (formId != null) {
                 JsonMap formContext = JsonMap.newBuilder()
                                              .put(REPORTING_CONTEXT_FORM_ID, formId)
+                                             .put(REPORTING_CONTEXT_FORM_SUBMITTED, isSubmitted)
                                              .build();
                 contextBuilder.put(REPORTING_CONTEXT_FORM, formContext);
             }

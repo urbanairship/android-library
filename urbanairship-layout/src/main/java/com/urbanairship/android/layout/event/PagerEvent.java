@@ -8,9 +8,15 @@ import com.urbanairship.android.layout.model.PagerModel;
 import androidx.annotation.NonNull;
 
 public abstract class PagerEvent extends Event {
+    private final long time;
 
-    public PagerEvent(@NonNull EventType type) {
+    public PagerEvent(@NonNull EventType type, long time) {
         super(type);
+        this.time = time;
+    }
+
+    public long getTime() {
+        return time;
     }
 
     /** Event emitted by Pager views, announcing their size and current position. */
@@ -25,8 +31,8 @@ public abstract class PagerEvent extends Event {
          *
          * @param position The current position of the carousel.
          */
-        public Init(@NonNull PagerModel model, int position) {
-            super(EventType.PAGER_INIT);
+        public Init(@NonNull PagerModel model, int position, long time) {
+            super(EventType.PAGER_INIT, time);
             this.size = model.getItems().size();
             this.position = position;
             this.hasNext = position < size - 1;
@@ -75,6 +81,7 @@ public abstract class PagerEvent extends Event {
                 ", position=" + position +
                 ", hasNext=" + hasNext +
                 ", hasPrev=" + hasPrev +
+                ", time=" + getTime() +
                 '}';
         }
     }
@@ -106,8 +113,8 @@ public abstract class PagerEvent extends Event {
          * @param model The pager model.
          * @param position The position of the item being displayed.
          */
-        public Scroll(@NonNull PagerModel model, int position, int previousPosition, boolean isInternalScroll) {
-            super(EventType.PAGER_SCROLL);
+        public Scroll(@NonNull PagerModel model, int position, int previousPosition, boolean isInternalScroll, long time) {
+            super(EventType.PAGER_SCROLL, time);
             this.position = position;
             this.previousPosition = previousPosition;
             this.hasNext = position < model.getItems().size() - 1;
@@ -159,6 +166,7 @@ public abstract class PagerEvent extends Event {
                 ", hasNext=" + hasNext +
                 ", hasPrev=" + hasPrev +
                 ", isInternalScroll=" + isInternalScroll +
+                ", time=" + getTime() +
                 '}';
         }
     }

@@ -22,11 +22,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -222,7 +225,7 @@ public class InAppReportingEventTest {
     @Test
     public void testPageView() {
         PagerData pagerData = new PagerData("pager id", 1, 2, false);
-        InAppReportingEvent.pageView("schedule ID", message, pagerData)
+        InAppReportingEvent.pageView("schedule ID", message, pagerData, 1)
                            .record(mockAnalytics);
 
         JsonMap expectedData = JsonMap.newBuilder()
@@ -233,6 +236,7 @@ public class InAppReportingEventTest {
                                       .put("pager_identifier", "pager id")
                                       .put("page_index", 1)
                                       .put("page_count", 2)
+                                      .put("viewed_count", 1)
                                       .put("completed", false)
                                       .build();
 
@@ -258,6 +262,66 @@ public class InAppReportingEventTest {
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_PAGE_SWIPE, expectedData)));
     }
+
+    @Test
+    public void testPageCompleted() {
+        PagerData pagerData = new PagerData("pager id", 1, 2, true);
+
+        InAppReportingEvent.pagerCompleted("schedule ID", message, pagerData)
+                           .record(mockAnalytics);
+
+        JsonMap expectedData = JsonMap.newBuilder()
+                                      .put("source", "urban-airship")
+                                      .put("id", JsonMap.newBuilder()
+                                                        .put("message_id", "schedule ID")
+                                                        .build())
+                                      .put("pager_identifier", "pager id")
+                                      .put("page_count", 2)
+                                      .put("page_index", 1)
+                                      .build();
+
+        verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPES_PAGER_COMPLETED, expectedData)));
+    }
+
+    @Test
+    public void testPageViewSummary() {
+        InAppReportingEvent.PageViewSummary pageView = new InAppReportingEvent.PageViewSummary(0, 100000);
+
+        JsonMap expected = JsonMap.newBuilder()
+                .put("index", 0)
+                .put("display_time", "100.000")
+                .build();
+
+        assertEquals(expected, pageView.toJsonValue().getMap());
+    }
+
+    @Test
+    public void testPageSummary() {
+        PagerData pagerData = new PagerData("pager id", 1, 2, true);
+
+        List<InAppReportingEvent.PageViewSummary> views = new ArrayList<>();
+        views.add(new InAppReportingEvent.PageViewSummary(0, 100));
+        views.add(new InAppReportingEvent.PageViewSummary(1, 200));
+        views.add(new InAppReportingEvent.PageViewSummary(0, 300));
+        views.add(new InAppReportingEvent.PageViewSummary(1, 100));
+
+        InAppReportingEvent.pagerSummary("schedule ID", message, pagerData, views)
+                           .record(mockAnalytics);
+
+        JsonMap expectedData = JsonMap.newBuilder()
+                                      .put("source", "urban-airship")
+                                      .put("id", JsonMap.newBuilder()
+                                                        .put("message_id", "schedule ID")
+                                                        .build())
+                                      .put("pager_identifier", "pager id")
+                                      .put("page_count", 2)
+                                      .put("page_index", 1)
+                                      .putOpt("viewed_pages", views)
+                                      .build();
+
+        verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPES_PAGER_SUMMARY, expectedData)));
+    }
+
 
     @Test
     public void testFormDisplay() {
@@ -340,7 +404,7 @@ public class InAppReportingEventTest {
     @Test
     public void testContext() {
         PagerData pagerData = new PagerData("pager id", 1, 2, true);
-        LayoutData layoutData = new LayoutData("form id", pagerData);
+        LayoutData layoutData = new LayoutData("form id", true, pagerData);
         InAppReportingEvent.display("schedule ID", message)
                            .setLayoutData(layoutData)
                            .setReportingContext(JsonValue.wrap("reporting bits!"))
@@ -356,6 +420,7 @@ public class InAppReportingEventTest {
                                                           .build())
                                      .put("form", JsonMap.newBuilder()
                                                           .put("identifier", "form id")
+                                                          .put("submitted", true)
                                                           .build())
                                      .build();
 
@@ -373,7 +438,7 @@ public class InAppReportingEventTest {
     @Test
     public void testEmptyContextData() {
         InAppReportingEvent.display("schedule ID", message)
-                           .setLayoutData(new LayoutData(null, null))
+                           .setLayoutData(new LayoutData(null, null, null))
                            .setReportingContext(JsonValue.NULL)
                            .record(mockAnalytics);
 
@@ -393,7 +458,7 @@ public class InAppReportingEventTest {
         when(mockAnalytics.getConversionSendId()).thenReturn("conversion send id!");
 
         InAppReportingEvent.display("schedule ID", message)
-                           .setLayoutData(new LayoutData(null, null))
+                           .setLayoutData(new LayoutData(null, null, null))
                            .setReportingContext(JsonValue.NULL)
                            .record(mockAnalytics);
 

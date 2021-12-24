@@ -12,8 +12,8 @@
 
         <meta-data android:name="com.urbanairship.autopilot"
             android:value="com.urbanairship.Autopilot"/>
-        <meta-data
-            android:name="preloaded_fonts"
+
+        <meta-data android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
 
         <activity
@@ -23,6 +23,13 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name="leakcanary.internal.activity.LeakActivity">
+            <meta-data
+                android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
+                android:value="true" />
         </activity>
     </application>
 </manifest>

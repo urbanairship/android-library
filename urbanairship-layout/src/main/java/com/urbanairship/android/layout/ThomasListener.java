@@ -20,8 +20,9 @@ public interface ThomasListener {
      * Called when a pager changes its page.
      * @param pagerData The pager data.
      * @param state The layout state.
+     * @param displayedAt A timestamp from {@code DisplayTimer}.
      */
-    void onPageView(@NonNull PagerData pagerData, @Nullable LayoutData state);
+    void onPageView(@NonNull PagerData pagerData, @Nullable LayoutData state, long displayedAt);
 
     /**
      * Called when a pager changes its page due to a swipe gesture.

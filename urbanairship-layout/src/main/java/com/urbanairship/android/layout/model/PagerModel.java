@@ -93,14 +93,14 @@ public class PagerModel extends LayoutModel {
     // View Actions
     //
 
-    public void onScrollTo(int position, boolean isInternalScroll) {
-        bubbleEvent(new PagerEvent.Scroll(this, position, lastIndex, isInternalScroll));
+    public void onScrollTo(int position, boolean isInternalScroll, long time) {
+        bubbleEvent(new PagerEvent.Scroll(this, position, lastIndex, isInternalScroll, time));
 
         lastIndex = position;
     }
 
-    public void onConfigured(int position) {
-        bubbleEvent(new PagerEvent.Init(this, position));
+    public void onConfigured(int position, long time) {
+        bubbleEvent(new PagerEvent.Init(this, position, time));
     }
 
     //
