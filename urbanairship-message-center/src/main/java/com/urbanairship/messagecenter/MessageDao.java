@@ -1,5 +1,7 @@
 package com.urbanairship.messagecenter;
 
+import com.urbanairship.analytics.data.BatchedQueryHelper;
+
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -17,7 +19,6 @@ import androidx.room.Update;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Dao
 public abstract class MessageDao {
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract void insert(@NonNull MessageEntity message);
 
@@ -62,9 +63,13 @@ public abstract class MessageDao {
     public abstract void markMessagesReadOrigin(@NonNull List<String> messageIds);
 
     @Transaction
-    @Query("DELETE FROM richpush WHERE message_id IN (:messageIds)")
     @NonNull
-    public abstract void deleteMessages(@NonNull List<String> messageIds);
+    public void deleteMessages(@NonNull List<String> messageIds) {
+         BatchedQueryHelper.runBatched(messageIds, this::deleteMessagesBatch);
+    }
+
+    @Query("DELETE FROM richpush WHERE message_id IN (:messageIds)")
+    abstract void deleteMessagesBatch(@NonNull List<String> messageIds);
 
     @Transaction
     @Query("DELETE FROM richpush")
@@ -78,6 +83,4 @@ public abstract class MessageDao {
     @Update
     @NonNull
     public abstract int updateMessage(@NonNull MessageEntity message);
-
-
 }
