@@ -80,7 +80,15 @@ public abstract class MessageDao {
     @NonNull
     public abstract void insertMessages(@NonNull List<MessageEntity> messages);
 
-    @Update
+    @Update(onConflict = OnConflictStrategy.REPLACE)
     @NonNull
     public abstract int updateMessage(@NonNull MessageEntity message);
+
+    @Query("DELETE FROM richpush WHERE _id NOT IN (SELECT MIN(_id) FROM richpush GROUP BY message_id)")
+    @NonNull
+    public abstract void deleteDuplicates();
+
+    @Query("SELECT EXISTS (SELECT 1 FROM richpush WHERE message_id = :id)")
+    @NonNull
+    public abstract boolean messageExists(@NonNull String id);
 }
