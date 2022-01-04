@@ -2,6 +2,15 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.1.1 January 4, 2022
+
+Patch release that fixes Message Center crashes and issues.
+
+### Changes
+- Fixed marking messages as read or deleting messages in Message Center.
+- Fixed a crash when enabling Message Center feature.
+- Fixed a crash when deleting 1000+ messages in Message Center.
+
 ## Version 16.1.0 November 15, 2021
 
 Minor release that adds a new chat action and has some minor
