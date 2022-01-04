@@ -11,7 +11,6 @@ import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.model.LabelButtonModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
-import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.NonNull;
@@ -19,7 +18,7 @@ import androidx.annotation.Nullable;
 
 import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 
-public class LabelButtonView extends MaterialButton implements BaseView<LabelButtonModel>, Recyclable {
+public class LabelButtonView extends MaterialButton implements BaseView<LabelButtonModel> {
     private LabelButtonModel model;
 
     public LabelButtonView(@NonNull Context context) {
@@ -90,14 +89,4 @@ public class LabelButtonView extends MaterialButton implements BaseView<LabelBut
             LabelButtonView.this.setEnabled(isEnabled);
         }
     };
-
-    @Override
-    public void onRecycled() {
-        model.setViewListener(null);
-        LayoutUtils.resetBorderAndBackground(this);
-        setText(null);
-        setContentDescription(null);
-        setOnClickListener(null);
-        setEnabled(true);
-    }
 }

@@ -90,10 +90,9 @@ public abstract class Image {
         private final DrawableResource drawable;
         @NonNull
         private final Color tint;
-        @NonNull
         private final float scale;
 
-        public Icon(@NonNull DrawableResource drawable, @NonNull Color tint, @NonNull float scale) {
+        public Icon(@NonNull DrawableResource drawable, @NonNull Color tint, float scale) {
             super(Type.ICON);
             this.drawable = drawable;
             this.tint = tint;

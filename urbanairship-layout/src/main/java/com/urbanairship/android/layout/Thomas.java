@@ -36,8 +36,6 @@ import com.urbanairship.android.layout.model.ToggleModel;
 import com.urbanairship.android.layout.model.WebViewModel;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.ui.ModalActivity;
-import com.urbanairship.android.layout.util.LayoutUtils;
-import com.urbanairship.android.layout.view.BaseView;
 import com.urbanairship.android.layout.view.CheckboxView;
 import com.urbanairship.android.layout.view.ContainerLayoutView;
 import com.urbanairship.android.layout.view.EmptyView;
@@ -59,10 +57,6 @@ import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.RecyclerView;
-
-import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
 /**
  * Entry point and related helper methods for rendering layouts based on our internal DSL.
@@ -207,81 +201,5 @@ public final class Thomas {
                 return ScoreView.create(context, (ScoreModel) model, environment);
         }
         throw new IllegalArgumentException("Error creating view! Unrecognized view type: " + model.getType());
-    }
-
-    @NonNull
-    public static LayoutViewHolder<?,?> viewHolder(
-        @NonNull Context context,
-        @NonNull ViewType viewType
-    ) {
-        switch (viewType) {
-            case CONTAINER:
-                return new LayoutViewHolder<>(new ContainerLayoutView(context));
-            case LINEAR_LAYOUT:
-                return new LayoutViewHolder<>(new LinearLayoutView(context));
-            case SCROLL_LAYOUT:
-                return new LayoutViewHolder<>(new ScrollLayoutView(context));
-            case MEDIA:
-                return new LayoutViewHolder<>(new MediaView(context));
-            case LABEL:
-                return new LayoutViewHolder<>(new LabelView(context));
-            case LABEL_BUTTON:
-                return new LayoutViewHolder<>(new LabelButtonView(context));
-            case IMAGE_BUTTON:
-                return new LayoutViewHolder<>(new ImageButtonView(context));
-            case EMPTY_VIEW:
-                return new LayoutViewHolder<>(new EmptyView(context));
-            case WEB_VIEW:
-                return new LayoutViewHolder<>(new WebViewView(context));
-            case PAGER:
-                return new LayoutViewHolder<>(new PagerView(context));
-            case PAGER_INDICATOR:
-                return new LayoutViewHolder<>(new PagerIndicatorView(context));
-            case CHECKBOX:
-                return new LayoutViewHolder<>(new CheckboxView(context));
-            case RADIO_INPUT:
-                return new LayoutViewHolder<>(new RadioInputView(context));
-            case TOGGLE:
-                return new LayoutViewHolder<>(new ToggleView(context));
-            case TEXT_INPUT:
-                return new LayoutViewHolder<>(new TextInputView(context));
-            case SCORE:
-                // TODO: implement ScoreView
-                break;
-            case PAGER_CONTROLLER:
-            case RADIO_INPUT_CONTROLLER:
-            case FORM_CONTROLLER:
-            case NPS_FORM_CONTROLLER:
-            case CHECKBOX_CONTROLLER:
-                // TODO: tweak types to disallow controllers as list items...
-                break;
-        }
-        throw new IllegalArgumentException("Error creating empty view stub! Unrecognized view type: " + viewType);
-    }
-
-    public static class LayoutViewHolder<V extends View & BaseView<M>, M extends BaseModel> extends RecyclerView.ViewHolder {
-
-        private final V view;
-
-        public LayoutViewHolder(@NonNull V itemView) {
-            super(itemView);
-            itemView.setLayoutParams(new RecyclerView.LayoutParams(MATCH_PARENT, MATCH_PARENT));
-            view = itemView;
-
-            LayoutUtils.doOnApplyWindowInsets(view, (v, insets, padding) -> {
-                v.setPadding(
-                    padding.getLeft() + insets.left,
-                    padding.getTop() + insets.top,
-                    padding.getRight() + insets.right,
-                    padding.getBottom() + insets.bottom
-                );
-                return WindowInsetsCompat.CONSUMED;
-            });
-        }
-
-        public void bind(@NonNull BaseModel item, @NonNull Environment environment) {
-            //noinspection unchecked
-            view.setModel((M) item, environment);
-        }
     }
 }

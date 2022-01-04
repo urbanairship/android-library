@@ -12,7 +12,6 @@ import com.urbanairship.android.layout.model.ContainerLayoutModel;
 import com.urbanairship.android.layout.util.ConstraintSetBuilder;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout;
-import com.urbanairship.android.layout.widget.Recyclable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.WindowInsetsCompat;
 
-public class ContainerLayoutView extends ClippableConstraintLayout implements BaseView<ContainerLayoutModel>, Recyclable {
+public class ContainerLayoutView extends ClippableConstraintLayout implements BaseView<ContainerLayoutModel> {
     private ContainerLayoutModel model;
     private Environment environment;
 
@@ -44,6 +43,7 @@ public class ContainerLayoutView extends ClippableConstraintLayout implements Ba
 
     public void init() {
         setId(generateViewId());
+        setClipChildren(false);
     }
 
     @NonNull
@@ -69,17 +69,19 @@ public class ContainerLayoutView extends ClippableConstraintLayout implements Ba
 
         constraintBuilder.build().applyTo(this);
 
-        // We need to set up insets after applying constraints so that initial margins will be available.
-        for (View itemView : windowInsetViews) {
-            LayoutUtils.doOnApplyWindowInsets(itemView, (v, insets, margins, padding) -> {
-                LayoutUtils.updateLayoutParams(itemView, lp -> {
-                    lp.topMargin = margins.getTop() + insets.top;
-                    lp.bottomMargin = margins.getBottom() + insets.bottom;
-                    lp.leftMargin = margins.getLeft() + insets.left;
-                    lp.rightMargin = margins.getRight() + insets.right;
+        if (environment.isIgnoringSafeAreas()) {
+            // We need to set up insets after applying constraints so that initial margins will be available.
+            for (View itemView : windowInsetViews) {
+                LayoutUtils.doOnApplyWindowInsets(itemView, (v, insets, margins, padding) -> {
+                    LayoutUtils.updateLayoutParams(itemView, lp -> {
+                        lp.topMargin = margins.getTop() + insets.top;
+                        lp.bottomMargin = margins.getBottom() + insets.bottom;
+                        lp.leftMargin = margins.getLeft() + insets.left;
+                        lp.rightMargin = margins.getRight() + insets.right;
+                    });
+                    return WindowInsetsCompat.CONSUMED;
                 });
-                return WindowInsetsCompat.CONSUMED;
-            });
+            }
         }
     }
 
@@ -102,12 +104,5 @@ public class ContainerLayoutView extends ClippableConstraintLayout implements Ba
         if (!item.shouldIgnoreSafeArea()) {
             windowInsetViews.add(itemView);
         }
-    }
-
-    @Override
-    public void onRecycled() {
-        windowInsetViews.clear();
-        LayoutUtils.resetBorderAndBackground(this);
-        removeAllViews();
     }
 }

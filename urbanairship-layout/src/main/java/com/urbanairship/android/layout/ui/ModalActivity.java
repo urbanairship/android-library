@@ -92,15 +92,20 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             long restoredTime = savedInstanceState != null ? savedInstanceState.getLong(KEY_DISPLAY_TIME) : 0;
             this.displayTimer = new DisplayTimer(this, restoredTime);
 
-            Environment environment =
-                new ViewEnvironment(this, args.getWebViewClientFactory(), args.getImageCache(), displayTimer);
-
             ModalPlacement placement = presentation.getResolvedPlacement(this);
             if (placement.shouldIgnoreSafeArea()) {
                 WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
                 getWindow().setStatusBarColor(R.color.system_bar_scrim_dark);
                 getWindow().setNavigationBarColor(R.color.system_bar_scrim_dark);
             }
+
+            Environment environment = new ViewEnvironment(
+                this,
+                args.getWebViewClientFactory(),
+                args.getImageCache(),
+                displayTimer,
+                placement.shouldIgnoreSafeArea()
+            );
 
             BaseModel view = args.getPayload().getView();
             view.addListener(this);

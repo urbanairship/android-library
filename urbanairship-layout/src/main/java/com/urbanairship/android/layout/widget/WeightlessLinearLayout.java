@@ -363,8 +363,14 @@ public class WeightlessLinearLayout extends ViewGroup {
 
                     int widthSpec;
                     if (lp.width == 0 && lp.maxWidthPercent > 0) {
-                        int childWidth = (int)(widthSize * lp.maxWidthPercent) - (lp.getMarginStart() + lp.getMarginEnd());
-                        widthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY);
+                        int childWidth;
+                        if (widthSize == 0 && widthMode == MeasureSpec.UNSPECIFIED) {
+                            childWidth = LayoutParams.WRAP_CONTENT;
+                            widthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.UNSPECIFIED);
+                        } else {
+                            childWidth = (int) (widthSize * lp.maxWidthPercent) - (lp.getMarginStart() + lp.getMarginEnd());
+                            widthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY);
+                        }
                     } else {
                         widthSpec = getChildMeasureSpec(widthMeasureSpec, getPaddingStart() + getPaddingEnd() + lp.getMarginStart() + lp.getMarginEnd(), lp.width);
                     }
@@ -585,8 +591,14 @@ public class WeightlessLinearLayout extends ViewGroup {
 
                     int heightSpec;
                     if (lp.height == 0 && lp.maxHeightPercent > 0) {
-                        int childHeight = (int)(heightSize * lp.maxHeightPercent) - (lp.topMargin + lp.bottomMargin);
-                        heightSpec = MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.EXACTLY);
+                        int childHeight;
+                        if (heightSize == 0 && heightMode == MeasureSpec.UNSPECIFIED) {
+                            childHeight = LayoutParams.WRAP_CONTENT;
+                            heightSpec = MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.UNSPECIFIED);
+                        } else {
+                            childHeight = (int)(heightSize * lp.maxHeightPercent) - (lp.topMargin + lp.bottomMargin);
+                            heightSpec = MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.EXACTLY);
+                        }
                     } else {
                         heightSpec = getChildMeasureSpec(widthMeasureSpec, getPaddingTop() + getPaddingBottom() + lp.topMargin + lp.bottomMargin, lp.height);
                     }

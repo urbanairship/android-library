@@ -25,7 +25,6 @@ import com.urbanairship.android.layout.model.MediaModel;
 import com.urbanairship.android.layout.property.MediaType;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.android.layout.util.ResourceUtils;
-import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.images.ImageRequestOptions;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.util.ManifestUtils;
@@ -50,7 +49,7 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class MediaView extends FrameLayout implements BaseView<MediaModel>, Recyclable {
+public class MediaView extends FrameLayout implements BaseView<MediaModel> {
 
     private MediaModel model;
     private Environment environment;
@@ -369,10 +368,4 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel>, Recy
             }
         }
     };
-
-    @Override
-    public void onRecycled() {
-        LayoutUtils.resetBorderAndBackground(this);
-        removeAllViews();
-    }
 }

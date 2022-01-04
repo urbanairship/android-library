@@ -12,7 +12,6 @@ import com.urbanairship.android.layout.model.ScoreModel;
 import com.urbanairship.android.layout.property.ScoreStyle;
 import com.urbanairship.android.layout.util.ConstraintSetBuilder;
 import com.urbanairship.android.layout.util.LayoutUtils;
-import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.android.layout.widget.ShapeButton;
 import com.urbanairship.util.UAStringUtil;
 
@@ -21,12 +20,11 @@ import java.util.Objects;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 
 /**
  * Form input that presents a set of numeric options representing a score.
  */
-public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel>, Recyclable {
+public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> {
     private ScoreModel model;
 
     @Nullable
@@ -135,14 +133,5 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel>,
         }
         // Notify our model
         model.onScoreChange(score);
-    }
-
-    @Override
-    public void onRecycled() {
-        selectedScore = null;
-        LayoutUtils.resetBorderAndBackground(this);
-        setContentDescription(null);
-        new ConstraintSet().applyTo(this);
-        removeAllViews();
     }
 }

@@ -8,14 +8,13 @@ import android.util.AttributeSet;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
-import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatTextView;
 
-public class LabelView extends AppCompatTextView implements BaseView<LabelModel>, Recyclable {
+public class LabelView extends AppCompatTextView implements BaseView<LabelModel> {
     public LabelView(@NonNull Context context) {
         super(context);
         init();
@@ -50,12 +49,5 @@ public class LabelView extends AppCompatTextView implements BaseView<LabelModel>
         if (!UAStringUtil.isEmpty(model.getContentDescription())) {
             setContentDescription(model.getContentDescription());
         }
-    }
-
-    @Override
-    public void onRecycled() {
-        LayoutUtils.resetBorderAndBackground(this);
-        setContentDescription(null);
-        setText(null);
     }
 }

@@ -36,12 +36,15 @@ public class ViewEnvironment implements Environment {
     @NonNull
     private final DisplayTimer displayTimer;
 
+    private final boolean isIgnoringSafeAreas;
 
-    public ViewEnvironment(@NonNull ComponentActivity activity,
-                           @Nullable Factory<AirshipWebViewClient> webViewClientFactory,
-                           @Nullable ImageCache imageCache,
-                           @NonNull DisplayTimer displayTimer) {
-
+    public ViewEnvironment(
+        @NonNull ComponentActivity activity,
+        @Nullable Factory<AirshipWebViewClient> webViewClientFactory,
+        @Nullable ImageCache imageCache,
+        @NonNull DisplayTimer displayTimer,
+        boolean isIgnoringSafeAreas
+    ) {
         this.activity = activity;
 
         this.webChromeClientFactory = () -> new AirshipWebChromeClient(activity);
@@ -59,6 +62,8 @@ public class ViewEnvironment implements Environment {
         }
 
         this.displayTimer = displayTimer;
+
+        this.isIgnoringSafeAreas = isIgnoringSafeAreas;
     }
 
     @NonNull
@@ -88,5 +93,10 @@ public class ViewEnvironment implements Environment {
     @Override
     public DisplayTimer displayTimer() {
         return displayTimer;
+    }
+
+    @Override
+    public boolean isIgnoringSafeAreas() {
+        return isIgnoringSafeAreas;
     }
 }

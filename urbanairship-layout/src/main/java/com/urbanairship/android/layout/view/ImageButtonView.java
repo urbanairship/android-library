@@ -15,7 +15,6 @@ import com.urbanairship.android.layout.model.ImageButtonModel;
 import com.urbanairship.android.layout.property.Image;
 import com.urbanairship.android.layout.util.ColorStateListBuilder;
 import com.urbanairship.android.layout.util.LayoutUtils;
-import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.images.ImageRequestOptions;
 import com.urbanairship.util.UAStringUtil;
 
@@ -25,7 +24,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.core.content.ContextCompat;
 
-public class ImageButtonView extends AppCompatImageButton implements BaseView<ImageButtonModel>, Recyclable {
+public class ImageButtonView extends AppCompatImageButton implements BaseView<ImageButtonModel> {
     private ImageButtonModel model;
     private Environment environment;
 
@@ -115,15 +114,4 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
             ImageButtonView.this.setEnabled(isEnabled);
         }
     };
-
-    @Override
-    public void onRecycled() {
-        LayoutUtils.resetBorderAndBackground(this);
-        model.setViewListener(null);
-        setContentDescription(null);
-        setImageDrawable(null);
-        setImageTintList(null);
-        setOnClickListener(null);
-        setEnabled(true);
-    }
 }

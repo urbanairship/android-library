@@ -21,7 +21,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.WebViewModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
-import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.util.ManifestUtils;
 import com.urbanairship.webkit.AirshipWebView;
@@ -36,7 +35,7 @@ import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 
 /** Web view... view? */
-public class WebViewView extends FrameLayout implements BaseView<WebViewModel>, Recyclable {
+public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
     private WebViewModel model;
     private Environment environment;
 
@@ -158,22 +157,6 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel>, 
         }
 
         webView.loadUrl(model.getUrl());
-    }
-
-    @Override
-    public void onRecycled() {
-        environment.lifecycle().removeObserver(lifecycleListener);
-
-        if (this.webView != null) {
-            this.webView.stopLoading();
-            this.webView.setWebChromeClient(null);
-            this.webView.setWebViewClient(null);
-            this.webView.destroy();
-            this.webView = null;
-        }
-
-        setContentDescription(null);
-        removeAllViews();
     }
 
     private abstract static class ClientListener implements AirshipWebViewClient.Listener {

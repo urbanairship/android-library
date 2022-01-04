@@ -39,15 +39,15 @@ public class ShapeDrawableWrapper extends DrawableWrapper {
         int width;
         int height;
         if (state.aspectRatio == 1) {
-            int maxDimension = Math.max(bounds.width(), bounds.height());
-            width = maxDimension;
-            height = maxDimension;
+            int minDimension = Math.min(bounds.width(), bounds.height());
+            width = minDimension;
+            height = minDimension;
         } else if (state.aspectRatio > 1) {
-            width = bounds.width();
-            height = (int) (bounds.width() / state.aspectRatio);
-        } else {
             width = (int) (bounds.height() * state.aspectRatio);
             height = bounds.height();
+        } else {
+            width = bounds.width();
+            height = (int) (bounds.width() / state.aspectRatio);
         }
 
         width *= state.scale;
@@ -62,6 +62,18 @@ public class ShapeDrawableWrapper extends DrawableWrapper {
         r.bottom -= heightDiff;
 
         super.onBoundsChange(r);
+    }
+
+    @Override
+    public int getIntrinsicWidth() {
+        // Override intrinsic width so icons can be rendered full size within our bounds.
+        return -1;
+    }
+
+    @Override
+    public int getIntrinsicHeight() {
+        // Override intrinsic height so icons can be rendered full size within our bounds.
+        return -1;
     }
 
     @Override

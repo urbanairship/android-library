@@ -9,7 +9,6 @@ import android.view.View;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.EmptyModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
-import com.urbanairship.android.layout.widget.Recyclable;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,7 +20,7 @@ import androidx.annotation.Nullable;
  *
  * @see EmptyModel
  */
-public class EmptyView extends View implements BaseView<EmptyModel>, Recyclable {
+public class EmptyView extends View implements BaseView<EmptyModel> {
     private EmptyModel model;
 
     public EmptyView(Context context) {
@@ -58,10 +57,5 @@ public class EmptyView extends View implements BaseView<EmptyModel>, Recyclable 
 
     private void configure() {
         LayoutUtils.applyBorderAndBackground(this, model);
-    }
-
-    @Override
-    public void onRecycled() {
-        LayoutUtils.resetBorderAndBackground(this);
     }
 }

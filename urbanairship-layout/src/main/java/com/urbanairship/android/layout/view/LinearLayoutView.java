@@ -14,7 +14,6 @@ import com.urbanairship.android.layout.property.Direction;
 import com.urbanairship.android.layout.property.Margin;
 import com.urbanairship.android.layout.property.Size;
 import com.urbanairship.android.layout.util.LayoutUtils;
-import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.android.layout.widget.WeightlessLinearLayout;
 
 import java.util.List;
@@ -25,7 +24,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 
-public class LinearLayoutView extends WeightlessLinearLayout implements BaseView<LinearLayoutModel>, Recyclable {
+public class LinearLayoutView extends WeightlessLinearLayout implements BaseView<LinearLayoutModel> {
 
     private LinearLayoutModel model;
     private Environment environment;
@@ -47,6 +46,7 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
 
     private void init() {
         setId(generateViewId());
+        setClipChildren(false);
     }
 
     @NonNull
@@ -71,15 +71,17 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
 
         addItems(model.getItems());
 
-        LayoutUtils.doOnApplyWindowInsets(this, (v, insets, padding) -> {
-            v.setPadding(
-                padding.getLeft() + insets.left,
-                padding.getTop() + insets.top,
-                padding.getRight() + insets.right,
-                padding.getBottom() + insets.bottom
-            );
-            return WindowInsetsCompat.CONSUMED;
-        });
+        if (environment.isIgnoringSafeAreas()) {
+            LayoutUtils.doOnApplyWindowInsets(this, (v, insets, padding) -> {
+                v.setPadding(
+                    padding.getLeft() + insets.left,
+                    padding.getTop() + insets.top,
+                    padding.getRight() + insets.right,
+                    padding.getBottom() + insets.bottom
+                );
+                return WindowInsetsCompat.CONSUMED;
+            });
+        }
     }
 
     private void addItems(List<LinearLayoutModel.Item> items) {
@@ -144,11 +146,5 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
         }
 
         return lp;
-    }
-
-    @Override
-    public void onRecycled() {
-        LayoutUtils.resetBorderAndBackground(this);
-        removeAllViews();
     }
 }

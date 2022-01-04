@@ -2,15 +2,14 @@
 
 package com.urbanairship.android.layout.view;
 
+import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import com.urbanairship.android.layout.Thomas;
-import com.urbanairship.android.layout.Thomas.LayoutViewHolder;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.BaseModel;
-import com.urbanairship.android.layout.property.ViewType;
-import com.urbanairship.android.layout.widget.Recyclable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +17,9 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class PagerAdapter extends RecyclerView.Adapter<LayoutViewHolder<?, ?>> {
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+
+public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> {
     @NonNull
     private final List<BaseModel> items = new ArrayList<>();
 
@@ -31,23 +32,20 @@ public class PagerAdapter extends RecyclerView.Adapter<LayoutViewHolder<?, ?>> {
 
     @NonNull
     @Override
-    public LayoutViewHolder<?, ?> onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return Thomas.viewHolder(parent.getContext(), ViewType.from(viewType));
+    public PagerAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return new ViewHolder(parent.getContext());
     }
 
     @Override
-    public void onBindViewHolder(@NonNull LayoutViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull PagerAdapter.ViewHolder holder, int position) {
         BaseModel model = getItemAtPosition(position);
         holder.bind(model, environment);
     }
 
     @Override
-    public void onViewRecycled(@NonNull LayoutViewHolder<?, ?> holder) {
+    public void onViewRecycled(@NonNull PagerAdapter.ViewHolder holder) {
         super.onViewRecycled(holder);
-        View view = holder.itemView;
-        if (view instanceof Recyclable) {
-            ((Recyclable) view).onRecycled();
-        }
+        holder.onRecycled();
     }
 
     @Override
@@ -69,6 +67,29 @@ public class PagerAdapter extends RecyclerView.Adapter<LayoutViewHolder<?, ?>> {
             this.items.clear();
             this.items.addAll(items);
             notifyDataSetChanged();
+        }
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        private final ViewGroup container;
+
+        public ViewHolder(@NonNull Context context) {
+            this(new FrameLayout(context));
+        }
+
+        private ViewHolder(@NonNull ViewGroup container) {
+            super(container);
+            container.setLayoutParams(new RecyclerView.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+            this.container = container;
+        }
+
+        public void bind(@NonNull BaseModel item, @NonNull Environment environment) {
+            View view = Thomas.view(itemView.getContext(), item, environment);
+            container.addView(view, new RecyclerView.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        }
+
+        public void onRecycled() {
+            container.removeAllViews();
         }
     }
 }

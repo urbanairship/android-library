@@ -33,4 +33,6 @@ public interface Environment {
 
     @NonNull
     DisplayTimer displayTimer();
+
+    boolean isIgnoringSafeAreas();
 }

@@ -12,7 +12,6 @@ import android.view.MotionEvent;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
-import com.urbanairship.android.layout.widget.Recyclable;
 import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.NonNull;
@@ -23,7 +22,7 @@ import androidx.appcompat.widget.AppCompatEditText;
 import static android.view.MotionEvent.ACTION_UP;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class TextInputView extends AppCompatEditText implements BaseView<TextInputModel>, Recyclable {
+public class TextInputView extends AppCompatEditText implements BaseView<TextInputModel> {
     private TextInputModel model;
 
     public TextInputView(@NonNull Context context) {
@@ -97,14 +96,4 @@ public class TextInputView extends AppCompatEditText implements BaseView<TextInp
         }
         return false;
     };
-
-    @Override
-    public void onRecycled() {
-        removeTextChangedListener(textWatcher);
-        setOnTouchListener(null);
-        LayoutUtils.resetBorderAndBackground(this);
-        setText(null);
-        setHint(null);
-        setContentDescription(null);
-    }
 }
