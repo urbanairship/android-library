@@ -48,8 +48,10 @@ class ThomasListenerProxy implements EventListener {
                 ReportingEvent.PageSwipe pageSwipe = (ReportingEvent.PageSwipe) event;
                 listener.onPageSwipe(
                     pageSwipe.getPagerData(),
-                    pageSwipe.getToIndex(),
-                    pageSwipe.getFromIndex(),
+                    pageSwipe.getToPageIndex(),
+                    pageSwipe.getToPageId(),
+                    pageSwipe.getFromPageIndex(),
+                    pageSwipe.getFromPageId(),
                     pageSwipe.getState()
                 );
                 return false;

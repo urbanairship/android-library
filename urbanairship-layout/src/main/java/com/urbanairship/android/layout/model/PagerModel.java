@@ -7,6 +7,8 @@ import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.PagerEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
+import com.urbanairship.android.layout.property.Margin;
+import com.urbanairship.android.layout.property.Size;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -18,9 +20,15 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import static com.urbanairship.android.layout.model.Identifiable.identifierFromJson;
+
 public class PagerModel extends LayoutModel {
     @NonNull
-    private final List<BaseModel> items;
+    private final List<PagerModel.Item> items;
+
+    @NonNull
+    private final List<BaseModel> children = new ArrayList<>();
+
     @Nullable
     private final Boolean disableSwipe;
 
@@ -29,14 +37,15 @@ public class PagerModel extends LayoutModel {
 
     private int lastIndex = 0;
 
-    public PagerModel(@NonNull List<BaseModel> items, @Nullable Boolean disableSwipe, @Nullable Color backgroundColor, @Nullable Border border) {
+    public PagerModel(@NonNull List<PagerModel.Item> items, @Nullable Boolean disableSwipe, @Nullable Color backgroundColor, @Nullable Border border) {
         super(ViewType.PAGER, backgroundColor, border);
 
         this.items = items;
         this.disableSwipe = disableSwipe;
 
-        for (BaseModel item : items) {
-            item.addListener(this);
+        for (PagerModel.Item item : items) {
+            item.view.addListener(this);
+            children.add(item.view);
         }
     }
 
@@ -46,20 +55,13 @@ public class PagerModel extends LayoutModel {
         Boolean disableSwipe = json.opt("disable_swipe").getBoolean();
         Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
-
-        List<BaseModel> items = new ArrayList<>(itemsJson.size());
-        for (int i = 0; i < itemsJson.size(); i++) {
-            JsonMap itemJson = itemsJson.get(i).optMap();
-            BaseModel item = Thomas.model(itemJson);
-            items.add(item);
-        }
-
+        List<PagerModel.Item> items = PagerModel.Item.fromJsonList(itemsJson);
         return new PagerModel(items, disableSwipe, backgroundColor, border);
     }
 
     @Override
     public List<BaseModel> getChildren() {
-        return items;
+        return children;
     }
 
     //
@@ -67,7 +69,7 @@ public class PagerModel extends LayoutModel {
     //
 
     @NonNull
-    public List<BaseModel> getItems() {
+    public List<PagerModel.Item> getItems() {
         return items;
     }
 
@@ -94,13 +96,15 @@ public class PagerModel extends LayoutModel {
     //
 
     public void onScrollTo(int position, boolean isInternalScroll, long time) {
-        bubbleEvent(new PagerEvent.Scroll(this, position, lastIndex, isInternalScroll, time));
-
+        String pageId = this.items.get(position).identifier;
+        String previousPageId = this.items.get(lastIndex).identifier;
+        bubbleEvent(new PagerEvent.Scroll(this, position, pageId, lastIndex, previousPageId, isInternalScroll, time));
         lastIndex = position;
     }
 
     public void onConfigured(int position, long time) {
-        bubbleEvent(new PagerEvent.Init(this, position, time));
+        String pageId = this.items.get(position).identifier;
+        bubbleEvent(new PagerEvent.Init(this, position, pageId, time));
     }
 
     //
@@ -136,5 +140,49 @@ public class PagerModel extends LayoutModel {
         }
 
         return super.trickleEvent(event);
+    }
+
+    public static class Item {
+        @NonNull
+        private final BaseModel view;
+        @NonNull
+        private final String identifier;
+
+        public Item(@NonNull BaseModel view, @NonNull String identifier) {
+            this.view = view;
+            this.identifier = identifier;
+        }
+
+        @NonNull
+        public static PagerModel.Item fromJson(@NonNull JsonMap json) throws JsonException {
+            JsonMap viewJson = json.opt("view").optMap();
+            String identifier = identifierFromJson(json);
+            BaseModel view = Thomas.model(viewJson);
+
+
+            return new PagerModel.Item(view, identifier);
+        }
+
+        @NonNull
+        public static List<PagerModel.Item> fromJsonList(@NonNull JsonList json) throws JsonException {
+            List<PagerModel.Item> items = new ArrayList<>(json.size());
+            for (int i = 0; i < json.size(); i++) {
+                JsonMap itemJson = json.get(i).optMap();
+                PagerModel.Item item = PagerModel.Item.fromJson(itemJson);
+                items.add(item);
+            }
+            return items;
+        }
+
+        @NonNull
+        public BaseModel getView() {
+            return view;
+        }
+
+        @NonNull
+        public String getIdentifier() {
+            return identifier;
+        }
+
     }
 }

@@ -265,7 +265,7 @@ public class AirshipLayoutDisplayAdapterTest {
         LayoutData layoutData = mock(LayoutData.class);
         ThomasListener listener = prepareListenerTest();
 
-        PagerData pagerData = new PagerData("some id", 1, 2, true);
+        PagerData pagerData = new PagerData("some id", 1, "page1", 2, true);
         listener.onPageView(pagerData, layoutData, 0);
 
         InAppReportingEvent expected = InAppReportingEvent.pageView(scheduleId, message, pagerData, 1)
@@ -279,12 +279,12 @@ public class AirshipLayoutDisplayAdapterTest {
         LayoutData layoutData = mock(LayoutData.class);
         ThomasListener listener = prepareListenerTest();
 
-        listener.onPageView(new PagerData("some id", 0, 2, false), layoutData, 0);
-        listener.onPageView(new PagerData("some id", 1, 2, true), layoutData, 1);
-        listener.onPageView(new PagerData("some id", 0, 2, true), layoutData, 2);
-        listener.onPageView(new PagerData("some id", 1, 2, true), layoutData, 3);
+        listener.onPageView(new PagerData("some id", 0, "page0",2, false), layoutData, 0);
+        listener.onPageView(new PagerData("some id", 1, "page1",2, true), layoutData, 1);
+        listener.onPageView(new PagerData("some id", 0, "page0",2, true), layoutData, 2);
+        listener.onPageView(new PagerData("some id", 1, "page1",2, true), layoutData, 3);
 
-        InAppReportingEvent pagerCompleted = InAppReportingEvent.pagerCompleted(scheduleId, message, new PagerData("some id", 1, 2, true))
+        InAppReportingEvent pagerCompleted = InAppReportingEvent.pagerCompleted(scheduleId, message, new PagerData("some id", 1, "page1",2, true))
                                                                 .setLayoutData(layoutData);
 
         verify(displayHandler, times(1)).addEvent(eq(pagerCompleted));
@@ -295,7 +295,7 @@ public class AirshipLayoutDisplayAdapterTest {
         LayoutData layoutData = mock(LayoutData.class);
         ThomasListener listener = prepareListenerTest();
 
-        PagerData pagerData = new PagerData("some id", 10, 20, true);
+        PagerData pagerData = new PagerData("some id", 10, "page10", 20, true);
         listener.onPageView(pagerData, layoutData, 2);
 
         InAppReportingEvent expected = InAppReportingEvent.pagerCompleted(scheduleId, message, pagerData)
@@ -314,10 +314,10 @@ public class AirshipLayoutDisplayAdapterTest {
         LayoutData layoutData = mock(LayoutData.class);
         ThomasListener listener = prepareListenerTest();
 
-        PagerData pagerData = new PagerData("some id", 10, 20, true);
-        listener.onPageSwipe(pagerData, 10, 20, layoutData);
+        PagerData pagerData = new PagerData("some id", 10, "page10", 20, true);
+        listener.onPageSwipe(pagerData, 10, "page10", 20, "page20", layoutData);
 
-        InAppReportingEvent expected = InAppReportingEvent.pageSwipe(scheduleId, message, pagerData, 10, 20)
+        InAppReportingEvent expected = InAppReportingEvent.pageSwipe(scheduleId, message, pagerData, 10, "page10", 20, "page20")
                                                           .setLayoutData(layoutData);
 
         verify(displayHandler).addEvent(eq(expected));

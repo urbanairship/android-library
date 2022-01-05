@@ -196,7 +196,7 @@ public class PagerIndicatorModel extends BaseModel {
     private boolean onPagerInit(PagerEvent.Init event) {
         // Set the size and current position from the event data.
         size = event.getSize();
-        position = event.getPosition();
+        position = event.getPageIndex();
 
         if (listener != null) {
             listener.onInit(size, position);
@@ -206,7 +206,7 @@ public class PagerIndicatorModel extends BaseModel {
 
     private boolean onPagerScroll(PagerEvent.Scroll event) {
         // Update the current position from the event data.
-        position = event.getPosition();
+        position = event.getPageIndex();
 
         if (listener != null) {
             listener.onUpdate(position);

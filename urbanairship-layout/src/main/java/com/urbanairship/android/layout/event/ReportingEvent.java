@@ -104,46 +104,59 @@ public abstract class ReportingEvent extends Event {
      * Bubbled up to the top level when a pager changes page due to a swipe.
      */
     public static class PageSwipe extends PagerReportingEvent {
-        private final int fromIndex;
-        private final int toIndex;
+        private final int fromPageIndex;
+        private final int toPageIndex;
+        private final String fromPageId;
+        private final String toPageId;
 
-        public PageSwipe(@NonNull PagerData pagerData, int fromIndex, int toIndex) {
-            this(pagerData, fromIndex, toIndex, new LayoutData(null, null, pagerData));
+        public PageSwipe(@NonNull PagerData pagerData, int fromPageIndex, @NonNull String fromPageId, int toPageIndex, @NonNull String toPageId) {
+            this(pagerData, fromPageIndex, fromPageId, toPageIndex, toPageId, new LayoutData(null, null, pagerData));
         }
 
-        private PageSwipe(@NonNull PagerData pagerData, int fromIndex, int toIndex, @Nullable LayoutData state) {
+        private PageSwipe(@NonNull PagerData pagerData, int fromPageIndex, @NonNull String fromPageId, int toPageIndex, @NonNull String toPageId, @Nullable LayoutData state) {
             super(ReportType.PAGE_SWIPE, pagerData, state);
-            this.fromIndex = fromIndex;
-            this.toIndex = toIndex;
+            this.fromPageIndex = fromPageIndex;
+            this.fromPageId = fromPageId;
+            this.toPageIndex = toPageIndex;
+            this.toPageId = toPageId;
         }
 
-        public int getFromIndex() {
-            return fromIndex;
+        public int getFromPageIndex() {
+            return fromPageIndex;
         }
 
-        public int getToIndex() {
-            return toIndex;
+        @NonNull
+        public String getFromPageId() {
+            return fromPageId;
+        }
+
+        public int getToPageIndex() {
+            return toPageIndex;
+        }
+
+        @NonNull
+        public String getToPageId() {
+            return toPageId;
         }
 
         @Override
         public ReportingEvent overrideState(@NonNull String formId, boolean isFormSubmitted) {
-            return new PageSwipe(getPagerData(), fromIndex, toIndex, copyState(formId, isFormSubmitted));
+            return new PageSwipe(getPagerData(), fromPageIndex, fromPageId, toPageIndex, toPageId, copyState(formId, isFormSubmitted));
         }
 
         @Override
         public ReportingEvent overrideState(@NonNull PagerData data) {
-            return new PageSwipe(getPagerData(), fromIndex, toIndex, copyState(data));
+            return new PageSwipe(getPagerData(), fromPageIndex, fromPageId, toPageIndex, toPageId, copyState(data));
         }
 
         @Override
-        @NonNull
         public String toString() {
-            return "ReportingEvent.PageSwipe{" +
-                "fromIndex=" + fromIndex +
-                ", toIndex=" + toIndex +
-                ", pagerData=" + getPagerData() +
-                ", state=" + getState() +
-                '}';
+            return "PageSwipe{" +
+                    "fromPageIndex=" + fromPageIndex +
+                    ", toPageIndex=" + toPageIndex +
+                    ", fromPageId='" + fromPageId + '\'' +
+                    ", toPageId='" + toPageId + '\'' +
+                    '}';
         }
     }
 

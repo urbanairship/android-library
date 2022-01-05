@@ -76,7 +76,7 @@ public class PagerView extends RecyclerView implements BaseView<PagerModel> {
 
         LayoutUtils.applyBorderAndBackground(this, model);
 
-        adapter.setItems(model.getItems());
+        adapter.setItems(model.getChildren());
         addOnScrollListener(onScrollListener);
 
         model.setListener(modelListener);

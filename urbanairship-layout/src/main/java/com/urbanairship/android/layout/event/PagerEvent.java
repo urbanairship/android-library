@@ -6,6 +6,7 @@ import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.PagerModel;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public abstract class PagerEvent extends Event {
     private final long time;
@@ -22,21 +23,18 @@ public abstract class PagerEvent extends Event {
     /** Event emitted by Pager views, announcing their size and current position. */
     public static final class Init extends PagerEvent {
         private final int size;
-        private final int position;
+        private final int pageIndex;
+        private final String pageId;
         private final boolean hasNext;
         private final boolean hasPrev;
 
-        /**
-         * Constructs a {@code PagerInit} event.
-         *
-         * @param position The current position of the carousel.
-         */
-        public Init(@NonNull PagerModel model, int position, long time) {
+        public Init(@NonNull PagerModel model, int pageIndex, @NonNull String pageId, long time) {
             super(EventType.PAGER_INIT, time);
             this.size = model.getItems().size();
-            this.position = position;
-            this.hasNext = position < size - 1;
-            this.hasPrev = position > 0;
+            this.pageIndex = pageIndex;
+            this.pageId = pageId;
+            this.hasNext = pageIndex < size - 1;
+            this.hasPrev = pageIndex > 0;
         }
 
         /**
@@ -51,11 +49,22 @@ public abstract class PagerEvent extends Event {
         /**
          * Gets the position of the item being displayed.
          *
-         * @return The current Pager position.
+         * @return The current page index.
          */
-        public int getPosition() {
-            return position;
+        public int getPageIndex() {
+            return pageIndex;
         }
+
+        /**
+         * Gets the page Id of the item being displayed.
+         *
+         * @return The current page Id.
+         */
+        @NonNull
+        public String getPageId() {
+            return pageId;
+        }
+
 
         /**
          * Returns whether or not the pager has a next page that can be scrolled to.
@@ -73,17 +82,17 @@ public abstract class PagerEvent extends Event {
             return hasPrev;
         }
 
-        @NonNull
         @Override
         public String toString() {
-            return "PagerEvent.Init{" +
-                "size=" + size +
-                ", position=" + position +
-                ", hasNext=" + hasNext +
-                ", hasPrev=" + hasPrev +
-                ", time=" + getTime() +
-                '}';
+            return "Init{" +
+                    "size=" + size +
+                    ", pageIndex=" + pageIndex +
+                    ", pageId='" + pageId + '\'' +
+                    ", hasNext=" + hasNext +
+                    ", hasPrev=" + hasPrev +
+                    '}';
         }
+
     }
 
     /** Event emitted by Pager indicator views on init. */
@@ -101,24 +110,22 @@ public abstract class PagerEvent extends Event {
 
     /** Event emitted by Pager views on scroll to the next or previous page. */
     public static final class Scroll extends PagerEvent {
-        private final int position;
-        private final int previousPosition;
+        private final int pageIndex;
+        private final String pageId;
+        private final int previousPageIndex;
+        private final String previousPageId;
         private final boolean hasNext;
         private final boolean hasPrev;
         private final boolean isInternalScroll;
 
-        /**
-         * Constructs a {@code PagerScroll} event.
-         *
-         * @param model The pager model.
-         * @param position The position of the item being displayed.
-         */
-        public Scroll(@NonNull PagerModel model, int position, int previousPosition, boolean isInternalScroll, long time) {
+        public Scroll(@NonNull PagerModel model, int pageIndex, @NonNull String pageId, int previousPageIndex, @NonNull String previousPageId, boolean isInternalScroll, long time) {
             super(EventType.PAGER_SCROLL, time);
-            this.position = position;
-            this.previousPosition = previousPosition;
-            this.hasNext = position < model.getItems().size() - 1;
-            this.hasPrev = position > 0;
+            this.pageIndex = pageIndex;
+            this.pageId = pageId;
+            this.previousPageIndex = previousPageIndex;
+            this.previousPageId = previousPageId;
+            this.hasNext = pageIndex < model.getItems().size() - 1;
+            this.hasPrev = pageIndex > 0;
             this.isInternalScroll = isInternalScroll;
         }
 
@@ -127,13 +134,25 @@ public abstract class PagerEvent extends Event {
          *
          * @return The carousel position.
          */
-        public int getPosition() {
-            return position;
+        public int getPageIndex() {
+            return pageIndex;
         }
 
         /** Gets the position of the previously displayed item. */
-        public int getPreviousPosition() {
-            return previousPosition;
+        public int getPreviousPageIndex() {
+            return previousPageIndex;
+        }
+
+        /** Gets the current page Id **/
+        @NonNull
+        public String getPageId() {
+            return pageId;
+        }
+
+        /** Gets the previous page Id **/
+        @NonNull
+        public String getPreviousPageId() {
+            return previousPageId;
         }
 
         /**
@@ -157,17 +176,17 @@ public abstract class PagerEvent extends Event {
             return isInternalScroll;
         }
 
-        @NonNull
         @Override
         public String toString() {
-            return "PagerEvent.Scroll{" +
-                "position=" + position +
-                ", previousPosition=" + previousPosition +
-                ", hasNext=" + hasNext +
-                ", hasPrev=" + hasPrev +
-                ", isInternalScroll=" + isInternalScroll +
-                ", time=" + getTime() +
-                '}';
+            return "Scroll{" +
+                    "pageIndex=" + pageIndex +
+                    ", pageId='" + pageId + '\'' +
+                    ", previousPageIndex=" + previousPageIndex +
+                    ", previousPageId='" + previousPageId + '\'' +
+                    ", hasNext=" + hasNext +
+                    ", hasPrev=" + hasPrev +
+                    ", isInternalScroll=" + isInternalScroll +
+                    '}';
         }
     }
 }

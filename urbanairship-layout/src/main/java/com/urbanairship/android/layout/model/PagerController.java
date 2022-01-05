@@ -12,11 +12,13 @@ import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.util.UAStringUtil;
 
 import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 import static com.urbanairship.android.layout.model.Identifiable.identifierFromJson;
 
@@ -29,7 +31,8 @@ public class PagerController extends LayoutModel implements Identifiable {
     @NonNull
     private final String identifier;
 
-    private int index = -1;
+    private String pageIdentifier;
+    private int pageIndex = -1;
     private int count = -1;
     private boolean completed = false;
 
@@ -122,12 +125,14 @@ public class PagerController extends LayoutModel implements Identifiable {
             case PAGER_INIT:
                 PagerEvent.Init init = (PagerEvent.Init) event;
                 this.count = init.getSize();
-                this.index = init.getPosition();
+                this.pageIndex = init.getPageIndex();
+                this.pageIdentifier = init.getPageId();
                 break;
             case PAGER_SCROLL:
                 PagerEvent.Scroll scroll = (PagerEvent.Scroll) event;
-                this.index = scroll.getPosition();
-                this.completed = this.completed || this.index == this.count - 1;
+                this.pageIndex = scroll.getPageIndex();
+                this.pageIdentifier = scroll.getPageId();
+                this.completed = this.completed || this.pageIndex == this.count - 1;
                 break;
         }
     }
@@ -138,10 +143,16 @@ public class PagerController extends LayoutModel implements Identifiable {
 
     private void reportPageSwipe(PagerEvent.Scroll event) {
         PagerData data = buildPagerData();
-        bubbleEvent(new ReportingEvent.PageSwipe(data, event.getPreviousPosition(), event.getPosition()));
+        bubbleEvent(new ReportingEvent.PageSwipe(data,
+                event.getPreviousPageIndex(),
+                event.getPreviousPageId(),
+                event.getPageIndex(),
+                event.getPageId()));
     }
 
+    @NonNull
     private PagerData buildPagerData() {
-        return new PagerData(identifier, index, count, completed);
+        String pageId = pageIdentifier == null ? "" : pageIdentifier;
+        return new PagerData(identifier, pageIndex, pageId, count, completed);
     }
 }

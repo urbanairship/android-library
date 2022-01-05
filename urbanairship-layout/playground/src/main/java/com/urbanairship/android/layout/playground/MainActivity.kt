@@ -111,8 +111,8 @@ class MainActivity : AppCompatActivity() {
             Logger.debug("onPageView(pagerData: $pagerData, state: $state, displayedAt: $displayedAt)")
         }
 
-        override fun onPageSwipe(pagerData: PagerData, toIndex: Int, fromIndex: Int, state: LayoutData?) {
-            Logger.debug("onPageSwipe(pagerData: $pagerData, toIndex: $toIndex, fromIndex: $fromIndex, state: $state)")
+        override fun onPageSwipe(pagerData: PagerData, toPageIndex: Int, toPageId: String, fromPageIndex: Int, fromPageId: String, state: LayoutData?) {
+            Logger.debug("onPageSwipe(pagerData: $pagerData, toPageIndex: $toPageIndex, toPageId: $toPageId, fromPageIndex: $fromPageIndex, fromPageId: $fromPageId, state: $state)")
         }
 
         override fun onButtonTap(buttonId: String, state: LayoutData?) {

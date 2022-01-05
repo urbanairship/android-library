@@ -27,11 +27,18 @@ public interface ThomasListener {
     /**
      * Called when a pager changes its page due to a swipe gesture.
      * @param pagerData The pager data.
-     * @param toIndex The resulting page index.
-     * @param fromIndex The page index that the swipe originated on.
+     * @param toPageIndex The resulting page index.
+     * @param toPageId The page resulting page Id.
+     * @param fromPageIndex The page index that the swipe originated on.
+     * @param fromPageId The page Id that the swipe originated on.
      * @param state The layout state.
      */
-    void onPageSwipe(@NonNull PagerData pagerData, int toIndex, int fromIndex, @Nullable LayoutData state);
+    void onPageSwipe(@NonNull PagerData pagerData,
+                     int toPageIndex,
+                     @NonNull String toPageId,
+                     int fromPageIndex,
+                     @NonNull String fromPageId,
+                     @Nullable LayoutData state);
 
     /**
      * Called when a button is tapped.

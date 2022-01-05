@@ -234,12 +234,13 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         }
 
         @Override
-        public void onPageSwipe(@NonNull PagerData pagerData, int toIndex, int fromIndex, @Nullable LayoutData layoutData) {
-            InAppReportingEvent event = InAppReportingEvent.pageSwipe(scheduleId, message, pagerData, toIndex, fromIndex)
+        public void onPageSwipe(@NonNull PagerData pagerData, int toPageIndex, @NonNull String toPageId, int fromPageIndex, @NonNull String fromPageId, @Nullable LayoutData layoutData) {
+            InAppReportingEvent event = InAppReportingEvent.pageSwipe(scheduleId, message, pagerData, toPageIndex, toPageId, fromPageIndex, fromPageId)
                                                            .setLayoutData(layoutData);
 
             displayHandler.addEvent(event);
         }
+
 
         @Override
         public void onButtonTap(@NonNull String buttonId, @Nullable LayoutData layoutData) {
@@ -253,7 +254,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         public void onDismiss(long displayTime) {
             ResolutionInfo resolutionInfo = ResolutionInfo.dismissed();
             InAppReportingEvent event = InAppReportingEvent.resolution(scheduleId, message, displayTime, resolutionInfo);
-            sendPageSummaryEvents(null);
+            sendPageSummaryEvents(null, displayTime);
             displayHandler.addEvent(event);
             displayHandler.notifyFinished(resolutionInfo);
         }
@@ -264,7 +265,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
             InAppReportingEvent event = InAppReportingEvent.resolution(scheduleId, message, displayTime, resolutionInfo)
                                                            .setLayoutData(layoutData);
 
-            sendPageSummaryEvents(layoutData);
+            sendPageSummaryEvents(layoutData, displayTime);
             displayHandler.addEvent(event);
             displayHandler.notifyFinished(resolutionInfo);
 
@@ -304,10 +305,10 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
             return count;
         }
 
-        private void sendPageSummaryEvents(@Nullable LayoutData layoutData) {
+        private void sendPageSummaryEvents(@Nullable LayoutData layoutData, long displayTime) {
             for (Map.Entry<String, PagerSummary> summaryEntry : this.pagerSummaryMap.entrySet()) {
                 PagerSummary summary = summaryEntry.getValue();
-
+                summary.pageFinished(displayTime);
                 if (summary.pagerData == null) {
                     continue;
                 }
@@ -326,14 +327,17 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         private long pageUpdateTime;
 
         private void updatePagerData(PagerData data, long updateTime) {
-            if (this.pagerData != null) {
-                long duration = updateTime - pageUpdateTime;
-                InAppReportingEvent.PageViewSummary summary = new InAppReportingEvent.PageViewSummary(this.pagerData.getIndex(), duration);
-                this.pageViewSummaries.add(summary);
-            }
-
+            pageFinished(updateTime);
             this.pagerData = data;
             this.pageUpdateTime = updateTime;
+        }
+
+        private void pageFinished(long updateTime) {
+            if (this.pagerData != null) {
+                long duration = updateTime - pageUpdateTime;
+                InAppReportingEvent.PageViewSummary summary = new InAppReportingEvent.PageViewSummary(pagerData.getIndex(), pagerData.getPageId(), duration);
+                this.pageViewSummaries.add(summary);
+            }
         }
     }
 }

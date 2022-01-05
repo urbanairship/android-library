@@ -100,8 +100,7 @@ public class DisplayHandler implements Parcelable {
     /**
      * Called when the in-app message is finished displaying.
      *
-     * This method differs from {@link #finished(ResolutionInfo, long)} by not inpsecting will not inspect the resolution info and cancel
-     * the IAA, while
+     * This method differs from {@link #finished(ResolutionInfo, long)} by not inspecting the resolution info to cancel the IAA.
      *
      * @param resolutionInfo Info on why the message has finished.
      *

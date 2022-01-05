@@ -224,10 +224,9 @@ public class InAppReportingEventTest {
 
     @Test
     public void testPageView() {
-        PagerData pagerData = new PagerData("pager id", 1, 2, false);
+        PagerData pagerData = new PagerData("pager id", 1, "page1", 2, false);
         InAppReportingEvent.pageView("schedule ID", message, pagerData, 1)
                            .record(mockAnalytics);
-
         JsonMap expectedData = JsonMap.newBuilder()
                                       .put("source", "urban-airship")
                                       .put("id", JsonMap.newBuilder()
@@ -235,6 +234,7 @@ public class InAppReportingEventTest {
                                                         .build())
                                       .put("pager_identifier", "pager id")
                                       .put("page_index", 1)
+                                      .put("page_identifier", "page1")
                                       .put("page_count", 2)
                                       .put("viewed_count", 1)
                                       .put("completed", false)
@@ -245,9 +245,9 @@ public class InAppReportingEventTest {
 
     @Test
     public void testPagerViewSwipe() {
-        PagerData pagerData = new PagerData("pager id", 1, 2, false);
+        PagerData pagerData = new PagerData("pager id", 1, "page1",2, false);
 
-        InAppReportingEvent.pageSwipe("schedule ID", message, pagerData, 1, 0)
+        InAppReportingEvent.pageSwipe("schedule ID", message, pagerData, 1, "page1", 0, "page0")
                            .record(mockAnalytics);
 
         JsonMap expectedData = JsonMap.newBuilder()
@@ -258,6 +258,8 @@ public class InAppReportingEventTest {
                                       .put("pager_identifier", "pager id")
                                       .put("to_page_index", 1)
                                       .put("from_page_index", 0)
+                                      .put("to_page_identifier", "page1")
+                                      .put("from_page_identifier", "page0")
                                       .build();
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_PAGE_SWIPE, expectedData)));
@@ -265,7 +267,7 @@ public class InAppReportingEventTest {
 
     @Test
     public void testPageCompleted() {
-        PagerData pagerData = new PagerData("pager id", 1, 2, true);
+        PagerData pagerData = new PagerData("pager id", 1, "page1",2, true);
 
         InAppReportingEvent.pagerCompleted("schedule ID", message, pagerData)
                            .record(mockAnalytics);
@@ -278,6 +280,7 @@ public class InAppReportingEventTest {
                                       .put("pager_identifier", "pager id")
                                       .put("page_count", 2)
                                       .put("page_index", 1)
+                                      .put("page_identifier", "page1")
                                       .build();
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPES_PAGER_COMPLETED, expectedData)));
@@ -285,25 +288,26 @@ public class InAppReportingEventTest {
 
     @Test
     public void testPageViewSummary() {
-        InAppReportingEvent.PageViewSummary pageView = new InAppReportingEvent.PageViewSummary(0, 100000);
+        InAppReportingEvent.PageViewSummary pageView = new InAppReportingEvent.PageViewSummary(0, "page0", 100000);
 
         JsonMap expected = JsonMap.newBuilder()
-                .put("index", 0)
-                .put("display_time", "100.000")
-                .build();
+                                  .put("page_index", 0)
+                                  .put("page_identifier", "page0")
+                                  .put("display_time", "100.000")
+                                  .build();
 
         assertEquals(expected, pageView.toJsonValue().getMap());
     }
 
     @Test
     public void testPageSummary() {
-        PagerData pagerData = new PagerData("pager id", 1, 2, true);
+        PagerData pagerData = new PagerData("pager id", 1, "page1",2, true);
 
         List<InAppReportingEvent.PageViewSummary> views = new ArrayList<>();
-        views.add(new InAppReportingEvent.PageViewSummary(0, 100));
-        views.add(new InAppReportingEvent.PageViewSummary(1, 200));
-        views.add(new InAppReportingEvent.PageViewSummary(0, 300));
-        views.add(new InAppReportingEvent.PageViewSummary(1, 100));
+        views.add(new InAppReportingEvent.PageViewSummary(0, "page0",100));
+        views.add(new InAppReportingEvent.PageViewSummary(1, "page1",200));
+        views.add(new InAppReportingEvent.PageViewSummary(0, "page0",300));
+        views.add(new InAppReportingEvent.PageViewSummary(1, "page1",100));
 
         InAppReportingEvent.pagerSummary("schedule ID", message, pagerData, views)
                            .record(mockAnalytics);
@@ -315,7 +319,7 @@ public class InAppReportingEventTest {
                                                         .build())
                                       .put("pager_identifier", "pager id")
                                       .put("page_count", 2)
-                                      .put("page_index", 1)
+                                      .put("completed", true)
                                       .putOpt("viewed_pages", views)
                                       .build();
 
@@ -403,7 +407,7 @@ public class InAppReportingEventTest {
 
     @Test
     public void testContext() {
-        PagerData pagerData = new PagerData("pager id", 1, 2, true);
+        PagerData pagerData = new PagerData("pager id", 1, "page1",2, true);
         LayoutData layoutData = new LayoutData("form id", true, pagerData);
         InAppReportingEvent.display("schedule ID", message)
                            .setLayoutData(layoutData)
@@ -415,7 +419,8 @@ public class InAppReportingEventTest {
                                      .put("pager", JsonMap.newBuilder()
                                                           .put("identifier", "pager id")
                                                           .put("count", 2)
-                                                          .put("index", 1)
+                                                          .put("page_index", 1)
+                                                          .put("page_identifier", "page1")
                                                           .put("completed", true)
                                                           .build())
                                      .put("form", JsonMap.newBuilder()

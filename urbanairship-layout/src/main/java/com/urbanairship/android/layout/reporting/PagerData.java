@@ -13,23 +13,31 @@ import androidx.annotation.RestrictTo;
 public class PagerData {
 
     private final String identifier;
-    private final int index;
+    private final int pageIndex;
+    private final String pageId;
     private final int count;
     private final boolean completed;
 
-    public PagerData(String identifier, int index, int count, boolean completed) {
+    public PagerData(@NonNull String identifier, int pageIndex, @NonNull String pageId, int count, boolean completed) {
         this.identifier = identifier;
-        this.index = index;
+        this.pageIndex = pageIndex;
+        this.pageId = pageId;
         this.count = count;
         this.completed = completed;
     }
 
+    @NonNull
     public String getIdentifier() {
         return identifier;
     }
 
+    @NonNull
+    public String getPageId() {
+        return pageId;
+    }
+
     public int getIndex() {
-        return index;
+        return pageIndex;
     }
 
     public int getCount() {
@@ -45,7 +53,8 @@ public class PagerData {
     public String toString() {
         return "PagerData{" +
             "identifier='" + identifier + '\'' +
-            ", index=" + index +
+            ", pageIndex=" + pageIndex +
+            ", pageId=" + pageId +
             ", count=" + count +
             ", completed=" + completed +
             '}';

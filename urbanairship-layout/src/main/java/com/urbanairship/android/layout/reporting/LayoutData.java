@@ -15,6 +15,7 @@ public class LayoutData {
 
     @Nullable
     private final String formId;
+
     @Nullable
     private final Boolean isFormSubmitted;
 
