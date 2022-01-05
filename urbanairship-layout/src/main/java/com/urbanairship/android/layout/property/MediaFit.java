@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
  */
 public enum MediaFit {
     CENTER("center", ImageView.ScaleType.CENTER),
-    CENTER_INSIDE("center_inside", ImageView.ScaleType.CENTER_INSIDE),
+    CENTER_INSIDE("center_inside", ImageView.ScaleType.FIT_CENTER),
     CENTER_CROP("center_crop", ImageView.ScaleType.CENTER_CROP);
 
     @NonNull
