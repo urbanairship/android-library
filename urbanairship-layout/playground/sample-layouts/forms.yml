@@ -50,7 +50,7 @@ view:
                   start: 0
                   top: 0
                 size:
-                  height: 100%
+                  height: auto
                   width: 100%
                 view:
                   media_fit: center_crop

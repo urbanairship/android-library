@@ -34,7 +34,7 @@ buildscript {
         androidxAppCompatVersion = '1.4.0'
         androidxPreferenceVersion = '1.1.1'
         androidxVectorDrawableVersion = '1.1.0'
-        androidxRoomVersion = '2.3.0'
+        androidxRoomVersion = '2.4.0'
         androidxConstraintLayoutVersion = '2.1.2'
         androidxPagingVersion = '2.1.2'
         androidxLifeCycleVersion = '2.4.0'

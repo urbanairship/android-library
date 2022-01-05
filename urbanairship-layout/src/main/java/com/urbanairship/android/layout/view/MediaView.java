@@ -161,18 +161,8 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
 
         ImageView imageView = new ImageView(getContext());
         imageView.setLayoutParams(new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        imageView.setAdjustViewBounds(true);
         imageView.setScaleType(model.getScaleType());
-
-        getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                getViewTreeObserver().removeOnGlobalLayoutListener(this);
-
-                // Update the view to adjust its bounds if height is WRAP_CONTENT, to match image view behavior on iOS.
-                int height = getLayoutParams().height;
-                imageView.setAdjustViewBounds(height == WRAP_CONTENT);
-            }
-        });
 
         if (!UAStringUtil.isEmpty(model.getContentDescription())) {
             imageView.setContentDescription(model.getContentDescription());
