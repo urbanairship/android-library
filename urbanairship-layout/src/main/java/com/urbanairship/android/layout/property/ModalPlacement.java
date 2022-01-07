@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import static com.urbanairship.android.layout.model.SafeAreaAware.ignoreSafeAreaFromJson;
 
 public class ModalPlacement implements SafeAreaAware {
+
     @NonNull
     private final ConstrainedSize size;
     @Nullable
@@ -22,18 +23,23 @@ public class ModalPlacement implements SafeAreaAware {
     private final Color shadeColor;
     private final boolean ignoreSafeArea;
 
+    @Nullable
+    private final Orientation orientationLock;
+
     public ModalPlacement(
-        @NonNull ConstrainedSize size,
-        @Nullable Margin margin,
-        @Nullable Position position,
-        @Nullable Color shadeColor,
-        boolean ignoreSafeArea
+            @NonNull ConstrainedSize size,
+            @Nullable Margin margin,
+            @Nullable Position position,
+            @Nullable Color shadeColor,
+            boolean ignoreSafeArea,
+            @Nullable Orientation orientationLock
     ) {
         this.size = size;
         this.margin = margin;
         this.position = position;
         this.shadeColor = shadeColor;
         this.ignoreSafeArea = ignoreSafeArea;
+        this.orientationLock = orientationLock;
     }
 
     @NonNull
@@ -51,7 +57,15 @@ public class ModalPlacement implements SafeAreaAware {
         Color backgroundColor = Color.fromJsonField(json, "shade_color");
         boolean ignoreSafeArea = ignoreSafeAreaFromJson(json);
 
-        return new ModalPlacement(size, margin, position, backgroundColor, ignoreSafeArea);
+        String orientationString = json.opt("device").optMap().opt("lock_orientation").optString();
+        Orientation orientationLock = orientationString.isEmpty() ? null : Orientation.from(orientationString);
+
+        return new ModalPlacement(size, margin, position, backgroundColor, ignoreSafeArea, orientationLock);
+    }
+
+    @Nullable
+    public Orientation getOrientationLock() {
+        return orientationLock;
     }
 
     @Nullable

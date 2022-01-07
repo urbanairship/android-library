@@ -99,8 +99,8 @@ public final class ResourceUtils {
             case SCREENLAYOUT_SIZE_SMALL:
                 return WindowSize.SMALL;
             case SCREENLAYOUT_SIZE_NORMAL:
-                return WindowSize.MEDIUM;
             case SCREENLAYOUT_SIZE_LARGE:
+                return WindowSize.MEDIUM;
             case SCREENLAYOUT_SIZE_XLARGE:
                 return WindowSize.LARGE;
         }

@@ -53,9 +53,9 @@ public class ModalPresentation extends BasePresentation {
         ModalPlacement defaultPlacement = ModalPlacement.fromJson(defaultPlacementJson);
         List<ModalPlacementSelector> placementSelectors =
             placementSelectorsJson.isEmpty() ? null : ModalPlacementSelector.fromJsonList(placementSelectorsJson);
-
         boolean dismissOnTouchOutside = json.opt("dismiss_on_touch_outside").getBoolean(false);
-        boolean disableBackButton = json.opt("disable_back_button").getBoolean(false);
+
+        boolean disableBackButton = json.opt("android").optMap().opt("disable_back_button").getBoolean(false);
 
         return new ModalPresentation(defaultPlacement, placementSelectors, dismissOnTouchOutside, disableBackButton);
     }

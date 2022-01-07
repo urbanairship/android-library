@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.ui;
 
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 
 import com.urbanairship.Logger;
@@ -20,6 +21,7 @@ import com.urbanairship.android.layout.event.ReportingEvent;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.property.ModalPlacement;
+import com.urbanairship.android.layout.property.Orientation;
 import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.DisplayTimer;
 import com.urbanairship.android.layout.util.ActionsRunner;
@@ -69,6 +71,7 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
         this.loader = getIntent().getParcelableExtra(EXTRA_DISPLAY_ARGS_LOADER);
         if (this.loader == null) {
             Logger.error("Missing layout args loader");
@@ -93,6 +96,17 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             this.displayTimer = new DisplayTimer(this, restoredTime);
 
             ModalPlacement placement = presentation.getResolvedPlacement(this);
+            if (placement.getOrientationLock() != null) {
+                switch (placement.getOrientationLock()) {
+                    case PORTRAIT:
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                        break;
+                    case LANDSCAPE:
+                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                        break;
+                }
+            }
+
             if (placement.shouldIgnoreSafeArea()) {
                 WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
                 getWindow().setStatusBarColor(R.color.system_bar_scrim_dark);
