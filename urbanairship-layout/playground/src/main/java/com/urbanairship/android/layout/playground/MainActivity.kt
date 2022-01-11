@@ -16,6 +16,7 @@ import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.ThomasListener
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
 import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -131,8 +132,8 @@ class MainActivity : AppCompatActivity() {
             Logger.debug("onFormResult(formData: ${formData.toJsonValue()}, state: $state)")
         }
 
-        override fun onFormDisplay(formId: String, state: LayoutData?) {
-            Logger.debug("onFormDisplay(formId: $formId, state: $state)")
+        override fun onFormDisplay(formInfo: FormInfo, state: LayoutData?) {
+            Logger.debug("onFormDisplay(formInfo: $formInfo, state: $state)")
         }
     }
 }

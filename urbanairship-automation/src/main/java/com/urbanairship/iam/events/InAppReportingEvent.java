@@ -5,6 +5,7 @@ package com.urbanairship.iam.events;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.iam.InAppMessage;
@@ -75,6 +76,9 @@ public class InAppReportingEvent {
 
     // Form keys
     private static final String FORM_ID = "form_identifier";
+    private static final String FORM_TYPE_KEY = "form_type";
+    private static final String FORM_RESPONSE_TYPE_KEY = "form_response_type";
+
     private static final String FORM = "form";
 
     // Pager keys
@@ -117,6 +121,9 @@ public class InAppReportingEvent {
     private static final String REPORTING_CONTEXT_FORM = "form";
     private static final String REPORTING_CONTEXT_FORM_ID = "identifier";
     private static final String REPORTING_CONTEXT_FORM_SUBMITTED = "submitted";
+    private static final String REPORTING_CONTEXT_FORM_TYPE = "type";
+    private static final String REPORTING_CONTEXT_FORM_RESPONSE_TYPE = "response_type";
+
     private static final String REPORTING_CONTEXT_PAGER = "pager";
     private static final String REPORTING_CONTEXT_PAGER_ID = "identifier";
     private static final String REPORTING_CONTEXT_PAGER_COUNT = "count";
@@ -194,9 +201,13 @@ public class InAppReportingEvent {
 
     public static InAppReportingEvent formDisplay(@NonNull String scheduleId,
                                                   @NonNull InAppMessage message,
-                                                  @NonNull String formId) {
+                                                  @NonNull FormInfo formInfo) {
         return new InAppReportingEvent(TYPE_FORM_DISPLAY, scheduleId, message)
-                .setOverrides(JsonMap.newBuilder().put(FORM_ID, formId).build());
+                .setOverrides(JsonMap.newBuilder()
+                                     .put(FORM_ID, formInfo.getIdentifier())
+                                     .put(FORM_RESPONSE_TYPE_KEY, formInfo.getFormResponseType())
+                                     .put(FORM_TYPE_KEY, formInfo.getFormType())
+                                     .build());
     }
 
     public static InAppReportingEvent formResult(@NonNull String scheduleId,
@@ -334,12 +345,14 @@ public class InAppReportingEvent {
                                                 .put(REPORTING_CONTEXT, reportingContext);
 
         if (layoutState != null) {
-            String formId = layoutState.getFormId();
-            boolean isSubmitted = layoutState.getFormSubmitted() != null ? layoutState.getFormSubmitted() : false;
-            if (formId != null) {
+            FormInfo formInfo = layoutState.getFormInfo();
+            if (formInfo != null) {
+                boolean isSubmitted = formInfo.getFormSubmitted() != null ? formInfo.getFormSubmitted() : false;
                 JsonMap formContext = JsonMap.newBuilder()
-                                             .put(REPORTING_CONTEXT_FORM_ID, formId)
+                                             .put(REPORTING_CONTEXT_FORM_ID, formInfo.getIdentifier())
                                              .put(REPORTING_CONTEXT_FORM_SUBMITTED, isSubmitted)
+                                             .put(REPORTING_CONTEXT_FORM_RESPONSE_TYPE, formInfo.getFormResponseType())
+                                             .put(REPORTING_CONTEXT_FORM_TYPE, formInfo.getFormType())
                                              .build();
                 contextBuilder.put(REPORTING_CONTEXT_FORM, formContext);
             }

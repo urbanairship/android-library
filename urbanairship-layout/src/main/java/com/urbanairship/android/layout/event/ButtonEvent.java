@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.event;
 
 import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
+import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.json.JsonValue;
@@ -27,7 +28,7 @@ public abstract class ButtonEvent extends Event {
         super(type);
         this.identifier = identifier;
         this.reportingDescription = reportingDescription;
-        this.state = state != null ? state : new LayoutData(null, null,null);
+        this.state = state != null ? state : new LayoutData(null,null);
     }
 
     @NonNull
@@ -49,11 +50,11 @@ public abstract class ButtonEvent extends Event {
         return state;
     }
 
-    public abstract ButtonEvent overrideState(@NonNull String formId, boolean isFormSubmitted);
+    public abstract ButtonEvent overrideState(@NonNull FormInfo formInfo);
     public abstract ButtonEvent overrideState(@NonNull PagerData pagerData);
 
-    protected LayoutData copyState(@NonNull String formId, boolean isFormSubmitted) {
-        return state.withFormData(formId, isFormSubmitted);
+    protected LayoutData copyState(@NonNull FormInfo formInfo) {
+        return state.withFormInfo(formInfo);
     }
 
     protected LayoutData copyState(@NonNull PagerData data) {
@@ -87,8 +88,8 @@ public abstract class ButtonEvent extends Event {
         }
 
         @Override
-        public Dismiss overrideState(@NonNull String formId, boolean isFormSubmitted) {
-            return new Dismiss(getIdentifier(), getReportingDescription(), copyState(formId, isFormSubmitted));
+        public Dismiss overrideState(@NonNull FormInfo formInfo) {
+            return new Dismiss(getIdentifier(), getReportingDescription(), copyState(formInfo));
         }
 
         @Override
@@ -122,8 +123,8 @@ public abstract class ButtonEvent extends Event {
         }
 
         @Override
-        public Cancel overrideState(@NonNull String formId, boolean isFormSubmitted) {
-            return new Cancel(getIdentifier(), getReportingDescription(), copyState(formId, isFormSubmitted));
+        public Cancel overrideState(@NonNull FormInfo formInfo) {
+            return new Cancel(getIdentifier(), getReportingDescription(), copyState(formInfo));
         }
 
         @Override
@@ -152,8 +153,8 @@ public abstract class ButtonEvent extends Event {
         }
 
         @Override
-        public PagerNext overrideState(@NonNull String formId, boolean isFormSubmitted) {
-            return new PagerNext(getIdentifier(), getReportingDescription(), copyState(formId, isFormSubmitted));
+        public PagerNext overrideState(@NonNull FormInfo formInfo) {
+            return new PagerNext(getIdentifier(), getReportingDescription(), copyState(formInfo));
         }
 
         @Override
@@ -182,8 +183,8 @@ public abstract class ButtonEvent extends Event {
         }
 
         @Override
-        public PagerPrevious overrideState(@NonNull String formId, boolean isFormSubmitted) {
-            return new PagerPrevious(getIdentifier(), getReportingDescription(), copyState(formId, isFormSubmitted));
+        public PagerPrevious overrideState(@NonNull FormInfo formInfo) {
+            return new PagerPrevious(getIdentifier(), getReportingDescription(), copyState(formInfo));
         }
 
         @Override
@@ -212,8 +213,8 @@ public abstract class ButtonEvent extends Event {
         }
 
         @Override
-        public FormSubmit overrideState(@NonNull String formId, boolean isFormSubmitted) {
-            return new FormSubmit(getIdentifier(), getReportingDescription(), copyState(formId, isFormSubmitted));
+        public FormSubmit overrideState(@NonNull FormInfo formInfo) {
+            return new FormSubmit(getIdentifier(), getReportingDescription(), copyState(formInfo));
         }
 
         @Override
@@ -246,8 +247,8 @@ public abstract class ButtonEvent extends Event {
         }
 
         @Override
-        public Actions overrideState(@NonNull String formId, boolean isFormSubmitted) {
-            return new Actions(getIdentifier(), getReportingDescription(), getActions(), copyState(formId, isFormSubmitted));
+        public Actions overrideState(@NonNull FormInfo formInfo) {
+            return new Actions(getIdentifier(), getReportingDescription(), getActions(), copyState(formInfo));
         }
 
         @Override

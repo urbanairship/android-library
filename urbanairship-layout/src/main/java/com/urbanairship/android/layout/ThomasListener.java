@@ -3,6 +3,7 @@
 package com.urbanairship.android.layout;
 
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 
@@ -76,8 +77,8 @@ public interface ThomasListener {
 
     /**
      * Called when a form is displayed.
-     * @param formId The form Id.
+     * @param formInfo The form info.
      * @param state The layout state.
      */
-    void onFormDisplay(@NonNull String formId, @Nullable LayoutData state);
+    void onFormDisplay(@NonNull FormInfo formInfo, @Nullable LayoutData state);
 }

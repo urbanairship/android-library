@@ -33,6 +33,7 @@ import static org.mockito.Mockito.when;
 
 public class FormControllerTest {
     private static final String FORM_ID = "form-identifier";
+    private static final String RESPONSE_TYPE = "some-response-type";
     private static final String TEXT_INPUT_ID = "text-input-identifier";
     private static final String BUTTON_ID = "button-identifier";
     private static final String BUTTON_DESCRIPTION = "button-description";
@@ -72,7 +73,7 @@ public class FormControllerTest {
         inputViewAttachedEvent = new Event.ViewAttachedToWindow(mockInput);
         inputFormFieldInitEvent = new TextInputEvent.Init(TEXT_INPUT_ID, false);
 
-        controller = new FormController(FORM_ID, mockView, FormBehaviorType.SUBMIT_EVENT);
+        controller = new FormController(FORM_ID, RESPONSE_TYPE, mockView, FormBehaviorType.SUBMIT_EVENT);
         testListener = new TestEventListener();
         controller.addListener(testListener);
     }
@@ -100,8 +101,9 @@ public class FormControllerTest {
         assertEquals(1, testListener.getCount(EventType.REPORTING_EVENT));
         ReportingEvent.FormDisplay reportingEvent = (ReportingEvent.FormDisplay) testListener.getEventAt(EventType.REPORTING_EVENT, 0);
         assertEquals(ReportingEvent.ReportType.FORM_DISPLAY, reportingEvent.getReportType());
-        assertEquals(FORM_ID, reportingEvent.getState().getFormId());
-        assertEquals(false, reportingEvent.getState().getFormSubmitted());
+        assertEquals(FORM_ID, reportingEvent.getFormInfo().getIdentifier());
+        assertEquals(false, reportingEvent.getState().getFormInfo().getFormSubmitted());
+        assertEquals(RESPONSE_TYPE, reportingEvent.getFormInfo().getFormResponseType());
         // Check to make sure no additional events were received.
         assertEquals(1, testListener.getCount());
     }
@@ -118,8 +120,9 @@ public class FormControllerTest {
         ReportingEvent.ButtonTap reportingEvent = (ReportingEvent.ButtonTap) testListener.getEventAt(EventType.REPORTING_EVENT, 1);
         assertEquals(ReportingEvent.ReportType.BUTTON_TAP, reportingEvent.getReportType());
         LayoutData state = reportingEvent.getState();
-        assertEquals(FORM_ID, state.getFormId());
-        assertEquals(false, state.getFormSubmitted());
+        assertEquals(FORM_ID, state.getFormInfo().getIdentifier());
+        assertEquals(RESPONSE_TYPE, state.getFormInfo().getFormResponseType());
+        assertEquals(false, state.getFormInfo().getFormSubmitted());
         // Check to make sure no additional events were received.
         assertEquals(2, testListener.getCount());
     }
@@ -135,8 +138,9 @@ public class FormControllerTest {
         assertEquals(1, testListener.getCount(EventType.WEBVIEW_CLOSE));
         WebViewEvent.Close closeEvent = (WebViewEvent.Close) testListener.getEventAt(EventType.WEBVIEW_CLOSE, 0);
         LayoutData state = requireNonNull(closeEvent.getState());
-        assertEquals(FORM_ID, state.getFormId());
-        assertEquals(false, state.getFormSubmitted());
+        assertEquals(FORM_ID, state.getFormInfo().getIdentifier());
+        assertEquals(false, state.getFormInfo().getFormSubmitted());
+        assertEquals(RESPONSE_TYPE, state.getFormInfo().getFormResponseType());
         // Check to make sure no additional events were received.
         assertEquals(2, testListener.getCount());
     }
@@ -152,8 +156,9 @@ public class FormControllerTest {
         assertEquals(1, testListener.getCount(EventType.BUTTON_BEHAVIOR_CANCEL));
         ButtonEvent cancelEvent = (ButtonEvent) testListener.getEventAt(EventType.BUTTON_BEHAVIOR_CANCEL, 0);
         LayoutData state = requireNonNull(cancelEvent.getState());
-        assertEquals(FORM_ID, state.getFormId());
-        assertEquals(false, state.getFormSubmitted());
+        assertEquals(FORM_ID, state.getFormInfo().getIdentifier());
+        assertEquals(false, state.getFormInfo().getFormSubmitted());
+        assertEquals(RESPONSE_TYPE, state.getFormInfo().getFormResponseType());
         // Check to make sure no additional events were received (aside from the form display event).
         assertEquals(2, testListener.getCount());
     }
@@ -169,8 +174,9 @@ public class FormControllerTest {
         assertEquals(1, testListener.getCount(EventType.BUTTON_BEHAVIOR_DISMISS));
         ButtonEvent dismissEvent = (ButtonEvent) testListener.getEventAt(EventType.BUTTON_BEHAVIOR_DISMISS, 0);
         LayoutData state = requireNonNull(dismissEvent.getState());
-        assertEquals(FORM_ID, state.getFormId());
-        assertEquals(false, state.getFormSubmitted());
+        assertEquals(FORM_ID, state.getFormInfo().getIdentifier());
+        assertEquals(false, state.getFormInfo().getFormSubmitted());
+        assertEquals(RESPONSE_TYPE, state.getFormInfo().getFormResponseType());
         // Check to make sure no additional events were received (aside from the form display event).
         assertEquals(2, testListener.getCount());
     }

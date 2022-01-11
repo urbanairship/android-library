@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.event;
 
+import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 
@@ -15,7 +16,7 @@ public abstract class WebViewEvent extends Event {
 
     public WebViewEvent(@NonNull EventType type, @Nullable LayoutData state) {
         super(type);
-        this.state = state != null ? state : new LayoutData(null, null,null);
+        this.state = state != null ? state : new LayoutData(null, null);
     }
 
     @NonNull
@@ -23,11 +24,11 @@ public abstract class WebViewEvent extends Event {
         return state;
     }
 
-    public abstract WebViewEvent overrideState(@NonNull String formId, boolean isFormSubmitted);
+    public abstract WebViewEvent overrideState(@NonNull FormInfo formInfo);
     public abstract WebViewEvent overrideState(@NonNull PagerData pagerData);
 
-    protected LayoutData copyState(@NonNull String formId, boolean isFormSubmitted) {
-        return state.withFormData(formId, isFormSubmitted);
+    protected LayoutData copyState(@NonNull FormInfo formInfo) {
+        return state.withFormInfo(formInfo);
     }
 
     protected LayoutData copyState(@NonNull PagerData data) {
@@ -45,8 +46,8 @@ public abstract class WebViewEvent extends Event {
         }
 
         @Override
-        public WebViewEvent overrideState(@NonNull String formId, boolean isFormSubmitted) {
-            return new Close(copyState(formId, isFormSubmitted));
+        public WebViewEvent overrideState(@NonNull FormInfo formInfo) {
+            return new Close(copyState(formInfo));
         }
 
         @Override

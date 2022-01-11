@@ -5,6 +5,7 @@ package com.urbanairship.iam.events;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.iam.ButtonInfo;
@@ -331,7 +332,9 @@ public class InAppReportingEventTest {
 
     @Test
     public void testFormDisplay() {
-        InAppReportingEvent.formDisplay("schedule ID", message, "form id")
+        FormInfo formInfo = new FormInfo("form id", "form type", "response type", false);
+
+        InAppReportingEvent.formDisplay("schedule ID", message, formInfo)
                            .record(mockAnalytics);
 
         JsonMap expectedData = JsonMap.newBuilder()
@@ -340,6 +343,8 @@ public class InAppReportingEventTest {
                                                         .put("message_id", "schedule ID")
                                                         .build())
                                       .put("form_identifier", "form id")
+                                      .put("form_response_type", "response type")
+                                      .put("form_type", "form type")
                                       .build();
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_FORM_DISPLAY, expectedData)));
@@ -347,7 +352,7 @@ public class InAppReportingEventTest {
 
     @Test
     public void testFormResult() {
-        FormData.BaseForm formData = new FormData.Nps("form_id", "score_id", Collections.singleton(new FormData.Score("score_id", 1)));
+        FormData.BaseForm formData = new FormData.Nps("form_id", "response type", "score_id", Collections.singleton(new FormData.Score("score_id", 1)));
 
         InAppReportingEvent.formResult("schedule ID", message, formData)
                            .record(mockAnalytics);
@@ -407,8 +412,9 @@ public class InAppReportingEventTest {
 
     @Test
     public void testContext() {
+        FormInfo formInfo = new FormInfo("form id", "form type", "response type", true);
         PagerData pagerData = new PagerData("pager id", 1, "page1",2, true);
-        LayoutData layoutData = new LayoutData("form id", true, pagerData);
+        LayoutData layoutData = new LayoutData(formInfo, pagerData);
         InAppReportingEvent.display("schedule ID", message)
                            .setLayoutData(layoutData)
                            .setReportingContext(JsonValue.wrap("reporting bits!"))
@@ -426,6 +432,8 @@ public class InAppReportingEventTest {
                                      .put("form", JsonMap.newBuilder()
                                                           .put("identifier", "form id")
                                                           .put("submitted", true)
+                                                          .put("type", "form type")
+                                                          .put("response_type", "response type")
                                                           .build())
                                      .build();
 
@@ -443,7 +451,7 @@ public class InAppReportingEventTest {
     @Test
     public void testEmptyContextData() {
         InAppReportingEvent.display("schedule ID", message)
-                           .setLayoutData(new LayoutData(null, null, null))
+                           .setLayoutData(new LayoutData(null, null))
                            .setReportingContext(JsonValue.NULL)
                            .record(mockAnalytics);
 
@@ -463,7 +471,7 @@ public class InAppReportingEventTest {
         when(mockAnalytics.getConversionSendId()).thenReturn("conversion send id!");
 
         InAppReportingEvent.display("schedule ID", message)
-                           .setLayoutData(new LayoutData(null, null, null))
+                           .setLayoutData(new LayoutData(null, null))
                            .setReportingContext(JsonValue.NULL)
                            .record(mockAnalytics);
 

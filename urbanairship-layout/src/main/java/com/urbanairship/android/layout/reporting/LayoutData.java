@@ -14,30 +14,21 @@ import androidx.annotation.RestrictTo;
 public class LayoutData {
 
     @Nullable
-    private final String formId;
+    private final FormInfo formInfo;
 
-    @Nullable
-    private final Boolean isFormSubmitted;
 
     @Nullable
     private final PagerData pagerData;
 
-    public LayoutData(@Nullable String formId,
-                      @Nullable Boolean isFormSubmitted,
+    public LayoutData(@Nullable FormInfo formInfo,
                       @Nullable PagerData pagerData) {
-        this.formId = formId;
-        this.isFormSubmitted = isFormSubmitted;
+        this.formInfo = formInfo;
         this.pagerData = pagerData;
     }
 
     @Nullable
-    public String getFormId() {
-        return formId;
-    }
-
-    @Nullable
-    public Boolean getFormSubmitted() {
-        return isFormSubmitted;
+    public FormInfo getFormInfo() {
+        return formInfo;
     }
 
     @Nullable
@@ -46,22 +37,21 @@ public class LayoutData {
     }
 
     @NonNull
-    public LayoutData withFormData(@NonNull String id, boolean isSubmitted) {
-        return new LayoutData(id, isSubmitted, pagerData);
+    public LayoutData withFormInfo(@NonNull FormInfo formInfo) {
+        return new LayoutData(formInfo, pagerData);
     }
 
     @NonNull
     public LayoutData withPagerData(@NonNull PagerData data) {
-        return new LayoutData(formId, isFormSubmitted, data);
+        return new LayoutData(formInfo, data);
     }
 
-    @NonNull
     @Override
     public String toString() {
         return "LayoutData{" +
-            "formId='" + formId + '\'' +
-            ", isFormSubmitted='" + isFormSubmitted + '\'' +
-            ", pagerData=" + pagerData +
-            '}';
+                "formInfo=" + formInfo +
+                ", pagerData=" + pagerData +
+                '}';
     }
+
 }

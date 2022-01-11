@@ -13,6 +13,7 @@ import com.urbanairship.android.layout.property.FormBehaviorType;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -35,6 +36,8 @@ import androidx.annotation.Nullable;
 public abstract class BaseFormController extends LayoutModel implements Identifiable {
     @NonNull
     private final String identifier;
+    @Nullable
+    private final String responseType;
     @NonNull
     private final BaseModel view;
     @Nullable
@@ -55,12 +58,14 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     public BaseFormController(
         @NonNull ViewType viewType,
         @NonNull String identifier,
+        @Nullable String responseType,
         @NonNull BaseModel view,
         @Nullable FormBehaviorType submitBehavior
     ) {
         super(viewType, null, null);
 
         this.identifier = identifier;
+        this.responseType = responseType;
         this.view = view;
         this.submitBehavior = submitBehavior;
 
@@ -71,6 +76,11 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     @Override
     public String getIdentifier() {
         return identifier;
+    }
+
+    @Nullable
+    public String getResponseType() {
+        return responseType;
     }
 
     @NonNull
@@ -132,20 +142,20 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
                     return true;
                 }
                 // Otherwise update with our form data and let parent form controller handle it.
-                return super.onEvent(((ButtonEvent) event).overrideState(identifier, isSubmitted));
+                return super.onEvent(((ButtonEvent) event).overrideState(getFormInfo()));
 
             case BUTTON_BEHAVIOR_CANCEL:
             case BUTTON_BEHAVIOR_DISMISS:
                 // Update the event with our form data and continue bubbling it up.
-                return super.onEvent(((ButtonEvent) event).overrideState(identifier, isSubmitted));
+                return super.onEvent(((ButtonEvent) event).overrideState(getFormInfo()));
 
             case WEBVIEW_CLOSE:
                 // Update the event with our form data and continue bubbling it up.
-                return super.onEvent(((WebViewEvent.Close) event).overrideState(identifier, isSubmitted));
+                return super.onEvent(((WebViewEvent.Close) event).overrideState(getFormInfo()));
 
             case REPORTING_EVENT:
                 // Update the event with our form data and continue bubbling it up.
-                return super.onEvent(((ReportingEvent) event).overrideState(identifier, isSubmitted));
+                return super.onEvent(((ReportingEvent) event).overrideState(getFormInfo()));
 
             default:
                 return super.onEvent(event);
@@ -180,7 +190,7 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     private void onViewAttached(Event.ViewAttachedToWindow attach) {
         if (attach.getViewType().isFormInput() && !isDisplayReported) {
             isDisplayReported = true;
-            bubbleEvent(new ReportingEvent.FormDisplay(getIdentifier(), isSubmitted));
+            bubbleEvent(new ReportingEvent.FormDisplay(getFormInfo()));
         }
     }
 
@@ -229,4 +239,12 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     protected Map<AttributeName, JsonValue> getAttributes() {
         return attributes;
     }
+
+    @NonNull
+    protected FormInfo getFormInfo() {
+        return new FormInfo(identifier, getFormType(), responseType, isSubmitted);
+    }
+
+    @NonNull
+    protected abstract String getFormType();
 }

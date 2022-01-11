@@ -28,15 +28,16 @@ public class FormDataTest {
         children.add(new FormData.Score("score", 5));
 
         FormData.Score childScore = new FormData.Score("child score", 7);
-        children.add(new FormData.Nps("child nps", "child score", Collections.singleton(childScore)));
+        children.add(new FormData.Nps("child nps", "child nps response type", "child score", Collections.singleton(childScore)));
 
         FormData.TextInput childText = new FormData.TextInput("child text", "child text input");
-        children.add(new FormData.Form("child form", Collections.singleton(childText)));
+        children.add(new FormData.Form("child form", "child form response type", Collections.singleton(childText)));
 
-        FormData.Form form = new FormData.Form("parent form", children);
+        FormData.Form form = new FormData.Form("parent form", "parent form response type", children);
 
         String expected = "{\n" +
                 "   \"parent form\":{\n" +
+                "      \"response_type\":\"parent form response type\",\n" +
                 "      \"type\":\"form\",\n" +
                 "      \"children\":{\n" +
                 "         \"score\":{\n" +
@@ -44,6 +45,7 @@ public class FormDataTest {
                 "            \"value\":5\n" +
                 "         },\n" +
                 "         \"child nps\":{\n" +
+                "            \"response_type\":\"child nps response type\",\n" +
                 "            \"type\":\"nps\",\n" +
                 "            \"children\":{\n" +
                 "               \"child score\":{\n" +
@@ -72,6 +74,7 @@ public class FormDataTest {
                 "            \"value\":\"single choice valuee\"\n" +
                 "         },\n" +
                 "         \"child form\":{\n" +
+                "            \"response_type\":\"child form response type\",\n" +
                 "            \"type\":\"form\",\n" +
                 "            \"children\":{\n" +
                 "               \"child text\":{\n" +

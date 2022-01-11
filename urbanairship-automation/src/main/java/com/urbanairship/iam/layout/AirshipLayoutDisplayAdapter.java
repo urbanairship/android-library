@@ -13,6 +13,7 @@ import com.urbanairship.android.layout.ThomasListener;
 import com.urbanairship.android.layout.display.DisplayException;
 import com.urbanairship.android.layout.display.DisplayRequest;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.android.layout.util.ImageCache;
@@ -283,8 +284,8 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         }
 
         @Override
-        public void onFormDisplay(@NonNull String formId, @Nullable LayoutData layoutData) {
-            InAppReportingEvent event = InAppReportingEvent.formDisplay(scheduleId, message, formId)
+        public void onFormDisplay(@NonNull FormInfo formInfo, @Nullable LayoutData layoutData) {
+            InAppReportingEvent event = InAppReportingEvent.formDisplay(scheduleId, message, formInfo)
                                                            .setLayoutData(layoutData);
 
             displayHandler.addEvent(event);

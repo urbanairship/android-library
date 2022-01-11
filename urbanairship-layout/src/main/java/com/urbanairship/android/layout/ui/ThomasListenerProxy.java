@@ -84,7 +84,7 @@ class ThomasListenerProxy implements EventListener {
 
             case FORM_DISPLAY:
                 ReportingEvent.FormDisplay formDisplay = (ReportingEvent.FormDisplay) event;
-                listener.onFormDisplay(formDisplay.getFormId(), formDisplay.getState());
+                listener.onFormDisplay(formDisplay.getFormInfo(), formDisplay.getState());
                 return false;
 
             default:

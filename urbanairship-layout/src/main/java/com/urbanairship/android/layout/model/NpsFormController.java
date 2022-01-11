@@ -23,11 +23,12 @@ public class NpsFormController extends BaseFormController {
 
     public NpsFormController(
         @NonNull String identifier,
+        @NonNull String responseType,
         @NonNull String scoreIdentifier,
         @NonNull BaseModel view,
         @Nullable FormBehaviorType submitBehavior
     ) {
-        super(ViewType.NPS_FORM_CONTROLLER, identifier, view, submitBehavior);
+        super(ViewType.NPS_FORM_CONTROLLER, identifier, responseType, view, submitBehavior);
 
         this.scoreIdentifier = scoreIdentifier;
     }
@@ -36,10 +37,11 @@ public class NpsFormController extends BaseFormController {
     public static NpsFormController fromJson(@NonNull JsonMap json) throws JsonException {
         String identifier = identifierFromJson(json);
         String scoreIdentifier = json.opt("nps_identifier").optString();
+        String responseType = json.opt("response_type").getString();
         BaseModel view = viewFromJson(json);
         FormBehaviorType submitBehavior = submitBehaviorFromJson(json);
 
-        return new NpsFormController(identifier, scoreIdentifier, view, submitBehavior);
+        return new NpsFormController(identifier, responseType, scoreIdentifier, view, submitBehavior);
     }
 
     @NonNull
@@ -49,7 +51,7 @@ public class NpsFormController extends BaseFormController {
 
     @Override
     protected ReportingEvent.FormResult getFormResultEvent() {
-        return new ReportingEvent.FormResult(new FormData.Nps(getIdentifier(), getScoreIdentifier(), getFormData()), getAttributes());
+        return new ReportingEvent.FormResult(new FormData.Nps(getIdentifier(), getResponseType(), getScoreIdentifier(), getFormData()), getFormInfo(), getAttributes());
     }
 
     @Override
@@ -59,6 +61,12 @@ public class NpsFormController extends BaseFormController {
 
     @Override
     protected FormEvent.DataChange getFormDataChangeEvent() {
-        return new FormEvent.DataChange(new FormData.Nps(getIdentifier(), getScoreIdentifier(), getFormData()), isFormValid(), getAttributes());
+        return new FormEvent.DataChange(new FormData.Nps(getIdentifier(), getResponseType(), getScoreIdentifier(), getFormData()), isFormValid(), getAttributes());
+    }
+
+    @NonNull
+    @Override
+    protected String getFormType() {
+        return "nps";
     }
 }

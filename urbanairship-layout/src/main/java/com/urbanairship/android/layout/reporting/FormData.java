@@ -7,10 +7,10 @@ import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -23,6 +23,7 @@ public abstract class FormData<T> {
     private static final String KEY_VALUE = "value";
     private static final String KEY_SCORE_ID = "score_id";
     private static final String KEY_CHILDREN = "children";
+    private static final String KEY_RESPONSE_TYPE = "response_type";
 
     private enum Type implements JsonSerializable {
         FORM("form"),
@@ -125,8 +126,11 @@ public abstract class FormData<T> {
 
     public abstract static class BaseForm extends FormData<Collection<FormData<?>>> implements JsonSerializable {
 
-        public BaseForm(@NonNull String identifier, @NonNull Type type, @NonNull Collection<FormData<?>> children) {
+        protected final String responseType;
+
+        public BaseForm(@NonNull String identifier, @Nullable String responseType, @NonNull Type type, @NonNull Collection<FormData<?>> children) {
             super(identifier, type, children);
+            this.responseType = responseType;
         }
 
         @NonNull
@@ -144,7 +148,8 @@ public abstract class FormData<T> {
         @NonNull
         @Override
         public JsonValue toJsonValue() {
-            return JsonMap.newBuilder().put(getIdentifier(), getFormData())
+            return JsonMap.newBuilder()
+                          .put(getIdentifier(), getFormData())
                           .build()
                           .toJsonValue();
         }
@@ -153,8 +158,8 @@ public abstract class FormData<T> {
 
     public static class Form extends BaseForm {
 
-        public Form(@NonNull String identifier, @NonNull Collection<FormData<?>> children) {
-            super(identifier, Type.FORM, children);
+        public Form(@NonNull String identifier, @Nullable String responseType, @NonNull Collection<FormData<?>> children) {
+            super(identifier, responseType, Type.FORM, children);
         }
 
         @NonNull
@@ -163,6 +168,7 @@ public abstract class FormData<T> {
             return JsonMap.newBuilder()
                           .put(KEY_TYPE, getType())
                           .put(KEY_CHILDREN, getChildrenJson())
+                          .put(KEY_RESPONSE_TYPE, responseType)
                           .build();
         }
 
@@ -172,8 +178,8 @@ public abstract class FormData<T> {
 
         private final String scoreId;
 
-        public Nps(@NonNull String identifier, @NonNull String scoreId, @NonNull Collection<FormData<?>> children) {
-            super(identifier, Type.NPS_FORM, children);
+        public Nps(@NonNull String identifier, @Nullable String responseType, @NonNull String scoreId, @NonNull Collection<FormData<?>> children) {
+            super(identifier, responseType, Type.NPS_FORM, children);
             this.scoreId = scoreId;
         }
 
@@ -188,6 +194,7 @@ public abstract class FormData<T> {
                           .put(KEY_TYPE, getType())
                           .put(KEY_CHILDREN, getChildrenJson())
                           .put(KEY_SCORE_ID, scoreId)
+                          .put(KEY_RESPONSE_TYPE, responseType)
                           .build();
         }
     }

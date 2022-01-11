@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.display.DisplayArgs;
 import com.urbanairship.android.layout.display.DisplayException;
 import com.urbanairship.android.layout.display.DisplayRequest;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.android.layout.util.ImageCache;
@@ -330,9 +331,10 @@ public class AirshipLayoutDisplayAdapterTest {
         LayoutData layoutData = mock(LayoutData.class);
         ThomasListener listener = prepareListenerTest();
 
-        listener.onFormDisplay("form id", layoutData);
+        FormInfo formInfo = new FormInfo("form id", "form type", "response type", false);
+        listener.onFormDisplay(formInfo, layoutData);
 
-        InAppReportingEvent expected = InAppReportingEvent.formDisplay(scheduleId, message, "form id")
+        InAppReportingEvent expected = InAppReportingEvent.formDisplay(scheduleId, message, formInfo)
                                                           .setLayoutData(layoutData);
 
         verify(displayHandler).addEvent(eq(expected));
@@ -344,7 +346,7 @@ public class AirshipLayoutDisplayAdapterTest {
         ThomasListener listener = prepareListenerTest();
 
         Collection<FormData<?>> children = Collections.singleton(new FormData.Score("score_id",1));
-        FormData.BaseForm formData = new FormData.Nps("form_id", "score_id", children);
+        FormData.BaseForm formData = new FormData.Nps("form_id", "response type", "score_id", children);
 
         listener.onFormResult(formData, layoutData);
 
