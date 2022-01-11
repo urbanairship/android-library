@@ -59,6 +59,6 @@ public class NpsFormController extends BaseFormController {
 
     @Override
     protected FormEvent.DataChange getFormDataChangeEvent() {
-        return new FormEvent.DataChange(getIdentifier(), new FormData.Nps(getIdentifier(), getScoreIdentifier(), getFormData()), isFormValid(), getAttributes());
+        return new FormEvent.DataChange(new FormData.Nps(getIdentifier(), getScoreIdentifier(), getFormData()), isFormValid(), getAttributes());
     }
 }

@@ -72,7 +72,7 @@ public interface ThomasListener {
      * @param formData The form data.
      * @param state The layout state.
      */
-    void onFormResult(@NonNull FormData<?> formData, @Nullable LayoutData state);
+    void onFormResult(@NonNull FormData.BaseForm formData, @Nullable LayoutData state);
 
     /**
      * Called when a form is displayed.

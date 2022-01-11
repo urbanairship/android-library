@@ -96,7 +96,7 @@ public class ToggleModel extends CheckableModel implements Identifiable, Validat
     @NonNull
     @Override
     public Event buildInputChangeEvent(boolean isChecked) {
-        return new FormEvent.DataChange(identifier, new FormData.Toggle(isChecked), isValid(), attributeName, attributeValue);
+        return new FormEvent.DataChange(new FormData.Toggle(identifier, isChecked), isValid(), attributeName, attributeValue);
     }
 
     @NonNull

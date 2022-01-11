@@ -275,7 +275,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         }
 
         @Override
-        public void onFormResult(@NonNull FormData<?> formData, @Nullable LayoutData layoutData) {
+        public void onFormResult(@NonNull FormData.BaseForm formData, @Nullable LayoutData layoutData) {
             InAppReportingEvent event = InAppReportingEvent.formResult(scheduleId, message, formData)
                                                            .setLayoutData(layoutData);
 

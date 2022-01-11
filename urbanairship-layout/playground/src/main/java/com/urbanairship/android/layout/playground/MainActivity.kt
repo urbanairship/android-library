@@ -127,7 +127,7 @@ class MainActivity : AppCompatActivity() {
             Logger.debug("onDismiss(buttonId: $buttonId, buttonDescription: $buttonDescription, cancel: $cancel, displayTime: $displayTime, state: $state")
         }
 
-        override fun onFormResult(formData: FormData<*>, state: LayoutData?) {
+        override fun onFormResult(formData: FormData.BaseForm, state: LayoutData?) {
             Logger.debug("onFormResult(formData: ${formData.toJsonValue()}, state: $state)")
         }
 

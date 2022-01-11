@@ -16,6 +16,7 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -179,7 +180,7 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     }
 
     private void onDataChange(FormEvent.DataChange data) {
-        String identifier = data.getIdentifier();
+        String identifier = data.getValue().getIdentifier();
         boolean isValid = data.isValid();
 
         if (isValid) {
@@ -215,8 +216,8 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     }
 
     @NonNull
-    protected Map<String, FormData<?>> getFormData() {
-        return formData;
+    protected Collection<FormData<?>> getFormData() {
+        return formData.values();
     }
 
     @NonNull

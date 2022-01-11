@@ -29,6 +29,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -341,9 +343,8 @@ public class AirshipLayoutDisplayAdapterTest {
         LayoutData layoutData = mock(LayoutData.class);
         ThomasListener listener = prepareListenerTest();
 
-        Map<String, FormData<?>> children = new HashMap<>();
-        children.put("score_id", new FormData.Score(1));
-        FormData<?> formData = new FormData.Nps("form_id", "score_id", children);
+        Collection<FormData<?>> children = Collections.singleton(new FormData.Score("score_id",1));
+        FormData.BaseForm formData = new FormData.Nps("form_id", "score_id", children);
 
         listener.onFormResult(formData, layoutData);
 

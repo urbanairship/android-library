@@ -201,7 +201,7 @@ public class InAppReportingEvent {
 
     public static InAppReportingEvent formResult(@NonNull String scheduleId,
                                                  @NonNull InAppMessage message,
-                                                 @NonNull FormData<?> formData) {
+                                                 @NonNull FormData.BaseForm formData) {
 
         return new InAppReportingEvent(TYPE_FORM_RESULT, scheduleId, message)
                 .setOverrides(JsonMap.newBuilder().put(FORM, formData).build());

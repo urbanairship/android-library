@@ -42,7 +42,7 @@ public class FormController extends BaseFormController {
 
     @Override
     protected FormEvent.DataChange getFormDataChangeEvent() {
-        return new FormEvent.DataChange(getIdentifier(), new FormData.Form(getIdentifier(), getFormData()), isFormValid());
+        return new FormEvent.DataChange(new FormData.Form(getIdentifier(), getFormData()), isFormValid());
     }
 
     @Override

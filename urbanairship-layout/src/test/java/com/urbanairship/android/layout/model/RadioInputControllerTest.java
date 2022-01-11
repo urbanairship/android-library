@@ -97,7 +97,7 @@ public class RadioInputControllerTest {
 
         // Verify event data
         assertTrue(changeEvent.isValid());
-        assertEquals(IDENTIFIER, changeEvent.getIdentifier());
+        assertEquals(IDENTIFIER, changeEvent.getValue().getIdentifier());
         assertEquals(SELECTED_VALUE, data.getValue());
 
         // Simulate another click on the selected radio input
@@ -117,7 +117,7 @@ public class RadioInputControllerTest {
 
         // Verify the data change contains the new value
         assertTrue(changeEvent.isValid());
-        assertEquals(IDENTIFIER, changeEvent.getIdentifier());
+        assertEquals(IDENTIFIER, changeEvent.getValue().getIdentifier());
         assertEquals(SELECTED_VALUE_2, data.getValue());
     }
 

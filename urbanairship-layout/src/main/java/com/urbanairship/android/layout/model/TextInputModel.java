@@ -134,6 +134,6 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
 
     public void onInputChange(@NonNull String value) {
         this.value = value;
-        bubbleEvent(new FormEvent.DataChange(identifier, new FormData.TextInput(value), isValid()));
+        bubbleEvent(new FormEvent.DataChange(new FormData.TextInput(identifier, value), isValid()));
     }
 }

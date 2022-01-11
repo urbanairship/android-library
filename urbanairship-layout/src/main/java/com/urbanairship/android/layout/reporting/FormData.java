@@ -6,6 +6,7 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,7 +17,7 @@ import androidx.annotation.RestrictTo;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public abstract class FormData<T> implements JsonSerializable {
+public abstract class FormData<T> {
 
     private static final String KEY_TYPE = "type";
     private static final String KEY_VALUE = "value";
@@ -29,7 +30,7 @@ public abstract class FormData<T> implements JsonSerializable {
         TOGGLE("toggle"),
         MULTIPLE_CHOICE("multiple_choice"),
         SINGLE_CHOICE("single_choice"),
-        TEXT("text"),
+        TEXT("text_input"),
         SCORE("score");
 
         @NonNull
@@ -51,7 +52,11 @@ public abstract class FormData<T> implements JsonSerializable {
     @NonNull
     private final T value;
 
-    public FormData(@NonNull Type type, @NonNull T value) {
+    @NonNull
+    private final String identifier;
+
+    public FormData(@NonNull String identifier, @NonNull Type type, @NonNull T value) {
+        this.identifier = identifier;
         this.type = type;
         this.value = value;
     }
@@ -67,102 +72,123 @@ public abstract class FormData<T> implements JsonSerializable {
     }
 
     @NonNull
-    @Override
-    public JsonValue toJsonValue() {
-        return toJsonMap().toJsonValue();
+    public String getIdentifier() {
+        return identifier;
     }
 
     @NonNull
-    protected JsonValue getJsonValue() {
-        return JsonValue.wrapOpt(value);
-    }
-
-    @NonNull
-    protected JsonMap toJsonMap() {
+    protected JsonMap getFormData() {
         return JsonMap.newBuilder()
-               .put(KEY_TYPE, getType())
-               .put(KEY_VALUE, getJsonValue())
-               .build();
+                      .put(KEY_TYPE, getType())
+                      .put(KEY_VALUE, JsonValue.wrapOpt(value))
+                      .build();
     }
 
     public static class Toggle extends FormData<Boolean> {
-        public Toggle(boolean value) {
-            super(Type.TOGGLE, value);
+        public Toggle(@NonNull String identifier, boolean value) {
+            super(identifier, Type.TOGGLE, value);
         }
     }
 
+
     public static class CheckboxController extends FormData<Set<JsonValue>> {
-        public CheckboxController(@NonNull Set<JsonValue> value) {
-            super(Type.MULTIPLE_CHOICE, value);
+
+        public CheckboxController(@NonNull String identifier, @NonNull Set<JsonValue> value) {
+            super(identifier, Type.MULTIPLE_CHOICE, value);
         }
+
     }
 
     public static class RadioInputController extends FormData<JsonValue> {
-        public RadioInputController(@NonNull JsonValue value) {
-            super(Type.SINGLE_CHOICE, value);
+
+        public RadioInputController(@NonNull String identifier, @NonNull JsonValue value) {
+            super(identifier, Type.SINGLE_CHOICE, value);
         }
+
     }
 
     public static class TextInput extends FormData<String> {
-        public TextInput(@NonNull String value) {
-            super(Type.TEXT, value);
+
+        public TextInput(@NonNull String identifier, @NonNull String value) {
+            super(identifier, Type.TEXT, value);
         }
+
     }
 
     public static class Score extends FormData<Integer> {
-        public Score(@NonNull Integer value) {
-            super(Type.SCORE, value);
+
+        public Score(@NonNull String identifier, @NonNull Integer value) {
+            super(identifier, Type.SCORE, value);
         }
+
     }
 
-    public abstract static class BaseForm extends FormData<Map<String, FormData<?>>> {
-        private final String identifier;
+    public abstract static class BaseForm extends FormData<Collection<FormData<?>>> implements JsonSerializable {
 
-        public BaseForm(@NonNull Type type, @NonNull String identifier, @NonNull Map<String, FormData<?>> children) {
-            super(type, children);
-            this.identifier = identifier;
+        public BaseForm(@NonNull String identifier, @NonNull Type type, @NonNull Collection<FormData<?>> children) {
+            super(identifier, type, children);
         }
 
-        public String getIdentifier() {
-            return identifier;
+        @NonNull
+        protected JsonSerializable getChildrenJson() {
+            JsonMap.Builder builder = JsonMap.newBuilder();
+            for (FormData<?> child : getValue()) {
+                builder.putOpt(child.identifier, child.getFormData());
+            }
+            return builder.build();
         }
+
+        @NonNull
+        protected abstract JsonMap getFormData();
+
+        @NonNull
+        @Override
+        public JsonValue toJsonValue() {
+            return JsonMap.newBuilder().put(getIdentifier(), getFormData())
+                          .build()
+                          .toJsonValue();
+        }
+
     }
 
     public static class Form extends BaseForm {
-        public Form(@NonNull String identifier, @NonNull Map<String, FormData<?>> children) {
-            super(Type.FORM, identifier, children);
+
+        public Form(@NonNull String identifier, @NonNull Collection<FormData<?>> children) {
+            super(identifier, Type.FORM, children);
         }
 
         @NonNull
         @Override
-        public JsonMap toJsonMap() {
+        protected JsonMap getFormData() {
             return JsonMap.newBuilder()
-                .put(KEY_TYPE, getType())
-                .put(KEY_CHILDREN, getJsonValue())
-                .build();
+                          .put(KEY_TYPE, getType())
+                          .put(KEY_CHILDREN, getChildrenJson())
+                          .build();
         }
+
     }
 
     public static class Nps extends BaseForm {
+
         private final String scoreId;
 
-        public Nps(@NonNull String identifier, @NonNull String scoreId, @NonNull Map<String, FormData<?>> children) {
-            super(Type.NPS_FORM, identifier, children);
+        public Nps(@NonNull String identifier, @NonNull String scoreId, @NonNull Collection<FormData<?>> children) {
+            super(identifier, Type.NPS_FORM, children);
             this.scoreId = scoreId;
-        }
-
-        @NonNull
-        @Override
-        public JsonMap toJsonMap() {
-            return JsonMap.newBuilder()
-                .put(KEY_TYPE, getType())
-                .put(KEY_SCORE_ID, getScoreId())
-                .put(KEY_CHILDREN, getJsonValue())
-                .build();
         }
 
         public String getScoreId() {
             return scoreId;
+        }
+
+        @NonNull
+        @Override
+        protected JsonMap getFormData() {
+            return JsonMap.newBuilder()
+                          .put(KEY_TYPE, getType())
+                          .put(KEY_CHILDREN, getChildrenJson())
+                          .put(KEY_SCORE_ID, scoreId)
+                          .build();
         }
     }
 }

@@ -112,6 +112,6 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
     public void onScoreChange(int score) {
         selectedScore = score;
 
-        bubbleEvent(new FormEvent.DataChange(identifier, new FormData.Score(score), isValid(), attributeName, JsonValue.wrap(score)));
+        bubbleEvent(new FormEvent.DataChange(new FormData.Score(identifier, score), isValid(), attributeName, JsonValue.wrap(score)));
     }
 }

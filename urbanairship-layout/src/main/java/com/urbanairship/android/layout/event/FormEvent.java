@@ -142,38 +142,33 @@ public abstract class FormEvent extends Event {
 
     /** Event bubbled up from form inputs to their parent form controllers when data has changed. */
     public static final class DataChange extends InputChange<FormData<?>> {
-        @NonNull
-        private final String identifier;
         private final boolean isValid;
+
         @NonNull
         private final Map<AttributeName, JsonValue> attributes = new HashMap<>();
 
         public DataChange(
-            @NonNull String identifier,
             @NonNull FormData<?> value,
             boolean isValid
         ) {
-            this(identifier, value, isValid, null, null);
+            this(value, isValid, null, null);
         }
 
         public DataChange(
-            @NonNull String identifier,
             @NonNull FormData<?> value,
             boolean isValid,
             @Nullable AttributeName attributeName
             ) {
-            this(identifier, value, isValid, attributeName, null);
+            this(value, isValid, attributeName, null);
         }
 
         public DataChange(
-            @NonNull String identifier,
             @NonNull FormData<?> value,
             boolean isValid,
             @Nullable AttributeName attributeName,
             @Nullable JsonValue attributeValue
         ) {
             this(
-                identifier,
                 value,
                 isValid,
                 attributeName != null && attributeValue != null
@@ -183,13 +178,11 @@ public abstract class FormEvent extends Event {
         }
 
         public DataChange(
-            @NonNull String identifier,
             @NonNull FormData<?> value,
             boolean isValid,
             @Nullable Map<AttributeName, JsonValue> attributes
         ) {
             super(EventType.FORM_DATA_CHANGE, value);
-            this.identifier = identifier;
             this.isValid = isValid;
             if (attributes != null) {
                 this.attributes.putAll(attributes);
@@ -201,11 +194,6 @@ public abstract class FormEvent extends Event {
         }
 
         @NonNull
-        public String getIdentifier() {
-            return identifier;
-        }
-
-        @NonNull
         public Map<AttributeName, JsonValue> getAttributes() {
             return attributes;
         }
@@ -213,11 +201,12 @@ public abstract class FormEvent extends Event {
         @Override
         public String toString() {
             return "DataChange{" +
-                "identifier='" + identifier + '\'' +
-                ", isValid=" + isValid +
-                ", attributes=" + attributes +
-                '}';
+                    "value=" + value +
+                    "isValid=" + isValid +
+                    ", attributes=" + attributes +
+                    '}';
         }
+
     }
 
 

@@ -101,7 +101,7 @@ public class CheckboxControllerTest {
 
         // Verify event data
         assertTrue(changeEvent.isValid());
-        assertEquals(IDENTIFIER, changeEvent.getIdentifier());
+        assertEquals(IDENTIFIER, changeEvent.getValue().getIdentifier());
         assertEquals(Collections.singleton(SELECTED_VALUE), data.getValue());
         assertEquals(1, controller.getSelectedValues().size());
 
@@ -114,7 +114,7 @@ public class CheckboxControllerTest {
 
         // Verify updated data
         assertFalse(changeEvent.isValid());
-        assertEquals(IDENTIFIER, changeEvent.getIdentifier());
+        assertEquals(IDENTIFIER, changeEvent.getValue().getIdentifier());
         assertEquals(Collections.emptySet(), data.getValue());
 
         assertEquals(0, controller.getSelectedValues().size());

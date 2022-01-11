@@ -23,6 +23,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -345,9 +347,7 @@ public class InAppReportingEventTest {
 
     @Test
     public void testFormResult() {
-        Map<String, FormData<?>> children = new HashMap<>();
-        children.put("score_id", new FormData.Score(1));
-        FormData formData = new FormData.Nps("form_id", "score_id", children);
+        FormData.BaseForm formData = new FormData.Nps("form_id", "score_id", Collections.singleton(new FormData.Score("score_id", 1)));
 
         InAppReportingEvent.formResult("schedule ID", message, formData)
                            .record(mockAnalytics);

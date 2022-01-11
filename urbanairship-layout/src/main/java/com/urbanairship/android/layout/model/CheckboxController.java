@@ -165,7 +165,7 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
         }
 
         trickleEvent(new CheckboxEvent.ViewUpdate(event.getValue(), event.isChecked()));
-        bubbleEvent(new FormEvent.DataChange(identifier, new FormData.CheckboxController(selectedValues), isValid()));
+        bubbleEvent(new FormEvent.DataChange(new FormData.CheckboxController(identifier, selectedValues), isValid()));
         return true;
     }
 }
