@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.android.layout.event.WebViewEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
@@ -33,5 +34,9 @@ public class WebViewModel extends BaseModel {
     @NonNull
     public String getUrl() {
         return url;
+    }
+
+    public void onClose() {
+        bubbleEvent(new WebViewEvent.Close());
     }
 }

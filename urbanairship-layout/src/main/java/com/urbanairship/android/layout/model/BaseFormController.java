@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.event.ButtonEvent;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.event.ReportingEvent;
+import com.urbanairship.android.layout.event.WebViewEvent;
 import com.urbanairship.android.layout.property.FormBehaviorType;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.AttributeName;
@@ -138,6 +139,10 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
                 // Update the event with our form data and continue bubbling it up.
                 return super.onEvent(((ButtonEvent) event).overrideState(identifier, isSubmitted));
 
+            case WEBVIEW_CLOSE:
+                // Update the event with our form data and continue bubbling it up.
+                return super.onEvent(((WebViewEvent.Close) event).overrideState(identifier, isSubmitted));
+
             case REPORTING_EVENT:
                 // Update the event with our form data and continue bubbling it up.
                 return super.onEvent(((ReportingEvent) event).overrideState(identifier, isSubmitted));
@@ -175,7 +180,7 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     private void onViewAttached(Event.ViewAttachedToWindow attach) {
         if (attach.getViewType().isFormInput() && !isDisplayReported) {
             isDisplayReported = true;
-            bubbleEvent(new ReportingEvent.FormDisplay(getIdentifier()));
+            bubbleEvent(new ReportingEvent.FormDisplay(getIdentifier(), isSubmitted));
         }
     }
 

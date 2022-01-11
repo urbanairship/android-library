@@ -58,7 +58,9 @@ public enum EventType {
     /** Score input events. */
     SCORE_INPUT_CHANGE,
 
-    /* Reporting events */
+    /** Reporting events */
+    REPORTING_EVENT,
 
-    REPORTING_EVENT
+    /** WebView dismiss event */
+    WEBVIEW_CLOSE
 }

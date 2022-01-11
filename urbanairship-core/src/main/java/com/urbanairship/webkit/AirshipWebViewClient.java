@@ -59,6 +59,7 @@ public class AirshipWebViewClient extends WebViewClient {
     public interface Listener {
         void onPageFinished(@NonNull final WebView view, final @Nullable String url);
         void onReceivedError(@NonNull WebView view, @NonNull WebResourceRequest request, @NonNull WebResourceError error);
+        boolean onClose(@NonNull WebView view);
     }
 
     private List<Listener> listeners = new CopyOnWriteArrayList<>();
@@ -145,8 +146,15 @@ public class AirshipWebViewClient extends WebViewClient {
      * @param webView The web view.
      */
     protected void onClose(@NonNull WebView webView) {
-        webView.getRootView().dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK));
-        webView.getRootView().dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK));
+        boolean handled = false;
+        for (Listener listener : listeners) {
+            handled = handled || listener.onClose(webView);
+        }
+
+        if (!handled) {
+            webView.getRootView().dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK));
+            webView.getRootView().dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK));
+        }
     }
 
     /**

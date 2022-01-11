@@ -18,12 +18,13 @@ import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.event.EventSource;
 import com.urbanairship.android.layout.event.ReportingEvent;
+import com.urbanairship.android.layout.event.WebViewEvent;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.property.ModalPlacement;
-import com.urbanairship.android.layout.property.Orientation;
 import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.DisplayTimer;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.util.ActionsRunner;
 import com.urbanairship.android.layout.view.ModalView;
 import com.urbanairship.channel.AttributeEditor;
@@ -167,7 +168,7 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
     public void onBackPressed() {
         if (!disableBackButton) {
             super.onBackPressed();
-            onEvent(new ReportingEvent.DismissFromOutside(displayTimer.getTime()));
+            reportDismissFromOutside(null);
         }
     }
 
@@ -179,6 +180,10 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             case BUTTON_BEHAVIOR_DISMISS:
                 reportDismissFromButton((ButtonEvent) event);
                 finish();
+                return true;
+
+            case WEBVIEW_CLOSE:
+                reportDismissFromOutside(((WebViewEvent) event).getState());
                 return true;
 
             case BUTTON_ACTIONS:
@@ -226,6 +231,10 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             displayTimer.getTime(),
             event.getState()
         ));
+    }
+
+    private void reportDismissFromOutside(@Nullable LayoutData state) {
+        onEvent(new ReportingEvent.DismissFromOutside(displayTimer.getTime(), state));
     }
 
     private void applyAttributeUpdates(ReportingEvent.FormResult result) {

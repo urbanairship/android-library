@@ -8,17 +8,16 @@ import com.urbanairship.android.layout.event.ButtonEvent;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.PagerEvent;
 import com.urbanairship.android.layout.event.ReportingEvent;
+import com.urbanairship.android.layout.event.WebViewEvent;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.util.UAStringUtil;
 
 import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.core.util.ObjectsCompat;
 
 import static com.urbanairship.android.layout.model.Identifiable.identifierFromJson;
 
@@ -109,6 +108,10 @@ public class PagerController extends LayoutModel implements Identifiable {
             case BUTTON_BEHAVIOR_DISMISS:
                 // Update the event with our pager data and continue bubbling it up.
                 return super.onEvent(((ButtonEvent) event).overrideState(buildPagerData()));
+
+            case WEBVIEW_CLOSE:
+                // Update the event with our pager data and continue bubbling it up.
+                return super.onEvent((((WebViewEvent.Close) event).overrideState(buildPagerData())));
 
             case REPORTING_EVENT:
                 // Update the event with our pager data and continue bubbling it up.

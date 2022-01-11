@@ -210,7 +210,7 @@ public abstract class ReportingEvent extends Event {
             this(displayTime, null);
         }
 
-        private DismissFromOutside(long displayTime, @Nullable LayoutData state) {
+        public DismissFromOutside(long displayTime, @Nullable LayoutData state) {
             super(ReportType.OUTSIDE_DISMISS, displayTime, state);
         }
 
@@ -356,8 +356,8 @@ public abstract class ReportingEvent extends Event {
         @NonNull
         private final String formId;
 
-        public FormDisplay(@NonNull String formId) {
-            this(formId, new LayoutData(formId, null, null));
+        public FormDisplay(@NonNull String formId, boolean isFormSubmitted) {
+            this(formId, new LayoutData(formId, isFormSubmitted, null));
         }
 
         private FormDisplay(@NonNull String formId, @Nullable LayoutData state) {

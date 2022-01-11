@@ -143,6 +143,12 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
             protected void onRetry(@NonNull WebView webView) {
                 webView.loadUrl(model.getUrl());
             }
+
+            @Override
+            public boolean onClose(@NonNull WebView webView) {
+                model.onClose();
+                return true;
+            }
         });
 
         webView.setWebChromeClient(chromeClient);
