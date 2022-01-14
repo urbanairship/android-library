@@ -105,16 +105,16 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
     }
 
     public void onClick() {
-        for (ButtonClickBehaviorType behavior : buttonClickBehaviors) {
-            bubbleEvent(ButtonEvent.fromBehavior(behavior, this));
-        }
+        // Report button tap event.
+        bubbleEvent(new ReportingEvent.ButtonTap(identifier));
 
         if (hasActions()) {
             bubbleEvent(new ButtonEvent.Actions(this));
         }
 
-        // Report button tap event.
-        bubbleEvent(new ReportingEvent.ButtonTap(identifier));
+        for (ButtonClickBehaviorType behavior : buttonClickBehaviors) {
+            bubbleEvent(ButtonEvent.fromBehavior(behavior, this));
+        }
 
         // Note: Button dismiss events are reported at the top level when handled.
         // We can't send them directly from here because we need to include
