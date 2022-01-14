@@ -82,12 +82,17 @@ public class PagerController extends LayoutModel implements Identifiable {
 
             case PAGER_SCROLL:
                 PagerEvent.Scroll scroll = (PagerEvent.Scroll) event;
-                trickleEvent(scroll);
-                reducePagerState(scroll);
-                reportPageView(scroll);
+                // Report the scroll event first, so that the pager context reflects
+                // the state of the pager when the swipe was initiated.
                 if (!scroll.isInternal()) {
                     reportPageSwipe(scroll);
                 }
+                // Trickle the event to update the pager indicator, if this controller contains one.
+                trickleEvent(scroll);
+                // Update our local state.
+                reducePagerState(scroll);
+                // Report the page view now that we've completed the pager scroll and updated state.
+                reportPageView(scroll);
                 return true;
 
             case BUTTON_BEHAVIOR_PAGER_NEXT:

@@ -24,11 +24,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -362,7 +359,7 @@ public class InAppReportingEventTest {
                                       .put("id", JsonMap.newBuilder()
                                                         .put("message_id", "schedule ID")
                                                         .build())
-                                      .put("form", formData)
+                                      .put("forms", formData)
                                       .build();
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_FORM_RESULT, expectedData)));

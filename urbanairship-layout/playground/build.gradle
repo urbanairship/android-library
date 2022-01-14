@@ -22,6 +22,8 @@ plugins {
     id 'kotlin-android'
 }
 
+group = "com.urbanairship.android"
+
 android {
     compileSdk 31
 

@@ -66,11 +66,11 @@ public class InAppReportingEvent {
     @NonNull
     public static final String TYPE_FORM_DISPLAY = "in_app_form_display";
     @NonNull
+    public static final String TYPE_FORM_RESULT = "in_app_form_result";
+    @NonNull
     public static final String TYPES_PAGER_SUMMARY = "in_app_pager_summary";
     @NonNull
     public static final String TYPES_PAGER_COMPLETED = "in_app_pager_completed";
-    @NonNull
-    public static final String TYPE_FORM_RESULT = "in_app_display";
     @NonNull
     public static final String TYPE_BUTTON_TAP = "in_app_button_tap";
 
@@ -79,7 +79,7 @@ public class InAppReportingEvent {
     private static final String FORM_TYPE_KEY = "form_type";
     private static final String FORM_RESPONSE_TYPE_KEY = "form_response_type";
 
-    private static final String FORM = "form";
+    private static final String FORMS = "forms";
 
     // Pager keys
     private static final String PAGER_ID = "pager_identifier";
@@ -167,7 +167,7 @@ public class InAppReportingEvent {
 
     public static InAppReportingEvent interrupted(@NonNull String scheduleId, @NonNull @InAppMessage.Source String source) {
         JsonMap resolutionData = resolutionData(ResolutionInfo.dismissed(), 0);
-        return new InAppReportingEvent(TYPE_FORM_RESULT, scheduleId, source)
+        return new InAppReportingEvent(TYPE_RESOLUTION, scheduleId, source)
                 .setOverrides(JsonMap.newBuilder().put(RESOLUTION, resolutionData).build());
     }
 
@@ -215,7 +215,7 @@ public class InAppReportingEvent {
                                                  @NonNull FormData.BaseForm formData) {
 
         return new InAppReportingEvent(TYPE_FORM_RESULT, scheduleId, message)
-                .setOverrides(JsonMap.newBuilder().put(FORM, formData).build());
+                .setOverrides(JsonMap.newBuilder().put(FORMS, formData).build());
     }
 
     public static InAppReportingEvent buttonTap(@NonNull String scheduleId,
@@ -436,6 +436,7 @@ public class InAppReportingEvent {
             return data;
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "AnalyticsEvent{" +

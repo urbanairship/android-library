@@ -3,6 +3,7 @@
 package com.urbanairship.android.layout.view;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 
 import com.google.android.material.button.MaterialButton;
@@ -39,6 +40,8 @@ public class LabelButtonView extends MaterialButton implements BaseView<LabelBut
     private void init() {
         setId(generateViewId());
         setAllCaps(false);
+        setSingleLine(true);
+        setEllipsize(TextUtils.TruncateAt.END);
     }
 
     @NonNull

@@ -43,7 +43,7 @@ public class ContainerLayoutView extends ClippableConstraintLayout implements Ba
 
     public void init() {
         setId(generateViewId());
-        setClipChildren(false);
+        setClipChildren(true);
     }
 
     @NonNull
