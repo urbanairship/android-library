@@ -75,9 +75,11 @@ public class PagerController extends LayoutModel implements Identifiable {
 
         switch (event.getType()) {
             case PAGER_INIT:
-                trickleEvent(event);
-                reducePagerState((PagerEvent) event);
-                reportPageView((PagerEvent) event);
+                PagerEvent.Init init = (PagerEvent.Init) event;
+                trickleEvent(init);
+                reducePagerState(init);
+                reportPageView(init);
+                handlePageActions(init);
                 return true;
 
             case PAGER_SCROLL:
@@ -87,6 +89,8 @@ public class PagerController extends LayoutModel implements Identifiable {
                 if (!scroll.isInternal()) {
                     reportPageSwipe(scroll);
                 }
+                // Bubble up any actions so that they can be passed along to our actions runner at the top level.
+                handlePageActions(scroll);
                 // Trickle the event to update the pager indicator, if this controller contains one.
                 trickleEvent(scroll);
                 // Update our local state.
@@ -156,6 +160,13 @@ public class PagerController extends LayoutModel implements Identifiable {
                 event.getPreviousPageId(),
                 event.getPageIndex(),
                 event.getPageId()));
+    }
+
+    /** Bubble up any page actions set on the event so that they can be handled by the layout host. */
+    private void handlePageActions(PagerEvent event) {
+        if (event.hasPageActions()) {
+            bubbleEvent(new PagerEvent.PageActions(event.getPageActions()));
+        }
     }
 
     @NonNull

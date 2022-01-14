@@ -15,6 +15,7 @@ import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.event.ButtonEvent;
 import com.urbanairship.android.layout.event.Event;
+import com.urbanairship.android.layout.event.Event.EventWithActions;
 import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.event.EventSource;
 import com.urbanairship.android.layout.event.ReportingEvent;
@@ -187,7 +188,8 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
                 return true;
 
             case BUTTON_ACTIONS:
-                return runButtonActions((ButtonEvent.Actions) event);
+            case PAGER_PAGE_ACTIONS:
+                return runActions(((EventWithActions) event).getActions());
 
             case REPORTING_EVENT:
                 if (((ReportingEvent) event).getReportType() == FORM_RESULT) {
@@ -204,9 +206,9 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
         return false;
     }
 
-    private boolean runButtonActions(ButtonEvent.Actions event) {
+    private boolean runActions(Map<String, JsonValue> actions) {
         if (actionsRunner != null) {
-            actionsRunner.run(event.getActions());
+            actionsRunner.run(actions);
             return true;
         }
         return false;

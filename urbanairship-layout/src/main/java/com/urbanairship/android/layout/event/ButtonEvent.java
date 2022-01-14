@@ -233,7 +233,7 @@ public abstract class ButtonEvent extends Event {
         }
     }
 
-    public static class Actions extends ButtonEvent {
+    public static class Actions extends ButtonEvent implements EventWithActions {
         @NonNull
         private final Map<String, JsonValue> actions;
 
@@ -256,6 +256,7 @@ public abstract class ButtonEvent extends Event {
             return new Actions(getIdentifier(), getReportingDescription(), getActions(), copyState(pagerData));
         }
 
+        @Override
         @NonNull
         public Map<String, JsonValue> getActions() {
             return actions;

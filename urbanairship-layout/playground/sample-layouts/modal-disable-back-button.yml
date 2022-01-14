@@ -2,7 +2,8 @@
 version: 1
 presentation:
   type: modal
-  disable_back_button: true
+  android:
+    disable_back_button: true
   ignore_safe_area: true
   default_placement:
     size:

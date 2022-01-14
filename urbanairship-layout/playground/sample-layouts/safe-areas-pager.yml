@@ -32,84 +32,90 @@ view:
         type: pager
         disable_swipe: false
         items:
-        - type: container
-          background_color:
-            default:
-              hex: "#FF0000"
-              alpha: 1
-          items:
-          - size:
-              width: 100%
-              height: 100%
-            position:
-              horizontal: center
-              vertical: center
-            margin:
-              top: 36
-              bottom: 36
-              start: 8
-              end: 8
-            view:
-              type: empty_view
-              border:
-                stroke_width: 2
-                stroke_color:
-                  default:
-                    hex: "#FFFFFF"
-                    alpha: 1
-                radius: 5
-        - type: container
-          background_color:
-            default:
-              hex: "#00FF00"
-              alpha: 1
-          items:
-          - size:
-              width: 100%
-              height: 100%
-            position:
-              horizontal: center
-              vertical: center
-            margin:
-              top: 36
-              bottom: 36
-              start: 8
-              end: 8
-            view:
-              type: empty_view
-              border:
-                stroke_width: 2
-                stroke_color:
-                  default:
-                    hex: "#FFFFFF"
-                    alpha: 1
-                radius: 5
-        - type: container
-          background_color:
-            default:
-              hex: "#0000FF"
-              alpha: 1
-          items:
-          - size:
-              width: 100%
-              height: 100%
-            position:
-              horizontal: center
-              vertical: center
-            margin:
-              top: 36
-              bottom: 36
-              start: 8
-              end: 8
-            view:
-              type: empty_view
-              border:
-                stroke_width: 2
-                stroke_color:
-                  default:
-                    hex: "#FFFFFF"
-                    alpha: 1
-                radius: 5
+        - identifier: "page-1"
+          view:
+            type: container
+            background_color:
+              default:
+                hex: "#FF0000"
+                alpha: 1
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              position:
+                horizontal: center
+                vertical: center
+              margin:
+                top: 36
+                bottom: 36
+                start: 8
+                end: 8
+              view:
+                type: empty_view
+                border:
+                  stroke_width: 2
+                  stroke_color:
+                    default:
+                      hex: "#FFFFFF"
+                      alpha: 1
+                  radius: 5
+        - idenfier: "page-2"
+          view:
+            type: container
+            background_color:
+              default:
+                hex: "#00FF00"
+                alpha: 1
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              position:
+                horizontal: center
+                vertical: center
+              margin:
+                top: 36
+                bottom: 36
+                start: 8
+                end: 8
+              view:
+                type: empty_view
+                border:
+                  stroke_width: 2
+                  stroke_color:
+                    default:
+                      hex: "#FFFFFF"
+                      alpha: 1
+                  radius: 5
+        - identifier: "page-3"
+          view:
+            type: container
+            background_color:
+              default:
+                hex: "#0000FF"
+                alpha: 1
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              position:
+                horizontal: center
+                vertical: center
+              margin:
+                top: 36
+                bottom: 36
+                start: 8
+                end: 8
+              view:
+                type: empty_view
+                border:
+                  stroke_width: 2
+                  stroke_color:
+                    default:
+                      hex: "#FFFFFF"
+                      alpha: 1
+                  radius: 5
     - position:
         horizontal: end
         vertical: top

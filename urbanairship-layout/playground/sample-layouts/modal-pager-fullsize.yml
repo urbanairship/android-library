@@ -38,202 +38,214 @@ view:
       view:
         type: pager
         items:
-        - type: container
-          background_color:
-            default:
-              hex: "#FF0000"
-              alpha: 0.5
-          items:
-          - position:
-              vertical: center
-              horizontal: center
-            size:
-              height: auto
-              width: auto
-            view:
-              type: label
-              text: This is the first page about stuff.
-              text_appearance:
-                alignment: center
-                color:
-                  default:
-                    hex: "#000000"
-                    alpha: 1
-                text_size: 14
-          - position:
-              horizontal: end
-              vertical: top
-            size:
-              height: 24
-              width: 24
-            margin:
-              top: 8
-              end: 8
-            view:
-              type: image_button
-              identifier: close_button_1
-              button_click: [ dismiss ]
-              image:
-                type: icon
-                icon: close
-                color:
-                  default:
-                    hex: "#000000"
-                    alpha: 1
-
-        - type: container
-          background_color:
-            default:
-              hex: "#00FF00"
-              alpha: 0.5
-          items:
-          - position:
-              vertical: center
-              horizontal: center
-            size:
-              height: auto
-              width: auto
-            view:
-              type: label
-              text: More stuff is here on the second page.
-              text_appearance:
-                alignment: center
-                color:
-                  default:
-                    hex: "#000000"
-                    alpha: 1
-                text_size: 14
-
-          - position:
-              horizontal: end
-              vertical: top
-            size:
-              height: 24
-              width: 24
-            margin:
-              top: 8
-              end: 8
-            view:
-              type: image_button
-              identifier: close_button_2
-              button_click: [ dismiss ]
-              image:
-                type: icon
-                icon: close
-                color:
-                  default:
-                    hex: "#000000"
-                    alpha: 1
-
-        - type: container
-          background_color:
-            default:
-              hex: "#0000FF"
-              alpha: 0.5
-          items:
-          - position:
-              vertical: center
-              horizontal: center
-            size:
-              height: auto
-              width: auto
-            view:
-              type: nps_form_controller
-              identifier: page_3_nps_form
-              nps_identifier: score_identifier
-              submit: submit_event
+        - identifier: "pager-page-1-id"
+          actions:
+            add_tags_action: 'pager-page-1x'
+          view:
+            type: container
+            background_color:
+              default:
+                hex: "#FF0000"
+                alpha: 0.5
+            items:
+            - position:
+                vertical: center
+                horizontal: center
+              size:
+                height: auto
+                width: auto
               view:
-                type: linear_layout
-                direction: vertical
-                items:
-                - size:
-                    width: 100%
-                    height: auto
-                  margin:
-                    start: 8
-                    end: 8
-                  view:
-                    type: score
-                    identifier: score_identifier
-                    required: true
-                    style:
-                      type: number_range
-                      start: 0
-                      end: 10
-                      spacing: 2
-                      bindings:
-                        selected:
-                          shapes:
-                          - type: ellipse
-                            color:
-                              default:
-                                hex: "#FFFFFF"
-                                alpha: 0
-                          text_appearance:
-                            font_size: 14
-                            color:
-                              default:
-                                hex: "#000000"
-                                alpha: 1
-                        unselected:
-                          shapes:
-                          - type: ellipse
-                            color:
-                              default:
-                                hex: "#000000"
-                                alpha: 1
-                          text_appearance:
-                            font_size: 14
-                            color:
-                              default:
-                                hex: "#ffffff"
-                                alpha: 1
-                - size:
-                    width: auto
-                    height: auto
-                  margin:
-                    start: 16
-                    end: 16
-                  view:
-                    type: label_button
-                    identifier: submit_button
-                    background_color:
-                      default:
-                        hex: "#ffffff"
-                        alpha: 1
-                    button_click: ["form_submit", "cancel"]
-                    enabled: ["form_validation"]
-                    label:
-                      type: label
-                      text: SuBmIt!1!1@
-                      text_appearance:
-                        font_size: 14
-                        alignment: center
-                        color:
-                          default:
-                            hex: "#000000"
-                            alpha: 1
+                type: label
+                text: This is the first page about stuff.
+                text_appearance:
+                  alignment: center
+                  color:
+                    default:
+                      hex: "#000000"
+                      alpha: 1
+                  text_size: 14
+            - position:
+                horizontal: end
+                vertical: top
+              size:
+                height: 24
+                width: 24
+              margin:
+                top: 8
+                end: 8
+              view:
+                type: image_button
+                identifier: close_button_1
+                button_click: [ dismiss ]
+                image:
+                  type: icon
+                  icon: close
+                  color:
+                    default:
+                      hex: "#000000"
+                      alpha: 1
+        - identifier: "pager-page-2-id"
+          actions:
+            add_tags_action: 'pager-page-2x'
+          view:
+            type: container
+            background_color:
+              default:
+                hex: "#00FF00"
+                alpha: 0.5
+            items:
+            - position:
+                vertical: center
+                horizontal: center
+              size:
+                height: auto
+                width: auto
+              view:
+                type: label
+                text: More stuff is here on the second page.
+                text_appearance:
+                  alignment: center
+                  color:
+                    default:
+                      hex: "#000000"
+                      alpha: 1
+                  text_size: 14
 
-          - position:
-              horizontal: end
-              vertical: top
-            size:
-              height: 24
-              width: 24
-            margin:
-              top: 8
-              end: 8
-            view:
-              type: image_button
-              identifier: close_button_3
-              button_click: [ dismiss ]
-              image:
-                type: icon
-                icon: close
-                color:
-                  default:
-                    hex: "#000000"
-                    alpha: 1
+            - position:
+                horizontal: end
+                vertical: top
+              size:
+                height: 24
+                width: 24
+              margin:
+                top: 8
+                end: 8
+              view:
+                type: image_button
+                identifier: close_button_2
+                button_click: [ dismiss ]
+                image:
+                  type: icon
+                  icon: close
+                  color:
+                    default:
+                      hex: "#000000"
+                      alpha: 1
+        - identifier: "pager-page-3-id"
+          actions:
+            add_tags_action: 'pager-page-3x'
+          view:
+            type: container
+            background_color:
+              default:
+                hex: "#0000FF"
+                alpha: 0.5
+            items:
+            - position:
+                vertical: center
+                horizontal: center
+              size:
+                height: auto
+                width: auto
+              view:
+                type: nps_form_controller
+                identifier: page_3_nps_form
+                nps_identifier: score_identifier
+                submit: submit_event
+                view:
+                  type: linear_layout
+                  direction: vertical
+                  items:
+                  - size:
+                      width: 100%
+                      height: auto
+                    margin:
+                      start: 8
+                      end: 8
+                    view:
+                      type: score
+                      identifier: score_identifier
+                      required: true
+                      style:
+                        type: number_range
+                        start: 0
+                        end: 10
+                        spacing: 2
+                        bindings:
+                          selected:
+                            shapes:
+                            - type: ellipse
+                              color:
+                                default:
+                                  hex: "#FFFFFF"
+                                  alpha: 0
+                            text_appearance:
+                              font_size: 14
+                              color:
+                                default:
+                                  hex: "#000000"
+                                  alpha: 1
+                          unselected:
+                            shapes:
+                            - type: ellipse
+                              color:
+                                default:
+                                  hex: "#000000"
+                                  alpha: 1
+                            text_appearance:
+                              font_size: 14
+                              color:
+                                default:
+                                  hex: "#ffffff"
+                                  alpha: 1
+                  - size:
+                      width: auto
+                      height: auto
+                    margin:
+                      start: 16
+                      end: 16
+                    view:
+                      type: label_button
+                      identifier: submit_button
+                      background_color:
+                        default:
+                          hex: "#ffffff"
+                          alpha: 1
+                      button_click: ["form_submit", "cancel"]
+                      enabled: ["form_validation"]
+                      actions:
+                        add_tags_action: 'pager-page-3-form-submit'
+                      label:
+                        type: label
+                        text: SuBmIt!1!1@
+                        text_appearance:
+                          font_size: 14
+                          alignment: center
+                          color:
+                            default:
+                              hex: "#000000"
+                              alpha: 1
+
+            - position:
+                horizontal: end
+                vertical: top
+              size:
+                height: 24
+                width: 24
+              margin:
+                top: 8
+                end: 8
+              view:
+                type: image_button
+                identifier: close_button_3
+                button_click: [ dismiss ]
+                image:
+                  type: icon
+                  icon: close
+                  color:
+                    default:
+                      hex: "#000000"
+                      alpha: 1
 
     - size:
         height: 16

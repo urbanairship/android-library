@@ -10,27 +10,35 @@ import com.urbanairship.android.layout.event.ReportingEvent;
 import com.urbanairship.android.layout.event.WebViewEvent;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.PagerData;
+import com.urbanairship.json.JsonValue;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import test.TestEventListener;
 
 import static androidx.core.util.ObjectsCompat.requireNonNull;
+import static com.urbanairship.android.layout.event.EventType.PAGER_PAGE_ACTIONS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@RunWith(RobolectricTestRunner.class)
 public class PagerControllerTest {
     private static final String PAGER_ID = "pager-identifier";
     private static final String PAGE_1_ID = "page-one-identifier";
@@ -38,11 +46,13 @@ public class PagerControllerTest {
     private static final String PAGE_3_ID = "page-two-identifier";
     private static final String BUTTON_ID = "button-identifier";
     private static final String BUTTON_DESCRIPTION = "button-description";
+    private static final Map<String, JsonValue> EMPTY_ACTIONS = Collections.emptyMap();
+
 
     private static final List<PagerModel.Item> ITEMS = Arrays.asList(
-        new PagerModel.Item(mock(BaseModel.class), PAGE_1_ID),
-        new PagerModel.Item(mock(BaseModel.class), PAGE_2_ID),
-        new PagerModel.Item(mock(BaseModel.class), PAGE_3_ID)
+        new PagerModel.Item(mock(BaseModel.class), PAGE_1_ID, EMPTY_ACTIONS),
+        new PagerModel.Item(mock(BaseModel.class), PAGE_2_ID, EMPTY_ACTIONS),
+        new PagerModel.Item(mock(BaseModel.class), PAGE_3_ID, EMPTY_ACTIONS)
     );
 
     private AutoCloseable mocksClosable;
@@ -91,7 +101,7 @@ public class PagerControllerTest {
 
     @Test
     public void testViewInit() {
-        PagerEvent.Init pagerInitEvent = new PagerEvent.Init(mockPager, 0, PAGE_1_ID, 0);
+        PagerEvent.Init pagerInitEvent = new PagerEvent.Init(mockPager, 0, PAGE_1_ID, EMPTY_ACTIONS, 0);
         controller.onEvent(new PagerEvent.IndicatorInit(mockIndicator));
         controller.onEvent(pagerInitEvent);
 
@@ -111,7 +121,7 @@ public class PagerControllerTest {
     @Test
     public void testOverridesStateForReportingEvents() {
         controller.onEvent(new PagerEvent.IndicatorInit(mockIndicator));
-        controller.onEvent(new PagerEvent.Init(mockPager, 0, PAGE_1_ID, 0));
+        controller.onEvent(new PagerEvent.Init(mockPager, 0, PAGE_1_ID, EMPTY_ACTIONS, 0));
         assertEquals(1, testListener.getCount(EventType.REPORTING_EVENT));
 
         // Bubble a Reporting Event to the controller.
@@ -131,7 +141,7 @@ public class PagerControllerTest {
     @Test
     public void testOverridesStateForWebViewEvents() {
         controller.onEvent(new PagerEvent.IndicatorInit(mockIndicator));
-        controller.onEvent(new PagerEvent.Init(mockPager, 0, PAGE_1_ID, 0));
+        controller.onEvent(new PagerEvent.Init(mockPager, 0, PAGE_1_ID, EMPTY_ACTIONS, 0));
 
         // Simulate a webview close from within the pager.
         controller.onEvent(new WebViewEvent.Close());
@@ -150,7 +160,7 @@ public class PagerControllerTest {
     public void testOverridesStateForButtonEvents() {
         // Init the pager.
         controller.onEvent(new PagerEvent.IndicatorInit(mockIndicator));
-        controller.onEvent(new PagerEvent.Init(mockPager, 0, PAGE_1_ID, 0));
+        controller.onEvent(new PagerEvent.Init(mockPager, 0, PAGE_1_ID, EMPTY_ACTIONS, 0));
 
         // Simulate a cancel event from a button within the pager.
         controller.onEvent(new ButtonEvent.Cancel(mockButton));
@@ -166,7 +176,7 @@ public class PagerControllerTest {
         assertFalse(cancelPagerData.isCompleted());
 
         // Advance to the next page to update the pager state on the controller
-        controller.onEvent(new PagerEvent.Scroll(mockPager, 1, PAGE_2_ID, 0, PAGE_1_ID, false, 0L));
+        controller.onEvent(new PagerEvent.Scroll(mockPager, 1, PAGE_2_ID, EMPTY_ACTIONS, 0, PAGE_1_ID, false, 0L));
 
         // Simulate a dismiss event from a button
         controller.onEvent(new ButtonEvent.Dismiss(mockButton));
@@ -185,7 +195,7 @@ public class PagerControllerTest {
     @Test
     public void testPagerNextPreviousButtonBehaviors() {
         controller.onEvent(new PagerEvent.IndicatorInit(mockIndicator));
-        controller.onEvent(new PagerEvent.Init(mockPager, 0, PAGE_1_ID, 0));
+        controller.onEvent(new PagerEvent.Init(mockPager, 0, PAGE_1_ID, EMPTY_ACTIONS, 0));
         assertEquals(1, testListener.getCount(EventType.REPORTING_EVENT));
 
         // Simulate a button tap with a next behavior and make sure the controller trickled to the pager and indicator.
@@ -203,5 +213,38 @@ public class PagerControllerTest {
         // Check emitted reporting events. The mocked pager doesn't move between pager pages when handling the button
         // event, so we don't expect any further events after the initial page view.
         assertEquals(1, testListener.getCount());
+    }
+    @Test
+    public void testPagerPageActions() {
+        Map<String, JsonValue> firstPageActions = new HashMap<String, JsonValue>() {{
+            put("add_tags_action", JsonValue.wrapOpt("page-1"));
+        }};
+        Map<String, JsonValue> secondPageActions = new HashMap<String, JsonValue>() {{
+            put("add_tags_action", JsonValue.wrapOpt("page-2"));
+        }};
+
+        PagerEvent.PageActions event;
+
+        // Verify actions are bubbled up from the init event
+        controller.onEvent(new PagerEvent.Init(mockPager, 0, PAGE_1_ID, firstPageActions, 0L));
+        assertEquals(1, testListener.getCount(PAGER_PAGE_ACTIONS));
+        event = (PagerEvent.PageActions) testListener.getEventAt(PAGER_PAGE_ACTIONS, 0);
+        assertEquals(firstPageActions, event.getActions());
+
+        // Verify that scrolling to the second page bubbles up actions
+        controller.onEvent(new PagerEvent.Scroll(mockPager, 1, PAGE_2_ID, secondPageActions, 0, PAGE_1_ID, false, 0L));
+        assertEquals(2, testListener.getCount(PAGER_PAGE_ACTIONS));
+        event = (PagerEvent.PageActions) testListener.getEventAt(PAGER_PAGE_ACTIONS, 1);
+        assertEquals(secondPageActions, event.getActions());
+
+        // Verify scrolling to the third page doesn't bubble actions (because there aren't any)
+        controller.onEvent(new PagerEvent.Scroll(mockPager, 2, PAGE_3_ID, EMPTY_ACTIONS, 1, PAGE_2_ID, false, 0L));
+        assertEquals(2, testListener.getCount(PAGER_PAGE_ACTIONS));
+
+        // Verify that scrolling back to the second page bubbles up actions again
+        controller.onEvent(new PagerEvent.Scroll(mockPager, 1, PAGE_2_ID, secondPageActions, 2, PAGE_3_ID, false, 0L));
+        assertEquals(3, testListener.getCount(PAGER_PAGE_ACTIONS));
+        event = (PagerEvent.PageActions) testListener.getEventAt(PAGER_PAGE_ACTIONS, 2);
+        assertEquals(secondPageActions, event.getActions());
     }
 }

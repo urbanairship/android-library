@@ -56,74 +56,81 @@ view:
             height: 250
             width: 100%
           margin:
-            start: 16
-            end: 16
+            start: 64
+            end: 64
             top: 16
             bottom: 16
           view:
             type: pager
+            disable_swipe: true
             items:
-            - type: container
-              background_color:
-                default:
-                  hex: "#88FF0000"
-              items:
-              - position:
-                  vertical: center
-                  horizontal: center
-                size:
-                  height: auto
-                  width: auto
-                view:
-                  type: label
-                  text: This is the first page about stuff.
-                  text_appearance:
-                    alignment: center
-                    font_size: 14
-                    color:
-                      default:
-                        hex: "#000000"
-            - type: container
-              background_color:
-                default:
-                  hex: "#00FF00"
-              items:
-              - position:
-                  vertical: center
-                  horizontal: center
-                size:
-                  height: auto
-                  width: auto
-                view:
-                  type: label
-                  text: More stuff is here on the second page.
-                  text_appearance:
-                    alignment: center
-                    color:
-                      default:
-                        hex: "#000000"
-                    font_size: 14
-            - type: container
-              background_color:
-                default:
-                  hex: "#0000FF"
-                  alpha: .8
-              items:
-              - position:
-                  vertical: center
-                  horizontal: center
-                size:
-                  height: auto
-                  width: auto
-                view:
-                  type: label
-                  text: That's not all! There's a third page, too!
-                  text_appearance:
-                    alignment: center
-                    color:
-                      default:
-                        hex: "#000000"
-                    font_size: 14
+            - identifier: "page-1"
+              view:
+                type: container
+                background_color:
+                  default:
+                    hex: "#88FF0000"
+                items:
+                - position:
+                    vertical: center
+                    horizontal: center
+                  size:
+                    height: auto
+                    width: auto
+                  view:
+                    type: label
+                    text: This is the first page about stuff.
+                    text_appearance:
+                      alignment: center
+                      font_size: 14
+                      color:
+                        default:
+                          hex: "#000000"
+            - identifier: "page-2"
+              view:
+                type: container
+                background_color:
+                  default:
+                    hex: "#00FF00"
+                items:
+                - position:
+                    vertical: center
+                    horizontal: center
+                  size:
+                    height: auto
+                    width: auto
+                  view:
+                    type: label
+                    text: More stuff is here on the second page.
+                    text_appearance:
+                      alignment: center
+                      color:
+                        default:
+                          hex: "#000000"
+                      font_size: 14
+            - identifier: "page-3"
+              view:
+                type: container
+                background_color:
+                  default:
+                    hex: "#0000FF"
+                    alpha: .8
+                items:
+                - position:
+                    vertical: center
+                    horizontal: center
+                  size:
+                    height: auto
+                    width: auto
+                  view:
+                    type: label
+                    text: That's not all! There's a third page, too!
+                    text_appearance:
+                      alignment: center
+                      color:
+                        default:
+                          hex: "#000000"
+                      font_size: 14
         - size:
             height: auto
             width: auto

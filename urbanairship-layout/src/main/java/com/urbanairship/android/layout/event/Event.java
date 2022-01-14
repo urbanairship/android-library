@@ -4,6 +4,9 @@ package com.urbanairship.android.layout.event;
 
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.json.JsonValue;
+
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 
@@ -79,4 +82,8 @@ public abstract class Event {
         }
     }
 
+    public interface EventWithActions {
+        @NonNull
+        Map<String, JsonValue> getActions();
+    }
 }

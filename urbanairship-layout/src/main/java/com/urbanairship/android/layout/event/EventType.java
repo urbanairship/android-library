@@ -28,6 +28,8 @@ public enum EventType {
     PAGER_INIT,
     /** Pager scroll events. */
     PAGER_SCROLL,
+    /** Pager page display actions event. */
+    PAGER_PAGE_ACTIONS,
 
     /* Form events */
 

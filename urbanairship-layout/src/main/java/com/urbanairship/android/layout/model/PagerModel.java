@@ -7,15 +7,15 @@ import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.PagerEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
-import com.urbanairship.android.layout.property.Margin;
-import com.urbanairship.android.layout.property.Size;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -96,15 +96,19 @@ public class PagerModel extends LayoutModel {
     //
 
     public void onScrollTo(int position, boolean isInternalScroll, long time) {
-        String pageId = this.items.get(position).identifier;
+        Item item = items.get(position);
+        String pageId = item.identifier;
+        Map<String, JsonValue> pageActions = item.actions;
         String previousPageId = this.items.get(lastIndex).identifier;
-        bubbleEvent(new PagerEvent.Scroll(this, position, pageId, lastIndex, previousPageId, isInternalScroll, time));
+        bubbleEvent(new PagerEvent.Scroll(this, position, pageId, pageActions, lastIndex, previousPageId, isInternalScroll, time));
         lastIndex = position;
     }
 
     public void onConfigured(int position, long time) {
-        String pageId = this.items.get(position).identifier;
-        bubbleEvent(new PagerEvent.Init(this, position, pageId, time));
+        Item item = items.get(position);
+        String pageId = item.identifier;
+        Map<String, JsonValue> pageActions = item.actions;
+        bubbleEvent(new PagerEvent.Init(this, position, pageId, pageActions, time));
     }
 
     //
@@ -147,20 +151,23 @@ public class PagerModel extends LayoutModel {
         private final BaseModel view;
         @NonNull
         private final String identifier;
+        @NonNull
+        private final Map<String, JsonValue> actions;
 
-        public Item(@NonNull BaseModel view, @NonNull String identifier) {
+        public Item(@NonNull BaseModel view, @NonNull String identifier, @NonNull Map<String, JsonValue> actions) {
             this.view = view;
             this.identifier = identifier;
+            this.actions = actions;
         }
 
         @NonNull
         public static PagerModel.Item fromJson(@NonNull JsonMap json) throws JsonException {
             JsonMap viewJson = json.opt("view").optMap();
             String identifier = identifierFromJson(json);
+            Map<String, JsonValue> actions = json.opt("actions").optMap().getMap();
             BaseModel view = Thomas.model(viewJson);
 
-
-            return new PagerModel.Item(view, identifier);
+            return new PagerModel.Item(view, identifier, actions);
         }
 
         @NonNull
