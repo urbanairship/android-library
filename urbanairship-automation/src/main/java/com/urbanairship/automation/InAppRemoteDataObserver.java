@@ -25,6 +25,7 @@ import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.remotedata.RemoteDataPayload;
 import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
+import com.urbanairship.util.VersionUtils;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -87,10 +88,14 @@ class InAppRemoteDataObserver {
     private static final String LAST_PAYLOAD_METADATA = "com.urbanairship.iam.data.LAST_PAYLOAD_METADATA";
     private static final String SCHEDULE_NEW_USER_CUTOFF_TIME_KEY = "com.urbanairship.iam.data.NEW_USER_TIME";
     static final String REMOTE_DATA_METADATA = "com.urbanairship.iaa.REMOTE_DATA_METADATA";
+    static final String LAST_SDK_VERSION_KEY = "com.urbanairship.iaa.last_sdk_version";
+
+    private static final String MIN_SDK_VERSION_KEY = "min_sdk_version";
 
     private final PreferenceDataStore preferenceDataStore;
     private final RemoteData remoteData;
     private final List<Listener> listeners = new ArrayList<>();
+    private final String sdkVersion;
 
     interface Listener {
 
@@ -123,6 +128,16 @@ class InAppRemoteDataObserver {
 
         this.preferenceDataStore = preferenceDataStore;
         this.remoteData = remoteData;
+        this.sdkVersion = UAirship.getVersion();
+    }
+
+    InAppRemoteDataObserver(@NonNull PreferenceDataStore preferenceDataStore,
+                            @NonNull final RemoteData remoteData,
+                            @NonNull String sdkVersion) {
+
+        this.preferenceDataStore = preferenceDataStore;
+        this.remoteData = remoteData;
+        this.sdkVersion = sdkVersion;
     }
 
     /**
@@ -209,6 +224,8 @@ class InAppRemoteDataObserver {
             return;
         }
 
+        String lastSdkVersion = preferenceDataStore.getString(LAST_SDK_VERSION_KEY, null);
+
         // Parse messages
         for (JsonValue messageJson : payload.getData().opt(MESSAGES_JSON_KEY).optList()) {
             long createdTimeStamp, lastUpdatedTimeStamp;
@@ -233,18 +250,7 @@ class InAppRemoteDataObserver {
             if (isMetadataUpToDate && lastUpdatedTimeStamp <= lastUpdate) {
                 continue;
             }
-
-            if (createdTimeStamp > lastUpdate) {
-                try {
-                    Schedule<? extends ScheduleData> schedule = parseSchedule(scheduleId, messageJson, scheduleMetadata);
-                    if (checkSchedule(schedule, createdTimeStamp)) {
-                        newSchedules.add(schedule);
-                        Logger.debug("New in-app automation: %s", schedule);
-                    }
-                } catch (Exception e) {
-                    Logger.error(e, "Failed to parse in-app automation: %s", messageJson);
-                }
-            } else if (scheduledRemoteIds.contains(scheduleId)) {
+            if (scheduledRemoteIds.contains(scheduleId)) {
                 try {
                     ScheduleEdits<?> edits = parseEdits(messageJson, scheduleMetadata);
                     Boolean edited = delegate.editSchedule(scheduleId, edits).get();
@@ -253,6 +259,19 @@ class InAppRemoteDataObserver {
                     }
                 } catch (JsonException e) {
                     Logger.error(e, "Failed to parse in-app automation edits: %s", scheduleId);
+                }
+            } else {
+                String minSdkVersion = messageJson.optMap().opt(MIN_SDK_VERSION_KEY).optString();
+                if (isNewSchedule(minSdkVersion, lastSdkVersion, createdTimeStamp, lastUpdate)) {
+                    try {
+                        Schedule<? extends ScheduleData> schedule = parseSchedule(scheduleId, messageJson, scheduleMetadata);
+                        if (shouldSchedule(schedule, createdTimeStamp)) {
+                            newSchedules.add(schedule);
+                            Logger.debug("New in-app automation: %s", schedule);
+                        }
+                    } catch (Exception e) {
+                        Logger.error(e, "Failed to parse in-app automation: %s", messageJson);
+                    }
                 }
             }
         }
@@ -285,6 +304,7 @@ class InAppRemoteDataObserver {
         // Store data
         preferenceDataStore.put(LAST_PAYLOAD_TIMESTAMP_KEY, payload.getTimestamp());
         preferenceDataStore.put(LAST_PAYLOAD_METADATA, payload.getMetadata());
+        preferenceDataStore.put(LAST_SDK_VERSION_KEY, sdkVersion);
 
         synchronized (listeners) {
             if (!listeners.isEmpty()) {
@@ -379,11 +399,38 @@ class InAppRemoteDataObserver {
      * @param createdTimeStamp The created times stamp.
      * @return {@code true} if the message should be scheduled, otherwise {@code false}.
      */
-    private boolean checkSchedule(Schedule<? extends ScheduleData> schedule, long createdTimeStamp) {
+    private boolean shouldSchedule(Schedule<? extends ScheduleData> schedule, long createdTimeStamp) {
         Context context = UAirship.getApplicationContext();
         Audience audience = schedule.getAudience();
         boolean allowNewUser = createdTimeStamp <= getScheduleNewUserCutOffTime();
         return AudienceChecks.checkAudienceForScheduling(context, audience, allowNewUser);
+    }
+
+    private boolean isNewSchedule(@Nullable String minSdkVersion,
+                                  @Nullable String lastSdkVersion,
+                                  long createdTimeStamp,
+                                  long lastUpdateTimeStamp) {
+
+        if (createdTimeStamp > lastUpdateTimeStamp) {
+            return true;
+        }
+
+        if (UAStringUtil.isEmpty(minSdkVersion)) {
+            return false;
+        }
+
+        // We can skip checking if the min_sdk_version is newer than the current SDK version since
+        // remote-data will filter them out. This flag is only a hint to the SDK to treat a schedule with
+        // an older created timestamp as a new schedule.
+
+        if (UAStringUtil.isEmpty(lastSdkVersion)) {
+            // If we do not have a last SDK version, then we are coming from an SDK older than
+            // 16.2.0. Check for a min SDK version newer or equal to 16.2.0.
+            return VersionUtils.isVersionNewerOrEqualTo("16.2.0", minSdkVersion);
+        } else {
+            // Check versions to see if minSdkVersion is newer than lastSdkVersion
+            return VersionUtils.isVersionNewer(lastSdkVersion, minSdkVersion);
+        }
     }
 
     @NonNull

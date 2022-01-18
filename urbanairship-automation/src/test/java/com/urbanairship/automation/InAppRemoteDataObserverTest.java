@@ -16,6 +16,7 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.reactive.Subject;
+import com.urbanairship.reactive.Subscription;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.remotedata.RemoteDataPayload;
 import com.urbanairship.util.DateUtils;
@@ -54,6 +55,7 @@ public class InAppRemoteDataObserverTest {
     private TestDelegate delegate;
     private RemoteData remoteData;
     private Subject<RemoteDataPayload> updates;
+    private Subscription subscription;
 
     @Before
     public void setup() {
@@ -64,7 +66,7 @@ public class InAppRemoteDataObserverTest {
         delegate = new TestDelegate();
 
         observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData);
-        observer.subscribe(Looper.getMainLooper(), delegate);
+        subscription = observer.subscribe(Looper.getMainLooper(), delegate);
     }
 
     @Test
@@ -156,6 +158,54 @@ public class InAppRemoteDataObserverTest {
         // Verify "foo" and "bar" are still scheduled
         assertEquals(fooSchedule, delegate.schedules.get("foo"));
         assertEquals(barSchedule, delegate.schedules.get("bar"));
+    }
+
+    @Test
+    public void testMinSdkVersion() {
+        subscription.cancel();
+        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData, "1.0.0");
+        subscription = observer.subscribe(Looper.getMainLooper(), delegate);
+
+        // Create an empty payload
+        RemoteDataPayload payload = new TestPayloadBuilder()
+                .setTimeStamp(TimeUnit.DAYS.toMillis(100))
+                .setMetadata(JsonMap.newBuilder().put("so", "meta").build())
+                .build();
+
+        // Notify the observer
+        updates.onNext(payload);
+        subscription.cancel();
+
+        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData, "2.0.0");
+        subscription = observer.subscribe(Looper.getMainLooper(), delegate);
+
+        JsonMap expectedMetadata = JsonMap.newBuilder()
+                                          .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", JsonMap.newBuilder().put("so", "so meta").build())
+                                          .build();
+
+        Schedule<InAppMessage> fooSchedule = Schedule.newBuilder(InAppMessage.newBuilder()
+                                                                             .setName("foo")
+                                                                             .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                                                             .build())
+                                                     .addTrigger(Triggers.newAppInitTriggerBuilder()
+                                                                         .setGoal(1)
+                                                                         .build())
+                                                     .setMetadata(expectedMetadata)
+                                                     .setId("foo")
+                                                     .build();
+
+        // Create another payload with foo
+        payload = new TestPayloadBuilder()
+                .addSchedule(fooSchedule, TimeUnit.DAYS.toMillis(99), TimeUnit.DAYS.toMillis(99), "2.0.0")
+                .setTimeStamp(TimeUnit.DAYS.toMillis(100))
+                .setMetadata(JsonMap.newBuilder().put("so", "so meta").build())
+                .build();
+
+        // Notify the observer
+        updates.onNext(payload);
+
+        // Verify "foo" is scheduled
+        assertEquals(fooSchedule, delegate.schedules.get("foo"));
     }
 
     @Test
@@ -521,7 +571,12 @@ public class InAppRemoteDataObserverTest {
         }
 
         public TestPayloadBuilder addSchedule(Schedule<? extends ScheduleData> schedule, long created, long updated) {
+            return addSchedule(schedule, created, updated, null);
+        }
+
+        public TestPayloadBuilder addSchedule(Schedule<? extends ScheduleData> schedule, long created, long updated, String minSdkVersion) {
             JsonMap.Builder scheduleJsonBuilder = JsonMap.newBuilder()
+                                                         .put("min_sdk_version", minSdkVersion)
                                                          .put("created", DateUtils.createIso8601TimeStamp(created))
                                                          .put("last_updated", DateUtils.createIso8601TimeStamp(updated))
                                                          .put("triggers", JsonValue.wrapOpt(schedule.getTriggers()))

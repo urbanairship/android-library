@@ -24,6 +24,9 @@ public class VersionUtils {
     static final String ANDROID_VERSION_KEY = "android";
     static final String VERSION_KEY = "version";
 
+    private static final String IVY_PATTERN_GREATER_THAN = "]%s,)";
+    private static final String IVY_PATTERN_GREATER_THAN_OR_EQUAL_TO = "[%s,)";
+
     /**
      * Generates the version object.
      *
@@ -72,4 +75,13 @@ public class VersionUtils {
                             .build();
     }
 
+    /** Returns {@code} if the v1 version is newer than the v2 version. */
+    public static boolean isVersionNewer(String v1, String v2) {
+        return IvyVersionMatcher.newMatcher(String.format(IVY_PATTERN_GREATER_THAN, v1)).apply(v2);
+    }
+
+    /** Returns {@code} if the v1 version is newer than or equal to the v2 version. */
+    public static boolean isVersionNewerOrEqualTo(String v1, String v2) {
+        return IvyVersionMatcher.newMatcher(String.format(IVY_PATTERN_GREATER_THAN_OR_EQUAL_TO, v1)).apply(v2);
+    }
 }
