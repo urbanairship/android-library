@@ -39,7 +39,7 @@ view:
         type: pager
         items:
         - identifier: "pager-page-1-id"
-          actions:
+          display_actions:
             add_tags_action: 'pager-page-1x'
           view:
             type: container
@@ -85,7 +85,7 @@ view:
                       hex: "#000000"
                       alpha: 1
         - identifier: "pager-page-2-id"
-          actions:
+          display_actions:
             add_tags_action: 'pager-page-2x'
           view:
             type: container
@@ -132,7 +132,7 @@ view:
                       hex: "#000000"
                       alpha: 1
         - identifier: "pager-page-3-id"
-          actions:
+          display_actions:
             add_tags_action: 'pager-page-3x'
           view:
             type: container
@@ -213,7 +213,7 @@ view:
                           alpha: 1
                       button_click: ["form_submit", "cancel"]
                       enabled: ["form_validation"]
-                      actions:
+                      display_actions:
                         add_tags_action: 'pager-page-3-form-submit'
                       label:
                         type: label

@@ -163,7 +163,7 @@ public class PagerModel extends LayoutModel {
         public static PagerModel.Item fromJson(@NonNull JsonMap json) throws JsonException {
             JsonMap viewJson = json.opt("view").optMap();
             String identifier = identifierFromJson(json);
-            Map<String, JsonValue> actions = json.opt("actions").optMap().getMap();
+            Map<String, JsonValue> actions = json.opt("display_actions").optMap().getMap();
             BaseModel view = Thomas.model(viewJson);
 
             return new PagerModel.Item(view, identifier, actions);

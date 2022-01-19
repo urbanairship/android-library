@@ -69,8 +69,11 @@ public class LabelButtonModel extends ButtonModel {
     @NonNull
     @Override
     public String reportingDescription() {
+        String labelOrIdentifier = !UAStringUtil.isEmpty(getLabel().getText())
+            ? getLabel().getText()
+            : getIdentifier();
         return !UAStringUtil.isEmpty(getContentDescription())
             ? getContentDescription()
-            : getLabel().getText();
+            : labelOrIdentifier;
     }
 }

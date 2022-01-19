@@ -71,6 +71,6 @@ public class ImageButtonModel extends ButtonModel {
     public String reportingDescription() {
         return getContentDescription() != null
             ? getContentDescription()
-            : "";
+            : getIdentifier();
     }
 }
