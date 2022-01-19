@@ -4,56 +4,44 @@ package com.urbanairship.android.layout.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.View;
+import android.widget.FrameLayout;
 
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.PagerModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
+import com.urbanairship.android.layout.widget.PagerRecyclerView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.PagerSnapHelper;
-import androidx.recyclerview.widget.RecyclerView;
+
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class PagerView extends RecyclerView implements BaseView<PagerModel> {
+public class PagerView extends FrameLayout implements BaseView<PagerModel> {
     private PagerModel model;
     private Environment environment;
-    private PagerAdapter adapter;
-    private LinearLayoutManager layoutManager;
-    private PagerSnapHelper snapHelper;
 
-    private boolean isInternalScroll = false;
+    private PagerRecyclerView view = null;
 
     public PagerView(@NonNull Context context) {
         super(context);
-        init(context);
+        init();
     }
 
     public PagerView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        init(context);
+        init();
     }
 
     public PagerView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init(context);
+        init();
     }
 
-    private void init(@NonNull Context context) {
+    private void init() {
         setId(generateViewId());
-
-        layoutManager = new LinearLayoutManager(context, HORIZONTAL, false);
-        // Disable prefetch so we won't get display events from items that aren't yet visible.
-        layoutManager.setItemPrefetchEnabled(false);
-        setLayoutManager(layoutManager);
-
-        snapHelper = new PagerSnapHelper();
-        snapHelper.attachToRecyclerView(this);
-
-        setHorizontalScrollBarEnabled(false);
     }
 
     @NonNull
@@ -71,66 +59,37 @@ public class PagerView extends RecyclerView implements BaseView<PagerModel> {
     }
 
     private void configure() {
-        adapter = new PagerAdapter(environment);
-        setAdapter(adapter);
+        view = new PagerRecyclerView(getContext());
+        view.configure(model, environment);
+        addView(view, MATCH_PARENT, MATCH_PARENT);
 
         LayoutUtils.applyBorderAndBackground(this, model);
-
-        adapter.setItems(model.getChildren());
-        addOnScrollListener(onScrollListener);
 
         model.setListener(modelListener);
 
         // Emit an init event so that we can connect to the indicator view, if one exists.
-        model.onConfigured(getDisplayedItemPosition(), environment.displayTimer().getTime());
-    }
-
-    private int getDisplayedItemPosition() {
-        View snapView = snapHelper.findSnapView(layoutManager);
-        return snapView != null ? getChildAdapterPosition(snapView) : 0;
-    }
-
-    @Override
-    public void smoothScrollToPosition(int position) {
-        isInternalScroll = true;
-        super.smoothScrollToPosition(position);
+        model.onConfigured(view.getDisplayedItemPosition(), environment.displayTimer().getTime());
     }
 
     private final PagerModel.Listener modelListener = new PagerModel.Listener() {
         @Override
         public void onScrollToNext() {
-            int position = getDisplayedItemPosition();
+            int position = view.getDisplayedItemPosition();
             int nextPosition = position + 1;
 
-            if (position != NO_POSITION && nextPosition < adapter.getItemCount()) {
-                smoothScrollToPosition(nextPosition);
+            if (position != NO_POSITION && nextPosition < view.getAdapterItemCount()) {
+                view.scrollTo(nextPosition);
             }
         }
 
         @Override
         public void onScrollToPrevious() {
-            int position = getDisplayedItemPosition();
+            int position = view.getDisplayedItemPosition();
             int previousPosition = position - 1;
 
             if (position != NO_POSITION && previousPosition > -1) {
-                smoothScrollToPosition(previousPosition);
+                view.scrollTo(previousPosition);
             }
-        }
-    };
-
-    private final OnScrollListener onScrollListener = new OnScrollListener() {
-        private int previousPosition = NO_POSITION;
-
-        @Override
-        public void onScrollStateChanged(@NonNull RecyclerView v, int state) {
-            if (state != SCROLL_STATE_IDLE) { return; }
-
-            int position = getDisplayedItemPosition();
-            if (position != NO_POSITION && position != previousPosition) {
-                model.onScrollTo(position, isInternalScroll, environment.displayTimer().getTime());
-            }
-            previousPosition = position;
-            isInternalScroll = false;
         }
     };
 }

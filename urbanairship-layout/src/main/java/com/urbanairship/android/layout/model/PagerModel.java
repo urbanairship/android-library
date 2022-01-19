@@ -29,15 +29,14 @@ public class PagerModel extends LayoutModel {
     @NonNull
     private final List<BaseModel> children = new ArrayList<>();
 
-    @Nullable
-    private final Boolean disableSwipe;
+    private final boolean disableSwipe;
 
     @Nullable
     private Listener listener;
 
     private int lastIndex = 0;
 
-    public PagerModel(@NonNull List<PagerModel.Item> items, @Nullable Boolean disableSwipe, @Nullable Color backgroundColor, @Nullable Border border) {
+    public PagerModel(@NonNull List<PagerModel.Item> items, boolean disableSwipe, @Nullable Color backgroundColor, @Nullable Border border) {
         super(ViewType.PAGER, backgroundColor, border);
 
         this.items = items;
@@ -52,13 +51,14 @@ public class PagerModel extends LayoutModel {
     @NonNull
     public static PagerModel fromJson(@NonNull JsonMap json) throws JsonException {
         JsonList itemsJson = json.opt("items").optList();
-        Boolean disableSwipe = json.opt("disable_swipe").getBoolean();
+        boolean disableSwipe = json.opt("disable_swipe").getBoolean(false);
         Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
         List<PagerModel.Item> items = PagerModel.Item.fromJsonList(itemsJson);
         return new PagerModel(items, disableSwipe, backgroundColor, border);
     }
 
+    @NonNull
     @Override
     public List<BaseModel> getChildren() {
         return children;
@@ -73,8 +73,7 @@ public class PagerModel extends LayoutModel {
         return items;
     }
 
-    @Nullable
-    public Boolean getDisableSwipe() {
+    public boolean isSwipeDisabled() {
         return disableSwipe;
     }
 

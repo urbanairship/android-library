@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.android.layout.view;
+package com.urbanairship.android.layout.widget;
 
 import android.content.Context;
 import android.view.View;
@@ -15,10 +15,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 import androidx.recyclerview.widget.RecyclerView;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> {
     @NonNull
     private final List<BaseModel> items = new ArrayList<>();
