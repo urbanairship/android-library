@@ -31,8 +31,15 @@ public abstract class EventDao {
     @Query("SELECT id, eventId, data FROM events ORDER BY id ASC LIMIT :limit")
     public abstract List<EventEntity.EventIdAndData> getBatch(int limit);
 
-    @Delete(entity = EventEntity.class)
-    public abstract void deleteBatch(List<EventEntity.EventIdAndData> events);
+    @Transaction
+    public void deleteBatch(List<EventEntity.EventIdAndData> events) {
+        for (EventEntity.EventIdAndData event : events) {
+            delete(event.eventId);
+        }
+    }
+
+    @Query("DELETE FROM events WHERE eventId = :eventId")
+    abstract void delete(String eventId);
 
     @Delete()
     public abstract void delete(EventEntity... events);

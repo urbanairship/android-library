@@ -4,6 +4,20 @@ plugins {
 
 description = "Airship Android Core SDK"
 
+android {
+    defaultConfig {
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    sourceSets {
+        androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
+    }
+}
+
 dependencies {
     // Required
     api "androidx.core:core:$rootProject.androidxCoreVersion"
@@ -18,11 +32,18 @@ dependencies {
     implementation "androidx.work:work-runtime:$rootProject.androidXWork"
     implementation "androidx.concurrent:concurrent-futures:$rootProject.androidXConcurrentFutures"
 
-    // Tests
+    // Unit Tests
     testImplementation project(':urbanairship-test')
     testImplementation "junit:junit:$rootProject.junitVersion"
     testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
     testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
     testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+
+    // Instrumentation Test
+    androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
+    androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
+    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+    androidTestImplementation "androidx.room:room-testing:$rootProject.androidxRoomVersion"
 }

@@ -24,7 +24,7 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper;
  * Analytics database.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities = { EventEntity.class }, version = 2, exportSchema = false)
+@Database(entities = { EventEntity.class }, version = 3)
 @TypeConverters({ JsonTypeConverters.class })
 public abstract class AnalyticsDatabase extends RoomDatabase {
 
@@ -92,13 +92,34 @@ public abstract class AnalyticsDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        private static final String TABLE_NAME = "events";
+
+        private static final String ID = "id";
+        private static final String EVENT_ID = "eventId";
+        private static final String INDEX_EVENT_ID = "index_events_eventId";
+
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            // Clean up duplicate events, if any are present.
+            db.execSQL("DELETE FROM " + TABLE_NAME + " WHERE " + ID + " NOT IN "
+                + "(SELECT MIN(" + ID +") FROM " + TABLE_NAME + " GROUP BY " + EVENT_ID + ")");
+            // Add unique index on eventId.
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `" + INDEX_EVENT_ID + "` "
+                + "ON `" + TABLE_NAME + "` (`" + EVENT_ID + "`)");
+        }
+    };
+
     public static AnalyticsDatabase createDatabase(@NonNull Context context, @NonNull AirshipRuntimeConfig config) {
         // Attempt to migrate an existing analytics db by moving it to the new location. The 1 -> 2
         // migration will handle updating the events schema and records when it runs.
         String path = migrateExistingDbIfExists(context, config);
 
         return Room.databaseBuilder(context, AnalyticsDatabase.class, path)
-                   .addMigrations(MIGRATION_1_2)
+                   .addMigrations(
+                       MIGRATION_1_2,
+                       MIGRATION_2_3
+                   )
                    .fallbackToDestructiveMigrationOnDowngrade()
                    .build();
     }

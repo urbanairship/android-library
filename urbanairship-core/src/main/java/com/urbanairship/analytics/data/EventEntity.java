@@ -2,26 +2,26 @@ package com.urbanairship.analytics.data;
 
 import com.urbanairship.analytics.Event;
 import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonTypeConverters;
 import com.urbanairship.json.JsonValue;
 
 import java.nio.charset.StandardCharsets;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 import androidx.room.Entity;
 import androidx.room.Ignore;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
-import androidx.room.TypeConverters;
 
 /**
  * Representation of an {@link Event} for persistent storage via Room.
  *
  * @hide
  */
-@Entity(tableName = "events")
+@Entity(tableName = "events", indices = {
+    @Index(value = { "eventId" }, unique = true)
+})
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class EventEntity {
 
