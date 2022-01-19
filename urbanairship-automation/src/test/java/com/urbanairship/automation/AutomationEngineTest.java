@@ -301,6 +301,25 @@ public class AutomationEngineTest {
     }
 
     @Test
+    public void testActiveSessionPaused() throws Exception {
+        Trigger trigger = Triggers.newActiveSessionTriggerBuilder()
+                                  .setGoal(1)
+                                  .build();
+
+        verifyTrigger(trigger, new Runnable() {
+            @Override
+            public void run() {
+                automationEngine.setPaused(true);
+                runLooperTasks();
+                activityMonitor.startActivity();
+                runLooperTasks();
+                automationEngine.setPaused(false);
+                runLooperTasks();
+            }
+        }, JsonValue.NULL);
+    }
+
+    @Test
     public void testActiveSessionLateSubscription() throws Exception {
         Trigger trigger = Triggers.newActiveSessionTriggerBuilder()
                                   .setGoal(1)

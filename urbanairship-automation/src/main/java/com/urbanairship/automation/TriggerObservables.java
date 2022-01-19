@@ -2,6 +2,8 @@
 
 package com.urbanairship.automation;
 
+import androidx.annotation.NonNull;
+
 import com.urbanairship.UAirship;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
@@ -16,7 +18,7 @@ import com.urbanairship.reactive.Subscription;
 import com.urbanairship.reactive.Supplier;
 import com.urbanairship.util.VersionUtils;
 
-import androidx.annotation.NonNull;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Factory methods for creating compound trigger observables
@@ -52,7 +54,8 @@ class TriggerObservables {
      * @param monitor An instance of ActivityMonitor.
      * @return An Observable of JsonSerializable.
      */
-    public static Observable<JsonSerializable> newSession(@NonNull final ActivityMonitor monitor) {
+    public static Observable<JsonSerializable> newSession(@NonNull final ActivityMonitor monitor, @NonNull AutomationEngine.PausedManager pausedManager) {
+        final AtomicBoolean processForegroundOnResume = new AtomicBoolean(false);
         return Observable.create(new Function<Observer<JsonSerializable>, Subscription>() {
             @NonNull
             @Override
@@ -60,18 +63,31 @@ class TriggerObservables {
                 final ApplicationListener listener = new SimpleApplicationListener() {
                     @Override
                     public void onForeground(long time) {
-                        observer.onNext(JsonValue.NULL);
+                        if (pausedManager.isPaused()) {
+                            processForegroundOnResume.set(true);
+                        } else {
+                            observer.onNext(JsonValue.NULL);
+                            processForegroundOnResume.set(false);
+                        }
+                    }
+
+                    @Override
+                    public void onBackground(long time) {
+                        super.onBackground(time);
+                        processForegroundOnResume.set(false);
                     }
                 };
 
-                monitor.addApplicationListener(listener);
-
-                return Subscription.create(new Runnable() {
-                    @Override
-                    public void run() {
-                        monitor.removeApplicationListener(listener);
+                pausedManager.addConsumer(isPaused -> {
+                    if (!isPaused && processForegroundOnResume.get()) {
+                        observer.onNext(JsonValue.NULL);
+                        processForegroundOnResume.set(false);
                     }
                 });
+
+                monitor.addApplicationListener(listener);
+
+                return Subscription.create(() -> monitor.removeApplicationListener(listener));
             }
         }).subscribeOn(Schedulers.main());
     }

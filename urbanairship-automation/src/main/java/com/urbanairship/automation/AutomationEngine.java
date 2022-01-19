@@ -9,6 +9,14 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.SparseArray;
 
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.core.util.Consumer;
+
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
@@ -57,16 +65,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
 /**
  * Core automation engine.
@@ -100,7 +102,7 @@ public class AutomationEngine {
     private Handler backgroundHandler;
     private final Handler mainHandler;
     private ScheduleListener scheduleListener;
-    private final AtomicBoolean isPaused = new AtomicBoolean(false);
+
     private final LegacyDataMigrator legacyDataMigrator;
     private long startTime;
     private final SparseArray<Long> stateChangeTimeStamps = new SparseArray<>();
@@ -175,6 +177,33 @@ public class AutomationEngine {
         }
     };
 
+    private final PausedManager pausedManager;
+
+    class PausedManager {
+        private final AtomicBoolean isPaused = new AtomicBoolean(false);
+        private final List<Consumer<Boolean>> consumers = new CopyOnWriteArrayList<>();
+
+        public boolean isPaused() {
+            return isPaused.get();
+        }
+
+        public void setPaused(boolean isPaused) {
+            if (this.isPaused.compareAndSet(!isPaused, isPaused)) {
+                for (Consumer<Boolean> consumer : consumers) {
+                    consumer.accept(isPaused);
+                }
+            }
+        }
+
+        public void addConsumer(Consumer<Boolean> consumer) {
+            consumers.add(consumer);
+        }
+
+        public void removeConsumer(Consumer<Boolean> consumer) {
+            consumers.remove(consumer);
+        }
+    }
+
     /**
      * Schedule listener.
      */
@@ -237,6 +266,7 @@ public class AutomationEngine {
         this.mainHandler = new Handler(Looper.getMainLooper());
         this.dao = dao;
         this.legacyDataMigrator = legacyDataMigrator;
+        this.pausedManager = new PausedManager();
     }
 
     /**
@@ -289,7 +319,7 @@ public class AutomationEngine {
      * @param isPaused {@code true} to pause the engine, otherwise {@code false}.
      */
     public void setPaused(boolean isPaused) {
-        this.isPaused.set(isPaused);
+        pausedManager.setPaused(isPaused);
 
         if (!isPaused && isStarted) {
             onScheduleConditionsChanged();
@@ -699,7 +729,7 @@ public class AutomationEngine {
     private Observable<JsonSerializable> createEventObservable(@Trigger.TriggerType int type) {
         switch (type) {
             case Trigger.ACTIVE_SESSION:
-                return TriggerObservables.newSession(activityMonitor);
+                return TriggerObservables.newSession(activityMonitor, pausedManager);
             case Trigger.CUSTOM_EVENT_COUNT:
             case Trigger.CUSTOM_EVENT_VALUE:
             case Trigger.LIFE_CYCLE_APP_INIT:
@@ -1079,7 +1109,7 @@ public class AutomationEngine {
         backgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (isPaused.get() || triggerEntities.isEmpty()) {
+                if (pausedManager.isPaused() || triggerEntities.isEmpty()) {
                     return;
                 }
 
@@ -1149,7 +1179,7 @@ public class AutomationEngine {
      */
     @WorkerThread
     private void handleTriggeredSchedules(@NonNull final List<FullSchedule> scheduleEntries, Map<String, TriggerContext> triggerContextMap) {
-        if (isPaused.get() || scheduleEntries.isEmpty()) {
+        if (pausedManager.isPaused() || scheduleEntries.isEmpty()) {
             return;
         }
 
@@ -1334,7 +1364,7 @@ public class AutomationEngine {
                 Schedule<? extends ScheduleData> schedule = null;
                 result = AutomationDriver.READY_RESULT_NOT_READY;
 
-                if (isPaused.get()) {
+                if (pausedManager.isPaused()) {
                     return;
                 }
 
