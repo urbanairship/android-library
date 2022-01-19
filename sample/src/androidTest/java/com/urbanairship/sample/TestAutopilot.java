@@ -4,6 +4,8 @@ import android.content.Context;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.UAirship;
+import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.automation.Schedule;
 
 import java.util.concurrent.TimeUnit;
 
@@ -15,9 +17,8 @@ public class TestAutopilot extends SampleAutopilot {
     @Override
     public void onAirshipReady(@NonNull UAirship airship) {
         super.onAirshipReady(airship);
-
-        airship.getInAppMessagingManager().setDisplayInterval(0, TimeUnit.MILLISECONDS);
-        UAirship.shared().getInAppMessagingManager().cancelAll();
+        InAppAutomation.shared().getInAppMessageManager().setDisplayInterval(0, TimeUnit.MILLISECONDS);
+        InAppAutomation.shared().cancelSchedules(Schedule.TYPE_IN_APP_MESSAGE);
     }
 
     @Nullable

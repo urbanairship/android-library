@@ -10,12 +10,20 @@ import com.urbanairship.messagecenter.InboxListener;
 import com.urbanairship.messagecenter.Message;
 import com.urbanairship.messagecenter.MessageCenter;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Main application entry point.
@@ -25,20 +33,36 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Remember the sent date of the last received [RichPushMessage].
      */
-    private final static String LAST_MESSAGE_SENT_DATE = "LAST_MC_SENT_DATE";
+    private static final String LAST_MESSAGE_SENT_DATE = "LAST_MC_SENT_DATE";
 
-    private InboxListener inboxListener = () -> showMessageCenterIndicator();
+    private static final Set<Integer> TOP_LEVEL_DESTINATIONS = new HashSet<Integer>() {{
+        add(R.id.homeFragment);
+        add(R.id.inboxFragment);
+        add(R.id.settingsFragment);
+        add(R.id.debugFragment);
+    }};
+
+    private final InboxListener inboxListener = this::showMessageCenterIndicator;
 
     private Snackbar messageCenterSnackbar;
     private long messageCenterLastSentDate;
     private BottomNavigationView navigationView = null;
-    private MultiNavigationHelper helper;
+    private NavController navController = null;
+    private AppBarConfiguration appBarConfiguration = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        NavHostFragment navHostFragment =
+                (NavHostFragment) requireNonNull(getSupportFragmentManager().findFragmentById(R.id.nav_host_container));
+
+        navController = navHostFragment.getNavController();
+        appBarConfiguration = new AppBarConfiguration.Builder(TOP_LEVEL_DESTINATIONS).build();
         navigationView = findViewById(R.id.navigation);
+
+        NavigationUI.setupWithNavController(navigationView, navController);
 
         if (savedInstanceState != null) {
             messageCenterLastSentDate = savedInstanceState.getLong(LAST_MESSAGE_SENT_DATE);
@@ -49,44 +73,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
-        helper = MultiNavigationHelper.newHelper(R.id.nav_host_container,
-                getSupportFragmentManager(),
-                navigationView.getSelectedItemId(),
-                R.navigation.nav_home,
-                R.navigation.nav_inbox,
-                R.navigation.nav_settings,
-                R.navigation.ua_debug_navigation);
-
-        navigationView.setOnItemReselectedListener(menuItem -> {
-            helper.resetCurrentGraph();
-        });
-
-        navigationView.setOnItemSelectedListener(menuItem -> {
-            // BottomNavigation items use the same Ids as the navigation graphs
-            helper.navigate(menuItem.getItemId());
-            return true;
-        });
-
-        helper.getCurrentNavController().observe(this, navController -> {
-            if (navController == null) {
-                return;
-            }
-
-            // Sync the selected item with the nav controller
-            if (navigationView.getSelectedItemId() != navController.getGraph().getId()) {
-                navigationView.setSelectedItemId(navController.getGraph().getId());
-            }
-        });
-
-        if (savedInstanceState == null) {
-            helper.deepLink(getIntent());
+        if (savedInstanceState != null) {
+            navController.handleDeepLink(getIntent());
         }
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        helper.deepLink(intent);
+        navController.handleDeepLink(intent);
     }
 
     @Override
@@ -116,21 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        return helper.navigateUp();
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (helper.popBackStack()) {
-            return;
-        }
-
-        if (navigationView.getSelectedItemId() != R.id.home) {
-            helper.navigate(R.id.home);
-            return;
-        }
-
-        super.onBackPressed();
+        return NavigationUI.navigateUp(navController, appBarConfiguration);
     }
 
     /**

@@ -15,6 +15,7 @@ android {
         versionCode 1
         versionName "1.0"
         vectorDrawables.useSupportLibrary = true
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildFeatures {
@@ -92,6 +93,29 @@ dependencies {
     androidTestImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
 
     implementation 'com.google.android.gms:play-services-instantapps:17.0.1'
+    // Instrumentation Tests
+
+    testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
+    androidTestImplementation "androidx.navigation:navigation-testing:$rootProject.androidxNavigationVersion"
+
+    debugImplementation "androidx.fragment:fragment-testing:$rootProject.androidxFragmentVersion"
+    androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
+    androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
+
+
+    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.androidxEspressoVersion"
+
+    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+    androidTestImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
+    androidTestImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
+
+    androidTestImplementation "org.robolectric:annotations:$rootProject.robolectricVersion"
+
+    androidTestImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
+    androidTestImplementation "org.mockito:mockito-android:$rootProject.mockitoVersion"
 }
 
 

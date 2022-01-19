@@ -8,14 +8,14 @@ import android.graphics.Color;
 import android.view.ViewGroup;
 
 import com.urbanairship.UAirship;
+import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.automation.Schedule;
 import com.urbanairship.automation.Triggers;
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.DisplayContent;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.InAppMessageListener;
-import com.urbanairship.iam.InAppMessageSchedule;
-import com.urbanairship.iam.InAppMessageScheduleInfo;
 import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.iam.TextInfo;
 import com.urbanairship.iam.banner.BannerAdapter;
@@ -65,7 +65,7 @@ public class InAppMessageTests {
     @Before
     public void setup() {
         expectedDisplays = new CountingIdlingResource("Expected IAA displays");
-        UAirship.shared().getInAppMessagingManager().setAdapterFactory(InAppMessage.TYPE_BANNER, new InAppMessageAdapter.Factory() {
+        InAppAutomation.shared().getInAppMessageManager().setAdapterFactory(InAppMessage.TYPE_BANNER, new InAppMessageAdapter.Factory() {
             @NonNull
             @Override
             public InAppMessageAdapter createAdapter(@NonNull InAppMessage message) {
@@ -87,7 +87,7 @@ public class InAppMessageTests {
 
     @After
     public void cleanup() {
-        UAirship.shared().getInAppMessagingManager().cancelAll();
+        InAppAutomation.shared().cancelSchedules(Schedule.TYPE_IN_APP_MESSAGE);
         IdlingRegistry.getInstance().unregister(expectedDisplays);
     }
 
@@ -108,7 +108,7 @@ public class InAppMessageTests {
                                                                                       .setText("Banner Heading")
                                                                                       .addStyle(TextInfo.STYLE_BOLD)
                                                                                       .setColor(Color.BLUE)
-                                                                                      .setDrawable(getContext(), R.drawable.ua_ic_add)
+                                                                                      .setDrawable(getContext(), R.drawable.ic_add)
                                                                                       .build())
                                                                   .setBody(TextInfo.newBuilder()
                                                                                    .setText("Banner body text is so cool its italic")
@@ -144,7 +144,7 @@ public class InAppMessageTests {
 
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(displayContent)
-                                           .setId(TEST_MESSAGE_ID)
+                                           .setName(TEST_MESSAGE_ID)
                                            .build();
 
         displayMessage(message);
@@ -157,7 +157,7 @@ public class InAppMessageTests {
         onView(withText(containsString("Button Two"))).perform(click());
 
         // Verify all the tags where added
-        Set<String> tags = UAirship.shared().getPushManager().getTags();
+        Set<String> tags = UAirship.shared().getChannel().getTags();
         assertTrue(tags.containsAll(Arrays.asList("clicked_banner", "button_one", "button_two")));
     }
 
@@ -254,7 +254,7 @@ public class InAppMessageTests {
 
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(displayContent)
-                                           .setId(TEST_MESSAGE_ID)
+                                           .setName(TEST_MESSAGE_ID)
                                            .build();
 
         List<String> buttons = Arrays.asList("Button One!", "Button Two!", "Button Three!", "Button Four!", "Button Five!");
@@ -266,7 +266,7 @@ public class InAppMessageTests {
         }
 
         // Verify all the tags where added
-        Set<String> tags = UAirship.shared().getPushManager().getTags();
+        Set<String> tags = UAirship.shared().getChannel().getTags();
         assertTrue(tags.containsAll(Arrays.asList("button_one!", "button_two!", "button_three!", "button_four!", "button_five!")));
     }
 
@@ -284,7 +284,7 @@ public class InAppMessageTests {
                                                                                     .setAlignment(TextInfo.ALIGNMENT_LEFT)
                                                                                     .setColor(Color.BLUE)
                                                                                     .setFontSize(15)
-                                                                                    .setDrawable(R.drawable.ic_add)
+                                                                                    .setDrawable(getContext() ,R.drawable.ic_add)
                                                                                     .build())
                                                                 .setBackgroundColor(Color.YELLOW)
                                                                 .setBody(TextInfo.newBuilder()
@@ -337,7 +337,7 @@ public class InAppMessageTests {
 
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(displayContent)
-                                           .setId(TEST_MESSAGE_ID)
+                                           .setName(TEST_MESSAGE_ID)
                                            .build();
 
         // Schedule modal in-app message
@@ -348,8 +348,8 @@ public class InAppMessageTests {
         displayMessage(message);
         onView(withText(containsString("Modal Two!"))).perform(click());
 
-        assertTrue(UAirship.shared().getPushManager().getTags().contains("modal_one"));
-        assertTrue(UAirship.shared().getPushManager().getTags().contains("modal_two"));
+        assertTrue(UAirship.shared().getChannel().getTags().contains("modal_one"));
+        assertTrue(UAirship.shared().getChannel().getTags().contains("modal_two"));
     }
 
 
@@ -362,27 +362,25 @@ public class InAppMessageTests {
         expectedDisplays.increment();
 
 
-        InAppMessageScheduleInfo scheduleInfo = InAppMessageScheduleInfo.newBuilder()
-                                                                        .setMessage(message)
-                                                                        .addTrigger(Triggers.newActiveSessionTriggerBuilder()
-                                                                                            .setGoal(1)
-                                                                                            .build())
-                                                                        .build();
+        Schedule schedule = Schedule.newBuilder(message)
+                                     .addTrigger(Triggers.newActiveSessionTriggerBuilder()
+                                                         .setGoal(1)
+                                                         .build())
+                                     .build();
 
-        final InAppMessageSchedule schedule = UAirship.shared().getInAppMessagingManager().scheduleMessage(scheduleInfo).get();
+        InAppAutomation.shared().schedule(schedule);
 
-        UAirship.shared().getInAppMessagingManager().addListener(new InAppMessageListener() {
+        InAppAutomation.shared().getInAppMessageManager().addListener(new InAppMessageListener() {
             @Override
             public void onMessageDisplayed(@NonNull String scheduleId, @NonNull InAppMessage message) {
                 if (scheduleId.equals(schedule.getId())) {
                     expectedDisplays.decrement();
-                    UAirship.shared().getInAppMessagingManager().removeListener(this);
+                    InAppAutomation.shared().getInAppMessageManager().removeListener(this);
                 }
             }
 
             @Override
             public void onMessageFinished(@NonNull String scheduleId, @NonNull InAppMessage message, @NonNull ResolutionInfo resolutionInfo) {
-
             }
         });
     }
