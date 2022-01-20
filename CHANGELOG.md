@@ -14,6 +14,14 @@ This version also includes a fix for a subset of devices sending duplicate event
 - Fixed In-App Automation session trigger skipping sessions when automations are paused then resumed
 - Reduce number of retries when Airship traffic is blocked on the network
 
+## Version 16.1.1 January 4, 2022
+
+Patch release that fixes Message Center crashes and issues.
+
+### Changes
+- Fixed marking messages as read or deleting messages in Message Center.
+- Fixed a crash when enabling Message Center feature.
+- Fixed a crash when deleting 1000+ messages in Message Center.
 
 ## Version 16.1.0 November 15, 2021
 

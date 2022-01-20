@@ -2,10 +2,27 @@
 
 package com.urbanairship.messagecenter;
 
+import static com.urbanairship.PrivacyManager.FEATURE_MESSAGE_CENTER;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
+
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
@@ -26,22 +43,6 @@ import org.robolectric.shadows.ShadowApplication;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
-import static com.urbanairship.PrivacyManager.FEATURE_MESSAGE_CENTER;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.robolectric.Shadows.shadowOf;
 
 /**
  * Tests for {@link MessageCenter}.
@@ -206,8 +207,8 @@ public class MessageCenterTest {
         when(privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)).thenReturn(false);
         privacyManagerListener.onEnabledFeaturesChanged();
 
-        verify(inbox).setEnabled(eq(false));
-        verify(inbox).updateEnabledState();
+        verify(inbox, timeout(100).times(1)).setEnabled(eq(false));
+        verify(inbox, timeout(100).times(1)).updateEnabledState();
     }
 
     @Test

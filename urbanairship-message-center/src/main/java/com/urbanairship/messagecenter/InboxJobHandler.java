@@ -249,7 +249,7 @@ class InboxJobHandler {
                 continue;
             }
 
-            if (messageDao.updateMessage(messageEntity) != 1) {
+            if (!messageDao.messageExists(messageEntity.messageId)) {
                 messagesToInsert.add(message);
             }
         }
@@ -273,6 +273,7 @@ class InboxJobHandler {
             return;
         }
 
+        messageDao.deleteDuplicates();
         Collection<MessageEntity> messagesToUpdate = messageDao.getLocallyDeletedMessages();
         List<String> idsToDelete = new ArrayList<>();
         List<JsonValue> reportings = new ArrayList<>();
@@ -311,6 +312,7 @@ class InboxJobHandler {
             return;
         }
 
+        messageDao.deleteDuplicates();
         Collection<MessageEntity> messagesToUpdate = messageDao.getLocallyReadMessages();
         List<String> idsToUpdate = new ArrayList<>();
         List<JsonValue> reportings = new ArrayList<>();

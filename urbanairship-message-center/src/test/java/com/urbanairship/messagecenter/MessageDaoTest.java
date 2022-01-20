@@ -10,6 +10,7 @@ import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -108,5 +109,61 @@ public class MessageDaoTest {
         List<MessageEntity> messageEntities = messageDao.getLocallyDeletedMessages();
         assertEquals(1, messageEntities.size());
         assertEquals(messageId, messageEntities.get(0).messageId);
+    }
+
+    @Test
+    public void testDeleteTooManyMessages() {
+        assertEquals(0, messageDao.getMessages().size());
+
+        List<String> messageIds = insertMessages(2000);
+        assertEquals(2000, messageDao.getMessages().size());
+
+        messageDao.deleteMessages(messageIds);
+        assertEquals(0, messageDao.getMessages().size());
+    }
+
+    @Test
+    public void testDeleteTooManyDuplicateMessages() {
+        assertEquals(0, messageDao.getMessages().size());
+
+        List<String> messageIds = insertDuplicateMessages(2000);
+        assertEquals(2000, messageDao.getMessages().size());
+
+        messageDao.deleteDuplicates();
+        assertEquals(1, messageDao.getMessages().size());
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private List<String> insertMessages(int count) {
+        List<MessageEntity> messages = new ArrayList<>();
+        List<String> messageIds = new ArrayList<>();
+
+        for (int i = 0; i < count; i++) {
+            MessageEntity message = MessageEntity.createMessageFromPayload(UUID.randomUUID().toString(), messageJson);
+            assert message != null;
+            messages.add(message);
+            messageIds.add(message.getMessageId());
+        }
+
+        messageDao.insertMessages(messages);
+
+        return messageIds;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private List<String> insertDuplicateMessages(int count) {
+        List<MessageEntity> messages = new ArrayList<>();
+        List<String> messageIds = new ArrayList<>();
+
+        for (int i = 0; i < count; i++) {
+            MessageEntity message = MessageEntity.createMessageFromPayload("theExactSameId", messageJson);
+            assert message != null;
+            messages.add(message);
+            messageIds.add(message.getMessageId());
+        }
+
+        messageDao.insertMessages(messages);
+
+        return messageIds;
     }
 }
