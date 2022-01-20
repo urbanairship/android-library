@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.ButtonEvent;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.FormEvent;
@@ -12,6 +13,7 @@ import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
 import com.urbanairship.android.layout.property.ButtonEnableBehaviorType;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -57,7 +59,7 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
         this.contentDescription = contentDescription;
     }
 
-    public static List<ButtonClickBehaviorType> buttonClickBehaviorsFromJson(@NonNull JsonMap json) {
+    public static List<ButtonClickBehaviorType> buttonClickBehaviorsFromJson(@NonNull JsonMap json) throws JsonException {
         JsonList clickBehaviorsList = json.opt("button_click").optList();
         return ButtonClickBehaviorType.fromList(clickBehaviorsList);
     }
@@ -66,7 +68,7 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
         return json.opt("actions").optMap().getMap();
     }
 
-    public static List<ButtonEnableBehaviorType> buttonEnableBehaviorsFromJson(@NonNull JsonMap json) {
+    public static List<ButtonEnableBehaviorType> buttonEnableBehaviorsFromJson(@NonNull JsonMap json) throws JsonException {
         JsonList enableBehaviorsList = json.opt("enabled").optList();
         return ButtonEnableBehaviorType.fromList(enableBehaviorsList);
     }
@@ -113,7 +115,11 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
         }
 
         for (ButtonClickBehaviorType behavior : buttonClickBehaviors) {
-            bubbleEvent(ButtonEvent.fromBehavior(behavior, this));
+            try {
+                bubbleEvent(ButtonEvent.fromBehavior(behavior, this));
+            } catch (JsonException e) {
+                Logger.warn(e, "Skipping button click behavior!");
+            }
         }
 
         // Note: Button dismiss events are reported at the top level when handled.

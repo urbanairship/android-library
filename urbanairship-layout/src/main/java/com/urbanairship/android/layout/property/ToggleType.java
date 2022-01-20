@@ -6,6 +6,8 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
+import com.urbanairship.json.JsonException;
+
 public enum ToggleType {
     SWITCH("switch"),
     CHECKBOX("checkbox");
@@ -18,13 +20,13 @@ public enum ToggleType {
     }
 
     @NonNull
-    public static ToggleType from(@NonNull String value) {
+    public static ToggleType from(@NonNull String value) throws JsonException {
         for (ToggleType type : ToggleType.values()) {
             if (type.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown ToggleType value: " + value);
+        throw new JsonException("Unknown ToggleType value: " + value);
     }
 
     @NonNull

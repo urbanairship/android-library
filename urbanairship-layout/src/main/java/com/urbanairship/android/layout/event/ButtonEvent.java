@@ -7,6 +7,7 @@ import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
 import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
@@ -61,7 +62,7 @@ public abstract class ButtonEvent extends Event {
         return state.withPagerData(data);
     }
 
-    public static ButtonEvent fromBehavior(@NonNull ButtonClickBehaviorType behavior, @NonNull ButtonModel model) {
+    public static ButtonEvent fromBehavior(@NonNull ButtonClickBehaviorType behavior, @NonNull ButtonModel model) throws JsonException {
         switch (behavior) {
             case CANCEL:
                 return new ButtonEvent.Cancel(model);
@@ -75,7 +76,7 @@ public abstract class ButtonEvent extends Event {
                 return new ButtonEvent.FormSubmit(model);
         }
         // Shouldn't get here, provided the above switch remains exhaustive.
-        throw new IllegalArgumentException("Unknown button click behavior type: " + behavior.name());
+        throw new JsonException("Unknown button click behavior type: " + behavior.name());
     }
 
     public static class Dismiss extends ButtonEvent {

@@ -6,6 +6,8 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
+import com.urbanairship.json.JsonException;
+
 public enum Direction {
     VERTICAL("vertical"),
     HORIZONTAL("horizontal");
@@ -18,13 +20,13 @@ public enum Direction {
     }
 
     @NonNull
-    public static Direction from(@NonNull String value) {
+    public static Direction from(@NonNull String value) throws JsonException {
         for (Direction d : Direction.values()) {
             if (d.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return d;
             }
         }
-        throw new IllegalArgumentException("Unknown Direction value: " + value);
+        throw new JsonException("Unknown Direction value: " + value);
     }
 
     @NonNull

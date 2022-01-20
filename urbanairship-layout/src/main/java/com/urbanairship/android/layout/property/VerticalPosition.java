@@ -8,6 +8,8 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
+import com.urbanairship.json.JsonException;
+
 public enum VerticalPosition {
     TOP("top", Gravity.TOP),
     BOTTOM("bottom", Gravity.BOTTOM),
@@ -23,13 +25,13 @@ public enum VerticalPosition {
     }
 
     @NonNull
-    public static VerticalPosition from(@NonNull String value) {
+    public static VerticalPosition from(@NonNull String value) throws JsonException {
         for (VerticalPosition vp : VerticalPosition.values()) {
             if (vp.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return vp;
             }
         }
-        throw new IllegalArgumentException("Unknown VerticalPosition value: " + value);
+        throw new JsonException("Unknown VerticalPosition value: " + value);
     }
 
     public int getGravity() {

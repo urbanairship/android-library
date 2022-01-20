@@ -107,7 +107,7 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     }
 
     @Nullable
-    protected static FormBehaviorType submitBehaviorFromJson(@NonNull JsonMap json) {
+    protected static FormBehaviorType submitBehaviorFromJson(@NonNull JsonMap json) throws JsonException {
         String submitString = json.opt("submit").getString();
         return submitString != null ? FormBehaviorType.from(submitString) : null;
     }

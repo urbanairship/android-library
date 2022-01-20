@@ -6,6 +6,8 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
+import com.urbanairship.json.JsonException;
+
 public enum TextStyle {
     BOLD("bold"),
     ITALIC("italic"),
@@ -19,13 +21,13 @@ public enum TextStyle {
     }
 
     @NonNull
-    public static TextStyle from(@NonNull String value) {
+    public static TextStyle from(@NonNull String value) throws JsonException {
         for (TextStyle type : TextStyle.values()) {
             if (type.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown Text Style value: " + value);
+        throw new JsonException("Unknown Text Style value: " + value);
     }
 
     @NonNull

@@ -6,6 +6,8 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
+import com.urbanairship.json.JsonException;
+
 public enum MediaType {
     IMAGE("image"),
     VIDEO("video"),
@@ -19,13 +21,13 @@ public enum MediaType {
     }
 
     @NonNull
-    public static MediaType from(@NonNull String value) {
+    public static MediaType from(@NonNull String value) throws JsonException {
         for (MediaType type : MediaType.values()) {
             if (type.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown MediaType value: " + value);
+        throw new JsonException("Unknown MediaType value: " + value);
     }
 
     @NonNull

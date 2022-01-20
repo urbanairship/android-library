@@ -4,6 +4,7 @@
 
 package com.urbanairship.android.layout.property;
 
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 
@@ -32,17 +33,17 @@ public enum ButtonClickBehaviorType {
     }
 
     @NonNull
-    public static ButtonClickBehaviorType from(@NonNull String value) {
+    public static ButtonClickBehaviorType from(@NonNull String value) throws JsonException {
         for (ButtonClickBehaviorType type : ButtonClickBehaviorType.values()) {
             if (type.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown ButtonClickBehaviorType value: " + value);
+        throw new JsonException("Unknown ButtonClickBehaviorType value: " + value);
     }
 
     @NonNull
-    public static List<ButtonClickBehaviorType> fromList(@NonNull JsonList json) {
+    public static List<ButtonClickBehaviorType> fromList(@NonNull JsonList json) throws JsonException {
         if (json.isEmpty()) {
             return Collections.emptyList();
         }

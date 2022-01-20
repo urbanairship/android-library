@@ -6,6 +6,8 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
+import com.urbanairship.json.JsonException;
+
 public enum WindowSize {
     SMALL("small"),
     MEDIUM("medium"),
@@ -19,13 +21,13 @@ public enum WindowSize {
     }
 
     @NonNull
-    public static WindowSize from(@NonNull String value) {
+    public static WindowSize from(@NonNull String value) throws JsonException {
         for (WindowSize v : WindowSize.values()) {
             if (v.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return v;
             }
         }
-        throw new IllegalArgumentException("Unknown WindowSize value: " + value);
+        throw new JsonException("Unknown WindowSize value: " + value);
     }
 
     @NonNull

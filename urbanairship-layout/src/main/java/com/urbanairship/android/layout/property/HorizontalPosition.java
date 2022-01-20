@@ -8,6 +8,8 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
+import com.urbanairship.json.JsonException;
+
 public enum HorizontalPosition {
     START("start", Gravity.START),
     END("end", Gravity.END),
@@ -23,13 +25,13 @@ public enum HorizontalPosition {
     }
 
     @NonNull
-    public static HorizontalPosition from(@NonNull String value) {
+    public static HorizontalPosition from(@NonNull String value) throws JsonException {
         for (HorizontalPosition hp : HorizontalPosition.values()) {
             if (hp.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return hp;
             }
         }
-        throw new IllegalArgumentException("Unknown HorizontalPosition value: " + value);
+        throw new JsonException("Unknown HorizontalPosition value: " + value);
     }
 
     public int getGravity() {

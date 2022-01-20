@@ -8,6 +8,8 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
+import com.urbanairship.json.JsonException;
+
 /**
  * Property that determines how an image should be scaled in an {@code ImageView}.
  */
@@ -27,17 +29,17 @@ public enum MediaFit {
     }
 
     @NonNull
-    public static MediaFit from(@NonNull String value) {
+    public static MediaFit from(@NonNull String value) throws JsonException {
         for (MediaFit type : MediaFit.values()) {
             if (type.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown MediaFit value: " + value);
+        throw new JsonException("Unknown MediaFit value: " + value);
     }
 
     @NonNull
-    public static ImageView.ScaleType asScaleType(@NonNull String mediaFit) {
+    public static ImageView.ScaleType asScaleType(@NonNull String mediaFit) throws JsonException {
         return MediaFit.from(mediaFit).getScaleType();
     }
 

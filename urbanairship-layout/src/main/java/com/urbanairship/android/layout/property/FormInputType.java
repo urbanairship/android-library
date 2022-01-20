@@ -13,6 +13,8 @@ import static android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
 import static android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE;
 import static android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
 
+import com.urbanairship.json.JsonException;
+
 public enum FormInputType {
     EMAIL("email", TYPE_CLASS_TEXT | TYPE_TEXT_VARIATION_EMAIL_ADDRESS),
     NUMBER("number", TYPE_CLASS_NUMBER),
@@ -29,13 +31,13 @@ public enum FormInputType {
     }
 
     @NonNull
-    public static FormInputType from(@NonNull String value) {
+    public static FormInputType from(@NonNull String value) throws JsonException {
         for (FormInputType type : FormInputType.values()) {
             if (type.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown Form Input Type value: " + value);
+        throw new JsonException("Unknown Form Input Type value: " + value);
     }
 
     public int getTypeMask() {

@@ -9,6 +9,8 @@ import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
+import com.urbanairship.json.JsonException;
+
 /**
  * Shape types.
  * @hide
@@ -28,13 +30,13 @@ public enum ShapeType {
     }
 
     @NonNull
-    public static ShapeType from(@NonNull String value) {
+    public static ShapeType from(@NonNull String value) throws JsonException {
         for (ShapeType type : ShapeType.values()) {
             if (type.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown ShapeType value: " + value);
+        throw new JsonException("Unknown ShapeType value: " + value);
     }
 
     public int getDrawableShapeType() {

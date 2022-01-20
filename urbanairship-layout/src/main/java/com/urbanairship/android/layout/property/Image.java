@@ -35,7 +35,7 @@ public abstract class Image {
             case ICON:
                 return Icon.fromJson(json);
         }
-        throw new IllegalArgumentException("Failed to parse image! Unknown button image type value: " + typeString);
+        throw new JsonException("Failed to parse image! Unknown button image type value: " + typeString);
     }
 
     public enum Type {
@@ -50,13 +50,13 @@ public abstract class Image {
         }
 
         @NonNull
-        public static Type from(@NonNull String value) {
+        public static Type from(@NonNull String value) throws JsonException {
             for (Type type : Type.values()) {
                 if (type.value.equals(value.toLowerCase(Locale.ROOT))) {
                     return type;
                 }
             }
-            throw new IllegalArgumentException("Unknown button image type value: " + value);
+            throw new JsonException("Unknown button image type value: " + value);
         }
     }
 
@@ -154,13 +154,13 @@ public abstract class Image {
             }
 
             @NonNull
-            private static DrawableResource from(String value) {
+            private static DrawableResource from(String value) throws JsonException {
                 for (DrawableResource res : DrawableResource.values()) {
                     if (res.value.equals(value.toLowerCase(Locale.ROOT))) {
                         return res;
                     }
                 }
-                throw new IllegalArgumentException("Unknown icon drawable resource: " + value);
+                throw new JsonException("Unknown icon drawable resource: " + value);
             }
         }
     }

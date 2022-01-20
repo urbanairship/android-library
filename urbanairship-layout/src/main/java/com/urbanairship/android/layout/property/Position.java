@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.property;
 
 import android.view.Gravity;
 
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.NonNull;
@@ -19,7 +20,7 @@ public class Position {
         this.vertical = vertical;
     }
     @NonNull
-    public static Position fromJson(@NonNull JsonMap json) {
+    public static Position fromJson(@NonNull JsonMap json) throws JsonException {
         String horizontalJson = json.opt("horizontal").optString();
         String verticalJson = json.opt("vertical").optString();
 

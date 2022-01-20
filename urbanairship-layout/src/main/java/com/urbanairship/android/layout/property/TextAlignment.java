@@ -8,6 +8,8 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
+import com.urbanairship.json.JsonException;
+
 public enum TextAlignment {
     START("start", Gravity.START),
     END("end", Gravity.END),
@@ -23,13 +25,13 @@ public enum TextAlignment {
     }
 
     @NonNull
-    public static TextAlignment from(@NonNull String value) {
+    public static TextAlignment from(@NonNull String value) throws JsonException {
         for (TextAlignment type : TextAlignment.values()) {
             if (type.value.equals(value.toLowerCase(Locale.ROOT))) {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown Text Alignment value: " + value);
+        throw new JsonException("Unknown Text Alignment value: " + value);
     }
 
     public int getGravity() {

@@ -67,9 +67,9 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
     public static CheckboxController fromJson(@NonNull JsonMap json) throws JsonException {
         String identifier = Identifiable.identifierFromJson(json);
         JsonMap viewJson = json.opt("view").optMap();
-        int minSelection = json.opt("min_selection").getInt(0);
-        int maxSelection = json.opt("max_selection").getInt(Integer.MAX_VALUE);
         boolean isRequired = Validatable.requiredFromJson(json);
+        int minSelection = json.opt("min_selection").getInt(isRequired ? 1 : 0);
+        int maxSelection = json.opt("max_selection").getInt(Integer.MAX_VALUE);
         String contentDescription = Accessible.contentDescriptionFromJson(json);
 
         BaseModel view = Thomas.model(viewJson);
