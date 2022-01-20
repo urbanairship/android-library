@@ -2,6 +2,19 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.2.0 January 24, 2021
+
+A minor release that adds support for two new features, Scenes and Surveys. Currently, these features are only available to customers in Airship's Special Access Program. Please reach out to your account manager for more details.
+
+This version also includes a fix for a subset of devices sending duplicate events, and to reduce the number of retries when the device has an internet connection but Airship traffic is blocked on the network. Devices running SDK 15+ should update.
+
+## Changes
+- Added support for Scenes and Surveys
+- Fixed devices sending duplicate events
+- Fixed In-App Automation session trigger skipping sessions when automations are paused then resumed
+- Reduce number of retries when Airship traffic is blocked on the network
+
+
 ## Version 16.1.0 November 15, 2021
 
 Minor release that adds a new chat action and has some minor
