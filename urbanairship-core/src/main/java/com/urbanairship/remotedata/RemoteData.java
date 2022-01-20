@@ -274,6 +274,7 @@ public class RemoteData extends AirshipComponent {
                                  .setAction(ACTION_REFRESH)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(RemoteData.class)
+                                 .setConflictStrategy(JobInfo.KEEP)
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);

@@ -134,6 +134,7 @@ public class Inbox {
                 JobInfo jobInfo = JobInfo.newBuilder()
                                          .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                                          .setAirshipComponent(MessageCenter.class)
+                                         .setConflictStrategy(JobInfo.KEEP)
                                          .build();
 
                 jobDispatcher.dispatch(jobInfo);
@@ -144,6 +145,7 @@ public class Inbox {
                 JobInfo jobInfo = JobInfo.newBuilder()
                                          .setAction(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
                                          .setAirshipComponent(MessageCenter.class)
+                                         .setConflictStrategy(JobInfo.KEEP)
                                          .build();
 
                 jobDispatcher.dispatch(jobInfo);
@@ -343,6 +345,7 @@ public class Inbox {
                 JobInfo jobInfo = JobInfo.newBuilder()
                                          .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                                          .setAirshipComponent(MessageCenter.class)
+                                         .setConflictStrategy(JobInfo.REPLACE)
                                          .build();
 
                 jobDispatcher.dispatch(jobInfo);
@@ -771,6 +774,7 @@ public class Inbox {
                                  .setExtras(JsonMap.newBuilder()
                                                    .put(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)
                                                    .build())
+                                 .setConflictStrategy(forcefully ? JobInfo.REPLACE : JobInfo.KEEP)
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);

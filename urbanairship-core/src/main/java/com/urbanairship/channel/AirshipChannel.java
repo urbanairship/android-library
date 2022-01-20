@@ -1103,6 +1103,8 @@ public class AirshipChannel extends AirshipComponent {
      * @param forceFullUpdate {@code true} to perform a full update, {@code false} to minimize the update payload.
      */
     private void dispatchUpdateJob(boolean forceFullUpdate) {
+        int conflictStrategy = forceFullUpdate ? JobInfo.REPLACE : JobInfo.KEEP;
+
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(ACTION_UPDATE_CHANNEL)
                                  .setExtras(JsonMap.newBuilder()
@@ -1110,6 +1112,7 @@ public class AirshipChannel extends AirshipComponent {
                                                    .build())
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(AirshipChannel.class)
+                                 .setConflictStrategy(conflictStrategy)
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);

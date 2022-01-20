@@ -153,6 +153,7 @@ class Chat
                 val jobInfo = JobInfo.newBuilder()
                         .setAction(REFRESH_MESSAGES_ACTION)
                         .setAirshipComponent(Chat::class.java)
+                        .setConflictStrategy(JobInfo.KEEP)
                         .build()
 
                 jobDispatcher.dispatch(jobInfo)

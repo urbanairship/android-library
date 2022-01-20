@@ -132,7 +132,7 @@ public class AirshipChannelTests extends BaseTestCase {
         verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") && jobInfo.getConflictStrategy() == JobInfo.KEEP;
             }
         }));
     }
@@ -666,7 +666,7 @@ public class AirshipChannelTests extends BaseTestCase {
         verify(mockDispatcher, times(0)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") && jobInfo.getConflictStrategy() == JobInfo.KEEP;
             }
         }));
     }
@@ -685,7 +685,7 @@ public class AirshipChannelTests extends BaseTestCase {
         verify(mockDispatcher, times(0)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") && jobInfo.getConflictStrategy() == JobInfo.KEEP;
             }
         }));
     }
@@ -704,7 +704,7 @@ public class AirshipChannelTests extends BaseTestCase {
         verify(mockDispatcher, times(0)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") && jobInfo.getConflictStrategy() == JobInfo.KEEP;
             }
         }));
     }
@@ -722,7 +722,7 @@ public class AirshipChannelTests extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") && jobInfo.getConflictStrategy() == JobInfo.KEEP;
             }
         }));
     }
@@ -746,7 +746,7 @@ public class AirshipChannelTests extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") && jobInfo.getConflictStrategy() == JobInfo.KEEP;
             }
         }));
     }
@@ -772,7 +772,7 @@ public class AirshipChannelTests extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") && jobInfo.getConflictStrategy() == JobInfo.KEEP;
             }
         }));
     }
@@ -832,7 +832,7 @@ public class AirshipChannelTests extends BaseTestCase {
         verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") && jobInfo.getConflictStrategy() == JobInfo.KEEP;
             }
         }));
     }
@@ -863,7 +863,7 @@ public class AirshipChannelTests extends BaseTestCase {
         verify(mockDispatcher, atLeastOnce()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") && jobInfo.getConflictStrategy() == JobInfo.KEEP;
             }
         }));
     }
@@ -1204,7 +1204,7 @@ public class AirshipChannelTests extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") && jobInfo.getConflictStrategy() == JobInfo.KEEP;
             }
         }));
     }
@@ -1217,7 +1217,7 @@ public class AirshipChannelTests extends BaseTestCase {
         verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL");
+                return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") && jobInfo.getConflictStrategy() == JobInfo.KEEP;
             }
         }));
     }
@@ -1263,7 +1263,8 @@ public class AirshipChannelTests extends BaseTestCase {
                 JsonValue extraForceFullUpdate = jobInfo.getExtras().get("EXTRA_FORCE_FULL_UPDATE");
                 return jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") &&
                         extraForceFullUpdate != null &&
-                        extraForceFullUpdate.getBoolean(false);
+                        extraForceFullUpdate.getBoolean(false) &&
+                        jobInfo.getConflictStrategy() == JobInfo.REPLACE;
             }
         }));
     }

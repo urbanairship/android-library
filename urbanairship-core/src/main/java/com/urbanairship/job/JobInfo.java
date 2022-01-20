@@ -13,6 +13,7 @@ import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.core.util.ObjectsCompat;
 
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
@@ -46,12 +47,14 @@ public class JobInfo {
     public static final int REPLACE = 0;
     public static final int APPEND = 1;
     public static final int KEEP = 2;
-    private final JsonMap extras;
+
     private final String action;
     private final String airshipComponentName;
     private final boolean isNetworkAccessRequired;
     private final long initialDelay;
     private final int conflictStrategy;
+    private final long minInitialBackOffMs;
+    private final JsonMap extras;
 
     /**
      * Default constructor.
@@ -65,6 +68,7 @@ public class JobInfo {
         this.isNetworkAccessRequired = builder.isNetworkAccessRequired;
         this.initialDelay = builder.initialDelay;
         this.conflictStrategy = builder.conflictStrategy;
+        this.minInitialBackOffMs = builder.initialBackOffMs;
     }
 
     /**
@@ -120,15 +124,20 @@ public class JobInfo {
         return conflictStrategy;
     }
 
+    public long getMinInitialBackOffMs() {
+        return minInitialBackOffMs;
+    }
+
     @Override
     public String toString() {
         return "JobInfo{" +
-                "extras=" + extras +
-                ", action='" + action + '\'' +
+                "action='" + action + '\'' +
                 ", airshipComponentName='" + airshipComponentName + '\'' +
                 ", isNetworkAccessRequired=" + isNetworkAccessRequired +
                 ", initialDelay=" + initialDelay +
                 ", conflictStrategy=" + conflictStrategy +
+                ", minInitialBackOffMs=" + minInitialBackOffMs +
+                ", extras=" + extras +
                 '}';
     }
 
@@ -136,26 +145,19 @@ public class JobInfo {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         JobInfo jobInfo = (JobInfo) o;
-
-        if (isNetworkAccessRequired != jobInfo.isNetworkAccessRequired) return false;
-        if (initialDelay != jobInfo.initialDelay) return false;
-        if (conflictStrategy != jobInfo.conflictStrategy) return false;
-        if (!extras.equals(jobInfo.extras)) return false;
-        if (!action.equals(jobInfo.action)) return false;
-        return airshipComponentName.equals(jobInfo.airshipComponentName);
+        return isNetworkAccessRequired == jobInfo.isNetworkAccessRequired &&
+                initialDelay == jobInfo.initialDelay &&
+                conflictStrategy == jobInfo.conflictStrategy &&
+                minInitialBackOffMs == jobInfo.minInitialBackOffMs &&
+                ObjectsCompat.equals(extras, jobInfo.extras) &&
+                ObjectsCompat.equals(action, jobInfo.action) &&
+                ObjectsCompat.equals(airshipComponentName, jobInfo.airshipComponentName);
     }
 
     @Override
     public int hashCode() {
-        int result = extras.hashCode();
-        result = 31 * result + action.hashCode();
-        result = 31 * result + airshipComponentName.hashCode();
-        result = 31 * result + (isNetworkAccessRequired ? 1 : 0);
-        result = 31 * result + (int) (initialDelay ^ (initialDelay >>> 32));
-        result = 31 * result + conflictStrategy;
-        return result;
+        return ObjectsCompat.hash(extras, action, airshipComponentName, isNetworkAccessRequired, initialDelay, conflictStrategy, minInitialBackOffMs);
     }
 
     /**
@@ -172,13 +174,14 @@ public class JobInfo {
      * JobInfo builder.
      */
     public static class Builder {
-
+        private final long MIN_INITIAL_BACKOFF_MS = 30000;
         private String action;
         private String airshipComponentName;
         private boolean isNetworkAccessRequired;
         private long initialDelay;
         private JsonMap extras;
         private int conflictStrategy = REPLACE;
+        private long initialBackOffMs = MIN_INITIAL_BACKOFF_MS;
 
         private Builder() {
         }
@@ -192,6 +195,12 @@ public class JobInfo {
         @NonNull
         public Builder setAction(@Nullable String action) {
             this.action = action;
+            return this;
+        }
+
+        @NonNull
+        public Builder setInitialBackOff(long duration, @NonNull TimeUnit unit) {
+            this.initialBackOffMs = Math.max(MIN_INITIAL_BACKOFF_MS, unit.toMillis(duration));
             return this;
         }
 

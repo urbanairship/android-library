@@ -1,11 +1,15 @@
 package com.urbanairship.job;
 
+import android.telecom.Call;
+
+import com.urbanairship.base.Extender;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.work.Data;
 
 abstract class WorkUtils {
@@ -31,14 +35,23 @@ abstract class WorkUtils {
 
     @NonNull
     static JobInfo convertToJobInfo(@NonNull Data data) throws JsonException {
-        return JobInfo.newBuilder()
+        return convertToJobInfo(data, null);
+    }
+
+    @NonNull
+    static JobInfo convertToJobInfo(@NonNull Data data, @Nullable Extender<JobInfo.Builder> extender) throws JsonException {
+        JobInfo.Builder builder = JobInfo.newBuilder()
                       .setAction(data.getString(ACTION_KEY))
                       .setExtras(JsonValue.parseString(data.getString(EXTRAS)).optMap())
                       .setInitialDelay(data.getLong(INITIAL_DELAY, 0), TimeUnit.MILLISECONDS)
                       .setNetworkAccessRequired(data.getBoolean(NETWORK_REQUIRED, false))
                       .setAirshipComponent(data.getString(COMPONENT))
-                      .setConflictStrategy(data.getInt(CONFLICT_STRATEGY, JobInfo.REPLACE))
-                      .build();
-    }
+                      .setConflictStrategy(data.getInt(CONFLICT_STRATEGY, JobInfo.REPLACE));
 
+        if (extender != null) {
+            builder = extender.extend(builder);
+        }
+
+        return builder.build();
+    }
 }

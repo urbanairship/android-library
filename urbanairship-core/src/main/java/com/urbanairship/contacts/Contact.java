@@ -403,10 +403,11 @@ public class Contact extends AirshipComponent {
      */
     private void dispatchContactUpdateJob() {
         JobInfo jobInfo = JobInfo.newBuilder()
-                .setAction(ACTION_UPDATE_CONTACT)
-                .setNetworkAccessRequired(true)
-                .setAirshipComponent(Contact.class)
-                .build();
+                                 .setAction(ACTION_UPDATE_CONTACT)
+                                 .setNetworkAccessRequired(true)
+                                 .setAirshipComponent(Contact.class)
+                                 .setConflictStrategy(JobInfo.KEEP)
+                                 .build();
 
         jobDispatcher.dispatch(jobInfo);
     }

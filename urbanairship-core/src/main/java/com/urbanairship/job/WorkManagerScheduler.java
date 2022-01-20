@@ -7,6 +7,7 @@ import android.content.Context;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
+import androidx.work.BackoffPolicy;
 import androidx.work.Constraints;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
@@ -33,6 +34,7 @@ class WorkManagerScheduler implements Scheduler {
         OneTimeWorkRequest.Builder workRequestBuilder = new OneTimeWorkRequest.Builder(AirshipWorker.class)
                 .addTag(AIRSHIP_TAG)
                 .setInputData(WorkUtils.convertToData(jobInfo))
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, jobInfo.getMinInitialBackOffMs(), TimeUnit.MILLISECONDS)
                 .setConstraints(createConstraints(jobInfo));
 
         if (jobInfo.getInitialDelay() > 0) {

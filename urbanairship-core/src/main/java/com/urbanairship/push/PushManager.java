@@ -338,6 +338,7 @@ public class PushManager extends AirshipComponent {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
                                  .setAirshipComponent(PushManager.class)
+                                 .setConflictStrategy(JobInfo.REPLACE)
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);

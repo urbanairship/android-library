@@ -351,7 +351,7 @@ public class InboxTest {
         verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE);
+                return jobInfo.getAction().equals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE) && jobInfo.getConflictStrategy() == JobInfo.KEEP;
             }
         }));
     }
