@@ -14,6 +14,7 @@ import androidx.annotation.WorkerThread;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
+import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
@@ -38,8 +39,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Clock;
 import com.urbanairship.util.UAStringUtil;
-
-import org.w3c.dom.Attr;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -337,6 +336,19 @@ public class Contact extends AirshipComponent {
                 addOperation(ContactOperation.resolve());
                 addOperation(ContactOperation.update(null, collapsedMutations));
                 dispatchContactUpdateJob();
+            }
+        };
+    }
+
+    /**
+     * Edits the subscription lists associated with this Contact.
+     *
+     * @return An {@link ScopedSubscriptionListEditor}.
+     */
+    public ScopedSubscriptionListEditor editSubscriptionLists() {
+        return new ScopedSubscriptionListEditor(clock) {
+            @Override
+            protected void onApply(@NonNull List<ScopedSubscriptionListMutation> mutations) {
             }
         };
     }
@@ -851,4 +863,26 @@ public class Contact extends AirshipComponent {
         }
     }
 
+    /**
+     * Returns the current map of subscription list Id to scopes for this contact, optionally applying pending
+     * subscription list changes that will be applied during the next contact update.
+     * <p>
+     * An empty map indicates that this contact is not subscribed to any lists.
+     *
+     * @param includePendingUpdates `true` to apply pending updates to the returned set, `false` to return the result without pending updates.
+     * @return A {@link PendingResult} of the current map of subscription lists.
+     */
+    @NonNull
+    public PendingResult<Map<String, Set<String>>> getSubscriptionLists(final boolean includePendingUpdates) {
+        final PendingResult<Map<String, Set<String>>> result = new PendingResult<>();
+
+        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+            result.setResult(Collections.emptyMap());
+        }
+
+        // TODO:
+        result.setResult(Collections.emptyMap());
+
+        return result;
+    }
 }

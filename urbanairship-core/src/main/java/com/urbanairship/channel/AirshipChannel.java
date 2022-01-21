@@ -625,7 +625,7 @@ public class AirshipChannel extends AirshipComponent {
         final PendingResult<Set<String>> result = new PendingResult<>();
 
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-            result.setResult(null);
+            result.setResult(Collections.emptySet());
         }
 
         Set<String> cachedSubscriptions = getCachedSubscriptionLists();
