@@ -3,12 +3,12 @@
 package com.urbanairship.analytics.data;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.util.Consumer;
 
 /**
  * Helper for running large queries in smaller batches to avoid 'too many SQL variables' exceptions.
