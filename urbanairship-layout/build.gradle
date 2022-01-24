@@ -5,7 +5,7 @@ plugins {
 description = "Airship Layout Rendering Library"
 
 airshipModule {
-    published = false
+    published = true
 }
 
 android {
