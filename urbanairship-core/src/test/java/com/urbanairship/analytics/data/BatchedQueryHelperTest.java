@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 
+import androidx.core.util.Consumer;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static org.junit.Assert.assertEquals;
@@ -66,11 +66,6 @@ public class BatchedQueryHelperTest {
         @Override
         public void accept(List<Integer> integers) {
             batches.add(integers);
-        }
-
-        @Override
-        public Consumer<List<Integer>> andThen(Consumer<? super List<Integer>> after) {
-            return null;
         }
     }
 }
