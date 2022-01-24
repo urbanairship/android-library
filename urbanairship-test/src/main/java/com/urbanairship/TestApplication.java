@@ -89,10 +89,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
         UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.pushManager, UAirship.sharedAirship.localeManager, pushProviders);
         UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.remoteData);
-
-        ProviderInfo info = new ProviderInfo();
-        info.authority = UrbanAirshipProvider.getAuthorityString(this);
-        Robolectric.buildContentProvider(UrbanAirshipProvider.class).create(info);
     }
 
     @Override

@@ -15,13 +15,6 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.provider.Settings;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.core.content.pm.PackageInfoCompat;
-
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
@@ -46,6 +39,7 @@ import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
+import com.urbanairship.util.ProcessUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -54,6 +48,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.core.content.pm.PackageInfoCompat;
 
 /**
  * UAirship manages the shared state for all Airship
@@ -344,6 +345,9 @@ public class UAirship {
         if (Looper.myLooper() == null || Looper.getMainLooper() != Looper.myLooper()) {
             Logger.error("takeOff() must be called on the main thread!");
         }
+
+        isMainProcess = ProcessUtils.isMainProcess(application);
+        GlobalActivityMonitor.shared(application);
 
         if (LOG_TAKE_OFF_STACKTRACE) {
             StringBuilder sb = new StringBuilder();
@@ -1151,6 +1155,7 @@ public class UAirship {
     public LocaleManager getLocaleManager() {
         return localeManager;
     }
+
 
     /**
      * Callback interface used to notify app when UAirship is ready.

@@ -42,6 +42,7 @@ buildscript {
         androidxSwipeRefreshLayoutVersion = '1.1.0'
         androidXWork = '2.7.1'
         androidXConcurrentFutures = '1.1.0'
+        androidXStartup = '1.1.0'
 
         // Material design
         materialVersion = '1.4.0'
