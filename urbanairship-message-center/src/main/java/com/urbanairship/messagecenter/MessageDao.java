@@ -6,6 +6,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.core.util.Consumer;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
@@ -19,6 +20,7 @@ import androidx.room.Update;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Dao
 public abstract class MessageDao {
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public abstract void insert(@NonNull MessageEntity message);
 
@@ -65,7 +67,8 @@ public abstract class MessageDao {
     @Transaction
     @NonNull
     public void deleteMessages(@NonNull List<String> messageIds) {
-         BatchedQueryHelper.runBatched(messageIds, this::deleteMessagesBatch);
+        Consumer<List<String>> consumer = ids -> deleteMessagesBatch(ids);
+        BatchedQueryHelper.runBatched(messageIds, consumer);
     }
 
     @Query("DELETE FROM richpush WHERE message_id IN (:messageIds)")
