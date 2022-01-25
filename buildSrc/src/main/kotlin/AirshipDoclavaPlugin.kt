@@ -1,5 +1,5 @@
+
 import com.android.build.gradle.LibraryExtension
-import com.android.build.gradle.api.LibraryVariant
 import java.io.File
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -56,16 +56,9 @@ class AirshipDoclavaPlugin : Plugin<Project> {
             }
         }
 
-        subprojects.filter {
-            it.name.startsWith("urbanairship-") && !it.name.contains("stub") && !it.name.contains("test")
-        }.forEach { proj ->
+        subprojects.forEach { proj ->
             proj.afterEvaluate {
-                val evaluated: Project = this
-                val android = evaluated.the<LibraryExtension>()
-
                 javadoc.configure {
-                    val task: Javadoc = this
-                    task.source += android.sourceSets["main"].java.getSourceFiles()
                     if (proj.name in listOf(
                             "urbanairship-core",
                             "urbanairship-accengage",
@@ -76,11 +69,14 @@ class AirshipDoclavaPlugin : Plugin<Project> {
                             "urbanairship-preference",
                             "urbanairship-chat")
                     ) {
+                        val android = proj.the<LibraryExtension>()
+                        val task: Javadoc = this
+                        task.source += android.sourceSets["main"].java.getSourceFiles()
                         val androidBootClasspath = android.bootClasspath.joinToString(File.pathSeparator)
-                        task.classpath += evaluated.files(androidBootClasspath)
+                        task.classpath += proj.files(androidBootClasspath)
 
                         android.libraryVariants.all {
-                            val variant: LibraryVariant = this
+                            val variant = this
                             if (variant.name == "release") {
                                 task.classpath += variant.javaCompileProvider.get().classpath
                                 task.classpath += project.files(androidBootClasspath)
