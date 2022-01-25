@@ -418,6 +418,12 @@ public class AirshipConfigOptions {
      */
     public final boolean requireInitialRemoteConfigEnabled;
 
+    /**
+     * The Firebase app name to use for FCM instead of the default app.
+     */
+    @Nullable
+    public final String fcmFirebaseAppName;
+
     private AirshipConfigOptions(@NonNull Builder builder) {
         if (builder.inProduction) {
             this.appKey = firstOrEmpty(builder.productionAppKey, builder.appKey);
@@ -470,6 +476,7 @@ public class AirshipConfigOptions {
         this.enabledFeatures = builder.enabledFeatures;
         this.extendedBroadcastsEnabled = builder.extendedBroadcastsEnabled;
         this.requireInitialRemoteConfigEnabled = builder.requireInitialRemoteConfigEnabled;
+        this.fcmFirebaseAppName = builder.fcmFirebaseAppName;
     }
 
     /**
@@ -618,6 +625,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_NOTIFICATION_ACCENT_COLOR = "notificationAccentColor";
         private static final String FIELD_WALLET_URL = "walletUrl";
         private static final String FIELD_NOTIFICATION_CHANNEL = "notificationChannel";
+        private static final String FIELD_FCM_FIREBASE_APP_NAME = "fcmFirebaseAppName";
         private static final String FIELD_FCM_SENDER_ID = "fcmSenderId";
         private static final String FIELD_PRODUCTION_FCM_SENDER_ID = "productionFcmSenderId";
         private static final String FIELD_DEVELOPMENT_FCM_SENDER_ID = "developmentFcmSenderId";
@@ -671,6 +679,7 @@ public class AirshipConfigOptions {
 
         private boolean suppressAllowListError = false;
         private boolean requireInitialRemoteConfigEnabled = false;
+        private String fcmFirebaseAppName;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -931,7 +940,11 @@ public class AirshipConfigOptions {
                         case FIELD_FCM_SENDER_ID:
                         case FIELD_DEVELOPMENT_FCM_SENDER_ID:
                         case FIELD_PRODUCTION_FCM_SENDER_ID:
-                            Logger.error("Support for Sender ID override has been removed. Firebase doesn't support multiple projects in a single app anymore.");
+                            Logger.error("Support for Sender ID override has been removed. Configure a FirebaseApp and use fcmFirebaseAppName instead.");
+                            break;
+
+                        case FIELD_FCM_FIREBASE_APP_NAME:
+                            this.setFcmFirebaseAppName(configParser.getString(name));
                             break;
 
                         case "enableUrlWhitelisting":
@@ -1553,6 +1566,19 @@ public class AirshipConfigOptions {
             return this;
         }
 
+        /**
+         * Sets the Firebase app name that is used for FCM. If set, the app name must exist in order
+         * for Airship to get registration token. The app should be initialized with Firebase before takeOff, or during
+         * onAirshipReady callback.
+         *
+         * @param fcmFirebaseAppName The firebase app name.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setFcmFirebaseAppName(@Nullable String fcmFirebaseAppName) {
+            this.fcmFirebaseAppName = fcmFirebaseAppName;
+            return this;
+        }
         /**
          * Sets the flag to require initial remote-config for device URLs.
          *
