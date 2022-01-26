@@ -10,6 +10,7 @@ import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.chip.Chip
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.data.Item
@@ -18,7 +19,9 @@ import com.urbanairship.preferencecenter.ui.PrefCenterItem.ChannelSubscriptionIt
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_DESCRIPTION
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_PREF_CHANNEL_SUBSCRIPTION
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_SECTION
+import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_SECTION_BREAK
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.DescriptionItem
+import com.urbanairship.preferencecenter.ui.PrefCenterItem.SectionBreakItem
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.SectionItem
 import com.urbanairship.preferencecenter.util.setTextOrHide
 import java.util.UUID
@@ -65,6 +68,8 @@ internal class PreferenceCenterAdapter(
             DescriptionItem.createViewHolder(parent)
         TYPE_SECTION ->
             SectionItem.createViewHolder(parent)
+        TYPE_SECTION_BREAK ->
+            SectionBreakItem.createViewHolder(parent)
         TYPE_PREF_CHANNEL_SUBSCRIPTION ->
             ChannelSubscriptionItem.createViewHolder(
                 parent = parent,
@@ -145,20 +150,23 @@ internal class PreferenceCenterAdapter(
 }
 
 internal abstract class PrefCenterViewHolder<T : PrefCenterItem>(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    protected val titleView: TextView = itemView.findViewById(R.id.ua_pref_title)
-    protected val descriptionView: TextView = itemView.findViewById(R.id.ua_pref_description)
-
     @Suppress("UNCHECKED_CAST")
     fun bindItem(item: PrefCenterItem) = bind(item as T)
 
     abstract fun bind(item: T)
 }
 
+internal abstract class CommonViewHolder<T : PrefCenterItem>(itemView: View) : PrefCenterViewHolder<T>(itemView) {
+    protected val titleView: TextView = itemView.findViewById(R.id.ua_pref_title)
+    protected val descriptionView: TextView = itemView.findViewById(R.id.ua_pref_description)
+}
+
 internal sealed class PrefCenterItem(val type: Int) {
     companion object {
         const val TYPE_DESCRIPTION = 0
         const val TYPE_SECTION = 1
-        const val TYPE_PREF_CHANNEL_SUBSCRIPTION = 2
+        const val TYPE_SECTION_BREAK = 2
+        const val TYPE_PREF_CHANNEL_SUBSCRIPTION = 3
     }
 
     abstract val id: String
@@ -195,7 +203,7 @@ internal sealed class PrefCenterItem(val type: Int) {
             return title == otherItem.title && description == otherItem.description
         }
 
-        class ViewHolder(itemView: View) : PrefCenterViewHolder<DescriptionItem>(itemView) {
+        class ViewHolder(itemView: View) : CommonViewHolder<DescriptionItem>(itemView) {
             override fun bind(item: DescriptionItem) {
                 titleView.setTextOrHide(item.title)
                 descriptionView.setTextOrHide(item.description)
@@ -235,10 +243,49 @@ internal sealed class PrefCenterItem(val type: Int) {
             return title == otherItem.title && subtitle == otherItem.subtitle
         }
 
-        class ViewHolder(itemView: View) : PrefCenterViewHolder<SectionItem>(itemView) {
+        class ViewHolder(itemView: View) : CommonViewHolder<SectionItem>(itemView) {
             override fun bind(item: SectionItem) {
                 titleView.setTextOrHide(item.title)
                 descriptionView.setTextOrHide(item.subtitle)
+            }
+        }
+    }
+
+    internal data class SectionBreakItem(val section: Section.SectionBreak) : PrefCenterItem(TYPE_SECTION_BREAK) {
+        companion object {
+            @LayoutRes
+            val LAYOUT: Int = R.layout.ua_item_preference_section_break
+
+            fun createViewHolder(
+                parent: ViewGroup,
+                inflater: LayoutInflater = LayoutInflater.from(parent.context)
+            ): ViewHolder {
+                val view = inflater.inflate(LAYOUT, parent, false)
+                return ViewHolder(view)
+            }
+        }
+
+        override val id: String = section.id
+        val label: String? = section.display.name
+
+        override fun areItemsTheSame(otherItem: PrefCenterItem): Boolean {
+            if (this === otherItem) return true
+            if (javaClass != otherItem.javaClass) return false
+            otherItem as SectionBreakItem
+            return id == otherItem.id
+        }
+
+        override fun areContentsTheSame(otherItem: PrefCenterItem): Boolean {
+            if (javaClass != otherItem.javaClass) return false
+            otherItem as SectionBreakItem
+            return label == otherItem.label
+        }
+
+        class ViewHolder(itemView: View) : PrefCenterViewHolder<SectionBreakItem>(itemView) {
+            private val chipView: Chip = itemView.findViewById(R.id.ua_pref_chip)
+
+            override fun bind(item: SectionBreakItem) {
+                chipView.text = item.label
             }
         }
     }
@@ -289,8 +336,7 @@ internal sealed class PrefCenterItem(val type: Int) {
             itemView: View,
             private val isChecked: (id: String) -> Boolean,
             onCheckedChange: (position: Int, isChecked: Boolean) -> Unit,
-        ) : PrefCenterViewHolder<ChannelSubscriptionItem>(itemView) {
-
+        ) : CommonViewHolder<ChannelSubscriptionItem>(itemView) {
             private val switch: SwitchMaterial = itemView.findViewById(R.id.ua_pref_widget_switch)
 
             private val checkedChangeListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->

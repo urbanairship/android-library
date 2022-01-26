@@ -10,6 +10,7 @@ import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.preferencecenter.PreferenceCenter
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
+import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.testing.OpenForTesting
 import com.urbanairship.preferencecenter.util.scanConcat
 import kotlin.coroutines.resume
@@ -200,9 +201,12 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
 @VisibleForTesting
 internal fun PreferenceCenterConfig.asPrefCenterItems(): List<PrefCenterItem> =
     sections.flatMap { section ->
-        listOf(PrefCenterItem.SectionItem(section)) + section.items.map { item ->
-            when (item) {
-                is Item.ChannelSubscription -> PrefCenterItem.ChannelSubscriptionItem(item)
+        when (section) {
+            is Section.SectionBreak -> listOf(PrefCenterItem.SectionBreakItem(section))
+            is Section.Common -> listOf(PrefCenterItem.SectionItem(section)) + section.items.map { item ->
+                when (item) {
+                    is Item.ChannelSubscription -> PrefCenterItem.ChannelSubscriptionItem(item)
+                }
             }
         }
     }

@@ -187,8 +187,21 @@ sealed class Section(private val type: String) {
         override fun toJson(): JsonMap = jsonMapBuilder().build()
     }
 
+    /**
+     * Labeled section break.
+     */
+    data class SectionBreak(
+        override val id: String,
+        override val display: CommonDisplay
+    ) : Section(TYPE_SECTION_BREAK) {
+        override val items: List<Item> = emptyList()
+
+        override fun toJson(): JsonMap = jsonMapBuilder().build()
+    }
+
     companion object {
         private const val TYPE_SECTION = "section"
+        private const val TYPE_SECTION_BREAK = "labeled_section_break"
 
         private const val KEY_TYPE = "type"
         private const val KEY_ID = "id"
@@ -203,13 +216,19 @@ sealed class Section(private val type: String) {
          */
         internal fun parse(json: JsonMap): Section {
             val id = json.requireField<String>(KEY_ID)
-            val items = json.opt(KEY_ITEMS).optList().map { Item.parse(it.optMap()) }
             val display = CommonDisplay.parse(json.get(KEY_DISPLAY))
 
             return when (val type = json.get(KEY_TYPE)?.string) {
-                TYPE_SECTION -> Common(
+                TYPE_SECTION -> {
+                    val items = json.opt(KEY_ITEMS).optList().map { Item.parse(it.optMap()) }
+                    return Common(
+                        id = id,
+                        display = display,
+                        items = items
+                    )
+                }
+                TYPE_SECTION_BREAK -> SectionBreak(
                     id = id,
-                    items = items,
                     display = display
                 )
                 else -> throw JsonException("Unknown Preference Center Section type: '$type'")

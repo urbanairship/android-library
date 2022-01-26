@@ -59,6 +59,8 @@ internal class PreferenceCenterFragmentTest {
         private const val ID = "pref-center-id"
         private const val TITLE = "Fake Preferences"
         private const val SUBTITLE = "Manage subscriptions"
+        private val SECTION_BREAK_1_ID = UUID.randomUUID().toString()
+        private const val SECTION_BREAK_1_LABEL = "App"
         private val SECTION_1_ID = UUID.randomUUID().toString()
         private const val SECTION_1_TITLE = "Section 1"
         private const val SECTION_1_SUBTITLE = "Section 1 Subtitle"
@@ -83,6 +85,10 @@ internal class PreferenceCenterFragmentTest {
             id = ID,
             display = CommonDisplay(TITLE, SUBTITLE),
             sections = listOf(
+                Section.SectionBreak(
+                    id = SECTION_BREAK_1_ID,
+                    display = CommonDisplay(SECTION_BREAK_1_LABEL)
+                ),
                 Section.Common(
                     id = SECTION_1_ID,
                     display = CommonDisplay(SECTION_1_TITLE, SECTION_1_SUBTITLE),
@@ -118,7 +124,8 @@ internal class PreferenceCenterFragmentTest {
             )
         )
 
-        private const val ITEM_COUNT = 7 // 1 description item + 2 section header items + 2 preferences per section
+        // 1 description item + 1 section break item + 2 section header items + 2 preferences per section
+        private const val ITEM_COUNT = 8
 
         private val STATE_CONTENT = State.Content(TITLE, SUBTITLE, CONFIG.asPrefCenterItems(), emptySet())
     }
@@ -166,14 +173,16 @@ internal class PreferenceCenterFragmentTest {
             verifyContentDisplayed(ITEM_COUNT)
             // Description item
             verifyItem(0, title = TITLE, subtitle = SUBTITLE)
+            // Section Break 1
+            verifySectionBreak(position = 1, label = SECTION_BREAK_1_LABEL)
             // Section 1
-            verifyItem(position = 1, title = SECTION_1_TITLE, subtitle = SECTION_1_SUBTITLE)
-            verifyChannelSubscriptionItem(position = 2, title = PREF_1_TITLE, subtitle = PREF_1_SUBTITLE)
-            verifyChannelSubscriptionItem(position = 3, title = PREF_2_TITLE)
+            verifyItem(position = 2, title = SECTION_1_TITLE, subtitle = SECTION_1_SUBTITLE)
+            verifyChannelSubscriptionItem(position = 3, title = PREF_1_TITLE, subtitle = PREF_1_SUBTITLE)
+            verifyChannelSubscriptionItem(position = 4, title = PREF_2_TITLE)
             // Section 2
-            verifyItem(position = 4, title = SECTION_2_TITLE, subtitle = SECTION_2_SUBTITLE)
-            verifyChannelSubscriptionItem(position = 5, title = PREF_3_TITLE)
-            verifyChannelSubscriptionItem(position = 6, title = PREF_4_TITLE)
+            verifyItem(position = 5, title = SECTION_2_TITLE, subtitle = SECTION_2_SUBTITLE)
+            verifyChannelSubscriptionItem(position = 6, title = PREF_3_TITLE)
+            verifyChannelSubscriptionItem(position = 7, title = PREF_4_TITLE)
 
             // Make sure the onDisplayListener was called
             verify(onDisplayListener).onDisplayPreferenceCenter(TITLE, SUBTITLE)
@@ -188,10 +197,10 @@ internal class PreferenceCenterFragmentTest {
             verifyContentDisplayed(ITEM_COUNT)
 
             // Verify items and toggle states
-            verifyChannelSubscriptionItem(position = 2, title = PREF_1_TITLE, subtitle = PREF_1_SUBTITLE, isChecked = true)
-            verifyChannelSubscriptionItem(position = 3, title = PREF_2_TITLE, isChecked = false)
-            verifyChannelSubscriptionItem(position = 5, title = PREF_3_TITLE, isChecked = true)
-            verifyChannelSubscriptionItem(position = 6, title = PREF_4_TITLE, isChecked = false)
+            verifyChannelSubscriptionItem(position = 3, title = PREF_1_TITLE, subtitle = PREF_1_SUBTITLE, isChecked = true)
+            verifyChannelSubscriptionItem(position = 4, title = PREF_2_TITLE, isChecked = false)
+            verifyChannelSubscriptionItem(position = 6, title = PREF_3_TITLE, isChecked = true)
+            verifyChannelSubscriptionItem(position = 7, title = PREF_4_TITLE, isChecked = false)
 
             // Make sure the ViewModel wasn't notified about checked changes during list setup
             verify(viewModel, never()).handle(any<Action.PreferenceItemChanged>())
@@ -203,10 +212,10 @@ internal class PreferenceCenterFragmentTest {
         preferenceCenter(initialState = STATE_CONTENT) {
             // Sanity check
             verifyContentDisplayed(ITEM_COUNT)
-            verifyChannelSubscriptionItem(position = 2, title = PREF_1_TITLE, subtitle = PREF_1_SUBTITLE, isChecked = false)
+            verifyChannelSubscriptionItem(position = 3, title = PREF_1_TITLE, subtitle = PREF_1_SUBTITLE, isChecked = false)
 
             // Toggle the first subscription pref item
-            toggleChannelSubscriptionItem(position = 2)
+            toggleChannelSubscriptionItem(position = 3)
             // Make sure the ViewModel was notified
             verify(viewModel).handle(argThat { action ->
                 action is Action.PreferenceItemChanged && action.item.id == PREF_1_ID && action.isEnabled
@@ -220,10 +229,10 @@ internal class PreferenceCenterFragmentTest {
         preferenceCenter(initialState = content) {
             // Sanity check
             verifyContentDisplayed(ITEM_COUNT)
-            verifyChannelSubscriptionItem(position = 2, title = PREF_1_TITLE, subtitle = PREF_1_SUBTITLE, isChecked = true)
+            verifyChannelSubscriptionItem(position = 3, title = PREF_1_TITLE, subtitle = PREF_1_SUBTITLE, isChecked = true)
 
             // Toggle the first subscription pref item
-            toggleChannelSubscriptionItem(position = 2)
+            toggleChannelSubscriptionItem(position = 3)
             // Make sure the View notified the ViewModel
             verify(viewModel, times(1)).handle(argThat { action ->
                 action is Action.PreferenceItemChanged && action.item.id == PREF_1_ID && action.isEnabled.not()
@@ -274,6 +283,7 @@ internal class PreferenceCenterRobot(
         private val ID_PREF_TITLE = R.id.ua_pref_title
         private val ID_PREF_DESCRIPTION = R.id.ua_pref_description
         private val ID_PREF_SWITCH = R.id.ua_pref_widget_switch
+        private val ID_PREF_CHIP = R.id.ua_pref_chip
     }
 
     init {
@@ -335,6 +345,21 @@ internal class PreferenceCenterRobot(
             verifyItem(position, ID_PREF_SWITCH) {
                 matches(if (isChecked) isChecked() else isNotChecked())
             }
+        }
+    }
+
+    fun verifySectionBreak(
+        position: Int,
+        label: String? = null
+    ) {
+        verifyItem(position, ID_PREF_CHIP) {
+            matches(
+                if (label != null) {
+                    allOf(withText(label), isDisplayed())
+                } else {
+                    not(isDisplayed())
+                }
+            )
         }
     }
 

@@ -198,11 +198,15 @@ private class SectionDividerDecoration(context: Context) : RecyclerView.ItemDeco
             ?: throw Resources.NotFoundException("Failed to resolve attr 'dividerHorizontal' from theme!")
     }
 
+    private val unlabeledSectionPadding = context.resources.getDimensionPixelSize(R.dimen.ua_preference_center_unlabeled_section_item_top_padding)
+
     private val dividerHeight: Int = drawable.intrinsicHeight
 
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
         if (shouldDrawDividerBelow(view, parent)) {
             outRect.bottom = dividerHeight
+        } else if (isSectionWithoutLabeledBreak(view, parent)) {
+            outRect.top = unlabeledSectionPadding
         }
     }
 
@@ -220,17 +224,35 @@ private class SectionDividerDecoration(context: Context) : RecyclerView.ItemDeco
 
     private fun shouldDrawDividerBelow(view: View, parent: RecyclerView): Boolean {
         val holder = parent.getChildViewHolder(view)
-        val isNotSectionItem = holder !is PrefCenterItem.SectionItem.ViewHolder
+        val isNotSectionItem = holder !is PrefCenterItem.SectionItem.ViewHolder &&
+            holder !is PrefCenterItem.SectionBreakItem.ViewHolder
 
         val index = parent.indexOfChild(view)
         return if (index < parent.childCount - 1) {
             val nextView = parent.getChildAt(index + 1)
             val nextHolder = parent.getChildViewHolder(nextView)
-            val isNextSectionItem = nextHolder is PrefCenterItem.SectionItem.ViewHolder
+            val isNextSectionItem = nextHolder is PrefCenterItem.SectionItem.ViewHolder ||
+                nextHolder is PrefCenterItem.SectionBreakItem.ViewHolder
 
             isNotSectionItem && isNextSectionItem
         } else {
             false
+        }
+    }
+
+    private fun isSectionWithoutLabeledBreak(view: View, parent: RecyclerView): Boolean {
+        val holder = parent.getChildViewHolder(view)
+        val isSectionItem = holder is PrefCenterItem.SectionItem.ViewHolder
+
+        val index = parent.indexOfChild(view)
+        return if (index < parent.childCount && index > 0) {
+            val prevView = parent.getChildAt(index - 1)
+            val prevHolder = parent.getChildViewHolder(prevView)
+            val isPrevSectionBreak = prevHolder is PrefCenterItem.SectionBreakItem.ViewHolder
+
+            isSectionItem && !isPrevSectionBreak
+        } else {
+            isSectionItem
         }
     }
 }
