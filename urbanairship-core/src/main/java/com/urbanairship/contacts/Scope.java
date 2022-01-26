@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.contacts;
 
 import com.urbanairship.json.JsonException;

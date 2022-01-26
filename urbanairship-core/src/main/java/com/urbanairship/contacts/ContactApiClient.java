@@ -20,15 +20,20 @@ import com.urbanairship.http.ResponseParser;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.Checks;
 import com.urbanairship.util.PlatformUtils;
 import com.urbanairship.util.UAHttpStatusUtil;
+import com.urbanairship.util.UAStringUtil;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 /**
@@ -45,6 +50,13 @@ class ContactApiClient {
     private static final String UPDATE_PATH = "api/contacts/";
     private static final String EMAIL_PATH = "api/channels/email/";
     private static final String SMS_PATH = "api/channels/sms/";
+
+    private static final String SUBSCRIPTION_LIST_PATH = "api/subscription_lists/contacts/";
+    private static final String SUBSCRIPTION_LISTS_KEY = "subscription_lists";
+    private static final String SCOPE_KEY = "scope";
+    private static final String LIST_IDS_KEY = "list_ids";
+
+
     private static final String UNINSTALL_PATH = "uninstall";
     private static final String OPTOUT_PATH = "opt-out";
 
@@ -58,8 +70,7 @@ class ContactApiClient {
     private static final String IS_ANONYMOUS = "is_anonymous";
     private static final String TAGS = "tags";
     private static final String ATTRIBUTES = "attributes";
-    private static final String TAG_WARNINGS= "tag_warnings";
-    private static final String ATTRIBUTE_WARNINGS= "attribute_warnings";
+    private static final String SUBSCRIPTION_LISTS = "subscription_lists";
     private static final String TIMEZONE = "timezone";
     private static final String ADDRESS = "address";
     private static final String EMAIL_ADDRESS = "email_address";
@@ -106,16 +117,14 @@ class ContactApiClient {
                 .setRequestBody(payload)
                 .setAirshipJsonAcceptsHeader()
                 .setAirshipUserAgent(runtimeConfig)
-                .execute(new ResponseParser<ContactIdentity>() {
-                    @Override
-                    public ContactIdentity parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
-                        if (UAHttpStatusUtil.inSuccessRange(status)) {
-                            String contactId = JsonValue.parseString(responseBody).optMap().opt(CONTACT_ID).getString();
-                            boolean isAnonymous = JsonValue.parseString(responseBody).optMap().opt(IS_ANONYMOUS).getBoolean();
-                            return new ContactIdentity(contactId, isAnonymous, null);
-                        }
-                        return null;
+                .execute((status, headers, responseBody) -> {
+                    if (UAHttpStatusUtil.inSuccessRange(status)) {
+                        String contactId = JsonValue.parseString(responseBody).optMap().opt(CONTACT_ID).getString();
+                        Checks.checkNotNull(contactId, "Missing contact ID");
+                        boolean isAnonymous = JsonValue.parseString(responseBody).optMap().opt(IS_ANONYMOUS).getBoolean(false);
+                        return new ContactIdentity(contactId, isAnonymous, null);
                     }
+                    return null;
                 });
     }
 
@@ -145,15 +154,12 @@ class ContactApiClient {
                 .setRequestBody(payload)
                 .setAirshipJsonAcceptsHeader()
                 .setAirshipUserAgent(runtimeConfig)
-                .execute(new ResponseParser<ContactIdentity>() {
-                    @Override
-                    public ContactIdentity parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
-                        if (UAHttpStatusUtil.inSuccessRange(status)) {
-                            String contactId = JsonValue.parseString(responseBody).optMap().opt(CONTACT_ID).getString();
-                            return new ContactIdentity(contactId, false, namedUserId);
-                        }
-                        return null;
+                .execute((status, headers, responseBody) -> {
+                    if (UAHttpStatusUtil.inSuccessRange(status)) {
+                        String contactId1 = JsonValue.parseString(responseBody).optMap().opt(CONTACT_ID).getString();
+                        return new ContactIdentity(contactId1, false, namedUserId);
                     }
+                    return null;
                 });
     }
 
@@ -348,20 +354,20 @@ class ContactApiClient {
                 .setRequestBody(payload)
                 .setAirshipJsonAcceptsHeader()
                 .setAirshipUserAgent(runtimeConfig)
-                .execute(new ResponseParser<ContactIdentity>() {
-                    @Override
-                    public ContactIdentity parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
-                        if (UAHttpStatusUtil.inSuccessRange(status)) {
-                            String contactId = JsonValue.parseString(responseBody).optMap().opt(CONTACT_ID).getString();
-                            return new ContactIdentity(contactId, true, null);
-                        }
-                        return null;
+                .execute((status, headers, responseBody) -> {
+                    if (UAHttpStatusUtil.inSuccessRange(status)) {
+                        String contactId = JsonValue.parseString(responseBody).optMap().opt(CONTACT_ID).getString();
+                        return new ContactIdentity(contactId, true, null);
                     }
+                    return null;
                 });
     }
 
     @NonNull
-    Response<Void> update(@NonNull String identifier, @Nullable List<TagGroupsMutation> tagGroupMutations, @Nullable final List<AttributeMutation> attributeMutations) throws RequestException {
+    Response<Void> update(@NonNull String identifier,
+                          @Nullable List<TagGroupsMutation> tagGroupMutations,
+                          @Nullable List<AttributeMutation> attributeMutations,
+                          @Nullable List<ScopedSubscriptionListMutation> subscriptionListMutations) throws RequestException {
         Uri url = runtimeConfig.getUrlConfig()
                 .deviceUrl()
                 .appendEncodedPath(UPDATE_PATH + identifier)
@@ -383,7 +389,11 @@ class ContactApiClient {
         }
 
         if (attributeMutations != null && !attributeMutations.isEmpty()) {
-            builder.put(ATTRIBUTES, JsonValue.wrapOpt(AttributeMutation.collapseMutations(attributeMutations)));
+            builder.putOpt(ATTRIBUTES, AttributeMutation.collapseMutations(attributeMutations));
+        }
+
+        if (subscriptionListMutations != null && !subscriptionListMutations.isEmpty()) {
+            builder.putOpt(SUBSCRIPTION_LISTS, ScopedSubscriptionListMutation.collapseMutations(subscriptionListMutations));
         }
 
         return requestFactory.createRequest()
@@ -392,24 +402,55 @@ class ContactApiClient {
                 .setRequestBody(builder.build())
                 .setAirshipJsonAcceptsHeader()
                 .setAirshipUserAgent(runtimeConfig)
-                .execute(new ResponseParser<Void>() {
-                    @Override
-                    public Void parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
-                        if (UAHttpStatusUtil.inSuccessRange(status)) {
-                            String tagWarnings = JsonValue.parseString(responseBody).optMap().opt(TAG_WARNINGS).getString();
-                            String attributeWarnings = JsonValue.parseString(responseBody).optMap().opt(ATTRIBUTE_WARNINGS).getString();
-
-                            if (tagWarnings != null) {
-                                Logger.debug("ContactApiClient - " + tagWarnings);
-                            }
-
-                            if (attributeWarnings != null) {
-                                Logger.debug("ContactApiClient - " + attributeWarnings);
-                            }
-                        }
-                        return null;
-                    }
+                .execute((status, headers, responseBody) -> {
+                    Logger.verbose("Update contact response status: %s body: %s", status, responseBody);
+                    return null;
                 });
+    }
+
+    /**
+     * Fetches the current set of subscriptions for the contact.
+     *
+     * @return The response.
+     * @throws RequestException
+     */
+    @NonNull
+    Response<Map<String, Set<Scope>>> getSubscriptionLists(@NonNull String identifier) throws RequestException {
+        Uri uri = runtimeConfig.getUrlConfig()
+                               .deviceUrl()
+                               .appendEncodedPath(SUBSCRIPTION_LIST_PATH + identifier)
+                               .build();
+
+        return requestFactory.createRequest()
+                             .setOperation("GET", uri)
+                             .setAirshipUserAgent(runtimeConfig)
+                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
+                             .setAirshipJsonAcceptsHeader()
+                             .execute((ResponseParser<Map<String, Set<Scope>>>) (status, headers, responseBody) -> {
+                                 Logger.verbose("Fetch contact subscription list status: %s body: %s", status, responseBody);
+
+                                 if (!UAHttpStatusUtil.inSuccessRange(status)) {
+                                     return null;
+                                 }
+
+
+                                 JsonValue json = JsonValue.parseString(responseBody);
+                                 Map<String, Set<Scope>> subscriptionLists = new HashMap<>();
+
+                                 for (JsonValue entryJson : json.requireMap().opt(SUBSCRIPTION_LISTS_KEY).optList()) {
+                                     Scope scope = Scope.fromJson(entryJson.optMap().opt(SCOPE_KEY));
+                                     for (JsonValue listIdJson : entryJson.optMap().opt(LIST_IDS_KEY).optList()) {
+                                         String listId = listIdJson.requireString();
+                                         Set<Scope> scopes = subscriptionLists.get(listId);
+                                         if (scopes == null) {
+                                             scopes = new HashSet<>();
+                                             subscriptionLists.put(listId, scopes);
+                                         }
+                                         scopes.add(scope);
+                                     }
+                                 }
+                                 return subscriptionLists;
+                             });
     }
 
 }

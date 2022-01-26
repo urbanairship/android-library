@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 import com.urbanairship.channel.AttributeMutation;
+import com.urbanairship.channel.SubscriptionListMutation;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -50,9 +51,27 @@ class ContactOperation implements JsonSerializable {
     }
 
     @NonNull
-    static ContactOperation update(@Nullable List<TagGroupsMutation> tagGroupMutations, @Nullable List<AttributeMutation> attributeMutations) {
-        return new ContactOperation(OPERATION_UPDATE, new UpdatePayload(tagGroupMutations, attributeMutations));
+    static ContactOperation update(@Nullable List<TagGroupsMutation> tagGroupMutations,
+                                   @Nullable List<AttributeMutation> attributeMutations,
+                                   @Nullable List<ScopedSubscriptionListMutation> subscriptionMutations) {
+        return new ContactOperation(OPERATION_UPDATE, new UpdatePayload(tagGroupMutations, attributeMutations, subscriptionMutations));
     }
+
+    @NonNull
+    static ContactOperation updateTags(@Nullable List<TagGroupsMutation> tagGroupMutations) {
+        return update(tagGroupMutations, null, null);
+    }
+
+    @NonNull
+    static ContactOperation updateAttributes(@Nullable List<AttributeMutation> attributeMutations) {
+        return update(null, attributeMutations, null);
+    }
+
+    @NonNull
+    static ContactOperation updateSubscriptionLists(@Nullable List<ScopedSubscriptionListMutation> subscriptionListMutations) {
+        return update(null, null, subscriptionListMutations);
+    }
+
 
     @NonNull
     static ContactOperation fromJson(JsonValue value) throws JsonException {
@@ -159,9 +178,7 @@ class ContactOperation implements JsonSerializable {
                     "identifier='" + identifier + '\'' +
                     '}';
         }
-
     }
-
 
     /**
      * Contact operation payload to update tags & attributes.
@@ -169,13 +186,18 @@ class ContactOperation implements JsonSerializable {
     static class UpdatePayload implements Payload {
         private static final String TAG_GROUP_MUTATIONS_KEY = "TAG_GROUP_MUTATIONS_KEY";
         private static final String ATTRIBUTE_MUTATIONS_KEY = "ATTRIBUTE_MUTATIONS_KEY";
+        private static final String SUBSCRIPTION_LISTS_MUTATIONS_KEY = "SUBSCRIPTION_LISTS_MUTATIONS_KEY";
 
         private final List<TagGroupsMutation> tagGroupMutations;
         private final List<AttributeMutation> attributeMutations;
+        private final List<ScopedSubscriptionListMutation> subscriptionListMutations;
 
-        public UpdatePayload(@Nullable List<TagGroupsMutation> tagGroupMutations, @Nullable List<AttributeMutation> attributeMutations) {
+        public UpdatePayload(@Nullable List<TagGroupsMutation> tagGroupMutations,
+                             @Nullable List<AttributeMutation> attributeMutations,
+                             @Nullable List<ScopedSubscriptionListMutation> subscriptionListMutations) {
             this.tagGroupMutations = tagGroupMutations == null ? Collections.<TagGroupsMutation>emptyList() : tagGroupMutations;
             this.attributeMutations = attributeMutations == null ? Collections.<AttributeMutation>emptyList() : attributeMutations;
+            this.subscriptionListMutations = subscriptionListMutations == null ? Collections.emptyList() : subscriptionListMutations;
         }
 
         @NonNull
@@ -188,15 +210,21 @@ class ContactOperation implements JsonSerializable {
             return attributeMutations;
         }
 
+
+        public List<ScopedSubscriptionListMutation> getSubscriptionListMutations() {
+            return subscriptionListMutations;
+        }
+
         @Nullable
         public static UpdatePayload fromJson(@NonNull JsonValue value) {
             if (value.isNull()) {
                 return null;
             }
             JsonMap map = value.optMap();
-            JsonList tagGroupMutations = map.opt(TAG_GROUP_MUTATIONS_KEY).optList();
-            JsonList attributeMutations = map.opt(ATTRIBUTE_MUTATIONS_KEY).optList();
-            return new UpdatePayload(TagGroupsMutation.fromJsonList(tagGroupMutations), AttributeMutation.fromJsonList(attributeMutations));
+            List<TagGroupsMutation> tagGroupMutations = TagGroupsMutation.fromJsonList(map.opt(TAG_GROUP_MUTATIONS_KEY).optList());
+            List<AttributeMutation> attributeMutations = AttributeMutation.fromJsonList(map.opt(ATTRIBUTE_MUTATIONS_KEY).optList());
+            List<ScopedSubscriptionListMutation> subscriptionListMutations = ScopedSubscriptionListMutation.fromJsonList(map.opt(SUBSCRIPTION_LISTS_MUTATIONS_KEY).optList());
+            return new UpdatePayload(tagGroupMutations, attributeMutations, subscriptionListMutations);
         }
 
         @NonNull
@@ -205,6 +233,7 @@ class ContactOperation implements JsonSerializable {
             return JsonMap.newBuilder()
                           .put(TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(tagGroupMutations))
                           .put(ATTRIBUTE_MUTATIONS_KEY, JsonValue.wrapOpt(attributeMutations))
+                          .put(SUBSCRIPTION_LISTS_MUTATIONS_KEY, JsonValue.wrapOpt(subscriptionListMutations))
                           .build().toJsonValue();
         }
 
@@ -213,9 +242,9 @@ class ContactOperation implements JsonSerializable {
             return "UpdatePayload{" +
                     "tagGroupMutations=" + tagGroupMutations +
                     ", attributeMutations=" + attributeMutations +
+                    ", subscriptionListMutations=" + subscriptionListMutations +
                     '}';
         }
-
     }
 
 }

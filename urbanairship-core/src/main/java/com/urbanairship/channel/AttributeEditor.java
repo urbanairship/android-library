@@ -204,7 +204,7 @@ abstract public class AttributeEditor {
             }
         }
 
-        onApply(mutations);
+        onApply(AttributeMutation.collapseMutations(mutations));
     }
 
     /**

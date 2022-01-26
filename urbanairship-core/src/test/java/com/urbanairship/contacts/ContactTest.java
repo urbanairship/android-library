@@ -6,9 +6,10 @@ import android.content.Context;
 
 import com.google.common.collect.Lists;
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.PreferenceData;
+import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.ResultCallback;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
@@ -27,6 +28,7 @@ import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.CachedValue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,11 +38,16 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
+import static android.os.Looper.getMainLooper;
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -50,10 +57,12 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
 
 public class ContactTest extends BaseTestCase {
 
@@ -69,6 +78,7 @@ public class ContactTest extends BaseTestCase {
     private final ContactChangeListener changeListener = mock(ContactChangeListener.class);
     private final TagGroupListener tagGroupListener = mock(TagGroupListener.class);
     private final AttributeListener attributeListener = mock(AttributeListener.class);
+    private final CachedValue<Map<String, Set<Scope>>> subscriptionCache = new CachedValue<>(testClock);
 
     private final JobInfo updateJob = JobInfo.newBuilder().setAction(Contact.ACTION_UPDATE_CONTACT).build();
 
@@ -82,7 +92,7 @@ public class ContactTest extends BaseTestCase {
         privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
 
         contact = new Contact(context, dataStore, mockDispatcher, privacyManager, mockChannel,
-                mockContactApiClient, testActivityMonitor, testClock);
+                mockContactApiClient, testActivityMonitor, testClock, subscriptionCache);
         contact.addContactChangeListener(changeListener);
         contact.addTagGroupListener(tagGroupListener);
         contact.addAttributeListener(attributeListener);
@@ -353,7 +363,7 @@ public class ContactTest extends BaseTestCase {
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         Response<Void> updateResponse = new Response.Builder<Void>(200).build();
-        when(mockContactApiClient.update(fakeContactId, tagGroupsMutations, Collections.<AttributeMutation>emptyList())).thenReturn(updateResponse);
+        when(mockContactApiClient.update(fakeContactId, tagGroupsMutations, Collections.emptyList(), Collections.emptyList())).thenReturn(updateResponse);
 
         tagGroupsEditor.apply();
 
@@ -361,8 +371,34 @@ public class ContactTest extends BaseTestCase {
         verify(mockContactApiClient).resolve(fakeChannelId);
 
         assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
-        verify(mockContactApiClient).update(fakeContactId, tagGroupsMutations, Collections.<AttributeMutation>emptyList());
+        verify(mockContactApiClient).update(fakeContactId, tagGroupsMutations, Collections.emptyList(), Collections.emptyList());
     }
+
+    @Test
+    public void testEditSubscriptionLists() throws RequestException {
+        contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply();
+        List<ScopedSubscriptionListMutation> pending = contact.getPendingSubscriptionListUpdates();
+        assertEquals(1, pending.size());
+        assertEquals(ScopedSubscriptionListMutation.newSubscribeMutation("some list", Scope.APP, testClock.currentTimeMillis), pending.get(0));
+
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
+        // Set up a 200 response
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        Response<Void> updateResponse = new Response.Builder<Void>(200).build();
+        when(mockContactApiClient.update(fakeContactId, Collections.emptyList(), Collections.emptyList(), pending)).thenReturn(updateResponse);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).resolve(fakeChannelId);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).update(fakeContactId, Collections.emptyList(), Collections.emptyList(), pending);
+
+        assertTrue(contact.getPendingSubscriptionListUpdates().isEmpty());
+    }
+
 
     @Test
     public void testEditAttributesSucceed() throws RequestException {
@@ -380,7 +416,7 @@ public class ContactTest extends BaseTestCase {
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         Response<Void> updateResponse = new Response.Builder<Void>(200).build();
-        when(mockContactApiClient.update(fakeContactId, Collections.<TagGroupsMutation>emptyList(), attributeMutations)).thenReturn(updateResponse);
+        when(mockContactApiClient.update(fakeContactId, Collections.emptyList(), attributeMutations, Collections.emptyList())).thenReturn(updateResponse);
 
         attributeEditor.apply();
 
@@ -388,22 +424,29 @@ public class ContactTest extends BaseTestCase {
         verify(mockContactApiClient).resolve(fakeChannelId);
 
         assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
-        verify(mockContactApiClient).update(fakeContactId, Collections.<TagGroupsMutation>emptyList(), attributeMutations);
+        verify(mockContactApiClient).update(fakeContactId, Collections.emptyList(), attributeMutations, Collections.emptyList());
     }
 
     @Test
     public void onConflictIdentify() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
-        List<TagGroupsMutation> tagGroupsMutations = new ArrayList<>();
-        tagGroupsMutations.add(TagGroupsMutation.newSetTagsMutation("group", new HashSet<>(Lists.newArrayList("tag"))));
-        tagGroupsMutations = TagGroupsMutation.collapseMutations(tagGroupsMutations);
+        contact.editAttributes()
+               .setAttribute("one_attribute", "attribute_value")
+               .apply();
 
-        List<AttributeMutation> attributeMutations = new ArrayList<>();
-        attributeMutations.add(AttributeMutation.newSetAttributeMutation("one_attribute", JsonValue.wrap("attribute_value"), testClock.currentTimeMillis()));
-        attributeMutations = AttributeMutation.collapseMutations(attributeMutations);
+        contact.editTagGroups()
+               .setTag("group", "tag")
+               .apply();
 
-        ContactData contactData = new ContactData(Collections.singletonMap("one_attribute", JsonValue.wrap("attribute_value")), Collections.<String, Set<String>>singletonMap("group", new HashSet<>(Lists.newArrayList("tag"))));
+        contact.editSubscriptionLists()
+               .subscribe("some list", Scope.SMS)
+               .apply();
+
+        List<TagGroupsMutation> tagGroupsMutations = contact.getPendingTagUpdates();
+        List<AttributeMutation> attributeMutations = contact.getPendingAttributeUpdates();
+        List<ScopedSubscriptionListMutation> subscriptionListMutations = contact.getPendingSubscriptionListUpdates();
+
         ContactConflictListener conflictListener = mock(ContactConflictListener.class);
         contact.setContactConflictListener(conflictListener);
 
@@ -412,15 +455,10 @@ public class ContactTest extends BaseTestCase {
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         Response<Void> updateResponse = new Response.Builder<Void>(200).build();
-        when(mockContactApiClient.update("some_contact_id", tagGroupsMutations, attributeMutations)).thenReturn(updateResponse);
+        when(mockContactApiClient.update("some_contact_id", tagGroupsMutations, attributeMutations, subscriptionListMutations)).thenReturn(updateResponse);
 
         Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity("some_other_contact_id", false, fakeNamedUserId)).build();
         when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, "some_contact_id")).thenReturn(response);
-
-        TagGroupsEditor tagGroupsEditor = contact.editTagGroups().setTag("group", "tag");
-        tagGroupsEditor.apply();
-        AttributeEditor attributeEditor = contact.editAttributes().setAttribute("one_attribute", "attribute_value");
-        attributeEditor.apply();
 
         contact.identify(fakeNamedUserId);
 
@@ -430,12 +468,18 @@ public class ContactTest extends BaseTestCase {
         assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
 
         verify(mockContactApiClient).resolve(fakeChannelId);
-        verify(mockContactApiClient).update("some_contact_id", tagGroupsMutations, attributeMutations);
+        verify(mockContactApiClient).update("some_contact_id", tagGroupsMutations, attributeMutations, subscriptionListMutations);
         verify(mockContactApiClient).identify(fakeNamedUserId, fakeChannelId, "some_contact_id");
 
         ArgumentCaptor<ContactData> argument = ArgumentCaptor.forClass(ContactData.class);
         verify(conflictListener).onConflict(argument.capture(), eq(fakeNamedUserId));
-        assertEquals(contactData, argument.getValue());
+
+        Map<String, JsonValue> expectedAttributes = Collections.singletonMap("one_attribute", JsonValue.wrap("attribute_value"));
+        Map<String, Set<String>> expectedTags = Collections.singletonMap("group", Collections.singleton("tag"));
+        Map<String, Set<Scope>> expectedSubscriptionLists = Collections.singletonMap("some list", Collections.singleton(Scope.SMS));
+
+        ContactData expectedContactData = new ContactData(expectedAttributes, expectedTags, expectedSubscriptionLists);
+        assertEquals(expectedContactData, argument.getValue());
     }
 
     @Test
@@ -459,7 +503,7 @@ public class ContactTest extends BaseTestCase {
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         Response<Void> updateResponse = new Response.Builder<Void>(200).build();
-        when(mockContactApiClient.update(fakeContactId, expectedTags,expectedAttributes)).thenReturn(updateResponse);
+        when(mockContactApiClient.update(fakeContactId, expectedTags, expectedAttributes, Collections.emptyList())).thenReturn(updateResponse);
 
         // Resolve
         assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
@@ -467,7 +511,7 @@ public class ContactTest extends BaseTestCase {
 
         // Update
         assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
-        verify(mockContactApiClient).update(anyString(), ArgumentMatchers.<TagGroupsMutation>anyList(), ArgumentMatchers.<AttributeMutation>anyList());
+        verify(mockContactApiClient).update(anyString(), ArgumentMatchers.anyList(), ArgumentMatchers.anyList(), ArgumentMatchers.anyList());
 
         verify(tagGroupListener).onTagGroupsMutationUploaded(expectedTags);
         verify(attributeListener).onAttributeMutationsUploaded(expectedAttributes);
@@ -513,6 +557,27 @@ public class ContactTest extends BaseTestCase {
         assertEquals(expected, contact.getPendingAttributeUpdates());
     }
 
+    @Test
+    public void testGetPendingSubscriptionLists() {
+        testClock.currentTimeMillis = 100;
+
+        contact.editSubscriptionLists()
+               .subscribe("cool", Scope.SMS)
+               .unsubscribe("cool", Scope.APP)
+               .apply();
+
+        contact.editSubscriptionLists()
+               .subscribe("something", Scope.EMAIL)
+               .apply();
+
+        List<ScopedSubscriptionListMutation> expected = Arrays.asList(
+                ScopedSubscriptionListMutation.newSubscribeMutation("cool", Scope.SMS, 100L),
+                ScopedSubscriptionListMutation.newUnsubscribeMutation("cool", Scope.APP, 100L),
+                ScopedSubscriptionListMutation.newSubscribeMutation("something", Scope.EMAIL, 100L)
+        );
+
+        assertEquals(expected, contact.getPendingSubscriptionListUpdates());
+    }
 
     @Test
     public void testMigrate() {
@@ -595,4 +660,183 @@ public class ContactTest extends BaseTestCase {
         assertFalse(dataStore.isSet(Contact.LEGACY_ATTRIBUTE_MUTATION_STORE_KEY));
     }
 
+    @Test
+    public void testGetSubscriptionListsFromCache() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        // Resolve contact
+        contact.resolve();
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+
+        Map<String, Set<Scope>> subscriptions = new HashMap<String, Set<Scope>>() {{
+            put("foo", Collections.singleton(Scope.APP));
+            put("bar", Collections.singleton(Scope.SMS));
+        }};
+
+        assertNull(subscriptionCache.get());
+
+        subscriptionCache.set(subscriptions, 100);
+
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+
+        // Result should be available immediately when returning from the cache.
+        assertEquals(subscriptions, result.getResult());
+        verify(mockContactApiClient, never()).getSubscriptionLists(anyString());
+    }
+
+    @Test
+    public void testGetSubscriptionListsFromNetworkIfCacheExpired() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        // Resolve contact
+        contact.resolve();
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+
+        Map<String, Set<Scope>> cachedSubscriptions = new HashMap<String, Set<Scope>>() {{
+            put("foo", Collections.singleton(Scope.APP));
+            put("bar", Collections.singleton(Scope.SMS));
+        }};
+
+        Map<String, Set<Scope>> networkSubscriptions = new HashMap<String, Set<Scope>>() {{
+            put("foo", Collections.singleton(Scope.SMS));
+            put("buzz", Collections.singleton(Scope.SMS));
+        }};
+
+        when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(200)
+                .setResult(networkSubscriptions)
+                .build()
+        );
+
+        // Prime the cache
+        testClock.currentTimeMillis = 100;
+        subscriptionCache.set(cachedSubscriptions, 10);
+
+        // Advance the time past the subscription cache lifetime
+        testClock.currentTimeMillis += 10;
+        assertNull(subscriptionCache.get());
+
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+        result.addResultCallback((ResultCallback<Map<String, Set<Scope>>>) result1 -> {
+            assertEquals(networkSubscriptions, result1);
+
+            // Verify that the cache was updated
+            assertEquals(networkSubscriptions, subscriptionCache.get());
+        });
+
+        shadowOf(getMainLooper()).idle();
+
+        verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
+    }
+
+    @Test
+    public void testGetSubscriptionListsFromNetworkIfCacheEmpty() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        // Resolve contact
+        contact.resolve();
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+
+        Map<String, Set<Scope>> networkSubscriptions = new HashMap<String, Set<Scope>>() {{
+            put("foo", Collections.singleton(Scope.SMS));
+            put("buzz", Collections.singleton(Scope.SMS));
+        }};
+
+        when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(200)
+                .setResult(networkSubscriptions)
+                .build()
+        );
+
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+        result.addResultCallback((ResultCallback<Map<String, Set<Scope>>>) result1 -> {
+            assertEquals(networkSubscriptions, result1);
+
+            // Verify that the cache was updated
+            assertEquals(networkSubscriptions, subscriptionCache.get());
+        });
+
+        shadowOf(getMainLooper()).idle();
+
+        verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
+    }
+
+    @Test
+    public void testGetSubscriptionListsIncludesPending() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        // Resolve contact
+        contact.resolve();
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+
+        contact.editSubscriptionLists()
+               .subscribe("fizz", Scope.SMS)
+               .unsubscribe("bar", Scope.APP)
+               .apply();
+
+        Map<String, Set<Scope>> networkSubscriptions = new HashMap<String, Set<Scope>>() {{
+            put("foo", Collections.singleton(Scope.SMS));
+            put("bar", Collections.singleton(Scope.APP));
+        }};
+
+        Map<String, Set<Scope>> expectedSubscriptions = new HashMap<String, Set<Scope>>() {{
+            put("foo", Collections.singleton(Scope.SMS));
+            put("fizz", Collections.singleton(Scope.SMS));
+        }};
+
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+        result.addResultCallback((ResultCallback<Map<String, Set<Scope>>>) result1 -> {
+            assertEquals(expectedSubscriptions, result1);
+
+            // Verify that the cache was updated
+            assertEquals(networkSubscriptions, subscriptionCache.get());
+        });
+
+        shadowOf(getMainLooper()).idle();
+
+        verify(mockContactApiClient).getSubscriptionLists(fakeContactId);;
+    }
+
+    @Test
+    public void testGetSubscriptionNoContact() throws RequestException, ExecutionException, InterruptedException {
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+        assertNull(result.get());
+        verify(mockContactApiClient, never()).getSubscriptionLists(anyString());
+    }
+
+    @Test
+    public void testGetSubscriptionErrorResult() throws RequestException, ExecutionException, InterruptedException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        // Resolve contact
+        contact.resolve();
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+
+        Map<String, Set<Scope>> networkSubscriptions = new HashMap<String, Set<Scope>>() {{
+            put("foo", Collections.singleton(Scope.SMS));
+            put("buzz", Collections.singleton(Scope.SMS));
+        }};
+
+        when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(400)
+                .build()
+        );
+
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+        result.addResultCallback((ResultCallback<Map<String, Set<Scope>>>) result1 -> {
+            assertNull(result1);
+            assertNull(subscriptionCache.get());
+        });
+
+        shadowOf(getMainLooper()).idle();
+
+        verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
+    }
 }

@@ -3,6 +3,7 @@
 package com.urbanairship.contacts;
 
 import com.urbanairship.Logger;
+import com.urbanairship.channel.SubscriptionListMutation;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -159,6 +160,33 @@ public class ScopedSubscriptionListMutation implements JsonSerializable {
                 '}';
     }
 
+    /**
+     * Collapses a collection of mutations into a single mutation payload.
+     *
+     * @param mutations a list of subscription list mutations to collapse.
+     * @return A collapsed {@code SubscriptionListMutation} object.
+     */
+    public static List<ScopedSubscriptionListMutation> collapseMutations(List<ScopedSubscriptionListMutation> mutations) {
+        List<ScopedSubscriptionListMutation> result = new ArrayList<>();
+
+        // Reverse the mutations payloads
+        List<ScopedSubscriptionListMutation> reversed = new ArrayList<>(mutations);
+        Collections.reverse(reversed);
+
+        Set<String> scopedListIds = new HashSet<>();
+
+        for (ScopedSubscriptionListMutation mutation : reversed) {
+            String key = mutation.getScope() + ":" + mutation.getListId();
+
+            if (!scopedListIds.contains(key)) {
+                result.add(0, mutation);
+                scopedListIds.add(key);
+            }
+        }
+
+        return result;
+    }
+
     public void apply(Map<String, Set<Scope>> subscriptionLists) {
         Set<Scope> scopes = subscriptionLists.get(listId);
 
@@ -181,5 +209,4 @@ public class ScopedSubscriptionListMutation implements JsonSerializable {
             subscriptionLists.remove(listId);
         }
     }
-
 }

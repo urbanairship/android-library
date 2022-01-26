@@ -20,17 +20,21 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.lang.reflect.Array;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -330,12 +334,17 @@ public class ContactApiClientTest extends BaseTestCase {
         attributeMutations.add(AttributeMutation.newSetAttributeMutation("random", JsonValue.wrapOpt("Bob"), 200));
         attributeMutations = AttributeMutation.collapseMutations(attributeMutations);
 
-        JsonMap expected = JsonMap.newBuilder()
-                .put("tags", tagsBuilder.build())
-                .put("attributes", JsonValue.wrap(attributeMutations))
-                .build();
+        List<ScopedSubscriptionListMutation> subscriptionListMutations = new ArrayList<>();
+        subscriptionListMutations.add(ScopedSubscriptionListMutation.newSubscribeMutation("name", null, 100));
+        subscriptionListMutations.add(ScopedSubscriptionListMutation.newUnsubscribeMutation("random", Scope.APP, 200));
 
-        Response<Void> response = client.update(fakeContactId, tagGroupsMutations, attributeMutations);
+        JsonMap expected = JsonMap.newBuilder()
+                                  .put("tags", tagsBuilder.build())
+                                  .put("attributes", JsonValue.wrap(attributeMutations))
+                                  .put("subscription_lists", JsonValue.wrap(subscriptionListMutations))
+                                  .build();
+
+        Response<Void> response = client.update(fakeContactId, tagGroupsMutations, attributeMutations, subscriptionListMutations);
 
         assertEquals(200, response.getStatus());
         assertEquals("POST", testRequest.getRequestMethod());
@@ -376,6 +385,86 @@ public class ContactApiClientTest extends BaseTestCase {
     @Test(expected = RequestException.class)
     public void testNullUrlUpdate() throws RequestException {
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
-        client.update(fakeContactId, null, null);
+        client.update(fakeContactId, null, null, null);
+    }
+
+    @Test
+    public void testGetSubscriptionLists() throws RequestException {
+        testRequest.responseStatus = 200;
+        testRequest.responseBody = "{\n" +
+                "   \"ok\":true,\n" +
+                "   \"subscription_lists\":[\n" +
+                "      {\n" +
+                "         \"list_ids\":[\n" +
+                "            \"example_listId-1\",\n" +
+                "            \"example_listId-3\"\n" +
+                "         ],\n" +
+                "         \"scope\":\"sms\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "         \"list_ids\":[\n" +
+                "            \"example_listId-2\",\n" +
+                "            \"example_listId-4\"\n" +
+                "         ],\n" +
+                "         \"scope\":\"app\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "         \"list_ids\":[\n" +
+                "            \"example_listId-2\"\n" +
+                "         ],\n" +
+                "         \"scope\":\"web\"\n" +
+                "      }\n" +
+                "   ]\n" +
+                "}";
+
+        Response<Map<String, Set<Scope>>> response = client.getSubscriptionLists("identifier");
+
+        assertEquals(testRequest.responseBody, response.getResponseBody());
+        assertEquals("https://example.com/api/subscription_lists/contacts/identifier", testRequest.getUrl().toString());
+        assertEquals("GET", testRequest.getRequestMethod());
+        assertEquals(200, response.getStatus());
+
+        Map<String, Set<Scope>> expected = new HashMap<>();
+        expected.put("example_listId-1", Collections.singleton(Scope.SMS));
+        expected.put("example_listId-2", new HashSet<>(Arrays.asList(Scope.APP, Scope.WEB)));
+        expected.put("example_listId-3", Collections.singleton(Scope.SMS));
+        expected.put("example_listId-4", Collections.singleton(Scope.APP));
+        assertEquals(expected, response.getResult());
+    }
+
+    @Test
+    public void testGetSubscriptionListsEmptyResponse() throws RequestException {
+        testRequest.responseStatus = 200;
+        testRequest.responseBody = "{\n" +
+                "   \"ok\":true,\n" +
+                "   \"subscription_lists\": []\n" +
+                "}";
+
+        Response<Map<String, Set<Scope>>> response = client.getSubscriptionLists("identifier");
+
+        assertEquals(testRequest.responseBody, response.getResponseBody());
+        assertEquals("https://example.com/api/subscription_lists/contacts/identifier", testRequest.getUrl().toString());
+        assertEquals("GET", testRequest.getRequestMethod());
+        assertEquals(200, response.getStatus());
+        assertTrue(response.getResult().isEmpty());
+    }
+
+
+    @Test(expected = RequestException.class)
+    public void testGetSubscriptionFailure() throws RequestException {
+        testRequest.responseStatus = 200;
+        testRequest.responseBody = "what";
+        client.getSubscriptionLists("identifier");
+    }
+
+    @Test
+    public void testGetSubscriptionInvalidBody() throws RequestException {
+        testRequest.responseStatus = 400;
+        Response<Map<String, Set<Scope>>> response = client.getSubscriptionLists("identifier");
+        assertEquals(testRequest.responseBody, response.getResponseBody());
+        assertEquals("https://example.com/api/subscription_lists/contacts/identifier", testRequest.getUrl().toString());
+        assertEquals("GET", testRequest.getRequestMethod());
+        assertEquals(400, response.getStatus());
+        assertNull(response.getResult());
     }
 }

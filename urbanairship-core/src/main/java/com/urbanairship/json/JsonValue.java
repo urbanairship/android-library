@@ -82,6 +82,48 @@ public class JsonValue implements Parcelable, JsonSerializable {
     }
 
     /**
+     * Requires the value to be a String or a JsonException will be thrown.
+     * @return The value as a string.
+     * @throws JsonException
+     */
+    @NonNull
+    public String requireString() throws JsonException {
+        String value = getString();
+        if (value == null) {
+            throw new JsonException("Expected string: " + this);
+        }
+        return value;
+    }
+
+    /**
+     * Requires the value to be a JsonMap or a JsonException will be thrown.
+     * @return The value as a map.
+     * @throws JsonException
+     */
+    @NonNull
+    public JsonMap requireMap() throws JsonException {
+        JsonMap value = getMap();
+        if (value == null) {
+            throw new JsonException("Expected map: " + this);
+        }
+        return value;
+    }
+
+    /**
+     * Requires the value to be a JsonList or a JsonException will be thrown.
+     * @return The value as a list.
+     * @throws JsonException
+     */
+    @NonNull
+    public JsonList requireList() throws JsonException {
+        JsonList value = getList();
+        if (value == null) {
+            throw new JsonException("Expected list: " + this);
+        }
+        return value;
+    }
+
+    /**
      * Gets the contained values as a String.
      *
      * @param defaultValue The default value if the contained value is not a String.

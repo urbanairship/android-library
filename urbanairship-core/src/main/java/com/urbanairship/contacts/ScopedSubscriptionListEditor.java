@@ -3,6 +3,8 @@
 package com.urbanairship.contacts;
 
 import com.urbanairship.Logger;
+import com.urbanairship.channel.AttributeMutation;
+import com.urbanairship.channel.SubscriptionListMutation;
 import com.urbanairship.util.Clock;
 import com.urbanairship.util.UAStringUtil;
 
@@ -54,7 +56,7 @@ public abstract class ScopedSubscriptionListEditor {
     @NonNull
     public ScopedSubscriptionListEditor subscribe(Set<String> subscriptionListIds, @NonNull Scope scope) {
         for (String id : subscriptionListIds) {
-            unsubscribe(id, scope);
+            subscribe(id, scope);
         }
 
         return this;
@@ -114,7 +116,7 @@ public abstract class ScopedSubscriptionListEditor {
      * Apply the subscription list changes.
      */
     public void apply() {
-        onApply(mutations);
+        onApply(ScopedSubscriptionListMutation.collapseMutations(mutations));
     }
 
     /**

@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.channel;
 
 import com.urbanairship.Logger;
