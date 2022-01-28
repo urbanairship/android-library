@@ -9,6 +9,7 @@ import android.net.Uri;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.util.AppStoreUtils;
 import com.urbanairship.util.Checks;
 
 import androidx.annotation.NonNull;
@@ -67,26 +68,6 @@ public class RateAppAction extends Action {
     public static final String BODY_KEY = "body";
 
     /**
-     * Key to define the URI the link prompt directs to if the user chooses to rate the app.
-     */
-    static final String STORE_URI_KEY = "store_uri";
-
-    /**
-     * URL to the Google Play store.
-     */
-    private static final String MARKET_PLAY_URL = "market://details?id=";
-
-    /**
-     * HTTPS URL to the Google Play store. Used instead of the market URl if the play store is not available.
-     */
-    private static final String HTTPS_PLAY_URL = "https://play.google.com/store/apps/details?id=";
-
-    /**
-     * URL to the Amazon store.
-     */
-    private static final String AMAZON_URL = "amzn://apps/android?p=";
-
-    /**
      * Intent action for linking directly to store review page or displaying a rating link prompt
      * with the option of opening the review page link.
      */
@@ -96,13 +77,12 @@ public class RateAppAction extends Action {
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
-        Uri storeUri = getAppStoreUri();
-        Checks.checkNotNull(storeUri, "Missing store URI");
 
         if (arguments.getValue().toJsonValue().optMap().opt(SHOW_LINK_PROMPT_KEY).getBoolean(false)) {
-            startRateAppActivity(storeUri, arguments);
+            startRateAppActivity(arguments);
         } else {
-            Intent openLinkIntent = new Intent(Intent.ACTION_VIEW, storeUri)
+            UAirship airship = UAirship.shared();
+            Intent openLinkIntent = AppStoreUtils.getAppStoreIntent(UAirship.getApplicationContext(), airship.getPlatformType(), airship.getAirshipConfigOptions())
                     .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             UAirship.getApplicationContext().startActivity(openLinkIntent);
         }
@@ -110,15 +90,14 @@ public class RateAppAction extends Action {
         return ActionResult.newEmptyResult();
     }
 
-    private void startRateAppActivity(@NonNull Uri storeUri, @NonNull ActionArguments arguments) {
+    private void startRateAppActivity(@NonNull ActionArguments arguments) {
 
         Context context = UAirship.getApplicationContext();
         JsonMap argMap = arguments.getValue().toJsonValue().optMap();
 
         final Intent intent = new Intent(SHOW_RATE_APP_INTENT_ACTION)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                .setPackage(UAirship.getPackageName())
-                .putExtra(STORE_URI_KEY, storeUri);
+                .setPackage(UAirship.getPackageName());
 
         if (argMap.opt(TITLE_KEY).isString()) {
             intent.putExtra(TITLE_KEY, argMap.opt(TITLE_KEY).getString());
@@ -147,7 +126,7 @@ public class RateAppAction extends Action {
             case SITUATION_MANUAL_INVOCATION:
             case SITUATION_WEB_VIEW_INVOCATION:
             case SITUATION_AUTOMATION:
-                return getAppStoreUri() != null;
+                return true;
             case SITUATION_PUSH_RECEIVED:
             case SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
             default:
@@ -159,30 +138,4 @@ public class RateAppAction extends Action {
     public boolean shouldRunOnMainThread() {
         return true;
     }
-
-    @Nullable
-    private Uri getAppStoreUri() {
-        UAirship airship = UAirship.shared();
-        if (airship.getAirshipConfigOptions().appStoreUri != null) {
-            return airship.getAirshipConfigOptions().appStoreUri;
-        }
-
-        String packageName = UAirship.getApplicationContext().getPackageName();
-
-        // Get Store Uri for platform
-        if (UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM) {
-            return Uri.parse(AMAZON_URL + packageName);
-        }
-
-        if (UAirship.shared().getPlatformType() == UAirship.ANDROID_PLATFORM) {
-            if (PlayServicesUtils.isGooglePlayStoreAvailable(UAirship.getApplicationContext())) {
-                return Uri.parse(MARKET_PLAY_URL + packageName);
-            } else {
-                return Uri.parse(HTTPS_PLAY_URL + packageName);
-            }
-        }
-
-        return null;
-    }
-
 }

@@ -39,6 +39,7 @@ import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
+import com.urbanairship.util.AppStoreUtils;
 import com.urbanairship.util.ProcessUtils;
 
 import java.lang.annotation.Retention;
@@ -1072,10 +1073,8 @@ public class UAirship {
                 return true;
             }
             case APP_STORE_DEEP_LINK_HOST: {
-                Intent appStoreIntent = new Intent(Intent.ACTION_VIEW)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        .setData(Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName()))
-                        .setPackage("com.android.vending");
+                Intent appStoreIntent = AppStoreUtils.getAppStoreIntent(context, getPlatformType(), getAirshipConfigOptions())
+                                                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(appStoreIntent);
                 return true;
             }
