@@ -285,13 +285,14 @@ public class ContactTest extends BaseTestCase {
         when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, null)).thenReturn(response);
 
         assertNull(contact.getLastContactIdentity());
-
         contact.identify(fakeNamedUserId);
 
         assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).identify(fakeNamedUserId, fakeChannelId, null);
 
         assertEquals(fakeContactId, contact.getLastContactIdentity().getContactId());
+        assertEquals(fakeNamedUserId, contact.getLastContactIdentity().getNamedUserId());
+
         verify(mockChannel).updateRegistration();
 
         verify(changeListener).onContactChanged();
@@ -753,7 +754,7 @@ public class ContactTest extends BaseTestCase {
         );
 
         PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
-        result.addResultCallback((ResultCallback<Map<String, Set<Scope>>>) result1 -> {
+        result.addResultCallback(result1 -> {
             assertEquals(networkSubscriptions, result1);
 
             // Verify that the cache was updated
@@ -791,7 +792,7 @@ public class ContactTest extends BaseTestCase {
         }};
 
         PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
-        result.addResultCallback((ResultCallback<Map<String, Set<Scope>>>) result1 -> {
+        result.addResultCallback(result1 -> {
             assertEquals(expectedSubscriptions, result1);
 
             // Verify that the cache was updated
@@ -808,6 +809,51 @@ public class ContactTest extends BaseTestCase {
         PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
         assertNull(result.get());
         verify(mockContactApiClient, never()).getSubscriptionLists(anyString());
+    }
+
+    @Test
+    public void testGetSubscriptionPendingReset() throws RequestException, ExecutionException, InterruptedException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        // Resolve contact
+        contact.resolve();
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+
+        contact.reset();
+
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+        assertNull(result.get());
+        verify(mockContactApiClient, never()).getSubscriptionLists(anyString());
+    }
+
+    @Test
+    public void testGetSubscriptionPendingIdentify() throws RequestException, ExecutionException, InterruptedException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, "some user id")).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        // Resolve contact
+        contact.resolve();
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+
+        Map<String, Set<Scope>> subscriptions = new HashMap<String, Set<Scope>>() {{
+            put("foo", Collections.singleton(Scope.APP));
+            put("bar", Collections.singleton(Scope.SMS));
+        }};
+        subscriptionCache.set(subscriptions, 100);
+
+        // Verify we have results
+        assertEquals(subscriptions, contact.getSubscriptionLists(false).get());
+
+        // Identify same named user, still have results
+        contact.identify("some user id");
+        assertEquals(subscriptions, contact.getSubscriptionLists(false).get());
+
+        // Different named user, results should be null
+        contact.identify("some other user id");
+        assertNull(contact.getSubscriptionLists(false).get());
     }
 
     @Test
@@ -830,7 +876,7 @@ public class ContactTest extends BaseTestCase {
         );
 
         PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
-        result.addResultCallback((ResultCallback<Map<String, Set<Scope>>>) result1 -> {
+        result.addResultCallback(result1 -> {
             assertNull(result1);
             assertNull(subscriptionCache.get());
         });

@@ -329,6 +329,34 @@ public class Contact extends AirshipComponent {
         }
     }
 
+    @Nullable
+    private String getCurrentContactId() {
+        synchronized (operationLock) {
+            ContactIdentity identity = getLastContactIdentity();
+            if (identity == null) {
+                return null;
+            }
+
+            // Make sure we don't have any pending identify or reset operations
+            List<ContactOperation> operations = getOperations();
+            for (int i = operations.size() - 1; i >= 0; i--) {
+                ContactOperation operation = operations.get(i);
+                switch (operation.getType()) {
+                    case ContactOperation.OPERATION_IDENTIFY:
+                        ContactOperation.IdentifyPayload payload = operations.get(i).coercePayload();
+                        if (!payload.getIdentifier().equals(identity.getNamedUserId())) {
+                            return null;
+                        }
+                        break;
+                    case ContactOperation.OPERATION_RESET:
+                        return null;
+                }
+            }
+
+            return identity.getContactId();
+        }
+    }
+
     /**
      * Edit the attributes associated with this Contact.
      *
@@ -372,7 +400,6 @@ public class Contact extends AirshipComponent {
                     return;
                 }
 
-                subscriptionListCache.invalidate();
                 addOperation(ContactOperation.resolve());
                 addOperation(ContactOperation.updateSubscriptionLists(mutations));
                 dispatchContactUpdateJob();
@@ -691,6 +718,7 @@ public class Contact extends AirshipComponent {
             if (lastContactIdentity != null && lastContactIdentity.isAnonymous()) {
                 onConflict(contactIdentity.getNamedUserId());
             }
+
             subscriptionListCache.invalidate();
             setLastContactIdentity(contactIdentity);
             setAnonContactData(null);
@@ -962,13 +990,13 @@ public class Contact extends AirshipComponent {
             return result;
         }
 
-        ContactIdentity lastContactId = getLastContactIdentity();
-        if (lastContactId == null) {
+        String contactId = getCurrentContactId();
+        if (contactId == null) {
             result.setResult(null);
             return result;
         }
 
-        PendingResult<Map<String, Set<Scope>>> subscriptionListsResult = getSubscriptionLists(lastContactId.getContactId());
+        PendingResult<Map<String, Set<Scope>>> subscriptionListsResult = getSubscriptionLists(contactId);
         subscriptionListsResult.addResultCallback(subscriptions -> {
             if (subscriptions == null) {
                 result.setResult(null);
