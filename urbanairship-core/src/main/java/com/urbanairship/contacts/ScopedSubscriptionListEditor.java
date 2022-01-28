@@ -3,8 +3,6 @@
 package com.urbanairship.contacts;
 
 import com.urbanairship.Logger;
-import com.urbanairship.channel.AttributeMutation;
-import com.urbanairship.channel.SubscriptionListMutation;
 import com.urbanairship.util.Clock;
 import com.urbanairship.util.UAStringUtil;
 
@@ -102,14 +100,21 @@ public abstract class ScopedSubscriptionListEditor {
      * Internal helper that uses a boolean flag to indicate whether to subscribe or unsubscribe.
      *
      * @param subscriptionListId The ID of the list to subscribe to or unsubscribe from.
-     * @param scope Defines the channel types that the change applies to.
+     * @param scopes Defines the set of channel types that the change applies to.
      * @param isSubscribe {@code true} to subscribe or {@code false} to unsubscribe.
      * @hide
      */
     @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public ScopedSubscriptionListEditor mutate(@NonNull String subscriptionListId, @NonNull Scope scope, boolean isSubscribe) {
-        return isSubscribe ? subscribe(subscriptionListId, scope) : unsubscribe(subscriptionListId, scope);
+    public ScopedSubscriptionListEditor mutate(@NonNull String subscriptionListId, @NonNull Set<Scope> scopes, boolean isSubscribe) {
+        for (Scope scope : scopes) {
+            if (isSubscribe) {
+                subscribe(subscriptionListId, scope);
+            } else {
+                unsubscribe(subscriptionListId, scope);
+            }
+        }
+        return this;
     }
 
     /**

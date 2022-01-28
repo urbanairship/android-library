@@ -23,6 +23,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.testing.OpenForTesting
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ChannelSubscriptionChange
+import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactSubscriptionChange
+import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactSubscriptionGroupChange
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Action
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.PreferenceCenterViewModelFactory
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
@@ -76,7 +78,7 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     }
 
     private val viewModel: PreferenceCenterViewModel by lazy {
-        ViewModelProvider(this, viewModelFactory).get(PreferenceCenterViewModel::class.java)
+        ViewModelProvider(this, viewModelFactory)[PreferenceCenterViewModel::class.java]
     }
 
     @VisibleForTesting
@@ -144,7 +146,12 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
         adapter.itemEvents
             .map { event ->
                 when (event) {
-                    is ChannelSubscriptionChange -> Action.PreferenceItemChanged(event.item, event.isChecked)
+                    is ChannelSubscriptionChange ->
+                        Action.PreferenceItemChanged(event.item, event.isChecked)
+                    is ContactSubscriptionChange ->
+                        Action.ScopedPreferenceItemChanged(event.item, event.scopes, event.isChecked)
+                    is ContactSubscriptionGroupChange ->
+                        Action.ScopedPreferenceItemChanged(event.item, event.scopes, event.isChecked)
                 }
             }
             .onEach { action -> viewModel.handle(action) }
@@ -183,7 +190,7 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
                 }
             } ?: showHeaderItem(state.title, state.subtitle)
 
-            adapter.submit(state.listItems, state.subscriptions)
+            adapter.submit(state.listItems, state.channelSubscriptions, state.contactSubscriptions)
 
             views.showContent()
         }

@@ -13,6 +13,8 @@
         <item name="android:colorBackground">@color/ua_preference_center_background</item>
         <item name="android:textColorPrimary">@color/ua_preference_center_ui_text_color</item>
         <item name="toolbarStyle">@style/UrbanAirship.PreferenceCenter.Toolbar</item>
+
+        <item name="urbanAirshipPreferenceCenterSubscriptionTypeChipStyle">@style/UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChip</item>
     </style>
 
     <!-- Default Activity -->
@@ -185,5 +187,28 @@
     <!-- Preference Center list item switch widget -->
     <style name="UrbanAirship.PreferenceCenter.Item.Widget.Switch">
 
+    </style>
+
+    <!-- Preference Center subscription group container -->
+    <style name="UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChipGroup" parent="Widget.MaterialComponents.ChipGroup">
+        <item name="android:layout_marginBottom">8dp</item>
+    </style>
+
+    <!-- Preference Center subscription group toggle chip -->
+    <style name="UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChip" parent="Widget.MaterialComponents.Chip.Filter">
+        <item name="chipBackgroundColor">@android:color/transparent</item>
+        <item name="chipMinHeight">@dimen/ua_preference_center_subscription_type_chip_min_height</item>
+        <item name="chipStrokeColor">@color/ua_preference_center_subscription_type_chip_stroke</item>
+        <item name="chipStrokeWidth">@dimen/ua_preference_center_subscription_type_chip_stroke_width</item>
+        <item name="chipIcon">@drawable/ua_ic_preference_center_subscription_type_chip_check_circle</item>
+        <item name="chipIconVisible">true</item>
+        <item name="checkedIcon">@null</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="android:textAppearance">@style/UrbanAirship.TextAppearance.PreferenceCenter.Item.Widget.SubscriptionTypeChip</item>
+    </style>
+
+    <!-- Preference Center subscription group toggle chip text appearance -->
+    <style name="UrbanAirship.TextAppearance.PreferenceCenter.Item.Widget.SubscriptionTypeChip" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textStyle">bold</item>
     </style>
 </resources>

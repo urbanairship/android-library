@@ -127,7 +127,7 @@ internal class PreferenceCenterFragmentTest {
         // 1 description item + 1 section break item + 2 section header items + 2 preferences per section
         private const val ITEM_COUNT = 8
 
-        private val STATE_CONTENT = State.Content(TITLE, SUBTITLE, CONFIG.asPrefCenterItems(), emptySet())
+        private val STATE_CONTENT = State.Content(TITLE, SUBTITLE, CONFIG.asPrefCenterItems(), emptySet(), emptyMap())
     }
 
     private val testScope = TestCoroutineScope()
@@ -191,7 +191,7 @@ internal class PreferenceCenterFragmentTest {
 
     @Test
     fun testSetsTogglesForSubscriptions() {
-        val content = STATE_CONTENT.copy(subscriptions = setOf(PREF_1_SUB_ID, PREF_3_SUB_ID))
+        val content = STATE_CONTENT.copy(channelSubscriptions = setOf(PREF_1_SUB_ID, PREF_3_SUB_ID))
         preferenceCenter(initialState = content) {
             // Sanity check
             verifyContentDisplayed(ITEM_COUNT)
@@ -225,7 +225,7 @@ internal class PreferenceCenterFragmentTest {
 
     @Test
     fun testChannelSubscriptionItemUnsubscribe() {
-        val content = STATE_CONTENT.copy(subscriptions = setOf(PREF_1_SUB_ID))
+        val content = STATE_CONTENT.copy(channelSubscriptions = setOf(PREF_1_SUB_ID))
         preferenceCenter(initialState = content) {
             // Sanity check
             verifyContentDisplayed(ITEM_COUNT)

@@ -82,7 +82,7 @@ dependencies {
     testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.mockitoKotlinVersion"
     testImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
     testImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
-    testImplementation "app.cash.turbine:turbine:0.5.2"
+    testImplementation "app.cash.turbine:turbine:$rootProject.turbineVersion"
 
     // Instrumentation Tests
     androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
