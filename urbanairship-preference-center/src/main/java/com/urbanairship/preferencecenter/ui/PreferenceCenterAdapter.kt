@@ -4,10 +4,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.Button
 import android.widget.CompoundButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.LayoutRes
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -19,6 +22,7 @@ import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.ChannelSubscriptionItem
+import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_ALERT
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_DESCRIPTION
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_PREF_CHANNEL_SUBSCRIPTION
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_PREF_CONTACT_SUBSCRIPTION
@@ -30,6 +34,8 @@ import com.urbanairship.preferencecenter.ui.PrefCenterItem.ContactSubscriptionIt
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.DescriptionItem
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.SectionBreakItem
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.SectionItem
+import com.urbanairship.preferencecenter.util.ActionsMap
+import com.urbanairship.preferencecenter.util.loadImageOrHide
 import com.urbanairship.preferencecenter.util.setTextOrHide
 import com.urbanairship.preferencecenter.widget.SubscriptionTypeChip
 import java.util.UUID
@@ -78,6 +84,10 @@ internal class PreferenceCenterAdapter(
             val scopes: Set<Scope>,
             val isChecked: Boolean
         ) : ItemEvent()
+
+        data class ButtonClick(
+            val actions: ActionsMap
+        ) : ItemEvent()
     }
 
     private val itemEventsFlow: MutableSharedFlow<ItemEvent> = MutableSharedFlow()
@@ -109,6 +119,11 @@ internal class PreferenceCenterAdapter(
                 isChecked = ::isSubscribed,
                 onCheckedChange = ::emitItemEvent
             )
+        TYPE_ALERT ->
+            PrefCenterItem.AlertItem.createViewHolder(
+                parent = parent,
+                onClick = ::emitActions
+            )
         else -> throw IllegalArgumentException("Unsupported view type: $viewType")
     }
 
@@ -130,6 +145,7 @@ internal class PreferenceCenterAdapter(
         submitList(list)
     }
 
+    @Suppress("SameParameterValue")
     private fun setSubscriptions(
         channelSubscriptions: Set<String>,
         contactSubscriptions: Map<String, Set<Scope>>,
@@ -212,6 +228,12 @@ internal class PreferenceCenterAdapter(
             itemEventsFlow.emit(event)
         }
     }
+
+    private fun emitActions(actions: ActionsMap) {
+        scopeProvider().launch {
+            itemEventsFlow.emit(ItemEvent.ButtonClick(actions))
+        }
+    }
 }
 
 internal abstract class PrefCenterViewHolder<T : PrefCenterItem>(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -234,6 +256,7 @@ internal sealed class PrefCenterItem(val type: Int) {
         const val TYPE_PREF_CHANNEL_SUBSCRIPTION = 3
         const val TYPE_PREF_CONTACT_SUBSCRIPTION = 4
         const val TYPE_PREF_CONTACT_SUBSCRIPTION_GROUP = 5
+        const val TYPE_ALERT = 6
     }
 
     abstract val id: String
@@ -561,6 +584,66 @@ internal sealed class PrefCenterItem(val type: Int) {
                         }
 
                         chipGroup.addView(this, WRAP_CONTENT, WRAP_CONTENT)
+                    }
+                }
+            }
+        }
+    }
+
+    internal data class AlertItem(val item: Item.Alert) : PrefCenterItem(TYPE_ALERT) {
+        companion object {
+             @LayoutRes
+            val LAYOUT: Int = R.layout.ua_item_alert
+
+            fun createViewHolder(
+                parent: ViewGroup,
+                inflater: LayoutInflater = LayoutInflater.from(parent.context),
+                onClick: (actions: ActionsMap) -> Unit
+            ): ViewHolder {
+                val view = inflater.inflate(LAYOUT, parent, false)
+                return ViewHolder(view, onClick)
+            }
+        }
+
+        override val id: String = item.id
+
+        val title = item.iconDisplay.name
+        val description = item.iconDisplay.description
+        val icon = item.iconDisplay.icon
+        val button = item.button
+
+        override fun areItemsTheSame(otherItem: PrefCenterItem): Boolean {
+            if (this === otherItem) return true
+            if (javaClass != otherItem.javaClass) return false
+            otherItem as AlertItem
+            return id == otherItem.id
+        }
+
+        override fun areContentsTheSame(otherItem: PrefCenterItem): Boolean {
+            if (javaClass != otherItem.javaClass) return false
+            otherItem as AlertItem
+            return title == otherItem.title && description == otherItem.description &&
+                    icon == otherItem.icon && button == otherItem.button
+        }
+
+        class ViewHolder(
+            itemView: View,
+            private val onClick: (actions: ActionsMap) -> Unit
+        ) : CommonViewHolder<AlertItem>(itemView) {
+            private val iconView: ImageView = itemView.findViewById(R.id.ua_pref_icon)
+            private val buttonView: Button = itemView.findViewById(R.id.ua_pref_button)
+
+            override fun bind(item: AlertItem) {
+                titleView.setTextOrHide(item.title)
+                descriptionView.setTextOrHide(item.description)
+                iconView.loadImageOrHide(item.icon)
+
+                item.button?.let { button ->
+                    buttonView.run {
+                        text = button.text
+                        contentDescription = button.contentDescription
+                        isVisible = true
+                        setOnClickListener { onClick(button.actions) }
                     }
                 }
             }

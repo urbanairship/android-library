@@ -6,14 +6,17 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.urbanairship.Logger
 import com.urbanairship.UAirship
+import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.contacts.Contact
 import com.urbanairship.contacts.Scope
+import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.PreferenceCenter
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.testing.OpenForTesting
+import com.urbanairship.preferencecenter.util.execute
 import com.urbanairship.preferencecenter.util.scanConcat
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -28,6 +31,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -45,6 +49,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
     private val channel: AirshipChannel = UAirship.shared().channel,
     private val contact: Contact = UAirship.shared().contact,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val actionRunRequestFactory: ActionRunRequestFactory = ActionRunRequestFactory()
 ) : ViewModel() {
     class PreferenceCenterViewModelFactory(
         private val preferenceCenterId: String
@@ -103,6 +108,10 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                     scopes = action.scopes,
                     isEnabled = action.isEnabled
                 )
+            is Action.ButtonActions -> with(action) {
+                actions.execute(requestFactory = actionRunRequestFactory)
+                emptyFlow()
+            }
         }
 
     private fun reduce(state: State, change: Change): Flow<State> =
@@ -215,6 +224,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
 
                 emit(Change.UpdateScopedSubscriptions(subscriptionId, scopes, isEnabled))
             }
+            is Item.Alert -> {} // No-op.
         }
     }
 
@@ -234,6 +244,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         object Refresh : Action()
         data class PreferenceItemChanged(val item: Item, val isEnabled: Boolean) : Action()
         data class ScopedPreferenceItemChanged(val item: Item, val scopes: Set<Scope>, val isEnabled: Boolean) : Action()
+        data class ButtonActions(val actions: Map<String, JsonValue>) : Action()
     }
 
     internal sealed class Change {
@@ -288,14 +299,25 @@ internal fun PreferenceCenterConfig.asPrefCenterItems(): List<PrefCenterItem> =
     sections.flatMap { section ->
         when (section) {
             is Section.SectionBreak -> listOf(PrefCenterItem.SectionBreakItem(section))
-            is Section.Common -> listOf(PrefCenterItem.SectionItem(section)) + section.items.map { item ->
-                when (item) {
-                    is Item.ChannelSubscription ->
-                        PrefCenterItem.ChannelSubscriptionItem(item)
-                    is Item.ContactSubscription ->
-                        PrefCenterItem.ContactSubscriptionItem(item)
-                    is Item.ContactSubscriptionGroup ->
-                        PrefCenterItem.ContactSubscriptionGroupItem(item)
+            is Section.Common -> {
+                if (section.display.isEmpty()) {
+                    // Ignore sections with no title and subtitle to avoid unwanted whitespace in
+                    // the list if a section has no title/description and is being used as a
+                    // container for an alert.
+                    emptyList()
+                } else {
+                    listOf(PrefCenterItem.SectionItem(section))
+                } + section.items.map { item ->
+                    when (item) {
+                        is Item.ChannelSubscription ->
+                            PrefCenterItem.ChannelSubscriptionItem(item)
+                        is Item.ContactSubscription ->
+                            PrefCenterItem.ContactSubscriptionItem(item)
+                        is Item.ContactSubscriptionGroup ->
+                            PrefCenterItem.ContactSubscriptionGroupItem(item)
+                        is Item.Alert ->
+                            PrefCenterItem.AlertItem(item)
+                    }
                 }
             }
         }

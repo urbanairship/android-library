@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.testing.OpenForTesting
+import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ButtonClick
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ChannelSubscriptionChange
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactSubscriptionChange
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactSubscriptionGroupChange
@@ -69,6 +70,7 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @Suppress("ProtectedInFinal")
     protected val viewModelFactory: ViewModelProvider.Factory by lazy {
         PreferenceCenterViewModelFactory(preferenceCenterId)
     }
@@ -82,6 +84,7 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     }
 
     @VisibleForTesting
+    @Suppress("ProtectedInFinal")
     protected val viewModelScopeProvider: () -> CoroutineScope = { viewModel.viewModelScope }
 
     private val adapter: PreferenceCenterAdapter by lazy {
@@ -152,6 +155,8 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
                         Action.ScopedPreferenceItemChanged(event.item, event.scopes, event.isChecked)
                     is ContactSubscriptionGroupChange ->
                         Action.ScopedPreferenceItemChanged(event.item, event.scopes, event.isChecked)
+                    is ButtonClick ->
+                        Action.ButtonActions(event.actions)
                 }
             }
             .onEach { action -> viewModel.handle(action) }
@@ -240,8 +245,9 @@ private class SectionDividerDecoration(context: Context) : RecyclerView.ItemDeco
             val nextHolder = parent.getChildViewHolder(nextView)
             val isNextSectionItem = nextHolder is PrefCenterItem.SectionItem.ViewHolder ||
                 nextHolder is PrefCenterItem.SectionBreakItem.ViewHolder
+            val isNextAlert = nextHolder is PrefCenterItem.AlertItem.ViewHolder
 
-            isNotSectionItem && isNextSectionItem
+            isNotSectionItem && isNextSectionItem || isNextAlert
         } else {
             false
         }

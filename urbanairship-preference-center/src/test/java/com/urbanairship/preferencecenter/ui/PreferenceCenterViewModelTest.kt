@@ -4,13 +4,18 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.urbanairship.PendingResult
+import com.urbanairship.actions.ActionRunRequest
+import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.SubscriptionListEditor
 import com.urbanairship.contacts.Contact
 import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListEditor
+import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.PreferenceCenter
+import com.urbanairship.preferencecenter.data.Button
 import com.urbanairship.preferencecenter.data.CommonDisplay
+import com.urbanairship.preferencecenter.data.IconDisplay
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Item.ContactSubscriptionGroup.Component
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
@@ -26,6 +31,7 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,6 +41,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.annotation.LooperMode
@@ -148,12 +155,33 @@ class PreferenceCenterViewModelTest {
                 )
             )
         )
+
+        private val ALERT_CONFIG = PreferenceCenterConfig(
+            id = PREF_CENTER_ID,
+            display = CommonDisplay(PREF_CENTER_TITLE, PREF_CENTER_SUBTITLE),
+            sections = listOf(
+                Section.Common(
+                    id = "section-1",
+                    display = CommonDisplay.EMPTY,
+                    items = listOf(
+                        Item.Alert(
+                            id = "alert",
+                            iconDisplay = IconDisplay("icon-uri", "name", "description"),
+                            button = Button("button", null, mapOf("foo" to JsonValue.wrap("bar")))
+                    ))
+                )
+            )
+        )
     }
 
     private lateinit var testDispatcher: TestCoroutineDispatcher
     private lateinit var preferenceCenter: PreferenceCenter
     private lateinit var channel: AirshipChannel
     private lateinit var contact: Contact
+
+    private val testActionRunRequestFactory: ActionRunRequestFactory = mock {
+        on { createActionRequest(any()) } doReturn ActionRunRequest.createRequest("test-action")
+    }
 
     @Before
     fun setUp() {
@@ -539,6 +567,40 @@ class PreferenceCenterViewModelTest {
         }
     }
 
+    //
+    // Alert Item
+    //
+
+    @Test
+    fun handlesButtonActions(): Unit = runBlocking {
+        val actions = mapOf(
+            "deeplink" to JsonValue.wrap("foo"),
+            "rate-app" to JsonValue.wrap("bar"),
+            "app-store" to JsonValue.wrap("baz")
+        )
+
+        viewModel(config = ALERT_CONFIG).run {
+            states.test {
+                handle(Action.ButtonActions(actions))
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+        verify(testActionRunRequestFactory, times(3)).createActionRequest(any())
+    }
+
+    @Test
+    fun testFiltersEmptySection(): Unit = runBlocking {
+        val conf = ALERT_CONFIG
+        val configItemCount = conf.sections.count() + conf.sections.sumOf { it.items.count() }
+        // Sanity check that we have 1 section with 1 alert item in the config
+        assertEquals(2, configItemCount)
+
+        val filteredItems = conf.asPrefCenterItems().count()
+        // Verify that the empty section wasn't converted into a PrefCenterItem
+        assertEquals(1, filteredItems)
+    }
+
     private fun mockConfig(
         hasChannelSubscriptions: Boolean = false,
         hasContactSubscriptions: Boolean = false
@@ -556,6 +618,7 @@ class PreferenceCenterViewModelTest {
         contactSubscriptions: Map<String, Set<Scope>> = emptyMap(),
         preferenceCenterId: String = config.id,
         ioDispatcher: CoroutineDispatcher = testDispatcher,
+        actionRunRequestFactory: ActionRunRequestFactory = testActionRunRequestFactory,
         mockPreferenceCenter: (PreferenceCenter.() -> Unit)? = {},
         mockChannel: (AirshipChannel.() -> Unit)? = {},
         mockContact: (Contact.() -> Unit)? = {}
@@ -587,7 +650,8 @@ class PreferenceCenterViewModelTest {
             preferenceCenter = preferenceCenter,
             channel = channel,
             contact = contact,
-            ioDispatcher = ioDispatcher
+            ioDispatcher = ioDispatcher,
+            actionRunRequestFactory = actionRunRequestFactory
         )
     }
 }

@@ -95,7 +95,7 @@
     <style name="UrbanAirship.PreferenceCenter.Item.HeaderTitle" parent="">
         <item name="android:maxLines">2</item>
         <item name="android:ellipsize">end</item>
-        <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Headline6</item>
+        <item name="android:textAppearance">?textAppearanceHeadline6</item>
         <item name="android:visibility">gone</item>
     </style>
 
@@ -175,6 +175,49 @@
         <item name="android:maxLines">10</item>
         <item name="android:textAppearance">?android:attr/textAppearanceListItemSecondary</item>
         <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <!-- Preference Center alert item -->
+    <style name="UrbanAirship.PreferenceCenter.Item.Alert">
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- Preference Center alert item content (title, description, and optional button) -->
+    <style name="UrbanAirship.PreferenceCenter.Item.AlertContent" parent="">
+        <item name="android:paddingEnd">0dp</item>
+    </style>
+
+    <!-- Preference Center alert item icon -->
+    <style name="UrbanAirship.PreferenceCenter.Item.AlertIcon" parent="">
+        <item name="android:layout_marginEnd">24dp</item>
+        <item name="android:layout_marginStart">8dp</item>
+    </style>
+
+    <!-- Preference Center alert item title -->
+    <style name="UrbanAirship.PreferenceCenter.Item.AlertTitle" parent="">
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textAppearance">?textAppearanceHeadline6</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
+    <!-- Preference Center alert item description -->
+    <style name="UrbanAirship.PreferenceCenter.Item.AlertDescription" parent="">
+        <item name="android:maxLines">3</item>
+        <item name="android:textAppearance">?textAppearanceListItem</item>
+        <item name="android:textColor">?android:textColorSecondary</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
+    <!-- Preference Center alert item button -->
+    <style name="UrbanAirship.PreferenceCenter.Item.AlertButton" parent="@style/Widget.MaterialComponents.Button">
+        <item name="android:textAppearance">?textAppearanceButton</item>
+        <item name="backgroundTint">?colorAccent</item>
+        <item name="android:textColor">@color/ua_preference_center_alert_button_text</item>
+        <item name="textAllCaps">false</item>
     </style>
 
     <!-- Preference Center list item widget base style -->
