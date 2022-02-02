@@ -18,7 +18,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
-import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
@@ -29,7 +28,6 @@ import com.urbanairship.channel.AttributeEditor;
 import com.urbanairship.channel.AttributeListener;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.ChannelRegistrationPayload;
-import com.urbanairship.channel.SubscriptionListMutation;
 import com.urbanairship.channel.TagGroupListener;
 import com.urbanairship.channel.TagGroupsEditor;
 import com.urbanairship.channel.TagGroupsMutation;
@@ -45,7 +43,6 @@ import com.urbanairship.util.Clock;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1035,7 +1032,7 @@ public class Contact extends AirshipComponent {
             result.setResult(cachedSubscriptions);
         } else {
             // Otherwise, fetch the current subscriptions over the network and update the cache.
-            AirshipExecutors.THREAD_POOL_EXECUTOR.submit(() -> {
+            AirshipExecutors.threadPoolExecutor().submit(() -> {
                 try {
                     Response<Map<String, Set<Scope>>> response = contactApiClient.getSubscriptionLists(contactId);
                     if (response.isSuccessful()) {

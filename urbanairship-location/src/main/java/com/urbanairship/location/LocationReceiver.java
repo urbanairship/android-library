@@ -70,7 +70,7 @@ public class LocationReceiver extends BroadcastReceiver {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                Future<?> task = AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
+                Future<?> task = AirshipExecutors.threadPoolExecutor().submit(new Runnable() {
                     @Override
                     public void run() {
                         processIntent(intent);

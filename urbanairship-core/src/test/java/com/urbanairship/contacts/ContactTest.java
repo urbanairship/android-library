@@ -10,6 +10,8 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.ResultCallback;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
+import com.urbanairship.ShadowAirshipExecutorsPaused;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
@@ -28,6 +30,7 @@ import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 import com.urbanairship.util.CachedValue;
 
 import org.junit.Before;
@@ -36,6 +39,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,6 +69,14 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
+@Config(
+        sdk = 28,
+        shadows = {
+                ShadowNotificationManagerExtension.class,
+                ShadowAirshipExecutorsLegacy.class
+        }
+)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class ContactTest extends BaseTestCase {
 
     private final String fakeNamedUserId = "fake-named-user-id";

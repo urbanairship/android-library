@@ -1010,6 +1010,7 @@ public class AirshipChannelTests extends BaseTestCase {
         subscriptionListCache.set(subscriptions, 100);
 
         PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists(false);
+        shadowMainLooper().idle();
 
         // Result should be available immediately when returning from the cache.
         assertEquals(result.getResult(), subscriptions);

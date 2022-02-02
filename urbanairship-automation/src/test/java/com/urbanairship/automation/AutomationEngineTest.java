@@ -10,6 +10,7 @@ import android.os.Looper;
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.PendingResult;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
@@ -32,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 import org.robolectric.shadows.ShadowLooper;
 
@@ -62,6 +64,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@Config(
+        sdk = 28,
+        shadows = { ShadowAirshipExecutorsLegacy.class },
+        application = TestApplication.class
+)
 @RunWith(AndroidJUnit4.class)
 @LooperMode(LooperMode.Mode.LEGACY)
 public class AutomationEngineTest {

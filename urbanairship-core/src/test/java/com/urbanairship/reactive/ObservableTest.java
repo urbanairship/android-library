@@ -7,6 +7,8 @@ import android.os.Looper;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.Predicate;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
+import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 
 import junit.framework.Assert;
 
@@ -14,6 +16,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +26,11 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.core.util.Pair;
 
+@Config(
+        sdk = 28,
+        shadows = { ShadowNotificationManagerExtension.class, ShadowAirshipExecutorsLegacy.class }
+)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class ObservableTest extends BaseTestCase {
 
     private List<Object> values;

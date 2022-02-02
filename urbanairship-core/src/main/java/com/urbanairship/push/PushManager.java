@@ -191,7 +191,7 @@ public class PushManager extends AirshipComponent {
      */
     static final String ACTION_UPDATE_PUSH_REGISTRATION = "ACTION_UPDATE_PUSH_REGISTRATION";
 
-    static final ExecutorService PUSH_EXECUTOR = AirshipExecutors.THREAD_POOL_EXECUTOR;
+    static final ExecutorService PUSH_EXECUTOR = AirshipExecutors.threadPoolExecutor();
 
     static final String KEY_PREFIX = "com.urbanairship.push";
 

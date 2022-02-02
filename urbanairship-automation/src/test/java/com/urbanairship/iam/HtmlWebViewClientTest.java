@@ -6,6 +6,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.webkit.WebView;
 
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.contacts.Contact;
@@ -24,6 +25,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +40,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@Config(application = TestApplication.class)
 @RunWith(AndroidJUnit4.class)
 public class HtmlWebViewClientTest {
 

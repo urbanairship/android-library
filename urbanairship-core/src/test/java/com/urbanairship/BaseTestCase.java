@@ -3,6 +3,7 @@
 package com.urbanairship;
 
 import android.os.Bundle;
+import android.os.Looper;
 
 import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 
@@ -10,17 +11,26 @@ import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
+import org.robolectric.shadows.ShadowLooper;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-@Config(sdk = 28,
-        shadows = { ShadowNotificationManagerExtension.class },
-        application = TestApplication.class
+import static org.robolectric.Shadows.shadowOf;
+
+@Config(
+    sdk = 28,
+    shadows = {
+        ShadowNotificationManagerExtension.class,
+        ShadowAirshipExecutorsPaused.class
+    }
 )
-@LooperMode(LooperMode.Mode.LEGACY)
 @RunWith(AndroidJUnit4.class)
 public abstract class BaseTestCase {
 
+    @Deprecated // Prefer static import for TestApplication.getApplication()
     public TestApplication getApplication() {
         return TestApplication.getApplication();
     }
@@ -76,4 +86,15 @@ public abstract class BaseTestCase {
         return true;
     }
 
+    public ShadowLooper shadowMainLooper() {
+        return shadowOf(Looper.getMainLooper());
+    }
+
+    public ShadowLooper shadowBackgroundLooper() {
+        return shadowOf(AirshipLoopers.getBackgroundLooper());
+    }
+
+    public ExecutorService shadowThreadPoolExecutor() {
+        return AirshipExecutors.threadPoolExecutor();
+    }
 }

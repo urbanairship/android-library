@@ -5,14 +5,18 @@ package com.urbanairship.wallet;
 import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestRequest;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -24,6 +28,11 @@ import androidx.annotation.NonNull;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
+@Config(
+        sdk = 28,
+        shadows = { ShadowNotificationManagerExtension.class, ShadowAirshipExecutorsLegacy.class }
+)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class PassRequestTest extends BaseTestCase {
 
     @Test

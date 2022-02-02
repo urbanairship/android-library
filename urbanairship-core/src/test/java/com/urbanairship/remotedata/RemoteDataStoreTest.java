@@ -45,6 +45,7 @@ public class RemoteDataStoreTest extends BaseTestCase {
     @After
     public void teardown() {
         dataStore.deletePayloads();
+        dataStore.close();
     }
 
     /**

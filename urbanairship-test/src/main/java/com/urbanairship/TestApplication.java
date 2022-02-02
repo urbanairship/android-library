@@ -4,6 +4,7 @@ package com.urbanairship;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
+import android.app.Application.ActivityLifecycleCallbacks;
 import android.content.Context;
 import android.content.pm.ProviderInfo;
 
@@ -34,12 +35,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
+@SuppressLint("VisibleForTests")
 public class TestApplication extends Application implements TestLifecycleApplication {
 
     public ActivityLifecycleCallbacks callback;
     public PreferenceDataStore preferenceDataStore;
 
     private TestAirshipRuntimeConfig testRuntimeConfig;
+
+    public static com.urbanairship.TestApplication getApplication() {
+        return (com.urbanairship.TestApplication) ApplicationProvider.getApplicationContext();
+    }
 
     @Override
     public void onCreate() {
@@ -50,24 +56,12 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
         this.preferenceDataStore = PreferenceDataStore.inMemoryStore(getApplicationContext());
 
-        JobDispatcher dispatcher = new JobDispatcher(this, new Scheduler() {
-            @Override
-            public void schedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException {
-
-            }
-        });
-
+        JobDispatcher dispatcher = new JobDispatcher(this, (context, jobInfo) -> {});
         JobDispatcher.setInstance(dispatcher);
 
-
         PrivacyManager privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);
-        Supplier<PushProviders> pushProviders = new Supplier<PushProviders>() {
-            @Nullable
-            @Override
-            public PushProviders get() {
-                return new TestPushProviders(testRuntimeConfig.getConfigOptions());
-            }
-        };
+        Supplier<PushProviders> pushProviders =
+                () -> new TestPushProviders(testRuntimeConfig.getConfigOptions());
 
         UAirship.application = this;
         UAirship.isFlying = true;
@@ -94,17 +88,11 @@ public class TestApplication extends Application implements TestLifecycleApplica
     @Override
     public void onTerminate() {
         super.onTerminate();
-        if (UAirship.sharedAirship != null) {
-            UAirship.sharedAirship.preferenceDataStore.tearDown();
-        }
+        preferenceDataStore.tearDown();
     }
 
     public void setPlatform(int platform) {
         testRuntimeConfig.setPlatform(PlatformUtils.parsePlatform(platform));
-    }
-
-    public static com.urbanairship.TestApplication getApplication() {
-        return (com.urbanairship.TestApplication) ApplicationProvider.getApplicationContext();
     }
 
     public void setPrivacyManager(PrivacyManager privacyManager) {
@@ -147,8 +135,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
     @Override
     @SuppressLint("NewApi")
-    public void registerActivityLifecycleCallbacks(
-            Application.ActivityLifecycleCallbacks callback) {
+    public void registerActivityLifecycleCallbacks(ActivityLifecycleCallbacks callback) {
         super.registerActivityLifecycleCallbacks(callback);
         this.callback = callback;
     }
@@ -168,5 +155,4 @@ public class TestApplication extends Application implements TestLifecycleApplica
     public void setChannelCapture(ChannelCapture channelCapture) {
         UAirship.shared().channelCapture = channelCapture;
     }
-
 }

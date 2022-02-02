@@ -373,7 +373,7 @@ public class UAirship {
 
             UAirship.application = application;
 
-            AirshipExecutors.THREAD_POOL_EXECUTOR.execute(new Runnable() {
+            AirshipExecutors.threadPoolExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
                     executeTakeOff(application, options, readyCallback);

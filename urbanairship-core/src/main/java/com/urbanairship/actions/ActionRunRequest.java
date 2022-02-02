@@ -43,7 +43,7 @@ public class ActionRunRequest {
     private Action action;
     private ActionValue actionValue;
     private Bundle metadata;
-    private Executor executor = AirshipExecutors.THREAD_POOL_EXECUTOR;
+    private Executor executor = AirshipExecutors.threadPoolExecutor();
     private @Action.Situation
     int situation = Action.SITUATION_MANUAL_INVOCATION;
 

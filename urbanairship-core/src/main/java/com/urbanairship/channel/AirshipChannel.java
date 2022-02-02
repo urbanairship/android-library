@@ -633,7 +633,7 @@ public class AirshipChannel extends AirshipComponent {
             result.setResult(cachedSubscriptions);
         } else {
             // Otherwise, fetch the current subscriptions over the network and update the cache.
-            AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
+            AirshipExecutors.threadPoolExecutor().submit(new Runnable() {
                 @Override
                 public void run() {
                     Set<String> fetchedSubscriptions = subscriptionListRegistrar.fetchChannelSubscriptionLists();

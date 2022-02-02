@@ -2,6 +2,8 @@
 
 package com.urbanairship.iam.actions;
 
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
+import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -19,6 +21,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +37,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 
+@Config(
+        sdk = 28,
+        shadows = { ShadowAirshipExecutorsLegacy.class },
+        application = TestApplication.class
+)
+@LooperMode(LooperMode.Mode.LEGACY)
 @RunWith(AndroidJUnit4.class)
 public class LandingPageActionTest {
 
@@ -43,12 +53,7 @@ public class LandingPageActionTest {
     @Before
     public void setup() {
         inAppAutomation = mock(InAppAutomation.class);
-        action = new LandingPageAction(new Callable<InAppAutomation>() {
-            @Override
-            public InAppAutomation call() {
-                return inAppAutomation;
-            }
-        });
+        action = new LandingPageAction(() -> inAppAutomation);
 
         urlAllowList = UAirship.shared().getUrlAllowList();
     }

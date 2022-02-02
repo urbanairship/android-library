@@ -230,6 +230,7 @@ public class RemoteData extends AirshipComponent {
         activityMonitor.removeApplicationListener(applicationListener);
         localeManager.removeListener(localeChangedListener);
         privacyManager.removeListener(privacyListener);
+        dataStore.close();
         backgroundThread.quit();
     }
 

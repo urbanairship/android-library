@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation.tags;
 
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
 import com.urbanairship.channel.AirshipChannel;
@@ -18,6 +19,8 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,6 +50,12 @@ import static org.mockito.Mockito.when;
 /**
  * {@link AudienceManager} tests.
  */
+@Config(
+        sdk = 28,
+        shadows = { ShadowAirshipExecutorsLegacy.class },
+        application = TestApplication.class
+)
+@LooperMode(LooperMode.Mode.LEGACY)
 @RunWith(AndroidJUnit4.class)
 public class AudienceManagerTest {
 

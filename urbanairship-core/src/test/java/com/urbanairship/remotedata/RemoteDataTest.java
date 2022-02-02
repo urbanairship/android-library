@@ -8,6 +8,7 @@ import android.os.Looper;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
@@ -26,6 +27,7 @@ import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Subscriber;
+import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 
 import org.junit.After;
 import org.junit.Before;
@@ -34,6 +36,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.net.MalformedURLException;
@@ -64,6 +68,11 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+@Config(
+        sdk = 28,
+        shadows = { ShadowNotificationManagerExtension.class, ShadowAirshipExecutorsLegacy.class }
+)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class RemoteDataTest extends BaseTestCase {
 
     private RemoteData remoteData;
@@ -126,6 +135,7 @@ public class RemoteDataTest extends BaseTestCase {
     @After
     public void teardown() {
         remoteData.tearDown();
+        preferenceDataStore.tearDown();
     }
 
     @Test
