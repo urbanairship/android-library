@@ -74,14 +74,17 @@ class PreferenceCenterViewModelTest {
                         Item.ChannelSubscription(
                             id = "item-1-id",
                             subscriptionId = SUBSCRIPTION_ID_1,
-                            display = CommonDisplay("item-1-title", "item-1-subtitle")
+                            display = CommonDisplay("item-1-title", "item-1-subtitle"),
+                            conditions = emptyList()
                         ),
                         Item.ChannelSubscription(
                             id = "item-2-id",
                             subscriptionId = SUBSCRIPTION_ID_2,
-                            display = CommonDisplay("item-2-title")
+                            display = CommonDisplay("item-2-title"),
+                            conditions = emptyList()
                         )
-                    )
+                    ),
+                    conditions = emptyList()
                 ),
                 Section.Common(
                     id = "section-2-id",
@@ -90,14 +93,17 @@ class PreferenceCenterViewModelTest {
                         Item.ChannelSubscription(
                             id = "item-3-id",
                             subscriptionId = SUBSCRIPTION_ID_3,
-                            display = CommonDisplay("item-3-title", "item-3-subtitle")
+                            display = CommonDisplay("item-3-title", "item-3-subtitle"),
+                            conditions = emptyList()
                         ),
                         Item.ChannelSubscription(
                             id = "item-4-id",
                             subscriptionId = SUBSCRIPTION_ID_4,
-                            display = CommonDisplay("item-4-title", "item-4-subtitle")
+                            display = CommonDisplay("item-4-title", "item-4-subtitle"),
+                            conditions = emptyList()
                         )
-                    )
+                    ),
+                    conditions = emptyList()
                 )
             )
         )
@@ -106,13 +112,15 @@ class PreferenceCenterViewModelTest {
             id = "item-1-id",
             subscriptionId = SUBSCRIPTION_ID_1,
             display = CommonDisplay("item-1-title", "item-1-subtitle"),
-            scopes = setOf(Scope.APP, Scope.EMAIL)
+            scopes = setOf(Scope.APP, Scope.EMAIL),
+            conditions = emptyList()
         )
         private val CONTACT_SUBSCRIPTION_ITEM_2 = Item.ContactSubscription(
             id = "item-2-id",
             subscriptionId = SUBSCRIPTION_ID_2,
             display = CommonDisplay("item-2-title"),
-            scopes = setOf(Scope.SMS)
+            scopes = setOf(Scope.SMS),
+            conditions = emptyList()
         )
         private val CONTACT_SUBSCRIPTION_GROUP_ITEM_3 = Item.ContactSubscriptionGroup(
             id = "item-3-id",
@@ -122,7 +130,8 @@ class PreferenceCenterViewModelTest {
                 Component(scopes = setOf(Scope.APP), display = CommonDisplay("APP")),
                 Component(scopes = setOf(Scope.EMAIL), display = CommonDisplay("EMAIL")),
                 Component(scopes = setOf(Scope.SMS), display = CommonDisplay("SMS")),
-            )
+            ),
+            conditions = emptyList()
         )
         private val CONTACT_SUBSCRIPTION_GROUP_ITEM_4 = Item.ContactSubscriptionGroup(
             id = "item-4-id",
@@ -132,7 +141,8 @@ class PreferenceCenterViewModelTest {
                 Component(scopes = setOf(Scope.APP), display = CommonDisplay("APP")),
                 Component(scopes = setOf(Scope.EMAIL), display = CommonDisplay("EMAIL")),
                 Component(scopes = setOf(Scope.SMS), display = CommonDisplay("SMS")),
-            )
+            ),
+            conditions = emptyList()
         )
 
         private val CONTACT_SUBSCRIPTION_CONFIG = PreferenceCenterConfig(
@@ -141,18 +151,21 @@ class PreferenceCenterViewModelTest {
             sections = listOf(
                 Section.SectionBreak(
                     id = "section-break-1-id",
-                    display = CommonDisplay("section-break-1-label")
+                    display = CommonDisplay("section-break-1-label"),
+                    conditions = emptyList()
                 ),
                 Section.Common(
                     id = "section-1-id",
                     display = CommonDisplay("section-1-title", "section-1-subtitle"),
-                    items = listOf(CONTACT_SUBSCRIPTION_ITEM_1, CONTACT_SUBSCRIPTION_ITEM_2)
+                    items = listOf(CONTACT_SUBSCRIPTION_ITEM_1, CONTACT_SUBSCRIPTION_ITEM_2),
+                    conditions = emptyList()
                 ),
                 Section.Common(
                     id = "section-2-id",
                     display = CommonDisplay("section-2-title", "section-2-subtitle"),
-                    items = listOf(CONTACT_SUBSCRIPTION_GROUP_ITEM_3, CONTACT_SUBSCRIPTION_GROUP_ITEM_4)
-                )
+                    items = listOf(CONTACT_SUBSCRIPTION_GROUP_ITEM_3, CONTACT_SUBSCRIPTION_GROUP_ITEM_4),
+                    conditions = emptyList()
+                ),
             )
         )
 
@@ -167,8 +180,11 @@ class PreferenceCenterViewModelTest {
                         Item.Alert(
                             id = "alert",
                             iconDisplay = IconDisplay("icon-uri", "name", "description"),
-                            button = Button("button", null, mapOf("foo" to JsonValue.wrap("bar")))
-                    ))
+                            button = Button("button", null, mapOf("foo" to JsonValue.wrap("bar"))),
+                            conditions = emptyList()
+                        )
+                    ),
+                    conditions = emptyList()
                 )
             )
         )
@@ -281,7 +297,7 @@ class PreferenceCenterViewModelTest {
         viewModel(
             mockChannel = { whenever(editSubscriptionLists()) doReturn editor }
         ).run {
-            val item = Item.ChannelSubscription("id", SUBSCRIPTION_ID_1, CommonDisplay.EMPTY)
+            val item = Item.ChannelSubscription("id", SUBSCRIPTION_ID_1, CommonDisplay.EMPTY, emptyList())
 
             states.test {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
@@ -319,7 +335,7 @@ class PreferenceCenterViewModelTest {
             channelSubscriptions = setOf(SUBSCRIPTION_ID_1, SUBSCRIPTION_ID_2),
             mockChannel = { whenever(editSubscriptionLists()) doReturn editor }
         ).run {
-            val item = Item.ChannelSubscription("id", SUBSCRIPTION_ID_2, CommonDisplay.EMPTY)
+            val item = Item.ChannelSubscription("id", SUBSCRIPTION_ID_2, CommonDisplay.EMPTY, emptyList())
 
             states.test {
                 assertThat(awaitItem()).isEqualTo(State.Loading)

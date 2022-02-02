@@ -7,6 +7,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.util.jsonMapOf
 import com.urbanairship.preferencecenter.util.optionalField
 import com.urbanairship.preferencecenter.util.requireField
+import com.urbanairship.preferencecenter.util.toJsonList
 
 /**
  * Preference items.
@@ -14,6 +15,7 @@ import com.urbanairship.preferencecenter.util.requireField
 sealed class Item(private val type: String) {
     abstract val id: String
     abstract val display: CommonDisplay
+    abstract val conditions: Conditions
 
     internal abstract val hasChannelSubscriptions: Boolean
     internal abstract val hasContactSubscriptions: Boolean
@@ -24,7 +26,8 @@ sealed class Item(private val type: String) {
     data class ChannelSubscription(
         override val id: String,
         val subscriptionId: String,
-        override val display: CommonDisplay
+        override val display: CommonDisplay,
+        override val conditions: Conditions
     ) : Item(TYPE_CHANNEL_SUBSCRIPTION) {
         override val hasChannelSubscriptions = true
         override val hasContactSubscriptions = false
@@ -42,7 +45,8 @@ sealed class Item(private val type: String) {
         override val id: String,
         val subscriptionId: String,
         val scopes: Set<Scope>,
-        override val display: CommonDisplay
+        override val display: CommonDisplay,
+        override val conditions: Conditions
     ) : Item(TYPE_CONTACT_SUBSCRIPTION) {
         override val hasChannelSubscriptions = false
         override val hasContactSubscriptions = true
@@ -60,7 +64,8 @@ sealed class Item(private val type: String) {
         override val id: String,
         val subscriptionId: String,
         val components: List<Component>,
-        override val display: CommonDisplay
+        override val display: CommonDisplay,
+        override val conditions: Conditions
     ) : Item(TYPE_CONTACT_SUBSCRIPTION_GROUP) {
         override val hasChannelSubscriptions = false
         override val hasContactSubscriptions = true
@@ -102,7 +107,8 @@ sealed class Item(private val type: String) {
     data class Alert(
         override val id: String,
         val iconDisplay: IconDisplay,
-        val button: Button?
+        val button: Button?,
+        override val conditions: Conditions
     ) : Item(TYPE_ALERT) {
         override val hasChannelSubscriptions = false
         override val hasContactSubscriptions = false
@@ -125,6 +131,7 @@ sealed class Item(private val type: String) {
         private const val KEY_TYPE = "type"
         private const val KEY_ID = "id"
         private const val KEY_DISPLAY = "display"
+        private const val KEY_CONDITIONS = "conditions"
         private const val KEY_BUTTON = "button"
 
         private const val KEY_SUBSCRIPTION_ID = "subscription_id"
@@ -144,13 +151,15 @@ sealed class Item(private val type: String) {
                 TYPE_CHANNEL_SUBSCRIPTION -> ChannelSubscription(
                     id = id,
                     subscriptionId = json.requireField(KEY_SUBSCRIPTION_ID),
-                    display = CommonDisplay.parse(json.get(KEY_DISPLAY))
+                    display = CommonDisplay.parse(json.get(KEY_DISPLAY)),
+                    conditions = Condition.parse(json.get(KEY_CONDITIONS))
                 )
                 TYPE_CONTACT_SUBSCRIPTION -> ContactSubscription(
                     id = id,
                     subscriptionId = json.requireField(KEY_SUBSCRIPTION_ID),
                     display = CommonDisplay.parse(json.get(KEY_DISPLAY)),
-                    scopes = json.requireField(KEY_SCOPES)
+                    scopes = json.opt(KEY_SCOPES).optList().map(Scope::fromJson).toSet(),
+                    conditions = Condition.parse(json.get(KEY_CONDITIONS))
                 )
                 TYPE_CONTACT_SUBSCRIPTION_GROUP -> {
                     val components = json.opt(KEY_COMPONENTS).list?.map {
@@ -160,13 +169,15 @@ sealed class Item(private val type: String) {
                         id = id,
                         subscriptionId = json.requireField(KEY_SUBSCRIPTION_ID),
                         display = CommonDisplay.parse(json.get(KEY_DISPLAY)),
-                        components = components
+                        components = components,
+                        conditions = Condition.parse(json.get(KEY_CONDITIONS))
                     )
                 }
                 TYPE_ALERT -> Alert(
                     id = id,
                     iconDisplay = IconDisplay.parse(json.requireField(KEY_DISPLAY)),
-                    button = Button.parse(json.optionalField(KEY_BUTTON))
+                    button = Button.parse(json.optionalField(KEY_BUTTON)),
+                    conditions = Condition.parse(json.get(KEY_CONDITIONS))
                 )
                 else -> throw JsonException("Unknown Preference Center Item type: '$type'")
             }
@@ -180,4 +191,5 @@ sealed class Item(private val type: String) {
             .put(KEY_ID, id)
             .put(KEY_TYPE, type)
             .put(KEY_DISPLAY, display.toJson())
+            .put(KEY_CONDITIONS, conditions.map(Condition::toJson).toJsonList())
 }

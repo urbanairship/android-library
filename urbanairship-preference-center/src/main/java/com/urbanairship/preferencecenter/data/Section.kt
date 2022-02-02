@@ -12,6 +12,7 @@ sealed class Section(private val type: String) {
     abstract val id: String
     abstract val items: List<Item>
     abstract val display: CommonDisplay
+    abstract val conditions: Conditions
 
     /** Returns `true` if this section contains channel subscription items. */
     internal val hasChannelSubscriptions: Boolean by lazy {
@@ -28,7 +29,8 @@ sealed class Section(private val type: String) {
     data class Common(
         override val id: String,
         override val items: List<Item>,
-        override val display: CommonDisplay
+        override val display: CommonDisplay,
+        override val conditions: Conditions
     ) : Section(TYPE_SECTION) {
         override fun toJson(): JsonMap = jsonMapBuilder().build()
     }
@@ -38,7 +40,8 @@ sealed class Section(private val type: String) {
      */
     data class SectionBreak(
         override val id: String,
-        override val display: CommonDisplay
+        override val display: CommonDisplay,
+        override val conditions: Conditions
     ) : Section(TYPE_SECTION_BREAK) {
         override val items: List<Item> = emptyList()
 
@@ -53,6 +56,7 @@ sealed class Section(private val type: String) {
         private const val KEY_ID = "id"
         private const val KEY_ITEMS = "items"
         private const val KEY_DISPLAY = "display"
+        private const val KEY_CONDITIONS = "conditions"
 
         /**
          * Parses a `JsonMap` into an `Section` subclass, based on the value of the `type` field.
@@ -70,12 +74,14 @@ sealed class Section(private val type: String) {
                     return Common(
                         id = id,
                         display = display,
-                        items = items
+                        items = items,
+                        conditions = Condition.parse(json.get(KEY_CONDITIONS))
                     )
                 }
                 TYPE_SECTION_BREAK -> SectionBreak(
                     id = id,
-                    display = display
+                    display = display,
+                    conditions = Condition.parse(json.get(KEY_CONDITIONS))
                 )
                 else -> throw JsonException("Unknown Preference Center Section type: '$type'")
             }
@@ -90,4 +96,5 @@ sealed class Section(private val type: String) {
             .put(KEY_TYPE, type)
             .put(KEY_DISPLAY, display.toJson())
             .put(KEY_ITEMS, items.map(Item::toJson).toJsonList())
+            .put(KEY_CONDITIONS, conditions.map(Condition::toJson).toJsonList())
 }

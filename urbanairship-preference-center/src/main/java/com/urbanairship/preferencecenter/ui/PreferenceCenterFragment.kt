@@ -140,6 +140,7 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
             list.adapter = adapter
             list.layoutManager = LinearLayoutManager(requireContext())
             list.addItemDecoration(SectionDividerDecoration(requireContext()))
+            list.setHasFixedSize(true)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -265,7 +266,7 @@ private class SectionDividerDecoration(context: Context) : RecyclerView.ItemDeco
 
             isSectionItem && !isPrevSectionBreak
         } else {
-            isSectionItem
+            false
         }
     }
 }

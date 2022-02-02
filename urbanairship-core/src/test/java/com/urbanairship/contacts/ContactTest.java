@@ -3,12 +3,15 @@
 package com.urbanairship.contacts;
 
 import android.content.Context;
+import android.os.Looper;
 
 import com.google.common.collect.Lists;
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+
 import com.urbanairship.ResultCallback;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.ShadowAirshipExecutorsPaused;
@@ -33,6 +36,7 @@ import com.urbanairship.json.JsonValue;
 import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 import com.urbanairship.util.CachedValue;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -51,8 +55,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static android.os.Looper.getMainLooper;
+import static com.urbanairship.AirshipLoopers.getBackgroundLooper;
 import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -97,11 +103,12 @@ public class ContactTest extends BaseTestCase {
 
     private Contact contact;
     private PrivacyManager privacyManager;
+    private PreferenceDataStore dataStore;
 
     @Before
     public void setUp() {
         Context context = TestApplication.getApplication();
-        PreferenceDataStore dataStore = TestApplication.getApplication().preferenceDataStore;
+        dataStore = TestApplication.getApplication().preferenceDataStore;
         privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
 
         contact = new Contact(context, dataStore, mockDispatcher, privacyManager, mockChannel,
@@ -109,6 +116,14 @@ public class ContactTest extends BaseTestCase {
         contact.addContactChangeListener(changeListener);
         contact.addTagGroupListener(tagGroupListener);
         contact.addAttributeListener(attributeListener);
+    }
+
+    @After
+    public void tearDown() {
+        runLooperTasks();
+        runSerialExecutorTasks();
+
+        dataStore.tearDown();
     }
 
     @Test
@@ -734,14 +749,14 @@ public class ContactTest extends BaseTestCase {
         assertNull(subscriptionCache.get());
 
         PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
-        result.addResultCallback((ResultCallback<Map<String, Set<Scope>>>) result1 -> {
+        result.addResultCallback(result1 -> {
             assertEquals(networkSubscriptions, result1);
 
             // Verify that the cache was updated
             assertEquals(networkSubscriptions, subscriptionCache.get());
         });
 
-        shadowOf(getMainLooper()).idle();
+        runLooperTasks();
 
         verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
     }
@@ -774,7 +789,7 @@ public class ContactTest extends BaseTestCase {
             assertEquals(networkSubscriptions, subscriptionCache.get());
         });
 
-        shadowOf(getMainLooper()).idle();
+        runLooperTasks();
 
         verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
     }
@@ -812,7 +827,7 @@ public class ContactTest extends BaseTestCase {
             assertEquals(networkSubscriptions, subscriptionCache.get());
         });
 
-        shadowOf(getMainLooper()).idle();
+        runLooperTasks();
 
         verify(mockContactApiClient).getSubscriptionLists(fakeContactId);;
     }
@@ -879,11 +894,6 @@ public class ContactTest extends BaseTestCase {
         contact.resolve();
         assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
 
-        Map<String, Set<Scope>> networkSubscriptions = new HashMap<String, Set<Scope>>() {{
-            put("foo", Collections.singleton(Scope.SMS));
-            put("buzz", Collections.singleton(Scope.SMS));
-        }};
-
         when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(400)
                 .build()
         );
@@ -894,8 +904,33 @@ public class ContactTest extends BaseTestCase {
             assertNull(subscriptionCache.get());
         });
 
-        shadowOf(getMainLooper()).idle();
+        runLooperTasks();
 
         verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
+    }
+
+    /**
+     * Helper method to run all the looper tasks.
+     */
+    private void runLooperTasks() {
+        Looper mainLooper = getMainLooper();
+        Looper backgroundLooper = getBackgroundLooper();
+
+        do {
+            shadowOf(mainLooper).runToEndOfTasks();
+            shadowOf(backgroundLooper).runToEndOfTasks();
+        }
+        while (shadowOf(mainLooper).getScheduler().areAnyRunnable() || shadowOf(backgroundLooper).getScheduler().areAnyRunnable());
+    }
+
+    /**
+     * Helper method to run any queued serial executor tasks.
+     */
+    private void runSerialExecutorTasks() {
+        try {
+            AirshipExecutors.threadPoolExecutor().awaitTermination(200, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

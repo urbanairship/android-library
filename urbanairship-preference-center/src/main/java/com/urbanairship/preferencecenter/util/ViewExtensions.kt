@@ -8,7 +8,7 @@ import com.urbanairship.images.ImageRequestOptions
 
 internal fun TextView.setTextOrHide(text: String?) {
     this.text = text
-    this.visibility = if (text != null) View.VISIBLE else View.GONE
+    this.visibility = if (text.isNullOrBlank()) View.GONE else View.VISIBLE
 }
 
 internal fun ImageView.loadImage(url: String, options: ImageRequestOptions.Builder.() -> Unit = {}) {

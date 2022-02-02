@@ -389,7 +389,7 @@ public class Contact extends AirshipComponent {
             @Override
             protected void onApply(@NonNull List<ScopedSubscriptionListMutation> mutations) {
                 if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS, PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-                    Logger.warn("Contact - Ignoring subscriptoin list edits while contacts and/or tags and attributes are disabled.");
+                    Logger.warn("Contact - Ignoring subscription list edits while contacts and/or tags and attributes are disabled.");
                     return;
                 }
 
@@ -674,6 +674,10 @@ public class Contact extends AirshipComponent {
                         }
                     }
                 }
+                if (updateResponse.isSuccessful() && !updatePayload.getSubscriptionListMutations().isEmpty()) {
+                    subscriptionListCache.invalidate();
+                }
+
                 return updateResponse;
 
             case ContactOperation.OPERATION_IDENTIFY:
@@ -1024,6 +1028,7 @@ public class Contact extends AirshipComponent {
 
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
             result.setResult(null);
+            return result;
         }
 
         Map<String, Set<Scope>> cachedSubscriptions = subscriptionListCache.get();
@@ -1036,7 +1041,11 @@ public class Contact extends AirshipComponent {
                 try {
                     Response<Map<String, Set<Scope>>> response = contactApiClient.getSubscriptionLists(contactId);
                     if (response.isSuccessful()) {
-                        subscriptionListCache.set(response.getResult(), SUBSCRIPTION_CACHE_LIFETIME_MS);
+                        Map<String, Set<Scope>> subscriptions = response.getResult();
+                        subscriptionListCache.set(subscriptions, SUBSCRIPTION_CACHE_LIFETIME_MS);
+                        result.setResult(subscriptions);
+                    } else {
+                        result.setResult(null);
                     }
                 } catch (RequestException e) {
                     result.setResult(null);

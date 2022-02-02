@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id 'airship-module'
     id 'kotlin-android'
@@ -16,13 +18,16 @@ android {
     }
 
     sourceSets {
-        // Add sharedTest srcDir to both testDebug and androidTestDebug source sets so that
-        // instrumentation tests can be run on an emulated or real device, or headless via
-        // Robolectric. We can only run tests using the fragment testing library in the debug
-        // configuration because the empty host activity must be present in the manifest, which
-        // is accomplished by adding the library via `debugImplementation`.
-        testDebug.java.srcDirs += 'src/sharedTestDebug/java'
-        androidTestDebug.java.srcDirs += 'src/sharedTestDebug/java'
+        // Android Studio isn't a fan of shared srcDirs, so we'll only set up headless
+        // instrumentation testing if running from CLI/CI to prevent "Duplicate content root"
+        // warnings. When running via Android Studio, we'll only add sharedTest to the
+        // androidTest sourceSets so instrumentation can still be run normally.
+        if (!System.getProperties().containsKey('idea.active')) {
+            testDebug.java.srcDirs += 'src/sharedTestDebug/java'
+            androidTestDebug.java.srcDirs += 'src/sharedTestDebug/java'
+        } else {
+            androidTestDebug.java.srcDirs += 'src/sharedTestDebug/java'
+        }
     }
 
     testOptions {
@@ -33,10 +38,12 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+}
 
+tasks.withType(KotlinCompile).configureEach {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
-        freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+        freeCompilerArgs += [ "-Xopt-in=kotlin.RequiresOptIn" ]
     }
 }
 

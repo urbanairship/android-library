@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:color="@color/ua_preference_center_subscription_type_chip_checked_background" android:state_checked="true"/>
-    <item android:color="@color/ua_preference_center_subscription_type_chip_unchecked_background" />
+    <item android:color="?colorControlActivated" android:state_checked="true"/>
+    <item android:color="?colorControlNormal" />
 </selector>

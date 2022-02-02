@@ -23,6 +23,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.data.CommonDisplay
+import com.urbanairship.preferencecenter.data.Condition
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.Section
@@ -87,7 +88,8 @@ internal class PreferenceCenterFragmentTest {
             sections = listOf(
                 Section.SectionBreak(
                     id = SECTION_BREAK_1_ID,
-                    display = CommonDisplay(SECTION_BREAK_1_LABEL)
+                    display = CommonDisplay(SECTION_BREAK_1_LABEL),
+                    conditions = emptyList()
                 ),
                 Section.Common(
                     id = SECTION_1_ID,
@@ -96,14 +98,17 @@ internal class PreferenceCenterFragmentTest {
                         Item.ChannelSubscription(
                             id = PREF_1_ID,
                             subscriptionId = PREF_1_SUB_ID,
-                            display = CommonDisplay(PREF_1_TITLE, PREF_1_SUBTITLE)
+                            display = CommonDisplay(PREF_1_TITLE, PREF_1_SUBTITLE),
+                            conditions = emptyList()
                         ),
                         Item.ChannelSubscription(
                             id = PREF_2_ID,
                             subscriptionId = PREF_2_SUB_ID,
-                            display = CommonDisplay(PREF_2_TITLE)
+                            display = CommonDisplay(PREF_2_TITLE),
+                            conditions = emptyList()
                         )
-                    )
+                    ),
+                    conditions = emptyList()
                 ),
                 Section.Common(
                     id = SECTION_2_ID,
@@ -112,22 +117,25 @@ internal class PreferenceCenterFragmentTest {
                         Item.ChannelSubscription(
                             id = PREF_3_ID,
                             subscriptionId = PREF_3_SUB_ID,
-                            display = CommonDisplay(PREF_3_TITLE)
+                            display = CommonDisplay(PREF_3_TITLE),
+                            conditions = emptyList()
                         ),
                         Item.ChannelSubscription(
                             id = PREF_4_ID,
                             subscriptionId = PREF_4_SUB_ID,
-                            display = CommonDisplay(PREF_4_TITLE)
+                            display = CommonDisplay(PREF_4_TITLE),
+                            conditions = emptyList()
                         )
-                    )
+                    ),
+                    conditions = emptyList()
                 )
             )
         )
 
         // 1 description item + 1 section break item + 2 section header items + 2 preferences per section
         private const val ITEM_COUNT = 8
-
-        private val STATE_CONTENT = State.Content(TITLE, SUBTITLE, CONFIG.asPrefCenterItems(), emptySet(), emptyMap())
+        private val ITEMS = CONFIG.asPrefCenterItems()
+        private val STATE_CONTENT = State.Content(TITLE, SUBTITLE, ITEMS, ITEMS, emptySet(), emptyMap(), Condition.State(isOptedIn = true))
     }
 
     private val testScope = TestCoroutineScope()

@@ -13,13 +13,12 @@
         <item name="android:colorBackground">@color/ua_preference_center_background</item>
         <item name="android:textColorPrimary">@color/ua_preference_center_ui_text_color</item>
         <item name="toolbarStyle">@style/UrbanAirship.PreferenceCenter.Toolbar</item>
-
-        <item name="urbanAirshipPreferenceCenterSubscriptionTypeChipStyle">@style/UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChip</item>
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/ua_preference_center_status_bar</item>
     </style>
 
     <!-- Default Activity -->
     <style name="UrbanAirship.PreferenceCenter.Activity">
-        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/ua_preference_center_status_bar</item>
+        <item name="urbanAirshipPreferenceCenterSubscriptionTypeChipStyle">@style/UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChip</item>
     </style>
 
     <!-- Toolbar -->
@@ -237,9 +236,22 @@
         <item name="android:layout_marginBottom">8dp</item>
     </style>
 
+    <!-- Preference Center subscription group toggle chip overlay
+         Override in app theme to customize chip styling, while preserving default styles. -->
+    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.Item.Widget.SubscriptionTypeChip" parent="">
+        <!-- Circle fill color when checked. -->
+        <item name="colorControlActivated">@color/ua_preference_center_subscription_type_chip_checked_background</item>
+        <!-- Circle fill color when unchecked. -->
+        <item name="colorControlNormal">@color/ua_preference_center_subscription_type_chip_unchecked_background</item>
+        <!-- Check icon tint color. -->
+        <item name="android:checkMarkTint">@color/ua_preference_center_accent</item>
+    </style>
+
     <!-- Preference Center subscription group toggle chip -->
     <style name="UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChip" parent="Widget.MaterialComponents.Chip.Filter">
+        <item name="materialThemeOverlay">@style/UrbanAirship.ThemeOverlay.PreferenceCenter.Item.Widget.SubscriptionTypeChip</item>
         <item name="chipBackgroundColor">@android:color/transparent</item>
+        <item name="chipSurfaceColor">?colorSurface</item>
         <item name="chipMinHeight">@dimen/ua_preference_center_subscription_type_chip_min_height</item>
         <item name="chipStrokeColor">@color/ua_preference_center_subscription_type_chip_stroke</item>
         <item name="chipStrokeWidth">@dimen/ua_preference_center_subscription_type_chip_stroke_width</item>

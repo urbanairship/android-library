@@ -7,6 +7,12 @@ import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
@@ -39,12 +45,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
 /**
  * Airship channel access.
@@ -664,7 +664,6 @@ public class AirshipChannel extends AirshipComponent {
                 }
 
                 if (!collapsedMutations.isEmpty()) {
-                    subscriptionListCache.invalidate();
                     subscriptionListRegistrar.addPendingMutations(collapsedMutations);
                     dispatchUpdateJob();
                 }
@@ -974,6 +973,10 @@ public class AirshipChannel extends AirshipComponent {
                 boolean attributeResult = attributeRegistrar.uploadPendingMutations();
                 boolean tagResult = tagGroupRegistrar.uploadPendingMutations();
                 boolean subscriptionListResult = subscriptionListRegistrar.uploadPendingMutations();
+
+                if (subscriptionListResult) {
+                    subscriptionListCache.invalidate();
+                }
 
                 if (!attributeResult || !tagResult || !subscriptionListResult) {
                     return JobInfo.JOB_RETRY;

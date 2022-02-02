@@ -19,6 +19,7 @@ import com.google.android.material.chip.ChipGroup
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.urbanairship.contacts.Scope
 import com.urbanairship.preferencecenter.R
+import com.urbanairship.preferencecenter.data.Conditions
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.ChannelSubscriptionItem
@@ -151,18 +152,24 @@ internal class PreferenceCenterAdapter(
         contactSubscriptions: Map<String, Set<Scope>>,
         notify: Boolean = true
     ) {
+        var changed = false
         if (this.channelSubscriptions != channelSubscriptions) {
             with(this.channelSubscriptions) {
                 clear()
                 addAll(channelSubscriptions)
             }
+            changed = true
+        }
+        if (this.contactSubscriptions != contactSubscriptions) {
             with(this.contactSubscriptions) {
                 clear()
-                this.putAll(contactSubscriptions)
+                putAll(contactSubscriptions)
             }
-            if (notify) {
-                notifyDataSetChanged()
-            }
+            changed = true
+        }
+
+        if (changed && notify) {
+            notifyDataSetChanged()
         }
     }
 
@@ -260,6 +267,7 @@ internal sealed class PrefCenterItem(val type: Int) {
     }
 
     abstract val id: String
+    abstract val conditions: Conditions
 
     abstract fun areItemsTheSame(otherItem: PrefCenterItem): Boolean
     abstract fun areContentsTheSame(otherItem: PrefCenterItem): Boolean
@@ -279,6 +287,7 @@ internal sealed class PrefCenterItem(val type: Int) {
         }
 
         override val id: String = UUID.randomUUID().toString()
+        override val conditions: Conditions = emptyList()
 
         override fun areItemsTheSame(otherItem: PrefCenterItem): Boolean {
             if (this === otherItem) return true
@@ -316,6 +325,7 @@ internal sealed class PrefCenterItem(val type: Int) {
         }
 
         override val id: String = section.id
+        override val conditions: Conditions = section.conditions
 
         val title: String? = section.display.name
         val subtitle: String? = section.display.description
@@ -356,6 +366,7 @@ internal sealed class PrefCenterItem(val type: Int) {
         }
 
         override val id: String = section.id
+        override val conditions: Conditions = section.conditions
         val label: String? = section.display.name
 
         override fun areItemsTheSame(otherItem: PrefCenterItem): Boolean {
@@ -404,6 +415,7 @@ internal sealed class PrefCenterItem(val type: Int) {
         }
 
         override val id: String = item.id
+        override val conditions: Conditions = item.conditions
 
         val subscriptionId: String = item.subscriptionId
         val title: String? = item.display.name
@@ -477,6 +489,7 @@ internal sealed class PrefCenterItem(val type: Int) {
         }
 
         override val id: String = item.id
+        override val conditions: Conditions = item.conditions
 
         val subscriptionId: String = item.subscriptionId
         val scopes: Set<Scope> = item.scopes
@@ -541,6 +554,7 @@ internal sealed class PrefCenterItem(val type: Int) {
         }
 
         override val id: String = item.id
+        override val conditions: Conditions = item.conditions
 
         val subscriptionId: String = item.subscriptionId
         val title: String? = item.display.name
@@ -606,6 +620,7 @@ internal sealed class PrefCenterItem(val type: Int) {
         }
 
         override val id: String = item.id
+        override val conditions: Conditions = item.conditions
 
         val title = item.iconDisplay.name
         val description = item.iconDisplay.description
