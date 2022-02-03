@@ -47,15 +47,8 @@ jobs:
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
 
-      - name: Prefetch Robolectric jars
-        run: |
-          mkdir robolectric-jars
-          wget -P robolectric-jars https://repo1.maven.org/maven2/org/robolectric/android-all/7.1.0_r7-robolectric-r1/android-all-7.1.0_r7-robolectric-r1.jar
-          wget -P robolectric-jars https://repo1.maven.org/maven2/org/robolectric/android-all/9-robolectric-4913185-2/android-all-9-robolectric-4913185-2.jar
-          wget -P robolectric-jars https://repo1.maven.org/maven2/org/robolectric/android-all/10-robolectric-5803371/android-all-10-robolectric-5803371.jar
-
       - name: Build
-        run: ./gradlew build packageDocs --stacktrace
+        run: ./gradlew assembleRelease packageDocs --stacktrace
 
       - name: Upload docs
         run: |
@@ -84,6 +77,7 @@ jobs:
         run: >-
           ./gradlew
           urbanairship-core:publishProductionPublicationToSonatypeRepository
+          urbanairship-layout:publishProductionPublicationToSonatypeRepository
           urbanairship-automation:publishProductionPublicationToSonatypeRepository
           urbanairship-message-center:publishProductionPublicationToSonatypeRepository
           urbanairship-location:publishProductionPublicationToSonatypeRepository
