@@ -2,6 +2,8 @@
 
 package com.urbanairship.contacts;
 
+import android.net.Uri;
+
 import com.google.common.collect.Lists;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestAirshipRuntimeConfig;
@@ -15,6 +17,7 @@ import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.DateUtils;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,22 +48,23 @@ public class ContactApiClientTest extends BaseTestCase {
     private final String fakeChannelId = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE";
     private final String fakeContactId = "fake_contact_id";
     private final String fakeEmail = "fake@email.com";
+    private final String fakeMsisdn = "123456789";
+    private final String fakeSenderId = "fake_sender_id";
     private ContactApiClient client;
-    private TestRequest testRequest;
     private TestAirshipRuntimeConfig runtimeConfig;
     private RequestFactory mockRequestFactory;
 
     @Before
     public void setUp() {
-        testRequest = new TestRequest();
-
         mockRequestFactory = Mockito.mock(RequestFactory.class);
-        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
 
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder()
                 .setDeviceUrl("https://example.com")
                 .build());
+
+        TimeZone usPacific = TimeZone.getTimeZone("US/Pacific");
+        TimeZone.setDefault(usPacific);
 
         client = new ContactApiClient(runtimeConfig, mockRequestFactory);
     }
@@ -69,6 +74,9 @@ public class ContactApiClientTest extends BaseTestCase {
      */
     @Test
     public void testResolveSucceeds() throws RequestException, JsonException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
+
         testRequest.responseBody = "{ \"ok\": true, \"contact_id\": \"fake_contact_id\", \"is_anonymous\": true }";
         testRequest.responseStatus = 200;
 
@@ -92,6 +100,9 @@ public class ContactApiClientTest extends BaseTestCase {
      */
     @Test
     public void testIdentifySucceeds() throws RequestException, JsonException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
+
         testRequest.responseBody = "{ \"ok\": true, \"contact_id\": \"fake_contact_id\"}";
         testRequest.responseStatus = 200;
 
@@ -117,6 +128,9 @@ public class ContactApiClientTest extends BaseTestCase {
      */
     @Test
     public void testIdentifyContactIdNullSucceeds() throws RequestException, JsonException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
+
         testRequest.responseBody = "{ \"ok\": true, \"contact_id\": \"fake_contact_id\"}";
         testRequest.responseStatus = 200;
 
@@ -137,72 +151,115 @@ public class ContactApiClientTest extends BaseTestCase {
     }
 
     /**
+     * Test register open channel request succeeds if status is 200.
+     */
+    @Test
+    public void testRegisterOpenChannelSucceeds() throws RequestException, JsonException {
+        TestRequest registerRequest = new TestRequest();
+        TestRequest associateRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(registerRequest, associateRequest);
+        registerRequest.responseBody = "{ \"ok\": true, \"channel_id\": \"fake_channel_id\"}";
+        registerRequest.responseStatus = 200;
+        associateRequest.responseStatus = 200;
+
+        Map<String, String> identifiersMap = new HashMap<>();
+        identifiersMap.put("identifier_key", "identifier_value");
+        OpenChannelRegistrationOptions options = OpenChannelRegistrationOptions.options("email", identifiersMap);
+
+        Response<AssociatedChannel> response = client.registerOpenChannel(fakeContactId, fakeEmail, options);
+        assertEquals(200, response.getStatus());
+        assertEquals("fake_channel_id", response.getResult().getChannelId());
+        assertEquals(ChannelType.OPEN, response.getResult().getChannelType());
+
+        // Verify register
+        String expectedChannelPayload = "{\n" +
+                "   \"channel\":{\n" +
+                "      \"address\":\"fake@email.com\",\n" +
+                "      \"timezone\":\"US\\/Pacific\",\n" +
+                "      \"opt_in\":true,\n" +
+                "      \"type\":\"open\",\n" +
+                "      \"locale_language\":\"en\",\n" +
+                "      \"open\":{\n" +
+                "         \"open_platform_name\":\"email\",\n" +
+                "         \"identifiers\":{\n" +
+                "            \"identifier_key\":\"identifier_value\"\n" +
+                "         }\n" +
+                "      },\n" +
+                "      \"locale_country\":\"US\"\n" +
+                "   }\n" +
+                "}";
+        assertEquals("POST", registerRequest.getRequestMethod());
+        assertEquals("https://example.com/api/channels/restricted/open/", registerRequest.getUrl().toString());
+        assertEquals(JsonValue.parseString(expectedChannelPayload), JsonValue.parseString(registerRequest.getRequestBody()));
+
+        // Verify update
+        String expectedUpdatePayload = "{\n" +
+                "   \"associate\":[\n" +
+                "      {\n" +
+                "         \"channel_id\":\"fake_channel_id\",\n" +
+                "         \"device_type\":\"open\"\n" +
+                "      }\n" +
+                "   ]\n" +
+                "}";
+        assertEquals("POST", associateRequest.getRequestMethod());
+        assertEquals("https://example.com/api/contacts/fake_contact_id", associateRequest.getUrl().toString());
+        assertEquals(JsonValue.parseString(expectedUpdatePayload), JsonValue.parseString(associateRequest.getRequestBody()));
+    }
+
+    /**
      * Test register email channel request succeeds if status is 200.
      */
     @Test
     public void testRegisterEmailSucceeds() throws RequestException, JsonException {
-        testRequest.responseBody = "{ \"ok\": true, \"channel_id\": \"fake_channel_id\"}";
-        testRequest.responseStatus = 200;
+        TestRequest registerRequest = new TestRequest();
+        TestRequest associateRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(registerRequest, associateRequest);
+        registerRequest.responseBody = "{ \"ok\": true, \"channel_id\": \"fake_channel_id\"}";
+        registerRequest.responseStatus = 200;
+        associateRequest.responseStatus = 200;
 
+        HashMap<String, JsonValue> propertiesMap = new HashMap<>();
+        propertiesMap.put("properties_key", JsonValue.wrap("properties_value"));
+        JsonMap properties = new JsonMap(propertiesMap);
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        String date = df.format(Calendar.getInstance().getTime());
+        Date date = Calendar.getInstance().getTime();
+        EmailRegistrationOptions options = EmailRegistrationOptions.options(date, properties, false);
 
-        JsonMap payloadContent = JsonMap.newBuilder()
-                                  .put("type", "email")
-                                  .put("commercial_opted_in", date)
-                                  .put("address", fakeEmail)
-                                  .put("timezone", TimeZone.getDefault().getID())
-                                  .put("locale_country", "US")
-                                  .put("locale_language", "en")
-                                  .build();
-
-        JsonMap expected = JsonMap.newBuilder()
-                                    .put("channel", payloadContent)
-                                    .build();
-
-        ArrayList<ContactApiClient.EmailType> optinStatus = new ArrayList<>();
-        optinStatus.add(ContactApiClient.EmailType.COMMERCIAL_OPTED_IN);
-
-        Response<String> response = client.registerEmail(fakeEmail, optinStatus);
-
+        Response<AssociatedChannel> response = client.registerEmail(fakeContactId, fakeEmail, options);
         assertEquals(200, response.getStatus());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/channels/email/", testRequest.getUrl().toString());
-        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
-        assertEquals("fake_channel_id", response.getResult());
-    }
+        assertEquals("fake_channel_id", response.getResult().getChannelId());
+        assertEquals(ChannelType.EMAIL, response.getResult().getChannelType());
 
-    /**
-     * Test update email channel request succeeds if status is 200.
-     */
-    @Test
-    public void testUpdateEmailSucceeds() throws RequestException, JsonException {
-        testRequest.responseBody = "{ \"ok\": true, \"channel_id\": \"fake_channel_id\"}";
-        testRequest.responseStatus = 200;
+        // Verify register
+        String expectedChannelPayload = "{\n" +
+                "   \"channel\":{\n" +
+                "      \"type\":\"email\",\n" +
+                "      \"transactional_opted_in\":\"" + DateUtils.createIso8601TimeStamp(date.getTime()) + "\",\n" +
+                "      \"address\":fake@email.com,\n" +
+                "      \"timezone\":\"US\\/Pacific\",\n" +
+                "      \"locale_language\":\"en\",\n" +
+                "      \"properties\":{\n" +
+                "         \"properties_key\":\"properties_value\"},\n" +
+                "      \"locale_country\":\"US\",\n" +
+                "      \"opt_in_mode\":\"classic\"\n" +
+                "   }\n" +
+                "}";
+        assertEquals("POST", registerRequest.getRequestMethod());
+        assertEquals("https://example.com/api/channels/restricted/email/", registerRequest.getUrl().toString());
+        assertEquals(JsonValue.parseString(expectedChannelPayload), JsonValue.parseString(registerRequest.getRequestBody()));
 
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        String date = df.format(Calendar.getInstance().getTime());
-
-        JsonMap contentPayload = JsonMap.newBuilder()
-                                        .put("type", "email")
-                                        .put("address", fakeEmail)
-                                        .put("commercial_opted_in", date)
-                                        .build();
-
-        JsonMap expected = JsonMap.newBuilder()
-                                    .put("channel", contentPayload)
-                                    .build();
-
-        ArrayList<ContactApiClient.EmailType> optinStatus = new ArrayList<>();
-        optinStatus.add(ContactApiClient.EmailType.COMMERCIAL_OPTED_IN);
-
-        Response<String> response = client.updateEmail(fakeEmail, "fake_channel_id", optinStatus);
-
-        assertEquals(200, response.getStatus());
-        assertEquals("PUT", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/channels/email/fake_channel_id", testRequest.getUrl().toString());
-        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
-        assertEquals("fake_channel_id", response.getResult());
+        // Verify update
+        String expectedUpdatePayload = "{\n" +
+                "   \"associate\":[\n" +
+                "      {\n" +
+                "         \"channel_id\":\"fake_channel_id\",\n" +
+                "         \"device_type\":\"email\"\n" +
+                "      }\n" +
+                "   ]\n" +
+                "}";
+        assertEquals("POST", associateRequest.getRequestMethod());
+        assertEquals("https://example.com/api/contacts/fake_contact_id", associateRequest.getUrl().toString());
+        assertEquals(JsonValue.parseString(expectedUpdatePayload), JsonValue.parseString(associateRequest.getRequestBody()));
     }
 
     /**
@@ -210,77 +267,48 @@ public class ContactApiClientTest extends BaseTestCase {
      */
     @Test
     public void testRegisterSmsSucceeds() throws RequestException, JsonException {
-        testRequest.responseBody = "{ \"ok\": true, \"operation_id\": \"fake_operation_id\", \"channel_id\": \"fake_channel_id\"}";
-        testRequest.responseStatus = 200;
+        TestRequest registerRequest = new TestRequest();
+        TestRequest associateRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(registerRequest, associateRequest);
+        registerRequest.responseBody = "{ \"ok\": true, \"channel_id\": \"fake_channel_id\"}";
+        registerRequest.responseStatus = 200;
+        associateRequest.responseStatus = 200;
+
+        SmsRegistrationOptions options = SmsRegistrationOptions.options(fakeSenderId);
 
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        String date = df.format(Calendar.getInstance().getTime());
+        String dateString = df.format(Calendar.getInstance().getTime());
 
-        JsonMap expected = JsonMap.newBuilder()
-                                        .put("msisdn", "123456789")
-                                        .put("sender", "28855")
-                                        .put("opted_in", date)
-                                        .put("timezone", TimeZone.getDefault().getID())
-                                        .put("locale_country", "US")
-                                        .put("locale_language", "en")
-                                        .build();
-
-        Response<String> response = client.registerSms("123456789", "28855", true);
-
+        Response<AssociatedChannel> response = client.registerSms(fakeContactId, fakeMsisdn, options);
         assertEquals(200, response.getStatus());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/channels/sms/", testRequest.getUrl().toString());
-        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
-        assertEquals("fake_channel_id", response.getResult());
-    }
+        assertEquals("fake_channel_id", response.getResult().getChannelId());
+        assertEquals(ChannelType.SMS, response.getResult().getChannelType());
 
-    /**
-     * Test update sms channel request succeeds if status is 200.
-     */
-    @Test
-    public void testUpdateSmsSucceeds() throws RequestException, JsonException {
-        testRequest.responseBody = "{ \"ok\": true, \"channel_id\": \"fake_channel_id\"}";
-        testRequest.responseStatus = 200;
+        // Verify register
+        String expectedChannelPayload = "{\n" +
+                "      \"msisdn\":\"123456789\",\n" +
+                "      \"sender\":\"fake_sender_id\",\n" +
+                "      \"timezone\":\"US\\/Pacific\",\n" +
+                "      \"locale_language\":\"en\",\n" +
+                "      \"locale_country\":\"US\",\n" +
+                "      \"opted_in\":\"" + dateString + "\"\n" +
+                "}";
+        assertEquals("POST", registerRequest.getRequestMethod());
+        assertEquals("https://example.com/api/channels/restricted/sms/", registerRequest.getUrl().toString());
+        assertEquals(JsonValue.parseString(expectedChannelPayload), JsonValue.parseString(registerRequest.getRequestBody()));
 
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        String date = df.format(Calendar.getInstance().getTime());
-
-        JsonMap expected = JsonMap.newBuilder()
-                                  .put("msisdn", "123456789")
-                                  .put("sender", "28855")
-                                  .put("opted_in", date)
-                                  .put("timezone", TimeZone.getDefault().getID())
-                                  .put("locale_country", "US")
-                                  .put("locale_language", "en")
-                                  .build();
-
-        Response<Void> response = client.updateSms("123456789", "28855", true, "fake_channel_id");
-
-        assertEquals(200, response.getStatus());
-        assertEquals("PUT", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/channels/sms/fake_channel_id", testRequest.getUrl().toString());
-        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
-    }
-
-    /**
-     * Test optout sms channel request succeeds if status is 200.
-     */
-    @Test
-    public void testOptOutSms() throws RequestException, JsonException {
-        testRequest.responseBody = "{ \"ok\": true }";
-        testRequest.responseStatus = 200;
-
-        JsonMap expected = JsonMap.newBuilder()
-                                  .put("sender", "55555")
-                                  .put("msisdn", "123456789")
-                                  .build();
-
-        Response<Void> response = client.optOutSms("123456789","55555");
-
-        assertEquals(200, response.getStatus());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/channels/sms/opt-out", testRequest.getUrl().toString());
-        assertEquals(expected, JsonValue.parseString(testRequest.getRequestBody()).optMap());
+        // Verify update
+        String expectedUpdatePayload = "{\n" +
+                "   \"associate\":[\n" +
+                "      {\n" +
+                "         \"channel_id\":\"fake_channel_id\",\n" +
+                "         \"device_type\":\"sms\"\n" +
+                "      }\n" +
+                "   ]\n" +
+                "}";
+        assertEquals("POST", associateRequest.getRequestMethod());
+        assertEquals("https://example.com/api/contacts/fake_contact_id", associateRequest.getUrl().toString());
+        assertEquals(JsonValue.parseString(expectedUpdatePayload), JsonValue.parseString(associateRequest.getRequestBody()));
     }
 
     /**
@@ -288,6 +316,9 @@ public class ContactApiClientTest extends BaseTestCase {
      */
     @Test
     public void testResetSucceeds() throws RequestException, JsonException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
+
         testRequest.responseBody = "{ \"ok\": true, \"contact_id\": \"fake_contact_id\"}";
         testRequest.responseStatus = 200;
 
@@ -311,6 +342,9 @@ public class ContactApiClientTest extends BaseTestCase {
      */
     @Test
     public void testUpdateSucceeds() throws RequestException, JsonException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
+
         testRequest.responseBody = "{ \"ok\": true, \"tag_warnings\": \"The following tag groups do not exist: random-tag-group\", \"attribute_warnings\": \"Unable to process attribute change for attribute: 'random-attribute'. Attribute not found.\"}";
         testRequest.responseStatus = 200;
 
@@ -357,6 +391,8 @@ public class ContactApiClientTest extends BaseTestCase {
      */
     @Test(expected = RequestException.class)
     public void testNullUrlResolve() throws RequestException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
         client.resolve(fakeChannelId);
     }
@@ -366,6 +402,8 @@ public class ContactApiClientTest extends BaseTestCase {
      */
     @Test(expected = RequestException.class)
     public void testNullUrlIdentify() throws RequestException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
         client.identify(fakeNamedUserId, fakeChannelId, fakeContactId);
     }
@@ -375,6 +413,8 @@ public class ContactApiClientTest extends BaseTestCase {
      */
     @Test(expected = RequestException.class)
     public void testNullUrlReset() throws RequestException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
         client.reset(fakeChannelId);
     }
@@ -384,12 +424,18 @@ public class ContactApiClientTest extends BaseTestCase {
      */
     @Test(expected = RequestException.class)
     public void testNullUrlUpdate() throws RequestException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
+
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
         client.update(fakeContactId, null, null, null);
     }
 
     @Test
     public void testGetSubscriptionLists() throws RequestException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
+
         testRequest.responseStatus = 200;
         testRequest.responseBody = "{\n" +
                 "   \"ok\":true,\n" +
@@ -434,6 +480,9 @@ public class ContactApiClientTest extends BaseTestCase {
 
     @Test
     public void testGetSubscriptionListsEmptyResponse() throws RequestException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
+
         testRequest.responseStatus = 200;
         testRequest.responseBody = "{\n" +
                 "   \"ok\":true,\n" +
@@ -452,6 +501,9 @@ public class ContactApiClientTest extends BaseTestCase {
 
     @Test(expected = RequestException.class)
     public void testGetSubscriptionFailure() throws RequestException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
+
         testRequest.responseStatus = 200;
         testRequest.responseBody = "what";
         client.getSubscriptionLists("identifier");
@@ -459,6 +511,9 @@ public class ContactApiClientTest extends BaseTestCase {
 
     @Test
     public void testGetSubscriptionInvalidBody() throws RequestException {
+        TestRequest testRequest = new TestRequest();
+        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
+
         testRequest.responseStatus = 400;
         Response<Map<String, Set<Scope>>> response = client.getSubscriptionLists("identifier");
         assertEquals(testRequest.responseBody, response.getResponseBody());

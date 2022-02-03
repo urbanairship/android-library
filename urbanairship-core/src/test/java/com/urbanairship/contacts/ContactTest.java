@@ -507,7 +507,7 @@ public class ContactTest extends BaseTestCase {
         Map<String, Set<String>> expectedTags = Collections.singletonMap("group", Collections.singleton("tag"));
         Map<String, Set<Scope>> expectedSubscriptionLists = Collections.singletonMap("some list", Collections.singleton(Scope.SMS));
 
-        ContactData expectedContactData = new ContactData(expectedAttributes, expectedTags, expectedSubscriptionLists);
+        ContactData expectedContactData = new ContactData(expectedAttributes, expectedTags, Collections.emptyList(), expectedSubscriptionLists);
         assertEquals(expectedContactData, argument.getValue());
     }
 

@@ -355,6 +355,74 @@ public class Contact extends AirshipComponent {
     }
 
     /**
+     * Registers an Email channel.
+     *
+     * @param address The Email address to register.
+     * @param options An EmailRegistrationOptions object that defines registration options.
+     */
+    public void registerEmail(@NonNull String address, @NonNull EmailRegistrationOptions options) {
+        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+            Logger.warn("Contact - Ignoring Email registration while contacts are disabled.");
+            return;
+        }
+
+        addOperation(ContactOperation.resolve());
+        addOperation(ContactOperation.registerEmail(address, options));
+        dispatchContactUpdateJob();
+    }
+
+    /**
+     * Registers a Sms channel.
+     *
+     * @param msisdn The Mobile Station number to register.
+     * @param options An SmsRegistrationObject object that defines registration options.
+     */
+    public void registerSms(@NonNull String msisdn, @NonNull SmsRegistrationOptions options) {
+        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+            Logger.warn("Contact - Ignoring Sms registration while contacts are disabled.");
+            return;
+        }
+
+        addOperation(ContactOperation.resolve());
+        addOperation(ContactOperation.registerSms(msisdn, options));
+        dispatchContactUpdateJob();
+    }
+
+    /**
+     * Registers an Open channel.
+     *
+     * @param address The address to register.
+     * @param options An SmsRegistrationObject object that defines registration options.
+     */
+    public void registerOpenChannel(@NonNull String address, @NonNull OpenChannelRegistrationOptions options) {
+        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+            Logger.warn("Contact - Ignoring Open channel registration while contacts are disabled.");
+            return;
+        }
+
+        addOperation(ContactOperation.resolve());
+        addOperation(ContactOperation.registerOpenChannel(address, options));
+        dispatchContactUpdateJob();
+    }
+
+    /**
+     * Associates a channel to the contact.
+     *
+     * @param channelId The channel Id.
+     * @param channelType The channel type.
+     */
+    public void associateChannel(@NonNull String channelId, @NonNull ChannelType channelType) {
+        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+            Logger.warn("Contact - Ignoring associate channel request while contacts are disabled.");
+            return;
+        }
+
+        addOperation(ContactOperation.resolve());
+        addOperation(ContactOperation.associateChannel(channelId, channelType));
+        dispatchContactUpdateJob();
+    }
+
+    /**
      * Edit the attributes associated with this Contact.
      *
      * @return An {@link AttributeEditor}.
@@ -622,6 +690,10 @@ public class Contact extends AirshipComponent {
         ContactIdentity contactIdentity = getLastContactIdentity();
         switch(operation.getType()) {
             case ContactOperation.OPERATION_UPDATE:
+            case ContactOperation.OPERATION_REGISTER_EMAIL:
+            case ContactOperation.OPERATION_REGISTER_SMS:
+            case ContactOperation.OPERATION_REGISTER_OPEN_CHANNEL:
+            case ContactOperation.OPERATION_ASSOCIATE_CHANNEL:
                 return false;
             case ContactOperation.OPERATION_IDENTIFY:
                 if (contactIdentity == null) {
@@ -660,7 +732,7 @@ public class Contact extends AirshipComponent {
                         updatePayload.getSubscriptionListMutations()
                 );
                 if (updateResponse.isSuccessful() && lastContactIdentity.isAnonymous()) {
-                    updateAnonData(updatePayload);
+                    updateAnonData(updatePayload, null);
 
                     if (!updatePayload.getAttributeMutations().isEmpty()) {
                         for (AttributeListener listener : this.attributeListeners) {
@@ -688,12 +760,12 @@ public class Contact extends AirshipComponent {
                 }
 
                 Response<ContactIdentity> identityResponse = contactApiClient.identify(identifyPayload.getIdentifier(), channelId, contactId);
-                processContactResponse(identityResponse, lastContactIdentity);
+                processResponse(identityResponse, lastContactIdentity);
                 return identityResponse;
 
             case ContactOperation.OPERATION_RESET:
                 Response<ContactIdentity> resetResponse = contactApiClient.reset(channelId);
-                processContactResponse(resetResponse, lastContactIdentity);
+                processResponse(resetResponse, lastContactIdentity);
                 return resetResponse;
 
             case ContactOperation.OPERATION_RESOLVE:
@@ -701,15 +773,51 @@ public class Contact extends AirshipComponent {
                 if (resolveResponse.isSuccessful()) {
                     setLastResolvedDate(clock.currentTimeMillis());
                 }
-                processContactResponse(resolveResponse, lastContactIdentity);
+                processResponse(resolveResponse, lastContactIdentity);
                 return resolveResponse;
+
+            case ContactOperation.OPERATION_REGISTER_EMAIL:
+                if (lastContactIdentity == null) {
+                    throw new IllegalStateException("Unable to process update without previous contact identity");
+                }
+                ContactOperation.RegisterEmailPayload registerEmailPayload = operation.coercePayload();
+                Response<AssociatedChannel> registerEmailResponse = contactApiClient.registerEmail(lastContactIdentity.getContactId(), registerEmailPayload.getEmailAddress(), registerEmailPayload.getOptions());
+                processResponse(registerEmailResponse);
+                return registerEmailResponse;
+
+            case ContactOperation.OPERATION_REGISTER_SMS:
+                if (lastContactIdentity == null) {
+                    throw new IllegalStateException("Unable to process update without previous contact identity");
+                }
+                ContactOperation.RegisterSmsPayload registerSmsPayload = operation.coercePayload();
+                Response<AssociatedChannel> registerSmsResponse = contactApiClient.registerSms(lastContactIdentity.getContactId(), registerSmsPayload.getMsisdn(), registerSmsPayload.getOptions());
+                processResponse(registerSmsResponse);
+                return registerSmsResponse;
+
+            case ContactOperation.OPERATION_REGISTER_OPEN_CHANNEL:
+                if (lastContactIdentity == null) {
+                    throw new IllegalStateException("Unable to process update without previous contact identity");
+                }
+                ContactOperation.RegisterOpenChannelPayload registerOpenChannelPayload = operation.coercePayload();
+                Response<AssociatedChannel> registerOpenChannelResponse = contactApiClient.registerOpenChannel(lastContactIdentity.getContactId(), registerOpenChannelPayload.getAddress(), registerOpenChannelPayload.getOptions());
+                processResponse(registerOpenChannelResponse);
+                return registerOpenChannelResponse;
+
+            case ContactOperation.OPERATION_ASSOCIATE_CHANNEL:
+                if (lastContactIdentity == null) {
+                    throw new IllegalStateException("Unable to process update without previous contact identity");
+                }
+                ContactOperation.AssociateChannelPayload associateChannelPayload = operation.coercePayload();
+                Response<AssociatedChannel> associatedChannelResponse = contactApiClient.associatedChannel(lastContactIdentity.getContactId(), associateChannelPayload.getChannelId(), associateChannelPayload.getChannelType());
+                processResponse(associatedChannelResponse);
+                return associatedChannelResponse;
 
             default:
                 throw new IllegalStateException("Unexpected operation type: " + operation.getType());
         }
     }
 
-    private void processContactResponse(@NonNull Response<ContactIdentity> response, @Nullable ContactIdentity lastContactIdentity) {
+    private void processResponse(@NonNull Response<ContactIdentity> response, @Nullable ContactIdentity lastContactIdentity) {
         ContactIdentity contactIdentity = response.getResult();
         if (!response.isSuccessful() || contactIdentity == null) {
             return;
@@ -743,6 +851,12 @@ public class Contact extends AirshipComponent {
         }
 
         isContactIdRefreshed = true;
+    }
+
+    private void processResponse(@NonNull Response<AssociatedChannel> response) {
+        if (response.isSuccessful() && getLastContactIdentity() != null && getLastContactIdentity().isAnonymous()) {
+            updateAnonData(null, response.getResult());
+        }
     }
 
     private void onConflict(@Nullable String namedUserId) {
@@ -782,39 +896,49 @@ public class Contact extends AirshipComponent {
         preferenceDataStore.put(ANON_CONTACT_DATA_KEY, contactData);
     }
 
-    private void updateAnonData(@NonNull ContactOperation.UpdatePayload payload) {
+    private void updateAnonData(@Nullable ContactOperation.UpdatePayload payload,
+                                @Nullable AssociatedChannel channel) {
+
         Map<String, JsonValue> attributes = new HashMap<>();
         Map<String, Set<String>> tagGroups = new HashMap<>();
+        List<AssociatedChannel> channels = new ArrayList<>();
         Map<String, Set<Scope>> subscriptionLists = new HashMap<>();
 
         ContactData anonData = getAnonContactData();
         if (anonData != null) {
             attributes.putAll(anonData.getAttributes());
             tagGroups.putAll(anonData.getTagGroups());
+            channels.addAll(anonData.getAssociatedChannels());
             subscriptionLists.putAll(anonData.getSubscriptionLists());
         }
 
-        for(AttributeMutation mutation : payload.getAttributeMutations()) {
-            switch (mutation.action) {
-                case AttributeMutation.ATTRIBUTE_ACTION_SET:
-                    attributes.put(mutation.name, mutation.value);
-                    break;
+        if (payload != null) {
+            for(AttributeMutation mutation : payload.getAttributeMutations()) {
+                switch (mutation.action) {
+                    case AttributeMutation.ATTRIBUTE_ACTION_SET:
+                        attributes.put(mutation.name, mutation.value);
+                        break;
 
-                case AttributeMutation.ATTRIBUTE_ACTION_REMOVE:
-                    attributes.remove(mutation.name);
-                    break;
+                    case AttributeMutation.ATTRIBUTE_ACTION_REMOVE:
+                        attributes.remove(mutation.name);
+                        break;
+                }
+            }
+
+            for(TagGroupsMutation mutation : payload.getTagGroupMutations()) {
+                mutation.apply(tagGroups);
+            }
+
+            for(ScopedSubscriptionListMutation mutation : payload.getSubscriptionListMutations()) {
+                mutation.apply(subscriptionLists);
             }
         }
 
-        for(TagGroupsMutation mutation : payload.getTagGroupMutations()) {
-            mutation.apply(tagGroups);
+        if (channel != null) {
+            channels.add(channel);
         }
 
-        for(ScopedSubscriptionListMutation mutation : payload.getSubscriptionListMutations()) {
-            mutation.apply(subscriptionLists);
-        }
-
-        ContactData data = new ContactData(attributes, tagGroups, subscriptionLists);
+        ContactData data = new ContactData(attributes, tagGroups, channels, subscriptionLists);
         setAnonContactData(data);
     }
 
