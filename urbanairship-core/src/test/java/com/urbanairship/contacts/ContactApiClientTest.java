@@ -238,11 +238,11 @@ public class ContactApiClientTest extends BaseTestCase {
                 "      \"address\":fake@email.com,\n" +
                 "      \"timezone\":\"US\\/Pacific\",\n" +
                 "      \"locale_language\":\"en\",\n" +
-                "      \"properties\":{\n" +
-                "         \"properties_key\":\"properties_value\"},\n" +
-                "      \"locale_country\":\"US\",\n" +
-                "      \"opt_in_mode\":\"classic\"\n" +
-                "   }\n" +
+                "      \"locale_country\":\"US\"\n" +
+                "   },\n" +
+                "   \"properties\":{\n" +
+                "      \"properties_key\":\"properties_value\"},\n" +
+                "   \"opt_in_mode\":\"classic\"\n" +
                 "}";
         assertEquals("POST", registerRequest.getRequestMethod());
         assertEquals("https://example.com/api/channels/restricted/email/", registerRequest.getUrl().toString());

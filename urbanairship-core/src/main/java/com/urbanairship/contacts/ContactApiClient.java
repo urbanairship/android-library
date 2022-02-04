@@ -189,9 +189,7 @@ class ContactApiClient {
                                          .put(ADDRESS, emailAddress)
                                          .put(TIMEZONE, TimeZone.getDefault().getID())
                                          .put(LOCALE_LANGUAGE, Locale.getDefault().getLanguage())
-                                         .put(LOCALE_COUNTRY, Locale.getDefault().getCountry())
-                                         .put(OPT_IN_MODE_KEY, options.isDoubleOptIn() ? OPT_IN_DOUBLE : OPT_IN_CLASSIC)
-                                         .put(PROPERTIES_KEY, options.getProperties());
+                                         .put(LOCALE_COUNTRY, Locale.getDefault().getCountry());
 
         if (options.getCommercialOptedIn() > 0) {
             builder.put(COMMERCIAL_OPTED_IN_KEY, DateUtils.createIso8601TimeStamp(options.getCommercialOptedIn()));
@@ -203,6 +201,8 @@ class ContactApiClient {
 
         JsonMap payload = JsonMap.newBuilder()
                                  .put(CHANNEL_KEY, builder.build())
+                                 .put(OPT_IN_MODE_KEY, options.isDoubleOptIn() ? OPT_IN_DOUBLE : OPT_IN_CLASSIC)
+                                 .put(PROPERTIES_KEY, options.getProperties())
                                  .build();
 
         return registerAndAssociate(identifier, url, payload, ChannelType.EMAIL);
