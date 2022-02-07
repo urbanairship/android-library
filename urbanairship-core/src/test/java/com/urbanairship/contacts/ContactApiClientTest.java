@@ -276,9 +276,6 @@ public class ContactApiClientTest extends BaseTestCase {
 
         SmsRegistrationOptions options = SmsRegistrationOptions.options(fakeSenderId);
 
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        String dateString = df.format(Calendar.getInstance().getTime());
-
         Response<AssociatedChannel> response = client.registerSms(fakeContactId, fakeMsisdn, options);
         assertEquals(200, response.getStatus());
         assertEquals("fake_channel_id", response.getResult().getChannelId());
@@ -290,8 +287,7 @@ public class ContactApiClientTest extends BaseTestCase {
                 "      \"sender\":\"fake_sender_id\",\n" +
                 "      \"timezone\":\"US\\/Pacific\",\n" +
                 "      \"locale_language\":\"en\",\n" +
-                "      \"locale_country\":\"US\",\n" +
-                "      \"opted_in\":\"" + dateString + "\"\n" +
+                "      \"locale_country\":\"US\"\n" +
                 "}";
         assertEquals("POST", registerRequest.getRequestMethod());
         assertEquals("https://example.com/api/channels/restricted/sms/", registerRequest.getUrl().toString());

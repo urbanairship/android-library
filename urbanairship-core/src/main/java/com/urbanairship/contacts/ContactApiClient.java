@@ -215,16 +215,12 @@ class ContactApiClient {
                                .appendEncodedPath(SMS_PATH)
                                .build();
 
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        String date = df.format(Calendar.getInstance().getTime());
-
         JsonMap payload = JsonMap.newBuilder()
                                  .put(MSISDN_KEY, msisdn)
                                  .put(SENDER_KEY, options.getSenderId())
                                  .put(TIMEZONE, TimeZone.getDefault().getID())
                                  .put(LOCALE_LANGUAGE, Locale.getDefault().getLanguage())
                                  .put(LOCALE_COUNTRY, Locale.getDefault().getCountry())
-                                 .put(OPTED_IN_KEY, date)
                                  .build();
 
         return registerAndAssociate(identifier, url, payload, ChannelType.SMS);
