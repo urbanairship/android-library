@@ -2,6 +2,25 @@
 
 package com.urbanairship.contacts;
 
+import static android.os.Looper.getMainLooper;
+import static com.urbanairship.AirshipLoopers.getBackgroundLooper;
+import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
+
 import android.content.Context;
 import android.os.Looper;
 
@@ -11,10 +30,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
-
-import com.urbanairship.ResultCallback;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
-import com.urbanairship.ShadowAirshipExecutorsPaused;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
@@ -32,6 +48,8 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 import com.urbanairship.util.CachedValue;
@@ -49,6 +67,7 @@ import org.robolectric.annotation.LooperMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -56,24 +75,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-
-import static android.os.Looper.getMainLooper;
-import static com.urbanairship.AirshipLoopers.getBackgroundLooper;
-import static junit.framework.Assert.assertNotNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.robolectric.Shadows.shadowOf;
 
 @Config(
         sdk = 28,
@@ -907,6 +908,182 @@ public class ContactTest extends BaseTestCase {
         runLooperTasks();
 
         verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
+    }
+
+    @Test
+    public void testRegisterEmail() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        JsonMap properties = JsonMap.newBuilder().put("place", "paris").build();
+        EmailRegistrationOptions options = EmailRegistrationOptions.commercialOptions(new Date(), new Date(), properties);
+
+        Response<AssociatedChannel> registerResponse = new Response.Builder<AssociatedChannel>(200).setResult(new AssociatedChannel("email-channel-id", ChannelType.EMAIL)).build();
+        when(mockContactApiClient.registerEmail(eq(fakeContactId), eq("ua@airship.com"), any(EmailRegistrationOptions.class))).thenReturn(registerResponse);
+
+        contact.registerEmail("ua@airship.com", options);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).resolve(fakeChannelId);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).registerEmail(eq(fakeContactId), eq("ua@airship.com"), any(EmailRegistrationOptions.class));
+
+        verify(changeListener).onContactChanged();
+    }
+
+    @Test
+    public void testRegisterEmailFailed() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        JsonMap properties = JsonMap.newBuilder().put("place", "paris").build();
+        EmailRegistrationOptions options = EmailRegistrationOptions.commercialOptions(new Date(), new Date(), properties);
+
+        Response<AssociatedChannel> registerResponse = new Response.Builder<AssociatedChannel>(500).build();
+        when(mockContactApiClient.registerEmail(eq(fakeContactId), eq("ua@airship.com"), Mockito.any(EmailRegistrationOptions.class))).thenReturn(registerResponse);
+
+        contact.registerEmail("ua@airship.com", options);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).resolve(fakeChannelId);
+
+        assertEquals(JobInfo.JOB_RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).registerEmail(eq(fakeContactId), eq("ua@airship.com"), Mockito.any(EmailRegistrationOptions.class));
+    }
+
+    @Test
+    public void testRegisterSms() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        SmsRegistrationOptions options = SmsRegistrationOptions.options("12345");
+
+        Response<AssociatedChannel> registerResponse = new Response.Builder<AssociatedChannel>(200).setResult(new AssociatedChannel("sms-channel-id", ChannelType.SMS)).build();
+        when(mockContactApiClient.registerSms(eq(fakeContactId), eq("12345678"), any(SmsRegistrationOptions.class))).thenReturn(registerResponse);
+
+        contact.registerSms("12345678", options);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).resolve(fakeChannelId);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).registerSms(eq(fakeContactId), eq("12345678"), any(SmsRegistrationOptions.class));
+
+        verify(changeListener).onContactChanged();
+    }
+
+    @Test
+    public void testRegisterSmsFailed() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        SmsRegistrationOptions options = SmsRegistrationOptions.options("12345");
+
+        Response<AssociatedChannel> registerResponse = new Response.Builder<AssociatedChannel>(500).build();
+        when(mockContactApiClient.registerSms(eq(fakeContactId), eq("12345678"), Mockito.any(SmsRegistrationOptions.class))).thenReturn(registerResponse);
+
+        contact.registerSms("12345678", options);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).resolve(fakeChannelId);
+
+        assertEquals(JobInfo.JOB_RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).registerSms(eq(fakeContactId), eq("12345678"), Mockito.any(SmsRegistrationOptions.class));
+    }
+
+    @Test
+    public void testRegisterOpen() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        OpenChannelRegistrationOptions options = OpenChannelRegistrationOptions.options("platform-name", Collections.singletonMap("number", "1"));
+
+        Response<AssociatedChannel> registerResponse = new Response.Builder<AssociatedChannel>(200).setResult(new AssociatedChannel("open-channel-id", ChannelType.OPEN)).build();
+        when(mockContactApiClient.registerOpenChannel(eq(fakeContactId), eq("open-channel-address"), any(OpenChannelRegistrationOptions.class))).thenReturn(registerResponse);
+
+        contact.registerOpenChannel("open-channel-address", options);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).resolve(fakeChannelId);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).registerOpenChannel(eq(fakeContactId), eq("open-channel-address"), any(OpenChannelRegistrationOptions.class));
+
+        verify(changeListener).onContactChanged();
+    }
+
+    @Test
+    public void testRegisterOpenFailed() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        OpenChannelRegistrationOptions options = OpenChannelRegistrationOptions.options("platform-name", Collections.singletonMap("number", "1"));
+
+        Response<AssociatedChannel> registerResponse = new Response.Builder<AssociatedChannel>(500).build();
+        when(mockContactApiClient.registerOpenChannel(eq(fakeContactId), eq("open-channel-address"), Mockito.any(OpenChannelRegistrationOptions.class))).thenReturn(registerResponse);
+
+        contact.registerOpenChannel("open-channel-address", options);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).resolve(fakeChannelId);
+
+        assertEquals(JobInfo.JOB_RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).registerOpenChannel(eq(fakeContactId), eq("open-channel-address"), Mockito.any(OpenChannelRegistrationOptions.class));
+    }
+
+    @Test
+    public void testAssociateChannel() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        Response<AssociatedChannel> associatedResponse = new Response.Builder<AssociatedChannel>(200).setResult(new AssociatedChannel("new-fake-channel-id", ChannelType.EMAIL)).build();
+        when(mockContactApiClient.associatedChannel(fakeContactId, "new-fake-channel-id", ChannelType.EMAIL)).thenReturn(associatedResponse);
+
+        contact.associateChannel("new-fake-channel-id", ChannelType.EMAIL);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).resolve(fakeChannelId);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).associatedChannel(fakeContactId, "new-fake-channel-id", ChannelType.EMAIL);
+
+        verify(changeListener).onContactChanged();
+    }
+
+    @Test
+    public void testAssociateChannelFailed() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        Response<AssociatedChannel> associatedResponse = new Response.Builder<AssociatedChannel>(500).build();
+        when(mockContactApiClient.associatedChannel(fakeContactId, "new-fake-channel-id", ChannelType.EMAIL)).thenReturn(associatedResponse);
+
+        contact.associateChannel("new-fake-channel-id", ChannelType.EMAIL);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).resolve(fakeChannelId);
+
+        assertEquals(JobInfo.JOB_RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).associatedChannel(fakeContactId, "new-fake-channel-id", ChannelType.EMAIL);
+
+        verify(changeListener).onContactChanged();
     }
 
     /**
