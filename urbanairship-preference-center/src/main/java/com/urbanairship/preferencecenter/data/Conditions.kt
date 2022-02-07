@@ -34,7 +34,7 @@ sealed class Condition(private val type: String) {
 
             companion object {
                 internal fun parse(json: String) =
-                    valueOf(json.lowercase())
+                    valueOf(json.uppercase())
             }
         }
 

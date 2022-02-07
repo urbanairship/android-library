@@ -14,6 +14,12 @@ sealed class Section(private val type: String) {
     abstract val display: CommonDisplay
     abstract val conditions: Conditions
 
+    fun filterItems(predicate: (Item) -> Boolean): Section =
+        when (this) {
+            is Common -> copy(items = items.filter(predicate))
+            is SectionBreak -> this
+        }
+
     /** Returns `true` if this section contains channel subscription items. */
     internal val hasChannelSubscriptions: Boolean by lazy {
         items.any { it.hasChannelSubscriptions }

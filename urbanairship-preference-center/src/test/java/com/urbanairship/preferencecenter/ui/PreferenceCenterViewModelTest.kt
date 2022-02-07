@@ -12,9 +12,12 @@ import com.urbanairship.contacts.Contact
 import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListEditor
 import com.urbanairship.json.JsonValue
+import com.urbanairship.preferencecenter.ConditionStateMonitor
 import com.urbanairship.preferencecenter.PreferenceCenter
 import com.urbanairship.preferencecenter.data.Button
 import com.urbanairship.preferencecenter.data.CommonDisplay
+import com.urbanairship.preferencecenter.data.Condition
+import com.urbanairship.preferencecenter.data.Condition.NotificationOptIn.Status
 import com.urbanairship.preferencecenter.data.IconDisplay
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Item.ContactSubscriptionGroup.Component
@@ -26,6 +29,8 @@ import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -36,6 +41,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.Mockito.spy
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.inOrder
@@ -169,7 +175,7 @@ class PreferenceCenterViewModelTest {
             )
         )
 
-        private val ALERT_CONFIG = PreferenceCenterConfig(
+        private val ALERT_CONDITIONS_CONFIG = PreferenceCenterConfig(
             id = PREF_CENTER_ID,
             display = CommonDisplay(PREF_CENTER_TITLE, PREF_CENTER_SUBTITLE),
             sections = listOf(
@@ -184,8 +190,14 @@ class PreferenceCenterViewModelTest {
                             conditions = emptyList()
                         )
                     ),
-                    conditions = emptyList()
-                )
+                    conditions = listOf(Condition.NotificationOptIn(status = Status.OPT_OUT))
+                ),
+                Section.Common(
+                    id = "section-2",
+                    display = CommonDisplay("section-2-title", "section-2-subtitle"),
+                    items = listOf(CONTACT_SUBSCRIPTION_ITEM_1, CONTACT_SUBSCRIPTION_ITEM_2),
+                    conditions = listOf(Condition.NotificationOptIn(status = Status.OPT_IN))
+                ),
             )
         )
     }
@@ -194,6 +206,7 @@ class PreferenceCenterViewModelTest {
     private lateinit var preferenceCenter: PreferenceCenter
     private lateinit var channel: AirshipChannel
     private lateinit var contact: Contact
+    private lateinit var conditionMonitor: ConditionStateMonitor
 
     private val testActionRunRequestFactory: ActionRunRequestFactory = mock {
         on { createActionRequest(any()) } doReturn ActionRunRequest.createRequest("test-action")
@@ -223,12 +236,11 @@ class PreferenceCenterViewModelTest {
 
     @Test
     fun handlesRefreshAction() = runBlocking {
-        viewModel(
-            config = mockConfig(
-                hasChannelSubscriptions = true,
-                hasContactSubscriptions = true
-            )
-        ).run {
+        val config = spy(CHANNEL_SUBSCRIPTION_CONFIG)
+        whenever(config.hasChannelSubscriptions).doReturn(true)
+        whenever(config.hasContactSubscriptions).doReturn(true)
+
+        viewModel(config = config).run {
             states.test {
                 handle(Action.Refresh)
                 assertThat(awaitItem()).isEqualTo(State.Loading)
@@ -244,12 +256,11 @@ class PreferenceCenterViewModelTest {
 
     @Test
     fun handlesRefreshActionWithoutChannelSubscriptions() = runBlocking {
-        viewModel(
-            config = mockConfig(
-                hasChannelSubscriptions = false,
-                hasContactSubscriptions = true
-            )
-        ).run {
+        val config = spy(CHANNEL_SUBSCRIPTION_CONFIG)
+        whenever(config.hasChannelSubscriptions).doReturn(false)
+        whenever(config.hasContactSubscriptions).doReturn(true)
+
+        viewModel(config = config).run {
             states.test {
                 handle(Action.Refresh)
                 assertThat(awaitItem()).isEqualTo(State.Loading)
@@ -265,12 +276,11 @@ class PreferenceCenterViewModelTest {
 
     @Test
     fun handlesRefreshActionWithoutContactSubscriptions() = runBlocking {
-        viewModel(
-            config = mockConfig(
-                hasChannelSubscriptions = true,
-                hasContactSubscriptions = false
-            )
-        ).run {
+        val config = spy(CHANNEL_SUBSCRIPTION_CONFIG)
+        whenever(config.hasChannelSubscriptions).doReturn(true)
+        whenever(config.hasContactSubscriptions).doReturn(false)
+
+        viewModel(config = config).run {
             states.test {
                 handle(Action.Refresh)
                 assertThat(awaitItem()).isEqualTo(State.Loading)
@@ -584,6 +594,59 @@ class PreferenceCenterViewModelTest {
     }
 
     //
+    // Condition State Updates
+    //
+
+    fun handlesConditionStateUpdate(): Unit = runBlocking {
+        val initialConditions = Condition.State(isOptedIn = false)
+        val updatedConditions = Condition.State(isOptedIn = true)
+
+        val stateFlow = MutableStateFlow(initialConditions)
+
+        viewModel(
+            config = ALERT_CONDITIONS_CONFIG,
+            mockConditionStateMonitor = {
+                whenever(currentState) doReturn stateFlow.value
+                whenever(states) doReturn stateFlow
+            },
+            conditionState = initialConditions
+        ).run {
+            states.test {
+                assertThat(awaitItem()).isEqualTo(State.Loading)
+
+                handle(Action.Refresh)
+
+                val initialContent = awaitItem()
+                // Ensure we received an initial content state
+                assertThat(initialContent).isInstanceOf(State.Content::class.java)
+                initialContent as State.Content
+                assertThat(initialContent.conditionState).isEqualTo(initialConditions)
+                // Config should contain the entire unfiltered config
+                assertThat(initialContent.config).isEqualTo(ALERT_CONDITIONS_CONFIG)
+
+                // List items should only contain the alert item when notifications are opted out
+                assertThat(initialContent.listItems).hasSize(1)
+                assertThat(initialContent.listItems.first()).isInstanceOf(Item.Alert::class.java)
+
+                // Update condition state to fake a notification opt-in
+                stateFlow.value = updatedConditions
+
+                val updatedContent = awaitItem()
+                // Sanity check
+                assertThat(updatedContent).isInstanceOf(State.Content::class.java)
+                updatedContent as State.Content
+                assertThat(updatedContent.conditionState).isEqualTo(updatedConditions)
+
+                // List items should contain a section with two subscription pref items
+                assertThat(updatedContent.listItems).hasSize(3)
+                assertThat(updatedContent.listItems[0]).isInstanceOf(Section.Common::class.java)
+                assertThat(updatedContent.listItems[1]).isInstanceOf(Item.ContactSubscription::class.java)
+                assertThat(updatedContent.listItems[2]).isInstanceOf(Item.ContactSubscription::class.java)
+            }
+        }
+    }
+
+    //
     // Alert Item
     //
 
@@ -595,7 +658,7 @@ class PreferenceCenterViewModelTest {
             "app-store" to JsonValue.wrap("baz")
         )
 
-        viewModel(config = ALERT_CONFIG).run {
+        viewModel(config = ALERT_CONDITIONS_CONFIG).run {
             states.test {
                 handle(Action.ButtonActions(actions))
                 cancelAndIgnoreRemainingEvents()
@@ -605,27 +668,36 @@ class PreferenceCenterViewModelTest {
         verify(testActionRunRequestFactory, times(3)).createActionRequest(any())
     }
 
+    //
+    // List Filtering
+    //
+
     @Test
     fun testFiltersEmptySection(): Unit = runBlocking {
-        val conf = ALERT_CONFIG
+        val conf = ALERT_CONDITIONS_CONFIG
         val configItemCount = conf.sections.count() + conf.sections.sumOf { it.items.count() }
-        // Sanity check that we have 1 section with 1 alert item in the config
-        assertEquals(2, configItemCount)
+        // Sanity check that we have 2 sections with 1 alert item in first and 2 subscription
+        // preference in the second
+        assertEquals(5, configItemCount)
 
-        val filteredItems = conf.asPrefCenterItems().count()
+        val conditions = Condition.State(isOptedIn = false)
+        val filteredItems = conf.filterByConditions(conditions).asPrefCenterItems().count()
         // Verify that the empty section wasn't converted into a PrefCenterItem
         assertEquals(1, filteredItems)
     }
 
-    private fun mockConfig(
-        hasChannelSubscriptions: Boolean = false,
-        hasContactSubscriptions: Boolean = false
-    ) = mock<PreferenceCenterConfig> {
-        on { this.id } doReturn PREF_CENTER_ID
-        on { this.display } doReturn CommonDisplay("name", "description")
-        on { this.hasChannelSubscriptions } doReturn hasChannelSubscriptions
-        on { this.hasContactSubscriptions } doReturn hasContactSubscriptions
-        on { this.asPrefCenterItems() } doReturn emptyList()
+    @Test
+    fun testFiltersNotificationOptIn(): Unit = runBlocking {
+        val conf = ALERT_CONDITIONS_CONFIG
+        val configItemCount = conf.sections.count() + conf.sections.sumOf { it.items.count() }
+        // Sanity check that we have 2 sections with 1 alert item in first and 2 subscription
+        // preference in the second
+        assertEquals(5, configItemCount)
+
+        val conditions = Condition.State(isOptedIn = true)
+        val filteredItems = conf.filterByConditions(conditions).asPrefCenterItems().count()
+        // Verify that we ended up with 1 section items + 2 preference items
+        assertEquals(3, filteredItems)
     }
 
     private fun viewModel(
@@ -637,7 +709,9 @@ class PreferenceCenterViewModelTest {
         actionRunRequestFactory: ActionRunRequestFactory = testActionRunRequestFactory,
         mockPreferenceCenter: (PreferenceCenter.() -> Unit)? = {},
         mockChannel: (AirshipChannel.() -> Unit)? = {},
-        mockContact: (Contact.() -> Unit)? = {}
+        mockContact: (Contact.() -> Unit)? = {},
+        mockConditionStateMonitor: (ConditionStateMonitor.() -> Unit)? = {},
+        conditionState: Condition.State = Condition.State(isOptedIn = true)
     ): PreferenceCenterViewModel {
         preferenceCenter = if (mockPreferenceCenter == null) {
             mock {}
@@ -660,6 +734,17 @@ class PreferenceCenterViewModelTest {
                 on { getSubscriptionLists(true) } doReturn pendingResultOf(contactSubscriptions)
             }.also(mockContact::invoke)
         }
+        conditionMonitor = if (mockConditionStateMonitor == null) {
+            mock {
+                on { currentState } doReturn conditionState
+                on { states } doReturn MutableStateFlow(conditionState).asStateFlow()
+            }
+        } else {
+            mock<ConditionStateMonitor> {
+                on { currentState } doReturn conditionState
+                on { states } doReturn MutableStateFlow(conditionState).asStateFlow()
+            }.also(mockConditionStateMonitor::invoke)
+        }
 
         return PreferenceCenterViewModel(
             preferenceCenterId = preferenceCenterId,
@@ -667,7 +752,8 @@ class PreferenceCenterViewModelTest {
             channel = channel,
             contact = contact,
             ioDispatcher = ioDispatcher,
-            actionRunRequestFactory = actionRunRequestFactory
+            actionRunRequestFactory = actionRunRequestFactory,
+            conditionMonitor = conditionMonitor
         )
     }
 }

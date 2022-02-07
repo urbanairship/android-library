@@ -157,10 +157,13 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 else -> state
             }
             is Change.UpdateConditionState -> when (state) {
-                is State.Content -> state.copy(
-                    listItems = state.unfilteredListItems.filteredByConditions(change.state),
-                    conditionState = change.state
-                )
+                is State.Content -> {
+                    val conditions = change.state
+                    state.copy(
+                        listItems = state.config.filterByConditions(conditions).asPrefCenterItems(),
+                        conditionState = conditions
+                    )
+                }
                 else -> state
             }
             is Change.ShowError -> State.Error(error = change.error)
@@ -198,17 +201,15 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                         flowOf(Triple(config, emptySet(), emptyMap()))
                 }
             }.map { (config, channelSubscriptions, contactSubscriptions) ->
-                // Filter list items based on conditions.
                 val conditionState = conditionMonitor.currentState
-                val unfilteredItems = config.asPrefCenterItems()
-                val listItems = unfilteredItems.filteredByConditions(conditionState)
-
+                val filteredItems = config.filterByConditions(conditionState).asPrefCenterItems()
+                val display = config.display
                 Change.ShowContent(
                     State.Content(
-                        title = config.display.name,
-                        subtitle = config.display.description,
-                        listItems = listItems,
-                        unfilteredListItems = unfilteredItems,
+                        config = config,
+                        listItems = filteredItems,
+                        title = display.name,
+                        subtitle = display.description,
                         channelSubscriptions = channelSubscriptions,
                         contactSubscriptions = contactSubscriptions,
                         conditionState = conditionState
@@ -259,10 +260,10 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         object Loading : State()
         data class Error(val message: String? = null, val error: Throwable? = null) : State()
         data class Content(
+            val config: PreferenceCenterConfig,
+            val listItems: List<PrefCenterItem>,
             val title: String?,
             val subtitle: String?,
-            val listItems: List<PrefCenterItem>,
-            val unfilteredListItems: List<PrefCenterItem>,
             val channelSubscriptions: Set<String>,
             val contactSubscriptions: Map<String, Set<Scope>>,
             val conditionState: Condition.State
@@ -323,8 +324,20 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
 /**
  * Helper extension that returns a subset of pref center items based on the given condition [state].
  */
-private fun List<PrefCenterItem>.filteredByConditions(state: Condition.State) =
-        filter { it.conditions.evaluate(state) }
+@VisibleForTesting
+internal fun PreferenceCenterConfig.filterByConditions(
+    state: Condition.State
+): PreferenceCenterConfig {
+    return this.copy(
+        sections = sections.filter { section ->
+            section.conditions.evaluate(state)
+        }.map { section ->
+            section.filterItems { item ->
+                item.conditions.evaluate(state)
+            }
+        }
+    )
+}
 
 /**
  * Helper extension that builds a list of `PrefCenterItem` objects from a `PreferenceCenterConfig`.

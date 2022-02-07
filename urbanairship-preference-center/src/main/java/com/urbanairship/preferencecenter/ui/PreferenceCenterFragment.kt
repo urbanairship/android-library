@@ -139,7 +139,7 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
         with(views) {
             list.adapter = adapter
             list.layoutManager = LinearLayoutManager(requireContext())
-            list.addItemDecoration(SectionDividerDecoration(requireContext()))
+            list.addItemDecoration(SectionDividerDecoration(requireContext(), list::isAnimating))
             list.setHasFixedSize(true)
         }
 
@@ -203,7 +203,10 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     }
 }
 
-private class SectionDividerDecoration(context: Context) : RecyclerView.ItemDecoration() {
+private class SectionDividerDecoration(
+    context: Context,
+    private val isAnimating: () -> Boolean
+) : RecyclerView.ItemDecoration() {
     private val drawable = run {
         val dividerAttr = TypedValue()
         context.theme.resolveAttribute(R.attr.dividerHorizontal, dividerAttr, true)
@@ -216,6 +219,8 @@ private class SectionDividerDecoration(context: Context) : RecyclerView.ItemDeco
     private val dividerHeight: Int = drawable.intrinsicHeight
 
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+        if (isAnimating()) return
+
         if (shouldDrawDividerBelow(view, parent)) {
             outRect.bottom = dividerHeight
         } else if (isSectionWithoutLabeledBreak(view, parent)) {
@@ -224,6 +229,8 @@ private class SectionDividerDecoration(context: Context) : RecyclerView.ItemDeco
     }
 
     override fun onDrawOver(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+        if (isAnimating()) return
+
         val width = parent.width
         for (i in 0 until parent.childCount) {
             val child = parent.getChildAt(i)

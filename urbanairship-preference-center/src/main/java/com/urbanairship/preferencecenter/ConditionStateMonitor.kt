@@ -15,10 +15,7 @@ internal class ConditionStateMonitor(
     private val channel: AirshipChannel = UAirship.shared().channel,
     private val pushManager: PushManager = UAirship.shared().pushManager
 ) {
-    private val isOptedIn: Boolean
-        get() = pushManager.isOptIn
-
-    private val stateFlow = MutableStateFlow(Condition.State(isOptedIn = isOptedIn))
+    private val stateFlow = MutableStateFlow(currentState)
 
     val states = stateFlow.asStateFlow()
         .onSubscription {
@@ -29,7 +26,11 @@ internal class ConditionStateMonitor(
             channel.removeChannelListener(channelListener)
         }
 
-    val currentState = stateFlow.value
+    val currentState
+        get() = Condition.State(isOptedIn = isOptedIn)
+
+    private val isOptedIn: Boolean
+        get() = pushManager.isOptIn
 
     private fun checkState() {
         stateFlow.getAndUpdate { state ->

@@ -135,7 +135,15 @@ internal class PreferenceCenterFragmentTest {
         // 1 description item + 1 section break item + 2 section header items + 2 preferences per section
         private const val ITEM_COUNT = 8
         private val ITEMS = CONFIG.asPrefCenterItems()
-        private val STATE_CONTENT = State.Content(TITLE, SUBTITLE, ITEMS, ITEMS, emptySet(), emptyMap(), Condition.State(isOptedIn = true))
+        private val STATE_CONTENT = State.Content(
+            config = CONFIG,
+            listItems = ITEMS,
+            conditionState = Condition.State(isOptedIn = true),
+            channelSubscriptions = emptySet(),
+            contactSubscriptions = emptyMap(),
+            title = TITLE,
+            subtitle = SUBTITLE
+        )
     }
 
     private val testScope = TestCoroutineScope()
