@@ -63,7 +63,8 @@
     <string name="ua_custom_event_add_property">Add Property</string>
     <string name="ua_custom_event_create">Create</string>
 
-
+    <string name="ua_pref_center_view_title">Preference Centers</string>
+    <string name="ua_pref_center_view_description">View and launch preference centers</string>
 
     <string name="ua_event_view_title">Events</string>
     <string name="ua_event_view_description">Search and filter a list of recent events</string>

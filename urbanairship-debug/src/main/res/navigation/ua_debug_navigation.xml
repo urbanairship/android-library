@@ -27,6 +27,9 @@
         <action
             android:id="@+id/action_debugFragment_to_ua_custom_event"
             app:destination="@id/ua_debug_custom_event_navigation" />
+        <action
+            android:id="@+id/action_debugFragment_to_prefCenterListFragment"
+            app:destination="@id/prefCenterListFragment" />
     </fragment>
 
 
@@ -63,6 +66,15 @@
         <argument
             android:name="pushId"
             app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/prefCenterListFragment"
+        android:name="com.urbanairship.debug.preferencecenter.PrefCentersListFragment"
+        android:label="@string/ua_pref_center_view_title">
+        <action
+            android:id="@+id/action_eventListFragment_to_eventDetailsFragment"
+            app:destination="@id/eventDetailsFragment" />
     </fragment>
 
 </navigation>
