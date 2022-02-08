@@ -78,6 +78,24 @@ public class EmailRegistrationOptions implements JsonSerializable {
         );
     }
 
+    /**
+     * Email registration options.
+     *
+     * @param properties The optional properties.
+     * @param doubleOptIn {@code true} to enable double opt-in, otherwise {@code false}.
+     * @return The registration options.
+     */
+    @NonNull
+    public static EmailRegistrationOptions options(@Nullable JsonMap properties,
+                                                   boolean doubleOptIn) {
+        return new EmailRegistrationOptions(
+            -1,
+            -1,
+            properties,
+            doubleOptIn
+        );
+    }
+
     @Nullable
     JsonMap getProperties() {
         return properties;
