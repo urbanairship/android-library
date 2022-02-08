@@ -3,10 +3,14 @@ package com.urbanairship.automation;
 import android.content.Context;
 import android.net.ConnectivityManager;
 
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
+import com.urbanairship.TestApplication;
 import com.urbanairship.util.Network;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 import org.robolectric.shadows.ShadowConnectivityManager;
 
 import java.util.ArrayList;
@@ -21,6 +25,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.robolectric.Shadows.shadowOf;
 
+@Config(application = TestApplication.class)
+@LooperMode(LooperMode.Mode.LEGACY)
 @RunWith(AndroidJUnit4.class)
 public class NetworkMonitorTest {
 

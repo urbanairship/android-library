@@ -6,10 +6,14 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
+import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +27,11 @@ import static org.mockito.Mockito.verify;
 /**
  * Tests for {@link RetryingExecutor}.
  */
+@Config(
+        sdk = 28,
+        shadows = { ShadowNotificationManagerExtension.class, ShadowAirshipExecutorsLegacy.class }
+)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class RetryingExecutorTest extends BaseTestCase {
 
     private RetryingExecutor executor;

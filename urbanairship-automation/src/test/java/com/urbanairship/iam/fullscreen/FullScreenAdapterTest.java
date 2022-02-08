@@ -5,6 +5,8 @@ package com.urbanairship.iam.fullscreen;
 import android.content.Context;
 import android.content.Intent;
 
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
+import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.InAppMessage;
@@ -18,6 +20,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -29,6 +33,7 @@ import static org.mockito.Mockito.verify;
 /**
  * {@link FullScreenAdapter} tests.
  */
+@Config(application = TestApplication.class)
 @RunWith(AndroidJUnit4.class)
 public class FullScreenAdapterTest  {
 

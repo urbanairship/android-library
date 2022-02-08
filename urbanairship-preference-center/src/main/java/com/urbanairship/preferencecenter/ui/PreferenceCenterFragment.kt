@@ -22,7 +22,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.testing.OpenForTesting
+import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ButtonClick
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ChannelSubscriptionChange
+import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactSubscriptionChange
+import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactSubscriptionGroupChange
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Action
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.PreferenceCenterViewModelFactory
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
@@ -67,6 +70,7 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    @Suppress("ProtectedInFinal")
     protected val viewModelFactory: ViewModelProvider.Factory by lazy {
         PreferenceCenterViewModelFactory(preferenceCenterId)
     }
@@ -76,10 +80,11 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     }
 
     private val viewModel: PreferenceCenterViewModel by lazy {
-        ViewModelProvider(this, viewModelFactory).get(PreferenceCenterViewModel::class.java)
+        ViewModelProvider(this, viewModelFactory)[PreferenceCenterViewModel::class.java]
     }
 
     @VisibleForTesting
+    @Suppress("ProtectedInFinal")
     protected val viewModelScopeProvider: () -> CoroutineScope = { viewModel.viewModelScope }
 
     private val adapter: PreferenceCenterAdapter by lazy {
@@ -134,7 +139,8 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
         with(views) {
             list.adapter = adapter
             list.layoutManager = LinearLayoutManager(requireContext())
-            list.addItemDecoration(SectionDividerDecoration(requireContext()))
+            list.addItemDecoration(SectionDividerDecoration(requireContext(), list::isAnimating))
+            list.setHasFixedSize(true)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -144,7 +150,14 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
         adapter.itemEvents
             .map { event ->
                 when (event) {
-                    is ChannelSubscriptionChange -> Action.PreferenceItemChanged(event.item, event.isChecked)
+                    is ChannelSubscriptionChange ->
+                        Action.PreferenceItemChanged(event.item, event.isChecked)
+                    is ContactSubscriptionChange ->
+                        Action.ScopedPreferenceItemChanged(event.item, event.scopes, event.isChecked)
+                    is ContactSubscriptionGroupChange ->
+                        Action.ScopedPreferenceItemChanged(event.item, event.scopes, event.isChecked)
+                    is ButtonClick ->
+                        Action.ButtonActions(event.actions)
                 }
             }
             .onEach { action -> viewModel.handle(action) }
@@ -183,14 +196,17 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
                 }
             } ?: showHeaderItem(state.title, state.subtitle)
 
-            adapter.submit(state.listItems, state.subscriptions)
+            adapter.submit(state.listItems, state.channelSubscriptions, state.contactSubscriptions)
 
             views.showContent()
         }
     }
 }
 
-private class SectionDividerDecoration(context: Context) : RecyclerView.ItemDecoration() {
+private class SectionDividerDecoration(
+    context: Context,
+    private val isAnimating: () -> Boolean
+) : RecyclerView.ItemDecoration() {
     private val drawable = run {
         val dividerAttr = TypedValue()
         context.theme.resolveAttribute(R.attr.dividerHorizontal, dividerAttr, true)
@@ -198,15 +214,23 @@ private class SectionDividerDecoration(context: Context) : RecyclerView.ItemDeco
             ?: throw Resources.NotFoundException("Failed to resolve attr 'dividerHorizontal' from theme!")
     }
 
+    private val unlabeledSectionPadding = context.resources.getDimensionPixelSize(R.dimen.ua_preference_center_unlabeled_section_item_top_padding)
+
     private val dividerHeight: Int = drawable.intrinsicHeight
 
     override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+        if (isAnimating()) return
+
         if (shouldDrawDividerBelow(view, parent)) {
             outRect.bottom = dividerHeight
+        } else if (isSectionWithoutLabeledBreak(view, parent)) {
+            outRect.top = unlabeledSectionPadding
         }
     }
 
     override fun onDrawOver(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
+        if (isAnimating()) return
+
         val width = parent.width
         for (i in 0 until parent.childCount) {
             val child = parent.getChildAt(i)
@@ -220,15 +244,34 @@ private class SectionDividerDecoration(context: Context) : RecyclerView.ItemDeco
 
     private fun shouldDrawDividerBelow(view: View, parent: RecyclerView): Boolean {
         val holder = parent.getChildViewHolder(view)
-        val isNotSectionItem = holder !is PrefCenterItem.SectionItem.ViewHolder
+        val isNotSectionItem = holder !is PrefCenterItem.SectionItem.ViewHolder &&
+            holder !is PrefCenterItem.SectionBreakItem.ViewHolder
 
         val index = parent.indexOfChild(view)
         return if (index < parent.childCount - 1) {
             val nextView = parent.getChildAt(index + 1)
             val nextHolder = parent.getChildViewHolder(nextView)
-            val isNextSectionItem = nextHolder is PrefCenterItem.SectionItem.ViewHolder
+            val isNextSectionItem = nextHolder is PrefCenterItem.SectionItem.ViewHolder ||
+                nextHolder is PrefCenterItem.SectionBreakItem.ViewHolder
+            val isNextAlert = nextHolder is PrefCenterItem.AlertItem.ViewHolder
 
-            isNotSectionItem && isNextSectionItem
+            isNotSectionItem && isNextSectionItem || isNextAlert
+        } else {
+            false
+        }
+    }
+
+    private fun isSectionWithoutLabeledBreak(view: View, parent: RecyclerView): Boolean {
+        val holder = parent.getChildViewHolder(view)
+        val isSectionItem = holder is PrefCenterItem.SectionItem.ViewHolder
+
+        val index = parent.indexOfChild(view)
+        return if (index < parent.childCount && index > 0) {
+            val prevView = parent.getChildAt(index - 1)
+            val prevHolder = parent.getChildViewHolder(prevView)
+            val isPrevSectionBreak = prevHolder is PrefCenterItem.SectionBreakItem.ViewHolder
+
+            isSectionItem && !isPrevSectionBreak
         } else {
             false
         }

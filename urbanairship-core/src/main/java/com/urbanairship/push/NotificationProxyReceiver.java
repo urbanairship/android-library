@@ -47,7 +47,7 @@ public class NotificationProxyReceiver extends BroadcastReceiver {
         final PendingResult pendingResult = goAsync();
         final Future<Boolean> future = new NotificationIntentProcessor(context, intent).process();
 
-        AirshipExecutors.THREAD_POOL_EXECUTOR.execute(new Runnable() {
+        AirshipExecutors.threadPoolExecutor().execute(new Runnable() {
             @Override
             public void run() {
                 try {

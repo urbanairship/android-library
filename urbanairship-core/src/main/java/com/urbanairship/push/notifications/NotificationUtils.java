@@ -4,12 +4,8 @@ package com.urbanairship.push.notifications;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.hardware.display.DisplayManager;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
-import android.view.Display;
-import android.view.View;
-import android.view.WindowManager;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
@@ -21,7 +17,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.zip.Inflater;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -58,7 +53,7 @@ public class NotificationUtils {
         // Big images have a max height of 240dp
         final int reqHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, BIG_IMAGE_HEIGHT_DP, dm);
 
-        Future<Bitmap> future = AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Callable<Bitmap>() {
+        Future<Bitmap> future = AirshipExecutors.threadPoolExecutor().submit(new Callable<Bitmap>() {
             @Nullable
             @Override
             public Bitmap call() throws Exception {

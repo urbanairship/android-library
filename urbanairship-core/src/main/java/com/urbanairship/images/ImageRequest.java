@@ -30,7 +30,7 @@ import androidx.core.content.ContextCompat;
  */
 abstract class ImageRequest {
 
-    private final Executor EXECUTOR = AirshipExecutors.THREAD_POOL_EXECUTOR;
+    private final Executor EXECUTOR = AirshipExecutors.threadPoolExecutor();
 
     /**
      * Duration of the fade in animation when loading a bitmap into the image view in milliseconds.

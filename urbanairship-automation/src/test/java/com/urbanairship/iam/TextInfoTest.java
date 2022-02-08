@@ -4,11 +4,15 @@ package com.urbanairship.iam;
 
 import android.graphics.Color;
 
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
+import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -17,6 +21,7 @@ import static junit.framework.Assert.assertEquals;
 /**
  * {@link TextInfo} tests.
  */
+@Config(application = TestApplication.class)
 @RunWith(AndroidJUnit4.class)
 public class TextInfoTest {
 

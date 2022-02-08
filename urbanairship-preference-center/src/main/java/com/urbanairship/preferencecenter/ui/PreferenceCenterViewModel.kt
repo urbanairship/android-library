@@ -6,17 +6,26 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.urbanairship.Logger
 import com.urbanairship.UAirship
+import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.contacts.Contact
+import com.urbanairship.contacts.Scope
+import com.urbanairship.json.JsonValue
+import com.urbanairship.preferencecenter.ConditionStateMonitor
 import com.urbanairship.preferencecenter.PreferenceCenter
+import com.urbanairship.preferencecenter.data.Condition
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
+import com.urbanairship.preferencecenter.data.Section
+import com.urbanairship.preferencecenter.data.evaluate
 import com.urbanairship.preferencecenter.testing.OpenForTesting
+import com.urbanairship.preferencecenter.util.execute
 import com.urbanairship.preferencecenter.util.scanConcat
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,20 +34,27 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @OpenForTesting
 internal class PreferenceCenterViewModel @JvmOverloads constructor(
     private val preferenceCenterId: String,
     private val preferenceCenter: PreferenceCenter = PreferenceCenter.shared(),
     private val channel: AirshipChannel = UAirship.shared().channel,
+    private val contact: Contact = UAirship.shared().contact,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val actionRunRequestFactory: ActionRunRequestFactory = ActionRunRequestFactory(),
+    private val conditionMonitor: ConditionStateMonitor = ConditionStateMonitor()
 ) : ViewModel() {
     class PreferenceCenterViewModelFactory(
         private val preferenceCenterId: String
@@ -76,6 +92,12 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             states.collect { state -> Logger.verbose("> $state") }
         }
+
+        // Collect updates from the condition monitor and repost them on the actions flow.
+        conditionMonitor.states
+            .map { Action.ConditionStateChanged(state = it) }
+            .onEach { actions.emit(it) }
+            .launchIn(viewModelScope)
     }
 
     fun handle(action: Action) {
@@ -84,8 +106,25 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
 
     private fun map(action: Action): Flow<Change> =
         when (action) {
-            is Action.Refresh -> refresh()
-            is Action.PreferenceItemChanged -> updatePreference(action.item, action.isEnabled)
+            is Action.Refresh ->
+                refresh()
+            is Action.PreferenceItemChanged ->
+                updatePreference(
+                    item = action.item,
+                    isEnabled = action.isEnabled
+                )
+            is Action.ScopedPreferenceItemChanged ->
+                updatePreference(
+                    item = action.item,
+                    scopes = action.scopes,
+                    isEnabled = action.isEnabled
+                )
+            is Action.ButtonActions -> with(action) {
+                actions.execute(requestFactory = actionRunRequestFactory)
+                emptyFlow()
+            }
+            is Action.ConditionStateChanged ->
+                flowOf(Change.UpdateConditionState(action.state))
         }
 
     private fun reduce(state: State, change: Change): Flow<State> =
@@ -94,11 +133,36 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             is Change.UpdateSubscriptions -> when (state) {
                 is State.Content -> {
                     val updatedSubscriptions = if (change.isSubscribed) {
-                        state.subscriptions + change.subscriptionId
+                        state.channelSubscriptions + change.subscriptionId
                     } else {
-                        state.subscriptions - change.subscriptionId
+                        state.channelSubscriptions - change.subscriptionId
                     }
-                    state.copy(subscriptions = updatedSubscriptions)
+                    state.copy(channelSubscriptions = updatedSubscriptions)
+                }
+                else -> state
+            }
+            is Change.UpdateScopedSubscriptions -> when (state) {
+                is State.Content -> {
+                    val currentScopes = state.contactSubscriptions.getOrDefault(change.subscriptionId, emptySet())
+                    val updatedScopes = if (change.isSubscribed) {
+                         currentScopes + change.scopes
+                    } else {
+                         currentScopes - change.scopes
+                    }
+                    val updatedSubscriptions = state.contactSubscriptions.toMutableMap().apply {
+                        set(change.subscriptionId, updatedScopes)
+                    }
+                    state.copy(contactSubscriptions = updatedSubscriptions)
+                }
+                else -> state
+            }
+            is Change.UpdateConditionState -> when (state) {
+                is State.Content -> {
+                    val conditions = change.state
+                    state.copy(
+                        listItems = state.config.filterByConditions(conditions).asPrefCenterItems(),
+                        conditionState = conditions
+                    )
                 }
                 else -> state
             }
@@ -109,20 +173,46 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             }
         }.let { flowOf(it) }
 
+    @OptIn(FlowPreview::class)
     private fun refresh(): Flow<Change> = flow {
         emit(Change.ShowLoading)
 
         val configFlow = flow { emit(getConfig(preferenceCenterId)) }
-        val subscriptionsFlow = flow { emit(getSubscriptions()) }
+        val channelSubscriptionsFlow = flow { emit(getChannelSubscriptions()) }
+        val contactSubscriptionsFlow = flow { emit(getContactSubscriptions()) }
 
         emitAll(
-            configFlow.zip(subscriptionsFlow) { config, subscriptions ->
+            // Fetch config first to determine which subscriptions are needed and flat map them into the flow.
+            configFlow.flatMapConcat { config ->
+                when {
+                    config.hasChannelSubscriptions && config.hasContactSubscriptions ->
+                        channelSubscriptionsFlow.zip(contactSubscriptionsFlow) { channelSubs, contactSubs ->
+                            Triple(config, channelSubs, contactSubs)
+                        }
+                    config.hasChannelSubscriptions ->
+                        channelSubscriptionsFlow.map { channelSubs ->
+                            Triple(config, channelSubs, emptyMap())
+                        }
+                    config.hasContactSubscriptions ->
+                        contactSubscriptionsFlow.map { contactSubs ->
+                            Triple(config, emptySet(), contactSubs)
+                        }
+                    else -> // We shouldn't ever get here, unless backend somehow serves a pref center with no items.
+                        flowOf(Triple(config, emptySet(), emptyMap()))
+                }
+            }.map { (config, channelSubscriptions, contactSubscriptions) ->
+                val conditionState = conditionMonitor.currentState
+                val filteredItems = config.filterByConditions(conditionState).asPrefCenterItems()
+                val display = config.display
                 Change.ShowContent(
                     State.Content(
-                        title = config.display.name,
-                        subtitle = config.display.description,
-                        listItems = config.asPrefCenterItems(),
-                        subscriptions = subscriptions
+                        config = config,
+                        listItems = filteredItems,
+                        title = display.name,
+                        subtitle = display.description,
+                        channelSubscriptions = channelSubscriptions,
+                        contactSubscriptions = contactSubscriptions,
+                        conditionState = conditionState
                     )
                 )
             }.catch<Change> { error ->
@@ -132,8 +222,13 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         )
     }
 
-    fun updatePreference(item: Item, isEnabled: Boolean): Flow<Change> = flow {
-        Logger.verbose("Updating preference item: id = ${item.id}, title = ${item.display.name}, state = $isEnabled")
+    private fun updatePreference(
+        item: Item,
+        scopes: Set<Scope> = emptySet(),
+        isEnabled: Boolean
+    ): Flow<Change> = flow {
+        Logger.verbose("Updating preference item: " +
+            "id = ${item.id}, title = ${item.display.name}, scopes = $scopes, state = $isEnabled")
 
         when (item) {
             is Item.ChannelSubscription -> with(item) {
@@ -143,6 +238,21 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
 
                 emit(Change.UpdateSubscriptions(subscriptionId, isEnabled))
             }
+            is Item.ContactSubscription -> with(item) {
+                contact.editSubscriptionLists()
+                    .mutate(subscriptionId, scopes, isEnabled)
+                    .apply()
+
+                emit(Change.UpdateScopedSubscriptions(subscriptionId, scopes, isEnabled))
+            }
+            is Item.ContactSubscriptionGroup -> with(item) {
+                contact.editSubscriptionLists()
+                    .mutate(subscriptionId, scopes, isEnabled)
+                    .apply()
+
+                emit(Change.UpdateScopedSubscriptions(subscriptionId, scopes, isEnabled))
+            }
+            is Item.Alert -> {} // No-op.
         }
     }
 
@@ -150,16 +260,22 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         object Loading : State()
         data class Error(val message: String? = null, val error: Throwable? = null) : State()
         data class Content(
+            val config: PreferenceCenterConfig,
+            val listItems: List<PrefCenterItem>,
             val title: String?,
             val subtitle: String?,
-            val listItems: List<PrefCenterItem>,
-            val subscriptions: Set<String>
+            val channelSubscriptions: Set<String>,
+            val contactSubscriptions: Map<String, Set<Scope>>,
+            val conditionState: Condition.State
         ) : State()
     }
 
     internal sealed class Action {
         object Refresh : Action()
         data class PreferenceItemChanged(val item: Item, val isEnabled: Boolean) : Action()
+        data class ScopedPreferenceItemChanged(val item: Item, val scopes: Set<Scope>, val isEnabled: Boolean) : Action()
+        data class ButtonActions(val actions: Map<String, JsonValue>) : Action()
+        data class ConditionStateChanged(val state: Condition.State) : Action()
     }
 
     internal sealed class Change {
@@ -167,6 +283,8 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         data class ShowError(val message: String? = null, val error: Throwable? = null) : Change()
         data class ShowContent(val state: State.Content) : Change()
         data class UpdateSubscriptions(val subscriptionId: String, val isSubscribed: Boolean) : Change()
+        data class UpdateScopedSubscriptions(val subscriptionId: String, val scopes: Set<Scope>, val isSubscribed: Boolean) : Change()
+        data class UpdateConditionState(val state: Condition.State) : Change()
     }
 
     private suspend fun getConfig(preferenceCenterId: String): PreferenceCenterConfig =
@@ -180,7 +298,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             }
         }
 
-    private suspend fun getSubscriptions(): Set<String> =
+    private suspend fun getChannelSubscriptions(): Set<String> =
         suspendCancellableCoroutine { continuation ->
             channel.getSubscriptionLists(/* includePendingUpdates = */ true).addResultCallback { subscriptions ->
                 if (subscriptions != null) {
@@ -190,6 +308,35 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 }
             }
         }
+
+    private suspend fun getContactSubscriptions(): Map<String, Set<Scope>> =
+        suspendCancellableCoroutine { continuation ->
+            contact.getSubscriptionLists(/* includePendingUpdates = */ true).addResultCallback { subscriptions ->
+                if (subscriptions != null) {
+                    continuation.resume(subscriptions)
+                } else {
+                    continuation.resumeWithException(IllegalStateException("Null subscription listing for contact id: ${contact.namedUserId}"))
+                }
+            }
+        }
+}
+
+/**
+ * Helper extension that returns a subset of pref center items based on the given condition [state].
+ */
+@VisibleForTesting
+internal fun PreferenceCenterConfig.filterByConditions(
+    state: Condition.State
+): PreferenceCenterConfig {
+    return this.copy(
+        sections = sections.filter { section ->
+            section.conditions.evaluate(state)
+        }.map { section ->
+            section.filterItems { item ->
+                item.conditions.evaluate(state)
+            }
+        }
+    )
 }
 
 /**
@@ -200,9 +347,28 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
 @VisibleForTesting
 internal fun PreferenceCenterConfig.asPrefCenterItems(): List<PrefCenterItem> =
     sections.flatMap { section ->
-        listOf(PrefCenterItem.SectionItem(section)) + section.items.map { item ->
-            when (item) {
-                is Item.ChannelSubscription -> PrefCenterItem.ChannelSubscriptionItem(item)
+        when (section) {
+            is Section.SectionBreak -> listOf(PrefCenterItem.SectionBreakItem(section))
+            is Section.Common -> {
+                if (section.display.isEmpty()) {
+                    // Ignore sections with no title and subtitle to avoid unwanted whitespace in
+                    // the list if a section has no title/description and is being used as a
+                    // container for an alert.
+                    emptyList()
+                } else {
+                    listOf(PrefCenterItem.SectionItem(section))
+                } + section.items.map { item ->
+                    when (item) {
+                        is Item.ChannelSubscription ->
+                            PrefCenterItem.ChannelSubscriptionItem(item)
+                        is Item.ContactSubscription ->
+                            PrefCenterItem.ContactSubscriptionItem(item)
+                        is Item.ContactSubscriptionGroup ->
+                            PrefCenterItem.ContactSubscriptionGroupItem(item)
+                        is Item.Alert ->
+                            PrefCenterItem.AlertItem(item)
+                    }
+                }
             }
         }
     }

@@ -17,6 +17,7 @@ import com.urbanairship.Logger;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.activity.ThemedActivity;
+import com.urbanairship.util.AppStoreUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -84,13 +85,6 @@ public class RateAppActivity extends ThemedActivity {
             return;
         }
 
-        final Uri storeUri = intent.getParcelableExtra(RateAppAction.STORE_URI_KEY);
-
-        if (storeUri == null) {
-            Logger.error("RateAppActivity - Missing store URI.");
-            finish();
-            return;
-        }
 
         AlertDialog.Builder builder;
         Context context = this;
@@ -116,7 +110,8 @@ public class RateAppActivity extends ThemedActivity {
                 new DialogInterface.OnClickListener() {
                     public void onClick(@NonNull DialogInterface dialog, int id) {
                         try {
-                            Intent openLinkIntent = new Intent(Intent.ACTION_VIEW, storeUri);
+                            UAirship airship = UAirship.shared();
+                            Intent openLinkIntent = AppStoreUtils.getAppStoreIntent(context, airship.getPlatformType(), airship.getAirshipConfigOptions());
                             startActivity(openLinkIntent);
                         } catch (ActivityNotFoundException e) {
                             Logger.error(e, "No web browser available to handle request to open the store link.");

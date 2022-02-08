@@ -2,6 +2,15 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.3.0 February 8, 2022
+
+A minor release that adds support for multi-channel Preference Center. Currently, these features are only available to customers in Airship's Special Access Program. Please reach out to your account manager for more details.
+
+## Changes
+- Added support for multi-channel Preference Center.
+- Added scoped subscription lists to contacts.
+- Added methods to associate email, SMS, and open channels to a contact.
+
 ## Version 16.2.0 January 24, 2021
 
 A minor release that adds support for two new features, Scenes and Surveys. Currently, these features are only available to customers in Airship's Special Access Program. Please reach out to your account manager for more details.

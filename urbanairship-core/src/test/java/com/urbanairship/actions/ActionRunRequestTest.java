@@ -6,12 +6,17 @@ import android.os.Bundle;
 import android.os.Looper;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
+import com.urbanairship.ShadowAirshipExecutorsPaused;
+import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.util.concurrent.Executor;
@@ -26,6 +31,13 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 
+@Config(
+        sdk = 28,
+        shadows = {
+                ShadowAirshipExecutorsLegacy.class
+        }
+)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class ActionRunRequestTest extends BaseTestCase {
 
     private ActionRegistry actionRegistry;

@@ -15,13 +15,6 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.provider.Settings;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.core.content.pm.PackageInfoCompat;
-
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
@@ -46,6 +39,8 @@ import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
+import com.urbanairship.util.AppStoreUtils;
+import com.urbanairship.util.ProcessUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -54,6 +49,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.core.content.pm.PackageInfoCompat;
 
 /**
  * UAirship manages the shared state for all Airship
@@ -345,6 +347,9 @@ public class UAirship {
             Logger.error("takeOff() must be called on the main thread!");
         }
 
+        isMainProcess = ProcessUtils.isMainProcess(application);
+        GlobalActivityMonitor.shared(application);
+
         if (LOG_TAKE_OFF_STACKTRACE) {
             StringBuilder sb = new StringBuilder();
             for (StackTraceElement element : new Exception().getStackTrace()) {
@@ -368,7 +373,7 @@ public class UAirship {
 
             UAirship.application = application;
 
-            AirshipExecutors.THREAD_POOL_EXECUTOR.execute(new Runnable() {
+            AirshipExecutors.threadPoolExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
                     executeTakeOff(application, options, readyCallback);
@@ -1068,10 +1073,8 @@ public class UAirship {
                 return true;
             }
             case APP_STORE_DEEP_LINK_HOST: {
-                Intent appStoreIntent = new Intent(Intent.ACTION_VIEW)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        .setData(Uri.parse("https://play.google.com/store/apps/details?id=" + getPackageName()))
-                        .setPackage("com.android.vending");
+                Intent appStoreIntent = AppStoreUtils.getAppStoreIntent(context, getPlatformType(), getAirshipConfigOptions())
+                                                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(appStoreIntent);
                 return true;
             }
@@ -1151,6 +1154,7 @@ public class UAirship {
     public LocaleManager getLocaleManager() {
         return localeManager;
     }
+
 
     /**
      * Callback interface used to notify app when UAirship is ready.

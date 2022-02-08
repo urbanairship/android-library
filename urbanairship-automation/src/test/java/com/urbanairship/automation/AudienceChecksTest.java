@@ -8,6 +8,7 @@ import android.util.Base64;
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
 import com.urbanairship.automation.tags.TagSelector;
 import com.urbanairship.channel.AirshipChannel;
@@ -22,6 +23,7 @@ import org.junit.runner.RunWith;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -40,6 +42,11 @@ import static org.mockito.Mockito.when;
 /**
  * {@link AudienceChecks} tests.
  */
+@Config(
+        shadows = { ShadowAirshipExecutorsLegacy.class },
+        application = TestApplication.class
+)
+@LooperMode(LooperMode.Mode.LEGACY)
 @RunWith(AndroidJUnit4.class)
 public class AudienceChecksTest {
 
@@ -56,16 +63,18 @@ public class AudienceChecksTest {
         pushManager = mock(PushManager.class);
         locationClient = mock(AirshipLocationClient.class);
         applicationMetrics = mock(ApplicationMetrics.class);
-        context = TestApplication.getApplication();
 
         PreferenceDataStore dataStore = PreferenceDataStore.inMemoryStore(TestApplication.getApplication());
         privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
 
-        TestApplication.getApplication().setChannel(airshipChannel);
-        TestApplication.getApplication().setPushManager(pushManager);
-        TestApplication.getApplication().setLocationClient(locationClient);
-        TestApplication.getApplication().setApplicationMetrics(applicationMetrics);
-        TestApplication.getApplication().setPrivacyManager(privacyManager);
+        TestApplication app = TestApplication.getApplication();
+        context = app;
+
+        app.setChannel(airshipChannel);
+        app.setPushManager(pushManager);
+        app.setLocationClient(locationClient);
+        app.setApplicationMetrics(applicationMetrics);
+        app.setPrivacyManager(privacyManager);
     }
 
     @Test

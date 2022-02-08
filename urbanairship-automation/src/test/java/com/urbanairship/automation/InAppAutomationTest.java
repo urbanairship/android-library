@@ -8,6 +8,7 @@ import android.os.Looper;
 import com.urbanairship.AirshipLoopers;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
@@ -44,6 +45,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 import org.robolectric.shadow.api.Shadow;
 import org.robolectric.shadows.ShadowApplication;
@@ -82,8 +84,13 @@ import static org.mockito.Mockito.when;
 /**
  * Tests for {@link InAppAutomation}.
  */
-@RunWith(AndroidJUnit4.class)
+@Config(
+        sdk = 28,
+        shadows = { ShadowAirshipExecutorsLegacy.class },
+        application = TestApplication.class
+)
 @LooperMode(LooperMode.Mode.LEGACY)
+@RunWith(AndroidJUnit4.class)
 public class InAppAutomationTest {
 
     private static List<TagGroupsMutation> EMPTY_TAG_OVERRIDES = Collections.emptyList();

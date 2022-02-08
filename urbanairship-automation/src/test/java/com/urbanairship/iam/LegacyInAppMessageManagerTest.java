@@ -7,6 +7,7 @@ import android.os.Bundle;
 
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
@@ -24,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
+import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 
 import androidx.annotation.NonNull;
@@ -40,8 +42,13 @@ import static org.mockito.Mockito.when;
 /**
  * Tests for {@link LegacyInAppMessageManager}
  */
-@RunWith(AndroidJUnit4.class)
+@Config(
+        sdk = 28,
+        shadows = { ShadowAirshipExecutorsLegacy.class },
+        application = TestApplication.class
+)
 @LooperMode(LooperMode.Mode.LEGACY)
+@RunWith(AndroidJUnit4.class)
 public class LegacyInAppMessageManagerTest {
 
     LegacyInAppMessageManager legacyInAppMessageManager;

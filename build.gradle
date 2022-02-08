@@ -2,7 +2,7 @@ buildscript {
 
     ext {
         // Airship Version - major.minor.patch
-        airshipVersion = '16.2.0'
+        airshipVersion = '16.3.0'
 
         // Airship Version Qualifier beta, release, etc...
         // airshipVersionQualifier = "beta"
@@ -42,6 +42,7 @@ buildscript {
         androidxSwipeRefreshLayoutVersion = '1.1.0'
         androidXWork = '2.7.1'
         androidXConcurrentFutures = '1.1.0'
+        androidXStartup = '1.1.0'
 
         // Material design
         materialVersion = '1.4.0'
@@ -70,6 +71,7 @@ buildscript {
         mockitoVersion = '4.1.0'
         mockitoKotlinVersion = '4.0.0'
         robolectricVersion = '4.7.3'
+        turbineVersion = '0.7.0'
 
         // Doc Dependencies
         doclavaVersion = '1.0.6'

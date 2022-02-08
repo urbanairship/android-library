@@ -56,7 +56,7 @@ public class WalletLoadingActivity extends ThemedActivity {
     }
 
     private void resolveWalletUrl(@NonNull final Uri url) {
-        AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
+        AirshipExecutors.threadPoolExecutor().submit(new Runnable() {
 
             @Override
             public void run() {

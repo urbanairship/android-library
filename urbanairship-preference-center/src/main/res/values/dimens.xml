@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="ua_preference_center_unlabeled_section_item_top_padding">16dp</dimen>
+    <dimen name="ua_preference_center_subscription_type_chip_stroke_width">1dp</dimen>
+    <dimen name="ua_preference_center_subscription_type_chip_min_height">32dp</dimen>
+</resources>

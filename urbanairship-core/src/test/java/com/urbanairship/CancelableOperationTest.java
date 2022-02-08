@@ -7,11 +7,14 @@ import android.os.Looper;
 import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 import org.robolectric.shadows.ShadowLooper;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@LooperMode(LooperMode.Mode.LEGACY)
 public class CancelableOperationTest extends BaseTestCase {
 
     ShadowLooper looper;

@@ -106,6 +106,7 @@ public class ClipboardActionTest extends BaseTestCase {
 
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, clipboardMap);
         ActionResult result = action.perform(args);
+        shadowMainLooper().idle();
 
         assertEquals(args.getValue(), result.getValue());
 
@@ -122,6 +123,7 @@ public class ClipboardActionTest extends BaseTestCase {
     public void testPerformWithString() {
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "clipboard text");
         ActionResult result = action.perform(args);
+        shadowMainLooper().idle();
 
         assertEquals(args.getValue(), result.getValue());
 

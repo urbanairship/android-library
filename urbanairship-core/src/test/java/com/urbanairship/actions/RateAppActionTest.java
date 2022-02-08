@@ -115,8 +115,6 @@ public class RateAppActionTest extends BaseTestCase {
             public void verify(Intent intent) {
                 assertEquals(RateAppAction.SHOW_RATE_APP_INTENT_ACTION, intent.getAction());
                 assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP, intent.getFlags());
-
-                assertEquals(Uri.parse("cool://link"), intent.getParcelableExtra(RateAppAction.STORE_URI_KEY));
             }
         });
 
@@ -133,7 +131,6 @@ public class RateAppActionTest extends BaseTestCase {
                 assertEquals(RateAppAction.SHOW_RATE_APP_INTENT_ACTION, intent.getAction());
                 assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP, intent.getFlags());
 
-                assertEquals(Uri.parse("cool://link"), intent.getParcelableExtra(RateAppAction.STORE_URI_KEY));
                 assertEquals("some title", intent.getStringExtra(RateAppAction.TITLE_KEY));
                 assertEquals("some body", intent.getStringExtra(RateAppAction.BODY_KEY));
             }

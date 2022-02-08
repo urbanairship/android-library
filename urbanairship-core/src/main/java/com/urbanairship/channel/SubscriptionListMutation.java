@@ -99,7 +99,7 @@ public class SubscriptionListMutation implements JsonSerializable {
     }
 
     @NonNull
-    static List<SubscriptionListMutation> fromJsonList(@NonNull JsonList jsonList) {
+    public static List<SubscriptionListMutation> fromJsonList(@NonNull JsonList jsonList) {
         List<SubscriptionListMutation> mutations = new ArrayList<>();
 
         for (JsonValue value : jsonList) {

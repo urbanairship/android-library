@@ -26,4 +26,9 @@
         navigationId="@id/pushListFragment"
         title="@string/ua_push_view_title" />
 
+    <entry
+        description="@string/ua_pref_center_view_description"
+        navigationId="@id/prefCenterListFragment"
+        title="@string/ua_pref_center_view_title" />
+
 </DebugScreens>

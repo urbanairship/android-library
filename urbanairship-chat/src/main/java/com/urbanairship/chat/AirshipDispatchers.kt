@@ -14,7 +14,7 @@ internal object AirshipDispatchers {
     /**
      * Dispatcher that uses the full thread pool
      */
-    val IO: CoroutineDispatcher = AirshipExecutors.THREAD_POOL_EXECUTOR.asCoroutineDispatcher()
+    val IO: CoroutineDispatcher = AirshipExecutors.threadPoolExecutor().asCoroutineDispatcher()
 
     /**
      * Creates a new single thread dispatcher.

@@ -8,12 +8,22 @@ import android.content.Context;
 import android.os.Bundle;
 
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
+import com.urbanairship.ShadowAirshipExecutorsPaused;
+import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushMessage;
+import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
+
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 
@@ -25,6 +35,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@Config(
+    sdk = 28,
+    shadows = { ShadowNotificationManagerExtension.class, ShadowAirshipExecutorsLegacy.class },
+    application = TestApplication.class
+)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class AirshipNotificationProviderTest extends BaseTestCase {
 
     private AirshipNotificationProvider provider;

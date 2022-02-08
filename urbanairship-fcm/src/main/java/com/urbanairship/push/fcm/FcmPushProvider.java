@@ -6,13 +6,16 @@ import android.content.Context;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.BuildConfig;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.push.PushProvider;
+import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,8 +44,9 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
     @Override
     @Nullable
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
+
         try {
-            return Tasks.await(FirebaseMessaging.getInstance().getToken());
+            return Tasks.await(getFirebaseMessaging().getToken());
         } catch (Exception e) {
             throw new RegistrationException("FCM error " + e.getMessage(), true, e);
         }
@@ -86,4 +90,16 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         return BuildConfig.SDK_VERSION;
     }
 
+    @NonNull
+    private static FirebaseMessaging getFirebaseMessaging() throws IllegalStateException {
+        AirshipConfigOptions configOptions = UAirship.shared().getAirshipConfigOptions();
+        if (UAStringUtil.isEmpty(configOptions.fcmFirebaseAppName)) {
+            // This will throw an IllegalStateException if firebase is not configured
+            return FirebaseMessaging.getInstance();
+        } else {
+            // This will throw an IllegalStateException if the app name is not registered
+            FirebaseApp app = FirebaseApp.getInstance(configOptions.fcmFirebaseAppName);
+            return (FirebaseMessaging) app.get(FirebaseMessaging.class);
+        }
+    }
 }

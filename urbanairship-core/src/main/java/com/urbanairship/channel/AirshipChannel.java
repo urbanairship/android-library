@@ -7,6 +7,12 @@ import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
@@ -26,6 +32,7 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;
+import com.urbanairship.util.CachedValue;
 import com.urbanairship.util.Clock;
 import com.urbanairship.util.Network;
 import com.urbanairship.util.UAStringUtil;
@@ -38,12 +45,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
 /**
  * Airship channel access.
@@ -106,11 +107,8 @@ public class AirshipChannel extends AirshipComponent {
     private final AttributeRegistrar attributeRegistrar;
     private final SubscriptionListRegistrar subscriptionListRegistrar;
 
-    private final Object subscriptionListCacheLock = new Object();
-
-    @Nullable
-    private Set<String> subscriptionListCache;
-    private Long subscriptionListCacheExpiration = 0L;
+    @NonNull
+    private final CachedValue<Set<String>> subscriptionListCache;
 
     private final AirshipRuntimeConfig runtimeConfig;
 
@@ -159,7 +157,9 @@ public class AirshipChannel extends AirshipComponent {
                 new ChannelApiClient(runtimeConfig),
                 new AttributeRegistrar(AttributeApiClient.channelClient(runtimeConfig), new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY)),
                 new TagGroupRegistrar(TagGroupApiClient.channelClient(runtimeConfig), new PendingTagGroupMutationStore(dataStore, TAG_GROUP_DATASTORE_KEY)),
-                new SubscriptionListRegistrar(SubscriptionListApiClient.channelClient(runtimeConfig), new PendingSubscriptionListMutationStore(dataStore, SUBSCRIPTION_LISTS_DATASTORE_KEY)));
+                new SubscriptionListRegistrar(SubscriptionListApiClient.channelClient(runtimeConfig), new PendingSubscriptionListMutationStore(dataStore, SUBSCRIPTION_LISTS_DATASTORE_KEY)),
+                new CachedValue<Set<String>>());
+
     }
 
     @VisibleForTesting
@@ -173,7 +173,8 @@ public class AirshipChannel extends AirshipComponent {
                    @NonNull ChannelApiClient channelApiClient,
                    @NonNull AttributeRegistrar attributeRegistrar,
                    @NonNull TagGroupRegistrar tagGroupRegistrar,
-                   @NonNull SubscriptionListRegistrar subscriptionListRegistrar) {
+                   @NonNull SubscriptionListRegistrar subscriptionListRegistrar,
+                   @NonNull CachedValue<Set<String>> subscriptionListCache) {
         super(context, dataStore);
 
         this.runtimeConfig = runtimeConfig;
@@ -185,6 +186,7 @@ public class AirshipChannel extends AirshipComponent {
         this.tagGroupRegistrar = tagGroupRegistrar;
         this.subscriptionListRegistrar = subscriptionListRegistrar;
         this.clock = clock;
+        this.subscriptionListCache = subscriptionListCache;
     }
 
     /**
@@ -206,21 +208,18 @@ public class AirshipChannel extends AirshipComponent {
 
         channelCreationDelayEnabled = getId() == null && runtimeConfig.getConfigOptions().channelCreationDelayEnabled;
 
-        privacyManager.addListener(new PrivacyManager.Listener() {
-            @Override
-            public void onEnabledFeaturesChanged() {
-                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-                    synchronized (tagLock) {
-                        getDataStore().remove(TAGS_KEY);
-                    }
-                    tagGroupRegistrar.clearPendingMutations();
-                    attributeRegistrar.clearPendingMutations();
-                    subscriptionListRegistrar.clearPendingMutations();
-                    invalidateSubscriptionListsCache();
+        privacyManager.addListener(() -> {
+            if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                synchronized (tagLock) {
+                    getDataStore().remove(TAGS_KEY);
                 }
-
-                updateRegistration();
+                tagGroupRegistrar.clearPendingMutations();
+                attributeRegistrar.clearPendingMutations();
+                subscriptionListRegistrar.clearPendingMutations();
+                subscriptionListCache.invalidate();
             }
+
+            updateRegistration();
         });
     }
 
@@ -625,21 +624,21 @@ public class AirshipChannel extends AirshipComponent {
         final PendingResult<Set<String>> result = new PendingResult<>();
 
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-            result.setResult(null);
+            result.setResult(Collections.emptySet());
         }
 
-        Set<String> cachedSubscriptions = getCachedSubscriptionLists();
+        Set<String> cachedSubscriptions = subscriptionListCache.get();
         if (cachedSubscriptions != null) {
             // Return subscription lists from the in-memory cache, if available.
             result.setResult(cachedSubscriptions);
         } else {
             // Otherwise, fetch the current subscriptions over the network and update the cache.
-            AirshipExecutors.THREAD_POOL_EXECUTOR.submit(new Runnable() {
+            AirshipExecutors.threadPoolExecutor().submit(new Runnable() {
                 @Override
                 public void run() {
                     Set<String> fetchedSubscriptions = subscriptionListRegistrar.fetchChannelSubscriptionLists();
                     if (fetchedSubscriptions != null) {
-                        cacheSubscriptionLists(fetchedSubscriptions);
+                        subscriptionListCache.set(fetchedSubscriptions, SUBSCRIPTION_CACHE_LIFETIME_MS);
                     }
                     result.setResult(fetchedSubscriptions);
                 }
@@ -648,52 +647,6 @@ public class AirshipChannel extends AirshipComponent {
 
         return result;
     }
-
-    /**
-     * Caches a set of channel subscriptions.
-     *
-     * @hide
-     */
-    @VisibleForTesting
-    void cacheSubscriptionLists(Set<String> subscriptions) {
-        synchronized (subscriptionListCacheLock) {
-            subscriptionListCache = subscriptions;
-            subscriptionListCacheExpiration = clock.currentTimeMillis() + SUBSCRIPTION_CACHE_LIFETIME_MS;
-        }
-    }
-
-    /**
-     * Retrieves a set of channel subscriptions from the cache, if fresh. Otherwise returns null.
-     *
-     * @return Cached subscription lists or null.
-     * @hide
-     */
-    @Nullable
-    @VisibleForTesting
-    Set<String> getCachedSubscriptionLists() {
-        synchronized (subscriptionListCacheLock) {
-            boolean isExpired = clock.currentTimeMillis() >= subscriptionListCacheExpiration;
-            if (subscriptionListCache == null || isExpired) {
-                return null;
-            }
-
-            return subscriptionListCache;
-        }
-    }
-
-    /**
-     * Clears cached channel subscriptions lists.
-     *
-     * @hide
-     */
-    @VisibleForTesting
-    void invalidateSubscriptionListsCache() {
-        synchronized (subscriptionListCacheLock) {
-            subscriptionListCache = null;
-            subscriptionListCacheExpiration = 0L;
-        }
-    }
-
 
     /**
      * Edit the channel subscription lists.
@@ -711,7 +664,6 @@ public class AirshipChannel extends AirshipComponent {
                 }
 
                 if (!collapsedMutations.isEmpty()) {
-                    invalidateSubscriptionListsCache();
                     subscriptionListRegistrar.addPendingMutations(collapsedMutations);
                     dispatchUpdateJob();
                 }
@@ -1021,6 +973,10 @@ public class AirshipChannel extends AirshipComponent {
                 boolean attributeResult = attributeRegistrar.uploadPendingMutations();
                 boolean tagResult = tagGroupRegistrar.uploadPendingMutations();
                 boolean subscriptionListResult = subscriptionListRegistrar.uploadPendingMutations();
+
+                if (subscriptionListResult) {
+                    subscriptionListCache.invalidate();
+                }
 
                 if (!attributeResult || !tagResult || !subscriptionListResult) {
                     return JobInfo.JOB_RETRY;

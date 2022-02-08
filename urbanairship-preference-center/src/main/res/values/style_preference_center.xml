@@ -13,11 +13,12 @@
         <item name="android:colorBackground">@color/ua_preference_center_background</item>
         <item name="android:textColorPrimary">@color/ua_preference_center_ui_text_color</item>
         <item name="toolbarStyle">@style/UrbanAirship.PreferenceCenter.Toolbar</item>
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/ua_preference_center_status_bar</item>
     </style>
 
     <!-- Default Activity -->
     <style name="UrbanAirship.PreferenceCenter.Activity">
-        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/ua_preference_center_status_bar</item>
+        <item name="urbanAirshipPreferenceCenterSubscriptionTypeChipStyle">@style/UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChip</item>
     </style>
 
     <!-- Toolbar -->
@@ -93,7 +94,7 @@
     <style name="UrbanAirship.PreferenceCenter.Item.HeaderTitle" parent="">
         <item name="android:maxLines">2</item>
         <item name="android:ellipsize">end</item>
-        <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Headline6</item>
+        <item name="android:textAppearance">?textAppearanceHeadline6</item>
         <item name="android:visibility">gone</item>
     </style>
 
@@ -106,7 +107,11 @@
 
     <!-- Preference Center list section header item -->
     <style name="UrbanAirship.PreferenceCenter.Item.Section">
-        <item name="android:layout_marginTop">16dp</item>
+        <!--
+        Section items that are not preceded by a Labelled Section Break will have top spacing added
+        via ItemDecoration. See: @dimen/ua_preference_center_unlabeled_section_item_top_padding
+        -->
+        <item name="android:layout_marginTop">0dp</item>
         <item name="android:paddingTop">8dp</item>
         <item name="android:paddingBottom">8dp</item>
     </style>
@@ -124,6 +129,30 @@
         <item name="android:maxLines">10</item>
         <item name="android:textAppearance">?android:attr/textAppearanceListItemSecondary</item>
         <item name="android:textColor">?android:attr/textColorSecondary</item>
+    </style>
+
+    <!-- Preference Center list section break item -->
+    <style name="UrbanAirship.PreferenceCenter.Item.SectionBreak" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="android:clickable">false</item>
+        <item name="android:checkable">false</item>
+        <item name="android:textAppearance">@style/UrbanAirship.TextAppearance.PreferenceCenter.SectionBreak</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/ua_preference_center_section_break_label_text</item>
+        <item name="android:layout_marginStart">?android:attr/listPreferredItemPaddingStart</item>
+        <item name="android:layout_marginEnd">?android:attr/listPreferredItemPaddingEnd</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:layout_marginBottom">0dp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="chipBackgroundColor">@color/ua_preference_center_section_break_label_background</item>
+        <item name="chipMinHeight">28dp</item>
+        <item name="chipMinTouchTargetSize">28dp</item>
+        <item name="chipCornerRadius">4dp</item>
+    </style>
+
+    <!-- Preference Center list section break text appearance -->
+    <style name="UrbanAirship.TextAppearance.PreferenceCenter.SectionBreak" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textStyle">bold</item>
     </style>
 
     <!-- Preference Center list preference item -->
@@ -147,6 +176,49 @@
         <item name="android:textColor">?android:attr/textColorSecondary</item>
     </style>
 
+    <!-- Preference Center alert item -->
+    <style name="UrbanAirship.PreferenceCenter.Item.Alert">
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- Preference Center alert item content (title, description, and optional button) -->
+    <style name="UrbanAirship.PreferenceCenter.Item.AlertContent" parent="">
+        <item name="android:paddingEnd">0dp</item>
+    </style>
+
+    <!-- Preference Center alert item icon -->
+    <style name="UrbanAirship.PreferenceCenter.Item.AlertIcon" parent="">
+        <item name="android:layout_marginEnd">24dp</item>
+        <item name="android:layout_marginStart">8dp</item>
+    </style>
+
+    <!-- Preference Center alert item title -->
+    <style name="UrbanAirship.PreferenceCenter.Item.AlertTitle" parent="">
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textAppearance">?textAppearanceHeadline6</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
+    <!-- Preference Center alert item description -->
+    <style name="UrbanAirship.PreferenceCenter.Item.AlertDescription" parent="">
+        <item name="android:maxLines">3</item>
+        <item name="android:textAppearance">?textAppearanceListItem</item>
+        <item name="android:textColor">?android:textColorSecondary</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
+    <!-- Preference Center alert item button -->
+    <style name="UrbanAirship.PreferenceCenter.Item.AlertButton" parent="@style/Widget.MaterialComponents.Button">
+        <item name="android:textAppearance">?textAppearanceButton</item>
+        <item name="backgroundTint">?colorAccent</item>
+        <item name="android:textColor">@color/ua_preference_center_alert_button_text</item>
+        <item name="textAllCaps">false</item>
+    </style>
+
     <!-- Preference Center list item widget base style -->
     <style name="UrbanAirship.PreferenceCenter.Item.Widget" parent="">
         <item name="android:gravity">end|center_vertical</item>
@@ -157,5 +229,43 @@
     <!-- Preference Center list item switch widget -->
     <style name="UrbanAirship.PreferenceCenter.Item.Widget.Switch">
 
+    </style>
+
+    <!-- Preference Center subscription group container -->
+    <style name="UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChipGroup" parent="Widget.MaterialComponents.ChipGroup">
+        <item name="android:layout_marginBottom">8dp</item>
+    </style>
+
+    <!-- Preference Center subscription group toggle chip overlay
+         Override in app theme to customize chip styling, while preserving default styles. -->
+    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.Item.Widget.SubscriptionTypeChip" parent="">
+        <!-- Chip background color. -->
+        <item name="colorSurface">@color/ua_preference_center_subscription_type_chip_surface</item>
+        <!-- Circle fill color when checked. -->
+        <item name="colorControlActivated">@color/ua_preference_center_subscription_type_chip_checked_background</item>
+        <!-- Circle fill color when unchecked. -->
+        <item name="colorControlNormal">@color/ua_preference_center_subscription_type_chip_unchecked_background</item>
+        <!-- Check icon tint color. -->
+        <item name="android:checkMarkTint">@color/ua_preference_center_subscription_type_chip_check_mark</item>
+    </style>
+
+    <!-- Preference Center subscription group toggle chip -->
+    <style name="UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChip" parent="Widget.MaterialComponents.Chip.Filter">
+        <item name="materialThemeOverlay">@style/UrbanAirship.ThemeOverlay.PreferenceCenter.Item.Widget.SubscriptionTypeChip</item>
+        <item name="chipBackgroundColor">@android:color/transparent</item>
+        <item name="chipSurfaceColor">?colorSurface</item>
+        <item name="chipMinHeight">@dimen/ua_preference_center_subscription_type_chip_min_height</item>
+        <item name="chipStrokeColor">@color/ua_preference_center_subscription_type_chip_stroke</item>
+        <item name="chipStrokeWidth">@dimen/ua_preference_center_subscription_type_chip_stroke_width</item>
+        <item name="chipIcon">@drawable/ua_ic_preference_center_subscription_type_chip_check_circle</item>
+        <item name="chipIconVisible">true</item>
+        <item name="checkedIcon">@null</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="android:textAppearance">@style/UrbanAirship.TextAppearance.PreferenceCenter.Item.Widget.SubscriptionTypeChip</item>
+    </style>
+
+    <!-- Preference Center subscription group toggle chip text appearance -->
+    <style name="UrbanAirship.TextAppearance.PreferenceCenter.Item.Widget.SubscriptionTypeChip" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textStyle">bold</item>
     </style>
 </resources>

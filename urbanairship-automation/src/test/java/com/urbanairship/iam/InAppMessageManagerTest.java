@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.StubbedActionRunRequest;
 import com.urbanairship.TestApplication;
 import com.urbanairship.actions.ActionRunRequest;
@@ -24,6 +25,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 
 import java.util.UUID;
@@ -50,8 +52,13 @@ import static org.mockito.Mockito.when;
 /**
  * Tests for {@link InAppMessageManager}.
  */
-@RunWith(AndroidJUnit4.class)
+@Config(
+        sdk = 28,
+        shadows = { ShadowAirshipExecutorsLegacy.class },
+        application = TestApplication.class
+)
 @LooperMode(LooperMode.Mode.LEGACY)
+@RunWith(AndroidJUnit4.class)
 public class InAppMessageManagerTest {
 
     private InAppMessageManager manager;

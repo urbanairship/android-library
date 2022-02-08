@@ -21,6 +21,7 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 
 import com.urbanairship.actions.DeepLinkListener;
+import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 
 import org.junit.After;
 import org.junit.Before;
@@ -29,9 +30,15 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import java.util.List;
-
+@Config(
+        application = TestApplication.class,
+        shadows = { ShadowNotificationManagerExtension.class, ShadowAirshipExecutorsLegacy.class }
+)
+@LooperMode(LooperMode.Mode.LEGACY)
 public class UAirshipTest extends BaseTestCase {
 
     @Rule

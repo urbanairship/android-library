@@ -53,7 +53,7 @@ class NotificationIntentProcessor {
      * @param intent The intent.
      */
     NotificationIntentProcessor(@NonNull Context context, @NonNull Intent intent) {
-        this(UAirship.shared(), context, intent, AirshipExecutors.THREAD_POOL_EXECUTOR);
+        this(UAirship.shared(), context, intent, AirshipExecutors.threadPoolExecutor());
     }
 
     @VisibleForTesting

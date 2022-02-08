@@ -262,10 +262,15 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
          */
         @NonNull
         public Builder put(@NonNull String key, @Nullable JsonSerializable value) {
-            if (value == null || value.toJsonValue().isNull()) {
+            if (value == null) {
                 map.remove(key);
             } else {
-                map.put(key, value.toJsonValue());
+                JsonValue jsonValue = value.toJsonValue();
+                if (jsonValue.isNull()) {
+                    map.remove(key);
+                } else {
+                    map.put(key, jsonValue);
+                }
             }
 
             return this;

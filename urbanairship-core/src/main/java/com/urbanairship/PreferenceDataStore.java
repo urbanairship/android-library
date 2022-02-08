@@ -170,12 +170,11 @@ public final class PreferenceDataStore {
     }
 
     /**
-     * Unregisters any observers.
+     * Unregisters any observers and closes the db connection.
      */
-    protected void tearDown() {
-        if (db.isOpen()) {
-            db.close();
-        }
+    public void tearDown() {
+        listeners.clear();
+        db.close();
     }
 
     /**

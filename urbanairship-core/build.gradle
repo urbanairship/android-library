@@ -32,6 +32,9 @@ dependencies {
     implementation "androidx.work:work-runtime:$rootProject.androidXWork"
     implementation "androidx.concurrent:concurrent-futures:$rootProject.androidXConcurrentFutures"
 
+    implementation "androidx.startup:startup-runtime:$rootProject.androidXStartup"
+
+
     // Unit Tests
     testImplementation project(':urbanairship-test')
     testImplementation "junit:junit:$rootProject.junitVersion"

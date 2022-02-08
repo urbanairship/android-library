@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Looper;
 
 import com.urbanairship.PendingResult;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
 import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.deferred.Deferred;
@@ -24,6 +25,7 @@ import com.urbanairship.util.DateUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 
 import java.net.MalformedURLException;
@@ -47,8 +49,13 @@ import static org.mockito.Mockito.when;
 /**
  * {@link InAppRemoteDataObserver} tests.
  */
-@RunWith(AndroidJUnit4.class)
+@Config(
+        sdk = 28,
+        shadows = { ShadowAirshipExecutorsLegacy.class },
+        application = TestApplication.class
+)
 @LooperMode(LooperMode.Mode.LEGACY)
+@RunWith(AndroidJUnit4.class)
 public class InAppRemoteDataObserverTest {
 
     private InAppRemoteDataObserver observer;
