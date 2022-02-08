@@ -239,12 +239,14 @@
     <!-- Preference Center subscription group toggle chip overlay
          Override in app theme to customize chip styling, while preserving default styles. -->
     <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.Item.Widget.SubscriptionTypeChip" parent="">
+        <!-- Chip background color. -->
+        <item name="colorSurface">@color/ua_preference_center_subscription_type_chip_surface</item>
         <!-- Circle fill color when checked. -->
         <item name="colorControlActivated">@color/ua_preference_center_subscription_type_chip_checked_background</item>
         <!-- Circle fill color when unchecked. -->
         <item name="colorControlNormal">@color/ua_preference_center_subscription_type_chip_unchecked_background</item>
         <!-- Check icon tint color. -->
-        <item name="android:checkMarkTint">@color/ua_preference_center_accent</item>
+        <item name="android:checkMarkTint">@color/ua_preference_center_subscription_type_chip_check_mark</item>
     </style>
 
     <!-- Preference Center subscription group toggle chip -->
