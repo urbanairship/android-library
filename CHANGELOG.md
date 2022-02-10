@@ -22,6 +22,7 @@ This version also includes a fix for a subset of devices sending duplicate event
 - Fixed devices sending duplicate events
 - Fixed In-App Automation session trigger skipping sessions when automations are paused then resumed
 - Reduce number of retries when Airship traffic is blocked on the network
+- Fixed a crash on Android 6 and below
 
 ## Version 16.1.1 January 4, 2022
 
