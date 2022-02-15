@@ -59,7 +59,6 @@ public class MessageItemView extends FrameLayout {
         init(context, attrs, defStyleAttr, R.style.MessageCenter);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public MessageItemView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
 
@@ -112,24 +111,18 @@ public class MessageItemView extends FrameLayout {
 
         iconView = contentView.findViewById(R.id.image);
         if (iconView != null) {
-            iconView.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (selectionListener != null) {
-                        selectionListener.onClick(MessageItemView.this);
-                    }
+            iconView.setOnClickListener(v -> {
+                if (selectionListener != null) {
+                    selectionListener.onClick(MessageItemView.this);
                 }
             });
         }
 
         checkBox = contentView.findViewById(R.id.checkbox);
         if (checkBox != null) {
-            checkBox.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (selectionListener != null) {
-                        selectionListener.onClick(MessageItemView.this);
-                    }
+            checkBox.setOnClickListener(v -> {
+                if (selectionListener != null) {
+                    selectionListener.onClick(MessageItemView.this);
                 }
             });
         }
@@ -199,7 +192,6 @@ public class MessageItemView extends FrameLayout {
         this.selectionListener = listener;
     }
 
-    @SuppressLint("UnknownNullness")
     @Override
     protected int[] onCreateDrawableState(int extraSpace) {
         if (isHighlighted) {
@@ -246,6 +238,7 @@ public class MessageItemView extends FrameLayout {
      * @param isSelected {@code true} if the message is selected, {@code false} otherwise.
      * @return a content description {@code String}.
      */
+    @NonNull
     private static String buildContentDescription(
         @NonNull Context context,
         @NonNull Message message,

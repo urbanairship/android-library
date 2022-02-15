@@ -11,7 +11,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -63,12 +62,7 @@ public class MessageListFragment extends Fragment {
     @DrawableRes
     private int placeHolder = R.drawable.ua_ic_image_placeholder;
 
-    private final InboxListener inboxListener = new InboxListener() {
-        @Override
-        public void onInboxUpdated() {
-            updateAdapterMessages();
-        }
-    };
+    private final InboxListener inboxListener = this::updateAdapterMessages;
 
     /**
      * Gets messages from the inbox filtered by the local predicate
@@ -117,13 +111,10 @@ public class MessageListFragment extends Fragment {
         }
 
         // Item click listener
-        getAbsListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Message message = getMessage(position);
-                if (message != null) {
-                    MessageCenter.shared().showMessageCenter(message.getMessageId());
-                }
+        getAbsListView().setOnItemClickListener((parent, view1, position, id) -> {
+            Message message = getMessage(position);
+            if (message != null) {
+                MessageCenter.shared().showMessageCenter(message.getMessageId());
             }
         });
 
@@ -179,12 +170,7 @@ public class MessageListFragment extends Fragment {
         // Pull to refresh
         refreshLayout = view.findViewById(R.id.swipe_container);
         if (refreshLayout != null) {
-            refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                @Override
-                public void onRefresh() {
-                    onRefreshMessages();
-                }
-            });
+            refreshLayout.setOnRefreshListener(this::onRefreshMessages);
         }
 
         View emptyListView = view.findViewById(android.R.id.empty);
@@ -300,12 +286,9 @@ public class MessageListFragment extends Fragment {
             fetchMessagesOperation.cancel();
         }
 
-        fetchMessagesOperation = inbox.fetchMessages(new Inbox.FetchMessagesCallback() {
-            @Override
-            public void onFinished(boolean success) {
-                if (refreshLayout != null) {
-                    refreshLayout.setRefreshing(false);
-                }
+        fetchMessagesOperation = inbox.fetchMessages(success -> {
+            if (refreshLayout != null) {
+                refreshLayout.setRefreshing(false);
             }
         });
 
