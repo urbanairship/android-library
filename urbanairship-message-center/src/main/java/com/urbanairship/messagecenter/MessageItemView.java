@@ -137,7 +137,7 @@ public class MessageItemView extends FrameLayout {
      * @param message The message.
      * @param placeholder Image place holder.
      */
-    void updateMessage(@NonNull Message message, @DrawableRes int placeholder) {
+    void updateMessage(@NonNull Message message, @DrawableRes int placeholder, boolean isSelected) {
         dateView.setText(DateFormat.getDateFormat(getContext()).format(message.getSentDate()));
 
         if (message.isRead()) {
@@ -149,7 +149,7 @@ public class MessageItemView extends FrameLayout {
         }
 
         if (checkBox != null) {
-            checkBox.setChecked(isActivated());
+            checkBox.setChecked(isSelected);
         }
 
         if (iconView != null) {

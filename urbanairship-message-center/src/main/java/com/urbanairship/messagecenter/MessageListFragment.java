@@ -226,23 +226,39 @@ public class MessageListFragment extends Fragment {
      */
     @NonNull
     protected MessageViewAdapter createMessageViewAdapter(@NonNull Context context) {
+        final List<String> selectedMessageIds = new ArrayList<>();
+
         return new MessageViewAdapter(context, R.layout.ua_item_mc) {
             @Override
             protected void bindView(@NonNull View view, @NonNull Message message, final int position) {
                 if (view instanceof MessageItemView) {
                     MessageItemView itemView = (MessageItemView) view;
 
-                    itemView.updateMessage(message, placeHolder);
+                    itemView.setSelectionListener(v -> setSelection(message.getMessageId(), position));
+
+                    itemView.updateMessage(message, placeHolder, isSelected(message));
                     itemView.setHighlighted(message.getMessageId().equals(currentMessageId));
-                    itemView.setSelectionListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (getAbsListView() != null) {
-                                getAbsListView().setItemChecked(position, !getAbsListView().isItemChecked(position));
-                            }
-                        }
-                    });
                 }
+            }
+
+            private void setSelection(String messageId, int position) {
+                AbsListView list = getAbsListView();
+                if (list == null) {
+                    return;
+                }
+                boolean isChecked = !list.isItemChecked(position);
+                // Update the list selections.
+                list.setItemChecked(position, isChecked);
+                // Also update the adapter so that view re-binds are aware of the checked state.
+                if (isChecked) {
+                    selectedMessageIds.add(messageId);
+                } else {
+                    selectedMessageIds.remove(messageId);
+                }
+            }
+
+            private boolean isSelected(@NonNull Message message) {
+                return selectedMessageIds.contains(message.getMessageId());
             }
         };
     }
