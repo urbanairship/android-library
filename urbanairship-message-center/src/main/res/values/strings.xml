@@ -18,13 +18,13 @@
     <!-- Message item content descriptions. Used on the Inbox (message list) screen. -->
 
     <!-- Prepended to the content description for messages that are currently selected. -->
-    <string name="ua_mc_description_state_selected">Selected, </string>
+    <string name="ua_mc_description_state_selected">Selected,</string>
     <!-- Prepended to the content description for messages that are currently unread. -->
-    <string name="ua_mc_description_state_unread">Unread, </string>
+    <string name="ua_mc_description_state_unread">Unread,</string>
     <!-- Content description for message items in the message list. Dates will be formatted using
     the DateFormat.LONG format in the current locale. -->
     <string name="ua_mc_description_title_and_date">
-        <x:g id="title" example="You left an item in your cart">%1$s</x:g>, on <x:g id="sent_date" example="February 14th, 2021">%1$s</x:g>
+        <x:g id="title" example="This week\'s top deals">%1$s</x:g>, on <x:g id="sent_date" example="May 1st, 2021">%2$s</x:g>
     </string>
 
     <!-- Message item actions. Displayed in TalkBack Actions menu when screen reader is active. -->

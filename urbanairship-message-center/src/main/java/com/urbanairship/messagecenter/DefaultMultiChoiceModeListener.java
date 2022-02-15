@@ -2,6 +2,7 @@
 
 package com.urbanairship.messagecenter;
 
+import android.content.res.Resources;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.Menu;
@@ -99,22 +100,29 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
 
     @Override
     public boolean onActionItemClicked(@NonNull ActionMode mode, @NonNull MenuItem item) {
-        if (messageListFragment.getAbsListView() == null) {
+        AbsListView listView = messageListFragment.getAbsListView();
+        if (listView == null) {
             return false;
         }
+        Resources res = listView.getContext().getResources();
 
         if (item.getItemId() == R.id.mark_read) {
             MessageCenter.shared().getInbox().markMessagesRead(getCheckedMessageIds());
+            int count = getCheckedMessageIds().size();
+            listView.announceForAccessibility(
+                res.getQuantityString(R.plurals.ua_mc_description_marked_read, count, count));
             mode.finish();
 
         } else if (item.getItemId() == R.id.delete) {
             MessageCenter.shared().getInbox().deleteMessages(getCheckedMessageIds());
+            int count = getCheckedMessageIds().size();
+            listView.announceForAccessibility(
+                res.getQuantityString(R.plurals.ua_mc_description_deleted, count, count));
             mode.finish();
 
         } else if (item.getItemId() == R.id.select_all) {
-            int count = messageListFragment.getAbsListView().getCount();
-            for (int i = 0; i < count; i++) {
-                messageListFragment.getAbsListView().setItemChecked(i, true);
+            for (int i = 0; i < listView.getCount(); i++) {
+                listView.setItemChecked(i, true);
             }
         }
 
