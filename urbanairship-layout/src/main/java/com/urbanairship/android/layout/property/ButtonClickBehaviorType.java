@@ -1,6 +1,4 @@
-/*
- Copyright Airship and Contributors
- */
+/* Copyright Airship and Contributors */
 
 package com.urbanairship.android.layout.property;
 
@@ -10,7 +8,6 @@ import com.urbanairship.json.JsonValue;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -52,7 +49,7 @@ public enum ButtonClickBehaviorType {
         for (JsonValue value : json) {
             behaviorTypes.add(from(value.optString()));
         }
-        behaviorTypes.sort(Comparator.comparingInt(Enum::ordinal));
+        Collections.sort(behaviorTypes, Enum::compareTo);
         return behaviorTypes;
     }
 

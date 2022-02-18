@@ -51,8 +51,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.util.Consumer;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import kotlin.jvm.functions.Function3;
-import kotlin.jvm.functions.Function4;
 
 import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 
