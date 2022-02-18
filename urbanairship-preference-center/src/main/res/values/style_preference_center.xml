@@ -16,10 +16,15 @@
         <item name="android:statusBarColor" tools:targetApi="lollipop">@color/ua_preference_center_status_bar</item>
     </style>
 
-    <!-- Default Activity -->
-    <style name="UrbanAirship.PreferenceCenter.Activity">
+    <style name="UrbanAirship.PreferenceCenter.Base">
         <item name="urbanAirshipPreferenceCenterSubscriptionTypeChipStyle">@style/UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChip</item>
     </style>
+
+    <!-- Default Activity -->
+    <style name="UrbanAirship.PreferenceCenter.Activity" parent="@style/UrbanAirship.PreferenceCenter.Base"/>
+
+    <!-- Default Fragment -->
+    <style name="UrbanAirship.PreferenceCenter.Fragment" parent="@style/UrbanAirship.PreferenceCenter.Base"/>
 
     <!-- Toolbar -->
     <style name="UrbanAirship.PreferenceCenter.Toolbar" parent="@style/Widget.MaterialComponents.Toolbar.Surface" />
