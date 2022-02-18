@@ -2,6 +2,15 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.3.1 February 17, 2022
+
+A minor release that fixes Preference Center and Automation issues.
+
+## Changes
+- Fixed PreferenceCenter theme attribute for chip style when embedding the Fragment directly.
+- Fixed a PreferenceCenter crash that impacted Android 6 and below.
+- Fixed a potential crash in Scenes and Surveys on Android 6 and below.
+
 ## Version 16.3.0 February 8, 2022
 
 A minor release that adds support for multi-channel Preference Center. Currently, these features are only available to customers in Airship's Special Access Program. Please reach out to your account manager for more details.
