@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/ua_debug_contact_navigation"
+    app:startDestination="@id/contactFragment">
+
+    <fragment
+        android:id="@+id/contactFragment"
+        android:name="com.urbanairship.debug.contact.ContactFragment"
+        android:label="Contact">
+    </fragment>
+
+    <fragment
+        android:id="@+id/emailFragment"
+        android:name="com.urbanairship.debug.contact.email.EmailFragment"
+        android:label="Email">
+    </fragment>
+</navigation>

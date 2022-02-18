@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContactScreens>
+    <entry
+        description="Register an open channel to the contact"
+        navigationId="@id/openChannelFragment"
+        title="Open Channel" />
+
+    <entry
+        description="Register an sms to the contact"
+        navigationId="@id/smsFragment"
+        title="SMS" />
+
+    <entry
+        description="Register an email to the contact"
+        navigationId="@id/emailFragment"
+        title="Email" />
+</ContactScreens>
