@@ -12,6 +12,9 @@ import java.util.Date
 class EmailAssociateViewModel : ViewModel() {
     private val propertiesMap = mutableMapOf<String, JsonValue>()
 
+    private var isTransactional = false
+    private var isCommercial = false
+
     val email = MutableLiveData<String>()
     val properties = MutableLiveData<Map<String, JsonValue>>()
 
@@ -19,7 +22,6 @@ class EmailAssociateViewModel : ViewModel() {
 
     init {
         emailValidator.value = true
-
         emailValidator.addSource(email) { emailValidator.value = true }
     }
 
@@ -43,6 +45,14 @@ class EmailAssociateViewModel : ViewModel() {
         properties.value = propertiesMap
     }
 
+    fun setTransactional(isTransactional: Boolean) {
+        this.isTransactional = isTransactional
+    }
+
+    fun setCommerical(isCommercial: Boolean) {
+        this.isCommercial = isCommercial
+    }
+
     private fun validate(): Boolean {
         emailValidator.value = !email.value.isNullOrBlank()
 
@@ -55,8 +65,21 @@ class EmailAssociateViewModel : ViewModel() {
         }
         val currentTime = System.currentTimeMillis();
 
-        val commercialOptedInDate = Date(currentTime)
-        val transactionalOptedInDate = Date(currentTime);
+        var commercialOptedInDate: Date?
+
+        if (isCommercial) {
+            commercialOptedInDate = Date(currentTime)
+        } else {
+            commercialOptedInDate = null
+        }
+
+        var transactionalOptedInDate: Date?
+
+        if (isTransactional) {
+            transactionalOptedInDate = Date(currentTime)
+        } else {
+            transactionalOptedInDate = null
+        }
 
         val emailOptions = EmailRegistrationOptions.commercialOptions(commercialOptedInDate, transactionalOptedInDate, JsonMap(propertiesMap))
         UAirship.shared().contact.registerEmail(email.value!!,emailOptions)

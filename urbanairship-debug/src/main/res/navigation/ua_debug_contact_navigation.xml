@@ -15,4 +15,15 @@
         android:name="com.urbanairship.debug.contact.email.EmailFragment"
         android:label="Email">
     </fragment>
+
+    <fragment
+        android:id="@+id/emailPropertyFragment"
+        android:name="com.urbanairship.debug.contact.email.PropertyFragment"
+        android:label="Property">
+        <argument
+            android:name="propertyName"
+            app:argType="string"
+            app:nullable="true"
+            />
+    </fragment>
 </navigation>
