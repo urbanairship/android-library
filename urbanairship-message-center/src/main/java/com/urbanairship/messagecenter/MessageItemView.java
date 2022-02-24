@@ -2,12 +2,9 @@
 
 package com.urbanairship.messagecenter;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Typeface;
-import android.os.Build;
 import android.text.SpannableString;
 import android.text.format.DateFormat;
 import android.text.style.StyleSpan;
@@ -20,11 +17,16 @@ import android.widget.TextView;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.images.ImageRequestOptions;
+import com.urbanairship.util.AccessibilityUtils;
 import com.urbanairship.util.ViewUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
 
 /**
  * Message Center item view.
@@ -33,10 +35,13 @@ public class MessageItemView extends FrameLayout {
 
     private static final int[] STATE_HIGHLIGHTED = { R.attr.ua_state_highlighted };
 
+    private View contentView;
     private TextView titleView;
     private TextView dateView;
     private ImageView iconView;
     private CheckBox checkBox;
+
+    private final List<Integer> accessibilityActionIds = new ArrayList<>();
 
     private boolean isHighlighted;
     private OnClickListener selectionListener;
@@ -54,7 +59,6 @@ public class MessageItemView extends FrameLayout {
         init(context, attrs, defStyleAttr, R.style.MessageCenter);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public MessageItemView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
 
@@ -97,7 +101,7 @@ public class MessageItemView extends FrameLayout {
 
         attributes.recycle();
 
-        View contentView = View.inflate(context, contentLayout, this);
+        contentView = View.inflate(context, contentLayout, this);
 
         titleView = contentView.findViewById(R.id.title);
         ViewUtils.applyTextStyle(context, titleView, titleTextAppearance);
@@ -107,24 +111,18 @@ public class MessageItemView extends FrameLayout {
 
         iconView = contentView.findViewById(R.id.image);
         if (iconView != null) {
-            iconView.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (selectionListener != null) {
-                        selectionListener.onClick(MessageItemView.this);
-                    }
+            iconView.setOnClickListener(v -> {
+                if (selectionListener != null) {
+                    selectionListener.onClick(MessageItemView.this);
                 }
             });
         }
 
         checkBox = contentView.findViewById(R.id.checkbox);
         if (checkBox != null) {
-            checkBox.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (selectionListener != null) {
-                        selectionListener.onClick(MessageItemView.this);
-                    }
+            checkBox.setOnClickListener(v -> {
+                if (selectionListener != null) {
+                    selectionListener.onClick(MessageItemView.this);
                 }
             });
         }
@@ -137,7 +135,7 @@ public class MessageItemView extends FrameLayout {
      * @param message The message.
      * @param placeholder Image place holder.
      */
-    void updateMessage(@NonNull Message message, @DrawableRes int placeholder) {
+    void updateMessage(@NonNull Message message, @DrawableRes int placeholder, boolean isSelected) {
         dateView.setText(DateFormat.getDateFormat(getContext()).format(message.getSentDate()));
 
         if (message.isRead()) {
@@ -149,7 +147,7 @@ public class MessageItemView extends FrameLayout {
         }
 
         if (checkBox != null) {
-            checkBox.setChecked(isActivated());
+            checkBox.setChecked(isSelected);
         }
 
         if (iconView != null) {
@@ -159,6 +157,10 @@ public class MessageItemView extends FrameLayout {
 
             UAirship.shared().getImageLoader().load(getContext(), iconView, options);
         }
+
+        // Set summary content description on the message item.
+        contentView.setContentDescription(buildContentDescription(getContext(), message, isSelected));
+        updateAccessibilityActions(contentView, isSelected);
     }
 
     @Override
@@ -190,7 +192,6 @@ public class MessageItemView extends FrameLayout {
         this.selectionListener = listener;
     }
 
-    @SuppressLint("UnknownNullness")
     @Override
     protected int[] onCreateDrawableState(int extraSpace) {
         if (isHighlighted) {
@@ -202,4 +203,63 @@ public class MessageItemView extends FrameLayout {
         }
     }
 
+
+    /**
+     * Updates the view's accessibility actions.
+     */
+    private void updateAccessibilityActions(@NonNull View view, boolean isActivated) {
+        // Clear any previously set actions to avoid duplicates.
+        for (int actionId : accessibilityActionIds) {
+            ViewCompat.removeAccessibilityAction(view, actionId);
+        }
+
+        // Add custom actions to support item selection on the item view.
+        // This replaces checkbox/icon clicks when in screen reader mode.
+        String actionLabel = getContext().getString(
+            isActivated ? R.string.ua_mc_action_unselect : R.string.ua_mc_action_select);
+        accessibilityActionIds.add(
+            ViewCompat.addAccessibilityAction(view, actionLabel, (v, args) -> {
+                if (selectionListener != null) {
+                    selectionListener.onClick(MessageItemView.this);
+                }
+                return true;
+            })
+        );
+
+        // Update click action to read "Tap to read message" instead of "Tap to activate".
+        AccessibilityUtils.setClickActionLabel(view, R.string.ua_mc_action_click);
+    }
+
+    /**
+     * Generates a content description for the given message.
+     *
+     * @param context Context.
+     * @param message The message.
+     * @param isSelected {@code true} if the message is selected, {@code false} otherwise.
+     * @return a content description {@code String}.
+     */
+    @NonNull
+    private static String buildContentDescription(
+        @NonNull Context context,
+        @NonNull Message message,
+        boolean isSelected
+    ) {
+        StringBuilder sb = new StringBuilder();
+        // Selected state
+        if (isSelected) {
+            sb.append(context.getString(R.string.ua_mc_description_state_selected));
+        }
+        // Read state
+        if (!message.isRead()) {
+            sb.append(context.getString(R.string.ua_mc_description_state_unread));
+        }
+        // Title and date
+        sb.append(
+            context.getString(R.string.ua_mc_description_title_and_date,
+                message.getTitle(),
+                DateFormat.getLongDateFormat(context).format(message.getSentDate())
+            )
+        );
+        return sb.toString();
+    }
 }

@@ -11,7 +11,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -63,12 +62,7 @@ public class MessageListFragment extends Fragment {
     @DrawableRes
     private int placeHolder = R.drawable.ua_ic_image_placeholder;
 
-    private final InboxListener inboxListener = new InboxListener() {
-        @Override
-        public void onInboxUpdated() {
-            updateAdapterMessages();
-        }
-    };
+    private final InboxListener inboxListener = this::updateAdapterMessages;
 
     /**
      * Gets messages from the inbox filtered by the local predicate
@@ -117,13 +111,10 @@ public class MessageListFragment extends Fragment {
         }
 
         // Item click listener
-        getAbsListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Message message = getMessage(position);
-                if (message != null) {
-                    MessageCenter.shared().showMessageCenter(message.getMessageId());
-                }
+        getAbsListView().setOnItemClickListener((parent, view1, position, id) -> {
+            Message message = getMessage(position);
+            if (message != null) {
+                MessageCenter.shared().showMessageCenter(message.getMessageId());
             }
         });
 
@@ -179,12 +170,7 @@ public class MessageListFragment extends Fragment {
         // Pull to refresh
         refreshLayout = view.findViewById(R.id.swipe_container);
         if (refreshLayout != null) {
-            refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                @Override
-                public void onRefresh() {
-                    onRefreshMessages();
-                }
-            });
+            refreshLayout.setOnRefreshListener(this::onRefreshMessages);
         }
 
         View emptyListView = view.findViewById(android.R.id.empty);
@@ -226,23 +212,39 @@ public class MessageListFragment extends Fragment {
      */
     @NonNull
     protected MessageViewAdapter createMessageViewAdapter(@NonNull Context context) {
+        final List<String> selectedMessageIds = new ArrayList<>();
+
         return new MessageViewAdapter(context, R.layout.ua_item_mc) {
             @Override
             protected void bindView(@NonNull View view, @NonNull Message message, final int position) {
                 if (view instanceof MessageItemView) {
                     MessageItemView itemView = (MessageItemView) view;
 
-                    itemView.updateMessage(message, placeHolder);
+                    itemView.setSelectionListener(v -> setSelection(message.getMessageId(), position));
+
+                    itemView.updateMessage(message, placeHolder, isSelected(message));
                     itemView.setHighlighted(message.getMessageId().equals(currentMessageId));
-                    itemView.setSelectionListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (getAbsListView() != null) {
-                                getAbsListView().setItemChecked(position, !getAbsListView().isItemChecked(position));
-                            }
-                        }
-                    });
                 }
+            }
+
+            private void setSelection(String messageId, int position) {
+                AbsListView list = getAbsListView();
+                if (list == null) {
+                    return;
+                }
+                boolean isChecked = !list.isItemChecked(position);
+                // Update the list selections.
+                list.setItemChecked(position, isChecked);
+                // Also update the adapter so that view re-binds are aware of the checked state.
+                if (isChecked) {
+                    selectedMessageIds.add(messageId);
+                } else {
+                    selectedMessageIds.remove(messageId);
+                }
+            }
+
+            private boolean isSelected(@NonNull Message message) {
+                return selectedMessageIds.contains(message.getMessageId());
             }
         };
     }
@@ -284,12 +286,9 @@ public class MessageListFragment extends Fragment {
             fetchMessagesOperation.cancel();
         }
 
-        fetchMessagesOperation = inbox.fetchMessages(new Inbox.FetchMessagesCallback() {
-            @Override
-            public void onFinished(boolean success) {
-                if (refreshLayout != null) {
-                    refreshLayout.setRefreshing(false);
-                }
+        fetchMessagesOperation = inbox.fetchMessages(success -> {
+            if (refreshLayout != null) {
+                refreshLayout.setRefreshing(false);
             }
         });
 
