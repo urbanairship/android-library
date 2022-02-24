@@ -20,9 +20,6 @@ import com.urbanairship.automation.limits.FrequencyChecker;
 import com.urbanairship.automation.limits.FrequencyConstraint;
 import com.urbanairship.automation.limits.FrequencyLimitManager;
 import com.urbanairship.automation.tags.AudienceManager;
-import com.urbanairship.automation.tags.TagGroupLookupResponseCache;
-import com.urbanairship.automation.tags.TagGroupResult;
-import com.urbanairship.automation.tags.TagSelector;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.TagGroupsMutation;
@@ -40,25 +37,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.robolectric.RuntimeEnvironment;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
-import org.robolectric.shadow.api.Shadow;
-import org.robolectric.shadows.ShadowApplication;
 import org.robolectric.shadows.ShadowPackageManager;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -77,7 +65,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -555,36 +542,6 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testNewConfig() {
-        JsonMap config = JsonMap.newBuilder()
-                                .put("tag_groups", JsonMap.newBuilder()
-                                                          .put("enabled", false)
-                                                          .put("cache_max_age_seconds", 1)
-                                                          .put("cache_stale_read_age_seconds", 11)
-                                                          .put("cache_prefer_local_until_seconds", 111)
-                                                          .build())
-                                .build();
-
-        inAppAutomation.onNewConfig(config);
-
-        verify(mockAudienceManager).setEnabled(false);
-        verify(mockAudienceManager).setCacheMaxAgeTime(1, TimeUnit.SECONDS);
-        verify(mockAudienceManager).setCacheStaleReadTime(11, TimeUnit.SECONDS);
-        verify(mockAudienceManager).setPreferLocalTagDataTime(111, TimeUnit.SECONDS);
-
-        Mockito.reset(mockAudienceManager);
-
-        // verify null config resets to defaults
-
-        inAppAutomation.onNewConfig(null);
-
-        verify(mockAudienceManager).setEnabled(true);
-        verify(mockAudienceManager).setCacheMaxAgeTime(TimeUnit.MILLISECONDS.toSeconds(TagGroupLookupResponseCache.DEFAULT_MAX_AGE_TIME_MS), TimeUnit.SECONDS);
-        verify(mockAudienceManager).setCacheStaleReadTime(TimeUnit.MILLISECONDS.toSeconds(TagGroupLookupResponseCache.DEFAULT_STALE_READ_TIME_MS), TimeUnit.SECONDS);
-        verify(mockAudienceManager).setPreferLocalTagDataTime(TimeUnit.MILLISECONDS.toSeconds(AudienceManager.DEFAULT_PREFER_LOCAL_DATA_TIME_MS), TimeUnit.SECONDS);
-    }
-
-    @Test
     public void testInvalidScheduleOnExecution() {
         JsonMap metadata = JsonMap.newBuilder()
                                   .putOpt("cool", "story")
@@ -733,29 +690,6 @@ public class InAppAutomationTest {
 
         // Verify the miss behavior
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
-    }
-
-    @Test
-    public void testAudienceConditionCheckWithTagGroups() {
-        Map<String, Set<String>> tagGroups = new HashMap<>();
-        tagGroups.put("expected group", Collections.singleton("expected tag"));
-        when(mockAudienceManager.getTags(tagGroups)).thenReturn(new TagGroupResult(true, tagGroups));
-
-        Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
-                                             .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                             .setAudience(Audience.newBuilder()
-                                                                  .setNotificationsOptIn(true)
-                                                                  .setMissBehavior(Audience.MISS_BEHAVIOR_SKIP)
-                                                                  .setTagSelector(TagSelector.tag("expected tag", "expected group"))
-                                                                  .build())
-                                             .build();
-
-        // Start preparing
-        AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        driver.onPrepareSchedule(schedule, null, mockPrepareCallback);
-
-        // Verify prepare result
-        verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
     }
 
     @Test

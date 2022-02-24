@@ -7,7 +7,6 @@ import android.content.Context;
 import com.urbanairship.Logger;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
-import com.urbanairship.automation.tags.TagSelector;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.push.PushManager;
@@ -18,7 +17,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
@@ -82,24 +80,8 @@ public abstract class AudienceChecks {
      * @return {@code true} if the audience conditions are met, otherwise {@code false}.
      */
     public static boolean checkAudience(@NonNull Context context, @Nullable Audience audience) {
-        return checkAudience(context, audience, null);
-    }
-
-    /**
-     * Checks the audience.
-     *
-     * @param context The application context.
-     * @param audience The audience.
-     * @param tagGroups The channel tag groups.
-     * @return {@code true} if the audience conditions are met, otherwise {@code false}.
-     */
-    public static boolean checkAudience(@NonNull Context context, @Nullable Audience audience, @Nullable Map<String, Set<String>> tagGroups) {
         if (audience == null) {
             return true;
-        }
-
-        if (tagGroups == null) {
-            tagGroups = TagSelector.EMPTY_TAG_GROUPS;
         }
 
         UAirship airship = UAirship.shared();
@@ -135,7 +117,7 @@ public abstract class AudienceChecks {
                 return false;
             }
 
-            if (!audience.getTagSelector().apply(channel.getTags(), tagGroups)) {
+            if (!audience.getTagSelector().apply(channel.getTags())) {
                 return false;
             }
         }

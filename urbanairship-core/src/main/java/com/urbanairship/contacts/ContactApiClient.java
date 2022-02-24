@@ -334,19 +334,6 @@ class ContactApiClient {
 
         JsonMap.Builder builder = JsonMap.newBuilder();
 
-        if (tagGroupMutations != null && !tagGroupMutations.isEmpty()) {
-            JsonMap.Builder tagBuilder = JsonMap.newBuilder();
-
-            List<TagGroupsMutation> tags = TagGroupsMutation.collapseMutations(tagGroupMutations);
-            for (TagGroupsMutation tag : tags) {
-                if (tag.toJsonValue().isJsonMap()) {
-                    tagBuilder.putAll(tag.toJsonValue().optMap());
-                }
-            }
-
-            builder.put(TAGS, tagBuilder.build());
-        }
-
         if (attributeMutations != null && !attributeMutations.isEmpty()) {
             builder.putOpt(ATTRIBUTES, AttributeMutation.collapseMutations(attributeMutations));
         }

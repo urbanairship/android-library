@@ -24,8 +24,6 @@ import com.urbanairship.automation.limits.FrequencyChecker;
 import com.urbanairship.automation.limits.FrequencyConstraint;
 import com.urbanairship.automation.limits.FrequencyLimitManager;
 import com.urbanairship.automation.tags.AudienceManager;
-import com.urbanairship.automation.tags.TagGroupResult;
-import com.urbanairship.automation.tags.TagGroupUtils;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.contacts.Contact;
@@ -34,7 +32,6 @@ import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
-import com.urbanairship.json.JsonMap;
 import com.urbanairship.reactive.Subscription;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.RetryingExecutor;
@@ -44,10 +41,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.MainThread;
@@ -232,27 +227,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @Override
     protected void init() {
         super.init();
-        audienceManager.setRequestTagsCallback(new AudienceManager.RequestTagsCallback() {
-            @NonNull
-            @Override
-            public Map<String, Set<String>> getTags() throws ExecutionException, InterruptedException {
-                Map<String, Set<String>> tags = new HashMap<>();
-
-                Collection<Schedule<? extends ScheduleData>> schedules = getSchedules().get();
-                if (schedules == null) {
-                    return tags;
-                }
-
-                for (Schedule<? extends ScheduleData> schedule : schedules) {
-                    Audience audience = schedule.getAudience();
-                    if (audience != null && audience.getTagSelector() != null && audience.getTagSelector().containsTagGroups()) {
-                        TagGroupUtils.addAll(tags, audience.getTagSelector().getTagGroups());
-                    }
-                }
-
-                return tags;
-            }
-        });
 
         this.automationEngine.setScheduleListener(new AutomationEngine.ScheduleListener() {
             @Override
@@ -322,15 +296,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         automationEngine.stop();
         isStarted.set(false);
         privacyManager.removeListener(privacyManagerListener);
-    }
-
-    @Override
-    public void onNewConfig(@Nullable JsonMap configValue) {
-        InAppRemoteConfig config = InAppRemoteConfig.fromJsonMap(configValue);
-        audienceManager.setEnabled(config.tagGroupsConfig.isEnabled);
-        audienceManager.setCacheStaleReadTime(config.tagGroupsConfig.cacheStaleReadTimeSeconds, TimeUnit.SECONDS);
-        audienceManager.setPreferLocalTagDataTime(config.tagGroupsConfig.cachePreferLocalTagDataTimeSeconds, TimeUnit.SECONDS);
-        audienceManager.setCacheMaxAgeTime(config.tagGroupsConfig.cacheMaxAgeInSeconds, TimeUnit.SECONDS);
     }
 
     /**
@@ -616,23 +581,11 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         RetryingExecutor.Operation checkAudience = new RetryingExecutor.Operation() {
             @Override
             public int run() {
-                Map<String, Set<String>> tagGroups = null;
-
                 if (schedule.getAudience() == null) {
                     return RetryingExecutor.RESULT_FINISHED;
                 }
 
-                if (schedule.getAudience().getTagSelector() != null && schedule.getAudience().getTagSelector().containsTagGroups()) {
-                    Map<String, Set<String>> tags = schedule.getAudience().getTagSelector().getTagGroups();
-                    TagGroupResult result = audienceManager.getTags(tags);
-                    if (!result.success) {
-                        return RetryingExecutor.RESULT_RETRY;
-                    }
-
-                    tagGroups = result.tagGroups;
-                }
-
-                if (AudienceChecks.checkAudience(getContext(), schedule.getAudience(), tagGroups)) {
+                if (AudienceChecks.checkAudience(getContext(), schedule.getAudience())) {
                     return RetryingExecutor.RESULT_FINISHED;
                 }
 

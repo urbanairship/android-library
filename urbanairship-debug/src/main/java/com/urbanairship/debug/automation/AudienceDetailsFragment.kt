@@ -2,10 +2,13 @@ package com.urbanairship.debug.automation
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.urbanairship.UAirship
 import com.urbanairship.automation.Audience
+import com.urbanairship.contacts.SmsRegistrationOptions
 import com.urbanairship.debug.R
 import com.urbanairship.debug.extensions.toFormattedJsonString
 import com.urbanairship.json.JsonValue
+import java.util.Date
 
 class AudienceDetailsFragment : AutomationDetailsFragment() {
 
@@ -20,6 +23,12 @@ class AudienceDetailsFragment : AutomationDetailsFragment() {
 
     private fun audienceDetails(audience: Audience): List<AutomationDetail> {
         return mutableListOf<AutomationDetail>().apply {
+
+            val commercialDate = Date()
+            val transactionalDate = Date()
+
+            val options = SmsRegistrationOptions.options("senderId")
+            UAirship.shared().contact.registerSms("yourMsisdn", options)
 
             audience.notificationsOptIn?.let {
                 if (it) {
