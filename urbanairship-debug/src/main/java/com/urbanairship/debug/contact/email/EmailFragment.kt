@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
-import android.widget.CompoundButton
 import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -27,7 +26,7 @@ class EmailFragment : Fragment() {
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
         binding.recyclerView.apply {
-            val propertyAdapter = PropertyAdapter {
+            val propertyAdapter =  PropertyAdapter {
                 if (isResumed) {
                     val args = Bundle()
                     args.putString(PropertyFragment.ARGUMENT_PROPERTY_NAME, it.first)
@@ -67,13 +66,13 @@ class EmailFragment : Fragment() {
             itemTouchHelper.attachToRecyclerView(this)
         }
 
-        binding.commercialCheckbox.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { _, isChecked ->
+        binding.commercialCheckbox.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setCommerical(isChecked)
-        })
+        }
 
-        binding.transactionalCheckbox.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { _, isChecked ->
+        binding.transactionalCheckbox.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setTransactional(isChecked)
-        })
+        }
 
         return binding.root
     }

@@ -88,16 +88,4 @@
         android:label="Contact">
     </fragment>
 
-    <fragment
-        android:id="@+id/openChannelFragment"
-        android:name="com.urbanairship.debug.contact.OpenChannelFragment"
-        android:label="Open">
-    </fragment>
-
-    <fragment
-        android:id="@+id/smsFragment"
-        android:name="com.urbanairship.debug.contact.SmsFragment"
-        android:label="SMS">
-    </fragment>
-
 </navigation>

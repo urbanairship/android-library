@@ -26,4 +26,23 @@
             app:nullable="true"
             />
     </fragment>
+
+    <fragment
+        android:id="@+id/smsFragment"
+        android:name="com.urbanairship.debug.contact.sms.SmsFragment"
+        android:label="SMS">
+    </fragment>
+
+    <fragment
+        android:id="@+id/openChannelFragment"
+        android:name="com.urbanairship.debug.contact.open.OpenChannelFragment"
+        android:label="Open">
+    </fragment>
+
+    <fragment
+        android:id="@+id/openIdentifierFragment"
+        android:name="com.urbanairship.debug.contact.open.IdentifierFragment"
+        android:label="Identifier">
+    </fragment>
+
 </navigation>
