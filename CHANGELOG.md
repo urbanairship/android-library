@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.3.2 March 3, 2022
+
+A patch release that fixes a potential crash with the splash screen Jetpack library when using banner in-app messages.
+
+## Changes
+- Remove check for container view on Activity#onCreate for banner in-app messages
+
 ## Version 16.3.1 February 17, 2022
 
 A minor release that fixes Preference Center and Automation issues.
