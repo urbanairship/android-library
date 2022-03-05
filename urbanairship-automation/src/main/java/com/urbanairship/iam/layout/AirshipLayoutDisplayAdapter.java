@@ -298,11 +298,21 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
          * @return the updated viewed count for the current page index.
          */
         private int updatePageViewCount(@NonNull PagerData data) {
-            Map<Integer, Integer> pageViews = pagerViewCounts.computeIfAbsent(data.getIdentifier(), key -> new HashMap<>(data.getCount()));
-            Integer count = pageViews.putIfAbsent(data.getIndex(), 0);
+            if (!pagerViewCounts.containsKey(data.getIdentifier())) {
+                pagerViewCounts.put(data.getIdentifier(), new HashMap<>(data.getCount()));
+            }
+            Map<Integer, Integer> pageViews = pagerViewCounts.get(data.getIdentifier());
+
+            if (pageViews != null && !pageViews.containsKey(data.getIndex())) {
+                pageViews.put(data.getIndex(), 0);
+            }
+
+            Integer count = pageViews != null ? pageViews.get(data.getIndex()) : Integer.valueOf(0);
             count = count != null ? count + 1 : 1;
 
-            pageViews.put(data.getIndex(), count);
+            if (pageViews != null) {
+                pageViews.put(data.getIndex(), count);
+            }
             return count;
         }
 
