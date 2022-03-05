@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.view;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
@@ -192,7 +193,11 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
 
         @Override
         public void onReceivedError(@NonNull WebView view, @NonNull WebResourceRequest request, @NonNull WebResourceError error) {
-            Logger.error("Error loading web view! %d - %s", error.getErrorCode(), error.getDescription());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Logger.error("Error loading web view! %d - %s", error.getErrorCode(), error.getDescription());
+            } else {
+                Logger.error("Error loading web view!");
+            }
             this.error = true;
         }
 

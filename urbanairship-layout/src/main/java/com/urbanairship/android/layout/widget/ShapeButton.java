@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.widget;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.view.Gravity;
 import android.view.SoundEffectConstants;
 import android.view.View;
@@ -85,7 +86,9 @@ public class ShapeButton extends AppCompatButton implements Checkable, Clippable
 
         Drawable background = Shape.buildStateListDrawable(context, checkedShapes, uncheckedShapes, checkedIcon, uncheckedIcon);
         setBackground(background);
-        setForeground(ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            setForeground(ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple));
+        }
 
         setText(text);
         updateText();
