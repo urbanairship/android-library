@@ -24,6 +24,7 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.Region;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -249,7 +250,9 @@ public class DrawableWrapper extends Drawable implements Drawable.Callback {
             drawable.setState(getState());
             drawable.setLevel(getLevel());
             drawable.setBounds(getBounds());
-            drawable.setLayoutDirection(getLayoutDirection());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                drawable.setLayoutDirection(getLayoutDirection());
+            }
 
             if (state != null) {
                 state.drawableState = drawable.getConstantState();

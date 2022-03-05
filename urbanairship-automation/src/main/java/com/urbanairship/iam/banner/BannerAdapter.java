@@ -52,8 +52,13 @@ public class BannerAdapter extends MediaDisplayAdapter {
     private final Predicate<Activity> activityPredicate = new Predicate<Activity>() {
         @Override
         public boolean apply(Activity activity) {
-            if (getContainerView(activity) == null) {
-                Logger.error("BannerAdapter - Unable to display in-app message. No view group found.");
+            try {
+                if (getContainerView(activity) == null) {
+                    Logger.error("BannerAdapter - Unable to display in-app message. No view group found.");
+                    return false;
+                }
+            } catch (Exception e) {
+                Logger.error("Failed to find container view.", e);
                 return false;
             }
 
@@ -61,26 +66,28 @@ public class BannerAdapter extends MediaDisplayAdapter {
         }
     };
 
-    private final ActivityListener listener = new FilteredActivityListener(new SimpleActivityListener() {
+    private final ActivityListener listener = new SimpleActivityListener() {
         @Override
         public void onActivityStopped(@NonNull Activity activity) {
-            super.onActivityStopped(activity);
-            BannerAdapter.this.onActivityStopped(activity);
+            if (activityPredicate.apply(activity)) {
+                BannerAdapter.this.onActivityStopped(activity);
+            }
         }
 
         @Override
         public void onActivityResumed(@NonNull Activity activity) {
-            super.onActivityResumed(activity);
-            BannerAdapter.this.onActivityResumed(activity);
+            if (activityPredicate.apply(activity)) {
+                BannerAdapter.this.onActivityResumed(activity);
+            }
         }
 
         @Override
         public void onActivityPaused(@NonNull Activity activity) {
-            super.onActivityPaused(activity);
-            BannerAdapter.this.onActivityPaused(activity);
+            if (activityPredicate.apply(activity)) {
+                BannerAdapter.this.onActivityPaused(activity);
+            }
         }
-
-    }, activityPredicate);
+    };
 
     private WeakReference<Activity> lastActivity;
     private WeakReference<BannerView> currentView;

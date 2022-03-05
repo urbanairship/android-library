@@ -126,7 +126,7 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val themedContext = ContextThemeWrapper(requireContext(), R.style.UrbanAirship_PreferenceCenter)
+        val themedContext = ContextThemeWrapper(requireContext(), R.style.UrbanAirship_PreferenceCenter_Fragment)
         val themedInflater = inflater.cloneInContext(themedContext)
         return super.onCreateView(themedInflater, container, savedInstanceState)
     }

@@ -67,7 +67,9 @@ class AirshipModulePlugin : Plugin<Project> {
                 targetCompatibility = JavaVersion.VERSION_1_8
             }
 
-            lintOptions.checkOnly("Interoperability")
+            lint {
+                checkOnly("Interoperability", "NewApi", "InlinedApi")
+            }
 
             testOptions.unitTests.isIncludeAndroidResources = true
         }

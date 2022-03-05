@@ -143,7 +143,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             }
             is Change.UpdateScopedSubscriptions -> when (state) {
                 is State.Content -> {
-                    val currentScopes = state.contactSubscriptions.getOrDefault(change.subscriptionId, emptySet())
+                    val currentScopes = state.contactSubscriptions[change.subscriptionId] ?: emptySet()
                     val updatedScopes = if (change.isSubscribed) {
                          currentScopes + change.scopes
                     } else {

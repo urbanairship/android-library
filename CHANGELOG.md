@@ -2,6 +2,30 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.3.3 March 4, 2022
+
+A patch release that fixes potential crashes in the urbanairship-automation module when
+displaying certain Scenes and Surveys on older API levels.
+
+### Changes
+- Fixed potential crashes in Scenes and Surveys on Android 6 and below.
+
+## Version 16.3.2 March 3, 2022
+
+A patch release that fixes a potential crash with the splash screen Jetpack library when using banner in-app messages.
+
+## Changes
+- Remove check for container view on Activity#onCreate for banner in-app messages
+
+## Version 16.3.1 February 17, 2022
+
+A minor release that fixes Preference Center and Automation issues.
+
+## Changes
+- Fixed PreferenceCenter theme attribute for chip style when embedding the Fragment directly.
+- Fixed a PreferenceCenter crash that impacted Android 6 and below.
+- Fixed a potential crash in Scenes and Surveys on Android 6 and below.
+
 ## Version 16.3.0 February 8, 2022
 
 A minor release that adds support for multi-channel Preference Center. Currently, these features are only available to customers in Airship's Special Access Program. Please reach out to your account manager for more details.
@@ -22,6 +46,7 @@ This version also includes a fix for a subset of devices sending duplicate event
 - Fixed devices sending duplicate events
 - Fixed In-App Automation session trigger skipping sessions when automations are paused then resumed
 - Reduce number of retries when Airship traffic is blocked on the network
+- Fixed a crash on Android 6 and below
 
 ## Version 16.1.1 January 4, 2022
 
