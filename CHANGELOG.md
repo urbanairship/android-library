@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.3.3 March 4, 2022
+
+A patch release that fixes potential crashes in the urbanairship-automation module when
+displaying certain Scenes and Surveys on older API levels.
+
+### Changes
+- Fixed potential crashes in Scenes and Surveys on Android 6 and below.
+
 ## Version 16.3.2 March 3, 2022
 
 A patch release that fixes a potential crash with the splash screen Jetpack library when using banner in-app messages.
