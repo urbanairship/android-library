@@ -84,17 +84,19 @@ class PropertyViewModel(val initName: String? = null, initValue: JsonValue? = nu
     }
 
     fun validate(): Boolean {
-        valueValidator.value = when (propertyType.value) {
+        val valueIsValid = when (propertyType.value) {
             PropertyType.STRING -> !stringValue.value.isNullOrBlank()
             PropertyType.NUMBER -> !numberValue.value.isNullOrBlank()
             PropertyType.BOOLEAN -> true
             PropertyType.JSON -> isJsonValid()
             else -> false
         }
+        valueValidator.value = valueIsValid
 
-        nameValidator.value = !name.value.isNullOrEmpty()
+        val nameIsValid = !name.value.isNullOrEmpty()
+        nameValidator.value = nameIsValid
 
-        return nameValidator.value!! && valueValidator.value!!
+        return nameIsValid && valueIsValid
     }
 
     private fun clearNameValidator() {

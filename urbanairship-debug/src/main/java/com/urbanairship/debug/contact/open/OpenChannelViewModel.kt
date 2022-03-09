@@ -45,10 +45,13 @@ class OpenChannelViewModel : ViewModel() {
     }
 
     private fun validate(): Boolean {
-        addressValidator.value = !address.value.isNullOrBlank()
-        platformNameValidator.value = !platformName.value.isNullOrBlank()
+        val addressIsValid = !address.value.isNullOrBlank()
+        addressValidator.value = addressIsValid
 
-        return addressValidator.value!! && platformNameValidator.value!!
+        val platformIsValid = !platformName.value.isNullOrBlank()
+        platformNameValidator.value = platformIsValid
+
+        return addressIsValid && platformIsValid
     }
 
     fun associateOpenChannel(): Boolean {

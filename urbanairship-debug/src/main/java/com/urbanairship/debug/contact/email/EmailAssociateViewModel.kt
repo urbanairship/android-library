@@ -54,9 +54,10 @@ class EmailAssociateViewModel : ViewModel() {
     }
 
     private fun validate(): Boolean {
-        emailValidator.value = !email.value.isNullOrBlank()
+        val isValid = !email.value.isNullOrBlank()
+        emailValidator.value = isValid
 
-        return emailValidator.value!!
+        return isValid
     }
 
     fun associateToContact(): Boolean {
@@ -65,21 +66,8 @@ class EmailAssociateViewModel : ViewModel() {
         }
         val currentTime = System.currentTimeMillis();
 
-        var commercialOptedInDate: Date?
-
-        if (isCommercial) {
-            commercialOptedInDate = Date(currentTime)
-        } else {
-            commercialOptedInDate = null
-        }
-
-        var transactionalOptedInDate: Date?
-
-        if (isTransactional) {
-            transactionalOptedInDate = Date(currentTime)
-        } else {
-            transactionalOptedInDate = null
-        }
+        val commercialOptedInDate = if (isCommercial) { Date(currentTime) } else { null }
+        val transactionalOptedInDate = if (isTransactional) { Date(currentTime) } else { null }
 
         val emailOptions = EmailRegistrationOptions.commercialOptions(commercialOptedInDate, transactionalOptedInDate, JsonMap(propertiesMap))
         UAirship.shared().contact.registerEmail(email.value!!,emailOptions)

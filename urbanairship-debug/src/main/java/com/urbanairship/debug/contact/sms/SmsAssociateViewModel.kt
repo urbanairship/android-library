@@ -26,9 +26,10 @@ class SmsAssociateViewModel : ViewModel() {
     }
 
     private fun validate(): Boolean {
-        smsValidator.value = !msisdn.value.isNullOrBlank() && !senderId.value.isNullOrBlank()
+        val isValid = !msisdn.value.isNullOrBlank() && !senderId.value.isNullOrBlank()
+        smsValidator.value = isValid
 
-        return smsValidator.value!!
+        return isValid
     }
 
     fun associateToContact(): Boolean {

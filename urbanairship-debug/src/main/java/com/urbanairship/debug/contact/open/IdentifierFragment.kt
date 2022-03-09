@@ -16,7 +16,7 @@ import com.urbanairship.debug.extensions.setupToolbarWithNavController
 class IdentifierFragment : Fragment() {
     private val openChannelViewModel: OpenChannelViewModel by navGraphViewModels(R.id.ua_debug_contact_navigation)
 
-    private val identifierViewModel by lazy(LazyThreadSafetyMode.NONE) {
+    private val identifierViewModel by lazy {
         val key = arguments?.getString("key")
         val value = key?.let { openChannelViewModel.getIdentifier(it) }
         ViewModelProvider(this, ViewModelFactory(key, value)).get(IdentifierViewModel::class.java)
@@ -44,8 +44,12 @@ class IdentifierFragment : Fragment() {
                 openChannelViewModel.removeIdentifier(it)
             }
 
-            openChannelViewModel.addIdentifier(identifierViewModel.key.value!!, identifierViewModel.value.value!!)
-            cancel()
+            identifierViewModel.key.value?.let { key ->
+                identifierViewModel.value.value?.let {value ->
+                    openChannelViewModel.addIdentifier(key, value)
+                    cancel()
+                }
+            }
         }
     }
 

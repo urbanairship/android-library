@@ -15,8 +15,9 @@ import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentDebugBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.DividerItemDecoration
 import kotlinx.coroutines.withContext
 
 class ContactFragment : Fragment() {
@@ -25,7 +26,7 @@ class ContactFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val dataBinding = DataBindingUtil.inflate<UaFragmentDebugBinding>(inflater, R.layout.ua_fragment_debug, container, false)
 
-        GlobalScope.launch(Dispatchers.IO) {
+        lifecycleScope.launch(Dispatchers.IO) {
             val entries = DebugEntry.parse(requireContext(), R.xml.ua_contact_channels)
             withContext(Dispatchers.Main) {
                 contactScreenEntryLiveData.value = entries
@@ -44,7 +45,7 @@ class ContactFragment : Fragment() {
             lifecycleOwner = this@ContactFragment
 
             screens.apply {
-                addItemDecoration(androidx.recyclerview.widget.DividerItemDecoration(context, androidx.recyclerview.widget.DividerItemDecoration.VERTICAL))
+                addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
                 adapter = componentAdapter
             }
         }

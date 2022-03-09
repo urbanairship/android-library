@@ -21,7 +21,7 @@ class PropertyFragment : Fragment() {
 
     private val emailAssociateViewModel: EmailAssociateViewModel by navGraphViewModels(R.id.ua_debug_contact_navigation)
 
-    private val propertyViewModel by lazy(LazyThreadSafetyMode.NONE) {
+    private val propertyViewModel by lazy {
         val name = arguments?.getString(PropertyFragment.ARGUMENT_PROPERTY_NAME)
         val value = name?.let { emailAssociateViewModel.getProperty(it) }
         ViewModelProvider(this, ViewModelFactory(name, value)).get(PropertyViewModel::class.java)
@@ -64,8 +64,10 @@ class PropertyFragment : Fragment() {
                 emailAssociateViewModel.removeProperty(it)
             }
 
-            emailAssociateViewModel.addProperty(propertyViewModel.name.value!!, propertyViewModel.value)
-            cancel()
+            propertyViewModel.name.value?.let { name ->
+                emailAssociateViewModel.addProperty(name, propertyViewModel.value)
+                cancel()
+            }
         }
     }
 
