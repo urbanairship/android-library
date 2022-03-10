@@ -35,7 +35,8 @@ public final class PreferenceDataStore {
             "com.urbanairship.push.iam.AUTO_DISPLAY_ENABLED",
             "com.urbanairship.push.iam.LAST_DISPLAYED_ID",
             "com.urbanairship.nameduser.CHANGE_TOKEN_KEY",
-            "com.urbanairship.nameduser.LAST_UPDATED_TOKEN_KEY"
+            "com.urbanairship.nameduser.LAST_UPDATED_TOKEN_KEY",
+            "com.urbanairship.iam.tags.TAG_PREFER_LOCAL_DATA_TIME"
     };
 
     Executor executor = AirshipExecutors.newSerialExecutor();

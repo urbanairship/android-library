@@ -37,8 +37,6 @@ public class AudienceManager  {
     private static final String DEVICE_GROUP = "device";
 
     // Data store keys
-    private static final String PREFER_LOCAL_DATA_TIME_KEY = "com.urbanairship.iam.tags.TAG_PREFER_LOCAL_DATA_TIME";
-
     private static final String ENABLED_KEY = "com.urbanairship.iam.tags.FETCH_ENABLED";
 
     /**
