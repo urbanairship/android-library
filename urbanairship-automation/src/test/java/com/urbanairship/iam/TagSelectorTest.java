@@ -32,7 +32,6 @@ public class TagSelectorTest {
         TagSelector original = TagSelector.or(
                 TagSelector.and(
                         TagSelector.tag("some-tag"),
-                        TagSelector.tag("some-group-tag", "some-group"),
                         TagSelector.not(TagSelector.tag("not-tag"))),
                 TagSelector.tag("some-other-tag"));
 
@@ -65,73 +64,6 @@ public class TagSelectorTest {
         tags.add("some-other-tag");
         // Contains "some-other-tag"
         assertTrue(selector.apply(tags));
-    }
-
-    @Test
-    public void testSelectorWithTagGroups() {
-        TagSelector selector = TagSelector.and(
-                TagSelector.tag("some-tag", "some-group-tag"),
-                TagSelector.tag("some-tag"),
-                TagSelector.not(TagSelector.tag("not-tag")));
-
-        List<String> tags = new ArrayList<>();
-        tags.add("some-tag");
-
-        Map<String, Set<String>> tagGroups = new HashMap<>();
-        tagGroups.put("wrong-group-tag", tagSet("some-tag"));
-        tagGroups.put("some-group-tag", tagSet("wrong-tag"));
-
-        assertFalse(selector.apply(tags, tagGroups));
-
-        tagGroups.put("some-group-tag", tagSet("some-tag"));
-        assertTrue(selector.apply(tags, tagGroups));
-    }
-
-    @Test
-    public void testContainsTagGroups() {
-        TagSelector selector = TagSelector.or(
-                TagSelector.and(
-                        TagSelector.tag("some-tag"),
-                        TagSelector.not(TagSelector.tag("not-tag"))),
-                TagSelector.tag("some-other-tag"));
-
-        assertFalse(selector.containsTagGroups());
-        assertTrue(selector.getTagGroups().isEmpty());
-
-        TagSelector groupSelector = TagSelector.or(
-                TagSelector.and(
-                        TagSelector.tag("another-tag"),
-                        TagSelector.tag("some-tag", "some-group"),
-                        TagSelector.not(TagSelector.tag("not-tag", "some-other-group"))),
-                TagSelector.tag("some-other-tag", "some-other-group"));
-
-        assertTrue(groupSelector.containsTagGroups());
-        assertFalse(groupSelector.getTagGroups().isEmpty());
-    }
-
-    @Test
-    public void tesGetTagGroups() {
-        TagSelector selector = TagSelector.or(
-                TagSelector.and(
-                        TagSelector.tag("another-tag"),
-                        TagSelector.tag("some-tag", "some-group"),
-                        TagSelector.not(TagSelector.tag("not-tag", "some-other-group"))),
-                TagSelector.tag("some-other-tag", "some-other-group"));
-
-        Map<String, Set<String>> tagGroups = selector.getTagGroups();
-
-        assertEquals(2, tagGroups.size());
-
-        // some-group
-        assertTrue(tagGroups.containsKey("some-group"));
-        assertEquals(1, tagGroups.get("some-group").size());
-        assertTrue(tagGroups.get("some-group").contains("some-tag"));
-
-        // some-other-group
-        assertTrue(tagGroups.containsKey("some-other-group"));
-        assertEquals(2, tagGroups.get("some-other-group").size());
-        assertTrue(tagGroups.get("some-other-group").contains("some-other-tag"));
-        assertTrue(tagGroups.get("some-other-group").contains("not-tag"));
     }
 
 }

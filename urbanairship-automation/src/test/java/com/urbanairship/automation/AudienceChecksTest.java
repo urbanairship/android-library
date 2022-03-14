@@ -206,28 +206,6 @@ public class AudienceChecksTest {
     }
 
     @Test
-    public void testTagSelectorWithGroups() {
-        final Set<String> tags = new HashSet<>();
-        when(airshipChannel.getTags()).then(new Answer<Set<String>>() {
-            @Override
-            public Set<String> answer(InvocationOnMock invocation) {
-                return tags;
-            }
-        });
-
-        Audience audience = Audience.newBuilder()
-                                    .setTagSelector(TagSelector.tag("expected tag", "expected group"))
-                                    .build();
-
-        Map<String, Set<String>> tagGroups = new HashMap<>();
-
-        assertFalse(AudienceChecks.checkAudience(context, audience, tagGroups));
-
-        tagGroups.put("expected group", tagSet("expected tag"));
-        assertTrue(AudienceChecks.checkAudience(context, audience, tagGroups));
-    }
-
-    @Test
     @Config
     public void testLocales() {
         /*
