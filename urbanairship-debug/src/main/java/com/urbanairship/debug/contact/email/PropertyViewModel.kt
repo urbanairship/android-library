@@ -119,5 +119,4 @@ class PropertyViewModel(val initName: String? = null, initValue: JsonValue? = nu
             false
         }
     }
-
 }

@@ -40,7 +40,7 @@ class OpenChannelFragment : Fragment() {
             this.adapter = identifierAdapter
             this.addItemDecoration(DividerItemDecoration(requireContext(), LinearLayout.VERTICAL))
 
-            val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback(){
+            val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
                 override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
                     return makeMovementFlags(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT)
                 }
@@ -72,7 +72,7 @@ class OpenChannelFragment : Fragment() {
         setupToolbarWithNavController(R.id.toolbar)?.let {
             it.inflateMenu(R.menu.ua_menu_contact_create)
 
-            it.setOnMenuItemClickListener{ menuItem ->
+            it.setOnMenuItemClickListener { menuItem ->
                 if (menuItem.itemId == R.id.ua_contact_create) {
                     if (viewModel.associateOpenChannel()) {
                         Navigation.findNavController(view).popBackStack()

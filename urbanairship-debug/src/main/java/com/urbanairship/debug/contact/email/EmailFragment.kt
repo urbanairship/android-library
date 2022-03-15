@@ -14,8 +14,8 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.debug.R
-import com.urbanairship.debug.extensions.setupToolbarWithNavController
 import com.urbanairship.debug.databinding.UaFragmentContactEmailBinding
+import com.urbanairship.debug.extensions.setupToolbarWithNavController
 
 class EmailFragment : Fragment() {
     private val viewModel: EmailAssociateViewModel by navGraphViewModels(R.id.ua_debug_contact_navigation)
@@ -26,7 +26,7 @@ class EmailFragment : Fragment() {
         binding.lifecycleOwner = this
         binding.viewModel = viewModel
         binding.recyclerView.apply {
-            val propertyAdapter =  PropertyAdapter {
+            val propertyAdapter = PropertyAdapter {
                 if (isResumed) {
                     val args = Bundle()
                     args.putString(PropertyFragment.ARGUMENT_PROPERTY_NAME, it.first)

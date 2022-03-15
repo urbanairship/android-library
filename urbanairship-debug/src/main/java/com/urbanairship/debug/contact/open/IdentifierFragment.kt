@@ -45,7 +45,7 @@ class IdentifierFragment : Fragment() {
             }
 
             identifierViewModel.key.value?.let { key ->
-                identifierViewModel.value.value?.let {value ->
+                identifierViewModel.value.value?.let { value ->
                     openChannelViewModel.addIdentifier(key, value)
                     cancel()
                 }

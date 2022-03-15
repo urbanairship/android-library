@@ -64,13 +64,13 @@ class EmailAssociateViewModel : ViewModel() {
         if (!validate()) {
             return false
         }
-        val currentTime = System.currentTimeMillis();
+        val currentTime = System.currentTimeMillis()
 
         val commercialOptedInDate = if (isCommercial) { Date(currentTime) } else { null }
         val transactionalOptedInDate = if (isTransactional) { Date(currentTime) } else { null }
 
         val emailOptions = EmailRegistrationOptions.commercialOptions(commercialOptedInDate, transactionalOptedInDate, JsonMap(propertiesMap))
-        UAirship.shared().contact.registerEmail(email.value!!,emailOptions)
+        UAirship.shared().contact.registerEmail(email.value!!, emailOptions)
 
         return true
     }

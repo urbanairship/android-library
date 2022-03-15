@@ -29,7 +29,7 @@ class SmsFragment : Fragment() {
             it.inflateMenu(R.menu.ua_menu_contact_create)
 
             it.setOnMenuItemClickListener { menuItem ->
-                if(menuItem.itemId == R.id.ua_contact_create) {
+                if (menuItem.itemId == R.id.ua_contact_create) {
                     if (viewModel.associateToContact()) {
                         Navigation.findNavController(view).popBackStack()
                     }

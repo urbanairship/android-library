@@ -8,7 +8,9 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
+import androidx.recyclerview.widget.DividerItemDecoration
 import com.urbanairship.debug.DebugEntry
 import com.urbanairship.debug.DebugEntryAdapter
 import com.urbanairship.debug.R
@@ -16,8 +18,6 @@ import com.urbanairship.debug.databinding.UaFragmentDebugBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DividerItemDecoration
 import kotlinx.coroutines.withContext
 
 class ContactFragment : Fragment() {
