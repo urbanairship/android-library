@@ -60,6 +60,9 @@ dependencies {
 
     // Lifecycle
     implementation "androidx.lifecycle:lifecycle-common-java8:$rootProject.androidxLifeCycleVersion"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.androidxLifeCycleVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.androidxLifeCycleVersion"
+    implementation "androidx.lifecycle:lifecycle-common-java8:$rootProject.androidxLifeCycleVersion"
 
     // Paging
     implementation "androidx.paging:paging-runtime-ktx:$rootProject.androidxPagingVersion"

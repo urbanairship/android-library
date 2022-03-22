@@ -7,6 +7,8 @@
     <include app:graph="@navigation/ua_debug_device_info_navigation" />
     <include app:graph="@navigation/ua_debug_automation_navigation" />
     <include app:graph="@navigation/ua_debug_custom_event_navigation" />
+    <include app:graph="@navigation/ua_debug_contact_navigation" />
+
 
     <fragment
         android:id="@+id/debugFragment"
@@ -30,6 +32,9 @@
         <action
             android:id="@+id/action_debugFragment_to_prefCenterListFragment"
             app:destination="@id/prefCenterListFragment" />
+        <action
+            android:id="@+id/action_debugFragment_to_contact"
+            app:destination="@+id/ua_debug_contact_navigation"/>
     </fragment>
 
 
@@ -75,6 +80,12 @@
         <action
             android:id="@+id/action_eventListFragment_to_eventDetailsFragment"
             app:destination="@id/eventDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/contactFragment"
+        android:name="com.urbanairship.debug.contact.ContactFragment"
+        android:label="Contact">
     </fragment>
 
 </navigation>

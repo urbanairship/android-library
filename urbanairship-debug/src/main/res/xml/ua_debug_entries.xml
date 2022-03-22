@@ -31,4 +31,9 @@
         navigationId="@id/prefCenterListFragment"
         title="@string/ua_pref_center_view_title" />
 
+    <entry
+        description="Register platforms to the contact"
+        navigationId="@id/ua_debug_contact_navigation"
+        title="Contacts" />
+
 </DebugScreens>
