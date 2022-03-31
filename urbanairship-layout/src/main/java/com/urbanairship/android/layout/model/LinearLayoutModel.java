@@ -14,6 +14,7 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -44,9 +45,12 @@ public class LinearLayoutModel extends LayoutModel {
     public static LinearLayoutModel fromJson(@NonNull JsonMap json) throws JsonException {
         String directionString = json.opt("direction").optString();
         JsonList itemsJson = json.opt("items").optList();
-
         Direction direction = Direction.from(directionString);
         List<Item> items = Item.fromJsonList(itemsJson);
+
+        if (json.opt("randomize_children").getBoolean(false)) {
+            Collections.shuffle(items);
+        }
 
         Color backgroundColor = backgroundColorFromJson(json);
         Border border = borderFromJson(json);
@@ -68,6 +72,7 @@ public class LinearLayoutModel extends LayoutModel {
     public List<BaseModel> getChildren() {
        return children;
     }
+
 
     public static class Item {
         @NonNull
