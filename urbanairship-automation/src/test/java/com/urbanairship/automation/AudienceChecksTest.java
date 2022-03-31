@@ -182,7 +182,9 @@ public class AudienceChecksTest {
         when(airshipChannel.getId()).thenReturn("test channel");
 
         assertTrue(AudienceChecks.checkAudienceForScheduling(context, testDeviceAudience, false));
+        assertTrue(AudienceChecks.checkAudience(context, testDeviceAudience));
         assertFalse(AudienceChecks.checkAudienceForScheduling(context, someOtherTestDeviceAudience, false));
+        assertFalse(AudienceChecks.checkAudience(context, someOtherTestDeviceAudience));
     }
 
     @Test

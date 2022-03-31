@@ -51,21 +51,7 @@ public abstract class AudienceChecks {
         }
 
         // Test devices
-        if (!audience.getTestDevices().isEmpty()) {
-            byte[] digest = UAStringUtil.sha256Digest(UAirship.shared().getChannel().getId());
-            if (digest == null || digest.length < 16) {
-                return false;
-            }
-
-            digest = Arrays.copyOf(digest, 16);
-
-            for (String testDevice : audience.getTestDevices()) {
-                byte[] decoded = UAStringUtil.base64Decode(testDevice);
-                if (Arrays.equals(digest, decoded)) {
-                    return true;
-                }
-            }
-
+        if (!isTestDeviceConditionMet(audience)) {
             return false;
         }
 
@@ -82,6 +68,11 @@ public abstract class AudienceChecks {
     public static boolean checkAudience(@NonNull Context context, @Nullable Audience audience) {
         if (audience == null) {
             return true;
+        }
+
+        // Test devices
+        if (!isTestDeviceConditionMet(audience)) {
+            return false;
         }
 
         UAirship airship = UAirship.shared();
@@ -215,6 +206,29 @@ public abstract class AudienceChecks {
         }
 
         return false;
+    }
+
+    private static boolean isTestDeviceConditionMet(@NonNull Audience audience) {
+        // Test devices
+        if (!audience.getTestDevices().isEmpty()) {
+            byte[] digest = UAStringUtil.sha256Digest(UAirship.shared().getChannel().getId());
+            if (digest == null || digest.length < 16) {
+                return false;
+            }
+
+            digest = Arrays.copyOf(digest, 16);
+
+            for (String testDevice : audience.getTestDevices()) {
+                byte[] decoded = UAStringUtil.base64Decode(testDevice);
+                if (Arrays.equals(digest, decoded)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return true;
     }
 
 }
