@@ -67,20 +67,8 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         pushProviders = mock(PushProviders.class);
         when(pushProviders.getAvailableProviders()).thenReturn(availableProviders);
 
-        client = new RemoteDataApiClient(runtimeConfig, new Supplier<PushProviders>() {
-            @Nullable
-            @Override
-            public PushProviders get() {
-                return pushProviders;
-            }
-        }, mockRequestFactory);
-
-        payloadParser = new RemoteDataApiClient.PayloadParser() {
-            @Override
-            public Set<RemoteDataPayload> parse(Uri url, JsonList payloads) {
-                return RemoteDataPayload.parsePayloads(payloads, JsonMap.EMPTY_MAP);
-            }
-        };
+        client = new RemoteDataApiClient(runtimeConfig, () -> pushProviders, mockRequestFactory);
+        payloadParser = (headers, url, payloads) -> RemoteDataPayload.parsePayloads(payloads, JsonMap.EMPTY_MAP);
     }
 
     /**
@@ -112,8 +100,9 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         assertNotNull(response);
         assertEquals(responseTimestamp, response.getResponseHeader("Last-Modified"));
 
+
         assertEquals(testRequest.getUrl(), response.getResult().url);
-        assertEquals(payloadParser.parse(testRequest.getUrl(), responseJson.opt("payloads").optList()), response.getResult().payloads);
+        assertEquals(payloadParser.parse(headers, testRequest.getUrl(), responseJson.opt("payloads").optList()), response.getResult().payloads);
     }
 
     /**
@@ -135,13 +124,10 @@ public class RemoteDataApiClientTest extends BaseTestCase {
         final Set<RemoteDataPayload> parsedResponse = new HashSet<>();
         parsedResponse.add(RemoteDataPayload.emptyPayload("neat"));
 
-        Response<RemoteDataApiClient.Result> response = client.fetchRemoteDataPayloads(null, new Locale("en"), new RemoteDataApiClient.PayloadParser() {
-            @Override
-            public Set<RemoteDataPayload> parse(Uri url, JsonList payloads) {
-                assertEquals(testRequest.getUrl(), url);
-                assertEquals(responseJson.opt("payloads").optList(), payloads);
-               return parsedResponse;
-            }
+        Response<RemoteDataApiClient.Result> response = client.fetchRemoteDataPayloads(null, new Locale("en"), (RemoteDataApiClient.PayloadParser) (headers, url, payloads) -> {
+            assertEquals(testRequest.getUrl(), url);
+            assertEquals(responseJson.opt("payloads").optList(), payloads);
+           return parsedResponse;
         });
 
         assertNotNull(response);

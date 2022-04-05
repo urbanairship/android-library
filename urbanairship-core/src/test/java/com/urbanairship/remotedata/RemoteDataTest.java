@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Looper;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
@@ -51,10 +52,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -148,12 +151,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         pushListener.onPushReceived(message, true);
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP;
-            }
-        }));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
 
         verifyNoMoreInteractions(mockDispatcher);
     }
@@ -166,12 +164,7 @@ public class RemoteDataTest extends BaseTestCase {
         clearInvocations(mockDispatcher);
         activityMonitor.foreground();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP;
-            }
-        }));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
 
         verifyNoMoreInteractions(mockDispatcher);
     }
@@ -186,12 +179,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         localeManager.setLocaleOverride(new Locale("de"));
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH);
-            }
-        }));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH)));
 
         verifyNoMoreInteractions(mockDispatcher);
     }
@@ -211,12 +199,7 @@ public class RemoteDataTest extends BaseTestCase {
         verifyNoInteractions(mockDispatcher);
 
         privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ANALYTICS);
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH);
-            }
-        }));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH)));
     }
 
     /**
@@ -228,12 +211,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         remoteData.onUrlConfigUpdated();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP;
-            }
-        }));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
 
         verifyNoMoreInteractions(mockDispatcher);
     }
@@ -255,22 +233,12 @@ public class RemoteDataTest extends BaseTestCase {
         // Time travel 9 ms, should skip refresh on foreground
         clock.currentTimeMillis += 9;
         activityMonitor.foreground();
-        verify(mockDispatcher, never()).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP;
-            }
-        }));
+        verify(mockDispatcher, never()).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
 
         // Time travel 1 ms, should refresh on foreground
         clock.currentTimeMillis += 1;
         activityMonitor.foreground();
-        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP;
-            }
-        }));
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
     }
 
     /**
@@ -280,12 +248,7 @@ public class RemoteDataTest extends BaseTestCase {
     public void testPrivacyManagerChanges() throws RequestException {
         activityMonitor.foreground();
 
-        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP;
-            }
-        }));
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
 
         updatePayloads();
 
@@ -299,21 +262,11 @@ public class RemoteDataTest extends BaseTestCase {
     @Test
     public void testPrivacyManagerTriggersUpdates() {
         activityMonitor.foreground();
-        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP;
-            }
-        }));
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
 
 
         privacyManager.disable(PrivacyManager.FEATURE_LOCATION);
-        verify(mockDispatcher, times(2)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP;
-            }
-        }));
+        verify(mockDispatcher, times(2)).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
     }
 
     /**
@@ -566,9 +519,16 @@ public class RemoteDataTest extends BaseTestCase {
 
         JsonList payloads = new JsonList(Collections.singletonList(payload));
         Uri url = Uri.parse("http://some-url.com");
-        Set<RemoteDataPayload> parsed = parser.parse(url, payloads);
 
-        JsonMap metadata = JsonMap.newBuilder().put("url", url.toString()).build();
+        Map<String, List<String>> headers = new HashMap<>();
+        headers.put("Last-Modified", Collections.singletonList("2017-01-01T12:00:00"));
+
+        Set<RemoteDataPayload> parsed = parser.parse(headers, url, payloads);
+
+        JsonMap metadata = JsonMap.newBuilder()
+                                  .put("url", url.toString())
+                                  .putOpt("last_modified", "2017-01-01T12:00:00")
+                                  .build();
         assertEquals(RemoteDataPayload.parsePayloads(payloads, metadata), parsed);
     }
 
@@ -645,6 +605,80 @@ public class RemoteDataTest extends BaseTestCase {
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
         assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+    }
+
+    @Test
+    public void testRefresh() throws RequestException, ExecutionException, InterruptedException {
+        activityMonitor.foreground();
+        clearInvocations(mockDispatcher);
+
+        PendingResult<Boolean> pendingResult = remoteData.refresh();
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
+
+        assertFalse(pendingResult.isDone());
+
+        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
+                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
+                .build();
+
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
+        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+
+        assertTrue(pendingResult.isDone());
+        assertTrue(pendingResult.get());
+    }
+
+    @Test
+    public void testRefreshShouldSkip() throws ExecutionException, InterruptedException {
+        verifyNoMoreInteractions(mockDispatcher);
+        PendingResult<Boolean> pendingResult = remoteData.refresh();
+
+        assertTrue(pendingResult.isDone());
+        assertTrue(pendingResult.get());
+    }
+
+    @Test
+    public void testForceRefresh() throws RequestException, ExecutionException, InterruptedException {
+        PendingResult<Boolean> pendingResult = remoteData.refresh(true);
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
+
+        assertFalse(pendingResult.isDone());
+
+        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
+                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
+                .build();
+
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
+        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+
+        assertTrue(pendingResult.isDone());
+        assertTrue(pendingResult.get());
+    }
+
+    @Test
+    public void testRefreshFailed() throws RequestException, ExecutionException, InterruptedException {
+        PendingResult<Boolean> pendingResult = remoteData.refresh(true);
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
+
+        assertFalse(pendingResult.isDone());
+
+        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(400)
+                .build();
+
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+
+        // Perform the update
+        JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
+        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+
+        assertTrue(pendingResult.isDone());
+        assertFalse(pendingResult.get());
     }
 
     private void updatePayloads(RemoteDataPayload... payloads) throws RequestException {

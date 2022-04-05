@@ -10,6 +10,7 @@ import android.os.HandlerThread;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
+import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.PushProviders;
@@ -23,26 +24,25 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.push.PushListener;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.push.PushMessage;
 import com.urbanairship.reactive.Function;
 import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subject;
-import com.urbanairship.reactive.Supplier;
 import com.urbanairship.util.AirshipHandlerThread;
 import com.urbanairship.util.Clock;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -97,6 +97,11 @@ public class RemoteData extends AirshipComponent {
     private static final String URL_METADATA_KEY = "url";
 
     /**
+     * Key for the last modified timestamp in the remote-data metadata.
+     */
+    private static final String LAST_MODIFIED_METADATA_KEY = "last_modified";
+
+    /**
      * Default foreground refresh interval in milliseconds.
      */
     public static final long DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS = 10000; // 10 seconds
@@ -119,6 +124,9 @@ public class RemoteData extends AirshipComponent {
     private final RemoteDataApiClient apiClient;
     private final PrivacyManager privacyManager;
 
+    @NonNull
+    private final List<PendingResult<Boolean>> pendingRefreshResults = new ArrayList<>();
+
     private volatile boolean refreshedSinceLastForeground = false;
 
     @VisibleForTesting
@@ -135,36 +143,26 @@ public class RemoteData extends AirshipComponent {
         public void onForeground(long time) {
             refreshedSinceLastForeground = false;
             if (shouldRefresh()) {
-                refresh();
+                dispatchRefreshJob();
             }
         }
     };
 
-    private final LocaleChangedListener localeChangedListener = new LocaleChangedListener() {
-        @Override
-        public void onLocaleChanged(@NonNull Locale locale) {
-            if (shouldRefresh()) {
-                refresh();
-            }
+    private final LocaleChangedListener localeChangedListener = locale -> {
+        if (shouldRefresh()) {
+            dispatchRefreshJob();
         }
     };
 
-    private final PushListener pushListener = new PushListener() {
-        @WorkerThread
-        @Override
-        public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
-            if (message.isRemoteDataUpdate()) {
-                refresh();
-            }
+    private final PushListener pushListener = (message, notificationPosted) -> {
+        if (message.isRemoteDataUpdate()) {
+            dispatchRefreshJob();
         }
     };
 
-    private final PrivacyManager.Listener privacyListener = new PrivacyManager.Listener() {
-        @Override
-        public void onEnabledFeaturesChanged() {
-            if (shouldRefresh()) {
-                refresh();
-            }
+    private final PrivacyManager.Listener privacyListener = () -> {
+        if (shouldRefresh()) {
+            dispatchRefreshJob();
         }
     };
 
@@ -220,7 +218,7 @@ public class RemoteData extends AirshipComponent {
         privacyManager.addListener(privacyListener);
 
         if (shouldRefresh()) {
-            refresh();
+            dispatchRefreshJob();
         }
     }
 
@@ -268,9 +266,35 @@ public class RemoteData extends AirshipComponent {
     }
 
     /**
-     * Refreshes the remote data from the cloud
+     * Refreshes remote-data if its out of date.
+     *
+     * @return The pending result.
      */
-    public void refresh() {
+    public PendingResult<Boolean> refresh() {
+        return refresh(false);
+    }
+
+    /**
+     * Refreshes remote-data.
+     *
+     * @param force To force a refresh or not.
+     * @return The pending result.
+     */
+    public PendingResult<Boolean> refresh(boolean force) {
+        PendingResult<Boolean> pendingResult = new PendingResult<>();
+        synchronized (pendingRefreshResults) {
+            if (force || shouldRefresh()) {
+                pendingRefreshResults.add(pendingResult);
+                dispatchRefreshJob();
+            } else {
+                pendingResult.setResult(true);
+            }
+        }
+
+        return pendingResult;
+    }
+
+    private void dispatchRefreshJob() {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(ACTION_REFRESH)
                                  .setNetworkAccessRequired(true)
@@ -290,7 +314,7 @@ public class RemoteData extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onUrlConfigUpdated() {
         // Update remote data when notified of new URL config.
-        refresh();
+        dispatchRefreshJob();
     }
 
     /**
@@ -303,13 +327,7 @@ public class RemoteData extends AirshipComponent {
      */
     @NonNull
     public Observable<RemoteDataPayload> payloadsForType(final @NonNull String type) {
-        return payloadsForTypes(Collections.singleton(type)).flatMap(new Function<Collection<RemoteDataPayload>, Observable<RemoteDataPayload>>() {
-            @NonNull
-            @Override
-            public Observable<RemoteDataPayload> apply(@NonNull Collection<RemoteDataPayload> payloads) {
-                return Observable.from(payloads);
-            }
-        });
+        return payloadsForTypes(Collections.singleton(type)).flatMap(Observable::from);
     }
 
     /**
@@ -337,39 +355,31 @@ public class RemoteData extends AirshipComponent {
     public Observable<Collection<RemoteDataPayload>> payloadsForTypes(@NonNull final Collection<String> types) {
 
         return Observable.concat(cachedPayloads(types), payloadUpdates)
-                         .map(new Function<Set<RemoteDataPayload>, Map<String, Collection<RemoteDataPayload>>>() {
-                             @NonNull
-                             @Override
-                             public Map<String, Collection<RemoteDataPayload>> apply(@NonNull Set<RemoteDataPayload> payloads) {
-                                 Map<String, Collection<RemoteDataPayload>> map = new HashMap<>();
-                                 for (RemoteDataPayload payload : payloads) {
-                                     Collection<RemoteDataPayload> mappedPayloads = map.get(payload.getType());
-                                     if (mappedPayloads == null) {
-                                         mappedPayloads = new HashSet<>();
-                                         map.put(payload.getType(), mappedPayloads);
-                                     }
-                                     mappedPayloads.add(payload);
+                         .map(payloads -> {
+                             Map<String, Collection<RemoteDataPayload>> map = new HashMap<>();
+                             for (RemoteDataPayload payload : payloads) {
+                                 Collection<RemoteDataPayload> mappedPayloads = map.get(payload.getType());
+                                 if (mappedPayloads == null) {
+                                     mappedPayloads = new HashSet<>();
+                                     map.put(payload.getType(), mappedPayloads);
                                  }
-
-                                 return map;
+                                 mappedPayloads.add(payload);
                              }
+
+                             return map;
                          })
-                         .map(new Function<Map<String, Collection<RemoteDataPayload>>, Collection<RemoteDataPayload>>() {
-                             @NonNull
-                             @Override
-                             public Collection<RemoteDataPayload> apply(@NonNull Map<String, Collection<RemoteDataPayload>> payloadMap) {
-                                 Set<RemoteDataPayload> payloads = new HashSet<>();
-                                 for (String type : new HashSet<>(types)) {
-                                     Collection<RemoteDataPayload> mappedPayloads = payloadMap.get(type);
-                                     if (mappedPayloads != null) {
-                                         payloads.addAll(mappedPayloads);
-                                     } else {
-                                         payloads.add(RemoteDataPayload.emptyPayload(type));
-                                     }
+                         .map((Function<Map<String, Collection<RemoteDataPayload>>, Collection<RemoteDataPayload>>) payloadMap -> {
+                             Set<RemoteDataPayload> payloads = new HashSet<>();
+                             for (String type : new HashSet<>(types)) {
+                                 Collection<RemoteDataPayload> mappedPayloads = payloadMap.get(type);
+                                 if (mappedPayloads != null) {
+                                     payloads.addAll(mappedPayloads);
+                                 } else {
+                                     payloads.add(RemoteDataPayload.emptyPayload(type));
                                  }
-
-                                 return payloads;
                              }
+
+                             return payloads;
                          })
                          .distinctUntilChanged();
     }
@@ -411,14 +421,8 @@ public class RemoteData extends AirshipComponent {
      * @return An Observable of RemoteDataPayload.
      */
     private Observable<Set<RemoteDataPayload>> cachedPayloads(final Collection<String> types) {
-        return Observable.defer(new Supplier<Observable<Set<RemoteDataPayload>>>() {
-            @NonNull
-            @Override
-            public Observable<Set<RemoteDataPayload>> apply() {
-                return Observable.just(dataStore.getPayloads(types))
-                                 .subscribeOn(Schedulers.looper(backgroundHandler.getLooper()));
-            }
-        });
+        return Observable.defer(() -> Observable.just(dataStore.getPayloads(types))
+                                                .subscribeOn(Schedulers.looper(backgroundHandler.getLooper())));
     }
 
     /**
@@ -428,7 +432,7 @@ public class RemoteData extends AirshipComponent {
      */
     public boolean isMetadataCurrent(@NonNull JsonMap jsonMap) {
         Uri uri = apiClient.getRemoteDataUrl(localeManager.getLocale());
-        return jsonMap.equals(createMetadata(uri));
+        return jsonMap.equals(createMetadata(uri, preferenceDataStore.getString(LAST_MODIFIED_KEY, null)));
     }
 
     /**
@@ -453,48 +457,60 @@ public class RemoteData extends AirshipComponent {
 
         Response<RemoteDataApiClient.Result> response;
         try {
-            response = apiClient.fetchRemoteDataPayloads(lastModified, locale, new RemoteDataApiClient.PayloadParser() {
-                @Override
-                public Set<RemoteDataPayload> parse(Uri url, JsonList payloads) {
-                    return RemoteDataPayload.parsePayloads(payloads, createMetadata(url));
-                }
+            response = apiClient.fetchRemoteDataPayloads(lastModified, locale, (headers, url, payloads) -> {
+                List<String> lmValues = headers.get("Last-Modified");
+                String lm = (lmValues != null && !lmValues.isEmpty()) ? lmValues.get(0) : null;
+                return RemoteDataPayload.parsePayloads(payloads, createMetadata(url, lm));
             });
         } catch (RequestException e) {
             Logger.error(e, "RemoteDataJobHandler - Failed to refresh data");
+            onRefreshFinished(false);
             return JobInfo.JOB_FINISHED;
         }
 
         Logger.debug("Received remote data response: %s", response);
 
         if (response.getStatus() == 304) {
-            onRefreshFinished();
+            onRefreshFinished(true);
             return JobInfo.JOB_FINISHED;
         }
 
         if (response.isSuccessful()) {
-            JsonMap metadata = createMetadata(response.getResult().url);
+            String lm = response.getResponseHeader("Last-Modified");
+            JsonMap metadata = createMetadata(response.getResult().url, lm);
             Set<RemoteDataPayload> remoteDataPayloads = response.getResult().payloads;
             if (saveNewPayloads(remoteDataPayloads)) {
                 preferenceDataStore.put(LAST_REFRESH_METADATA, metadata);
-                preferenceDataStore.put(LAST_MODIFIED_KEY, response.getResponseHeader("Last-Modified"));
+                preferenceDataStore.put(LAST_MODIFIED_KEY, lm);
                 notifyPayloadUpdates(remoteDataPayloads);
-                onRefreshFinished();
+                onRefreshFinished(true);
                 return JobInfo.JOB_FINISHED;
             }
+            onRefreshFinished(false);
             return JobInfo.JOB_RETRY;
         }
 
         // Error
+        onRefreshFinished(false);
         return response.isServerError() ? JobInfo.JOB_RETRY : JobInfo.JOB_FINISHED;
     }
 
-    private void onRefreshFinished() {
-        refreshedSinceLastForeground = true;
-        PackageInfo packageInfo = UAirship.getPackageInfo();
-        if (packageInfo != null) {
-            preferenceDataStore.put(LAST_REFRESH_APP_VERSION_KEY, PackageInfoCompat.getLongVersionCode(packageInfo));
+    private void onRefreshFinished(boolean success) {
+        if (success) {
+            refreshedSinceLastForeground = true;
+            PackageInfo packageInfo = UAirship.getPackageInfo();
+            if (packageInfo != null) {
+                preferenceDataStore.put(LAST_REFRESH_APP_VERSION_KEY, PackageInfoCompat.getLongVersionCode(packageInfo));
+            }
+            preferenceDataStore.put(LAST_REFRESH_TIME_KEY, clock.currentTimeMillis());
         }
-        preferenceDataStore.put(LAST_REFRESH_TIME_KEY, clock.currentTimeMillis());
+
+        synchronized (pendingRefreshResults) {
+            for (PendingResult<Boolean> pendingResult : pendingRefreshResults) {
+                pendingResult.setResult(success);
+            }
+            pendingRefreshResults.clear();
+        }
     }
 
     private boolean saveNewPayloads(@NonNull final Set<RemoteDataPayload> payloads) {
@@ -502,18 +518,14 @@ public class RemoteData extends AirshipComponent {
     }
 
     private void notifyPayloadUpdates(@NonNull final Set<RemoteDataPayload> payloads) {
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                payloadUpdates.onNext(payloads);
-            }
-        });
+        backgroundHandler.post(() -> payloadUpdates.onNext(payloads));
     }
 
     @NonNull
-    private JsonMap createMetadata(@Nullable Uri uri) {
+    private JsonMap createMetadata(@Nullable Uri uri, @Nullable String lastModified) {
         return JsonMap.newBuilder()
                       .putOpt(URL_METADATA_KEY, uri == null ? null : uri.toString())
+                      .putOpt(LAST_MODIFIED_METADATA_KEY, lastModified)
                       .build();
     }
 

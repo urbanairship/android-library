@@ -72,8 +72,8 @@ public class InAppRemoteDataObserverTest {
 
         delegate = new TestDelegate();
 
-        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData);
-        subscription = observer.subscribe(Looper.getMainLooper(), delegate);
+        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData, "1.0.0", Looper.getMainLooper());
+        subscription = observer.subscribe(delegate);
     }
 
     @Test
@@ -170,8 +170,8 @@ public class InAppRemoteDataObserverTest {
     @Test
     public void testMinSdkVersion() {
         subscription.cancel();
-        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData, "1.0.0");
-        subscription = observer.subscribe(Looper.getMainLooper(), delegate);
+        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData, "1.0.0", Looper.getMainLooper());
+        subscription = observer.subscribe(delegate);
 
         // Create an empty payload
         RemoteDataPayload payload = new TestPayloadBuilder()
@@ -183,8 +183,8 @@ public class InAppRemoteDataObserverTest {
         updates.onNext(payload);
         subscription.cancel();
 
-        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData, "2.0.0");
-        subscription = observer.subscribe(Looper.getMainLooper(), delegate);
+        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData, "2.0.0", Looper.getMainLooper());
+        subscription = observer.subscribe(delegate);
 
         JsonMap expectedMetadata = JsonMap.newBuilder()
                                           .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", JsonMap.newBuilder().put("so", "so meta").build())

@@ -64,7 +64,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
     // State
     private final InAppRemoteDataObserver remoteDataSubscriber;
-    private final Handler backgroundHandler;
     private final AirshipChannel airshipChannel;
     private final AutomationEngine automationEngine;
     private final InAppMessageManager inAppMessageManager;
@@ -90,17 +89,17 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         }
 
         @Override
-        public void onPrepareSchedule(@NonNull Schedule schedule, @Nullable TriggerContext triggerContext, @NonNull PrepareScheduleCallback callback) {
+        public void onPrepareSchedule(@NonNull Schedule<? extends ScheduleData> schedule, @Nullable TriggerContext triggerContext, @NonNull PrepareScheduleCallback callback) {
             InAppAutomation.this.onPrepareSchedule(schedule, triggerContext, callback);
         }
 
         @Override
-        public int onCheckExecutionReadiness(@NonNull Schedule schedule) {
+        public int onCheckExecutionReadiness(@NonNull Schedule<? extends ScheduleData> schedule) {
             return InAppAutomation.this.onCheckExecutionReadiness(schedule);
         }
 
         @Override
-        public void onExecuteTriggeredSchedule(@NonNull Schedule schedule, @NonNull ExecutionCallback finishCallback) {
+        public void onExecuteTriggeredSchedule(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull ExecutionCallback finishCallback) {
             InAppAutomation.this.onExecuteTriggeredSchedule(schedule, finishCallback);
         }
     };
@@ -130,12 +129,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         }
     };
 
-    private final PrivacyManager.Listener privacyManagerListener = new PrivacyManager.Listener() {
-        @Override
-        public void onEnabledFeaturesChanged() {
-            checkUpdatesSubscription();
-            updateEnginePauseState();
-        }
+    private final PrivacyManager.Listener privacyManagerListener = () -> {
+        checkUpdatesSubscription();
+        updateEnginePauseState();
     };
 
     /**
@@ -175,14 +171,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.airshipChannel = airshipChannel;
         this.audienceManager = new AudienceManager(runtimeConfig, airshipChannel, contact, preferenceDataStore);
         this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore, remoteData);
-        this.inAppMessageManager = new InAppMessageManager(context, preferenceDataStore, analytics, new InAppMessageManager.Delegate() {
-            @Override
-            public void onReadinessChanged() {
-                automationEngine.checkPendingSchedules();
-            }
-        });
+        this.inAppMessageManager = new InAppMessageManager(context, preferenceDataStore, analytics, automationEngine::checkPendingSchedules);
 
-        this.backgroundHandler = new Handler(AirshipLoopers.getBackgroundLooper());
         this.retryingExecutor = RetryingExecutor.newSerialExecutor(Looper.getMainLooper());
 
         this.deferredScheduleClient = new DeferredScheduleClient(runtimeConfig, new AuthManager(runtimeConfig, airshipChannel));
@@ -214,7 +204,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.inAppMessageManager = inAppMessageManager;
         this.retryingExecutor = retryingExecutor;
         this.deferredScheduleClient = deferredScheduleClient;
-        this.backgroundHandler = new Handler(AirshipLoopers.getBackgroundLooper());
         this.actionScheduleDelegate = actionsScheduleDelegate;
         this.inAppMessageScheduleDelegate = inAppMessageScheduleDelegate;
         this.frequencyLimitManager = frequencyLimitManager;
@@ -526,104 +515,79 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                                    final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
         Logger.verbose("onPrepareSchedule schedule: %s, trigger context: %s", schedule.getId(), triggerContext);
 
-        final AutomationDriver.PrepareScheduleCallback callbackWrapper = new AutomationDriver.PrepareScheduleCallback() {
-            @Override
-            public void onFinish(int result) {
-                if (result != AutomationDriver.PREPARE_RESULT_CONTINUE) {
-                    frequencyCheckerMap.remove(schedule.getId());
-                }
-                callback.onFinish(result);
+        final AutomationDriver.PrepareScheduleCallback callbackWrapper = result -> {
+            if (result != AutomationDriver.PREPARE_RESULT_CONTINUE) {
+                frequencyCheckerMap.remove(schedule.getId());
             }
+            callback.onFinish(result);
         };
 
-        if (isScheduleInvalid(schedule)) {
-            backgroundHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    // If the subscriber is already up to date, invalidate immediately
-                    if (remoteDataSubscriber.isUpToDate()) {
-                        callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
-                    } else {
-                        // Otherwise wait to invalidate
-                        remoteDataSubscriber.addListener(new InAppRemoteDataObserver.Listener() {
-                            @Override
-                            public void onSchedulesUpdated() {
-                                callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
-                                remoteDataSubscriber.removeListener(this);
-                            }
-                        });
-                    }
+        RetryingExecutor.Operation frequencyChecks = () -> {
+            if (!schedule.getFrequencyConstraintIds().isEmpty()) {
+                FrequencyChecker frequencyChecker = getFrequencyChecker(schedule);
+                if (frequencyChecker == null) {
+                    return RetryingExecutor.RESULT_RETRY;
                 }
-            });
-            return;
-        }
-
-        RetryingExecutor.Operation getFrequencyChecker = new RetryingExecutor.Operation() {
-            @Override
-            public int run() {
-                if (!schedule.getFrequencyConstraintIds().isEmpty()) {
-                    FrequencyChecker frequencyChecker = getFrequencyChecker(schedule);
-                    if (frequencyChecker == null) {
-                        return RetryingExecutor.RESULT_RETRY;
-                    }
-                    frequencyCheckerMap.put(schedule.getId(), frequencyChecker);
-                    if (frequencyChecker.isOverLimit()) {
-                        // The frequency constraint is exceeded, skip
-                        callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
-                    }
+                frequencyCheckerMap.put(schedule.getId(), frequencyChecker);
+                if (frequencyChecker.isOverLimit()) {
+                    // The frequency constraint is exceeded, skip
+                    callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
                 }
-
-                return RetryingExecutor.RESULT_FINISHED;
             }
+
+            return RetryingExecutor.RESULT_FINISHED;
         };
 
         // Audience checks
-        RetryingExecutor.Operation checkAudience = new RetryingExecutor.Operation() {
-            @Override
-            public int run() {
-                if (schedule.getAudience() == null) {
-                    return RetryingExecutor.RESULT_FINISHED;
-                }
-
-                if (AudienceChecks.checkAudience(getContext(), schedule.getAudience())) {
-                    return RetryingExecutor.RESULT_FINISHED;
-                }
-
-                callbackWrapper.onFinish(getPrepareResultMissedAudience(schedule));
-                return RetryingExecutor.RESULT_CANCEL;
-            }
-        };
-
-        RetryingExecutor.Operation prepareSchedule = new RetryingExecutor.Operation() {
-            @Override
-            public int run() {
-                switch (schedule.getType()) {
-                    case Schedule.TYPE_DEFERRED:
-                        return resolveDeferred(schedule, triggerContext, callbackWrapper);
-                    case Schedule.TYPE_ACTION:
-                        prepareSchedule(schedule, (Actions) schedule.coerceType(), actionScheduleDelegate, callbackWrapper);
-                        break;
-                    case Schedule.TYPE_IN_APP_MESSAGE:
-                        prepareSchedule(schedule, (InAppMessage) schedule.coerceType(), inAppMessageScheduleDelegate, callbackWrapper);
-                        break;
-                }
-
+        RetryingExecutor.Operation audienceChecks = () -> {
+            if (schedule.getAudience() == null) {
                 return RetryingExecutor.RESULT_FINISHED;
             }
+
+            if (AudienceChecks.checkAudience(getContext(), schedule.getAudience())) {
+                return RetryingExecutor.RESULT_FINISHED;
+            }
+
+            callbackWrapper.onFinish(getPrepareResultMissedAudience(schedule));
+            return RetryingExecutor.RESULT_CANCEL;
         };
 
-        retryingExecutor.execute(getFrequencyChecker, checkAudience, prepareSchedule);
+        RetryingExecutor.Operation prepareSchedule = () -> {
+            switch (schedule.getType()) {
+                case Schedule.TYPE_DEFERRED:
+                    return resolveDeferred(schedule, triggerContext, callbackWrapper);
+                case Schedule.TYPE_ACTION:
+                    prepareSchedule(schedule, schedule.coerceType(), actionScheduleDelegate, callbackWrapper);
+                    break;
+                case Schedule.TYPE_IN_APP_MESSAGE:
+                    prepareSchedule(schedule, schedule.coerceType(), inAppMessageScheduleDelegate, callbackWrapper);
+                    break;
+            }
+
+            return RetryingExecutor.RESULT_FINISHED;
+        };
+
+        RetryingExecutor.Operation[] operations = new RetryingExecutor.Operation[] { frequencyChecks, audienceChecks, prepareSchedule };
+
+        if (remoteDataSubscriber.isRemoteSchedule(schedule)) {
+            remoteDataSubscriber.attemptRefresh(() -> {
+                if (isScheduleInvalid(schedule)) {
+                    callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                } else {
+                    retryingExecutor.execute(operations);
+                }
+            });
+        } else {
+            retryingExecutor.execute(operations);
+        }
     }
 
     private <T extends ScheduleData> void prepareSchedule(final Schedule<? extends ScheduleData> schedule, T scheduleData, final ScheduleDelegate<T> delegate, final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
-        delegate.onPrepareSchedule(schedule, scheduleData, new AutomationDriver.PrepareScheduleCallback() {
-            @Override
-            public void onFinish(int result) {
-                if (result == AutomationDriver.PREPARE_RESULT_CONTINUE) {
-                    scheduleDelegateMap.put(schedule.getId(), delegate);
-                }
-                callback.onFinish(result);
+        delegate.onPrepareSchedule(schedule, scheduleData, result -> {
+            if (result == AutomationDriver.PREPARE_RESULT_CONTINUE) {
+                scheduleDelegateMap.put(schedule.getId(), delegate);
             }
+            callback.onFinish(result);
         });
     }
 
@@ -632,7 +596,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                                 final @Nullable TriggerContext triggerContext,
                                 final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
 
-        Deferred deferredScheduleData = (Deferred) schedule.coerceType();
+        Deferred deferredScheduleData = schedule.coerceType();
         Response<DeferredScheduleClient.Result> response;
 
         String channelId = airshipChannel.getId();
@@ -760,9 +724,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private FrequencyChecker getFrequencyChecker(@NonNull Schedule<? extends ScheduleData> schedule) {
         try {
             return frequencyLimitManager.getFrequencyChecker(schedule.getFrequencyConstraintIds()).get();
-        } catch (ExecutionException e) {
-            Logger.error("InAppAutomation - Failed to get Frequency Limit Checker : " + e);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | ExecutionException e) {
             Logger.error("InAppAutomation - Failed to get Frequency Limit Checker : " + e);
         }
         return null;
@@ -828,7 +790,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
                         remoteDataSubscriber.setScheduleNewUserCutOffTime(getNewUserCutOff());
                     }
-                    subscription = remoteDataSubscriber.subscribe(backgroundHandler.getLooper(), remoteDataObserverDelegate);
+                    subscription = remoteDataSubscriber.subscribe(remoteDataObserverDelegate);
                 }
             } else if (subscription != null) {
                 subscription.cancel();
@@ -845,4 +807,5 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return airshipChannel.getId() == null ? System.currentTimeMillis() : 0;
         }
     }
+
 }

@@ -37,6 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatcher;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Shadows;
@@ -58,6 +59,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
@@ -146,7 +148,7 @@ public class InAppAutomationTest {
         inAppAutomation.onAirshipReady(UAirship.shared());
 
         ArgumentCaptor<InAppRemoteDataObserver.Delegate> argument = ArgumentCaptor.forClass(InAppRemoteDataObserver.Delegate.class);
-        verify(mockObserver).subscribe(any(Looper.class), argument.capture());
+        verify(mockObserver).subscribe(argument.capture());
         remoteDataObserverDelegate = argument.getValue();
 
         runLooperTasks();
@@ -199,11 +201,11 @@ public class InAppAutomationTest {
         inAppAutomation.onAirshipReady(UAirship.shared());
 
         verify(mockEngine, never()).start(driver);
-        verify(mockObserver, never()).subscribe(any(Looper.class), any(InAppRemoteDataObserver.Delegate.class));
+        verify(mockObserver, never()).subscribe(any(InAppRemoteDataObserver.Delegate.class));
 
         privacyManager.enable(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
         verify(mockEngine).start(driver);
-        verify(mockObserver).subscribe(any(Looper.class), any(InAppRemoteDataObserver.Delegate.class));
+        verify(mockObserver).subscribe(any(InAppRemoteDataObserver.Delegate.class));
     }
 
     @Test
@@ -218,7 +220,7 @@ public class InAppAutomationTest {
         inAppAutomation.onAirshipReady(UAirship.shared());
 
         verify(mockEngine, never()).start(driver);
-        verify(mockObserver, never()).subscribe(any(Looper.class), any(InAppRemoteDataObserver.Delegate.class));
+        verify(mockObserver, never()).subscribe(any(InAppRemoteDataObserver.Delegate.class));
 
         inAppAutomation.cancelSchedule("sweet");
 
@@ -237,10 +239,10 @@ public class InAppAutomationTest {
         inAppAutomation.onAirshipReady(UAirship.shared());
 
         Subscription subscription = Subscription.create(null);
-        when(mockObserver.subscribe(any(Looper.class), any(InAppRemoteDataObserver.Delegate.class))).thenReturn(subscription);
+        when(mockObserver.subscribe(any(InAppRemoteDataObserver.Delegate.class))).thenReturn(subscription);
 
         privacyManager.enable(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
-        verify(mockObserver).subscribe(any(Looper.class), any(InAppRemoteDataObserver.Delegate.class));
+        verify(mockObserver).subscribe(any(InAppRemoteDataObserver.Delegate.class));
         assertFalse(subscription.isCancelled());
 
         privacyManager.disable(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
@@ -579,7 +581,13 @@ public class InAppAutomationTest {
 
         when(mockObserver.isRemoteSchedule(schedule)).thenReturn(true);
         when(mockObserver.isScheduleValid(schedule)).thenReturn(false);
-        when(mockObserver.isUpToDate()).thenReturn(true);
+
+        doAnswer((Answer) invocation -> {
+            Runnable runnable = invocation.getArgument(0);
+            runnable.run();
+            return null;
+        }).when(mockObserver).attemptRefresh(any());
+
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);

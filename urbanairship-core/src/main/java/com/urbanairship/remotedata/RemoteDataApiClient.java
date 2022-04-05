@@ -74,7 +74,7 @@ public class RemoteDataApiClient {
     }
 
     public interface PayloadParser {
-        Set<RemoteDataPayload> parse(Uri url, JsonList payloads);
+        Set<RemoteDataPayload> parse(Map<String, List<String>> headers, Uri url, JsonList payloads);
     }
 
     /**
@@ -122,19 +122,17 @@ public class RemoteDataApiClient {
             request.setHeader("If-Modified-Since", lastModified);
         }
 
-        return request.execute(new ResponseParser<Result>() {
-            @Override
-            public Result parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
-                if (status == 200) {
-                    JsonList payloads = JsonValue.parseString(responseBody).optMap().opt("payloads").getList();
-                    if (payloads == null) {
-                        throw new JsonException("Response does not contain payloads");
-                    }
-
-                    return new Result(url, payloadParser.parse(url, payloads));
-                } else {
-                    return null;
+        return request.execute((status, headers, responseBody) -> {
+            if (status == 200) {
+                JsonList payloads = JsonValue.parseString(responseBody).optMap().opt("payloads").getList();
+                if (payloads == null) {
+                    throw new JsonException("Response does not contain payloads");
                 }
+
+                headers = headers == null ? Collections.emptyMap() : headers;
+                return new Result(url, payloadParser.parse(headers, url, payloads));
+            } else {
+                return null;
             }
         });
     }
@@ -192,8 +190,12 @@ public class RemoteDataApiClient {
     @Nullable
     private String getPushProviderCsv() {
         Set<String> deliveryTypes = new HashSet<>();
-        for (PushProvider provider : pushProviders.get().getAvailableProviders()) {
-            deliveryTypes.add(provider.getDeliveryType());
+        PushProviders providers = pushProviders.get();
+
+        if (providers != null) {
+            for (PushProvider provider : providers.getAvailableProviders()) {
+                deliveryTypes.add(provider.getDeliveryType());
+            }
         }
 
         if (deliveryTypes.isEmpty()) {

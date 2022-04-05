@@ -5,9 +5,9 @@ package com.urbanairship.automation;
 import android.content.Context;
 import android.os.Looper;
 
+import com.urbanairship.AirshipLoopers;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
-import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
 import com.urbanairship.automation.actions.Actions;
@@ -96,6 +96,7 @@ class InAppRemoteDataObserver {
     private final RemoteData remoteData;
     private final List<Listener> listeners = new ArrayList<>();
     private final String sdkVersion;
+    private final Looper looper;
 
     interface Listener {
 
@@ -129,22 +130,25 @@ class InAppRemoteDataObserver {
         this.preferenceDataStore = preferenceDataStore;
         this.remoteData = remoteData;
         this.sdkVersion = UAirship.getVersion();
+        this.looper = AirshipLoopers.getBackgroundLooper();
     }
 
     InAppRemoteDataObserver(@NonNull PreferenceDataStore preferenceDataStore,
                             @NonNull final RemoteData remoteData,
-                            @NonNull String sdkVersion) {
+                            @NonNull String sdkVersion,
+                            @NonNull Looper looper) {
 
         this.preferenceDataStore = preferenceDataStore;
         this.remoteData = remoteData;
         this.sdkVersion = sdkVersion;
+        this.looper = looper;
     }
 
     /**
      * Adds a listener.
      * <p>
      * Updates will be called on the looper provided in
-     * {@link #subscribe(Looper, Delegate)}.
+     * {@link #subscribe(Delegate)}.
      *
      * @param listener The listener to add.
      */
@@ -168,21 +172,17 @@ class InAppRemoteDataObserver {
     /**
      * Subscribes to remote data.
      *
-     * @param looper The looper to process updates and callbacks on.
      * @param delegate The delegate.
      * @return The subcription.
      */
-    Subscription subscribe(@NonNull Looper looper, @NonNull final Delegate delegate) {
+    Subscription subscribe(@NonNull final Delegate delegate) {
         return remoteData.payloadsForType(IAM_PAYLOAD_TYPE)
-                         .filter(new Predicate<RemoteDataPayload>() {
-                             @Override
-                             public boolean apply(@NonNull RemoteDataPayload payload) {
-                                 if (payload.getTimestamp() != preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1)) {
-                                     return true;
-                                 }
-
-                                 return !payload.getMetadata().equals(getLastPayloadMetadata());
+                         .filter(payload -> {
+                             if (payload.getTimestamp() != preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1)) {
+                                 return true;
                              }
+
+                             return !payload.getMetadata().equals(getLastPayloadMetadata());
                          })
                          .observeOn(Schedulers.looper(looper))
                          .subscribeOn(Schedulers.looper(looper))
@@ -623,12 +623,12 @@ class InAppRemoteDataObserver {
      *
      * @return {@code true} if the observer is up to date, otherwise {@code false}.
      */
-    public boolean isUpToDate() {
+    private boolean isUpToDate() {
         return remoteData.isMetadataCurrent(getLastPayloadMetadata());
     }
 
     /**
-     * Checks to see if the schedule is from remote-data and is up-to-date.
+     * Checks to see if the schedule is valid.
      *
      * @param schedule The schedule.
      * @return {@code true} if the schedule valid, otherwise {@code false}.
@@ -645,7 +645,7 @@ class InAppRemoteDataObserver {
      * @param schedule The schedule.
      * @return {@code true} if the schedule is from remote-data, otherwise {@code false}.
      */
-    boolean isRemoteSchedule(@NonNull Schedule<? extends ScheduleData> schedule) {
+    public boolean isRemoteSchedule(@NonNull Schedule<? extends ScheduleData> schedule) {
         if (schedule.getMetadata().containsKey(REMOTE_DATA_METADATA)) {
             return true;
         }
@@ -658,4 +658,23 @@ class InAppRemoteDataObserver {
         return false;
     }
 
+    public void attemptRefresh(@NonNull Runnable onComplete) {
+        remoteData.refresh().addResultCallback(result -> {
+            if (result == null || !result) {
+                Logger.debug("Failed to refresh remote-data.");
+            }
+
+            if (isUpToDate()) {
+                onComplete.run();
+            } else {
+                addListener(new Listener() {
+                    @Override
+                    public void onSchedulesUpdated() {
+                        removeListener(this);
+                        onComplete.run();
+                    }
+                });
+            }
+        });
+    }
 }
