@@ -72,4 +72,9 @@
         <name>wallet_action</name>
         <name>^w</name>
     </ActionEntry>
+
+    <ActionEntry class="com.urbanairship.actions.SubscriptionListAction">
+        <name>subscription_list_action</name>
+        <name>^sla</name>
+    </ActionEntry>
 </resources>

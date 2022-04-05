@@ -39,7 +39,7 @@ public class ActionRegistryTest extends BaseTestCase {
     @Test
     public void testDefaultActions() {
         registry.registerDefaultActions(TestApplication.getApplication());
-        assertEquals("Default entries changed", 13, registry.getEntries().size());
+        assertEquals("Default entries changed", 14, registry.getEntries().size());
 
         validateEntry(registry.getEntry("^d"), "^d", "deep_link_action");
         validateEntry(registry.getEntry("^+t"), "^+t", "add_tags_action");
@@ -54,12 +54,13 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("^ef"), "^ef", "enable_feature");
         validateEntry(registry.getEntry("^ra"), "^ra", "rate_app_action");
         validateEntry(registry.getEntry("^a"), "^a", "set_attributes_action");
+        validateEntry(registry.getEntry("^sla"), "^sla", "subscription_list_action");
     }
 
     @Test
     public void testDefaultActionsFromResource() {
         registry.registerDefaultActions(TestApplication.getApplication().getApplicationContext());
-        assertEquals("Default entries changed", 13, registry.getEntries().size());
+        assertEquals("Default entries changed", 14, registry.getEntries().size());
 
         validateEntry(registry.getEntry("^d"), "^d", "deep_link_action");
         validateEntry(registry.getEntry("^+t"), "^+t", "add_tags_action");
@@ -74,6 +75,7 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("^ef"), "^ef", "enable_feature");
         validateEntry(registry.getEntry("^ra"), "^ra", "rate_app_action");
         validateEntry(registry.getEntry("^a"), "^a", "set_attributes_action");
+        validateEntry(registry.getEntry("^sla"), "^sla", "subscription_list_action");
     }
 
     /**
