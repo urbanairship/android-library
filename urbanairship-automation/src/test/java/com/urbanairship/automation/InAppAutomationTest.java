@@ -1,9 +1,28 @@
 package com.urbanairship.automation;
 
+import static com.urbanairship.automation.tags.TestUtils.tagSet;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
 import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+
+import androidx.annotation.NonNull;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.urbanairship.AirshipLoopers;
 import com.urbanairship.PendingResult;
@@ -37,7 +56,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatcher;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.Shadows;
@@ -47,28 +65,11 @@ import org.robolectric.shadows.ShadowPackageManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-
-import androidx.annotation.NonNull;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
-import static com.urbanairship.automation.tags.TestUtils.tagSet;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link InAppAutomation}.
@@ -512,6 +513,148 @@ public class InAppAutomationTest {
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
         verifyNoInteractions(callback);
+    }
+
+    @Test
+    public void testPrepareDeferredSchedule409StatusCode() throws AuthException, RequestException, InterruptedException {
+        when(mockChannel.getId()).thenReturn("some channel");
+
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
+        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
+                .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                .build();
+
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(409)
+                        .build());
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+
+        runLooperTasks();
+
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+        verifyNoMoreInteractions(callback);
+    }
+
+    @Test
+    public void testPrepareDeferredSchedule429StatusCode() throws AuthException, RequestException {
+        when(mockChannel.getId()).thenReturn("some channel");
+
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
+        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
+                .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                .build();
+
+        Map<String, List<String>> headers = new HashMap<String, List<String>>() {{
+            put("Location", Collections.singletonList("https://fakeLocation.com"));
+            put("Retry-After", Collections.singletonList("60"));
+        }};
+
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(429)
+                        .setResponseHeaders(headers)
+                        .build());
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+
+        verifyNoInteractions(callback);
+
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://fakeLocation.com"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
+                        .setResult(new DeferredScheduleClient.Result(true, null))
+                        .build());
+
+        runLooperTasks();
+
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
+        verifyNoMoreInteractions(callback);
+    }
+
+    @Test
+    public void testPrepareDeferredSchedule429StatusCodeNoLocationNoRetryTime() throws AuthException, RequestException {
+        when(mockChannel.getId()).thenReturn("some channel");
+
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
+        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
+                .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                .build();
+
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(429)
+                        .build())
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
+                        .setResult(new DeferredScheduleClient.Result(true, null))
+                        .build());
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+
+        runLooperTasks();
+
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
+        verifyNoMoreInteractions(callback);
+    }
+
+    @Test
+    public void testPrepareDeferredSchedule307StatusCode() throws AuthException, RequestException {
+        when(mockChannel.getId()).thenReturn("some channel");
+
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
+        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
+                .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                .build();
+
+        Map<String, List<String>> headers = new HashMap<String, List<String>>() {{
+            put("Location", Collections.singletonList("https://fakeLocation.com"));
+            put("Retry-After", Collections.singletonList("60"));
+        }};
+
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(307)
+                        .setResponseHeaders(headers)
+                        .build());
+
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://fakeLocation.com"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
+                        .setResult(new DeferredScheduleClient.Result(true, null))
+                        .build());
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+
+        verifyNoInteractions(callback);
+
+        runLooperTasks();
+
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
+        verifyNoMoreInteractions(callback);
+    }
+
+    @Test
+    public void testPrepareDeferredSchedule307StatusCodeNoLocationNoRetryTime() throws AuthException, RequestException {
+        when(mockChannel.getId()).thenReturn("some channel");
+
+        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
+        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
+                .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                .build();
+
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(307)
+                        .build())
+                .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(200)
+                        .setResult(new DeferredScheduleClient.Result(true, null))
+                        .build());
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+
+        runLooperTasks();
+
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
+        verifyNoMoreInteractions(callback);
     }
 
     @Test

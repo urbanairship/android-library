@@ -193,19 +193,19 @@ public class DeferredScheduleClientTest {
         client.performRequest(Uri.parse("https://airship.com"), "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
 
         JsonValue jsonStateOverrides = JsonMap.newBuilder()
-                .put("app_version", "1")
-                .put("sdk_version", "1.0.0")
-                .put("notification_opt_in", true)
-                .put("locale_language", "en")
-                .put("locale_country", "US")
-                .build()
-                .toJsonValue();
+                                              .put("app_version", "1")
+                                              .put("sdk_version", "1.0.0")
+                                              .put("notification_opt_in", true)
+                                              .put("locale_language", "en")
+                                              .put("locale_country", "US")
+                                              .build()
+                                              .toJsonValue();
 
         JsonMap expected = JsonMap.newBuilder()
-                .put("platform", "android")
-                .put("channel_id", "channel")
-                .put("state_overrides", jsonStateOverrides)
-                .build();
+                                  .put("platform", "android")
+                                  .put("channel_id", "channel")
+                                  .put("state_overrides", jsonStateOverrides)
+                                  .build();
 
         assertEquals(expected.toString(), testRequest.getRequestBody());
     }
@@ -285,5 +285,4 @@ public class DeferredScheduleClientTest {
 
         verify(mockAuthManager).tokenExpired("expired");
     }
-
 }

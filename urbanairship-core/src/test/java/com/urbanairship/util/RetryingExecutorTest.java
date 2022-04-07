@@ -59,23 +59,23 @@ public class RetryingExecutorTest extends BaseTestCase {
 
     @Test
     public void testExecuteOperation() {
-        TestOperation operation = new TestOperation(RetryingExecutor.RESULT_FINISHED);
+        TestOperation operation = new TestOperation(RetryingExecutor.finishedResult());
         executor.execute(operation);
         assertEquals(1, operation.runCount);
     }
 
     @Test
     public void testExecuteChainedOperations() {
-        TestOperation fistOperation = new TestOperation(RetryingExecutor.RESULT_FINISHED);
-        TestOperation secondOperation = new TestOperation(RetryingExecutor.RESULT_RETRY);
-        TestOperation thirdOperation = new TestOperation(RetryingExecutor.RESULT_FINISHED);
+        TestOperation fistOperation = new TestOperation(RetryingExecutor.finishedResult());
+        TestOperation secondOperation = new TestOperation(RetryingExecutor.retryResult());
+        TestOperation thirdOperation = new TestOperation(RetryingExecutor.finishedResult());
 
         executor.execute(fistOperation, secondOperation, thirdOperation);
         assertEquals(1, fistOperation.runCount);
         assertEquals(1, secondOperation.runCount);
         assertEquals(0, thirdOperation.runCount);
 
-        secondOperation.result = RetryingExecutor.RESULT_FINISHED;
+        secondOperation.result = RetryingExecutor.finishedResult();
         advanceLooper(30000);
 
         assertEquals(1, fistOperation.runCount);
@@ -85,9 +85,9 @@ public class RetryingExecutorTest extends BaseTestCase {
 
     @Test
     public void testExecuteChainedOperationsCancel() {
-        TestOperation fistOperation = new TestOperation(RetryingExecutor.RESULT_CANCEL);
-        TestOperation secondOperation = new TestOperation(RetryingExecutor.RESULT_FINISHED);
-        TestOperation thirdOperation = new TestOperation(RetryingExecutor.RESULT_FINISHED);
+        TestOperation fistOperation = new TestOperation(RetryingExecutor.cancelResult());
+        TestOperation secondOperation = new TestOperation(RetryingExecutor.finishedResult());
+        TestOperation thirdOperation = new TestOperation(RetryingExecutor.finishedResult());
 
         executor.execute(fistOperation, secondOperation, thirdOperation);
         assertEquals(1, fistOperation.runCount);
@@ -102,7 +102,7 @@ public class RetryingExecutorTest extends BaseTestCase {
 
     @Test
     public void testExecuteOperationRetry() {
-        TestOperation operation = new TestOperation(RetryingExecutor.RESULT_RETRY);
+        TestOperation operation = new TestOperation(RetryingExecutor.retryResult());
         executor.execute(operation);
         assertEquals(1, operation.runCount);
 
@@ -113,7 +113,7 @@ public class RetryingExecutorTest extends BaseTestCase {
         advanceLooper(60000);
         assertEquals(3, operation.runCount);
 
-        operation.result = RetryingExecutor.RESULT_FINISHED;
+        operation.result = RetryingExecutor.finishedResult();
         advanceLooper(120000);
         assertEquals(4, operation.runCount);
 
@@ -123,8 +123,44 @@ public class RetryingExecutorTest extends BaseTestCase {
     }
 
     @Test
+    public void testExecuteOperationRetryWithBackOff() {
+        TestOperation operation = new TestOperation(RetryingExecutor.retryResult(10));
+        executor.execute(operation);
+        assertEquals(1, operation.runCount);
+
+        // Initial backoff
+        advanceLooper(10);
+        assertEquals(2, operation.runCount);
+
+        operation.result = RetryingExecutor.retryResult();
+
+        // Still have old backoff
+        advanceLooper(10);
+        assertEquals(3, operation.runCount);
+
+        operation.result = RetryingExecutor.retryResult();
+
+        advanceLooper(19);
+        assertEquals(3, operation.runCount);
+
+        advanceLooper(1);
+        assertEquals(4, operation.runCount);
+
+        operation.result = RetryingExecutor.finishedResult();
+        advanceLooper(39);
+        assertEquals(4, operation.runCount);
+
+        advanceLooper(1);
+        assertEquals(5, operation.runCount);
+
+        // Run the looper to the end of tasks, make sure the run count is still 5
+        Shadows.shadowOf(mainLooper).runToEndOfTasks();
+        assertEquals(5, operation.runCount);
+    }
+
+    @Test
     public void testPause() {
-        TestOperation operation = new TestOperation(RetryingExecutor.RESULT_RETRY);
+        TestOperation operation = new TestOperation(RetryingExecutor.retryResult());
 
         // Pause the executor
         executor.setPaused(true);
@@ -155,19 +191,17 @@ public class RetryingExecutorTest extends BaseTestCase {
 
     public static class TestOperation implements RetryingExecutor.Operation {
 
-        int result;
+        RetryingExecutor.Result result;
         int runCount;
 
-        public TestOperation(int result) {
+        public TestOperation(RetryingExecutor.Result result) {
             this.result = result;
         }
 
         @Override
-        public int run() {
+        public RetryingExecutor.Result run() {
             runCount++;
             return result;
         }
-
     }
-
 }

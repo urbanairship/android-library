@@ -3,12 +3,18 @@
 package com.urbanairship.automation;
 
 import android.content.Context;
-import android.os.Handler;
+import android.net.Uri;
 import android.os.Looper;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
-import com.urbanairship.AirshipLoopers;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
@@ -43,14 +49,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
 /**
  * In-app automation.
@@ -78,6 +78,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
     private final Map<String, ScheduleDelegate<?>> scheduleDelegateMap = new HashMap<>();
     private final Map<String, FrequencyChecker> frequencyCheckerMap = new HashMap<>();
+
+    private final Map<String, Uri> redirectURLs = new HashMap<>();
 
     private final AtomicBoolean isStarted = new AtomicBoolean(false);
     private Subscription subscription;
@@ -526,7 +528,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             if (!schedule.getFrequencyConstraintIds().isEmpty()) {
                 FrequencyChecker frequencyChecker = getFrequencyChecker(schedule);
                 if (frequencyChecker == null) {
-                    return RetryingExecutor.RESULT_RETRY;
+                    return RetryingExecutor.retryResult();
                 }
                 frequencyCheckerMap.put(schedule.getId(), frequencyChecker);
                 if (frequencyChecker.isOverLimit()) {
@@ -535,21 +537,21 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                 }
             }
 
-            return RetryingExecutor.RESULT_FINISHED;
+            return RetryingExecutor.finishedResult();
         };
 
         // Audience checks
         RetryingExecutor.Operation audienceChecks = () -> {
             if (schedule.getAudience() == null) {
-                return RetryingExecutor.RESULT_FINISHED;
+                return RetryingExecutor.finishedResult();
             }
 
             if (AudienceChecks.checkAudience(getContext(), schedule.getAudience())) {
-                return RetryingExecutor.RESULT_FINISHED;
+                return RetryingExecutor.finishedResult();
             }
 
             callbackWrapper.onFinish(getPrepareResultMissedAudience(schedule));
-            return RetryingExecutor.RESULT_CANCEL;
+            return RetryingExecutor.cancelResult();
         };
 
         RetryingExecutor.Operation prepareSchedule = () -> {
@@ -564,7 +566,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     break;
             }
 
-            return RetryingExecutor.RESULT_FINISHED;
+            return RetryingExecutor.finishedResult();
         };
 
         RetryingExecutor.Operation[] operations = new RetryingExecutor.Operation[] { frequencyChecks, audienceChecks, prepareSchedule };
@@ -591,8 +593,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         });
     }
 
-    @RetryingExecutor.Result
-    private int resolveDeferred(final @NonNull Schedule<? extends ScheduleData> schedule,
+
+
+    private RetryingExecutor.Result resolveDeferred(final @NonNull Schedule<? extends ScheduleData> schedule,
                                 final @Nullable TriggerContext triggerContext,
                                 final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
 
@@ -601,46 +604,72 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         String channelId = airshipChannel.getId();
         if (channelId == null) {
-            return RetryingExecutor.RESULT_RETRY;
+            return RetryingExecutor.retryResult();
         }
 
+        Uri url = redirectURLs.containsKey(schedule.getId()) ? redirectURLs.get(schedule.getId()) : deferredScheduleData.getUrl();
+
         try {
-            response = deferredScheduleClient.performRequest(deferredScheduleData.getUrl(),
+            response = deferredScheduleClient.performRequest(url,
                     channelId, triggerContext, audienceManager.getTagOverrides(),
                     audienceManager.getAttributeOverrides());
         } catch (RequestException e) {
             if (deferredScheduleData.getRetryOnTimeout()) {
                 Logger.debug(e, "Failed to resolve deferred schedule, will retry. Schedule: %s", schedule.getId());
-                return RetryingExecutor.RESULT_RETRY;
+                return RetryingExecutor.retryResult();
             } else {
                 Logger.debug(e, "Failed to resolve deferred schedule. Schedule: %s", schedule.getId());
                 callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
-                return RetryingExecutor.RESULT_CANCEL;
+                return RetryingExecutor.cancelResult();
             }
         } catch (AuthException e) {
             Logger.debug(e, "Failed to resolve deferred schedule: %s", schedule.getId());
-            return RetryingExecutor.RESULT_RETRY;
+            return RetryingExecutor.retryResult();
         }
 
-        if (!response.isSuccessful()) {
-            Logger.debug("Failed to resolve deferred schedule, will retry. Schedule: %s, Response: %s", schedule.getId(), response);
-            return RetryingExecutor.RESULT_RETRY;
+        DeferredScheduleClient.Result apiResult = response.getResult();
+
+        // Success
+        if (response.isSuccessful() && response.getResult() != null) {
+            if (!apiResult.isAudienceMatch()) {
+                callback.onFinish(getPrepareResultMissedAudience(schedule));
+                return RetryingExecutor.cancelResult();
+            }
+
+            InAppMessage message = apiResult.getMessage();
+            if (message != null) {
+                prepareSchedule(schedule, message, inAppMessageScheduleDelegate, callback);
+            } else {
+                // Handled by backend, penalize to count towards limit
+                callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
+            }
+
+            return RetryingExecutor.finishedResult();
         }
 
-        if (!response.getResult().isAudienceMatch()) {
-            callback.onFinish(getPrepareResultMissedAudience(schedule));
-            return RetryingExecutor.RESULT_CANCEL;
-        }
+        Logger.debug("Failed to resolve deferred schedule. Schedule: %s, Response: %s", schedule.getId(), response.getResult());
 
-        InAppMessage message = response.getResult().getMessage();
-        if (message != null) {
-            prepareSchedule(schedule, message, inAppMessageScheduleDelegate, callback);
-        } else {
-            // Handled by backend, penalize to count towards limit
-            callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
-        }
+        Uri location = response.getLocationHeader();
+        long retryAfter = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, -1);
 
-        return RetryingExecutor.RESULT_FINISHED;
+        // Error
+        switch (response.getStatus()) {
+            case 409:
+                callback.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                return RetryingExecutor.finishedResult();
+            case 429:
+                if (location != null) {
+                    redirectURLs.put(schedule.getId(), location);
+                }
+                return retryAfter >= 0 ? RetryingExecutor.retryResult(retryAfter) : RetryingExecutor.retryResult();
+            case 307:
+                if (location != null) {
+                    redirectURLs.put(schedule.getId(), location);
+                }
+                return retryAfter >= 0 ? RetryingExecutor.retryResult(retryAfter) : RetryingExecutor.retryResult(0);
+            default:
+                return RetryingExecutor.retryResult();
+        }
     }
 
     @MainThread
@@ -807,5 +836,4 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return airshipChannel.getId() == null ? System.currentTimeMillis() : 0;
         }
     }
-
 }

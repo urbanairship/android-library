@@ -2,14 +2,22 @@
 
 package com.urbanairship.http;
 
+import android.net.Uri;
+
+import com.urbanairship.Logger;
+import com.urbanairship.util.Clock;
+import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAHttpStatusUtil;
 
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Model object containing response information from a request.
@@ -147,6 +155,61 @@ public class Response<T> {
     @Nullable
     public Map<String, List<String>> getResponseHeaders() {
         return responseHeaders;
+    }
+
+    /**
+     * Returns the location header if set.
+     *
+     * @return The location header if set, otherwise null.
+     */
+    @Nullable
+    public Uri getLocationHeader() {
+        String location = getResponseHeader("Location");
+        if (location == null) {
+            return null;
+        }
+
+        try {
+            return Uri.parse(location);
+        } catch (Exception e) {
+            Logger.error("Failed to parse location header.");
+            return null;
+        }
+    }
+
+    /**
+     * Returns the retry-after header if set.
+     *
+     * @param timeUnit The resulting time unit.
+     * @param defaultValue The default value.
+     * @return The retry-after in the time unit if set, otherwise the defaultValue.
+     */
+    public long getRetryAfterHeader(@NonNull TimeUnit timeUnit, long defaultValue) {
+        return getRetryAfterHeader(timeUnit, defaultValue, Clock.DEFAULT_CLOCK);
+    }
+
+    @VisibleForTesting
+    public long getRetryAfterHeader(@NonNull TimeUnit timeUnit, long defaultValue, @NonNull Clock clock) {
+        String retryAfter = getResponseHeader("Retry-After");
+        if (retryAfter == null) {
+            return defaultValue;
+        }
+
+        try {
+            long retryDate = DateUtils.parseIso8601(retryAfter);
+            long milliseconds = retryDate - clock.currentTimeMillis();
+            return timeUnit.convert(milliseconds, TimeUnit.MILLISECONDS);
+        } catch (ParseException ignored) {
+        }
+
+        try {
+            long seconds = Long.parseLong(retryAfter);
+            return timeUnit.convert(seconds, TimeUnit.SECONDS);
+        } catch (Exception ignored) {
+        }
+
+        Logger.error("Invalid RetryAfter header %s", retryAfter);
+        return defaultValue;
     }
 
     /**

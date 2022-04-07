@@ -105,8 +105,8 @@ public class DeferredScheduleClient {
                                            @NonNull List<AttributeMutation> attributeOverrides) throws RequestException, AuthException {
         String token = authManager.getToken();
         JsonMap.Builder requestBodyBuilder = JsonMap.newBuilder()
-                .put(PLATFORM_KEY, runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM ? PLATFORM_AMAZON : PLATFORM_ANDROID)
-                .put(CHANNEL_ID_KEY, channelId);
+                                                    .put(PLATFORM_KEY, runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM ? PLATFORM_AMAZON : PLATFORM_ANDROID)
+                                                    .put(CHANNEL_ID_KEY, channelId);
 
         if (triggerContext != null) {
             requestBodyBuilder.put(TRIGGER_KEY, JsonMap.newBuilder()

@@ -247,55 +247,49 @@ public class InAppMessageManager {
         }
 
         // Prepare Assets
-        RetryingExecutor.Operation prepareAssets = new RetryingExecutor.Operation() {
-            @Override
-            public int run() {
-                int result = assetManager.onPrepare(scheduleId, adapter.message);
+        RetryingExecutor.Operation prepareAssets = () -> {
+            int result = assetManager.onPrepare(scheduleId, adapter.message);
 
-                switch (result) {
-                    case AssetManager.PREPARE_RESULT_OK:
-                        Logger.debug("Assets prepared for schedule %s.", scheduleId);
-                        return RetryingExecutor.RESULT_FINISHED;
+            switch (result) {
+                case AssetManager.PREPARE_RESULT_OK:
+                    Logger.debug("Assets prepared for schedule %s.", scheduleId);
+                    return RetryingExecutor.finishedResult();
 
-                    case AssetManager.PREPARE_RESULT_RETRY:
-                        Logger.debug("Assets failed to prepare for schedule %s. Will retry.", scheduleId);
-                        return RetryingExecutor.RESULT_RETRY;
+                case AssetManager.PREPARE_RESULT_RETRY:
+                    Logger.debug("Assets failed to prepare for schedule %s. Will retry.", scheduleId);
+                    return RetryingExecutor.retryResult();
 
-                    case AssetManager.PREPARE_RESULT_CANCEL:
-                    default:
-                        Logger.debug("Assets failed to prepare. Cancelling display for schedule %s.", scheduleId);
-                        assetManager.onDisplayFinished(scheduleId, adapter.message);
-                        callback.onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
-                        return RetryingExecutor.RESULT_CANCEL;
-                }
+                case AssetManager.PREPARE_RESULT_CANCEL:
+                default:
+                    Logger.debug("Assets failed to prepare. Cancelling display for schedule %s.", scheduleId);
+                    assetManager.onDisplayFinished(scheduleId, adapter.message);
+                    callback.onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
+                    return RetryingExecutor.cancelResult();
             }
         };
 
         // Prepare Adapter
-        RetryingExecutor.Operation prepareAdapter = new RetryingExecutor.Operation() {
-            @Override
-            public int run() {
-                int result = adapter.prepare(context, assetManager.getAssets(scheduleId));
+        RetryingExecutor.Operation prepareAdapter = () -> {
+            int result = adapter.prepare(context, assetManager.getAssets(scheduleId));
 
-                switch (result) {
-                    case InAppMessageAdapter.OK:
-                        Logger.debug("Adapter prepared schedule %s.", scheduleId);
+            switch (result) {
+                case InAppMessageAdapter.OK:
+                    Logger.debug("Adapter prepared schedule %s.", scheduleId);
 
-                        // Store the adapter
-                        adapterWrappers.put(scheduleId, adapter);
-                        callback.onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
-                        return RetryingExecutor.RESULT_FINISHED;
+                    // Store the adapter
+                    adapterWrappers.put(scheduleId, adapter);
+                    callback.onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+                    return RetryingExecutor.finishedResult();
 
-                    case InAppMessageAdapter.RETRY:
-                        Logger.debug("Adapter failed to prepare schedule %s. Will retry.", scheduleId);
-                        return RetryingExecutor.RESULT_RETRY;
+                case InAppMessageAdapter.RETRY:
+                    Logger.debug("Adapter failed to prepare schedule %s. Will retry.", scheduleId);
+                    return RetryingExecutor.retryResult();
 
-                    case InAppMessageAdapter.CANCEL:
-                    default:
-                        Logger.debug("Adapter failed to prepare. Cancelling display for schedule %s.", scheduleId);
-                        callback.onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
-                        return RetryingExecutor.RESULT_CANCEL;
-                }
+                case InAppMessageAdapter.CANCEL:
+                default:
+                    Logger.debug("Adapter failed to prepare. Cancelling display for schedule %s.", scheduleId);
+                    callback.onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
+                    return RetryingExecutor.cancelResult();
             }
         };
 

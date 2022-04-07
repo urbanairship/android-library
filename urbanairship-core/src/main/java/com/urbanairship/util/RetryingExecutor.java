@@ -8,14 +8,11 @@ import android.os.SystemClock;
 
 import com.urbanairship.AirshipExecutors;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executor;
 
-import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
@@ -28,37 +25,18 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class RetryingExecutor implements Executor {
 
+    private static final Result FINISHED_RESULT = new Result(Status.FINISHED, -1);
+    private static final Result CANCEL_RESULT = new Result(Status.CANCEL, -1);
+
     /**
      * Initial retry backoff
      */
-    private static final long INITIAL_BACKOFF_MILLIS = 30000; // 30 seconds
+    public static final long INITIAL_BACKOFF_MILLIS = 30000; // 30 seconds
 
     /**
      * Max backoff
      */
-    private static final long MAX_BACKOFF_MILLIS = 300000; // 5 minutes
-
-    @IntDef({ RESULT_FINISHED, RESULT_RETRY, RESULT_CANCEL })
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface Result {}
-
-    /**
-     * When executing an {@link Operation}, it notifies the executor that the operation
-     * is finished.
-     */
-    public static final int RESULT_FINISHED = 0;
-
-    /**
-     * When executing an {@link Operation}, it notifies the executor that the operation
-     * needs to be retried.
-     */
-    public static final int RESULT_RETRY = 1;
-
-    /**
-     * When executing an {@link Operation}, it notifies the executor that the operation
-     * is finished and any dependent operations should be skipped.
-     */
-    public static final int RESULT_CANCEL = 2;
+    private static final long MAX_BACKOFF_MILLIS = 120000; // 2 minutes
 
     private final Handler scheduler;
     private final Executor executor;
@@ -81,6 +59,22 @@ public class RetryingExecutor implements Executor {
         return new RetryingExecutor(new Handler(looper), AirshipExecutors.newSerialExecutor());
     }
 
+    public static Result retryResult() {
+        return new Result(Status.RETRY, -1);
+    }
+
+    public static Result retryResult(long nextBackOff) {
+        return new Result(Status.RETRY, nextBackOff);
+    }
+
+    public static Result finishedResult() {
+        return FINISHED_RESULT;
+    }
+
+    public static Result cancelResult() {
+        return CANCEL_RESULT;
+    }
+
     /**
      * Executes a runnable. The runnable will not be retried.
      *
@@ -88,12 +82,9 @@ public class RetryingExecutor implements Executor {
      */
     @Override
     public void execute(@NonNull final Runnable runnable) {
-        execute(new Operation() {
-            @Override
-            public int run() {
-                runnable.run();
-                return RESULT_FINISHED;
-            }
+        execute(() -> {
+            runnable.run();
+            return finishedResult();
         });
     }
 
@@ -119,9 +110,9 @@ public class RetryingExecutor implements Executor {
      * Helper method that handles executing an operation.
      *
      * @param operation The operation.
-     * @param backOff The next backOff if retrying the operation.
+     * @param nextBackOff The next backOff if retrying the operation.
      */
-    private void execute(final @NonNull Operation operation, final long backOff) {
+    public void execute(final @NonNull Operation operation, final long nextBackOff) {
         final Runnable executeRunnable = new Runnable() {
             @Override
             public void run() {
@@ -132,20 +123,25 @@ public class RetryingExecutor implements Executor {
                     }
                 }
 
-                int result = operation.run();
-                if (result == RESULT_RETRY) {
-                    scheduler.postAtTime(new Runnable() {
-                        @Override
-                        public void run() {
-                            execute(operation, Math.min(backOff * 2, MAX_BACKOFF_MILLIS));
-                        }
+                Result result = operation.run();
+
+                if (result.status == Status.RETRY) {
+                    long backOff = result.nextBackOff >= 0 ? result.nextBackOff : nextBackOff;
+                    scheduler.postAtTime(() -> {
+                        execute(operation, calculateBackoff(backOff));
                     }, executor, SystemClock.uptimeMillis() + backOff);
                 }
-
             }
         };
 
         executor.execute(executeRunnable);
+    }
+
+    private long calculateBackoff(long lastBackOff) {
+        if (lastBackOff <= 0) {
+            return INITIAL_BACKOFF_MILLIS;
+        }
+        return Math.min(lastBackOff * 2, MAX_BACKOFF_MILLIS);
     }
 
     /**
@@ -181,11 +177,10 @@ public class RetryingExecutor implements Executor {
         /**
          * Called to run the operation.
          *
-         * @return {@link #RESULT_RETRY} to retry or {@link #RESULT_FINISHED} to finish the operation.
+         * @return The result.
          */
-        @Result
-        int run();
-
+        @NonNull
+        Result run();
     }
 
     /**
@@ -201,26 +196,40 @@ public class RetryingExecutor implements Executor {
         }
 
         @Override
-        public int run() {
+        @NonNull
+        public Result run() {
             if (operations.isEmpty()) {
-                return RESULT_FINISHED;
+                return finishedResult();
             }
 
-            int result = operations.get(0).run();
+            Result result = operations.get(0).run();
 
-            switch (result) {
-                case RESULT_RETRY:
-                    return RESULT_RETRY;
-                case RESULT_CANCEL:
-                    return RESULT_CANCEL;
-                case RESULT_FINISHED:
-                default:
-                    operations.remove(0);
-                    execute(this);
-                    return RESULT_FINISHED;
+            if (result.status == Status.FINISHED) {
+                operations.remove(0);
+                execute(this);
             }
+
+            return result;
         }
-
     }
 
+
+    public enum Status {
+        FINISHED,
+        RETRY,
+        CANCEL
+    }
+
+    public static class Result {
+
+        private final Status status;
+
+        // -1 means use current, otherwise use next
+        private final long nextBackOff;
+
+        private Result(Status status, long nextBackOff) {
+            this.status = status;
+            this.nextBackOff = nextBackOff;
+        }
+    }
 }
