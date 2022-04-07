@@ -46,7 +46,7 @@ public class PagerRecyclerView extends RecyclerView {
         this.model = model;
         this.environment = environment;
 
-        if (model.isSwipeDisabled()) {
+        if (model.getChildren().size() <= 1 || model.isSwipeDisabled()) {
             layoutManager = new SwipeDisabledLinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL);
         } else {
             layoutManager = new LinearLayoutManager(getContext(), HORIZONTAL, false);
@@ -77,7 +77,7 @@ public class PagerRecyclerView extends RecyclerView {
     }
 
     private final RecyclerView.OnScrollListener recyclerScrollListener = new RecyclerView.OnScrollListener() {
-        private int previousPosition = NO_POSITION;
+        private int previousPosition = 0;
 
         @Override
         public void onScrollStateChanged(@NonNull RecyclerView v, int state) {
