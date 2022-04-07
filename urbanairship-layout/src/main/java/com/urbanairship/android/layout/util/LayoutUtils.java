@@ -13,6 +13,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
+import android.view.textservice.TextInfo;
 import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
@@ -210,13 +211,16 @@ public final class LayoutUtils {
         applyTextAppearance(editText, textInput.getTextAppearance());
         int padding = (int) dpToPx(editText.getContext(), 8);
         editText.setPadding(padding, padding, padding, padding);
-
         editText.setInputType(textInput.getInputType().getTypeMask());
         editText.setSingleLine(textInput.getInputType() != FormInputType.TEXT_MULTILINE);
         editText.setGravity(editText.getGravity() | Gravity.TOP);
 
         if (!UAStringUtil.isEmpty(textInput.getHintText())) {
             editText.setHint(textInput.getHintText());
+        }
+
+        if (textInput.getPlaceholderTextAppearance() != null) {
+            editText.setHintTextColor(textInput.getPlaceholderTextAppearance().getColor().resolve(editText.getContext()));
         }
 
         if (!UAStringUtil.isEmpty(textInput.getContentDescription())) {
