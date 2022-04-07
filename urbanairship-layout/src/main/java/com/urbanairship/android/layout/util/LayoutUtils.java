@@ -217,10 +217,11 @@ public final class LayoutUtils {
 
         if (!UAStringUtil.isEmpty(textInput.getHintText())) {
             editText.setHint(textInput.getHintText());
-        }
-
-        if (textInput.getPlaceholderTextAppearance() != null) {
-            editText.setHintTextColor(textInput.getPlaceholderTextAppearance().getColor().resolve(editText.getContext()));
+            if (textInput.getPlaceholderTextAppearance() != null) {
+                editText.setHintTextColor(textInput.getPlaceholderTextAppearance().getColor().resolve(editText.getContext()));
+            } else {
+                editText.setHintTextColor(textInput.getTextAppearance().getColor().resolve(editText.getContext()));
+            }
         }
 
         if (!UAStringUtil.isEmpty(textInput.getContentDescription())) {
