@@ -28,6 +28,8 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
     @NonNull
     private final TextAppearance textAppearance;
     @Nullable
+    private final TextAppearance placeholderTextAppearance;
+    @Nullable
     private final String hintText;
     @Nullable
     private final String contentDescription;
@@ -41,6 +43,7 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
         @NonNull FormInputType inputType,
         @NonNull TextAppearance textAppearance,
         @Nullable String hintText,
+        @Nullable TextAppearance placeholderTextAppearance,
         @Nullable String contentDescription,
         boolean isRequired,
         @Nullable Color backgroundColor,
@@ -52,6 +55,7 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
         this.inputType = inputType;
         this.textAppearance = textAppearance;
         this.hintText = hintText;
+        this.placeholderTextAppearance = placeholderTextAppearance;
         this.contentDescription = contentDescription;
         this.isRequired = isRequired;
     }
@@ -64,6 +68,12 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
         JsonMap textAppearanceJson = json.opt("text_appearance").optMap();
         TextAppearance textAppearance = TextAppearance.fromJson(textAppearanceJson);
 
+        TextAppearance placeholderTextAppearance = null;
+        JsonMap placeholderAppearanceJson = json.opt("placeholder_text_appearance").optMap();
+        if (!placeholderAppearanceJson.isEmpty()) {
+            placeholderTextAppearance = TextAppearance.fromJson(placeholderAppearanceJson);
+        }
+
         String identifier = Identifiable.identifierFromJson(json);
         String contentDescription = Accessible.contentDescriptionFromJson(json);
         boolean required = Validatable.requiredFromJson(json);
@@ -75,6 +85,7 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
             inputType,
             textAppearance,
             placeholder,
+            placeholderTextAppearance,
             contentDescription,
             required,
             backgroundColor,
@@ -117,6 +128,11 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
     @NonNull
     public TextAppearance getTextAppearance() {
         return textAppearance;
+    }
+
+    @Nullable
+    public TextAppearance getPlaceholderTextAppearance() {
+        return placeholderTextAppearance;
     }
 
     @Nullable
