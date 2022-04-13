@@ -68,8 +68,10 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
     }
 
     private void configureButton() {
+        setScaleType(ScaleType.FIT_CENTER);
         LayoutUtils.applyBorderAndBackground(this, model);
         model.setViewListener(modelListener);
+
 
         if (!UAStringUtil.isEmpty(model.getContentDescription())) {
             setContentDescription(model.getContentDescription());
