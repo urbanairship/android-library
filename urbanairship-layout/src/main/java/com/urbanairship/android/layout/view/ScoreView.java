@@ -20,6 +20,7 @@ import java.util.Objects;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 
 /**
  * Form input that presents a set of numeric options representing a score.
@@ -115,7 +116,8 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
             addView(button, new LayoutParams(LayoutParams.MATCH_CONSTRAINT, LayoutParams.MATCH_CONSTRAINT));
         }
 
-        constraints.createHorizontalChainInParent(viewIds, 0, style.getSpacing());
+        constraints.setHorizontalChainStyle(viewIds, ConstraintSet.CHAIN_PACKED)
+                .createHorizontalChainInParent(viewIds, 0, style.getSpacing());
     }
 
     private void onScoreClick(@NonNull View view, int score) {

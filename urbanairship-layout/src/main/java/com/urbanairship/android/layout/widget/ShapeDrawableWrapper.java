@@ -43,11 +43,11 @@ public class ShapeDrawableWrapper extends DrawableWrapper {
             width = minDimension;
             height = minDimension;
         } else if (state.aspectRatio > 1) {
-            width = (int) (bounds.height() * state.aspectRatio);
-            height = bounds.height();
-        } else {
             width = bounds.width();
-            height = (int) (bounds.width() / state.aspectRatio);
+            height = (int) (bounds.height() / state.aspectRatio);
+        } else {
+            width = (int) (bounds.width() * state.aspectRatio);
+            height = bounds.height();
         }
 
         width *= state.scale;

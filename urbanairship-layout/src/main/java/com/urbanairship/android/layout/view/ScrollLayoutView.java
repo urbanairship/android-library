@@ -71,6 +71,7 @@ public class ScrollLayoutView extends NestedScrollView implements BaseView<Scrol
             layoutParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
         }
 
+        setClipToOutline(true);
         contentView.setLayoutParams(layoutParams);
         addView(contentView);
     }

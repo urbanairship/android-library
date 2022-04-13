@@ -103,10 +103,17 @@ public final class ConstraintSetBuilder {
     }
 
     @NonNull
+    public ConstraintSetBuilder setHorizontalChainStyle(@NonNull int[] viewIds, int chainStyle) {
+        for (int i = 0; i < viewIds.length; i++) {
+            constraints.setHorizontalChainStyle(viewIds[i], chainStyle);
+        }
+        return this;
+    }
+
+    @NonNull
     public ConstraintSetBuilder createHorizontalChainInParent(int[] viewIds, int verticalSpacing, int horizontalSpacing) {
         for (int i = 0; i < viewIds.length; i++) {
             int viewId = viewIds[i];
-
             if (i == 0) {
                 addToHorizontalChain(viewId, PARENT_ID, viewIds[i +1], 0, horizontalSpacing);
             } else if (i == viewIds.length - 1) {
