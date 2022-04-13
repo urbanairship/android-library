@@ -28,7 +28,7 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
     @NonNull
     private final TextAppearance textAppearance;
     @Nullable
-    private final TextAppearance placeholderTextAppearance;
+    private final Color hintColor;
     @Nullable
     private final String hintText;
     @Nullable
@@ -43,7 +43,7 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
         @NonNull FormInputType inputType,
         @NonNull TextAppearance textAppearance,
         @Nullable String hintText,
-        @Nullable TextAppearance placeholderTextAppearance,
+        @Nullable Color hintColor,
         @Nullable String contentDescription,
         boolean isRequired,
         @Nullable Color backgroundColor,
@@ -55,7 +55,7 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
         this.inputType = inputType;
         this.textAppearance = textAppearance;
         this.hintText = hintText;
-        this.placeholderTextAppearance = placeholderTextAppearance;
+        this.hintColor = hintColor;
         this.contentDescription = contentDescription;
         this.isRequired = isRequired;
     }
@@ -64,16 +64,10 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
     public static TextInputModel fromJson(@NonNull JsonMap json) throws JsonException {
         String inputTypeString = json.opt("input_type").optString();
         FormInputType inputType = FormInputType.from(inputTypeString);
-        String placeholder = json.opt("place_holder").getString();
+        String hintText = json.opt("place_holder").getString();
+        Color hintColor = Color.fromJsonField(json, "place_holder_text_color");
         JsonMap textAppearanceJson = json.opt("text_appearance").optMap();
         TextAppearance textAppearance = TextAppearance.fromJson(textAppearanceJson);
-
-        TextAppearance placeholderTextAppearance = null;
-        JsonMap placeholderAppearanceJson = json.opt("placeholder_text_appearance").optMap();
-        if (!placeholderAppearanceJson.isEmpty()) {
-            placeholderTextAppearance = TextAppearance.fromJson(placeholderAppearanceJson);
-        }
-
         String identifier = Identifiable.identifierFromJson(json);
         String contentDescription = Accessible.contentDescriptionFromJson(json);
         boolean required = Validatable.requiredFromJson(json);
@@ -84,8 +78,8 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
             identifier,
             inputType,
             textAppearance,
-            placeholder,
-            placeholderTextAppearance,
+            hintText,
+            hintColor,
             contentDescription,
             required,
             backgroundColor,
@@ -131,8 +125,8 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
     }
 
     @Nullable
-    public TextAppearance getPlaceholderTextAppearance() {
-        return placeholderTextAppearance;
+    public Color getHintColor() {
+        return hintColor;
     }
 
     @Nullable
