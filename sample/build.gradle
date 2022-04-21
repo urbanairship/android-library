@@ -92,7 +92,7 @@ dependencies {
     androidTestImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
     androidTestImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
 
-    implementation 'com.google.android.gms:play-services-instantapps:17.0.1'
+    implementation 'com.google.android.gms:play-services-instantapps:18.0.1'
     // Instrumentation Tests
 
     testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"

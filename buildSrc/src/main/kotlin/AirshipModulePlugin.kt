@@ -68,7 +68,7 @@ class AirshipModulePlugin : Plugin<Project> {
             }
 
             lint {
-                checkOnly("Interoperability", "NewApi", "InlinedApi")
+                this.checkOnly += setOf("Interoperability", "NewApi", "InlinedApi")
             }
 
             testOptions.unitTests.isIncludeAndroidResources = true

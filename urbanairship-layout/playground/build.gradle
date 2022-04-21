@@ -80,7 +80,7 @@ dependencies {
     implementation "androidx.constraintlayout:constraintlayout:${rootProject.androidxConstraintLayoutVersion}"
 
     // Leak Canary (for debug builds only)
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8.1'
 
     testImplementation "junit:junit:${rootProject.junitVersion}"
 
@@ -126,4 +126,3 @@ android.applicationVariants.all { variant ->
         dependsOn generateSampleLayouts
     }
 }
-
