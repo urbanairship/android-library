@@ -63,11 +63,16 @@ public class ThomasTest {
         assertTrue(Thomas.isValid(validPayload));
         assertEquals(1, validPayload.getVersion());
 
-        BasePayload versionZero = new BasePayload(0, validPayload.getPresentation(), validPayload.getView());
-        assertFalse(Thomas.isValid(versionZero));
+        for (int i = Thomas.MIN_SUPPORTED_VERSION; i < Thomas.MAX_SUPPORTED_VERSION; i++) {
+            BasePayload payload = new BasePayload(i, validPayload.getPresentation(), validPayload.getView());
+            assertTrue(Thomas.isValid(payload));
+        }
 
-        BasePayload versionTwo = new BasePayload(2, validPayload.getPresentation(), validPayload.getView());
-        assertFalse(Thomas.isValid(versionTwo));
+        BasePayload invalidMin = new BasePayload(Thomas.MIN_SUPPORTED_VERSION - 1, validPayload.getPresentation(), validPayload.getView());
+        assertFalse(Thomas.isValid(invalidMin));
+
+        BasePayload invalidMax = new BasePayload(Thomas.MAX_SUPPORTED_VERSION + 1, validPayload.getPresentation(), validPayload.getView());
+        assertFalse(Thomas.isValid(invalidMax));
     }
 
     @Test

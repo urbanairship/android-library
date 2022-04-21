@@ -57,6 +57,7 @@ import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Entry point and related helper methods for rendering layouts based on our internal DSL.
@@ -65,8 +66,10 @@ import androidx.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Thomas {
-    private static final int MAX_SUPPORTED_VERSION = 1;
-    private static final int MIN_SUPPORTED_VERSION = 1;
+    @VisibleForTesting
+    static final int MAX_SUPPORTED_VERSION = 2;
+    @VisibleForTesting
+    static final int MIN_SUPPORTED_VERSION = 1;
 
     private Thomas() {}
 
