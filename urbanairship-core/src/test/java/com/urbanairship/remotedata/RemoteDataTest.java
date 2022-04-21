@@ -211,7 +211,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         remoteData.onUrlConfigUpdated();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.REPLACE));
 
         verifyNoMoreInteractions(mockDispatcher);
     }
@@ -613,7 +613,7 @@ public class RemoteDataTest extends BaseTestCase {
         clearInvocations(mockDispatcher);
 
         PendingResult<Boolean> pendingResult = remoteData.refresh();
-        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.REPLACE));
 
         assertFalse(pendingResult.isDone());
 
@@ -643,7 +643,7 @@ public class RemoteDataTest extends BaseTestCase {
     @Test
     public void testForceRefresh() throws RequestException, ExecutionException, InterruptedException {
         PendingResult<Boolean> pendingResult = remoteData.refresh(true);
-        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.REPLACE));
 
         assertFalse(pendingResult.isDone());
 
@@ -664,7 +664,7 @@ public class RemoteDataTest extends BaseTestCase {
     @Test
     public void testRefreshFailed() throws RequestException, ExecutionException, InterruptedException {
         PendingResult<Boolean> pendingResult = remoteData.refresh(true);
-        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.REPLACE));
 
         assertFalse(pendingResult.isDone());
 

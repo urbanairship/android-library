@@ -124,6 +124,9 @@ public class RemoteData extends AirshipComponent {
     private final RemoteDataApiClient apiClient;
     private final PrivacyManager privacyManager;
 
+    private boolean isRefreshing = false;
+    private final Object refreshLock = new Object();
+
     @NonNull
     private final List<PendingResult<Boolean>> pendingRefreshResults = new ArrayList<>();
 
@@ -150,7 +153,7 @@ public class RemoteData extends AirshipComponent {
 
     private final LocaleChangedListener localeChangedListener = locale -> {
         if (shouldRefresh()) {
-            dispatchRefreshJob();
+            dispatchRefreshJob(JobInfo.REPLACE);
         }
     };
 
@@ -282,10 +285,13 @@ public class RemoteData extends AirshipComponent {
      */
     public PendingResult<Boolean> refresh(boolean force) {
         PendingResult<Boolean> pendingResult = new PendingResult<>();
-        synchronized (pendingRefreshResults) {
-            if (force || shouldRefresh()) {
+        synchronized (refreshLock) {
+            if (isRefreshing || force || shouldRefresh()) {
                 pendingRefreshResults.add(pendingResult);
-                dispatchRefreshJob();
+                if (!isRefreshing) {
+                    dispatchRefreshJob(JobInfo.REPLACE);
+                }
+                isRefreshing = true;
             } else {
                 pendingResult.setResult(true);
             }
@@ -295,11 +301,15 @@ public class RemoteData extends AirshipComponent {
     }
 
     private void dispatchRefreshJob() {
+        dispatchRefreshJob(JobInfo.KEEP);
+    }
+
+    private void dispatchRefreshJob(@JobInfo.ConflictStrategy int conflictStrategy) {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(ACTION_REFRESH)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(RemoteData.class)
-                                 .setConflictStrategy(JobInfo.KEEP)
+                                 .setConflictStrategy(conflictStrategy)
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);
@@ -314,7 +324,7 @@ public class RemoteData extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onUrlConfigUpdated() {
         // Update remote data when notified of new URL config.
-        dispatchRefreshJob();
+        dispatchRefreshJob(JobInfo.REPLACE);
     }
 
     /**
@@ -452,6 +462,10 @@ public class RemoteData extends AirshipComponent {
      */
     @JobInfo.JobResult
     private int onRefresh() {
+        synchronized (refreshLock) {
+            isRefreshing = true;
+        }
+
         String lastModified = isLastMetadataCurrent() ? preferenceDataStore.getString(LAST_MODIFIED_KEY, null) : null;
         Locale locale = localeManager.getLocale();
 
@@ -505,7 +519,9 @@ public class RemoteData extends AirshipComponent {
             preferenceDataStore.put(LAST_REFRESH_TIME_KEY, clock.currentTimeMillis());
         }
 
-        synchronized (pendingRefreshResults) {
+        synchronized (refreshLock) {
+            this.isRefreshing = false;
+
             for (PendingResult<Boolean> pendingResult : pendingRefreshResults) {
                 pendingResult.setResult(success);
             }

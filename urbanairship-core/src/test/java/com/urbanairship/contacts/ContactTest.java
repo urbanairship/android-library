@@ -10,9 +10,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -139,12 +141,7 @@ public class ContactTest extends BaseTestCase {
 
         listener.onChannelCreated(fakeChannelId);
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(Contact.ACTION_UPDATE_CONTACT);
-            }
-        }));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(Contact.ACTION_UPDATE_CONTACT)));
     }
 
     @Test
@@ -350,6 +347,79 @@ public class ContactTest extends BaseTestCase {
     }
 
     @Test
+    public void testIdentifyDoesntSkipReset() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        final String resetContactId = "some other fake id";
+
+        Response<ContactIdentity> identifyResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, false, fakeNamedUserId)).build();
+        when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, null)).thenReturn(identifyResponse);
+        when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, resetContactId)).thenReturn(identifyResponse);
+
+        Response<ContactIdentity> resetResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity("some other fake id", true, null)).build();
+        when(mockContactApiClient.reset(fakeChannelId)).thenReturn(resetResponse);
+
+        contact.identify(fakeNamedUserId);
+        contact.reset();
+        contact.reset();
+        contact.identify(fakeNamedUserId);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient, times(1)).identify(fakeNamedUserId, fakeChannelId, null);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient, times(1)).reset(fakeChannelId);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient, times(1)).identify(fakeNamedUserId, fakeChannelId, resetContactId);
+        assertNotNull(contact.getLastContactIdentity());
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verifyNoMoreInteractions(mockContactApiClient);
+    }
+
+    @Test
+    public void testUpdateDoesntSkipReset() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
+        final String resetContactId = "some other fake id";
+
+        // Set up a 200 response
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        Response<Void> updateResponse = new Response.Builder<Void>(200).build();
+        when(mockContactApiClient.update(eq(fakeContactId), anyList(), anyList(), anyList())).thenReturn(updateResponse);
+        when(mockContactApiClient.update(eq(resetContactId), anyList(), anyList(), anyList())).thenReturn(updateResponse);
+
+        Response<ContactIdentity> resetResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(resetContactId, true, null)).build();
+        when(mockContactApiClient.reset(fakeChannelId)).thenReturn(resetResponse);
+
+        contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply();
+        List<ScopedSubscriptionListMutation> pending = contact.getPendingSubscriptionListUpdates();
+
+        contact.reset();
+        contact.reset();
+        contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply();
+
+        // Resolve
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient, times(1)).resolve(fakeChannelId);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient, times(1)).update(fakeContactId, Collections.emptyList(), Collections.emptyList(), pending);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient, times(1)).reset(fakeChannelId);
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient, times(1)).update(resetContactId, Collections.emptyList(), Collections.emptyList(), pending);
+        assertNotNull(contact.getLastContactIdentity());
+
+        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        verifyNoMoreInteractions(mockContactApiClient);
+    }
+
+    @Test
     public void testIdentifyFailed() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
@@ -428,7 +498,6 @@ public class ContactTest extends BaseTestCase {
 
         assertTrue(contact.getPendingSubscriptionListUpdates().isEmpty());
     }
-
 
     @Test
     public void testEditAttributesSucceed() throws RequestException {
@@ -830,7 +899,8 @@ public class ContactTest extends BaseTestCase {
 
         runLooperTasks();
 
-        verify(mockContactApiClient).getSubscriptionLists(fakeContactId);;
+        verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
+        ;
     }
 
     @Test
@@ -1110,4 +1180,5 @@ public class ContactTest extends BaseTestCase {
             e.printStackTrace();
         }
     }
+
 }

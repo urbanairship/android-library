@@ -4,13 +4,6 @@ package com.urbanairship.contacts;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.Size;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
@@ -48,6 +41,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.Size;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * Airship contact. A contact is distinct from a channel and represents a "user"
@@ -109,7 +109,7 @@ public class Contact extends AirshipComponent {
      */
     public Contact(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                    @NonNull AirshipRuntimeConfig runtimeConfig, @NonNull PrivacyManager privacyManager,
-                   @NonNull AirshipChannel airshipChannel){
+                   @NonNull AirshipChannel airshipChannel) {
         this(context, preferenceDataStore, JobDispatcher.shared(context), privacyManager,
                 airshipChannel, new ContactApiClient(runtimeConfig), GlobalActivityMonitor.shared(context),
                 Clock.DEFAULT_CLOCK, new CachedValue<>());
@@ -242,8 +242,8 @@ public class Contact extends AirshipComponent {
     }
 
     /**
-     * @hide
      * @param isEnabled {@code true} if the component is enabled, otherwise {@code false}.
+     * @hide
      */
     @Override
     protected void onComponentEnableChange(boolean isEnabled) {
@@ -258,7 +258,7 @@ public class Contact extends AirshipComponent {
      *
      * @param externalId The channel's identifier.
      */
-    public void identify(@NonNull @Size(min=1, max = 128) String externalId) {
+    public void identify(@NonNull @Size(min = 1, max = 128) String externalId) {
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
             Logger.debug("Contact - Contacts is disabled, ignoring contact identifying.");
             return;
@@ -309,6 +309,7 @@ public class Contact extends AirshipComponent {
 
     /**
      * Gets the named user ID.
+     *
      * @return The named user ID, or null if it is unknown.
      */
     @Nullable
@@ -533,11 +534,15 @@ public class Contact extends AirshipComponent {
      * Dispatches a job to update the contact.
      */
     private void dispatchContactUpdateJob() {
+        dispatchContactUpdateJob(JobInfo.KEEP);
+    }
+
+    private void dispatchContactUpdateJob(@JobInfo.ConflictStrategy int conflictStrategy) {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(ACTION_UPDATE_CONTACT)
                                  .setNetworkAccessRequired(true)
                                  .setAirshipComponent(Contact.class)
-                                 .setConflictStrategy(JobInfo.KEEP)
+                                 .setConflictStrategy(conflictStrategy)
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);
@@ -583,7 +588,7 @@ public class Contact extends AirshipComponent {
                 return JobInfo.JOB_RETRY;
             } else {
                 removeFirstOperation();
-                dispatchContactUpdateJob();
+                dispatchContactUpdateJob(JobInfo.REPLACE);
                 return JobInfo.JOB_FINISHED;
             }
         } catch (RequestException e) {
@@ -592,40 +597,41 @@ public class Contact extends AirshipComponent {
         } catch (IllegalStateException e) {
             Logger.error("Unable to process operation %s, skipping.", nextOperation, e);
             removeFirstOperation();
-            dispatchContactUpdateJob();
+            dispatchContactUpdateJob(JobInfo.REPLACE);
             return JobInfo.JOB_FINISHED;
         }
     }
 
     @Nullable
-    private ContactOperation prepareNextOperation()  {
+    private ContactOperation prepareNextOperation() {
         ContactOperation next = null;
 
         synchronized (operationLock) {
             List<ContactOperation> operations = getOperations();
 
             while (!operations.isEmpty()) {
-                 ContactOperation first = operations.remove(0);
-                if (!shouldSkipOperation(first)) {
+                ContactOperation first = operations.remove(0);
+                if (!shouldSkipOperation(first, true)) {
                     next = first;
                     break;
                 }
             }
 
             if (next != null) {
-                switch(next.getType()) {
+                switch (next.getType()) {
                     case ContactOperation.OPERATION_UPDATE:
                         // Collapse any sequential updates (ignoring anything that can be skipped inbetween)
                         while (!operations.isEmpty()) {
-                            ContactOperation first = operations.get(0);
-                            if (shouldSkipOperation(first)) {
+                            ContactOperation nextNext = operations.get(0);
+
+                            if (shouldSkipOperation(nextNext, false)) {
                                 operations.remove(0);
                                 continue;
                             }
 
-                            if (first.getType().equals(ContactOperation.OPERATION_UPDATE)) {
-                                ContactOperation.UpdatePayload firstPayload = first.coercePayload();
-                                ContactOperation.UpdatePayload nextPayload =  next.coercePayload();
+                            if (nextNext.getType().equals(ContactOperation.OPERATION_UPDATE)) {
+                                ContactOperation.UpdatePayload firstPayload = nextNext.coercePayload();
+                                ContactOperation.UpdatePayload nextPayload = next.coercePayload();
 
                                 List<TagGroupsMutation> combinedTags = new ArrayList<>();
                                 combinedTags.addAll(firstPayload.getTagGroupMutations());
@@ -652,13 +658,14 @@ public class Contact extends AirshipComponent {
                         ContactIdentity contactIdentity = getLastContactIdentity();
                         if (isContactIdRefreshed && (contactIdentity == null || !contactIdentity.isAnonymous())) {
                             while (!operations.isEmpty()) {
-                                ContactOperation first = operations.get(0);
-                                if (shouldSkipOperation(first)) {
+                                ContactOperation nextNext = operations.get(0);
+
+                                if (shouldSkipOperation(nextNext, false)) {
                                     operations.remove(0);
                                     continue;
                                 }
 
-                                if (first.getType().equals(ContactOperation.OPERATION_IDENTIFY)) {
+                                if (nextNext.getType().equals(ContactOperation.OPERATION_IDENTIFY)) {
                                     next = operations.remove(0);
                                     continue;
                                 }
@@ -686,9 +693,10 @@ public class Contact extends AirshipComponent {
         return next;
     }
 
-    private boolean shouldSkipOperation(ContactOperation operation) {
+    private boolean shouldSkipOperation(@NonNull ContactOperation operation, boolean isNext) {
+
         ContactIdentity contactIdentity = getLastContactIdentity();
-        switch(operation.getType()) {
+        switch (operation.getType()) {
             case ContactOperation.OPERATION_UPDATE:
             case ContactOperation.OPERATION_REGISTER_EMAIL:
             case ContactOperation.OPERATION_REGISTER_SMS:
@@ -702,10 +710,11 @@ public class Contact extends AirshipComponent {
                 ContactOperation.IdentifyPayload payload = operation.coercePayload();
                 return isContactIdRefreshed && payload.getIdentifier().equals(contactIdentity.getNamedUserId());
             case ContactOperation.OPERATION_RESET:
-                if (contactIdentity == null) {
+                if (contactIdentity == null || !isNext) {
                     return false;
                 }
-                return contactIdentity.isAnonymous() && getAnonContactData() != null;
+                return contactIdentity.isAnonymous() && getAnonContactData() == null;
+
             case ContactOperation.OPERATION_RESOLVE:
                 return isContactIdRefreshed;
         }
@@ -731,6 +740,7 @@ public class Contact extends AirshipComponent {
                         updatePayload.getAttributeMutations(),
                         updatePayload.getSubscriptionListMutations()
                 );
+
                 if (updateResponse.isSuccessful() && lastContactIdentity.isAnonymous()) {
                     updateAnonData(updatePayload, null);
 
@@ -746,6 +756,7 @@ public class Contact extends AirshipComponent {
                         }
                     }
                 }
+
                 if (updateResponse.isSuccessful() && !updatePayload.getSubscriptionListMutations().isEmpty()) {
                     subscriptionListCache.invalidate();
                 }
@@ -898,7 +909,6 @@ public class Contact extends AirshipComponent {
 
     private void updateAnonData(@Nullable ContactOperation.UpdatePayload payload,
                                 @Nullable AssociatedChannel channel) {
-
         Map<String, JsonValue> attributes = new HashMap<>();
         Map<String, Set<String>> tagGroups = new HashMap<>();
         List<AssociatedChannel> channels = new ArrayList<>();
@@ -913,7 +923,7 @@ public class Contact extends AirshipComponent {
         }
 
         if (payload != null) {
-            for(AttributeMutation mutation : payload.getAttributeMutations()) {
+            for (AttributeMutation mutation : payload.getAttributeMutations()) {
                 switch (mutation.action) {
                     case AttributeMutation.ATTRIBUTE_ACTION_SET:
                         attributes.put(mutation.name, mutation.value);
@@ -925,11 +935,11 @@ public class Contact extends AirshipComponent {
                 }
             }
 
-            for(TagGroupsMutation mutation : payload.getTagGroupMutations()) {
+            for (TagGroupsMutation mutation : payload.getTagGroupMutations()) {
                 mutation.apply(tagGroups);
             }
 
-            for(ScopedSubscriptionListMutation mutation : payload.getSubscriptionListMutations()) {
+            for (ScopedSubscriptionListMutation mutation : payload.getSubscriptionListMutations()) {
                 mutation.apply(subscriptionLists);
             }
         }
@@ -963,6 +973,7 @@ public class Contact extends AirshipComponent {
 
     /**
      * Adds an attribute listener.
+     *
      * @param attributeListener The listener.
      * @hide
      */
@@ -973,6 +984,7 @@ public class Contact extends AirshipComponent {
 
     /**
      * Removes an attribute listener.
+     *
      * @param attributeListener The listener.
      * @hide
      */
@@ -983,6 +995,7 @@ public class Contact extends AirshipComponent {
 
     /**
      * Adds a tag group listener.
+     *
      * @param tagGroupListener The listener.
      * @hide
      */
@@ -993,6 +1006,7 @@ public class Contact extends AirshipComponent {
 
     /**
      * Adds a tag group listener.
+     *
      * @param tagGroupListener The listener.
      * @hide
      */
@@ -1003,6 +1017,7 @@ public class Contact extends AirshipComponent {
 
     /**
      * Removes a contact change listener.
+     *
      * @param changeListener The listener.
      * @hide
      */
@@ -1013,6 +1028,7 @@ public class Contact extends AirshipComponent {
 
     /**
      * Removes a contact change listener.
+     *
      * @param changeListener The listener.
      * @hide
      */
@@ -1096,7 +1112,6 @@ public class Contact extends AirshipComponent {
         return getSubscriptionLists(true);
     }
 
-
     /**
      * Returns the current set of subscription lists for the current contact, optionally applying pending
      * subscription list changes that will be applied during the next contact update.
@@ -1179,4 +1194,5 @@ public class Contact extends AirshipComponent {
 
         return result;
     }
+
 }

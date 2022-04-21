@@ -30,7 +30,6 @@ import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.util.CachedValue;
 import com.urbanairship.util.Clock;
@@ -232,17 +231,8 @@ public class AirshipChannel extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected void onAirshipReady(@NonNull UAirship airship) {
         super.onAirshipReady(airship);
-
-        localeManager.addListener(new LocaleChangedListener() {
-            @Override
-            public void onLocaleChanged(@NonNull Locale locale) {
-                dispatchUpdateJob();
-            }
-        });
-
-        if (getId() != null || !channelCreationDelayEnabled) {
-            dispatchUpdateJob();
-        }
+        localeManager.addListener(locale -> dispatchUpdateJob());
+        dispatchUpdateJob();
     }
 
     /**
@@ -271,9 +261,7 @@ public class AirshipChannel extends AirshipComponent {
     @Override
     public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (ACTION_UPDATE_CHANNEL.equals(jobInfo.getAction())) {
-            String channelId = getId();
-
-            if (channelId == null && (channelCreationDelayEnabled || !privacyManager.isAnyFeatureEnabled())) {
+            if (!isRegistrationAllowed()) {
                 Logger.debug("Channel registration is currently disabled.");
                 return JobInfo.JOB_FINISHED;
             }
@@ -305,9 +293,7 @@ public class AirshipChannel extends AirshipComponent {
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onComponentEnableChange(boolean isEnabled) {
-        if (isEnabled && privacyManager.isAnyFeatureEnabled()) {
-            dispatchUpdateJob();
-        }
+        dispatchUpdateJob();
     }
 
     /**
@@ -317,10 +303,7 @@ public class AirshipChannel extends AirshipComponent {
      */
     @Override
     public void onUrlConfigUpdated() {
-        if (privacyManager.isAnyFeatureEnabled()) {
-            // If the channel already exists, perform a full update. Otherwise create it.
-            dispatchUpdateJob(true);
-        }
+        dispatchUpdateJob(true, JobInfo.REPLACE);
     }
 
     /**
@@ -692,9 +675,7 @@ public class AirshipChannel extends AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void updateRegistration() {
-        if (getId() != null || privacyManager.isAnyFeatureEnabled()) {
-            dispatchUpdateJob();
-        }
+        dispatchUpdateJob();
     }
 
     /**
@@ -940,6 +921,7 @@ public class AirshipChannel extends AirshipComponent {
                 getContext().sendBroadcast(channelCreatedIntent);
             }
 
+            dispatchUpdateJob(false, JobInfo.REPLACE);
             return JobInfo.JOB_FINISHED;
         }
 
@@ -1020,8 +1002,10 @@ public class AirshipChannel extends AirshipComponent {
             // Set non-minimized payload as the last sent version, for future comparison
             setLastRegistrationPayload(payload);
             for (AirshipChannelListener listener : airshipChannelListeners) {
-                listener.onChannelUpdated(getId());
+                listener.onChannelUpdated(channelId);
             }
+
+            dispatchUpdateJob(false, JobInfo.REPLACE);
             return JobInfo.JOB_FINISHED;
         }
 
@@ -1048,18 +1032,19 @@ public class AirshipChannel extends AirshipComponent {
      * Dispatches a job to update registration.
      */
     private void dispatchUpdateJob() {
-        if (getId() != null || privacyManager.isAnyFeatureEnabled()) {
-            dispatchUpdateJob(false);
-        }
+        dispatchUpdateJob(false, JobInfo.KEEP);
     }
 
     /**
      * Dispatches a job to update registration.
      *
      * @param forceFullUpdate {@code true} to perform a full update, {@code false} to minimize the update payload.
+     * @param conflictStrategy The conflict strategy.
      */
-    private void dispatchUpdateJob(boolean forceFullUpdate) {
-        int conflictStrategy = forceFullUpdate ? JobInfo.REPLACE : JobInfo.KEEP;
+    private void dispatchUpdateJob(boolean forceFullUpdate, @JobInfo.ConflictStrategy int conflictStrategy) {
+        if (!isRegistrationAllowed()) {
+            return;
+        }
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(ACTION_UPDATE_CHANNEL)
@@ -1072,5 +1057,17 @@ public class AirshipChannel extends AirshipComponent {
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);
+    }
+
+    private boolean isRegistrationAllowed() {
+        if (!isComponentEnabled()) {
+            return false;
+        }
+
+        if (getId() == null && (channelCreationDelayEnabled || !privacyManager.isAnyFeatureEnabled())) {
+            return false;
+        }
+
+        return true;
     }
 }
