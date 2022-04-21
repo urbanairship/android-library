@@ -217,8 +217,9 @@ public final class LayoutUtils {
 
         if (!UAStringUtil.isEmpty(textInput.getHintText())) {
             editText.setHint(textInput.getHintText());
-            if (textInput.getHintColor() != null) {
-                editText.setHintTextColor(textInput.getHintColor().resolve(editText.getContext()));
+            Color hintColor = textInput.getTextAppearance().getHintColor();
+            if (hintColor != null) {
+                editText.setHintTextColor(hintColor.resolve(editText.getContext()));
             }
         }
 

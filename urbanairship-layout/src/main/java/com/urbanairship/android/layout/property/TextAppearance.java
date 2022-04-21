@@ -5,12 +5,14 @@ package com.urbanairship.android.layout.property;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.reactive.Function;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class TextAppearance {
     @NonNull
@@ -23,6 +25,14 @@ public class TextAppearance {
     private final List<TextStyle> textStyles;
     @NonNull
     private final List<String> fontFamilies;
+
+    protected TextAppearance(@NonNull TextAppearance textAppearance) {
+        this.color = textAppearance.color;
+        this.fontSize = textAppearance.fontSize;
+        this.alignment = textAppearance.alignment;
+        this.textStyles = textAppearance.textStyles;
+        this.fontFamilies = textAppearance.fontFamilies;
+    }
 
     public TextAppearance(
         @NonNull Color color,

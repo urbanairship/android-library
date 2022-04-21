@@ -8,7 +8,7 @@ import com.urbanairship.android.layout.event.TextInputEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.FormInputType;
-import com.urbanairship.android.layout.property.TextAppearance;
+import com.urbanairship.android.layout.property.TextInputTextAppearance;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.json.JsonException;
@@ -26,9 +26,7 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
     @NonNull
     private final FormInputType inputType;
     @NonNull
-    private final TextAppearance textAppearance;
-    @Nullable
-    private final Color hintColor;
+    private final TextInputTextAppearance textAppearance;
     @Nullable
     private final String hintText;
     @Nullable
@@ -41,9 +39,8 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
     public TextInputModel(
         @NonNull String identifier,
         @NonNull FormInputType inputType,
-        @NonNull TextAppearance textAppearance,
+        @NonNull TextInputTextAppearance textAppearance,
         @Nullable String hintText,
-        @Nullable Color hintColor,
         @Nullable String contentDescription,
         boolean isRequired,
         @Nullable Color backgroundColor,
@@ -55,7 +52,6 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
         this.inputType = inputType;
         this.textAppearance = textAppearance;
         this.hintText = hintText;
-        this.hintColor = hintColor;
         this.contentDescription = contentDescription;
         this.isRequired = isRequired;
     }
@@ -67,7 +63,7 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
         String hintText = json.opt("place_holder").getString();
         Color hintColor = Color.fromJsonField(json, "place_holder_text_color");
         JsonMap textAppearanceJson = json.opt("text_appearance").optMap();
-        TextAppearance textAppearance = TextAppearance.fromJson(textAppearanceJson);
+        TextInputTextAppearance textAppearance = TextInputTextAppearance.fromJson(textAppearanceJson);
         String identifier = Identifiable.identifierFromJson(json);
         String contentDescription = Accessible.contentDescriptionFromJson(json);
         boolean required = Validatable.requiredFromJson(json);
@@ -79,7 +75,6 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
             inputType,
             textAppearance,
             hintText,
-            hintColor,
             contentDescription,
             required,
             backgroundColor,
@@ -120,13 +115,8 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
     }
 
     @NonNull
-    public TextAppearance getTextAppearance() {
+    public TextInputTextAppearance getTextAppearance() {
         return textAppearance;
-    }
-
-    @Nullable
-    public Color getHintColor() {
-        return hintColor;
     }
 
     @Nullable
