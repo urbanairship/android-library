@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
@@ -8,8 +8,8 @@
     <string name="ua_notification_button_buy_now">Kup teraz</string>
     <string name="ua_notification_button_follow">Obserwuj</string>
     <string name="ua_notification_button_unfollow">Przestań obserwować</string>
-    <string name="ua_notification_button_opt_in">Zgadzam się</string>
-    <string name="ua_notification_button_opt_out">Nie zgadzam się</string>
+    <string name="ua_notification_button_opt_in">Subskrybuj</string>
+    <string name="ua_notification_button_opt_out">Zrezygnuj</string>
     <string name="ua_notification_button_remind">Przypomnij mi później</string>
     <string name="ua_notification_button_share">Udostępnij</string>
     <string name="ua_notification_button_accept">Akceptuj</string>
@@ -17,25 +17,22 @@
     <string name="ua_notification_button_download">Pobierz</string>
     <string name="ua_notification_button_more_like">Więcej podobnych treści</string>
     <string name="ua_notification_button_less_like">Mniej podobnych treści</string>
-    <string name="ua_notification_button_like">Podoba mi się</string>
-    <string name="ua_notification_button_dislike">Nie podoba mi się</string>
+    <string name="ua_notification_button_like">Polub</string>
+    <string name="ua_notification_button_dislike">Cofnij polubienie</string>
     <string name="ua_notification_button_copy">Kopiuj</string>
     <string name="ua_notification_button_save">Zapisz</string>
     <string name="ua_notification_button_add_to_calendar">Dodaj do kalendarza</string>
     <string name="ua_notification_button_add">Dodaj</string>
     <string name="ua_notification_button_tell_me_more">Więcej informacji</string>
-    <string name="ua_notification_button_send_info">Wyślij info</string>
+    <string name="ua_notification_button_send_info">Wyślij informacje</string>
     <string name="ua_notification_button_rate_now">Oceń teraz</string>
     <string name="ua_notification_button_search">Szukaj</string>
     <string name="ua_notification_button_book_now">Rezerwuj teraz</string>
-
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">Udostępnij</string>
-
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Kanał Airship</string>
+    <string name="ua_channel_notification_ticker">Kanał sterowca</string>
     <string name="ua_channel_copy_toast">Skopiowano kanał do schowka!</string>
-
     <!-- Message Center -->
     <string name="ua_message_center_title">Centrum wiadomości</string>
     <string name="ua_empty_message_list">Brak wiadomości</string>
@@ -51,7 +48,6 @@
     <string name="ua_delete">Usuń</string>
     <string name="ua_mc_no_longer_available">Wybrana wiadomość nie jest już dostępna.</string>
     <string name="ua_content_error">Błąd treści</string>
-
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
         <item quantity="one">Wybrano: <xliff:g example="1" id="count">%1$d</xliff:g></item>
@@ -59,21 +55,32 @@
         <item quantity="many">Wybrano: <xliff:g example="3" id="count">%1$d</xliff:g></item>
         <item quantity="other">Wybrano: <xliff:g example="3" id="count">%1$d</xliff:g></item>
     </plurals>
-
     <!-- General -->
     <string name="ua_refresh">Odśwież</string>
     <string name="ua_open">Otwórz</string>
-
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Oceń</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Nie, dziękuję</string>
-    <string name="ua_rate_app_action_default_title">Podoba Ci się aplikacja <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
-    <string name="ua_rate_app_action_default_body">Dotknij <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>, aby ocenić ją w sklepie z aplikacjami.</string>
+    <string name="ua_rate_app_action_default_title">Podoba Ci się <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Kliknij <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>, aby ocenić w sklepie z aplikacjami.</string>
     <string name="ua_rate_app_action_generic_display_name">Ta aplikacja</string>
-
     <!-- Channels -->
     <string name="ua_default_channel_name">Powiadomienia</string>
     <string name="ua_default_channel_description">Ogólne aktualizacje aplikacji</string>
     <string name="ua_channel_id">ID kanału</string>
-
+    <string name="ua_service_channel_name">Powiadomienia serwisowe</string>
+    <string name="ua_service_channel_description">Wiadomości serwisowe</string>
+    <string name="ua_service_channel_id">Identyfikator kanału usług</string>
+    <string name="ua_news_channel_name">Powiadomienia o nowościach</string>
+    <string name="ua_news_channel_description">Wiadomości o nowościach</string>
+    <string name="ua_news_channel_id">Identyfikator kanału wiadomości</string>
+    <string name="ua_urgent_channel_name">Pilne powiadomienia</string>
+    <string name="ua_urgent_channel_description">Pilne wiadomości</string>
+    <string name="ua_urgent_channel_id">Pilny identyfikator kanału</string>
+    <string name="ua_low_priority_channel_name">Powiadomienia o niskim priorytecie</string>
+    <string name="ua_low_priority_channel_description">Wiadomości o niskim priorytecie</string>
+    <string name="ua_low_priority_channel_id">Identyfikator kanału o niskim priorytecie</string>
+    <string name="ua_min_priority_channel_name">Powiadomienia o minimalnym priorytecie</string>
+    <string name="ua_min_priority_channel_description">Komunikaty o minimalnym priorytecie</string>
+    <string name="ua_min_priority_channel_id">Identyfikator kanału minimalnego</string>
 </resources>

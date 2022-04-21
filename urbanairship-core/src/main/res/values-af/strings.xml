@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Ja</string>
+    <string name="ua_notification_button_no">Geen</string>
+    <string name="ua_notification_button_shop_now">Koop dit nou</string>
+    <string name="ua_notification_button_buy_now">Koop nou</string>
+    <string name="ua_notification_button_follow">Volg</string>
+    <string name="ua_notification_button_unfollow">Ontvolg</string>
+    <string name="ua_notification_button_opt_in">Teken in</string>
+    <string name="ua_notification_button_opt_out">Onttrek</string>
+    <string name="ua_notification_button_remind">Herinner my later</string>
+    <string name="ua_notification_button_share">Deel</string>
+    <string name="ua_notification_button_accept">Aanvaar</string>
+    <string name="ua_notification_button_decline">Weier</string>
+    <string name="ua_notification_button_download">Aflaai</string>
+    <string name="ua_notification_button_more_like">Meer soos hierdie</string>
+    <string name="ua_notification_button_less_like">Minder soos hierdie</string>
+    <string name="ua_notification_button_like">Hou van</string>
+    <string name="ua_notification_button_dislike">Hou nie van nie</string>
+    <string name="ua_notification_button_copy">Kopieer</string>
+    <string name="ua_notification_button_save">Stoor</string>
+    <string name="ua_notification_button_add_to_calendar">Voeg by Kalender</string>
+    <string name="ua_notification_button_add">Voeg by</string>
+    <string name="ua_notification_button_tell_me_more">Vertel my meer</string>
+    <string name="ua_notification_button_send_info">Stuur inligting</string>
+    <string name="ua_notification_button_rate_now">Beoordeel nou</string>
+    <string name="ua_notification_button_search">Soek</string>
+    <string name="ua_notification_button_book_now">Bespreek nou</string>
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Deel</string>
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Lugskipkanaal</string>
+    <string name="ua_channel_copy_toast">Kanaal is na knipbord gekopieer!</string>
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Boodskapsentrum</string>
+    <string name="ua_empty_message_list">Geen boodskappe nie</string>
+    <string name="ua_message_not_selected">Geen boodskappe gekies nie</string>
+    <string name="ua_mc_failed_to_load">Kan nie boodskap laai nie. Probeer asseblief weer later.</string>
+    <string name="ua_retry_button">Probeer weer</string>
+    <string name="ua_ok">OK</string>
+    <string name="ua_cancel">Kanselleer</string>
+    <string name="ua_select_none">Kies Geen</string>
+    <string name="ua_select_all">Kies Alles</string>
+    <string name="ua_connection_error">Konneksiefout</string>
+    <string name="ua_mark_read">Merk Lees</string>
+    <string name="ua_delete">Skrap</string>
+    <string name="ua_mc_no_longer_available">Die geselekteerde boodskap is nie meer beskikbaar nie.</string>
+    <string name="ua_content_error">Inhoudfout</string>
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> gekies</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> gekies</item>
+    </plurals>
+    <!-- General -->
+    <string name="ua_refresh">Verfris</string>
+    <string name="ua_open">Maak oop</string>
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">Koers</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Nee dankie</string>
+    <string name="ua_rate_app_action_default_title">Geniet jy <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Tik op <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> om dit in die toepassingwinkel te gradeer.</string>
+    <string name="ua_rate_app_action_generic_display_name">Hierdie toepassing</string>
+    <!-- Channels -->
+    <string name="ua_default_channel_name">Kennisgewings</string>
+    <string name="ua_default_channel_description">Algemene toepassingopdaterings</string>
+    <string name="ua_channel_id">Kanaal-ID</string>
+    <string name="ua_service_channel_name">Dienskennisgewings</string>
+    <string name="ua_service_channel_description">Diensboodskappe</string>
+    <string name="ua_service_channel_id">Dienskanaal-ID</string>
+    <string name="ua_news_channel_name">Nuuskennisgewings</string>
+    <string name="ua_news_channel_description">Nuusboodskappe</string>
+    <string name="ua_news_channel_id">Nuuskanaal-ID</string>
+    <string name="ua_urgent_channel_name">Dringende kennisgewings</string>
+    <string name="ua_urgent_channel_description">Dringende boodskappe</string>
+    <string name="ua_urgent_channel_id">Dringende kanaal-ID</string>
+    <string name="ua_low_priority_channel_name">Lae prioriteit kennisgewings</string>
+    <string name="ua_low_priority_channel_description">Boodskappe met lae prioriteit</string>
+    <string name="ua_low_priority_channel_id">Kanaal-ID met lae prioriteit</string>
+    <string name="ua_min_priority_channel_name">Minimum prioriteit Kennisgewings</string>
+    <string name="ua_min_priority_channel_description">Minimum prioriteit Boodskappe</string>
+    <string name="ua_min_priority_channel_id">Minimum kanaal-ID</string>
+</resources>

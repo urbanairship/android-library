@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
@@ -17,25 +17,22 @@
     <string name="ua_notification_button_download">ダウンロード</string>
     <string name="ua_notification_button_more_like">さらに似ている項目</string>
     <string name="ua_notification_button_less_like">もっと違う項目</string>
-    <string name="ua_notification_button_like">いいね</string>
-    <string name="ua_notification_button_dislike">よくない</string>
+    <string name="ua_notification_button_like">いいね！</string>
+    <string name="ua_notification_button_dislike">いいね！を取り消す</string>
     <string name="ua_notification_button_copy">コピーする</string>
     <string name="ua_notification_button_save">保存する</string>
-    <string name="ua_notification_button_add_to_calendar">カレンダーに追加する</string>
+    <string name="ua_notification_button_add_to_calendar">カレンダーに追加</string>
     <string name="ua_notification_button_add">追加する</string>
     <string name="ua_notification_button_tell_me_more">詳しく教えてください</string>
-    <string name="ua_notification_button_send_info">情報を送る</string>
+    <string name="ua_notification_button_send_info">情報を送信する</string>
     <string name="ua_notification_button_rate_now">今すぐ評価する</string>
     <string name="ua_notification_button_search">検索する</string>
     <string name="ua_notification_button_book_now">今すぐ予約する</string>
-
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
-    <string name="ua_share_dialog_title">共有しよう</string>
-
+    <string name="ua_share_dialog_title">共有</string>
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Airship チャンネル</string>
+    <string name="ua_channel_notification_ticker">飛行船チャンネル</string>
     <string name="ua_channel_copy_toast">チャンネルがクリップボードにコピーされました！</string>
-
     <!-- Message Center -->
     <string name="ua_message_center_title">メッセージ センター</string>
     <string name="ua_empty_message_list">メッセージはありません</string>
@@ -49,28 +46,38 @@
     <string name="ua_connection_error">接続エラー</string>
     <string name="ua_mark_read">既読にする</string>
     <string name="ua_delete">削除する</string>
-    <string name="ua_mc_no_longer_available">選択したメッセージは使用できなくなりました。</string>
+    <string name="ua_mc_no_longer_available">選択したメッセージは使用できなくなります。</string>
     <string name="ua_content_error">コンテンツエラー</string>
-
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g>が選択されています</item>
     </plurals>
-
     <!-- General -->
-    <string name="ua_refresh">リフレッシュ</string>
+    <string name="ua_refresh">更新</string>
     <string name="ua_open">開く</string>
-
     <!-- Rate App Action -->
-    <string name="ua_rate_app_action_default_rate_positive_button">レート</string>
-    <string name="ua_rate_app_action_default_rate_negative_button">結構です</string>
+    <string name="ua_rate_app_action_default_rate_positive_button">評価</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">いえ結構です</string>
     <string name="ua_rate_app_action_default_title"><xliff:g example="this App" id="app_name">%1$2s</xliff:g>を楽しんでいますか？</string>
-    <string name="ua_rate_app_action_default_body"><xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>をタップしてアプリストアで評価しましょう。</string>
+    <string name="ua_rate_app_action_default_body"><xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>をタップして、アプリストアで評価します。</string>
     <string name="ua_rate_app_action_generic_display_name">このアプリ</string>
-
     <!-- Channels -->
     <string name="ua_default_channel_name">通知</string>
-    <string name="ua_default_channel_description">一般的なアプリのアップデート</string>
-    <string name="ua_channel_id">チャンネルID</string>
-
+    <string name="ua_default_channel_description">一般的なアプリの更新</string>
+    <string name="ua_channel_id">チャンネル ID</string>
+    <string name="ua_service_channel_name">サービス通知</string>
+    <string name="ua_service_channel_description">サービスメッセージ</string>
+    <string name="ua_service_channel_id">サービスチャネル ID</string>
+    <string name="ua_news_channel_name">ニュース通知</string>
+    <string name="ua_news_channel_description">ニュースメッセージ</string>
+    <string name="ua_news_channel_id">ニュースチャンネル ID</string>
+    <string name="ua_urgent_channel_name">緊急通知</string>
+    <string name="ua_urgent_channel_description">緊急メッセージ</string>
+    <string name="ua_urgent_channel_id">緊急チャンネル ID</string>
+    <string name="ua_low_priority_channel_name">優先度の低い通知</string>
+    <string name="ua_low_priority_channel_description">優先度の低いメッセージ</string>
+    <string name="ua_low_priority_channel_id">優先度の低いチャネル ID</string>
+    <string name="ua_min_priority_channel_name">最小優先度の通知</string>
+    <string name="ua_min_priority_channel_description">最小優先度メッセージ</string>
+    <string name="ua_min_priority_channel_id">最小チャネル ID</string>
 </resources>

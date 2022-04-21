@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">da</string>
+    <string name="ua_notification_button_no">št</string>
+    <string name="ua_notification_button_shop_now">Nakupujte zdaj</string>
+    <string name="ua_notification_button_buy_now">Kupi zdaj</string>
+    <string name="ua_notification_button_follow">Sledite</string>
+    <string name="ua_notification_button_unfollow">Prekliči spremljanje</string>
+    <string name="ua_notification_button_opt_in">Privolitev</string>
+    <string name="ua_notification_button_opt_out">Odjava</string>
+    <string name="ua_notification_button_remind">Opomni me kasneje</string>
+    <string name="ua_notification_button_share">Deliti</string>
+    <string name="ua_notification_button_accept">Sprejmi</string>
+    <string name="ua_notification_button_decline">Zavrni</string>
+    <string name="ua_notification_button_download">Prenesi</string>
+    <string name="ua_notification_button_more_like">Več takega</string>
+    <string name="ua_notification_button_less_like">Manj takega</string>
+    <string name="ua_notification_button_like">Všeč mi je</string>
+    <string name="ua_notification_button_dislike">Ne maram</string>
+    <string name="ua_notification_button_copy">Kopirati</string>
+    <string name="ua_notification_button_save">Shrani</string>
+    <string name="ua_notification_button_add_to_calendar">Dodaj v koledar</string>
+    <string name="ua_notification_button_add">Dodaj</string>
+    <string name="ua_notification_button_tell_me_more">Povej mi več</string>
+    <string name="ua_notification_button_send_info">Pošlji informacije</string>
+    <string name="ua_notification_button_rate_now">Oceni zdaj</string>
+    <string name="ua_notification_button_search">Iskanje</string>
+    <string name="ua_notification_button_book_now">Rezervirajte zdaj</string>
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Deliti</string>
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Kanal zračne ladje</string>
+    <string name="ua_channel_copy_toast">Kanal je kopiran v odložišče!</string>
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Center za sporočila</string>
+    <string name="ua_empty_message_list">Brez sporočil</string>
+    <string name="ua_message_not_selected">Izbrano ni nobeno sporočilo</string>
+    <string name="ua_mc_failed_to_load">Sporočila ni mogoče naložiti. Prosim poskusite kasneje.</string>
+    <string name="ua_retry_button">Poskusi znova</string>
+    <string name="ua_ok">v redu</string>
+    <string name="ua_cancel">Prekliči</string>
+    <string name="ua_select_none">Izberite Brez</string>
+    <string name="ua_select_all">Izberi vse</string>
+    <string name="ua_connection_error">Napaka v povezavi</string>
+    <string name="ua_mark_read">Označi kot prebrano</string>
+    <string name="ua_delete">Izbriši</string>
+    <string name="ua_mc_no_longer_available">Izbrano sporočilo ni več na voljo.</string>
+    <string name="ua_content_error">Napaka vsebine</string>
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> izbrano</item>
+        <item quantity="two"><xliff:g example="3" id="count">%1$d</xliff:g> izbrano</item>
+        <item quantity="few"><xliff:g example="3" id="count">%1$d</xliff:g> izbrano</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> izbrano</item>
+    </plurals>
+    <!-- General -->
+    <string name="ua_refresh">Osveži</string>
+    <string name="ua_open">Odprto</string>
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">Oceniti</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Ne hvala</string>
+    <string name="ua_rate_app_action_default_title">Uživate v storitvi <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Dotaknite se <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>, da ga ocenite v trgovini z aplikacijami.</string>
+    <string name="ua_rate_app_action_generic_display_name">Ta aplikacija</string>
+    <!-- Channels -->
+    <string name="ua_default_channel_name">Obvestila</string>
+    <string name="ua_default_channel_description">Splošne posodobitve aplikacij</string>
+    <string name="ua_channel_id">ID kanala</string>
+    <string name="ua_service_channel_name">Obvestila o storitvah</string>
+    <string name="ua_service_channel_description">Servisna sporočila</string>
+    <string name="ua_service_channel_id">ID storitvenega kanala</string>
+    <string name="ua_news_channel_name">Obvestila o novicah</string>
+    <string name="ua_news_channel_description">Sporočila novic</string>
+    <string name="ua_news_channel_id">ID kanala novic</string>
+    <string name="ua_urgent_channel_name">Nujna obvestila</string>
+    <string name="ua_urgent_channel_description">Nujna sporočila</string>
+    <string name="ua_urgent_channel_id">ID nujnega kanala</string>
+    <string name="ua_low_priority_channel_name">Obvestila nizke prioritete</string>
+    <string name="ua_low_priority_channel_description">Sporočila nizke prioritete</string>
+    <string name="ua_low_priority_channel_id">ID kanala z nizko prioriteto</string>
+    <string name="ua_min_priority_channel_name">Najmanjša prednostna obvestila</string>
+    <string name="ua_min_priority_channel_description">Najmanjša prednostna sporočila</string>
+    <string name="ua_min_priority_channel_id">Najmanjši ID kanala</string>
+</resources>

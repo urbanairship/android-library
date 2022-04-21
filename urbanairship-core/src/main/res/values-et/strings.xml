@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Jah</string>
+    <string name="ua_notification_button_no">Ei</string>
+    <string name="ua_notification_button_shop_now">Osta nüüd</string>
+    <string name="ua_notification_button_buy_now">Osta kohe</string>
+    <string name="ua_notification_button_follow">Follow</string>
+    <string name="ua_notification_button_unfollow">Jälgimise lõpetamine</string>
+    <string name="ua_notification_button_opt_in">Lubatud</string>
+    <string name="ua_notification_button_opt_out">Loobumine</string>
+    <string name="ua_notification_button_remind">Tuleta mulle hiljem meelde</string>
+    <string name="ua_notification_button_share">Jaga</string>
+    <string name="ua_notification_button_accept">Nõustu</string>
+    <string name="ua_notification_button_decline">Keeldumine</string>
+    <string name="ua_notification_button_download">Lae alla</string>
+    <string name="ua_notification_button_more_like">Rohkem sellist</string>
+    <string name="ua_notification_button_less_like">Vähem Sellist</string>
+    <string name="ua_notification_button_like">meeldib</string>
+    <string name="ua_notification_button_dislike">Ei meeldi</string>
+    <string name="ua_notification_button_copy">Kopeeri</string>
+    <string name="ua_notification_button_save">Salvesta</string>
+    <string name="ua_notification_button_add_to_calendar">Lisa kalendrisse</string>
+    <string name="ua_notification_button_add">Lisama</string>
+    <string name="ua_notification_button_tell_me_more">Räägi mulle rohkem</string>
+    <string name="ua_notification_button_send_info">Saada Info</string>
+    <string name="ua_notification_button_rate_now">Hinda kohe</string>
+    <string name="ua_notification_button_search">Otsing</string>
+    <string name="ua_notification_button_book_now">Broneeri kohe</string>
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Jaga</string>
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Õhulaeva kanal</string>
+    <string name="ua_channel_copy_toast">Kanal kopeeriti lõikelauale!</string>
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Sõnumikeskus</string>
+    <string name="ua_empty_message_list">Sõnumeid pole</string>
+    <string name="ua_message_not_selected">Ühtegi sõnumit pole valitud</string>
+    <string name="ua_mc_failed_to_load">Sõnumit ei saa laadida. Palun proovi hiljem uuesti.</string>
+    <string name="ua_retry_button">Uuesti proovima</string>
+    <string name="ua_ok">Okei</string>
+    <string name="ua_cancel">Tühista</string>
+    <string name="ua_select_none">Valige Puudub</string>
+    <string name="ua_select_all">Vali kõik</string>
+    <string name="ua_connection_error">Ühenduse viga</string>
+    <string name="ua_mark_read">Märgi loetuks</string>
+    <string name="ua_delete">Kustuta</string>
+    <string name="ua_mc_no_longer_available">Valitud sõnum pole enam saadaval.</string>
+    <string name="ua_content_error">Sisu viga</string>
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> valitud</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> valitud</item>
+    </plurals>
+    <!-- General -->
+    <string name="ua_refresh">Värskenda</string>
+    <string name="ua_open">Avatud</string>
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">Hinda</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Ei aitäh</string>
+    <string name="ua_rate_app_action_default_title">Kas teile meeldib <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Puudutage valikut <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>, et seda rakenduste poes hinnata.</string>
+    <string name="ua_rate_app_action_generic_display_name">See rakendus</string>
+    <!-- Channels -->
+    <string name="ua_default_channel_name">Märguanded</string>
+    <string name="ua_default_channel_description">Üldised rakenduste värskendused</string>
+    <string name="ua_channel_id">Kanali ID</string>
+    <string name="ua_service_channel_name">Teenuste teatised</string>
+    <string name="ua_service_channel_description">Teenussõnumid</string>
+    <string name="ua_service_channel_id">Teenuse kanali ID</string>
+    <string name="ua_news_channel_name">Uudiste teated</string>
+    <string name="ua_news_channel_description">Uudised Sõnumid</string>
+    <string name="ua_news_channel_id">Uudiste kanali ID</string>
+    <string name="ua_urgent_channel_name">Kiireloomulised teated</string>
+    <string name="ua_urgent_channel_description">Kiireloomulised teated</string>
+    <string name="ua_urgent_channel_id">Kiireloomuline kanali ID</string>
+    <string name="ua_low_priority_channel_name">Madala prioriteediga teatised</string>
+    <string name="ua_low_priority_channel_description">Madala prioriteediga sõnumid</string>
+    <string name="ua_low_priority_channel_id">Madala prioriteediga kanali ID</string>
+    <string name="ua_min_priority_channel_name">Minimaalse prioriteediga teatised</string>
+    <string name="ua_min_priority_channel_description">Minimaalse prioriteediga sõnumid</string>
+    <string name="ua_min_priority_channel_id">Minimaalne kanali ID</string>
+</resources>

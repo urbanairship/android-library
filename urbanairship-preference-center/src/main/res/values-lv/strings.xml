@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">Preferenču centrs</string>
+    <string name="ua_preference_center_empty">Nevar ielādēt preferences. Lūdzu, pamēģiniet vēlreiz vēlāk.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">Atjaunināšana neizdevās. Lūdzu, pamēģiniet vēlreiz vēlāk.</string>
+</resources>

@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Ndiyo</string>
+    <string name="ua_notification_button_no">Hapana</string>
+    <string name="ua_notification_button_shop_now">Nunua Sasa</string>
+    <string name="ua_notification_button_buy_now">Nunua Sasa</string>
+    <string name="ua_notification_button_follow">Fuata</string>
+    <string name="ua_notification_button_unfollow">Acha kufuata</string>
+    <string name="ua_notification_button_opt_in">Jijumuishe</string>
+    <string name="ua_notification_button_opt_out">Chagua kutoka</string>
+    <string name="ua_notification_button_remind">Nikumbushe Baadaye</string>
+    <string name="ua_notification_button_share">Shiriki</string>
+    <string name="ua_notification_button_accept">Kubali</string>
+    <string name="ua_notification_button_decline">Kataa</string>
+    <string name="ua_notification_button_download">Pakua</string>
+    <string name="ua_notification_button_more_like">Zaidi Kama Hii</string>
+    <string name="ua_notification_button_less_like">Kidogo Kama Hii</string>
+    <string name="ua_notification_button_like">Penda</string>
+    <string name="ua_notification_button_dislike">Kutopenda</string>
+    <string name="ua_notification_button_copy">Nakili</string>
+    <string name="ua_notification_button_save">Hifadhi</string>
+    <string name="ua_notification_button_add_to_calendar">Ongeza kwenye Kalenda</string>
+    <string name="ua_notification_button_add">Ongeza</string>
+    <string name="ua_notification_button_tell_me_more">Niambie zaidi</string>
+    <string name="ua_notification_button_send_info">Tuma Taarifa</string>
+    <string name="ua_notification_button_rate_now">Kadiria Sasa</string>
+    <string name="ua_notification_button_search">Tafuta</string>
+    <string name="ua_notification_button_book_now">Weka Nafasi Sasa</string>
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Shiriki</string>
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Kituo cha Airship</string>
+    <string name="ua_channel_copy_toast">Kituo kimenakiliwa kwenye ubao wa kunakili!</string>
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Kituo cha Ujumbe</string>
+    <string name="ua_empty_message_list">Hakuna ujumbe</string>
+    <string name="ua_message_not_selected">Hakuna ujumbe uliochaguliwa</string>
+    <string name="ua_mc_failed_to_load">Imeshindwa kupakia ujumbe. Tafadhali jaribu tena baadae.</string>
+    <string name="ua_retry_button">Jaribu tena</string>
+    <string name="ua_ok">SAWA</string>
+    <string name="ua_cancel">Ghairi</string>
+    <string name="ua_select_none">Chagua Hakuna</string>
+    <string name="ua_select_all">Chagua Zote</string>
+    <string name="ua_connection_error">Hitilafu ya Muunganisho</string>
+    <string name="ua_mark_read">Alama kuwa Imesomwa</string>
+    <string name="ua_delete">Futa</string>
+    <string name="ua_mc_no_longer_available">Ujumbe uliochaguliwa haupatikani tena.</string>
+    <string name="ua_content_error">Hitilafu ya Maudhui</string>
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> imechaguliwa</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> imechaguliwa</item>
+    </plurals>
+    <!-- General -->
+    <string name="ua_refresh">Onyesha upya</string>
+    <string name="ua_open">Fungua</string>
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">Kadiria</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Hapana, Asante</string>
+    <string name="ua_rate_app_action_default_title">Je, unafurahia <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Gusa <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> ili kuikadiria kwenye duka la programu.</string>
+    <string name="ua_rate_app_action_generic_display_name">Programu hii</string>
+    <!-- Channels -->
+    <string name="ua_default_channel_name">Arifa</string>
+    <string name="ua_default_channel_description">Sasisho za jumla za programu</string>
+    <string name="ua_channel_id">Kitambulisho cha Kituo</string>
+    <string name="ua_service_channel_name">Arifa za Huduma</string>
+    <string name="ua_service_channel_description">Ujumbe wa Huduma</string>
+    <string name="ua_service_channel_id">Kitambulisho cha Kituo cha Huduma</string>
+    <string name="ua_news_channel_name">Arifa za Habari</string>
+    <string name="ua_news_channel_description">Ujumbe wa Habari</string>
+    <string name="ua_news_channel_id">Kitambulisho cha Kituo cha Habari</string>
+    <string name="ua_urgent_channel_name">Arifa za Haraka</string>
+    <string name="ua_urgent_channel_description">Ujumbe wa Haraka</string>
+    <string name="ua_urgent_channel_id">Kitambulisho cha Haraka cha Kituo</string>
+    <string name="ua_low_priority_channel_name">Arifa za kipaumbele cha chini</string>
+    <string name="ua_low_priority_channel_description">Ujumbe wa kipaumbele cha chini</string>
+    <string name="ua_low_priority_channel_id">Kitambulisho cha Kituo kilichopewa kipaumbele cha chini</string>
+    <string name="ua_min_priority_channel_name">Arifa za kipaumbele</string>
+    <string name="ua_min_priority_channel_description">Kima cha chini cha Ujumbe wa Kipaumbele</string>
+    <string name="ua_min_priority_channel_id">Kitambulisho cha Chini cha Kituo</string>
+</resources>

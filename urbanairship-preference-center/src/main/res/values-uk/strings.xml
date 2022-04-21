@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">Центр параметрів</string>
+    <string name="ua_preference_center_empty">Не вдалося завантажити параметри. Будь-ласка, спробуйте пізніше.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">Помилка оновлення. Будь-ласка, спробуйте пізніше.</string>
+</resources>

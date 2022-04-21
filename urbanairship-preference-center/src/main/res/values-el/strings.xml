@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">Κέντρο προτιμήσεων</string>
+    <string name="ua_preference_center_empty">Δεν είναι δυνατή η φόρτωση των προτιμήσεων. Παρακαλώ δοκιμάστε ξανά αργότερα.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">Ενημέρωση απέτυχε. Παρακαλώ δοκιμάστε ξανά αργότερα.</string>
+</resources>

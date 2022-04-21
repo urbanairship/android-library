@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">مرکز ترجیحات</string>
+    <string name="ua_preference_center_empty">بارگیری تنظیمات برگزیده ممکن نیست. لطفاً بعداً دوباره امتحان کنید.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">به روز رسانی نا موفق بود. لطفاً بعداً دوباره امتحان کنید.</string>
+</resources>

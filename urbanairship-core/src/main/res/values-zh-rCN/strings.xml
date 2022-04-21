@@ -1,15 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">是</string>
     <string name="ua_notification_button_no">否</string>
-    <string name="ua_notification_button_shop_now">现在就出手吧！</string>
+    <string name="ua_notification_button_shop_now">现在就选购吧！</string>
     <string name="ua_notification_button_buy_now">立刻购买</string>
     <string name="ua_notification_button_follow">关注</string>
     <string name="ua_notification_button_unfollow">取消关注</string>
-    <string name="ua_notification_button_opt_in">选择参加</string>
-    <string name="ua_notification_button_opt_out">选择退出</string>
+    <string name="ua_notification_button_opt_in">参加</string>
+    <string name="ua_notification_button_opt_out">不参加</string>
     <string name="ua_notification_button_remind">稍后提醒我</string>
     <string name="ua_notification_button_share">分享</string>
     <string name="ua_notification_button_accept">接受</string>
@@ -25,21 +25,18 @@
     <string name="ua_notification_button_add">添加</string>
     <string name="ua_notification_button_tell_me_more">告诉我更多</string>
     <string name="ua_notification_button_send_info">发送信息</string>
-    <string name="ua_notification_button_rate_now">现在就评价吧</string>
+    <string name="ua_notification_button_rate_now">立即评价</string>
     <string name="ua_notification_button_search">搜索</string>
     <string name="ua_notification_button_book_now">现在预订</string>
-
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">分享</string>
-
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">城市飞艇通道</string>
-    <string name="ua_channel_copy_toast">通道已复制到剪贴板！</string>
-
+    <string name="ua_channel_notification_ticker">飞艇频道</string>
+    <string name="ua_channel_copy_toast">频道已复制到剪贴板！</string>
     <!-- Message Center -->
     <string name="ua_message_center_title">消息中心</string>
     <string name="ua_empty_message_list">无消息</string>
-    <string name="ua_message_not_selected">未选择消息</string>
+    <string name="ua_message_not_selected">未选择任何消息</string>
     <string name="ua_mc_failed_to_load">无法加载消息。请稍后再试。</string>
     <string name="ua_retry_button">重试</string>
     <string name="ua_ok">好</string>
@@ -51,26 +48,36 @@
     <string name="ua_delete">删除</string>
     <string name="ua_mc_no_longer_available">所选消息不再可用。</string>
     <string name="ua_content_error">内容错误</string>
-
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g>项已选</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> 项已选</item>
     </plurals>
-
     <!-- General -->
     <string name="ua_refresh">刷新</string>
     <string name="ua_open">打开</string>
-
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">评价</string>
     <string name="ua_rate_app_action_default_rate_negative_button">不用了，谢谢</string>
-    <string name="ua_rate_app_action_default_title">喜欢<xliff:g example="this App" id="app_name">%1$2s</xliff:g>？</string>
-    <string name="ua_rate_app_action_default_body">点击<xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>在应用程序商店进行评价。</string>
-    <string name="ua_rate_app_action_generic_display_name">这款应用程序</string>
-
+    <string name="ua_rate_app_action_default_title">喜欢 <xliff:g example="this App" id="app_name">%1$2s</xliff:g>吗？</string>
+    <string name="ua_rate_app_action_default_body">点按 <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> 以在应用商店对其进行评分。</string>
+    <string name="ua_rate_app_action_generic_display_name">此应用程序</string>
     <!-- Channels -->
     <string name="ua_default_channel_name">通知</string>
-    <string name="ua_default_channel_description">一般应用程序更新</string>
-    <string name="ua_channel_id">通道ID</string>
-
+    <string name="ua_default_channel_description">一般应用更新</string>
+    <string name="ua_channel_id">频道 ID</string>
+    <string name="ua_service_channel_name">服务通知</string>
+    <string name="ua_service_channel_description">服务消息</string>
+    <string name="ua_service_channel_id">服务频道 ID</string>
+    <string name="ua_news_channel_name">新闻通知</string>
+    <string name="ua_news_channel_description">新闻讯息</string>
+    <string name="ua_news_channel_id">新闻频道 ID</string>
+    <string name="ua_urgent_channel_name">紧急通知</string>
+    <string name="ua_urgent_channel_description">紧急消息</string>
+    <string name="ua_urgent_channel_id">紧急频道 ID</string>
+    <string name="ua_low_priority_channel_name">低优先级通知</string>
+    <string name="ua_low_priority_channel_description">低优先级消息</string>
+    <string name="ua_low_priority_channel_id">低优先级频道 ID</string>
+    <string name="ua_min_priority_channel_name">最低优先级通知</string>
+    <string name="ua_min_priority_channel_description">最低优先级消息</string>
+    <string name="ua_min_priority_channel_id">最小频道 ID</string>
 </resources>

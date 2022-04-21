@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">بله</string>
+    <string name="ua_notification_button_no">خیر</string>
+    <string name="ua_notification_button_shop_now">اکنون خرید کنید</string>
+    <string name="ua_notification_button_buy_now">هم اکنون خریداری کنید</string>
+    <string name="ua_notification_button_follow">دنبال کردن</string>
+    <string name="ua_notification_button_unfollow">لغو دنبال کردن</string>
+    <string name="ua_notification_button_opt_in">شرکت کنید</string>
+    <string name="ua_notification_button_opt_out">انصراف دهید</string>
+    <string name="ua_notification_button_remind">بعدا به من یادآوری کن</string>
+    <string name="ua_notification_button_share">اشتراک گذاری</string>
+    <string name="ua_notification_button_accept">تایید</string>
+    <string name="ua_notification_button_decline">رد کردن</string>
+    <string name="ua_notification_button_download">دانلود</string>
+    <string name="ua_notification_button_more_like">بیشتر شبیه این</string>
+    <string name="ua_notification_button_less_like">کمتر شبیه این</string>
+    <string name="ua_notification_button_like">پسندیدن</string>
+    <string name="ua_notification_button_dislike">دوست نداشتن</string>
+    <string name="ua_notification_button_copy">کپی</string>
+    <string name="ua_notification_button_save">ذخیره</string>
+    <string name="ua_notification_button_add_to_calendar">به تقویم اضافه کنید</string>
+    <string name="ua_notification_button_add">اضافه</string>
+    <string name="ua_notification_button_tell_me_more">بیشتر بگویید</string>
+    <string name="ua_notification_button_send_info">ارسال اطلاعات</string>
+    <string name="ua_notification_button_rate_now">اکنون بسنج</string>
+    <string name="ua_notification_button_search">جستجو</string>
+    <string name="ua_notification_button_book_now">اکنون رزرو کنید</string>
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">اشتراک گذاری</string>
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">کانال کشتی هوایی</string>
+    <string name="ua_channel_copy_toast">کانال در کلیپ بورد کپی شد!</string>
+    <!-- Message Center -->
+    <string name="ua_message_center_title">مرکز پیام</string>
+    <string name="ua_empty_message_list">هیچ پیامی وجود ندارد</string>
+    <string name="ua_message_not_selected">هیچ پیامی انتخاب نشد</string>
+    <string name="ua_mc_failed_to_load">بارگیری پیام ممکن نیست. لطفاً بعداً دوباره امتحان کنید.</string>
+    <string name="ua_retry_button">دوباره امتحان کنید</string>
+    <string name="ua_ok">بسیارخوب</string>
+    <string name="ua_cancel">لغو</string>
+    <string name="ua_select_none">هیچ کدام را انتخاب نکنید</string>
+    <string name="ua_select_all">انتخاب همه</string>
+    <string name="ua_connection_error">خطای اتصال</string>
+    <string name="ua_mark_read">علامت گذاری به عنوان خوانده شده</string>
+    <string name="ua_delete">حذف</string>
+    <string name="ua_mc_no_longer_available">پیام انتخاب شده دیگر در دسترس نیست.</string>
+    <string name="ua_content_error">خطای محتوا</string>
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g>انتخاب شد</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g>انتخاب شد</item>
+    </plurals>
+    <!-- General -->
+    <string name="ua_refresh">تازه کردن</string>
+    <string name="ua_open">باز کن</string>
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">سنجیدن</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">خیر ممنون</string>
+    <string name="ua_rate_app_action_default_title">از<xliff:g example="this App" id="app_name">%1$2s</xliff:g>لذت می برید؟</string>
+    <string name="ua_rate_app_action_default_body">روی<xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>ضربه بزنید تا در فروشگاه برنامه رتبه بندی کنید.</string>
+    <string name="ua_rate_app_action_generic_display_name">این برنامه</string>
+    <!-- Channels -->
+    <string name="ua_default_channel_name">اعلان ها</string>
+    <string name="ua_default_channel_description">به روز رسانی های عمومی برنامه</string>
+    <string name="ua_channel_id">آیدی کانال</string>
+    <string name="ua_service_channel_name">اعلان های خدمات</string>
+    <string name="ua_service_channel_description">پیام های خدماتی</string>
+    <string name="ua_service_channel_id">سرویس شناسه کانال</string>
+    <string name="ua_news_channel_name">اعلان های خبری</string>
+    <string name="ua_news_channel_description">پیام های خبری</string>
+    <string name="ua_news_channel_id">آیدی کانال خبری</string>
+    <string name="ua_urgent_channel_name">اعلان های فوری</string>
+    <string name="ua_urgent_channel_description">پیام های فوری</string>
+    <string name="ua_urgent_channel_id">آیدی فوری کانال</string>
+    <string name="ua_low_priority_channel_name">اعلان های با اولویت پایین</string>
+    <string name="ua_low_priority_channel_description">پیام های با اولویت پایین</string>
+    <string name="ua_low_priority_channel_id">شناسه کانال با اولویت پایین</string>
+    <string name="ua_min_priority_channel_name">اعلان های حداقل اولویت</string>
+    <string name="ua_min_priority_channel_description">پیام های حداقل اولویت</string>
+    <string name="ua_min_priority_channel_id">شناسه کانال حداقل ها</string>
+</resources>

@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Ναι</string>
+    <string name="ua_notification_button_no">Όχι</string>
+    <string name="ua_notification_button_shop_now">Ψώνισε τώρα</string>
+    <string name="ua_notification_button_buy_now">Αγόρασε τώρα</string>
+    <string name="ua_notification_button_follow">Ακολουθήστε</string>
+    <string name="ua_notification_button_unfollow">Κατάργηση παρακολούθησης</string>
+    <string name="ua_notification_button_opt_in">Συμμετοχή</string>
+    <string name="ua_notification_button_opt_out">Εξαίρεση</string>
+    <string name="ua_notification_button_remind">Θύμισέ μου αργότερα</string>
+    <string name="ua_notification_button_share">Κοινοποίηση</string>
+    <string name="ua_notification_button_accept">Αποδέχομαι</string>
+    <string name="ua_notification_button_decline">Πτώση</string>
+    <string name="ua_notification_button_download">Κατεβάστε</string>
+    <string name="ua_notification_button_more_like">Περισσότερα σαν αυτό</string>
+    <string name="ua_notification_button_less_like">Λιγότερο σαν αυτό</string>
+    <string name="ua_notification_button_like">Αρέσει</string>
+    <string name="ua_notification_button_dislike">Δεν αρέσει</string>
+    <string name="ua_notification_button_copy">Αντίγραφο</string>
+    <string name="ua_notification_button_save">Αποθηκεύσετε</string>
+    <string name="ua_notification_button_add_to_calendar">Προσθήκη στο Ημερολόγιο</string>
+    <string name="ua_notification_button_add">Προσθήκη</string>
+    <string name="ua_notification_button_tell_me_more">Πες μου κι άλλα</string>
+    <string name="ua_notification_button_send_info">Αποστολή πληροφοριών</string>
+    <string name="ua_notification_button_rate_now">Βαθμολογήστε τώρα</string>
+    <string name="ua_notification_button_search">Αναζήτηση</string>
+    <string name="ua_notification_button_book_now">Κάνετε κράτηση τώρα</string>
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Κοινοποίηση</string>
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Κανάλι αερόπλοιου</string>
+    <string name="ua_channel_copy_toast">Το κανάλι αντιγράφηκε στο πρόχειρο!</string>
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Κέντρο μηνυμάτων</string>
+    <string name="ua_empty_message_list">Χωρίς μηνύματα</string>
+    <string name="ua_message_not_selected">Δεν επιλέχθηκαν μηνύματα</string>
+    <string name="ua_mc_failed_to_load">Δεν είναι δυνατή η φόρτωση του μηνύματος. Παρακαλώ δοκιμάστε ξανά αργότερα.</string>
+    <string name="ua_retry_button">Ξαναδοκιμάσετε</string>
+    <string name="ua_ok">Εντάξει</string>
+    <string name="ua_cancel">Ματαίωση</string>
+    <string name="ua_select_none">Επιλογή κανενός</string>
+    <string name="ua_select_all">Επιλογή όλων</string>
+    <string name="ua_connection_error">Σφάλμα σύνδεσης</string>
+    <string name="ua_mark_read">Σημείωση ως διαβασμένο</string>
+    <string name="ua_delete">Διαγράφω</string>
+    <string name="ua_mc_no_longer_available">Το επιλεγμένο μήνυμα δεν είναι πλέον διαθέσιμο.</string>
+    <string name="ua_content_error">Σφάλμα περιεχομένου</string>
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+        <item quantity="one">Επιλέχθηκε <xliff:g example="1" id="count">%1$d</xliff:g></item>
+        <item quantity="other">Επιλέχθηκε <xliff:g example="3" id="count">%1$d</xliff:g></item>
+    </plurals>
+    <!-- General -->
+    <string name="ua_refresh">Ανανέωση</string>
+    <string name="ua_open">Άνοιξε</string>
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">Αξιολόγηση</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Όχι ευχαριστώ</string>
+    <string name="ua_rate_app_action_default_title">Σας αρέσει το <xliff:g example="this App" id="app_name">%1$2s</xliff:g>;</string>
+    <string name="ua_rate_app_action_default_body">Πατήστε <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> για να το βαθμολογήσετε στο app store.</string>
+    <string name="ua_rate_app_action_generic_display_name">Αυτή η εφαρμογή</string>
+    <!-- Channels -->
+    <string name="ua_default_channel_name">Ειδοποιήσεις</string>
+    <string name="ua_default_channel_description">Γενικές ενημερώσεις εφαρμογών</string>
+    <string name="ua_channel_id">Αναγνωριστικό καναλιού</string>
+    <string name="ua_service_channel_name">Ειδοποιήσεις υπηρεσίας</string>
+    <string name="ua_service_channel_description">Μηνύματα υπηρεσίας</string>
+    <string name="ua_service_channel_id">Αναγνωριστικό καναλιού υπηρεσίας</string>
+    <string name="ua_news_channel_name">Ειδοποιήσεις ειδήσεων</string>
+    <string name="ua_news_channel_description">Μηνύματα ειδήσεων</string>
+    <string name="ua_news_channel_id">Αναγνωριστικό καναλιού ειδήσεων</string>
+    <string name="ua_urgent_channel_name">Επείγουσες ειδοποιήσεις</string>
+    <string name="ua_urgent_channel_description">Επείγοντα μηνύματα</string>
+    <string name="ua_urgent_channel_id">Επείγον αναγνωριστικό καναλιού</string>
+    <string name="ua_low_priority_channel_name">Ειδοποιήσεις χαμηλής προτεραιότητας</string>
+    <string name="ua_low_priority_channel_description">Μηνύματα χαμηλής προτεραιότητας</string>
+    <string name="ua_low_priority_channel_id">Αναγνωριστικό καναλιού χαμηλής προτεραιότητας</string>
+    <string name="ua_min_priority_channel_name">Ειδοποιήσεις ελάχιστης προτεραιότητας</string>
+    <string name="ua_min_priority_channel_description">Μηνύματα ελάχιστης προτεραιότητας</string>
+    <string name="ua_min_priority_channel_id">Ελάχιστο αναγνωριστικό καναλιού</string>
+</resources>

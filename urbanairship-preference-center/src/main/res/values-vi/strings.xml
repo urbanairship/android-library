@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">Trung tâm Ưu tiên</string>
+    <string name="ua_preference_center_empty">Không thể tải các ưu tiên. Vui lòng thử lại sau.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">Cập nhật không thành công. Vui lòng thử lại sau.</string>
+</resources>

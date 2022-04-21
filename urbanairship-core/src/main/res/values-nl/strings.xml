@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
@@ -8,8 +8,8 @@
     <string name="ua_notification_button_buy_now">Koop nu</string>
     <string name="ua_notification_button_follow">Volg</string>
     <string name="ua_notification_button_unfollow">Ontvolg</string>
-    <string name="ua_notification_button_opt_in">Opt-in</string>
-    <string name="ua_notification_button_opt_out">Opt-out</string>
+    <string name="ua_notification_button_opt_in">Aanmelden</string>
+    <string name="ua_notification_button_opt_out">Afmelden</string>
     <string name="ua_notification_button_remind">Herinner mij later</string>
     <string name="ua_notification_button_share">Deel</string>
     <string name="ua_notification_button_accept">Accepteer</string>
@@ -17,29 +17,26 @@
     <string name="ua_notification_button_download">Download</string>
     <string name="ua_notification_button_more_like">Meer \"Vind Dit Leuk\"</string>
     <string name="ua_notification_button_less_like">Minder \"Vind Dit Leuk\"</string>
-    <string name="ua_notification_button_like">Leuk</string>
-    <string name="ua_notification_button_dislike">Niet leuk</string>
+    <string name="ua_notification_button_like">Vind ik leuk</string>
+    <string name="ua_notification_button_dislike">Vind ik niet leuk</string>
     <string name="ua_notification_button_copy">Kopieer</string>
     <string name="ua_notification_button_save">Sla op</string>
-    <string name="ua_notification_button_add_to_calendar">Voeg toe aan kalender</string>
+    <string name="ua_notification_button_add_to_calendar">Aan Kalender toevoegen</string>
     <string name="ua_notification_button_add">Voeg toe</string>
     <string name="ua_notification_button_tell_me_more">Vertel Mij Neer</string>
-    <string name="ua_notification_button_send_info">Informatie verzenden</string>
+    <string name="ua_notification_button_send_info">Stuur Info</string>
     <string name="ua_notification_button_rate_now">Beoordeel Nu</string>
     <string name="ua_notification_button_search">Zoek</string>
     <string name="ua_notification_button_book_now">Boek Nu</string>
-
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">Deel</string>
-
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Airship Kanaal</string>
+    <string name="ua_channel_notification_ticker">Luchtschipkanaal</string>
     <string name="ua_channel_copy_toast">Kanaal gekopieerd naar het klembord!</string>
-
     <!-- Message Center -->
     <string name="ua_message_center_title">Berichtencentrum</string>
-    <string name="ua_empty_message_list">Geen Berichten</string>
-    <string name="ua_message_not_selected">Geen Bericht Geselecteerd</string>
+    <string name="ua_empty_message_list">Geen berichten</string>
+    <string name="ua_message_not_selected">Geen berichten geselecteerd</string>
     <string name="ua_mc_failed_to_load">Kan bericht niet laden. Probeer het later opnieuw.</string>
     <string name="ua_retry_button">Probeer opnieuw</string>
     <string name="ua_ok">OK</string>
@@ -49,29 +46,39 @@
     <string name="ua_connection_error">Verbindingsfout</string>
     <string name="ua_mark_read">Markeer als Gelezen</string>
     <string name="ua_delete">Verwijder</string>
-    <string name="ua_mc_no_longer_available">Het geselecteerde bericht is niet langer beschikbaar.</string>
-    <string name="ua_content_error">Fout met de inhoud.</string>
-
+    <string name="ua_mc_no_longer_available">Het geselecteerde bericht is niet meer beschikbaar.</string>
+    <string name="ua_content_error">Inhoudsfout</string>
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
         <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> geselecteerd</item>
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> geselecteerd</item>
     </plurals>
-
     <!-- General -->
-    <string name="ua_refresh">Verversen</string>
-    <string name="ua_open">Openen</string>
-
+    <string name="ua_refresh">Vernieuwen</string>
+    <string name="ua_open">Open</string>
     <!-- Rate App Action -->
-    <string name="ua_rate_app_action_default_rate_positive_button">Waardering</string>
-    <string name="ua_rate_app_action_default_rate_negative_button">Nee, bedankt</string>
-    <string name="ua_rate_app_action_default_title">Geniet u ervan <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_rate_positive_button">Tarief</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Nee bedankt</string>
+    <string name="ua_rate_app_action_default_title">Geniet je van <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
     <string name="ua_rate_app_action_default_body">Tik op <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> om het te beoordelen in de app store.</string>
     <string name="ua_rate_app_action_generic_display_name">Deze app</string>
-
     <!-- Channels -->
     <string name="ua_default_channel_name">Meldingen</string>
-    <string name="ua_default_channel_description">Algemene updates voor de app</string>
-    <string name="ua_channel_id">Kanaal-ID</string>
-
+    <string name="ua_default_channel_description">Algemene app-updates</string>
+    <string name="ua_channel_id">Kanaal ID</string>
+    <string name="ua_service_channel_name">Servicemeldingen</string>
+    <string name="ua_service_channel_description">Serviceberichten</string>
+    <string name="ua_service_channel_id">Servicekanaal-ID</string>
+    <string name="ua_news_channel_name">Nieuwsmeldingen</string>
+    <string name="ua_news_channel_description">Nieuwsberichten</string>
+    <string name="ua_news_channel_id">Nieuwskanaal-ID</string>
+    <string name="ua_urgent_channel_name">Dringende meldingen</string>
+    <string name="ua_urgent_channel_description">Dringende berichten</string>
+    <string name="ua_urgent_channel_id">Urgente kanaal-ID</string>
+    <string name="ua_low_priority_channel_name">Meldingen met lage prioriteit</string>
+    <string name="ua_low_priority_channel_description">Berichten met lage prioriteit</string>
+    <string name="ua_low_priority_channel_id">Kanaal-ID met lage prioriteit</string>
+    <string name="ua_min_priority_channel_name">Minimale prioriteit Meldingen</string>
+    <string name="ua_min_priority_channel_description">Minimale prioriteit Berichten</string>
+    <string name="ua_min_priority_channel_id">Minimale kanaal-ID</string>
 </resources>

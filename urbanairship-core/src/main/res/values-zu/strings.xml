@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Yebo</string>
+    <string name="ua_notification_button_no">Cha</string>
+    <string name="ua_notification_button_shop_now">Thenga Manje</string>
+    <string name="ua_notification_button_buy_now">Thenga Manje</string>
+    <string name="ua_notification_button_follow">Landela</string>
+    <string name="ua_notification_button_unfollow">Yekela ukulandela</string>
+    <string name="ua_notification_button_opt_in">Khetha ukungena</string>
+    <string name="ua_notification_button_opt_out">Phuma</string>
+    <string name="ua_notification_button_remind">Ngikhumbuze ngokuhamba kwesikhathi</string>
+    <string name="ua_notification_button_share">Yabelana</string>
+    <string name="ua_notification_button_accept">Yamukela</string>
+    <string name="ua_notification_button_decline">Yenqaba</string>
+    <string name="ua_notification_button_download">Landa</string>
+    <string name="ua_notification_button_more_like">Okuningi Okufana Nalokhu</string>
+    <string name="ua_notification_button_less_like">Kancane Kanje</string>
+    <string name="ua_notification_button_like">Thanda</string>
+    <string name="ua_notification_button_dislike">Ukungathandi</string>
+    <string name="ua_notification_button_copy">Kopisha</string>
+    <string name="ua_notification_button_save">Londoloza</string>
+    <string name="ua_notification_button_add_to_calendar">Engeza kukhalenda</string>
+    <string name="ua_notification_button_add">Engeza</string>
+    <string name="ua_notification_button_tell_me_more">Ngitshele Okuningi</string>
+    <string name="ua_notification_button_send_info">Thumela Ulwazi</string>
+    <string name="ua_notification_button_rate_now">Linganisa Manje</string>
+    <string name="ua_notification_button_search">Sesha</string>
+    <string name="ua_notification_button_book_now">Bhukha Manje</string>
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Yabelana</string>
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Isiteshi se-Airship</string>
+    <string name="ua_channel_copy_toast">Isiteshi sikopishelwe ebhodini lokunamathisela!</string>
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Isikhungo Somlayezo</string>
+    <string name="ua_empty_message_list">Ayikho imilayezo</string>
+    <string name="ua_message_not_selected">Ayikho imilayezo ekhethiwe</string>
+    <string name="ua_mc_failed_to_load">Ayikwazi ukulayisha umlayezo. Sicela uzame futhi emuva kwesikhathi.</string>
+    <string name="ua_retry_button">Zama futhi</string>
+    <string name="ua_ok">KULUNGILE</string>
+    <string name="ua_cancel">Khansela</string>
+    <string name="ua_select_none">Khetha Lutho</string>
+    <string name="ua_select_all">Khetha konke</string>
+    <string name="ua_connection_error">Iphutha Lokuxhuma</string>
+    <string name="ua_mark_read">Maka Funda</string>
+    <string name="ua_delete">Susa</string>
+    <string name="ua_mc_no_longer_available">Umlayezo okhethiwe awusatholakali.</string>
+    <string name="ua_content_error">Iphutha Lokuqukethwe</string>
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> ekhethiwe</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> ekhethiwe</item>
+    </plurals>
+    <!-- General -->
+    <string name="ua_refresh">Vuselela</string>
+    <string name="ua_open">Vula</string>
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">Linganisa</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Cha ngiyabonga</string>
+    <string name="ua_rate_app_action_default_title">Ujabulela i- <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Thepha okuthi <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> ukuze ukale esitolo sohlelo lokusebenza.</string>
+    <string name="ua_rate_app_action_generic_display_name">Lolu hlelo lokusebenza</string>
+    <!-- Channels -->
+    <string name="ua_default_channel_name">Izaziso</string>
+    <string name="ua_default_channel_description">Izibuyekezo zohlelo lokusebenza olujwayelekile</string>
+    <string name="ua_channel_id">I-ID yesiteshi</string>
+    <string name="ua_service_channel_name">Izaziso Zesevisi</string>
+    <string name="ua_service_channel_description">Imilayezo Yesevisi</string>
+    <string name="ua_service_channel_id">I-ID Yesiteshi Sesevisi</string>
+    <string name="ua_news_channel_name">Izaziso Zezindaba</string>
+    <string name="ua_news_channel_description">Imilayezo Yezindaba</string>
+    <string name="ua_news_channel_id">I-ID Yesiteshi Sezindaba</string>
+    <string name="ua_urgent_channel_name">Izaziso Eziphuthumayo</string>
+    <string name="ua_urgent_channel_description">Imilayezo Ephuthumayo</string>
+    <string name="ua_urgent_channel_id">I-ID Yesiteshi Esiphuthumayo</string>
+    <string name="ua_low_priority_channel_name">Izaziso ezingabalulekile kangako</string>
+    <string name="ua_low_priority_channel_description">Imilayezo engabalulekile kangako</string>
+    <string name="ua_low_priority_channel_id">I-ID yesiteshi engabalulekile kangako</string>
+    <string name="ua_min_priority_channel_name">Izaziso ezibalulekile</string>
+    <string name="ua_min_priority_channel_description">Imilayezo Ebalulekile Encane</string>
+    <string name="ua_min_priority_channel_id">Ubuncane be-ID yesiteshi</string>
+</resources>

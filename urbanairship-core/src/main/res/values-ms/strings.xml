@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
@@ -8,8 +8,8 @@
     <string name="ua_notification_button_buy_now">Beli Sekarang</string>
     <string name="ua_notification_button_follow">Ikut</string>
     <string name="ua_notification_button_unfollow">Nyahikut</string>
-    <string name="ua_notification_button_opt_in">Memilih masuk</string>
-    <string name="ua_notification_button_opt_out">Memilih keluar</string>
+    <string name="ua_notification_button_opt_in">Ikut serta</string>
+    <string name="ua_notification_button_opt_out">Tarik diri</string>
     <string name="ua_notification_button_remind">Ingatkan Saya Kemudian</string>
     <string name="ua_notification_button_share">Kongsi</string>
     <string name="ua_notification_button_accept">Terima</string>
@@ -24,22 +24,19 @@
     <string name="ua_notification_button_add_to_calendar">Tambah Ke Kalendar</string>
     <string name="ua_notification_button_add">Tambah</string>
     <string name="ua_notification_button_tell_me_more">Beritahu Saya Lagi</string>
-    <string name="ua_notification_button_send_info">Hantar Maklumat</string>
+    <string name="ua_notification_button_send_info">Menghantar Info</string>
     <string name="ua_notification_button_rate_now">Nilaikan Sekarang</string>
     <string name="ua_notification_button_search">Carian</string>
     <string name="ua_notification_button_book_now">Tempah Sekarang</string>
-
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">Kongsi</string>
-
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Saluran AirShip</string>
+    <string name="ua_channel_notification_ticker">Saluran Kapal Udara</string>
     <string name="ua_channel_copy_toast">Saluran disalin ke papan klip!</string>
-
     <!-- Message Center -->
     <string name="ua_message_center_title">Pusat Mesej</string>
     <string name="ua_empty_message_list">Tiada Mesej</string>
-    <string name="ua_message_not_selected">Tiada Mesej Yang Dipilih</string>
+    <string name="ua_message_not_selected">Tiada mesej dipilih</string>
     <string name="ua_mc_failed_to_load">Tidak dapat memuatkan mesej. Sila cuba sebentar lagi.</string>
     <string name="ua_retry_button">Cuba semula</string>
     <string name="ua_ok">OK</string>
@@ -50,27 +47,37 @@
     <string name="ua_mark_read">Tanda Dibaca</string>
     <string name="ua_delete">Padam</string>
     <string name="ua_mc_no_longer_available">Mesej yang dipilih tidak lagi tersedia.</string>
-    <string name="ua_content_error">Ralat kandungan</string>
-
+    <string name="ua_content_error">Ralat Kandungan</string>
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> dipilih</item>
     </plurals>
-
     <!-- General -->
-    <string name="ua_refresh">Segarkan</string>
+    <string name="ua_refresh">Segarkan semula</string>
     <string name="ua_open">Buka</string>
-
     <!-- Rate App Action -->
-    <string name="ua_rate_app_action_default_rate_positive_button">Nilaikan</string>
+    <string name="ua_rate_app_action_default_rate_positive_button">Kadar</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Tidak, Terima kasih</string>
     <string name="ua_rate_app_action_default_title">Menikmati <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
-    <string name="ua_rate_app_action_default_body">Ketik <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> untuk menilaikannya di kedai aplikasi.</string>
-    <string name="ua_rate_app_action_generic_display_name">Apl ini</string>
-
+    <string name="ua_rate_app_action_default_body">Ketik <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> untuk menilainya di gedung aplikasi.</string>
+    <string name="ua_rate_app_action_generic_display_name">Aplikasi ini</string>
     <!-- Channels -->
     <string name="ua_default_channel_name">Pemberitahuan</string>
     <string name="ua_default_channel_description">Kemas kini aplikasi umum</string>
     <string name="ua_channel_id">ID Saluran</string>
-
+    <string name="ua_service_channel_name">Pemberitahuan Perkhidmatan</string>
+    <string name="ua_service_channel_description">Mesej Perkhidmatan</string>
+    <string name="ua_service_channel_id">ID Saluran Perkhidmatan</string>
+    <string name="ua_news_channel_name">Pemberitahuan Berita</string>
+    <string name="ua_news_channel_description">Mesej Berita</string>
+    <string name="ua_news_channel_id">ID Saluran Berita</string>
+    <string name="ua_urgent_channel_name">Pemberitahuan Segera</string>
+    <string name="ua_urgent_channel_description">Mesej Segera</string>
+    <string name="ua_urgent_channel_id">ID Saluran Segera</string>
+    <string name="ua_low_priority_channel_name">Pemberitahuan keutamaan rendah</string>
+    <string name="ua_low_priority_channel_description">Mesej keutamaan rendah</string>
+    <string name="ua_low_priority_channel_id">ID Saluran keutamaan rendah</string>
+    <string name="ua_min_priority_channel_name">Pemberitahuan keutamaan minimum</string>
+    <string name="ua_min_priority_channel_description">Mesej keutamaan minimum</string>
+    <string name="ua_min_priority_channel_id">ID Saluran Minimum</string>
 </resources>

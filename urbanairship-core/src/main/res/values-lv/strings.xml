@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Jā</string>
+    <string name="ua_notification_button_no">Nē</string>
+    <string name="ua_notification_button_shop_now">Iepirkties tūlīt</string>
+    <string name="ua_notification_button_buy_now">Pirkt tagad</string>
+    <string name="ua_notification_button_follow">Sekot</string>
+    <string name="ua_notification_button_unfollow">Pārtraukt sekošanu</string>
+    <string name="ua_notification_button_opt_in">Pieteikties</string>
+    <string name="ua_notification_button_opt_out">Atteikties</string>
+    <string name="ua_notification_button_remind">Atgādināt man vēlāk</string>
+    <string name="ua_notification_button_share">Dalīties</string>
+    <string name="ua_notification_button_accept">Pieņemt</string>
+    <string name="ua_notification_button_decline">Noraidīt</string>
+    <string name="ua_notification_button_download">Lejupielādēt</string>
+    <string name="ua_notification_button_more_like">Vairāk kā šis</string>
+    <string name="ua_notification_button_less_like">Mazāk kā šis</string>
+    <string name="ua_notification_button_like">Patīk</string>
+    <string name="ua_notification_button_dislike">Nepatīk</string>
+    <string name="ua_notification_button_copy">Kopēt</string>
+    <string name="ua_notification_button_save">Saglabāt</string>
+    <string name="ua_notification_button_add_to_calendar">Pievienot kalendāram</string>
+    <string name="ua_notification_button_add">Pievienot</string>
+    <string name="ua_notification_button_tell_me_more">Pastāstiet man vairāk</string>
+    <string name="ua_notification_button_send_info">Nosūtīt Info</string>
+    <string name="ua_notification_button_rate_now">Novērtēt tagad</string>
+    <string name="ua_notification_button_search">Meklēt</string>
+    <string name="ua_notification_button_book_now">Rezervēt tagad</string>
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Dalīties</string>
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Gaisa kuģa kanāls</string>
+    <string name="ua_channel_copy_toast">Kanāls ir kopēts starpliktuvē!</string>
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Ziņojumu centrs</string>
+    <string name="ua_empty_message_list">Nav ziņojumu</string>
+    <string name="ua_message_not_selected">Nav atlasīts neviens ziņojums</string>
+    <string name="ua_mc_failed_to_load">Nevar ielādēt ziņojumu. Lūdzu, pamēģiniet vēlreiz vēlāk.</string>
+    <string name="ua_retry_button">Mēģiniet vēlreiz</string>
+    <string name="ua_ok">Labi</string>
+    <string name="ua_cancel">Atcelt</string>
+    <string name="ua_select_none">Atlasīt Neviens</string>
+    <string name="ua_select_all">Atlasīt Visi</string>
+    <string name="ua_connection_error">Savienojuma kļūda</string>
+    <string name="ua_mark_read">Atzīmēt kā izlasītu</string>
+    <string name="ua_delete">Dzēst</string>
+    <string name="ua_mc_no_longer_available">Atlasītais ziņojums vairs nav pieejama.</string>
+    <string name="ua_content_error">Satura kļūda</string>
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+        <item quantity="zero"><xliff:g example="3" id="count">%1$d</xliff:g> atlasīts</item>
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> atlasīts</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> atlasīti</item>
+    </plurals>
+    <!-- General -->
+    <string name="ua_refresh">Atjaunot</string>
+    <string name="ua_open">Atvērt</string>
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">Likme</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Nē, paldies</string>
+    <string name="ua_rate_app_action_default_title">Vai jums patīk <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Pieskarieties vienumam <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>, lai novērtētu to lietotņu veikalā.</string>
+    <string name="ua_rate_app_action_generic_display_name">Šī lietotne</string>
+    <!-- Channels -->
+    <string name="ua_default_channel_name">Paziņojumi</string>
+    <string name="ua_default_channel_description">Vispārīgi lietotņu atjauninājumi</string>
+    <string name="ua_channel_id">Kanāla ID</string>
+    <string name="ua_service_channel_name">Paziņojumi par pakalpojumiem</string>
+    <string name="ua_service_channel_description">Pakalpojuma ziņojumi</string>
+    <string name="ua_service_channel_id">Pakalpojuma kanāla ID</string>
+    <string name="ua_news_channel_name">Ziņu paziņojumi</string>
+    <string name="ua_news_channel_description">Ziņu ziņojumi</string>
+    <string name="ua_news_channel_id">Ziņu kanāla ID</string>
+    <string name="ua_urgent_channel_name">Steidzami paziņojumi</string>
+    <string name="ua_urgent_channel_description">Steidzami ziņojumi</string>
+    <string name="ua_urgent_channel_id">Steidzama kanāla ID</string>
+    <string name="ua_low_priority_channel_name">Zemas prioritātes paziņojumi</string>
+    <string name="ua_low_priority_channel_description">Zemas prioritātes ziņojumi</string>
+    <string name="ua_low_priority_channel_id">Zemas prioritātes kanāla ID</string>
+    <string name="ua_min_priority_channel_name">Minimālās prioritātes paziņojumi</string>
+    <string name="ua_min_priority_channel_description">Minimālās prioritātes ziņojumi</string>
+    <string name="ua_min_priority_channel_id">Minimālais kanāla ID</string>
+</resources>

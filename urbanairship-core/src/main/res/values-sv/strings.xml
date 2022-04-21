@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
@@ -8,8 +8,8 @@
     <string name="ua_notification_button_buy_now">Köp nu</string>
     <string name="ua_notification_button_follow">Följ</string>
     <string name="ua_notification_button_unfollow">Sluta följa</string>
-    <string name="ua_notification_button_opt_in">Välj</string>
-    <string name="ua_notification_button_opt_out">Välj bort</string>
+    <string name="ua_notification_button_opt_in">Anmäl dig</string>
+    <string name="ua_notification_button_opt_out">Avanmäl dig</string>
     <string name="ua_notification_button_remind">Påminn mig senare</string>
     <string name="ua_notification_button_share">Dela</string>
     <string name="ua_notification_button_accept">Acceptera</string>
@@ -28,18 +28,15 @@
     <string name="ua_notification_button_rate_now">Betygsätt nu</string>
     <string name="ua_notification_button_search">Sök</string>
     <string name="ua_notification_button_book_now">Boka nu</string>
-
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">Dela</string>
-
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Airship Channel</string>
+    <string name="ua_channel_notification_ticker">Luftskeppskanal</string>
     <string name="ua_channel_copy_toast">Kanal kopierad till Urklipp!</string>
-
     <!-- Message Center -->
     <string name="ua_message_center_title">Meddelandecenter</string>
     <string name="ua_empty_message_list">Inga meddelanden</string>
-    <string name="ua_message_not_selected">Inget meddelande har valts</string>
+    <string name="ua_message_not_selected">Inga meddelanden har valts</string>
     <string name="ua_mc_failed_to_load">Det går inte att läsa in meddelande. Försök igen senare.</string>
     <string name="ua_retry_button">Försök igen</string>
     <string name="ua_ok">OK</string>
@@ -51,27 +48,37 @@
     <string name="ua_delete">Radera</string>
     <string name="ua_mc_no_longer_available">Det valda meddelandet är inte längre tillgängligt.</string>
     <string name="ua_content_error">Innehållsfel</string>
-
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
         <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> valt</item>
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> valda</item>
     </plurals>
-
     <!-- General -->
     <string name="ua_refresh">Uppdatera</string>
     <string name="ua_open">Öppna</string>
-
     <!-- Rate App Action -->
-    <string name="ua_rate_app_action_default_rate_positive_button">Betygsätt</string>
+    <string name="ua_rate_app_action_default_rate_positive_button">Betygsätta</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Nej tack</string>
     <string name="ua_rate_app_action_default_title">Gillar du <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
-    <string name="ua_rate_app_action_default_body">Tryck på <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> för att betygsätta den på App Store.</string>
-    <string name="ua_rate_app_action_generic_display_name">Denna app</string>
-
+    <string name="ua_rate_app_action_default_body">Tryck på <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> för att betygsätta den i appbutiken.</string>
+    <string name="ua_rate_app_action_generic_display_name">Den här appen</string>
     <!-- Channels -->
-    <string name="ua_default_channel_name">Meddelanden</string>
+    <string name="ua_default_channel_name">Aviseringar</string>
     <string name="ua_default_channel_description">Allmänna appuppdateringar</string>
     <string name="ua_channel_id">Kanal-ID</string>
-
+    <string name="ua_service_channel_name">Serviceaviseringar</string>
+    <string name="ua_service_channel_description">Servicemeddelanden</string>
+    <string name="ua_service_channel_id">Servicekanal-ID</string>
+    <string name="ua_news_channel_name">Nyhetsaviseringar</string>
+    <string name="ua_news_channel_description">Nyhetsmeddelanden</string>
+    <string name="ua_news_channel_id">Nyhetskanal-ID</string>
+    <string name="ua_urgent_channel_name">Brådskande aviseringar</string>
+    <string name="ua_urgent_channel_description">Brådskande meddelanden</string>
+    <string name="ua_urgent_channel_id">Brådskande kanal-ID</string>
+    <string name="ua_low_priority_channel_name">Aviseringar med låg prioritet</string>
+    <string name="ua_low_priority_channel_description">Meddelanden med låg prioritet</string>
+    <string name="ua_low_priority_channel_id">Kanal-ID med låg prioritet</string>
+    <string name="ua_min_priority_channel_name">Aviseringar med minsta prioritet</string>
+    <string name="ua_min_priority_channel_description">Meddelanden med minsta prioritet</string>
+    <string name="ua_min_priority_channel_id">Minsta kanal-ID</string>
 </resources>

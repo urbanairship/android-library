@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">वरीयता केंद्र</string>
+    <string name="ua_preference_center_empty">संदेश लोड करने में असमर्थ। कृपया दोबारा कोशिश करें।</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">अपडेट विफल हुआ. बाद में पुन: प्रयास करें.</string>
+</resources>

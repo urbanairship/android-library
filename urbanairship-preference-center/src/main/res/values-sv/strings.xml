@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">Preferenscenter</string>
+    <string name="ua_preference_center_empty">Det går inte att läsa in preferenser. Försök igen senare.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">Uppdateringen misslyckades. Vänligen försök igen senare.</string>
+</resources>

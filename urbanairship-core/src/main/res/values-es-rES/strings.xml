@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
@@ -8,8 +8,8 @@
     <string name="ua_notification_button_buy_now">Comprar ahora</string>
     <string name="ua_notification_button_follow">Seguir</string>
     <string name="ua_notification_button_unfollow">Dejar de seguir</string>
-    <string name="ua_notification_button_opt_in">Optar por sí</string>
-    <string name="ua_notification_button_opt_out">Optar por no</string>
+    <string name="ua_notification_button_opt_in">Acepto</string>
+    <string name="ua_notification_button_opt_out">No acepto</string>
     <string name="ua_notification_button_remind">Recordármelo más tarde</string>
     <string name="ua_notification_button_share">Compartir</string>
     <string name="ua_notification_button_accept">Aceptar</string>
@@ -17,8 +17,8 @@
     <string name="ua_notification_button_download">Descargar</string>
     <string name="ua_notification_button_more_like">Más como éste</string>
     <string name="ua_notification_button_less_like">Menos como éste</string>
-    <string name="ua_notification_button_like">Me Gusta</string>
-    <string name="ua_notification_button_dislike">No Me Gusta</string>
+    <string name="ua_notification_button_like">Me gusta</string>
+    <string name="ua_notification_button_dislike">No me gusta</string>
     <string name="ua_notification_button_copy">Copiar</string>
     <string name="ua_notification_button_save">Guardar</string>
     <string name="ua_notification_button_add_to_calendar">Añadir al calendario</string>
@@ -28,18 +28,15 @@
     <string name="ua_notification_button_rate_now">Calificar ahora</string>
     <string name="ua_notification_button_search">Buscar</string>
     <string name="ua_notification_button_book_now">Reservar ahora</string>
-
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">Compartir</string>
-
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Cana Airship</string>
+    <string name="ua_channel_notification_ticker">Canal de dirigible</string>
     <string name="ua_channel_copy_toast">¡Canal copiado al portapapeles!</string>
-
     <!-- Message Center -->
     <string name="ua_message_center_title">Centro de mensajes</string>
     <string name="ua_empty_message_list">No hay mensajes</string>
-    <string name="ua_message_not_selected">No hay mensajes seleccionado</string>
+    <string name="ua_message_not_selected">No hay mensajes seleccionados</string>
     <string name="ua_mc_failed_to_load">No se pudo cargar el mensaje. Por favor intenta más tarde.</string>
     <string name="ua_retry_button">Intentar de nuevo</string>
     <string name="ua_ok">Aceptar</string>
@@ -51,27 +48,38 @@
     <string name="ua_delete">Eliminar</string>
     <string name="ua_mc_no_longer_available">El mensaje seleccionado ya no está disponible.</string>
     <string name="ua_content_error">Error de contenido</string>
-
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
         <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> seleccionado</item>
+        <item quantity="many"><xliff:g example="3" id="count">%1$d</xliff:g> seleccionados</item>
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> seleccionados</item>
     </plurals>
-
     <!-- General -->
     <string name="ua_refresh">Actualizar</string>
     <string name="ua_open">Abrir</string>
-
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Calificar</string>
     <string name="ua_rate_app_action_default_rate_negative_button">No, gracias</string>
-    <string name="ua_rate_app_action_default_title">¿Te gusta <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
-    <string name="ua_rate_app_action_default_body">Toca <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> para calificarla en la tienda de aplicaciones.</string>
+    <string name="ua_rate_app_action_default_title">¿Disfruta de <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Toque <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> para puntuarlo en la tienda de aplicaciones.</string>
     <string name="ua_rate_app_action_generic_display_name">Esta aplicación</string>
-
     <!-- Channels -->
     <string name="ua_default_channel_name">Notificaciones</string>
     <string name="ua_default_channel_description">Actualizaciones generales de la aplicación</string>
-    <string name="ua_channel_id">ID de canal</string>
-
+    <string name="ua_channel_id">Canal ID</string>
+    <string name="ua_service_channel_name">Notificaciones de servicio</string>
+    <string name="ua_service_channel_description">Mensajes de servicio</string>
+    <string name="ua_service_channel_id">ID de canal de servicio</string>
+    <string name="ua_news_channel_name">Notificaciones de noticias</string>
+    <string name="ua_news_channel_description">Mensajes de noticias</string>
+    <string name="ua_news_channel_id">ID del canal de noticias</string>
+    <string name="ua_urgent_channel_name">Notificaciones Urgentes</string>
+    <string name="ua_urgent_channel_description">Mensajes Urgentes</string>
+    <string name="ua_urgent_channel_id">ID de canal urgente</string>
+    <string name="ua_low_priority_channel_name">Notificaciones de prioridad baja</string>
+    <string name="ua_low_priority_channel_description">Mensajes de baja prioridad</string>
+    <string name="ua_low_priority_channel_id">ID de canal de prioridad baja</string>
+    <string name="ua_min_priority_channel_name">Notificaciones de prioridad mínima</string>
+    <string name="ua_min_priority_channel_description">Mensajes de prioridad mínima</string>
+    <string name="ua_min_priority_channel_id">ID de canal mínimo</string>
 </resources>

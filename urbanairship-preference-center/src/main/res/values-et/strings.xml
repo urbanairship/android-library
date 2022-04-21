@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">Eelistuskeskus</string>
+    <string name="ua_preference_center_empty">Eelistusi ei saa laadida. Palun proovi hiljem uuesti.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">Uuendus ebaõnnestus. Palun proovi hiljem uuesti.</string>
+</resources>

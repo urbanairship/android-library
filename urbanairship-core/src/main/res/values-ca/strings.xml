@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Sí</string>
+    <string name="ua_notification_button_no">No</string>
+    <string name="ua_notification_button_shop_now">Anar a la botiga ara</string>
+    <string name="ua_notification_button_buy_now">Comprar ara</string>
+    <string name="ua_notification_button_follow">Seguir</string>
+    <string name="ua_notification_button_unfollow">Deixar de seguir</string>
+    <string name="ua_notification_button_opt_in">Activar</string>
+    <string name="ua_notification_button_opt_out">Desactivar</string>
+    <string name="ua_notification_button_remind">Recordeu-m\'ho més tard</string>
+    <string name="ua_notification_button_share">Compartir</string>
+    <string name="ua_notification_button_accept">Acceptar</string>
+    <string name="ua_notification_button_decline">Refusar</string>
+    <string name="ua_notification_button_download">Descarregar</string>
+    <string name="ua_notification_button_more_like">Més com aquest</string>
+    <string name="ua_notification_button_less_like">Menys com aquest</string>
+    <string name="ua_notification_button_like">M\'agrada</string>
+    <string name="ua_notification_button_dislike">No m\'agrada</string>
+    <string name="ua_notification_button_copy">Copiar</string>
+    <string name="ua_notification_button_save">Desar</string>
+    <string name="ua_notification_button_add_to_calendar">Afegir al calendari</string>
+    <string name="ua_notification_button_add">Afegir</string>
+    <string name="ua_notification_button_tell_me_more">Expliqueu-me més</string>
+    <string name="ua_notification_button_send_info">Enviar informació</string>
+    <string name="ua_notification_button_rate_now">Valorar ara</string>
+    <string name="ua_notification_button_search">Cercar</string>
+    <string name="ua_notification_button_book_now">Reservar ara</string>
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Compartir</string>
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Canal Airship</string>
+    <string name="ua_channel_copy_toast">S\'ha copiat el canal al porta-retalls!</string>
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Centre de missatges</string>
+    <string name="ua_empty_message_list">No hi ha missatges</string>
+    <string name="ua_message_not_selected">No s\'ha seleccionat cap missatge</string>
+    <string name="ua_mc_failed_to_load">No es pot carregar el missatge. Si us plau, intenteu-ho més tard.</string>
+    <string name="ua_retry_button">Torneu-ho a provar</string>
+    <string name="ua_ok">D\'acord</string>
+    <string name="ua_cancel">Cancel·lar</string>
+    <string name="ua_select_none">Seleccioneu Cap</string>
+    <string name="ua_select_all">Seleccioneu Tot</string>
+    <string name="ua_connection_error">Error de connexió</string>
+    <string name="ua_mark_read">Marcar com a Llegit</string>
+    <string name="ua_delete">Suprimir</string>
+    <string name="ua_mc_no_longer_available">El missatge seleccionat ja no està disponible.</string>
+    <string name="ua_content_error">Error de contingut</string>
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> seleccionats</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> seleccionats</item>
+    </plurals>
+    <!-- General -->
+    <string name="ua_refresh">Actualitzar</string>
+    <string name="ua_open">Obrir</string>
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">Valorar</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">No gràcies</string>
+    <string name="ua_rate_app_action_default_title">Us agrada <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Toqueu <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> per puntuar-lo a la botiga d\'aplicacions.</string>
+    <string name="ua_rate_app_action_generic_display_name">Aquesta aplicació</string>
+    <!-- Channels -->
+    <string name="ua_default_channel_name">Notificacions</string>
+    <string name="ua_default_channel_description">Actualitzacions generals de l\'aplicació</string>
+    <string name="ua_channel_id">Identificador del canal</string>
+    <string name="ua_service_channel_name">Notificacions de servei</string>
+    <string name="ua_service_channel_description">Missatges de servei</string>
+    <string name="ua_service_channel_id">Identificador del canal de servei</string>
+    <string name="ua_news_channel_name">Notificacions de notícies</string>
+    <string name="ua_news_channel_description">Missatges de notícies</string>
+    <string name="ua_news_channel_id">Identificador del canal de notícies</string>
+    <string name="ua_urgent_channel_name">Notificacions urgents</string>
+    <string name="ua_urgent_channel_description">Missatges urgents</string>
+    <string name="ua_urgent_channel_id">Identificador de canal urgent</string>
+    <string name="ua_low_priority_channel_name">Notificacions de baixa prioritat</string>
+    <string name="ua_low_priority_channel_description">Missatges de baixa prioritat</string>
+    <string name="ua_low_priority_channel_id">Identificador de canal de baixa prioritat</string>
+    <string name="ua_min_priority_channel_name">Notificacions de prioritat mínima</string>
+    <string name="ua_min_priority_channel_description">Missatges de prioritat mínima</string>
+    <string name="ua_min_priority_channel_id">Identificador de canal mínim</string>
+</resources>

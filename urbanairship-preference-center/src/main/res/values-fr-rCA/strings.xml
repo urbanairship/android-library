@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">Centre de préférences</string>
+    <string name="ua_preference_center_empty">Impossible de charger les préférences. Veuillez réessayer plus tard.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">Mise à jour a échoué. Veuillez réessayer plus tard.</string>
+</resources>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
@@ -8,8 +8,8 @@
     <string name="ua_notification_button_buy_now">קנה עכשיו</string>
     <string name="ua_notification_button_follow">עקוב</string>
     <string name="ua_notification_button_unfollow">הסר עקיבה</string>
-    <string name="ua_notification_button_opt_in">הצטרף</string>
-    <string name="ua_notification_button_opt_out">בטל הצטרפות</string>
+    <string name="ua_notification_button_opt_in">הסכמת הרשמה</string>
+    <string name="ua_notification_button_opt_out">ביטול הסכמת הרשמה</string>
     <string name="ua_notification_button_remind">הזכר לי מאוחר יותר</string>
     <string name="ua_notification_button_share">שתף</string>
     <string name="ua_notification_button_accept">אשר</string>
@@ -24,22 +24,19 @@
     <string name="ua_notification_button_add_to_calendar">הוסף ליומן</string>
     <string name="ua_notification_button_add">הוסף</string>
     <string name="ua_notification_button_tell_me_more">ספר לי עוד</string>
-    <string name="ua_notification_button_send_info">שלח מידע</string>
+    <string name="ua_notification_button_send_info">שלח פרטים</string>
     <string name="ua_notification_button_rate_now">דרג עכשיו</string>
     <string name="ua_notification_button_search">חיפוש</string>
     <string name="ua_notification_button_book_now">הזמן עכשיו</string>
-
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">שתף</string>
-
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">ערוץ Airship</string>
+    <string name="ua_channel_notification_ticker">ערוץ ספינת אוויר</string>
     <string name="ua_channel_copy_toast">הערוץ הועתק ללוח העריכה!</string>
-
     <!-- Message Center -->
     <string name="ua_message_center_title">מרכז ההודעות</string>
     <string name="ua_empty_message_list">אין הודעות</string>
-    <string name="ua_message_not_selected">לא נבחרה הודעה</string>
+    <string name="ua_message_not_selected">לא נבחרו הודעות</string>
     <string name="ua_mc_failed_to_load">לא ניתן לטעון הודעה. נסה שוב מאוחר יותר.</string>
     <string name="ua_retry_button">נסה שוב</string>
     <string name="ua_ok">אישור</string>
@@ -51,29 +48,39 @@
     <string name="ua_delete">מחק</string>
     <string name="ua_mc_no_longer_available">ההודעה שנבחרה אינה זמינה יותר.</string>
     <string name="ua_content_error">שגיאת תוכן</string>
-
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> נבחר</item>
-        <item quantity="two"><xliff:g example="3" id="count">%1$d</xliff:g> נבחרו</item>
-        <item quantity="many"><xliff:g example="3" id="count">%1$d</xliff:g> נבחרו</item>
-        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> נבחרו</item>
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g>נבחר </item>
+        <item quantity="two"><xliff:g example="3" id="count">%1$d</xliff:g>נבחרו </item>
+        <item quantity="many"><xliff:g example="3" id="count">%1$d</xliff:g>נבחרו </item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g>נבחרו </item>
     </plurals>
-
     <!-- General -->
-    <string name="ua_refresh">רענן</string>
-    <string name="ua_open">פתח</string>
-
+    <string name="ua_refresh">לְרַעֲנֵן</string>
+    <string name="ua_open">לִפְתוֹחַ</string>
     <!-- Rate App Action -->
-    <string name="ua_rate_app_action_default_rate_positive_button">דירוג</string>
+    <string name="ua_rate_app_action_default_rate_positive_button">ציון</string>
     <string name="ua_rate_app_action_default_rate_negative_button">לא תודה</string>
-    <string name="ua_rate_app_action_default_title">נהנה מ-<xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
-    <string name="ua_rate_app_action_default_body">הקש על <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> כדי לדרג את האפליקציה ב-App Store.</string>
+    <string name="ua_rate_app_action_default_title"> נהנה מ-<xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body"> הקש על<xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>כדי לדרג אותו בחנות האפליקציות.</string>
     <string name="ua_rate_app_action_generic_display_name">האפליקציה הזאת</string>
-
     <!-- Channels -->
     <string name="ua_default_channel_name">התראות</string>
     <string name="ua_default_channel_description">עדכוני אפליקציה כלליים</string>
-    <string name="ua_channel_id">זיהוי הערוץ</string>
-
+    <string name="ua_channel_id">מזהה ערוץ</string>
+    <string name="ua_service_channel_name">התרעות שירות</string>
+    <string name="ua_service_channel_description">הודעות שירות</string>
+    <string name="ua_service_channel_id">מזהה ערוץ שירות</string>
+    <string name="ua_news_channel_name">התרעות חדשות</string>
+    <string name="ua_news_channel_description">הודעות חדשות</string>
+    <string name="ua_news_channel_id">מזהה ערוץ חדשות</string>
+    <string name="ua_urgent_channel_name">התרעות דחופות</string>
+    <string name="ua_urgent_channel_description">הודעות דחופות</string>
+    <string name="ua_urgent_channel_id">מזהה ערוץ דחוף</string>
+    <string name="ua_low_priority_channel_name">התרעות בעדיפות נמוכה</string>
+    <string name="ua_low_priority_channel_description">הודעות בעדיפות נמוכה</string>
+    <string name="ua_low_priority_channel_id">מזהה ערוץ בעדיפות נמוכה</string>
+    <string name="ua_min_priority_channel_name">התרעות בעדיפות מינימלית</string>
+    <string name="ua_min_priority_channel_description">הודעות בעדיפות מינימלית</string>
+    <string name="ua_min_priority_channel_id">מזהה ערוץ מינימלי</string>
 </resources>

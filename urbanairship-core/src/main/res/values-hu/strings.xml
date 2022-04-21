@@ -1,15 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">Igen</string>
     <string name="ua_notification_button_no">Nem</string>
     <string name="ua_notification_button_shop_now">Vásárlás most</string>
-    <string name="ua_notification_button_buy_now">Megveszem most</string>
+    <string name="ua_notification_button_buy_now">Megvétel most</string>
     <string name="ua_notification_button_follow">Követem</string>
     <string name="ua_notification_button_unfollow">Nem követem</string>
-    <string name="ua_notification_button_opt_in">Részvétel</string>
-    <string name="ua_notification_button_opt_out">Kiválás</string>
+    <string name="ua_notification_button_opt_in">Kérem</string>
+    <string name="ua_notification_button_opt_out">Nem kérem</string>
     <string name="ua_notification_button_remind">Emlékeztess később</string>
     <string name="ua_notification_button_share">Oszd meg</string>
     <string name="ua_notification_button_accept">Fogadd el</string>
@@ -17,29 +17,26 @@
     <string name="ua_notification_button_download">Töltsd le</string>
     <string name="ua_notification_button_more_like">Még több ilyen</string>
     <string name="ua_notification_button_less_like">Kevesebb ilyen</string>
-    <string name="ua_notification_button_like">Kedvelem</string>
-    <string name="ua_notification_button_dislike">Nem kedvelem</string>
-    <string name="ua_notification_button_copy">Másold</string>
-    <string name="ua_notification_button_save">Mentsd el</string>
-    <string name="ua_notification_button_add_to_calendar">Add a naptárhoz</string>
-    <string name="ua_notification_button_add">Add hozzá</string>
-    <string name="ua_notification_button_tell_me_more">Mondj róla többet</string>
-    <string name="ua_notification_button_send_info">Információ elküldése</string>
+    <string name="ua_notification_button_like">Tetszik</string>
+    <string name="ua_notification_button_dislike">Nem tetszik</string>
+    <string name="ua_notification_button_copy">Másolás</string>
+    <string name="ua_notification_button_save">Mentés</string>
+    <string name="ua_notification_button_add_to_calendar">Hozzáadás naptárhoz</string>
+    <string name="ua_notification_button_add">Hozzáadás</string>
+    <string name="ua_notification_button_tell_me_more">Mondjon róla többet</string>
+    <string name="ua_notification_button_send_info">Küldjön infót</string>
     <string name="ua_notification_button_rate_now">Most értékelem</string>
     <string name="ua_notification_button_search">Keress</string>
-    <string name="ua_notification_button_book_now">Foglald le most</string>
-
+    <string name="ua_notification_button_book_now">Foglalja le most</string>
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
-    <string name="ua_share_dialog_title">Oszd meg</string>
-
+    <string name="ua_share_dialog_title">Megosztás</string>
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Airship csatorna</string>
+    <string name="ua_channel_notification_ticker">Léghajó csatorna</string>
     <string name="ua_channel_copy_toast">A csatornát rámásoltam a vágólapra</string>
-
     <!-- Message Center -->
     <string name="ua_message_center_title">Üzenetközpont</string>
     <string name="ua_empty_message_list">Nincs üzenete</string>
-    <string name="ua_message_not_selected">Nincs kiválasztva üzenet</string>
+    <string name="ua_message_not_selected">Nincsenek kiválasztott üzenetek</string>
     <string name="ua_mc_failed_to_load">Nem tudtam betölteni az üzenetet. Próbálja újra később.</string>
     <string name="ua_retry_button">Próbáld újra</string>
     <string name="ua_ok">OK</string>
@@ -49,29 +46,39 @@
     <string name="ua_connection_error">Kapcsolati hiba</string>
     <string name="ua_mark_read">Jelöld olvasottnak</string>
     <string name="ua_delete">Töröld</string>
-    <string name="ua_mc_no_longer_available">A kiválasztott üzenet már nem elérhető.</string>
+    <string name="ua_mc_no_longer_available">A kiválasztott üzenet már nem érhető el.</string>
     <string name="ua_content_error">Tartalmi hiba</string>
-
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
         <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> kiválasztva</item>
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> kiválasztva</item>
     </plurals>
-
     <!-- General -->
     <string name="ua_refresh">Frissítés</string>
-    <string name="ua_open">Megnyitás</string>
-
+    <string name="ua_open">Megnyit</string>
     <!-- Rate App Action -->
-    <string name="ua_rate_app_action_default_rate_positive_button">Értékelés</string>
-    <string name="ua_rate_app_action_default_rate_negative_button">Nem, köszönöm</string>
-    <string name="ua_rate_app_action_default_title">Élvezi a(z) <xliff:g example="this App" id="app_name">%1$2s</xliff:g> alkalmazást?</string>
-    <string name="ua_rate_app_action_default_body">Koppintson a <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>-re a webáruházban történő értékeléshez.</string>
+    <string name="ua_rate_app_action_default_rate_positive_button">Értékel</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Nem köszönöm</string>
+    <string name="ua_rate_app_action_default_title">Tetszik a(z) <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Koppintson a(z) <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> elemre, hogy értékelje az alkalmazásboltban.</string>
     <string name="ua_rate_app_action_generic_display_name">Ez az alkalmazás</string>
-
     <!-- Channels -->
     <string name="ua_default_channel_name">Értesítések</string>
     <string name="ua_default_channel_description">Általános alkalmazásfrissítések</string>
     <string name="ua_channel_id">Csatornaazonosító</string>
-
+    <string name="ua_service_channel_name">Szolgáltatási értesítések</string>
+    <string name="ua_service_channel_description">Szolgáltatási üzenetek</string>
+    <string name="ua_service_channel_id">Szolgáltatási csatorna azonosítója</string>
+    <string name="ua_news_channel_name">Hírek Értesítések</string>
+    <string name="ua_news_channel_description">Hírek Üzenetek</string>
+    <string name="ua_news_channel_id">Hírcsatorna azonosítója</string>
+    <string name="ua_urgent_channel_name">Sürgős értesítések</string>
+    <string name="ua_urgent_channel_description">Sürgős üzenetek</string>
+    <string name="ua_urgent_channel_id">Sürgős csatornaazonosító</string>
+    <string name="ua_low_priority_channel_name">Alacsony prioritású értesítések</string>
+    <string name="ua_low_priority_channel_description">Alacsony prioritású üzenetek</string>
+    <string name="ua_low_priority_channel_id">Alacsony prioritású csatornaazonosító</string>
+    <string name="ua_min_priority_channel_name">Minimális prioritású értesítések</string>
+    <string name="ua_min_priority_channel_description">Minimális prioritású üzenetek</string>
+    <string name="ua_min_priority_channel_id">Minimális csatornaazonosító</string>
 </resources>

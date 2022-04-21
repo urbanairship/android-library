@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">ምርጫ ማዕከል</string>
+    <string name="ua_preference_center_empty">ምርጫዎችን መጫን አልተቻለም። እባክዎ ቆየት ብለው ይሞክሩ.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">ማዘመን አልተሳካም። እባክዎ ቆየት ብለው ይሞክሩ.</string>
+</resources>

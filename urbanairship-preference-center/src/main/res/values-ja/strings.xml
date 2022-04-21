@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">プリファレンスセンター</string>
+    <string name="ua_preference_center_empty">メッセージを読み込むことができません。後ほどもう一度お試しください。</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">更新に失敗しました。後でもう一度やり直してください。</string>
+</resources>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
@@ -13,12 +13,12 @@
     <string name="ua_notification_button_remind">मुझे बाद में याद दिलाएं</string>
     <string name="ua_notification_button_share">साझा करें</string>
     <string name="ua_notification_button_accept">स्वीकार करें</string>
-    <string name="ua_notification_button_decline">अस्वीकारें</string>
+    <string name="ua_notification_button_decline">अस्वीकार करें</string>
     <string name="ua_notification_button_download">डाउनलोड करें</string>
-    <string name="ua_notification_button_more_like">इसकी तरह और</string>
+    <string name="ua_notification_button_more_like">ज्यादातर इस की तरह</string>
     <string name="ua_notification_button_less_like">इसकी तरह कम</string>
-    <string name="ua_notification_button_like">लाइक करें (पसंद करें)</string>
-    <string name="ua_notification_button_dislike">डिस्लाइक करें (नापसंद करें)</string>
+    <string name="ua_notification_button_like">पसंद करें</string>
+    <string name="ua_notification_button_dislike">नापसंद करें</string>
     <string name="ua_notification_button_copy">कॉपी करें</string>
     <string name="ua_notification_button_save">सहेजें</string>
     <string name="ua_notification_button_add_to_calendar">कैलेंडर में जोड़ें</string>
@@ -28,14 +28,11 @@
     <string name="ua_notification_button_rate_now">अभी रेट करें</string>
     <string name="ua_notification_button_search">खोजें</string>
     <string name="ua_notification_button_book_now">अभी बुक करें</string>
-
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">साझा करें</string>
-
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">शहरी एयरशिप चैनल</string>
+    <string name="ua_channel_notification_ticker">हवाई पोत चैनल</string>
     <string name="ua_channel_copy_toast">चैनल क्लिपबोर्ड पर कॉपी किया गया!</string>
-
     <!-- Message Center -->
     <string name="ua_message_center_title">संदेश केंद्र</string>
     <string name="ua_empty_message_list">कोई संदेश नहीं</string>
@@ -48,30 +45,40 @@
     <string name="ua_select_all">सभी का चयन करें</string>
     <string name="ua_connection_error">कनेक्शन त्रुटि</string>
     <string name="ua_mark_read">पढ़ा गया चिह्नित करें</string>
-    <string name="ua_delete">हटाएं</string>
-    <string name="ua_mc_no_longer_available">चयनित संदेश अब उपलब्ध नहीं है।</string>
-    <string name="ua_content_error">विषय-सामग्री संबंधी त्रुटि</string>
-
+    <string name="ua_delete">मिटाएं</string>
+    <string name="ua_mc_no_longer_available">चयनित संदेश अब उपलब्ध नहीं है.</string>
+    <string name="ua_content_error">सामग्री त्रुटि</string>
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
         <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> चयनित</item>
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> चयनित</item>
     </plurals>
-
     <!-- General -->
-    <string name="ua_refresh">रिफ्रेश करें</string>
+    <string name="ua_refresh">ताज़ा करना</string>
     <string name="ua_open">खोलें</string>
-
     <!-- Rate App Action -->
-    <string name="ua_rate_app_action_default_rate_positive_button">मूल्यांकन करें</string>
-    <string name="ua_rate_app_action_default_rate_negative_button">नहीं धन्यवाद</string>
-    <string name="ua_rate_app_action_default_title"><xliff:g example="this App" id="app_name">%1$2s</xliff:g> का आनंद ले रहे?</string>
-    <string name="ua_rate_app_action_default_body">ऐप स्टोर में इसका मूल्यांकन करने के लिए <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> को टैप करें।</string>
-    <string name="ua_rate_app_action_generic_display_name">यह ऐप</string>
-
+    <string name="ua_rate_app_action_default_rate_positive_button">भाव</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">जी नहीं, धन्यवाद</string>
+    <string name="ua_rate_app_action_default_title"><xliff:g example="this App" id="app_name">%1$2s</xliff:g> का आनंद ले रहे हैं?</string>
+    <string name="ua_rate_app_action_default_body">ऐप स्टोर पर इसे रेट करने के लिए <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> पर टैप करें.</string>
+    <string name="ua_rate_app_action_generic_display_name">यह एप</string>
     <!-- Channels -->
-    <string name="ua_default_channel_name">अधिसूचनाएं</string>
-    <string name="ua_default_channel_description">सामान्य ऐप अद्यतन</string>
-    <string name="ua_channel_id">चैनल ID</string>
-
+    <string name="ua_default_channel_name">सूचनाएं</string>
+    <string name="ua_default_channel_description">सामान्य ऐप अपडेट</string>
+    <string name="ua_channel_id">चैनल आईडी</string>
+    <string name="ua_service_channel_name">सेवा सूचनाएं</string>
+    <string name="ua_service_channel_description">सेवा संदेश</string>
+    <string name="ua_service_channel_id">सेवा चैनल आईडी</string>
+    <string name="ua_news_channel_name">समाचार सूचनाएं</string>
+    <string name="ua_news_channel_description">समाचार संदेश</string>
+    <string name="ua_news_channel_id">समाचार चैनल आईडी</string>
+    <string name="ua_urgent_channel_name">तत्काल सूचनाएं</string>
+    <string name="ua_urgent_channel_description">तत्काल संदेश</string>
+    <string name="ua_urgent_channel_id">तत्काल चैनल आईडी</string>
+    <string name="ua_low_priority_channel_name">कम प्राथमिकता वाली सूचनाएं</string>
+    <string name="ua_low_priority_channel_description">कम प्राथमिकता वाले संदेश</string>
+    <string name="ua_low_priority_channel_id">निम्न प्राथमिकता चैनल आईडी</string>
+    <string name="ua_min_priority_channel_name">न्यूनतम प्राथमिकता सूचनाएं</string>
+    <string name="ua_min_priority_channel_description">न्यूनतम प्राथमिकता वाले संदेश</string>
+    <string name="ua_min_priority_channel_id">न्यूनतम चैनल आईडी</string>
 </resources>

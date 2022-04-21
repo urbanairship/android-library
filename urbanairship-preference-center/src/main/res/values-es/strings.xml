@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">Centro de preferencias</string>
+    <string name="ua_preference_center_empty">No se puede cargar el mensaje. Por favor inténtelo de nuevo más tarde.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">Actualización fallida. Por favor, inténtelo de nuevo más tarde.</string>
+</resources>

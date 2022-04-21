@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Taip</string>
+    <string name="ua_notification_button_no">Nr.</string>
+    <string name="ua_notification_button_shop_now">Apsipirkti dabar</string>
+    <string name="ua_notification_button_buy_now">Pirkti dabar</string>
+    <string name="ua_notification_button_follow">Sekti</string>
+    <string name="ua_notification_button_unfollow">Nebesekti</string>
+    <string name="ua_notification_button_opt_in">Sutikti</string>
+    <string name="ua_notification_button_opt_out">Atsisakyti</string>
+    <string name="ua_notification_button_remind">Priminti man vėliau</string>
+    <string name="ua_notification_button_share">Dalintis</string>
+    <string name="ua_notification_button_accept">Priimti</string>
+    <string name="ua_notification_button_decline">Atmesti</string>
+    <string name="ua_notification_button_download">Atsisiųsti</string>
+    <string name="ua_notification_button_more_like">Daugiau tokio</string>
+    <string name="ua_notification_button_less_like">Mažiau tokio</string>
+    <string name="ua_notification_button_like">Panašus</string>
+    <string name="ua_notification_button_dislike">Nepatinka</string>
+    <string name="ua_notification_button_copy">Kopijuoti</string>
+    <string name="ua_notification_button_save">Išsaugoti</string>
+    <string name="ua_notification_button_add_to_calendar">Pridėti prie kalendoriaus</string>
+    <string name="ua_notification_button_add">Pridėti</string>
+    <string name="ua_notification_button_tell_me_more">Noriu sužinoti daugiau</string>
+    <string name="ua_notification_button_send_info">Siųsti informaciją</string>
+    <string name="ua_notification_button_rate_now">Įvertinti dabar</string>
+    <string name="ua_notification_button_search">Paieška</string>
+    <string name="ua_notification_button_book_now">Užsakyti dabar</string>
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Dalintis</string>
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Dirižablio kanalas</string>
+    <string name="ua_channel_copy_toast">Kanalas nukopijuotas į iškarpinę!</string>
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Žinučių centras</string>
+    <string name="ua_empty_message_list">Jokių žinučių</string>
+    <string name="ua_message_not_selected">Jokių žinučių nepasirinkta</string>
+    <string name="ua_mc_failed_to_load">Nepavyko įkelti žinutės. Pabandykite dar kartą vėliau.</string>
+    <string name="ua_retry_button">Bandyti dar kartą</string>
+    <string name="ua_ok">Gerai</string>
+    <string name="ua_cancel">Atšaukti</string>
+    <string name="ua_select_none">Pasirinkti jokio</string>
+    <string name="ua_select_all">Pasirinkti viską</string>
+    <string name="ua_connection_error">Ryšio klaida</string>
+    <string name="ua_mark_read">Pažymėti kaip skaitytą</string>
+    <string name="ua_delete">Ištrinti</string>
+    <string name="ua_mc_no_longer_available">Pasirinkta žinutė nebepasiekiama.</string>
+    <string name="ua_content_error">Turinio klaida</string>
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+        <item quantity="one">Pasirinkta: <xliff:g example="1" id="count">%1$d</xliff:g></item>
+        <item quantity="few">Pasirinkta: <xliff:g example="3" id="count">%1$d</xliff:g></item>
+        <item quantity="many">Pasirinkta: <xliff:g example="3" id="count">%1$d</xliff:g></item>
+        <item quantity="other">Pasirinkta: <xliff:g example="3" id="count">%1$d</xliff:g></item>
+    </plurals>
+    <!-- General -->
+    <string name="ua_refresh">Atnaujinti</string>
+    <string name="ua_open">Atidaryti</string>
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">Įvertinti</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Ne, ačiū</string>
+    <string name="ua_rate_app_action_default_title">Patinka <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Palieskite <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>, kad įvertintumėte jį programėlių parduotuvėje.</string>
+    <string name="ua_rate_app_action_generic_display_name">Ši programėlė</string>
+    <!-- Channels -->
+    <string name="ua_default_channel_name">Pranešimai</string>
+    <string name="ua_default_channel_description">Bendrieji programėlės naujiniai</string>
+    <string name="ua_channel_id">Kanalo ID</string>
+    <string name="ua_service_channel_name">Paslaugų pranešimai</string>
+    <string name="ua_service_channel_description">Paslaugų žinutės</string>
+    <string name="ua_service_channel_id">Paslaugos kanalo ID</string>
+    <string name="ua_news_channel_name">Naujienų pranešimai</string>
+    <string name="ua_news_channel_description">Naujienų žinutės</string>
+    <string name="ua_news_channel_id">Naujienų kanalo ID</string>
+    <string name="ua_urgent_channel_name">Skubūs pranešimai</string>
+    <string name="ua_urgent_channel_description">Skubios žinutės</string>
+    <string name="ua_urgent_channel_id">Skubaus kanalo ID</string>
+    <string name="ua_low_priority_channel_name">Žemo prioriteto pranešimai</string>
+    <string name="ua_low_priority_channel_description">Žemo prioriteto žinutės</string>
+    <string name="ua_low_priority_channel_id">Žemo prioriteto kanalo ID</string>
+    <string name="ua_min_priority_channel_name">Minimalaus prioriteto pranešimai</string>
+    <string name="ua_min_priority_channel_description">Minimalaus prioriteto žinutės</string>
+    <string name="ua_min_priority_channel_id">Minimalaus kanalo ID</string>
+</resources>

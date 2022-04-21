@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">ศูนย์การตั้งค่า</string>
+    <string name="ua_preference_center_empty">ไม่สามารถโหลดข้อความ กรุณาลองใหม่อีกครั้งในภายหลัง</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">การอัปเดทล้มเหลว โปรดลองอีกครั้งในภายหลัง</string>
+</resources>

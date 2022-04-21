@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">مركز التفضيلات</string>
+    <string name="ua_preference_center_empty">غير قادر على تحميل الرسالة. الرجاء معاودة المحاولة في وقت لاحق.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">فشل التحديث. الرجاء معاودة المحاولة في وقت لاحق.</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">Centrul de preferințe</string>
+    <string name="ua_preference_center_empty">Imposibil de încărcat mesaje. Vă rugăm să încercați mai târziu.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">Actualizare eșuată. Vă rugăm să încercați din nou mai târziu.</string>
+</resources>

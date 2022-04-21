@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">Так</string>
+    <string name="ua_notification_button_no">Ні</string>
+    <string name="ua_notification_button_shop_now">Здійснити покупку</string>
+    <string name="ua_notification_button_buy_now">Придбайте зараз</string>
+    <string name="ua_notification_button_follow">Слідкувати</string>
+    <string name="ua_notification_button_unfollow">Скасувати підписку</string>
+    <string name="ua_notification_button_opt_in">Вибрати</string>
+    <string name="ua_notification_button_opt_out">Відмовитися</string>
+    <string name="ua_notification_button_remind">Нагадай мені пізніше</string>
+    <string name="ua_notification_button_share">Поділіться</string>
+    <string name="ua_notification_button_accept">Прийняти</string>
+    <string name="ua_notification_button_decline">Відхилити</string>
+    <string name="ua_notification_button_download">Завантажити</string>
+    <string name="ua_notification_button_more_like">Більше подібного</string>
+    <string name="ua_notification_button_less_like">Менше подібного</string>
+    <string name="ua_notification_button_like">Люблю</string>
+    <string name="ua_notification_button_dislike">Не люблю</string>
+    <string name="ua_notification_button_copy">Копіювати</string>
+    <string name="ua_notification_button_save">Зберегти</string>
+    <string name="ua_notification_button_add_to_calendar">Додати до календаря</string>
+    <string name="ua_notification_button_add">Додати</string>
+    <string name="ua_notification_button_tell_me_more">Розкажи мені більше</string>
+    <string name="ua_notification_button_send_info">Надіслати інформацію</string>
+    <string name="ua_notification_button_rate_now">Оцінити зараз</string>
+    <string name="ua_notification_button_search">Пошук</string>
+    <string name="ua_notification_button_book_now">Резервувати зараз</string>
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">Поділіться</string>
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">Канал Airship</string>
+    <string name="ua_channel_copy_toast">Канал скопійовано в буфер обміну!</string>
+    <!-- Message Center -->
+    <string name="ua_message_center_title">Центр повідомлень</string>
+    <string name="ua_empty_message_list">Немає повідомлень</string>
+    <string name="ua_message_not_selected">Не вибрано жодного повідомлення</string>
+    <string name="ua_mc_failed_to_load">Не вдається завантажити повідомлення. Будь-ласка, спробуйте пізніше.</string>
+    <string name="ua_retry_button">Повторіть спробу</string>
+    <string name="ua_ok">ОК</string>
+    <string name="ua_cancel">Скасувати</string>
+    <string name="ua_select_none">Скасувати вибір</string>
+    <string name="ua_select_all">Вибрати все</string>
+    <string name="ua_connection_error">Помилка з\'єднання</string>
+    <string name="ua_mark_read">Позначити як прочитане</string>
+    <string name="ua_delete">Видалити</string>
+    <string name="ua_mc_no_longer_available">Вибране повідомлення більше не доступне.</string>
+    <string name="ua_content_error">Помилка вмісту</string>
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+        <item quantity="one">Вибрано <xliff:g example="1" id="count">%1$d</xliff:g></item>
+        <item quantity="few">Вибрано <xliff:g example="3" id="count">%1$d</xliff:g></item>
+        <item quantity="many">Вибрано <xliff:g example="3" id="count">%1$d</xliff:g></item>
+        <item quantity="other">Вибрано <xliff:g example="3" id="count">%1$d</xliff:g></item>
+    </plurals>
+    <!-- General -->
+    <string name="ua_refresh">Оновити</string>
+    <string name="ua_open">Відктири</string>
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">Оцінити</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Ні, дякую</string>
+    <string name="ua_rate_app_action_default_title">Вам подобається <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Торкніться <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g>, щоб оцінити це в магазині програм.</string>
+    <string name="ua_rate_app_action_generic_display_name">Ця програма</string>
+    <!-- Channels -->
+    <string name="ua_default_channel_name">Сповіщення</string>
+    <string name="ua_default_channel_description">Загальні оновлення програми</string>
+    <string name="ua_channel_id">Ідентифікатор каналу</string>
+    <string name="ua_service_channel_name">Сервісні сповіщення</string>
+    <string name="ua_service_channel_description">Сервісні повідомлення</string>
+    <string name="ua_service_channel_id">Ідентифікатор сервісного каналу</string>
+    <string name="ua_news_channel_name">Сповіщення про новини</string>
+    <string name="ua_news_channel_description">Повідомлення новин</string>
+    <string name="ua_news_channel_id">Ідентифікатор каналу новин</string>
+    <string name="ua_urgent_channel_name">Термінові сповіщення</string>
+    <string name="ua_urgent_channel_description">Термінові повідомлення</string>
+    <string name="ua_urgent_channel_id">Ідентифікатор термінового каналу</string>
+    <string name="ua_low_priority_channel_name">Сповіщення з низьким пріоритетом</string>
+    <string name="ua_low_priority_channel_description">Повідомлення з низьким пріоритетом</string>
+    <string name="ua_low_priority_channel_id">Ідентифікатор каналу з низьким пріоритетом</string>
+    <string name="ua_min_priority_channel_name">Сповіщення з мінімальним пріоритетом</string>
+    <string name="ua_min_priority_channel_description">Повідомлення з мінімальним пріоритетом</string>
+    <string name="ua_min_priority_channel_id">Мінімальний ідентифікатор каналу</string>
+</resources>

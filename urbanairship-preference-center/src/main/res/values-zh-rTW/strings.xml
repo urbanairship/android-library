@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">偏好中心</string>
+    <string name="ua_preference_center_empty">無法加載訊息。請稍後再試。</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">更新失敗。請稍後再試。</string>
+</resources>

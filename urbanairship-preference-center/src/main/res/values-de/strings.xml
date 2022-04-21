@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="ua_preference_center_label">Präferenzzentrum</string>
+    <string name="ua_preference_center_empty">Nachricht kann nicht geladen werden. Bitte versuchen Sie es später noch einmal.</string>
+    <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
+    <string name="ua_preference_center_item_error">Update fehlgeschlagen. Bitte versuchen Sie es später erneut.</string>
+</resources>

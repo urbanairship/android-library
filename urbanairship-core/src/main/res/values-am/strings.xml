@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
+    <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
+    <string name="ua_notification_button_yes">አዎ</string>
+    <string name="ua_notification_button_no">አይ</string>
+    <string name="ua_notification_button_shop_now">አሁን ይሸምቱ</string>
+    <string name="ua_notification_button_buy_now">አሁን ይግዙ</string>
+    <string name="ua_notification_button_follow">ተከተል</string>
+    <string name="ua_notification_button_unfollow">አትከተል</string>
+    <string name="ua_notification_button_opt_in">መርጦ መግባት</string>
+    <string name="ua_notification_button_opt_out">መርጦ ውጣ</string>
+    <string name="ua_notification_button_remind">በኋላ አስታውሰኝ</string>
+    <string name="ua_notification_button_share">አጋራ</string>
+    <string name="ua_notification_button_accept">ተቀበል</string>
+    <string name="ua_notification_button_decline">አትቀበል</string>
+    <string name="ua_notification_button_download">አውርድ</string>
+    <string name="ua_notification_button_more_like">ተጨማሪ እንደዚህ</string>
+    <string name="ua_notification_button_less_like">እንደዚህ ያነሰ</string>
+    <string name="ua_notification_button_like">መውደድ</string>
+    <string name="ua_notification_button_dislike">አለመውደድ</string>
+    <string name="ua_notification_button_copy">ቅዳ</string>
+    <string name="ua_notification_button_save">አስቀምጥ</string>
+    <string name="ua_notification_button_add_to_calendar">ወደ ቀን መቁጠሪያ ያክሉ</string>
+    <string name="ua_notification_button_add">አክል</string>
+    <string name="ua_notification_button_tell_me_more">ተጨማሪ ንገረኝ</string>
+    <string name="ua_notification_button_send_info">መረጃ ላክ</string>
+    <string name="ua_notification_button_rate_now">አሁን ደረጃ ይስጡ</string>
+    <string name="ua_notification_button_search">ፈልግ</string>
+    <string name="ua_notification_button_book_now">አሁን ያዝ</string>
+    <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
+    <string name="ua_share_dialog_title">አጋራ</string>
+    <!-- Channel Capture -->
+    <string name="ua_channel_notification_ticker">የአየርመርከብ ቻናል</string>
+    <string name="ua_channel_copy_toast">ቻናል ወደ ቅንጥብ ሰሌዳ ተቀድቷል!</string>
+    <!-- Message Center -->
+    <string name="ua_message_center_title">የመልእክት ማእከል</string>
+    <string name="ua_empty_message_list">ምንም መልዕክቶች የሉም</string>
+    <string name="ua_message_not_selected">ምንም መልዕክቶች አልተመረጡም።</string>
+    <string name="ua_mc_failed_to_load">መልእክት መጫን አልተቻለም። እባክዎ ቆየት ብለው ይሞክሩ.</string>
+    <string name="ua_retry_button">እንደገና ይሞክሩ</string>
+    <string name="ua_ok">እሺ</string>
+    <string name="ua_cancel">ሰርዝ</string>
+    <string name="ua_select_none">ምንምን ይምረጡ</string>
+    <string name="ua_select_all">ሁሉንም ይምረጡ</string>
+    <string name="ua_connection_error">የግንኙነት ስህተት</string>
+    <string name="ua_mark_read">መነበቡን አመልክት</string>
+    <string name="ua_delete">አጥፋ</string>
+    <string name="ua_mc_no_longer_available">የተመረጠው መልእክት ከአሁን በኋላ አይገኝም።</string>
+    <string name="ua_content_error">የይዘት ስህተት</string>
+    <!-- Label describing the number of selected items -->
+    <plurals name="ua_selected_count">
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> ተመርጧል</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> ተመርጧል</item>
+    </plurals>
+    <!-- General -->
+    <string name="ua_refresh">አድስ</string>
+    <string name="ua_open">ክፈት</string>
+    <!-- Rate App Action -->
+    <string name="ua_rate_app_action_default_rate_positive_button">ደረጃ ይስጡ</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">አይ አመሰግናለሁ</string>
+    <string name="ua_rate_app_action_default_title">በ <xliff:g example="this App" id="app_name">%1$2s</xliff:g> እየተዝናኑ ነው?</string>
+    <string name="ua_rate_app_action_default_body">በመተግበሪያ መደብር ላይ ደረጃ ለመስጠት <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> ን ነካ ያድርጉ።</string>
+    <string name="ua_rate_app_action_generic_display_name">ይህ መተግበሪያ</string>
+    <!-- Channels -->
+    <string name="ua_default_channel_name">ማሳወቂያዎች</string>
+    <string name="ua_default_channel_description">አጠቃላይ የመተግበሪያ ማዘመኛዎች</string>
+    <string name="ua_channel_id">የቻናል መታወቂያ</string>
+    <string name="ua_service_channel_name">የአገልግሎት ማሳወቂያዎች</string>
+    <string name="ua_service_channel_description">የአገልግሎት መልዕክቶች</string>
+    <string name="ua_service_channel_id">የአገልግሎት ቻናል መታወቂያ</string>
+    <string name="ua_news_channel_name">የዜና ማሳወቂያዎች</string>
+    <string name="ua_news_channel_description">የዜና መልዕክቶች</string>
+    <string name="ua_news_channel_id">የዜና ቻናል መታወቂያ</string>
+    <string name="ua_urgent_channel_name">አስቸኳይ ማሳወቂያዎች</string>
+    <string name="ua_urgent_channel_description">አስቸኳይ መልእክቶች</string>
+    <string name="ua_urgent_channel_id">አስቸኳይ የቻናል መታወቂያ</string>
+    <string name="ua_low_priority_channel_name">ዝቅተኛ ቅድሚያ የሚሰጡዋቸው ማሳወቂያዎች</string>
+    <string name="ua_low_priority_channel_description">ዝቅተኛ ቅድሚያ የሚሰጡዋቸው መልዕክቶች</string>
+    <string name="ua_low_priority_channel_id">ዝቅተኛ ቅድሚያ የሚሰጠው የቻናል መታወቂያ</string>
+    <string name="ua_min_priority_channel_name">አነስተኛ ቅድሚያ የሚሰጡዋቸው ማስታወቂያዎች</string>
+    <string name="ua_min_priority_channel_description">አነስተኛ ቅድሚያ የሚሰጡዋቸው መልዕክቶች</string>
+    <string name="ua_min_priority_channel_id">አነስተኛ የቻናል መታወቂያ</string>
+</resources>

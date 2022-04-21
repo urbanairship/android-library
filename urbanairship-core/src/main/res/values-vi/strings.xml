@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
@@ -8,8 +8,8 @@
     <string name="ua_notification_button_buy_now">Mua Ngay</string>
     <string name="ua_notification_button_follow">Theo dõi</string>
     <string name="ua_notification_button_unfollow">Hủy theo dõi</string>
-    <string name="ua_notification_button_opt_in">Chọn tham gia</string>
-    <string name="ua_notification_button_opt_out">Chọn không tham gia</string>
+    <string name="ua_notification_button_opt_in">Tham gia</string>
+    <string name="ua_notification_button_opt_out">Không tham gia</string>
     <string name="ua_notification_button_remind">Nhắc Tôi Sau</string>
     <string name="ua_notification_button_share">Chia sẻ</string>
     <string name="ua_notification_button_accept">Chấp nhận</string>
@@ -24,22 +24,19 @@
     <string name="ua_notification_button_add_to_calendar">Thêm vào Lịch</string>
     <string name="ua_notification_button_add">Thêm</string>
     <string name="ua_notification_button_tell_me_more">Cho Tôi Biết Thêm</string>
-    <string name="ua_notification_button_send_info">Gửi thông tin</string>
+    <string name="ua_notification_button_send_info">Gửi Thông tin</string>
     <string name="ua_notification_button_rate_now">Đánh giá Ngay</string>
     <string name="ua_notification_button_search">Tìm kiếm</string>
     <string name="ua_notification_button_book_now">Đặt Ngay</string>
-
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">Chia sẻ</string>
-
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Kênh Airship</string>
+    <string name="ua_channel_notification_ticker">Kênh khí cầu</string>
     <string name="ua_channel_copy_toast">Đã sao chép kênh vào bộ nhớ tạm!</string>
-
     <!-- Message Center -->
     <string name="ua_message_center_title">Trung tâm Tin nhắn</string>
-    <string name="ua_empty_message_list">Không có Tin nhắn</string>
-    <string name="ua_message_not_selected">Không có Tin nhắn được Chọn</string>
+    <string name="ua_empty_message_list">Không có tin nhắn</string>
+    <string name="ua_message_not_selected">Không có tin nhắn nào được chọn</string>
     <string name="ua_mc_failed_to_load">Không thể tải tin nhắn. Vui lòng thử lại sau.</string>
     <string name="ua_retry_button">Thử lại</string>
     <string name="ua_ok">OK</string>
@@ -49,28 +46,38 @@
     <string name="ua_connection_error">Lỗi Kết nối</string>
     <string name="ua_mark_read">Đánh dấu đã Đọc</string>
     <string name="ua_delete">Xóa</string>
-    <string name="ua_mc_no_longer_available">Thông điệp được lựa chọn không có sẵn nữa.</string>
+    <string name="ua_mc_no_longer_available">Tin nhắn đã chọn không còn nữa.</string>
     <string name="ua_content_error">Lỗi nội dung</string>
-
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
         <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> được chọn khác</item>
     </plurals>
-
     <!-- General -->
     <string name="ua_refresh">Làm mới</string>
     <string name="ua_open">Mở</string>
-
     <!-- Rate App Action -->
-    <string name="ua_rate_app_action_default_rate_positive_button">Tỷ lệ</string>
+    <string name="ua_rate_app_action_default_rate_positive_button">Đánh giá</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Không, cám ơn</string>
-    <string name="ua_rate_app_action_default_title">Thưởng thức <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
-    <string name="ua_rate_app_action_default_body">Chạm <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> để xếp hạng ứng dụng trên app store.</string>
+    <string name="ua_rate_app_action_default_title">Bạn thích <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Nhấn vào <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> để đánh giá trên cửa hàng ứng dụng.</string>
     <string name="ua_rate_app_action_generic_display_name">Ứng dụng này</string>
-
     <!-- Channels -->
     <string name="ua_default_channel_name">Thông báo</string>
     <string name="ua_default_channel_description">Cập nhật ứng dụng chung</string>
     <string name="ua_channel_id">ID kênh</string>
-
+    <string name="ua_service_channel_name">Thông báo Dịch vụ</string>
+    <string name="ua_service_channel_description">Tin nhắn Dịch vụ</string>
+    <string name="ua_service_channel_id">ID kênh dịch vụ</string>
+    <string name="ua_news_channel_name">Thông báo Tin tức</string>
+    <string name="ua_news_channel_description">Tin nhắn Tin tức</string>
+    <string name="ua_news_channel_id">ID kênh Tin tức</string>
+    <string name="ua_urgent_channel_name">Thông báo Khẩn cấp</string>
+    <string name="ua_urgent_channel_description">Tin nhắn Khẩn cấp</string>
+    <string name="ua_urgent_channel_id">ID kênh Khẩn cấp</string>
+    <string name="ua_low_priority_channel_name">Thông báo mức độ ưu tiên thấp</string>
+    <string name="ua_low_priority_channel_description">Tin nhắn có mức độ ưu tiên thấp</string>
+    <string name="ua_low_priority_channel_id">ID kênh có mức độ ưu tiên thấp</string>
+    <string name="ua_min_priority_channel_name">Thông báo ưu tiên tối thiểu</string>
+    <string name="ua_min_priority_channel_description">Tin nhắn ưu tiên tối thiểu</string>
+    <string name="ua_min_priority_channel_id">ID kênh tối thiểu</string>
 </resources>

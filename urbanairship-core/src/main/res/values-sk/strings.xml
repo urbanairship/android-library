@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!--Notification action buttons text. The action buttons are displayed under a variety of alert messages -->
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
@@ -8,8 +8,8 @@
     <string name="ua_notification_button_buy_now">Kúpiť teraz</string>
     <string name="ua_notification_button_follow">Sledovať</string>
     <string name="ua_notification_button_unfollow">Zrušiť sledovanie</string>
-    <string name="ua_notification_button_opt_in">Pripojiť sa</string>
-    <string name="ua_notification_button_opt_out">Nepripojiť sa</string>
+    <string name="ua_notification_button_opt_in">Aktivovať možnosti výberu</string>
+    <string name="ua_notification_button_opt_out">Deaktivovať možnosti výberu</string>
     <string name="ua_notification_button_remind">Pripomenúť neskôr</string>
     <string name="ua_notification_button_share">Zdieľať</string>
     <string name="ua_notification_button_accept">Prijať</string>
@@ -17,29 +17,26 @@
     <string name="ua_notification_button_download">Stiahnuť</string>
     <string name="ua_notification_button_more_like">Viac ako je uvedené</string>
     <string name="ua_notification_button_less_like">Menej ako je uvedené</string>
-    <string name="ua_notification_button_like">Páči sa</string>
-    <string name="ua_notification_button_dislike">Nepáči sa</string>
+    <string name="ua_notification_button_like">Páčiť sa</string>
+    <string name="ua_notification_button_dislike">Nepáčiť sa</string>
     <string name="ua_notification_button_copy">Kopírovať</string>
     <string name="ua_notification_button_save">Uložiť</string>
     <string name="ua_notification_button_add_to_calendar">Pridať do kalendára</string>
     <string name="ua_notification_button_add">Pridať</string>
     <string name="ua_notification_button_tell_me_more">Dajte viac informácií</string>
-    <string name="ua_notification_button_send_info">Poslať informácie</string>
+    <string name="ua_notification_button_send_info">Poslať informáciu</string>
     <string name="ua_notification_button_rate_now">Hodnotiť teraz</string>
     <string name="ua_notification_button_search">Vyhľadať</string>
     <string name="ua_notification_button_book_now">Rezervovať teraz</string>
-
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">Zdieľať</string>
-
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Kanál Airship</string>
+    <string name="ua_channel_notification_ticker">Kanál vzducholode</string>
     <string name="ua_channel_copy_toast">Kanál bol skopírovaný do schránky!</string>
-
     <!-- Message Center -->
     <string name="ua_message_center_title">Centrum správ</string>
     <string name="ua_empty_message_list">Žiadne správy</string>
-    <string name="ua_message_not_selected">Nebola vybraná žiadna správa</string>
+    <string name="ua_message_not_selected">Nie sú vybraté žiadne správy</string>
     <string name="ua_mc_failed_to_load">Nie je možné načítať správu. Skúste to neskôr, prosím.</string>
     <string name="ua_retry_button">Opakovať pokus</string>
     <string name="ua_ok">OK</string>
@@ -49,30 +46,41 @@
     <string name="ua_connection_error">Chyba pripojenia</string>
     <string name="ua_mark_read">Označiť ako prečítané</string>
     <string name="ua_delete">Vymazať</string>
-    <string name="ua_mc_no_longer_available">Vybraná správa už nie je k dispozícii.</string>
+    <string name="ua_mc_no_longer_available">Vybratá správa už nie je k dispozícii.</string>
     <string name="ua_content_error">Chyba obsahu</string>
-
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
-        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> Vybrána</item>
-        <item quantity="few"><xliff:g example="3" id="count">%1$d</xliff:g> Vybrány</item>
-        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> Vybráno</item>
+        <item quantity="one"><xliff:g example="1" id="count">%1$d</xliff:g> jeden zvolený</item>
+        <item quantity="few"><xliff:g example="3" id="count">%1$d</xliff:g> zopár zvolených</item>
+        <item quantity="many"><xliff:g example="3" id="count">%1$d</xliff:g> veľa zvolených</item>
+        <item quantity="other"><xliff:g example="3" id="count">%1$d</xliff:g> ďalší zvolený</item>
     </plurals>
-
     <!-- General -->
     <string name="ua_refresh">Obnoviť</string>
-    <string name="ua_open">Otvoriť</string>
-
+    <string name="ua_open">Otvorené</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Ohodnotiť</string>
-    <string name="ua_rate_app_action_default_rate_negative_button">Nie, ďakujem</string>
-    <string name="ua_rate_app_action_default_title">Páči sa ti <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
-    <string name="ua_rate_app_action_default_body">Kliknutím na <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> ju ohodnotíš v App Store.</string>
+    <string name="ua_rate_app_action_default_rate_negative_button">Nie ďakujem</string>
+    <string name="ua_rate_app_action_default_title">Páči sa vám <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Klepnutím na <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> ju ohodnotíte v obchode s aplikáciami.</string>
     <string name="ua_rate_app_action_generic_display_name">Táto aplikácia</string>
-
     <!-- Channels -->
     <string name="ua_default_channel_name">Upozornenia</string>
-    <string name="ua_default_channel_description">Všeobecné aktualizácie aplikácie</string>
+    <string name="ua_default_channel_description">Všeobecné aktualizácie aplikácií</string>
     <string name="ua_channel_id">ID kanála</string>
-
+    <string name="ua_service_channel_name">Servisné upozornenia</string>
+    <string name="ua_service_channel_description">Servisné správy</string>
+    <string name="ua_service_channel_id">ID kanála služby</string>
+    <string name="ua_news_channel_name">Upozornenia na novinky</string>
+    <string name="ua_news_channel_description">Správy s novinkami</string>
+    <string name="ua_news_channel_id">ID spravodajského kanála</string>
+    <string name="ua_urgent_channel_name">Naliehavé upozornenia</string>
+    <string name="ua_urgent_channel_description">Naliehavé správy</string>
+    <string name="ua_urgent_channel_id">Naliehavé ID kanála</string>
+    <string name="ua_low_priority_channel_name">Upozornenia s nízkou prioritou</string>
+    <string name="ua_low_priority_channel_description">Správy s nízkou prioritou</string>
+    <string name="ua_low_priority_channel_id">ID kanála s nízkou prioritou</string>
+    <string name="ua_min_priority_channel_name">Upozornenia s minimálnou prioritou</string>
+    <string name="ua_min_priority_channel_description">Správy s minimálnou prioritou</string>
+    <string name="ua_min_priority_channel_id">Minimálne ID kanála</string>
 </resources>
