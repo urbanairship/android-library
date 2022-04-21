@@ -122,6 +122,15 @@ class PreferenceCenterTest {
     }
 
     @Test
+    fun testGetJsonConfigWithSingleRemoteDataPayload() {
+        whenever(remoteData.payloadsForType(eq(PAYLOAD_TYPE)))
+            .doReturn(Observable.just(SINGLE_FORM_PAYLOAD))
+
+        val pendingResult = prefCenter.getJsonConfig(ID_1)
+        assertEquals(PREFERENCE_FORM_1.toJson().toJsonValue(), pendingResult.result)
+    }
+
+    @Test
     fun testGetConfigWithMultipleRemoteDataPayloads() {
         whenever(remoteData.payloadsForType(eq(PAYLOAD_TYPE)))
             .doReturn(Observable.just(MULTI_FORM_PAYLOAD))

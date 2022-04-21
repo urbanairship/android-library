@@ -15,7 +15,7 @@ data class PreferenceCenterConfig(
     val display: CommonDisplay
 ) {
     companion object {
-        private const val KEY_ID = "id"
+        internal const val KEY_ID = "id"
         private const val KEY_DISPLAY = "display"
         private const val KEY_SECTIONS = "sections"
 

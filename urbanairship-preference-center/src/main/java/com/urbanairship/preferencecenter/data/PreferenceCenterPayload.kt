@@ -10,7 +10,7 @@ internal data class PreferenceCenterPayload(
     val config: PreferenceCenterConfig
 ) {
     companion object {
-        private const val KEY_FORM = "form"
+        internal const val KEY_FORM = "form"
 
         /**
          * Parses a `JsonMap` into a `PreferenceCenterPayload` object.
