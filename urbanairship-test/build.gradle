@@ -16,7 +16,10 @@ android {
 
 dependencies {
     api project(':urbanairship-core')
+    implementation "junit:junit:$rootProject.junitVersion"
     implementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    implementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
+    implementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
     implementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
     implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
     annotationProcessor "androidx.room:room-compiler:$rootProject.androidxRoomVersion"

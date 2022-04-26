@@ -136,6 +136,10 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
     @Override
     public boolean isReady(@NonNull Context context) {
+        if (!super.isReady(context)) {
+            return false;
+        }
+
         boolean isConnected = isConnectedSupplier.get();
 
         for (UrlInfo urlInfo : this.urlInfoList) {
