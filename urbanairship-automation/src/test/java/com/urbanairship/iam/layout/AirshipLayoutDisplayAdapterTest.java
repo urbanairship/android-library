@@ -2,6 +2,10 @@ package com.urbanairship.iam.layout;
 
 import android.content.Context;
 
+import com.urbanairship.BaseTestCase;
+import com.urbanairship.ShadowAirshipExecutorsLegacy;
+import com.urbanairship.TestActivity;
+import com.urbanairship.TestApplication;
 import com.urbanairship.android.layout.BasePayload;
 import com.urbanairship.android.layout.ThomasListener;
 import com.urbanairship.android.layout.display.DisplayArgs;
@@ -28,17 +32,19 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.annotation.Config;
+import org.robolectric.annotation.LooperMode;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 import androidx.core.util.Supplier;
+import androidx.lifecycle.Lifecycle;
+import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static org.junit.Assert.assertEquals;
@@ -55,8 +61,13 @@ import static org.mockito.Mockito.when;
 /**
  * {@link AirshipLayoutDisplayAdapter} tests.
  */
-@RunWith(AndroidJUnit4.class)
-public class AirshipLayoutDisplayAdapterTest {
+@Config(
+    sdk = 28,
+    shadows = { ShadowAirshipExecutorsLegacy.class },
+    application = TestApplication.class
+)
+@LooperMode(LooperMode.Mode.LEGACY)
+@RunWith(AndroidJUnit4.class)public class AirshipLayoutDisplayAdapterTest extends BaseTestCase {
 
     private AirshipLayoutDisplayAdapter adapter;
     private AirshipLayoutDisplayContent displayContent;
@@ -194,11 +205,30 @@ public class AirshipLayoutDisplayAdapterTest {
     }
 
     @Test
-    public void testIsReadyConnectedNotCached() {
+    public void testIsReadyConnectedNotCachedActivityStarted() {
         isConnected = true;
         when(allowList.isAllowed(anyString(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
-        assertEquals(InAppMessageAdapter.OK, adapter.onPrepare(context, assets));
-        assertTrue(adapter.isReady(context));
+
+        try(ActivityScenario<TestActivity> scenario = ActivityScenario.launch(TestActivity.class)) {
+            scenario.onActivity(activity -> {
+                assertEquals(InAppMessageAdapter.OK, adapter.onPrepare(activity, assets));
+                assertTrue(adapter.isReady(activity));
+            });
+        }
+    }
+
+    @Test
+    public void testIsReadyConnectedNotCachedActivityStopped() {
+        isConnected = true;
+        when(allowList.isAllowed(anyString(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
+
+        try(ActivityScenario<TestActivity> scenario = ActivityScenario.launch(TestActivity.class)) {
+            scenario.moveToState(Lifecycle.State.CREATED);
+            scenario.onActivity(activity -> {
+                assertEquals(InAppMessageAdapter.OK, adapter.onPrepare(activity, assets));
+                assertFalse(adapter.isReady(activity));
+            });
+        }
     }
 
     @Test
