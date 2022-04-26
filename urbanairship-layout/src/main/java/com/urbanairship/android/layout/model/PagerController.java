@@ -139,6 +139,7 @@ public class PagerController extends LayoutModel implements Identifiable {
                 this.count = init.getSize();
                 this.pageIndex = init.getPageIndex();
                 this.pageIdentifier = init.getPageId();
+                this.completed = this.count == 1;
                 break;
             case PAGER_SCROLL:
                 PagerEvent.Scroll scroll = (PagerEvent.Scroll) event;
