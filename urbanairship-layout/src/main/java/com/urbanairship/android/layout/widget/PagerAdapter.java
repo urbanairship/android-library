@@ -7,15 +7,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.BaseModel;
+import com.urbanairship.android.layout.util.LayoutUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
@@ -88,6 +91,11 @@ public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> 
         public void bind(@NonNull BaseModel item, @NonNull Environment environment) {
             View view = Thomas.view(itemView.getContext(), item, environment);
             container.addView(view, new RecyclerView.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+
+            // Register a listener, so we can request insets when the view is attached.
+            LayoutUtils.doOnAttachToWindow(itemView, () ->
+                ViewCompat.requestApplyInsets(itemView)
+            );
         }
 
         public void onRecycled() {

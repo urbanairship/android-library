@@ -12,6 +12,8 @@ public class Margin {
     private final int start;
     private final int end;
 
+    public static Margin NONE = new Margin(0, 0, 0, 0);
+
     public Margin(int top, int bottom, int start, int end) {
         this.top = top;
         this.bottom = bottom;

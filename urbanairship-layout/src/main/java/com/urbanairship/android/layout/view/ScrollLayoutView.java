@@ -14,6 +14,7 @@ import com.urbanairship.android.layout.util.LayoutUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
 import androidx.core.widget.NestedScrollView;
 
 public class ScrollLayoutView extends NestedScrollView implements BaseView<ScrollLayoutModel> {
@@ -74,5 +75,10 @@ public class ScrollLayoutView extends NestedScrollView implements BaseView<Scrol
         setClipToOutline(true);
         contentView.setLayoutParams(layoutParams);
         addView(contentView);
+
+        // Pass along any calls to apply insets to the view.
+        ViewCompat.setOnApplyWindowInsetsListener(this, (v, insets) ->
+            ViewCompat.dispatchApplyWindowInsets(contentView, insets)
+        );
     }
 }

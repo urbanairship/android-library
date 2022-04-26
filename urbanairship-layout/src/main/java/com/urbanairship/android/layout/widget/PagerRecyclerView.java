@@ -12,6 +12,9 @@ import com.urbanairship.android.layout.model.PagerModel;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.OrientationHelper;
@@ -60,6 +63,14 @@ public class PagerRecyclerView extends RecyclerView {
 
         adapter.setItems(model.getChildren());
         addOnScrollListener(recyclerScrollListener);
+
+        // Pass along any calls to apply insets to the view.
+        ViewCompat.setOnApplyWindowInsetsListener(this, (v, insets) -> {
+            for (int i = 0, count = getChildCount(); i < count; i++) {
+                ViewCompat.dispatchApplyWindowInsets(getChildAt(i), insets);
+            }
+            return insets;
+        });
     }
 
     public int getDisplayedItemPosition() {

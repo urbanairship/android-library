@@ -12,6 +12,7 @@ import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.graphics.Insets;
 
 import static androidx.constraintlayout.widget.ConstraintSet.BOTTOM;
 import static androidx.constraintlayout.widget.ConstraintSet.LEFT;
@@ -225,6 +226,19 @@ public final class ConstraintSetBuilder {
             constraints.setMargin(viewId, ConstraintSet.START, (int) dpToPx(context, margin.getStart()));
             constraints.setMargin(viewId, ConstraintSet.END, (int) dpToPx(context, margin.getEnd()));
         }
+        return this;
+    }
+
+    @NonNull
+    public ConstraintSetBuilder margin(@Nullable Margin margin, @NonNull Insets insets, @IdRes int viewId) {
+        if (margin == null) {
+            margin = new Margin(0, 0, 0, 0);
+        }
+        constraints.setMargin(viewId, TOP, (int) dpToPx(context, margin.getTop()) + insets.top);
+        constraints.setMargin(viewId, BOTTOM, (int) dpToPx(context, margin.getBottom()) + insets.bottom);
+        constraints.setMargin(viewId, ConstraintSet.START, (int) dpToPx(context, margin.getStart()) + insets.left);
+        constraints.setMargin(viewId, ConstraintSet.END, (int) dpToPx(context, margin.getEnd()) + insets.right);
+
         return this;
     }
 

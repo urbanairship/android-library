@@ -3,6 +3,7 @@
 package com.urbanairship.android.layout.ui;
 
 import android.content.pm.ActivityInfo;
+import android.os.Build;
 import android.os.Bundle;
 
 import com.urbanairship.Logger;
@@ -99,13 +100,22 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
 
             ModalPlacement placement = presentation.getResolvedPlacement(this);
             if (placement.getOrientationLock() != null) {
-                switch (placement.getOrientationLock()) {
-                    case PORTRAIT:
-                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                        break;
-                    case LANDSCAPE:
-                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-                        break;
+                if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O) {
+                    switch (placement.getOrientationLock()) {
+                        case PORTRAIT:
+                            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                            break;
+                        case LANDSCAPE:
+                            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                            break;
+                    }
+                } else {
+                    // Orientation locking isn't allowed on API 26 for transparent activities,
+                    // so we'll do the best we can and inherit the parent activity's orientation.
+                    // If the parent activity is locked to an orientation, we'll be locked to that
+                    // orientation, too. Otherwise, rotation will be allowed even though the layout
+                    // requested it not be.
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_BEHIND);
                 }
             }
 

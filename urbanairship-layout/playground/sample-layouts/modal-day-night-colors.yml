@@ -174,6 +174,7 @@ view:
       image:
         type: icon
         icon: close
+        scale: 0.5
         color:
           selectors:
           - platform: android

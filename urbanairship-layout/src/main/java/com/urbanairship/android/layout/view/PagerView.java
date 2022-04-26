@@ -14,6 +14,7 @@ import com.urbanairship.android.layout.widget.PagerRecyclerView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.core.view.ViewCompat;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
@@ -69,6 +70,11 @@ public class PagerView extends FrameLayout implements BaseView<PagerModel> {
 
         // Emit an init event so that we can connect to the indicator view, if one exists.
         model.onConfigured(view.getDisplayedItemPosition(), environment.displayTimer().getTime());
+
+        // Pass along any calls to apply insets to the view.
+        ViewCompat.setOnApplyWindowInsetsListener(this, (v, insets) ->
+                ViewCompat.dispatchApplyWindowInsets(view, insets)
+        );
     }
 
     private final PagerModel.Listener modelListener = new PagerModel.Listener() {

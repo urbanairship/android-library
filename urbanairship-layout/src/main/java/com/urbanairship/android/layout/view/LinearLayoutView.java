@@ -20,6 +20,8 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
@@ -71,17 +73,17 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
 
         addItems(model.getItems());
 
-        if (environment.isIgnoringSafeAreas()) {
-            LayoutUtils.doOnApplyWindowInsets(this, (v, insets, padding) -> {
-                v.setPadding(
-                    padding.getLeft() + insets.left,
-                    padding.getTop() + insets.top,
-                    padding.getRight() + insets.right,
-                    padding.getBottom() + insets.bottom
-                );
-                return WindowInsetsCompat.CONSUMED;
-            });
-        }
+        ViewCompat.setOnApplyWindowInsetsListener(this, (v, insets) -> {
+            WindowInsetsCompat noInsets = new WindowInsetsCompat.Builder()
+                    .setInsets(WindowInsetsCompat.Type.systemBars(), Insets.NONE)
+                    .build();
+
+            for (int i = 0; i < getChildCount(); i++) {
+                ViewCompat.dispatchApplyWindowInsets(getChildAt(i), noInsets);
+            }
+
+            return noInsets;
+        });
     }
 
     private void addItems(List<LinearLayoutModel.Item> items) {

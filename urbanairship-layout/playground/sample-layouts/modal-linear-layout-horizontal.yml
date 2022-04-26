@@ -1,10 +1,11 @@
 ---
 version: 1
 presentation:
+  dismiss_on_touch_outside: true
   type: modal
   default_placement:
     size:
-      width: 364
+      width: 95%
       height: 30%
     shade_color:
       default:
@@ -118,4 +119,3 @@ view:
                 alpha: 1
             alignment: center
             font_size: 12
-

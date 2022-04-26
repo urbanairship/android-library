@@ -11,9 +11,6 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewGroup.MarginLayoutParams;
-import android.view.textservice.TextInfo;
 import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
@@ -22,7 +19,6 @@ import com.google.android.material.shape.CornerFamily;
 import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.Fonts;
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.R;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.LabelButtonModel;
@@ -48,10 +44,6 @@ import androidx.annotation.RestrictTo;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.graphics.ColorUtils;
-import androidx.core.graphics.Insets;
-import androidx.core.util.Consumer;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 
@@ -322,56 +314,6 @@ public final class LayoutUtils {
             .add(checkedColor, android.R.attr.state_checked)
             .add(normalColor)
             .build();
-    }
-
-    public static void updateLayoutParams(@NonNull View view, Consumer<MarginLayoutParams> block) {
-        ViewGroup.LayoutParams params = view.getLayoutParams();
-        if (params instanceof MarginLayoutParams) {
-            block.accept((MarginLayoutParams) params);
-            view.setLayoutParams(params);
-            view.invalidate();
-        } else {
-            Logger.error("Failed to set margin layout params! View '%s' does not use MarginLayoutParams.",
-                view.getClass().getSimpleName());
-        }
-    }
-
-    public static void requestApplyInsetsWhenAttached(@NonNull View view) {
-        if (view.isAttachedToWindow()) {
-            view.requestApplyInsets();
-        } else {
-            view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
-                @Override
-                public void onViewAttachedToWindow(View v) {
-                    v.removeOnAttachStateChangeListener(this);
-                    v.requestApplyInsets();
-                }
-
-                @Override
-                public void onViewDetachedFromWindow(View v) { /* no-op */ }
-            });
-        }
-    }
-
-    public static void doOnApplyWindowInsets(@NonNull View view, Function3<View, Insets, InitialPadding, WindowInsetsCompat> callback) {
-        InitialPadding initialPadding = new InitialPadding(view);
-
-        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) ->
-            callback.invoke(v, insets.getInsets(WindowInsetsCompat.Type.systemBars()), initialPadding)
-        );
-
-        requestApplyInsetsWhenAttached(view);
-    }
-
-    public static void doOnApplyWindowInsets(@NonNull View view, Function4<View, Insets, InitialMargins, InitialPadding, WindowInsetsCompat> callback) {
-        InitialPadding initialPadding = new InitialPadding(view);
-        InitialMargins initialMargins = new InitialMargins((MarginLayoutParams) view.getLayoutParams());
-
-        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) ->
-            callback.invoke(v, insets.getInsets(WindowInsetsCompat.Type.systemBars()), initialMargins, initialPadding)
-        );
-
-        requestApplyInsetsWhenAttached(view);
     }
 
     public static void doOnAttachToWindow(@NonNull View view, @NonNull Runnable callback) {

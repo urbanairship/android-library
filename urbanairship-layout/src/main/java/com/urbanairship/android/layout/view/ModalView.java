@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+import androidx.core.view.ViewCompat;
 
 public class ModalView extends ConstraintLayout {
     private BaseModel model;
@@ -117,6 +118,12 @@ public class ModalView extends ConstraintLayout {
         }
 
         constraints.applyTo(this);
+
+        if (environment.isIgnoringSafeAreas()) {
+           ViewCompat.setOnApplyWindowInsetsListener(modalFrame, (v, insets) ->
+               ViewCompat.dispatchApplyWindowInsets(containerView, insets)
+           );
+        }
     }
 
     @Override

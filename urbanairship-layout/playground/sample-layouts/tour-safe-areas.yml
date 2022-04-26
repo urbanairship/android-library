@@ -59,7 +59,7 @@ view:
                     width: 100%
                   view:
                     type: media
-                    media_fit: center
+                    media_fit: center_crop
                     url: https://unroll-images-production.s3.amazonaws.com/projects/2487/1565801064410-banner-500x500-no-words.jpg
                     media_type: image
                   margin:
@@ -154,7 +154,7 @@ view:
                     width: 100%
                   view:
                     type: media
-                    media_fit: center
+                    media_fit: center_crop
                     url: https://i.imgur.com/IlweEFM.gif
                     media_type: image
                   margin:
@@ -498,7 +498,7 @@ view:
                             end: 20
                           view:
                             type: media
-                            media_fit: center
+                            media_fit: center_crop
                             url: https://unroll-images-production.s3.amazonaws.com/projects/2487/1565801064410-banner-500x500-no-words.jpg
                             media_type: image
                         - size:
