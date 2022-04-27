@@ -99,25 +99,7 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             this.displayTimer = new DisplayTimer(this, restoredTime);
 
             ModalPlacement placement = presentation.getResolvedPlacement(this);
-            if (placement.getOrientationLock() != null) {
-                if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O) {
-                    switch (placement.getOrientationLock()) {
-                        case PORTRAIT:
-                            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                            break;
-                        case LANDSCAPE:
-                            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-                            break;
-                    }
-                } else {
-                    // Orientation locking isn't allowed on API 26 for transparent activities,
-                    // so we'll do the best we can and inherit the parent activity's orientation.
-                    // If the parent activity is locked to an orientation, we'll be locked to that
-                    // orientation, too. Otherwise, rotation will be allowed even though the layout
-                    // requested it not be.
-                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_BEHIND);
-                }
-            }
+            setOrientationLock(placement);
 
             if (placement.shouldIgnoreSafeArea()) {
                 WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
@@ -283,6 +265,32 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             editor.setAttribute(attribute, value.getInt(-1));
         } else if (value.isLong()) {
             editor.setAttribute(attribute, value.getLong(-1));
+        }
+    }
+
+    private void setOrientationLock(@NonNull ModalPlacement placement) {
+        try {
+            if (placement.getOrientationLock() != null) {
+                if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O) {
+                    switch (placement.getOrientationLock()) {
+                        case PORTRAIT:
+                            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                            break;
+                        case LANDSCAPE:
+                            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                            break;
+                    }
+                } else {
+                    // Orientation locking isn't allowed on API 26 for transparent activities,
+                    // so we'll do the best we can and inherit the parent activity's orientation.
+                    // If the parent activity is locked to an orientation, we'll be locked to that
+                    // orientation, too. Otherwise, rotation will be allowed even though the layout
+                    // requested it not be.
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_BEHIND);
+                }
+            }
+        } catch (Exception e) {
+            Logger.error(e, "Unable to set orientation lock.");
         }
     }
 }
