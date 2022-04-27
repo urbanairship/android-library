@@ -5,21 +5,19 @@ package com.urbanairship.android.layout.widget;
 import android.content.Context;
 import android.view.View;
 
-import com.urbanairship.Logger;
-import com.urbanairship.android.layout.environment.Environment;
-import com.urbanairship.android.layout.model.PagerModel;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
-import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.OrientationHelper;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.urbanairship.Logger;
+import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.model.PagerModel;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PagerRecyclerView extends RecyclerView {
@@ -93,11 +91,15 @@ public class PagerRecyclerView extends RecyclerView {
         @Override
         public void onScrollStateChanged(@NonNull RecyclerView v, int state) {
             Logger.debug("onScrollStateChanged: %d", state);
-            if (state != SCROLL_STATE_IDLE) { return; }
 
             int position = getDisplayedItemPosition();
             if (position != NO_POSITION && position != previousPosition) {
-                model.onScrollTo(position, isInternalScroll, environment.displayTimer().getTime());
+                int step = position > previousPosition ? 1 : -1;
+                int distance = Math.abs(position - previousPosition);
+                for (int i = 0; i < distance; i++) {
+                    int calculated = previousPosition + (step * (i + 1));
+                    model.onScrollTo(calculated, isInternalScroll, environment.displayTimer().getTime());
+                }
             }
             previousPosition = position;
             isInternalScroll = false;
