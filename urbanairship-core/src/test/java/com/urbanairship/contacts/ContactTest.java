@@ -50,6 +50,7 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -139,6 +140,7 @@ public class ContactTest extends BaseTestCase {
 
         clearInvocations(mockDispatcher);
 
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
         listener.onChannelCreated(fakeChannelId);
 
         verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(Contact.ACTION_UPDATE_CONTACT)));
@@ -152,7 +154,7 @@ public class ContactTest extends BaseTestCase {
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(response);
 
         contact.resolve();
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
         ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
@@ -166,26 +168,26 @@ public class ContactTest extends BaseTestCase {
 
     @Test
     public void testForeground() throws RequestException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
         // Set up fixed time
         testClock.currentTimeMillis = 0;
 
         contact.init();
-
-        when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 200 response
         Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(response);
 
         contact.resolve();
-        verify(mockDispatcher, times(2)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
                 return jobInfo.getAction().equals(Contact.ACTION_UPDATE_CONTACT);
             }
         }));
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
         clearInvocations(mockDispatcher);
 
@@ -225,7 +227,7 @@ public class ContactTest extends BaseTestCase {
 
         contact.resolve();
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
         verify(changeListener).onContactChanged();
@@ -241,7 +243,7 @@ public class ContactTest extends BaseTestCase {
 
         contact.resolve();
 
-        assertEquals(JobInfo.JOB_RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
     }
 
@@ -255,7 +257,7 @@ public class ContactTest extends BaseTestCase {
 
         contact.resolve();
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
     }
 
@@ -269,7 +271,7 @@ public class ContactTest extends BaseTestCase {
 
         contact.reset();
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).reset(fakeChannelId);
         verify(changeListener).onContactChanged();
     }
@@ -284,7 +286,7 @@ public class ContactTest extends BaseTestCase {
 
         contact.reset();
 
-        assertEquals(JobInfo.JOB_RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).reset(fakeChannelId);
     }
 
@@ -298,7 +300,7 @@ public class ContactTest extends BaseTestCase {
 
         contact.reset();
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).reset(fakeChannelId);
     }
 
@@ -313,7 +315,7 @@ public class ContactTest extends BaseTestCase {
         assertNull(contact.getLastContactIdentity());
         contact.identify(fakeNamedUserId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).identify(fakeNamedUserId, fakeChannelId, null);
 
         assertEquals(fakeContactId, contact.getLastContactIdentity().getContactId());
@@ -333,11 +335,11 @@ public class ContactTest extends BaseTestCase {
         when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, null)).thenReturn(response);
         contact.identify(fakeNamedUserId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).identify(fakeNamedUserId, fakeChannelId, null);
         assertNotNull(contact.getLastContactIdentity());
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verifyNoMoreInteractions(mockContactApiClient);
 
         assertEquals(fakeContactId, contact.getLastContactIdentity().getContactId());
@@ -363,17 +365,17 @@ public class ContactTest extends BaseTestCase {
         contact.reset();
         contact.identify(fakeNamedUserId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient, times(1)).identify(fakeNamedUserId, fakeChannelId, null);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient, times(1)).reset(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient, times(1)).identify(fakeNamedUserId, fakeChannelId, resetContactId);
         assertNotNull(contact.getLastContactIdentity());
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verifyNoMoreInteractions(mockContactApiClient);
     }
 
@@ -402,20 +404,20 @@ public class ContactTest extends BaseTestCase {
         contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply();
 
         // Resolve
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient, times(1)).resolve(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient, times(1)).update(fakeContactId, Collections.emptyList(), Collections.emptyList(), pending);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient, times(1)).reset(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient, times(1)).update(resetContactId, Collections.emptyList(), Collections.emptyList(), pending);
         assertNotNull(contact.getLastContactIdentity());
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verifyNoMoreInteractions(mockContactApiClient);
     }
 
@@ -429,7 +431,7 @@ public class ContactTest extends BaseTestCase {
 
         contact.identify(fakeNamedUserId);
 
-        assertEquals(JobInfo.JOB_RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).identify(fakeNamedUserId, fakeChannelId, null);
     }
 
@@ -443,7 +445,7 @@ public class ContactTest extends BaseTestCase {
 
         contact.identify(fakeNamedUserId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).identify(fakeNamedUserId, fakeChannelId, null);
     }
 
@@ -467,10 +469,10 @@ public class ContactTest extends BaseTestCase {
 
         tagGroupsEditor.apply();
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).update(fakeContactId, tagGroupsMutations, Collections.emptyList(), Collections.emptyList());
     }
 
@@ -490,10 +492,10 @@ public class ContactTest extends BaseTestCase {
         Response<Void> updateResponse = new Response.Builder<Void>(200).build();
         when(mockContactApiClient.update(fakeContactId, Collections.emptyList(), Collections.emptyList(), pending)).thenReturn(updateResponse);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).update(fakeContactId, Collections.emptyList(), Collections.emptyList(), pending);
 
         assertTrue(contact.getPendingSubscriptionListUpdates().isEmpty());
@@ -519,10 +521,10 @@ public class ContactTest extends BaseTestCase {
 
         attributeEditor.apply();
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).update(fakeContactId, Collections.emptyList(), attributeMutations, Collections.emptyList());
     }
 
@@ -561,10 +563,10 @@ public class ContactTest extends BaseTestCase {
 
         contact.identify(fakeNamedUserId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
         verify(mockContactApiClient).resolve(fakeChannelId);
         verify(mockContactApiClient).update("some_contact_id", tagGroupsMutations, attributeMutations, subscriptionListMutations);
@@ -605,11 +607,11 @@ public class ContactTest extends BaseTestCase {
         when(mockContactApiClient.update(fakeContactId, expectedTags, expectedAttributes, Collections.emptyList())).thenReturn(updateResponse);
 
         // Resolve
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
         // Update
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).update(anyString(), ArgumentMatchers.anyList(), ArgumentMatchers.anyList(), ArgumentMatchers.anyList());
 
         verify(tagGroupListener).onTagGroupsMutationUploaded(expectedTags);
@@ -767,7 +769,7 @@ public class ContactTest extends BaseTestCase {
 
         // Resolve contact
         contact.resolve();
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
         Map<String, Set<Scope>> subscriptions = new HashMap<String, Set<Scope>>() {{
             put("foo", Collections.singleton(Scope.APP));
@@ -793,7 +795,7 @@ public class ContactTest extends BaseTestCase {
 
         // Resolve contact
         contact.resolve();
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
         Map<String, Set<Scope>> cachedSubscriptions = new HashMap<String, Set<Scope>>() {{
             put("foo", Collections.singleton(Scope.APP));
@@ -839,7 +841,7 @@ public class ContactTest extends BaseTestCase {
 
         // Resolve contact
         contact.resolve();
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
         Map<String, Set<Scope>> networkSubscriptions = new HashMap<String, Set<Scope>>() {{
             put("foo", Collections.singleton(Scope.SMS));
@@ -872,7 +874,7 @@ public class ContactTest extends BaseTestCase {
 
         // Resolve contact
         contact.resolve();
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
         contact.editSubscriptionLists()
                .subscribe("fizz", Scope.SMS)
@@ -913,12 +915,12 @@ public class ContactTest extends BaseTestCase {
     @Test
     public void testGetSubscriptionPendingReset() throws RequestException, ExecutionException, InterruptedException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, false, null)).build();
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         // Resolve contact
         contact.resolve();
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
         contact.reset();
 
@@ -935,7 +937,7 @@ public class ContactTest extends BaseTestCase {
 
         // Resolve contact
         contact.resolve();
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
         Map<String, Set<Scope>> subscriptions = new HashMap<String, Set<Scope>>() {{
             put("foo", Collections.singleton(Scope.APP));
@@ -963,7 +965,7 @@ public class ContactTest extends BaseTestCase {
 
         // Resolve contact
         contact.resolve();
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
         when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(400)
                 .build()
@@ -995,10 +997,10 @@ public class ContactTest extends BaseTestCase {
 
         contact.registerEmail("ua@airship.com", options);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).registerEmail(eq(fakeContactId), eq("ua@airship.com"), any(EmailRegistrationOptions.class));
 
         verify(changeListener).onContactChanged();
@@ -1019,10 +1021,10 @@ public class ContactTest extends BaseTestCase {
 
         contact.registerEmail("ua@airship.com", options);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).registerEmail(eq(fakeContactId), eq("ua@airship.com"), Mockito.any(EmailRegistrationOptions.class));
     }
 
@@ -1040,10 +1042,10 @@ public class ContactTest extends BaseTestCase {
 
         contact.registerSms("12345678", options);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).registerSms(eq(fakeContactId), eq("12345678"), any(SmsRegistrationOptions.class));
 
         verify(changeListener).onContactChanged();
@@ -1063,10 +1065,10 @@ public class ContactTest extends BaseTestCase {
 
         contact.registerSms("12345678", options);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).registerSms(eq(fakeContactId), eq("12345678"), Mockito.any(SmsRegistrationOptions.class));
     }
 
@@ -1084,10 +1086,10 @@ public class ContactTest extends BaseTestCase {
 
         contact.registerOpenChannel("open-channel-address", options);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).registerOpenChannel(eq(fakeContactId), eq("open-channel-address"), any(OpenChannelRegistrationOptions.class));
 
         verify(changeListener).onContactChanged();
@@ -1107,10 +1109,10 @@ public class ContactTest extends BaseTestCase {
 
         contact.registerOpenChannel("open-channel-address", options);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).registerOpenChannel(eq(fakeContactId), eq("open-channel-address"), Mockito.any(OpenChannelRegistrationOptions.class));
     }
 
@@ -1126,10 +1128,10 @@ public class ContactTest extends BaseTestCase {
 
         contact.associateChannel("new-fake-channel-id", ChannelType.EMAIL);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).associatedChannel(fakeContactId, "new-fake-channel-id", ChannelType.EMAIL);
 
         verify(changeListener).onContactChanged();
@@ -1147,10 +1149,10 @@ public class ContactTest extends BaseTestCase {
 
         contact.associateChannel("new-fake-channel-id", ChannelType.EMAIL);
 
-        assertEquals(JobInfo.JOB_FINISHED, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        assertEquals(JobInfo.JOB_RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
+        assertEquals(JobResult.RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).associatedChannel(fakeContactId, "new-fake-channel-id", ChannelType.EMAIL);
 
         verify(changeListener).onContactChanged();

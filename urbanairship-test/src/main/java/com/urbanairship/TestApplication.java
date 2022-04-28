@@ -56,7 +56,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
         this.preferenceDataStore = PreferenceDataStore.inMemoryStore(getApplicationContext());
 
-        JobDispatcher dispatcher = new JobDispatcher(this, (context, jobInfo) -> {});
+        JobDispatcher dispatcher = new JobDispatcher(this, (context, jobInfo, delay) -> {});
         JobDispatcher.setInstance(dispatcher);
 
         PrivacyManager privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);

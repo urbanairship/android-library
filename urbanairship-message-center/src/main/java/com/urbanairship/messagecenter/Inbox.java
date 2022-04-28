@@ -29,6 +29,7 @@ import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonMap;
 
 import java.util.ArrayList;
@@ -191,11 +192,11 @@ public class Inbox {
      * @hide
      */
     @WorkerThread
-    @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+    @NonNull
+    JobResult onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (!isEnabled.get()) {
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
 
         if (inboxJobHandler == null) {

@@ -25,6 +25,7 @@ import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.push.PushListener;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
@@ -221,13 +222,13 @@ public class MessageCenter extends AirshipComponent {
      * @hide
      */
     @WorkerThread
-    @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+    @NonNull
+    public JobResult onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)) {
             return inbox.onPerformJob(airship, jobInfo);
         } else {
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
     }
 

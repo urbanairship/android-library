@@ -15,6 +15,7 @@ import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 
 import junit.framework.Assert;
 
@@ -519,8 +520,8 @@ public class InboxTest {
         inbox.setEnabled(false);
         inbox.inboxJobHandler = jobHandler;
 
-        int jobResult = inbox.onPerformJob(mock(UAirship.class), mock(JobInfo.class));
-        assertEquals(JobInfo.JOB_FINISHED, jobResult);
+        JobResult jobResult = inbox.onPerformJob(mock(UAirship.class), mock(JobInfo.class));
+        assertEquals(JobResult.SUCCESS, jobResult);
 
         verify(jobHandler, never()).performJob(any(JobInfo.class));
     }

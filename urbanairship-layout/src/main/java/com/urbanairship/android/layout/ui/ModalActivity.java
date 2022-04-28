@@ -5,6 +5,7 @@ package com.urbanairship.android.layout.ui;
 import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.ViewGroup;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -69,6 +70,7 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
 
     private DisplayTimer displayTimer;
     private boolean disableBackButton = false;
+    private ModalView modalView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -123,7 +125,7 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
                 addListener(new ThomasListenerProxy(this.externalListener));
             }
 
-            ModalView modalView = ModalView.create(this, view, presentation, environment);
+            modalView = ModalView.create(this, view, presentation, environment);
             modalView.setLayoutParams(new ConstraintLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
 
             if (presentation.isDismissOnTouchOutside()) {
@@ -141,7 +143,6 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             finish();
         }
     }
-
 
     @Override
     protected void onDestroy() {

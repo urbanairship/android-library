@@ -12,6 +12,7 @@ import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
@@ -106,8 +107,8 @@ class InboxJobHandler {
      * @param jobInfo The airship jobInfo.
      * @return The job result.
      */
-    @JobInfo.JobResult
-    int performJob(@NonNull JobInfo jobInfo) {
+    @NonNull
+    JobResult performJob(@NonNull JobInfo jobInfo) {
         switch (jobInfo.getAction()) {
             case ACTION_RICH_PUSH_USER_UPDATE:
                 onUpdateUser(jobInfo.getExtras().opt(EXTRA_FORCEFULLY).getBoolean(false));
@@ -122,7 +123,7 @@ class InboxJobHandler {
                 break;
         }
 
-        return JobInfo.JOB_FINISHED;
+        return JobResult.SUCCESS;
     }
 
     /**

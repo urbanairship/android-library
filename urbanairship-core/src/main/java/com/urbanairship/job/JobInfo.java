@@ -3,10 +3,18 @@
 package com.urbanairship.job;
 
 import com.urbanairship.AirshipComponent;
+import com.urbanairship.R;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Checks;
 
 import java.lang.annotation.Retention;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.IntDef;
@@ -14,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.util.ObjectsCompat;
+import androidx.work.Data;
 
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
@@ -24,21 +33,6 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class JobInfo {
-
-    @IntDef({ JOB_FINISHED, JOB_RETRY })
-    @Retention(SOURCE)
-    public @interface JobResult {}
-
-    /**
-     * JobInfo is finished.
-     */
-    public static final int JOB_FINISHED = 0;
-
-    /**
-     * JobInfo needs to be retried at a later date.
-     */
-    public static final int JOB_RETRY = 1;
-
 
     @IntDef({ REPLACE, APPEND, KEEP })
     @Retention(SOURCE)
@@ -51,10 +45,11 @@ public class JobInfo {
     private final String action;
     private final String airshipComponentName;
     private final boolean isNetworkAccessRequired;
-    private final long initialDelay;
+    private final long minDelayMs;
     private final int conflictStrategy;
-    private final long minInitialBackOffMs;
+    private final long initialBackOffMs;
     private final JsonMap extras;
+    private final Set<String> rateLimitIds;
 
     /**
      * Default constructor.
@@ -66,9 +61,10 @@ public class JobInfo {
         this.airshipComponentName = builder.airshipComponentName == null ? "" : builder.airshipComponentName;
         this.extras = builder.extras != null ? builder.extras : JsonMap.EMPTY_MAP;
         this.isNetworkAccessRequired = builder.isNetworkAccessRequired;
-        this.initialDelay = builder.initialDelay;
+        this.minDelayMs = builder.minDelayMs;
         this.conflictStrategy = builder.conflictStrategy;
-        this.minInitialBackOffMs = builder.initialBackOffMs;
+        this.initialBackOffMs = builder.initialBackOffMs;
+        this.rateLimitIds = new HashSet<>(builder.rateLimitIds);
     }
 
     /**
@@ -95,8 +91,8 @@ public class JobInfo {
      *
      * @return The initial delay in milliseconds.
      */
-    public long getInitialDelay() {
-        return initialDelay;
+    public long getMinDelayMs() {
+        return minDelayMs;
     }
 
     /**
@@ -119,13 +115,18 @@ public class JobInfo {
         return airshipComponentName;
     }
 
+    @NonNull
+    public Set<String> getRateLimitIds() {
+        return rateLimitIds;
+    }
+
     @ConflictStrategy
     public int getConflictStrategy() {
         return conflictStrategy;
     }
 
-    public long getMinInitialBackOffMs() {
-        return minInitialBackOffMs;
+    public long getInitialBackOffMs() {
+        return initialBackOffMs;
     }
 
     @Override
@@ -134,10 +135,11 @@ public class JobInfo {
                 "action='" + action + '\'' +
                 ", airshipComponentName='" + airshipComponentName + '\'' +
                 ", isNetworkAccessRequired=" + isNetworkAccessRequired +
-                ", initialDelay=" + initialDelay +
+                ", minDelayMs=" + minDelayMs +
                 ", conflictStrategy=" + conflictStrategy +
-                ", minInitialBackOffMs=" + minInitialBackOffMs +
+                ", initialBackOffMs=" + initialBackOffMs +
                 ", extras=" + extras +
+                ", rateLimitIds=" + rateLimitIds +
                 '}';
     }
 
@@ -147,17 +149,18 @@ public class JobInfo {
         if (o == null || getClass() != o.getClass()) return false;
         JobInfo jobInfo = (JobInfo) o;
         return isNetworkAccessRequired == jobInfo.isNetworkAccessRequired &&
-                initialDelay == jobInfo.initialDelay &&
+                minDelayMs == jobInfo.minDelayMs &&
                 conflictStrategy == jobInfo.conflictStrategy &&
-                minInitialBackOffMs == jobInfo.minInitialBackOffMs &&
+                initialBackOffMs == jobInfo.initialBackOffMs &&
                 ObjectsCompat.equals(extras, jobInfo.extras) &&
                 ObjectsCompat.equals(action, jobInfo.action) &&
-                ObjectsCompat.equals(airshipComponentName, jobInfo.airshipComponentName);
+                ObjectsCompat.equals(airshipComponentName, jobInfo.airshipComponentName) &&
+                ObjectsCompat.equals(rateLimitIds, jobInfo.rateLimitIds);
     }
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(extras, action, airshipComponentName, isNetworkAccessRequired, initialDelay, conflictStrategy, minInitialBackOffMs);
+        return ObjectsCompat.hash(extras, action, airshipComponentName, isNetworkAccessRequired, minDelayMs, conflictStrategy, initialBackOffMs, rateLimitIds);
     }
 
     /**
@@ -178,10 +181,11 @@ public class JobInfo {
         private String action;
         private String airshipComponentName;
         private boolean isNetworkAccessRequired;
-        private long initialDelay;
         private JsonMap extras;
         private int conflictStrategy = REPLACE;
         private long initialBackOffMs = MIN_INITIAL_BACKOFF_MS;
+        private long minDelayMs = 0;
+        private Set<String> rateLimitIds = new HashSet<>();
 
         private Builder() {
         }
@@ -229,15 +233,15 @@ public class JobInfo {
         }
 
         /**
-         * Sets initial delay.
+         * Sets the min delay.
          *
          * @param delay The initial delay.
          * @param unit The delay time unit.
          * @return The job builder.
          */
         @NonNull
-        public Builder setInitialDelay(long delay, @NonNull TimeUnit unit) {
-            this.initialDelay = unit.toMillis(delay);
+        public Builder setMinDelay(long delay, @NonNull TimeUnit unit) {
+            this.minDelayMs = unit.toMillis(delay);
             return this;
         }
 
@@ -272,6 +276,11 @@ public class JobInfo {
             return this;
         }
 
+        @NonNull
+        public Builder addRateLimit(@NonNull String rateLimitId) {
+            this.rateLimitIds.add(rateLimitId);
+            return this;
+        }
 
         /**
          * Builds the job.

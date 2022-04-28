@@ -20,6 +20,7 @@ import com.urbanairship.chat.ui.ChatActivity
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
+import com.urbanairship.job.JobResult
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.push.PushManager
@@ -180,19 +181,19 @@ class Chat
         conversation.launchConnectionUpdate()
     }
 
-    override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): Int {
+    override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
         if (jobInfo.action == REFRESH_MESSAGES_ACTION) {
             val result = runBlocking {
                 conversation.refreshMessages()
             }
             return if (result) {
-                JobInfo.JOB_FINISHED
+                JobResult.SUCCESS
             } else {
-                JobInfo.JOB_RETRY
+                JobResult.RETRY
             }
         } else {
             Logger.error("Unexpected job $jobInfo")
-            return JobInfo.JOB_FINISHED
+            return JobResult.SUCCESS
         }
     }
 

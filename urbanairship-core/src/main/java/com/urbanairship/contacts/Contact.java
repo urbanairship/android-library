@@ -29,6 +29,7 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.CachedValue;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -70,6 +72,9 @@ public class Contact extends AirshipComponent {
     @VisibleForTesting
     @NonNull
     static final String ACTION_UPDATE_CONTACT = "ACTION_UPDATE_CONTACT";
+
+    static final String IDENTITY_RATE_LIMIT = "Contact.identity";
+    static final String UPDATE_RATE_LIMIT = "Contact.update";
 
     /**
      * Max age for the contact subscription listing cache.
@@ -180,6 +185,9 @@ public class Contact extends AirshipComponent {
                 checkPrivacyManager();
             }
         });
+
+        jobDispatcher.setRateLimit(IDENTITY_RATE_LIMIT, 1, 5, TimeUnit.SECONDS);
+        jobDispatcher.setRateLimit(UPDATE_RATE_LIMIT, 1, 500, TimeUnit.MILLISECONDS);
 
         checkPrivacyManager();
         dispatchContactUpdateJob();
@@ -538,14 +546,33 @@ public class Contact extends AirshipComponent {
     }
 
     private void dispatchContactUpdateJob(@JobInfo.ConflictStrategy int conflictStrategy) {
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(ACTION_UPDATE_CONTACT)
-                                 .setNetworkAccessRequired(true)
-                                 .setAirshipComponent(Contact.class)
-                                 .setConflictStrategy(conflictStrategy)
-                                 .build();
+        if (UAStringUtil.isEmpty(airshipChannel.getId())) {
+            return;
+        }
 
-        jobDispatcher.dispatch(jobInfo);
+        JobInfo.Builder builder = JobInfo.newBuilder()
+                                         .setAction(ACTION_UPDATE_CONTACT)
+                                         .setNetworkAccessRequired(true)
+                                         .setAirshipComponent(Contact.class)
+                                         .setConflictStrategy(conflictStrategy)
+                                         .addRateLimit(UPDATE_RATE_LIMIT);
+
+        synchronized (operationLock) {
+            ContactOperation operation = prepareNextOperation();
+            if (operation == null) {
+                return;
+            }
+
+            switch (operation.getType()) {
+                case ContactOperation.OPERATION_IDENTIFY:
+                case ContactOperation.OPERATION_RESET:
+                case ContactOperation.OPERATION_RESOLVE:
+                    builder.addRateLimit(IDENTITY_RATE_LIMIT);
+                    break;
+            }
+        }
+
+        jobDispatcher.dispatch(builder.build());
     }
 
     /**
@@ -553,13 +580,12 @@ public class Contact extends AirshipComponent {
      */
     @Override
     @WorkerThread
-    @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+    public JobResult onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (ACTION_UPDATE_CONTACT.equals(jobInfo.getAction())) {
             return onUpdateContact();
         }
-        return JobInfo.JOB_FINISHED;
+        return JobResult.SUCCESS;
     }
 
     /**
@@ -567,38 +593,38 @@ public class Contact extends AirshipComponent {
      *
      * @return The job result.
      */
-    @JobInfo.JobResult
     @WorkerThread
-    private int onUpdateContact() {
+    @NonNull
+    private JobResult onUpdateContact() {
         String channelId = airshipChannel.getId();
         if (UAStringUtil.isEmpty(channelId)) {
             Logger.verbose("The channel ID does not exist. Will retry when channel ID is available.");
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
 
         ContactOperation nextOperation = prepareNextOperation();
         if (nextOperation == null) {
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
 
         try {
             Response response = performOperation(nextOperation, channelId);
             Logger.debug("Operation %s finished with response %s", nextOperation, response);
             if (response.isServerError() || response.isTooManyRequestsError()) {
-                return JobInfo.JOB_RETRY;
+                return JobResult.RETRY;
             } else {
                 removeFirstOperation();
                 dispatchContactUpdateJob(JobInfo.REPLACE);
-                return JobInfo.JOB_FINISHED;
+                return JobResult.SUCCESS;
             }
         } catch (RequestException e) {
             Logger.debug("Failed to update operation: %s, will retry.", e.getMessage());
-            return JobInfo.JOB_RETRY;
+            return JobResult.RETRY;
         } catch (IllegalStateException e) {
             Logger.error("Unable to process operation %s, skipping.", nextOperation, e);
             removeFirstOperation();
             dispatchContactUpdateJob(JobInfo.REPLACE);
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
     }
 
@@ -721,7 +747,6 @@ public class Contact extends AirshipComponent {
         return true;
     }
 
-    @JobInfo.JobResult
     @WorkerThread
     @NonNull
     private Response<?> performOperation(ContactOperation operation, String channelId) throws RequestException {

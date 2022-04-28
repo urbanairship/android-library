@@ -11,6 +11,7 @@ import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
@@ -94,7 +95,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
 
         // Verify result receiver
         verify(inbox).onUpdateMessagesFinished(false);
@@ -125,7 +126,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
 
         // Verify result receiver
         verify(inbox).onUpdateMessagesFinished(true);
@@ -162,7 +163,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
 
         // Verify result receiver
         verify(inbox).onUpdateMessagesFinished(true);
@@ -208,7 +209,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
 
         // Verify result receiver
         verify(inbox).onUpdateMessagesFinished(true);
@@ -244,7 +245,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
 
         // Verify result receiver
         verify(inbox).onUpdateMessagesFinished(false);
@@ -302,7 +303,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
 
         verify(mockMessageDao, never()).deleteMessages(idsToDelete);
 
@@ -355,7 +356,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
 
         verify(mockMessageDao).deleteMessages(idsToDelete);
 
@@ -408,7 +409,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
 
         verify(mockMessageDao, never()).markMessagesReadOrigin(idsToUpdate);
 
@@ -461,7 +462,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
 
         verify(mockMessageDao).markMessagesReadOrigin(idsToUpdate);
 
@@ -489,7 +490,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
         assertTrue(userListener.lastUpdateUserResult);
 
         // Verify user name and user token was set
@@ -517,7 +518,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
         assertTrue(userListener.lastUpdateUserResult);
 
         // Verify user name and user token was set
@@ -536,7 +537,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
         assertFalse(userListener.lastUpdateUserResult);
 
         // Verify we did not create the user
@@ -559,7 +560,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
         assertFalse(userListener.lastUpdateUserResult);
 
         // Verify we did not create the user
@@ -588,7 +589,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
         assertTrue(userListener.lastUpdateUserResult);
     }
 
@@ -613,7 +614,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
         assertTrue(userListener.lastUpdateUserResult);
     }
 
@@ -632,7 +633,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
         assertFalse(userListener.lastUpdateUserResult);
     }
 
@@ -654,7 +655,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
         assertFalse(userListener.lastUpdateUserResult);
     }
 
@@ -693,7 +694,7 @@ public class InboxJobHandlerTest {
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, jobHandler.performJob(jobInfo));
+        assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo));
         assertTrue(userListener.lastUpdateUserResult);
 
         // Verify user name and user token was set

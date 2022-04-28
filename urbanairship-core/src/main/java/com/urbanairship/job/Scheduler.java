@@ -19,7 +19,8 @@ public interface Scheduler {
      *
      * @param context The application context.
      * @param jobInfo The jobInfo to schedule.
+     * @param delayMs The initial delay.
      * @throws SchedulerException if the scheduler fails to schedule the jobInfo.
      */
-    void schedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException;
+    void schedule(@NonNull Context context, @NonNull JobInfo jobInfo, long delayMs) throws SchedulerException;
 }

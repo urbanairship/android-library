@@ -20,38 +20,21 @@ public class WorkUtilsTest extends BaseTestCase {
     @Test
     public void testConvert() throws JsonException {
         JobInfo original = JobInfo.newBuilder()
-                                 .setAction("some action")
-                                 .setAirshipComponent(PushManager.class)
-                                 .setConflictStrategy(JobInfo.APPEND)
-                                 .setExtras(JsonMap.newBuilder()
-                                                   .put("key", "value")
-                                                   .build())
-                                 .setInitialDelay(10, TimeUnit.MILLISECONDS)
-                                 .setNetworkAccessRequired(true)
-                                 .build();
-
-        Data data = WorkUtils.convertToData(original);
-        JobInfo converted = WorkUtils.convertToJobInfo(data);
-
-        assertEquals(original, converted);
-    }
-
-    @Test
-    public void testExtend() throws JsonException {
-        JobInfo original = JobInfo.newBuilder()
-                                  .setAction("some extended action")
+                                  .setAction("some action")
                                   .setAirshipComponent(PushManager.class)
                                   .setConflictStrategy(JobInfo.APPEND)
                                   .setExtras(JsonMap.newBuilder()
                                                     .put("key", "value")
                                                     .build())
-                                  .setInitialDelay(10, TimeUnit.MILLISECONDS)
+                                  .setMinDelay(10, TimeUnit.MILLISECONDS)
                                   .setNetworkAccessRequired(true)
+                                  .setInitialBackOff(10, TimeUnit.SECONDS)
+                                  .addRateLimit("foo")
+                                  .addRateLimit("bar")
                                   .build();
 
         Data data = WorkUtils.convertToData(original);
-        JobInfo converted = WorkUtils.convertToJobInfo(data, value -> value.setAction("some extended action"));
-
+        JobInfo converted = WorkUtils.convertToJobInfo(data);
         assertEquals(original, converted);
     }
 }

@@ -7,6 +7,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
+import com.urbanairship.job.JobResult
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
@@ -120,7 +121,7 @@ class ChatTest {
             val job = JobInfo.newBuilder().setAction("REFRESH_MESSAGES_ACTION").setAirshipComponent(Chat::class.java).build()
 
             val result = chat.onPerformJob(mock(), job)
-            assertEquals(JobInfo.JOB_FINISHED, result)
+            assertEquals(JobResult.SUCCESS, result)
             verify(mockConversation).refreshMessages()
         }
     }
@@ -133,7 +134,7 @@ class ChatTest {
             val job = JobInfo.newBuilder().setAction("REFRESH_MESSAGES_ACTION").setAirshipComponent(Chat::class.java).build()
 
             val result = chat.onPerformJob(mock(), job)
-            assertEquals(JobInfo.JOB_RETRY, result)
+            assertEquals(JobResult.RETRY, result)
             verify(mockConversation).refreshMessages()
         }
     }

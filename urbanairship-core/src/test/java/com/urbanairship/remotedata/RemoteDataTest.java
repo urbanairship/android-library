@@ -19,6 +19,7 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -444,11 +445,11 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
-        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
         runLooperTasks();
 
         // Perform the update
-        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
         runLooperTasks();
 
         verify(mockClient).fetchRemoteDataPayloads(eq("lastModifiedResponse"), eq(locale), any(RemoteDataApiClient.PayloadParser.class));
@@ -478,7 +479,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
-        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
         runLooperTasks();
 
         localeManager.setLocaleOverride(otherLocale);
@@ -486,7 +487,7 @@ public class RemoteDataTest extends BaseTestCase {
         when(mockClient.fetchRemoteDataPayloads(eq((String) null), eq(otherLocale), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         // Perform the update
-        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
         runLooperTasks();
     }
 
@@ -545,7 +546,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
-        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
     }
 
     @Test
@@ -554,7 +555,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
-        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
 
         verifyNoMoreInteractions(mockClient);
     }
@@ -572,7 +573,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
-        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
     }
 
     /**
@@ -588,7 +589,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
-        assertEquals(JobInfo.JOB_RETRY, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.RETRY, remoteData.onPerformJob(UAirship.shared(), jobInfo));
     }
 
     /**
@@ -604,7 +605,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
-        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
     }
 
     @Test
@@ -625,7 +626,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
-        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
 
         assertTrue(pendingResult.isDone());
         assertTrue(pendingResult.get());
@@ -655,7 +656,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
-        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
 
         assertTrue(pendingResult.isDone());
         assertTrue(pendingResult.get());
@@ -675,7 +676,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
-        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
 
         assertTrue(pendingResult.isDone());
         assertFalse(pendingResult.get());
@@ -690,7 +691,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
-        assertEquals(JobInfo.JOB_FINISHED, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
 
         runLooperTasks();
     }

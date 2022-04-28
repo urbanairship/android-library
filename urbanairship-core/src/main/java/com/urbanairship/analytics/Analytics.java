@@ -22,6 +22,7 @@ import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleManager;
@@ -282,26 +283,26 @@ public class Analytics extends AirshipComponent {
      */
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @JobInfo.JobResult
-    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+    @NonNull
+    public JobResult onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (EventManager.ACTION_SEND.equals(jobInfo.getAction())) {
             if (!isEnabled()) {
-                return JobInfo.JOB_FINISHED;
+                return JobResult.SUCCESS;
             }
 
             if (airshipChannel.getId() == null) {
                 Logger.debug("No channel ID, skipping analytics send.");
-                return JobInfo.JOB_FINISHED;
+                return JobResult.SUCCESS;
             }
 
             if (!eventManager.uploadEvents(getAnalyticHeaders())) {
-                return JobInfo.JOB_RETRY;
+                return JobResult.RETRY;
             }
 
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
 
-        return JobInfo.JOB_FINISHED;
+        return JobResult.SUCCESS;
     }
 
     /**

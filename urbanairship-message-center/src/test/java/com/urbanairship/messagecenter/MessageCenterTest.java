@@ -29,6 +29,7 @@ import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.push.PushListener;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
@@ -263,8 +264,10 @@ public class MessageCenterTest {
         UAirship airship = mock(UAirship.class);
         JobInfo jobInfo = mock(JobInfo.class);
 
-        int result = messageCenter.onPerformJob(airship, jobInfo);
-        assertEquals(JobInfo.JOB_FINISHED, result);
+        when(inbox.onPerformJob(airship, jobInfo)).thenReturn(JobResult.SUCCESS);
+        JobResult result = messageCenter.onPerformJob(airship, jobInfo);
+        assertEquals(JobResult.SUCCESS, result);
+
 
         verify(inbox).onPerformJob(eq(airship), eq(jobInfo));
     }
@@ -273,8 +276,8 @@ public class MessageCenterTest {
     public void testPerformJobWhenDisabled() {
         when(privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)).thenReturn(false);
 
-        int result = messageCenter.onPerformJob(mock(UAirship.class), mock(JobInfo.class));
-        assertEquals(JobInfo.JOB_FINISHED, result);
+        JobResult result = messageCenter.onPerformJob(mock(UAirship.class), mock(JobInfo.class));
+        assertEquals(JobResult.SUCCESS, result);
 
         verify(inbox, never()).onPerformJob(any(UAirship.class), any(JobInfo.class));
     }

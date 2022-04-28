@@ -24,6 +24,7 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;
@@ -236,18 +237,18 @@ public class RemoteData extends AirshipComponent {
     }
 
     @WorkerThread
-    @JobInfo.JobResult
+    @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+    public JobResult onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (!privacyManager.isAnyFeatureEnabled()) {
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
 
         if (ACTION_REFRESH.equals(jobInfo.getAction())) {
             return onRefresh();
         }
 
-        return JobInfo.JOB_FINISHED;
+        return JobResult.SUCCESS;
     }
 
     /**
@@ -460,8 +461,8 @@ public class RemoteData extends AirshipComponent {
      *
      * @return The job result.
      */
-    @JobInfo.JobResult
-    private int onRefresh() {
+    @NonNull
+    private JobResult onRefresh() {
         synchronized (refreshLock) {
             isRefreshing = true;
         }
@@ -479,14 +480,14 @@ public class RemoteData extends AirshipComponent {
         } catch (RequestException e) {
             Logger.error(e, "RemoteDataJobHandler - Failed to refresh data");
             onRefreshFinished(false);
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
 
         Logger.debug("Received remote data response: %s", response);
 
         if (response.getStatus() == 304) {
             onRefreshFinished(true);
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
 
         if (response.isSuccessful()) {
@@ -498,15 +499,15 @@ public class RemoteData extends AirshipComponent {
                 preferenceDataStore.put(LAST_MODIFIED_KEY, lm);
                 notifyPayloadUpdates(remoteDataPayloads);
                 onRefreshFinished(true);
-                return JobInfo.JOB_FINISHED;
+                return JobResult.SUCCESS;
             }
             onRefreshFinished(false);
-            return JobInfo.JOB_RETRY;
+            return JobResult.RETRY;
         }
 
         // Error
         onRefreshFinished(false);
-        return response.isServerError() ? JobInfo.JOB_RETRY : JobInfo.JOB_FINISHED;
+        return response.isServerError() ? JobResult.RETRY : JobResult.SUCCESS;
     }
 
     private void onRefreshFinished(boolean success) {

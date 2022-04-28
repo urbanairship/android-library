@@ -1,57 +1,54 @@
 package com.urbanairship.job;
 
-import android.telecom.Call;
-
-import com.urbanairship.base.Extender;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.work.Data;
 
 abstract class WorkUtils {
 
-    private static final String ACTION_KEY = "action";
+    private static final String ACTION = "action";
     private static final String EXTRAS = "extras";
     private static final String COMPONENT = "component";
     private static final String NETWORK_REQUIRED = "network_required";
-    private static final String INITIAL_DELAY = "initial_delay";
+    private static final String MIN_DELAY = "min_delay";
     private static final String CONFLICT_STRATEGY = "conflict_strategy";
+    private static final String INITIAL_BACKOFF = "initial_backoff";
+    private static final String RATE_LIMIT_IDS = "rate_limit_ids";
 
     @NonNull
     static Data convertToData(@NonNull JobInfo jobInfo) {
         return new Data.Builder()
-                .putString(ACTION_KEY, jobInfo.getAction())
+                .putString(ACTION, jobInfo.getAction())
                 .putString(EXTRAS, jobInfo.getExtras().toString())
                 .putString(COMPONENT, jobInfo.getAirshipComponentName())
                 .putBoolean(NETWORK_REQUIRED, jobInfo.isNetworkAccessRequired())
-                .putLong(INITIAL_DELAY, jobInfo.getInitialDelay())
+                .putLong(MIN_DELAY, jobInfo.getMinDelayMs())
+                .putLong(INITIAL_BACKOFF, jobInfo.getInitialBackOffMs())
                 .putInt(CONFLICT_STRATEGY, jobInfo.getConflictStrategy())
+                .putString(RATE_LIMIT_IDS, JsonValue.wrapOpt(jobInfo.getRateLimitIds()).toString())
                 .build();
     }
 
     @NonNull
     static JobInfo convertToJobInfo(@NonNull Data data) throws JsonException {
-        return convertToJobInfo(data, null);
-    }
-
-    @NonNull
-    static JobInfo convertToJobInfo(@NonNull Data data, @Nullable Extender<JobInfo.Builder> extender) throws JsonException {
         JobInfo.Builder builder = JobInfo.newBuilder()
-                      .setAction(data.getString(ACTION_KEY))
-                      .setExtras(JsonValue.parseString(data.getString(EXTRAS)).optMap())
-                      .setInitialDelay(data.getLong(INITIAL_DELAY, 0), TimeUnit.MILLISECONDS)
-                      .setNetworkAccessRequired(data.getBoolean(NETWORK_REQUIRED, false))
-                      .setAirshipComponent(data.getString(COMPONENT))
-                      .setConflictStrategy(data.getInt(CONFLICT_STRATEGY, JobInfo.REPLACE));
+                                         .setAction(data.getString(ACTION))
+                                         .setExtras(JsonValue.parseString(data.getString(EXTRAS)).optMap())
+                                         .setMinDelay(data.getLong(MIN_DELAY, 0), TimeUnit.MILLISECONDS)
+                                         .setInitialBackOff(data.getLong(INITIAL_BACKOFF, 0), TimeUnit.MILLISECONDS)
+                                         .setNetworkAccessRequired(data.getBoolean(NETWORK_REQUIRED, false))
+                                         .setAirshipComponent(data.getString(COMPONENT))
+                                         .setConflictStrategy(data.getInt(CONFLICT_STRATEGY, JobInfo.REPLACE));
 
-        if (extender != null) {
-            builder = extender.extend(builder);
+        for (JsonValue value : JsonValue.parseString(data.getString(RATE_LIMIT_IDS)).optList()) {
+            builder.addRateLimit(value.requireString());
         }
 
         return builder.build();
     }
+
 }

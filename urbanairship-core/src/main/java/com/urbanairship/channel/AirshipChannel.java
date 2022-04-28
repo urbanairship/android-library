@@ -27,6 +27,7 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -257,13 +258,13 @@ public class AirshipChannel extends AirshipComponent {
      * @hide
      */
     @WorkerThread
-    @JobInfo.JobResult
+    @NonNull
     @Override
-    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+    public JobResult onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (ACTION_UPDATE_CHANNEL.equals(jobInfo.getAction())) {
             if (!isRegistrationAllowed()) {
                 Logger.debug("Channel registration is currently disabled.");
-                return JobInfo.JOB_FINISHED;
+                return JobResult.SUCCESS;
             }
 
             JsonValue extraForceFullUpdate = jobInfo.getExtras().get(EXTRA_FORCE_FULL_UPDATE);
@@ -272,7 +273,7 @@ public class AirshipChannel extends AirshipComponent {
             return onUpdateChannel(forceFullUpdate);
         }
 
-        return JobInfo.JOB_FINISHED;
+        return JobResult.SUCCESS;
     }
 
     /**
@@ -886,15 +887,15 @@ public class AirshipChannel extends AirshipComponent {
      * @return The job result.
      */
     @WorkerThread
-    @JobInfo.JobResult
-    private int onCreateChannel() {
+    @NonNull
+    private JobResult onCreateChannel() {
         ChannelRegistrationPayload payload = getNextChannelRegistrationPayload();
         Response<String> response;
         try {
             response = channelApiClient.createChannelWithPayload(payload);
         } catch (RequestException e) {
             Logger.debug(e, "Channel registration failed, will retry");
-            return JobInfo.JOB_RETRY;
+            return JobResult.RETRY;
         }
 
         // 2xx
@@ -922,17 +923,17 @@ public class AirshipChannel extends AirshipComponent {
             }
 
             dispatchUpdateJob(false, JobInfo.REPLACE);
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
 
         // 429 || 5xx
         if (response.isServerError() || response.isTooManyRequestsError()) {
             Logger.debug("Channel registration failed with status: %s, will retry", response.getStatus());
-            return JobInfo.JOB_RETRY;
+            return JobResult.RETRY;
         }
 
         Logger.debug("Channel registration failed with status: %s", response.getStatus());
-        return JobInfo.JOB_FINISHED;
+        return JobResult.SUCCESS;
     }
 
     /**
@@ -941,12 +942,12 @@ public class AirshipChannel extends AirshipComponent {
      * @return The job result.
      */
     @WorkerThread
-    @JobInfo.JobResult
-    private int onUpdateChannel(boolean forceFullUpdate) {
+    @NonNull
+    private JobResult onUpdateChannel(boolean forceFullUpdate) {
         String channelId = getId();
         // Create or Update Channel Registration
-        int result = channelId == null ? onCreateChannel() : updateChannelRegistration(channelId, forceFullUpdate);
-        if (result != JobInfo.JOB_FINISHED) {
+        JobResult result = channelId == null ? onCreateChannel() : updateChannelRegistration(channelId, forceFullUpdate);
+        if (result != JobResult.SUCCESS) {
             return result;
         } else {
             channelId = getId();
@@ -961,11 +962,11 @@ public class AirshipChannel extends AirshipComponent {
                 }
 
                 if (!attributeResult || !tagResult || !subscriptionListResult) {
-                    return JobInfo.JOB_RETRY;
+                    return JobResult.RETRY;
                 }
             }
         }
-        return JobInfo.JOB_FINISHED;
+        return JobResult.SUCCESS;
     }
 
     /**
@@ -976,12 +977,12 @@ public class AirshipChannel extends AirshipComponent {
      * @return The job result.
      */
     @WorkerThread
-    @JobInfo.JobResult
-    private int updateChannelRegistration(@NonNull String channelId, boolean forceFullUpdate) {
+    @NonNull
+    private JobResult updateChannelRegistration(@NonNull String channelId, boolean forceFullUpdate) {
         ChannelRegistrationPayload payload = getNextChannelRegistrationPayload();
         if (!shouldUpdateRegistration(payload)) {
             Logger.verbose("Channel already up to date.");
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
 
         Logger.verbose("Performing channel registration.");
@@ -993,7 +994,7 @@ public class AirshipChannel extends AirshipComponent {
             response = channelApiClient.updateChannelWithPayload(channelId, updatePayload);
         } catch (RequestException e) {
             Logger.debug(e, "Channel registration failed, will retry");
-            return JobInfo.JOB_RETRY;
+            return JobResult.RETRY;
         }
 
         // 2xx
@@ -1006,13 +1007,13 @@ public class AirshipChannel extends AirshipComponent {
             }
 
             dispatchUpdateJob(false, JobInfo.REPLACE);
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
 
         // 429 || 5xx
         if (response.isServerError() || response.isTooManyRequestsError()) {
             Logger.debug("Channel registration failed with status: %s, will retry", response.getStatus());
-            return JobInfo.JOB_RETRY;
+            return JobResult.RETRY;
         }
 
         // 409
@@ -1025,7 +1026,7 @@ public class AirshipChannel extends AirshipComponent {
         }
 
         Logger.debug("Channel registration failed with status: %s", response.getStatus());
-        return JobInfo.JOB_FINISHED;
+        return JobResult.SUCCESS;
     }
 
     /**

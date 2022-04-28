@@ -6,6 +6,7 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonMap;
 
 import java.util.concurrent.Executor;
@@ -96,10 +97,9 @@ public abstract class AirshipComponent {
      * @hide
      */
     @WorkerThread
-    @JobInfo.JobResult
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
-        return JobInfo.JOB_FINISHED;
+    public JobResult onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+        return JobResult.SUCCESS;
     }
 
     /**

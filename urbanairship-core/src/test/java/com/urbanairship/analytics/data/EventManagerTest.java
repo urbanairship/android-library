@@ -77,7 +77,7 @@ public class EventManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(EventManager.ACTION_SEND) && jobInfo.getInitialDelay() == 10000L;
+                return jobInfo.getAction().equals(EventManager.ACTION_SEND) && jobInfo.getMinDelayMs() == 10000L;
             }
         }));
     }
@@ -100,7 +100,7 @@ public class EventManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(EventManager.ACTION_SEND) && jobInfo.getInitialDelay() > 10000;
+                return jobInfo.getAction().equals(EventManager.ACTION_SEND) && jobInfo.getMinDelayMs() > 10000;
             }
         }));
     }
@@ -241,7 +241,7 @@ public class EventManagerTest extends BaseTestCase {
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
             public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(EventManager.ACTION_SEND) && jobInfo.getInitialDelay() == 0;
+                return jobInfo.getAction().equals(EventManager.ACTION_SEND) && jobInfo.getMinDelayMs() == 0;
             }
         }));
     }

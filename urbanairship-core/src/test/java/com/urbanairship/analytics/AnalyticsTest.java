@@ -16,6 +16,7 @@ import com.urbanairship.analytics.data.EventManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.locale.LocaleManager;
 
 import org.junit.Before;
@@ -371,7 +372,7 @@ public class AnalyticsTest extends BaseTestCase {
                                  .setAction(EventManager.ACTION_SEND)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, analytics.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, analytics.onPerformJob(UAirship.shared(), jobInfo));
     }
 
     /**
@@ -388,7 +389,7 @@ public class AnalyticsTest extends BaseTestCase {
                                  .setAction(EventManager.ACTION_SEND)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, analytics.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, analytics.onPerformJob(UAirship.shared(), jobInfo));
     }
 
     /**
@@ -405,7 +406,7 @@ public class AnalyticsTest extends BaseTestCase {
                                  .setAction(EventManager.ACTION_SEND)
                                  .build();
 
-        assertEquals(JobInfo.JOB_FINISHED, analytics.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.SUCCESS, analytics.onPerformJob(UAirship.shared(), jobInfo));
     }
 
     /**
@@ -422,7 +423,7 @@ public class AnalyticsTest extends BaseTestCase {
                                  .setAction(EventManager.ACTION_SEND)
                                  .build();
 
-        assertEquals(JobInfo.JOB_RETRY, analytics.onPerformJob(UAirship.shared(), jobInfo));
+        assertEquals(JobResult.RETRY, analytics.onPerformJob(UAirship.shared(), jobInfo));
     }
 
     /**

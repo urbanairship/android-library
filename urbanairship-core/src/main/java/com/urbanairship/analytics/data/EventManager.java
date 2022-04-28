@@ -136,7 +136,7 @@ public class EventManager {
                                      .setAction(ACTION_SEND)
                                      .setNetworkAccessRequired(true)
                                      .setAirshipComponent(Analytics.class)
-                                     .setInitialDelay(milliseconds, TimeUnit.MILLISECONDS)
+                                     .setMinDelay(milliseconds, TimeUnit.MILLISECONDS)
                                      .setConflictStrategy(conflictStrategy)
                                      .build();
 

@@ -9,18 +9,20 @@ import java.util.concurrent.TimeUnit;
 import androidx.annotation.NonNull;
 import androidx.work.BackoffPolicy;
 import androidx.work.Constraints;
+import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
 class WorkManagerScheduler implements Scheduler {
+    static final String JOB_INFO = "job_info";
     private static final String AIRSHIP_TAG = "airship";
 
     @Override
-    public void schedule(@NonNull Context context, @NonNull JobInfo jobInfo) throws SchedulerException {
+    public void schedule(@NonNull Context context, @NonNull JobInfo jobInfo, long delayMs) throws SchedulerException {
         try {
-            OneTimeWorkRequest workRequest = createWorkRequest(jobInfo);
+            OneTimeWorkRequest workRequest = createWorkRequest(jobInfo, delayMs);
             ExistingWorkPolicy workPolicy = convertConflict(jobInfo.getConflictStrategy());
             String uniqueName = jobInfo.getAirshipComponentName() + ":" + jobInfo.getAction();
             WorkManager.getInstance(context)
@@ -30,15 +32,16 @@ class WorkManagerScheduler implements Scheduler {
         }
     }
 
-    private static OneTimeWorkRequest createWorkRequest(@NonNull JobInfo jobInfo) {
+    private static OneTimeWorkRequest createWorkRequest(@NonNull JobInfo jobInfo, long delayMs) {
+        Data data = WorkUtils.convertToData(jobInfo);
         OneTimeWorkRequest.Builder workRequestBuilder = new OneTimeWorkRequest.Builder(AirshipWorker.class)
                 .addTag(AIRSHIP_TAG)
-                .setInputData(WorkUtils.convertToData(jobInfo))
-                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, jobInfo.getMinInitialBackOffMs(), TimeUnit.MILLISECONDS)
+                .setInputData(data)
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, jobInfo.getInitialBackOffMs(), TimeUnit.MILLISECONDS)
                 .setConstraints(createConstraints(jobInfo));
 
-        if (jobInfo.getInitialDelay() > 0) {
-            workRequestBuilder.setInitialDelay(jobInfo.getInitialDelay(), TimeUnit.MILLISECONDS);
+        if (delayMs > 0) {
+            workRequestBuilder.setInitialDelay(delayMs, TimeUnit.MILLISECONDS);
         }
 
         return workRequestBuilder.build();
@@ -68,7 +71,5 @@ class WorkManagerScheduler implements Scheduler {
         return new Constraints.Builder()
                 .setRequiredNetworkType(jobInfo.isNetworkAccessRequired() ? NetworkType.CONNECTED : NetworkType.NOT_REQUIRED)
                 .build();
-
     }
-
 }

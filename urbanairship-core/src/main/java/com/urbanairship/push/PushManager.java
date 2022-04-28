@@ -21,6 +21,7 @@ import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
+import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
@@ -413,11 +414,11 @@ public class PushManager extends AirshipComponent {
      * @hide
      */
     @WorkerThread
-    @JobInfo.JobResult
+    @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public int onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+    public JobResult onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)) {
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
 
         switch (jobInfo.getAction()) {
@@ -430,7 +431,7 @@ public class PushManager extends AirshipComponent {
                 String providerClass = jobInfo.getExtras().opt(PushProviderBridge.EXTRA_PROVIDER_CLASS).getString();
 
                 if (providerClass == null) {
-                    return JobInfo.JOB_FINISHED;
+                    return JobResult.SUCCESS;
                 }
 
                 IncomingPushRunnable pushRunnable = new IncomingPushRunnable.Builder(getContext())
@@ -442,10 +443,10 @@ public class PushManager extends AirshipComponent {
 
                 pushRunnable.run();
 
-                return JobInfo.JOB_FINISHED;
+                return JobResult.SUCCESS;
         }
 
-        return JobInfo.JOB_FINISHED;
+        return JobResult.SUCCESS;
     }
 
     /**
@@ -1006,20 +1007,20 @@ public class PushManager extends AirshipComponent {
      * @return {@code true} if push registration either succeeded or is not possible on this device. {@code false} if
      * registration failed and should be retried.
      */
-    @JobInfo.JobResult
-    int performPushRegistration(boolean updateChannelOnChange) {
+    @NonNull
+    JobResult performPushRegistration(boolean updateChannelOnChange) {
         shouldDispatchUpdateTokenJob = false;
         String currentToken = getPushToken();
 
         if (pushProvider == null) {
             Logger.info("PushManager - Push registration failed. Missing push provider.");
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
 
         synchronized (pushProvider) {
             if (!pushProvider.isAvailable(context)) {
                 Logger.warn("PushManager - Push registration failed. Push provider unavailable: %s", pushProvider);
-                return JobInfo.JOB_RETRY;
+                return JobResult.RETRY;
             }
 
             String token;
@@ -1029,10 +1030,10 @@ public class PushManager extends AirshipComponent {
                 if (e.isRecoverable()) {
                     Logger.debug("Push registration failed with error: %s. Will retry.", e.getMessage());
                     Logger.verbose(e);
-                    return JobInfo.JOB_RETRY;
+                    return JobResult.RETRY;
                 } else {
                     Logger.error(e, "PushManager - Push registration failed.");
-                    return JobInfo.JOB_FINISHED;
+                    return JobResult.SUCCESS;
                 }
             }
 
@@ -1051,7 +1052,7 @@ public class PushManager extends AirshipComponent {
                 }
             }
 
-            return JobInfo.JOB_FINISHED;
+            return JobResult.SUCCESS;
         }
     }
 
