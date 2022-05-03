@@ -157,7 +157,7 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
         if (event.isChecked() && !event.getValue().equals(selectedValue)) {
             selectedValue = event.getValue();
             trickleEvent(new RadioEvent.ViewUpdate(event.getValue(), event.isChecked()));
-            bubbleEvent(new FormEvent.DataChange(new FormData.RadioInputController(identifier, event.getValue()), isValid(), attributeName, JsonValue.wrap(selectedValue)));
+            bubbleEvent(new FormEvent.DataChange(new FormData.RadioInputController(identifier, event.getValue()), isValid(), attributeName, event.getAttributeValue()));
         }
 
         return true;

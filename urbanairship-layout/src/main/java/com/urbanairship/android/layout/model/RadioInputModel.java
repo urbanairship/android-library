@@ -65,7 +65,7 @@ public class RadioInputModel extends CheckableModel {
     @NonNull
     @Override
     public Event buildInputChangeEvent(boolean isChecked) {
-        return new RadioEvent.InputChange(reportingValue, isChecked);
+        return new RadioEvent.InputChange(reportingValue, attributeValue, isChecked);
     }
 
     @NonNull
