@@ -17,4 +17,11 @@ public interface EventSource {
      * @param listener the {@code EventListener} to remove.
      */
     void removeListener(EventListener listener);
+
+    /**
+     * Sets an event listener, removing any previously set listeners.
+     *
+     * @param listener the {@code EventListener} to set.
+     */
+    void setListener(EventListener listener);
 }

@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ContainerLayoutModel;
@@ -52,7 +53,6 @@ public class ContainerLayoutView extends ClippableConstraintLayout implements Ba
     }
 
     public void init() {
-        setId(generateViewId());
         setClipChildren(true);
     }
 
@@ -67,6 +67,8 @@ public class ContainerLayoutView extends ClippableConstraintLayout implements Ba
     public void setModel(@NonNull ContainerLayoutModel model, @NonNull Environment environment) {
         this.model = model;
         this.environment = environment;
+
+        setId(model.getViewId());
         configureContainer();
     }
 
@@ -90,7 +92,6 @@ public class ContainerLayoutView extends ClippableConstraintLayout implements Ba
 
     private void addItem(@NonNull ConstraintSetBuilder constraintBuilder, @NonNull ContainerLayoutModel.Item item) {
         View itemView = Thomas.view(getContext(), item.getView(), environment);
-        itemView.setId(generateViewId());
 
         ViewGroup frame = new FrameLayout(getContext());
         int frameId = generateViewId();

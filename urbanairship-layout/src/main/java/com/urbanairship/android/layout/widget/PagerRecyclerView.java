@@ -5,19 +5,20 @@ package com.urbanairship.android.layout.widget;
 import android.content.Context;
 import android.view.View;
 
+import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.model.PagerModel;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.core.util.Consumer;
 import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.OrientationHelper;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.urbanairship.Logger;
-import com.urbanairship.android.layout.environment.Environment;
-import com.urbanairship.android.layout.model.PagerModel;
+import androidx.recyclerview.widget.RecyclerView.Adapter.StateRestorationPolicy;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PagerRecyclerView extends RecyclerView {
@@ -35,8 +36,6 @@ public class PagerRecyclerView extends RecyclerView {
     }
 
     private void init() {
-        setId(generateViewId());
-
         snapHelper = new SnapHelper();
         snapHelper.attachToRecyclerView(this);
 
@@ -47,20 +46,31 @@ public class PagerRecyclerView extends RecyclerView {
         this.model = model;
         this.environment = environment;
 
+        setId(model.getRecyclerViewId());
+
+        final Consumer<Boolean> onLayoutComplete = (isInitialLayout) -> {
+            if (!isInitialLayout) { return; }
+            model.onConfigured(getDisplayedItemPosition(), environment.displayTimer().getTime());
+        };
+
         if (model.getChildren().size() <= 1 || model.isSwipeDisabled()) {
-            layoutManager = new SwipeDisabledLinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL);
+            layoutManager = new SwipeDisabledLinearLayoutManager(
+                getContext(), LinearLayoutManager.HORIZONTAL, onLayoutComplete);
         } else {
-            layoutManager = new LinearLayoutManager(getContext(), HORIZONTAL, false);
+            layoutManager = new ThomasLinearLayoutManager(
+                getContext(), HORIZONTAL, onLayoutComplete);
         }
+
         // Disable prefetch so we won't get display events from items that aren't yet visible.
         layoutManager.setItemPrefetchEnabled(false);
         setLayoutManager(layoutManager);
 
-        adapter = new PagerAdapter(environment);
-        setAdapter(adapter);
-
-        adapter.setItems(model.getChildren());
         addOnScrollListener(recyclerScrollListener);
+
+        adapter = new PagerAdapter(model, environment);
+        adapter.setStateRestorationPolicy(StateRestorationPolicy.PREVENT_WHEN_EMPTY);
+        adapter.setItems(model.getChildren());
+        setAdapter(adapter);
 
         // Pass along any calls to apply insets to the view.
         ViewCompat.setOnApplyWindowInsetsListener(this, (v, insets) -> {
@@ -90,8 +100,6 @@ public class PagerRecyclerView extends RecyclerView {
 
         @Override
         public void onScrollStateChanged(@NonNull RecyclerView v, int state) {
-            Logger.debug("onScrollStateChanged: %d", state);
-
             int position = getDisplayedItemPosition();
             if (position != NO_POSITION && position != previousPosition) {
                 int step = position > previousPosition ? 1 : -1;
@@ -106,12 +114,37 @@ public class PagerRecyclerView extends RecyclerView {
         }
     };
 
+    private static class ThomasLinearLayoutManager extends LinearLayoutManager {
+        private final Consumer<Boolean> layoutCompletedCallback;
+        private boolean isInitialLayout = true;
+
+        public ThomasLinearLayoutManager(
+            Context context,
+            int orientation,
+            Consumer<Boolean> completedCallback
+        ) {
+            super(context, orientation, false);
+            this.layoutCompletedCallback = completedCallback;
+        }
+
+        @Override
+        public void onLayoutCompleted(State state) {
+            super.onLayoutCompleted(state);
+            layoutCompletedCallback.accept(isInitialLayout);
+            isInitialLayout = false;
+        }
+    }
+
     /**
      * Custom {@code LinearLayoutManager} that disables scrolling via touch, but can still be scrolled programmatically.
      */
-    private static class SwipeDisabledLinearLayoutManager extends LinearLayoutManager {
-        public SwipeDisabledLinearLayoutManager(Context context, int orientation) {
-            super(context, orientation, false);
+    private static class SwipeDisabledLinearLayoutManager extends ThomasLinearLayoutManager {
+        public SwipeDisabledLinearLayoutManager(
+            Context context,
+            int orientation,
+            Consumer<Boolean> completedCallback
+        ) {
+            super(context, orientation, completedCallback);
         }
 
         @Override

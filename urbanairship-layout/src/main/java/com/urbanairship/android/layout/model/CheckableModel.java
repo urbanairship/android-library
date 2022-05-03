@@ -2,6 +2,9 @@
 
 package com.urbanairship.android.layout.model;
 
+import android.view.View;
+
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
@@ -11,6 +14,7 @@ import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
+import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -23,6 +27,8 @@ public abstract class CheckableModel extends BaseModel implements Accessible {
 
     @Nullable
     private Listener listener = null;
+
+    private final int checkableViewId = View.generateViewId();
 
     public CheckableModel(
         @NonNull ViewType viewType,
@@ -59,6 +65,10 @@ public abstract class CheckableModel extends BaseModel implements Accessible {
         return contentDescription;
     }
 
+    public int getCheckableViewId() {
+        return checkableViewId;
+    }
+
     public void setListener(@Nullable Listener listener) {
         this.listener = listener;
     }
@@ -69,6 +79,7 @@ public abstract class CheckableModel extends BaseModel implements Accessible {
         }
     }
 
+    @CallSuper
     public void onConfigured() {
         bubbleEvent(buildInitEvent());
     }

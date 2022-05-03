@@ -25,21 +25,14 @@ public class EmptyView extends View implements BaseView<EmptyModel> {
 
     public EmptyView(Context context) {
         super(context);
-        init();
     }
 
     public EmptyView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        init();
     }
 
     public EmptyView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
-    }
-
-    public void init() {
-        setId(generateViewId());
     }
 
     @NonNull
@@ -52,6 +45,8 @@ public class EmptyView extends View implements BaseView<EmptyModel> {
     @Override
     public void setModel(@NonNull EmptyModel model, @NonNull Environment environment) {
         this.model = model;
+
+        setId(model.getViewId());
         configure();
     }
 

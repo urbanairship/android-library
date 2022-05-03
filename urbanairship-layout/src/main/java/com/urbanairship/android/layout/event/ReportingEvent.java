@@ -352,12 +352,12 @@ public abstract class ReportingEvent extends Event {
 
         @Override
         public ReportingEvent overrideState(@NonNull FormInfo formInfo) {
-            return new FormResult(formData, formInfo, copyState(formInfo), attributes);
+            return new FormResult(getFormData(), getFormInfo(), copyState(formInfo), attributes);
         }
 
         @Override
         public ReportingEvent overrideState(@NonNull PagerData pagerData) {
-            return new FormResult(formData, formInfo, copyState(pagerData), attributes);
+            return new FormResult(getFormData(), getFormInfo(), copyState(pagerData), attributes);
         }
     }
 
@@ -382,12 +382,12 @@ public abstract class ReportingEvent extends Event {
 
         @Override
         public ReportingEvent overrideState(@NonNull FormInfo formInfo) {
-            return new FormDisplay(formInfo, copyState(formInfo));
+            return new FormDisplay(getFormInfo(), copyState(formInfo));
         }
 
         @Override
         public ReportingEvent overrideState(@NonNull PagerData pagerData) {
-            return new FormDisplay(formInfo, copyState(pagerData));
+            return new FormDisplay(getFormInfo(), copyState(pagerData));
         }
 
         @Override

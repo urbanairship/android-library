@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.CheckboxEvent;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
@@ -12,6 +13,7 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
+import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -45,6 +47,11 @@ public class CheckboxModel extends CheckableModel {
         Border border = borderFromJson(json);
 
         return new CheckboxModel(reportingValue, style, contentDescription, backgroundColor, border);
+    }
+
+    @NonNull
+    public JsonValue getReportingValue() {
+        return reportingValue;
     }
 
     @NonNull

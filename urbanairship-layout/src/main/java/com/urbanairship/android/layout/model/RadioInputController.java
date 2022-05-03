@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.FormEvent;
@@ -128,7 +129,8 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
                 return onViewInit((Event.ViewInit) event);
             case RADIO_INPUT_CHANGE:
                 return onInputChange((RadioEvent.InputChange) event);
-
+            case VIEW_ATTACHED:
+                return onViewAttached((Event.ViewAttachedToWindow) event);
             default:
                 // Pass along any other events
                 return super.onEvent(event);
@@ -141,7 +143,10 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
                 bubbleEvent(new RadioEvent.ControllerInit(identifier, isValid()));
             }
             RadioInputModel model = (RadioInputModel) event.getModel();
-            radioInputs.add(model);
+            if (!radioInputs.contains(model)) {
+                // This is the first time we've seen this radio input; Add it to our list.
+                radioInputs.add(model);
+            }
             return true;
         } else {
             return false;
@@ -156,5 +161,21 @@ public class RadioInputController extends LayoutModel implements Identifiable, A
         }
 
         return true;
+    }
+
+    private boolean onViewAttached(Event.ViewAttachedToWindow event) {
+        if (event.getViewType() == ViewType.RADIO_INPUT
+            && event.getModel() instanceof RadioInputModel
+            && selectedValue != null) {
+
+            // Restore radio state.
+            JsonValue value = ((RadioInputModel) event.getModel()).getReportingValue();
+            boolean isSelected = selectedValue.equals(value);
+            if (isSelected) {
+                trickleEvent(new RadioEvent.ViewUpdate(value, true));
+            }
+        }
+        // Always pass the event on.
+        return super.onEvent(event);
     }
 }

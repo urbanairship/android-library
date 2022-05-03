@@ -4,10 +4,12 @@ package com.urbanairship.android.layout.view;
 
 import android.content.Context;
 import android.view.Gravity;
+import android.view.WindowInsets;
 import android.widget.Checkable;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.PagerIndicatorModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
@@ -44,6 +46,7 @@ public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIn
     @Override
     public void setModel(@NonNull PagerIndicatorModel model, @NonNull Environment environment) {
         this.model = model;
+        setId(model.getViewId());
         configure();
     }
 
@@ -60,9 +63,14 @@ public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIn
     //
 
     private final PagerIndicatorModel.Listener listener = new PagerIndicatorModel.Listener() {
+        private boolean isInitialized = false;
+
         @Override
         public void onInit(int size, int position) {
-            setCount(size);
+            if (!isInitialized) {
+                isInitialized = true;
+                setCount(size);
+            }
             setPosition(position);
         }
 
@@ -79,9 +87,6 @@ public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIn
      */
     public void setCount(int count) {
         Context context = getContext();
-        if (getChildCount() > 0) {
-            removeAllViews();
-        }
 
         PagerIndicatorModel.Bindings bindings = model.getBindings();
         PagerIndicatorModel.Binding checked = bindings.getSelected();
@@ -98,11 +103,12 @@ public class PagerIndicatorView extends LinearLayout implements BaseView<PagerIn
                 checked.getIcon(),
                 unchecked.getIcon());
 
+            view.setId(model.getIndicatorViewId(i));
+            view.setAdjustViewBounds(true);
+
             LayoutParams lp = new LayoutParams(WRAP_CONTENT, MATCH_PARENT);
             lp.setMarginStart(i == 0 ? spacing : halfSpacing);
             lp.setMarginEnd(i == count - 1 ? spacing : halfSpacing);
-
-            view.setAdjustViewBounds(true);
 
             addView(view, lp);
         }

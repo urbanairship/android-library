@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.model;
 
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.event.CheckboxEvent;
 import com.urbanairship.android.layout.event.Event;
@@ -133,6 +134,9 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
             case CHECKBOX_INPUT_CHANGE:
                 return onCheckboxInputChange((CheckboxEvent.InputChange) event);
 
+            case VIEW_ATTACHED:
+                return onViewAttached((Event.ViewAttachedToWindow) event);
+
             default:
                 // Pass along any other events
                 return super.onEvent(event);
@@ -145,7 +149,12 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
                 bubbleEvent(new CheckboxEvent.ControllerInit(identifier, isValid()));
             }
             CheckboxModel model = (CheckboxModel) event.getModel();
-            checkboxes.add(model);
+
+            if (!checkboxes.contains(model)) {
+                // This is the first time we've seen this checkbox; Add it to our list.
+                checkboxes.add(model);
+            }
+
             return true;
         } else {
             return false;
@@ -155,6 +164,7 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
     private boolean onCheckboxInputChange(CheckboxEvent.InputChange event) {
         if (event.isChecked() && selectedValues.size() + 1 > maxSelection) {
             // Can't check any more boxes, so we'll ignore it and consume the event.
+            Logger.debug("Ignoring checkbox input change for '%s'. Max selections reached!", event.getValue());
             return true;
         }
 
@@ -167,5 +177,18 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
         trickleEvent(new CheckboxEvent.ViewUpdate(event.getValue(), event.isChecked()));
         bubbleEvent(new FormEvent.DataChange(new FormData.CheckboxController(identifier, selectedValues), isValid()));
         return true;
+    }
+
+    private boolean onViewAttached(Event.ViewAttachedToWindow event) {
+        if (event.getViewType() == ViewType.CHECKBOX
+            && event.getModel() instanceof CheckboxModel
+            && !selectedValues.isEmpty()) {
+
+            CheckboxModel model = (CheckboxModel) event.getModel();
+            boolean isChecked = selectedValues.contains(model.getReportingValue());
+            trickleEvent(new CheckboxEvent.ViewUpdate(model.getReportingValue(), isChecked));
+        }
+        // Always pass the event on.
+        return super.onEvent(event);
     }
 }

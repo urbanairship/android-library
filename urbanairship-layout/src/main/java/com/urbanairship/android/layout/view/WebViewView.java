@@ -5,6 +5,7 @@ package com.urbanairship.android.layout.view;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
@@ -61,7 +62,6 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
     }
 
     private void init() {
-        setId(generateViewId());
     }
 
     @NonNull
@@ -86,12 +86,13 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
     /**
      * Sets the media info.
      *  @param model The media info.
-     * // TODO: @param cachedMediaUrl The cached media URL.
      * @param environment
      */
     public void setModel(@NonNull WebViewModel model, @NonNull Environment environment) {
         this.model = model;
         this.environment = environment;
+
+        setId(model.getViewId());
         configure();
     }
 
@@ -107,6 +108,12 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
     @SuppressLint("SetJavaScriptEnabled")
     private void loadWebView(@NonNull WebViewModel model) {
         this.webView = new AirshipWebView(getContext());
+
+        // Restore saved state from the model, if available.
+        Bundle savedState = model.getSavedState();
+        if (savedState != null) {
+            webView.restoreState(savedState);
+        }
 
         FrameLayout frameLayout = new FrameLayout(getContext());
         frameLayout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
@@ -163,7 +170,10 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
             return;
         }
 
-        webView.loadUrl(model.getUrl());
+        // Load the URL (if we didn't restore with saved state)
+        if (savedState == null) {
+            webView.loadUrl(model.getUrl());
+        }
     }
 
     private abstract static class ClientListener implements AirshipWebViewClient.Listener {
@@ -219,6 +229,18 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
         public void onResume(@NonNull LifecycleOwner owner) {
             if (webView != null) {
                 webView.onResume();
+            }
+        }
+
+        @Override
+        public void onStop(@NonNull LifecycleOwner owner) {
+            // WebView saved state is meant to work with Activity/Fragment APIs that use bundles.
+            // Work around this by stashing state in the model instead. This won't survive process
+            // restarts, but will at least restore scroll position for recreates.
+            if (webView != null) {
+                Bundle bundle = new Bundle();
+                webView.saveState(bundle);
+                model.saveState(bundle);
             }
         }
     };

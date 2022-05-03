@@ -3,9 +3,12 @@
 package com.urbanairship.android.layout.view;
 
 import android.content.Context;
+import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.util.SparseArray;
 import android.view.View;
 
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.ScrollLayoutModel;
@@ -37,7 +40,6 @@ public class ScrollLayoutView extends NestedScrollView implements BaseView<Scrol
     }
 
     private void init() {
-        setId(generateViewId());
         setFillViewport(false);
     }
 
@@ -56,6 +58,8 @@ public class ScrollLayoutView extends NestedScrollView implements BaseView<Scrol
     public void setModel(@NonNull ScrollLayoutModel model, @NonNull Environment environment) {
         this.model = model;
         this.environment = environment;
+
+        setId(model.getViewId());
         configureScrollLayout();
     }
 

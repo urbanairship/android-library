@@ -38,7 +38,6 @@ public class LabelButtonView extends MaterialButton implements BaseView<LabelBut
     }
 
     private void init() {
-        setId(generateViewId());
         setAllCaps(false);
         setSingleLine(true);
         setEllipsize(TextUtils.TruncateAt.END);
@@ -53,6 +52,8 @@ public class LabelButtonView extends MaterialButton implements BaseView<LabelBut
 
     public void setModel(@NonNull LabelButtonModel model, @NonNull Environment environment) {
         this.model = model;
+
+        setId(model.getViewId());
         configureButton();
     }
 

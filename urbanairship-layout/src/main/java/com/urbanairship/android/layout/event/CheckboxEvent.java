@@ -37,7 +37,10 @@ public abstract class CheckboxEvent {
         }
     }
 
-    /** Event trickled down to Checkbox views from Checkbox controllers to update their checked state. */
+    /**
+     * Event trickled down to Checkbox views from Checkbox controllers to update
+     * their checked state when a checkbox is checked or unchecked.
+     */
     public static final class ViewUpdate extends FormEvent.CheckedChange {
         public ViewUpdate(@NonNull JsonValue value, boolean isChecked) {
             super(EventType.CHECKBOX_VIEW_UPDATE, value, isChecked);

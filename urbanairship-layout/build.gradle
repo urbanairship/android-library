@@ -18,7 +18,10 @@ android {
     }
 
     testOptions {
-        unitTests.includeAndroidResources = true
+        unitTests {
+            includeAndroidResources = true
+            returnDefaultValues = true
+        }
     }
 
     compileOptions {
@@ -33,6 +36,7 @@ dependencies {
     // AndroidX
     implementation "androidx.core:core:$rootProject.androidxCoreVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
+    implementation "androidx.recyclerview:recyclerview:$rootProject.androidxRecyclerViewVersion"
     implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
 
     // Material

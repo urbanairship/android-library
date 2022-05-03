@@ -83,8 +83,10 @@ class MainActivity : AppCompatActivity() {
             previousSelection = adapter.getItem(position)
         }
 
-        binding.showModal.setOnClickListener {
+        binding.showModal.setOnClickListener { v ->
+            v.isEnabled = false
             displayLayout(binding.layoutSpinnerText.text.toString())
+            v.postDelayed({ v.isEnabled = true }, 150)
         }
     }
 
@@ -108,32 +110,66 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val thomasListener = object : ThomasListener {
+        private val events = mutableListOf<String>()
+
         override fun onPageView(pagerData: PagerData, state: LayoutData?, displayedAt: Long) {
-            Logger.debug("onPageView(pagerData: $pagerData, state: $state, displayedAt: $displayedAt)")
+            "onPageView(pagerData: $pagerData, state: $state, displayedAt: $displayedAt)".let {
+                events.add(it)
+                Logger.debug(it)
+            }
         }
 
         override fun onPageSwipe(pagerData: PagerData, toPageIndex: Int, toPageId: String, fromPageIndex: Int, fromPageId: String, state: LayoutData?) {
-            Logger.debug("onPageSwipe(pagerData: $pagerData, toPageIndex: $toPageIndex, toPageId: $toPageId, fromPageIndex: $fromPageIndex, fromPageId: $fromPageId, state: $state)")
+            "onPageSwipe(pagerData: $pagerData, toPageIndex: $toPageIndex, toPageId: $toPageId, fromPageIndex: $fromPageIndex, fromPageId: $fromPageId, state: $state)".let {
+                events.add(it)
+                Logger.debug(it)
+            }
         }
 
         override fun onButtonTap(buttonId: String, state: LayoutData?) {
-            Logger.debug("onButtonTap(buttonId: $buttonId, state: $state)")
+            "onButtonTap(buttonId: $buttonId, state: $state)".let {
+                events.add(it)
+                Logger.debug(it)
+            }
         }
 
         override fun onDismiss(displayTime: Long) {
-            Logger.debug("onDismiss(displayTime: $displayTime)")
+            "onDismiss(displayTime: $displayTime)".let {
+                events.add(it)
+                Logger.debug(it)
+            }
+            dumpEvents()
         }
 
         override fun onDismiss(buttonId: String, buttonDescription: String?, cancel: Boolean, displayTime: Long, state: LayoutData?) {
-            Logger.debug("onDismiss(buttonId: $buttonId, buttonDescription: $buttonDescription, cancel: $cancel, displayTime: $displayTime, state: $state")
+            "onDismiss(buttonId: $buttonId, buttonDescription: $buttonDescription, cancel: $cancel, displayTime: $displayTime, state: $state".let {
+                events.add(it)
+                Logger.debug(it)
+            }
+            dumpEvents()
         }
 
         override fun onFormResult(formData: FormData.BaseForm, state: LayoutData?) {
-            Logger.debug("onFormResult(formData: ${formData.toJsonValue()}, state: $state)")
+            "onFormResult(formData: ${formData.toJsonValue()}, state: $state)".let {
+                events.add(it)
+                Logger.debug(it)
+            }
         }
 
         override fun onFormDisplay(formInfo: FormInfo, state: LayoutData?) {
-            Logger.debug("onFormDisplay(formInfo: $formInfo, state: $state)")
+            "onFormDisplay(formInfo: $formInfo, state: $state)".let {
+                events.add(it)
+                Logger.debug(it)
+            }
+        }
+
+        private fun dumpEvents() {
+            Logger.debug("\n")
+            Logger.debug("---- LAYOUT EVENTS ----")
+            events.forEachIndexed { index, s -> Logger.debug("$index: $s") }
+            Logger.debug("-----------------------")
+            Logger.debug("\n")
+            events.clear()
         }
     }
 }

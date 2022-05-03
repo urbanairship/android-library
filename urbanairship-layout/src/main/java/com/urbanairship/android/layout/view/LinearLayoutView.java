@@ -47,7 +47,6 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
     }
 
     private void init() {
-        setId(generateViewId());
         setClipChildren(false);
     }
 
@@ -62,6 +61,8 @@ public class LinearLayoutView extends WeightlessLinearLayout implements BaseView
     public void setModel(@NonNull LinearLayoutModel model, @NonNull Environment environment) {
         this.model = model;
         this.environment = environment;
+
+        setId(model.getViewId());
         configureLinearLayout();
     }
 

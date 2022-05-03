@@ -41,7 +41,8 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
     @Nullable
     private final String contentDescription;
 
-    private int selectedScore = -1;
+    @Nullable
+    private Integer selectedScore = null;
 
     public ScoreModel(
         @NonNull String identifier,
@@ -96,9 +97,14 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
         return style;
     }
 
+    @Nullable
+    public Integer getSelectedScore() {
+        return selectedScore;
+    }
+
     @Override
     public boolean isValid() {
-        return selectedScore > -1 || !isRequired;
+        return (selectedScore != null && selectedScore > -1) || !isRequired;
     }
 
     public void onConfigured() {

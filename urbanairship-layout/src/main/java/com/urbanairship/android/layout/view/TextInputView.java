@@ -8,6 +8,8 @@ import android.text.TextWatcher;
 import android.text.method.ScrollingMovementMethod;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.TextInputModel;
@@ -41,8 +43,14 @@ public class TextInputView extends AppCompatEditText implements BaseView<TextInp
     }
 
     private void init() {
-        setId(generateViewId());
         setBackground(null);
+    }
+
+    @Nullable
+    @Override
+    public InputConnection onCreateInputConnection(@NonNull EditorInfo outAttrs) {
+        outAttrs.imeOptions |= EditorInfo.IME_FLAG_NO_FULLSCREEN | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
+        return super.onCreateInputConnection(outAttrs);
     }
 
     @NonNull
@@ -55,6 +63,8 @@ public class TextInputView extends AppCompatEditText implements BaseView<TextInp
     @Override
     public void setModel(@NonNull TextInputModel model, @NonNull Environment environment) {
         this.model = model;
+
+        setId(model.getViewId());
         configure();
     }
 
@@ -63,6 +73,10 @@ public class TextInputView extends AppCompatEditText implements BaseView<TextInp
 
         if (!UAStringUtil.isEmpty(model.getContentDescription())) {
             setContentDescription(model.getContentDescription());
+        }
+
+        if (model.getValue() != null) {
+            setText(model.getValue());
         }
 
         addTextChangedListener(textWatcher);

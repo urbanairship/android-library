@@ -31,7 +31,6 @@ public class LabelView extends AppCompatTextView implements BaseView<LabelModel>
     }
 
     private void init() {
-        setId(generateViewId());
     }
 
     @NonNull
@@ -43,6 +42,8 @@ public class LabelView extends AppCompatTextView implements BaseView<LabelModel>
 
     @Override
     public void setModel(@NonNull LabelModel model, @NonNull Environment environment) {
+        setId(model.getViewId());
+
         LayoutUtils.applyLabelModel(this, model);
         LayoutUtils.applyBorderAndBackground(this, model);
 

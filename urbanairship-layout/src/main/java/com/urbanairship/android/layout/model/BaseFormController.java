@@ -114,7 +114,7 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
 
     @Override
     public boolean onEvent(@NonNull Event event) {
-        Logger.debug("onEvent: %s", event);
+        Logger.verbose("onEvent: %s", event);
         switch (event.getType()) {
             case FORM_INIT:
                 onNestedFormInit((FormEvent.Init) event);

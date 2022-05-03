@@ -76,10 +76,16 @@ public class PagerController extends LayoutModel implements Identifiable {
         switch (event.getType()) {
             case PAGER_INIT:
                 PagerEvent.Init init = (PagerEvent.Init) event;
+                boolean isReinit = isInitialized();
+                // Trickle the event to update the pager indicator, if this controller contains one.
                 trickleEvent(init);
+                // Update our local state.
                 reducePagerState(init);
-                reportPageView(init);
-                handlePageActions(init);
+                // If this is the first time we've been initialized, report and handle actions.
+                if (!isReinit) {
+                    reportPageView(init);
+                    handlePageActions(init);
+                }
                 return true;
 
             case PAGER_SCROLL:
@@ -105,13 +111,11 @@ public class PagerController extends LayoutModel implements Identifiable {
                 return false;
 
             case VIEW_INIT:
-                switch (((Event.ViewInit) event).getViewType()) {
-                    case PAGER_INDICATOR:
-                        // Consume indicator init events.
-                        return true;
-                    default:
-                        return super.onEvent(event);
+                if (((Event.ViewInit) event).getViewType() == ViewType.PAGER_INDICATOR) {
+                    // Consume indicator init events.
+                    return true;
                 }
+                return super.onEvent(event);
 
             case BUTTON_BEHAVIOR_CANCEL:
             case BUTTON_BEHAVIOR_DISMISS:
@@ -174,5 +178,10 @@ public class PagerController extends LayoutModel implements Identifiable {
     private PagerData buildPagerData() {
         String pageId = pageIdentifier == null ? "" : pageIdentifier;
         return new PagerData(identifier, pageIndex, pageId, count, completed);
+    }
+
+    /** Returns {@code true} if the controller has been initialized with state from a pager view. */
+    private boolean isInitialized() {
+        return pageIdentifier != null && pageIndex != -1 && count != -1;
     }
 }

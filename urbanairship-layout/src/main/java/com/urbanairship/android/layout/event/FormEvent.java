@@ -94,7 +94,7 @@ public abstract class FormEvent extends Event {
         }
     }
 
-    private abstract static class InputChange<T> extends FormEvent {
+    abstract static class InputChange<T> extends FormEvent {
         @NonNull
         protected final T value;
 

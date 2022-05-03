@@ -96,7 +96,6 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
     }
 
     private void init() {
-        setId(generateViewId());
     }
 
     @NonNull
@@ -116,6 +115,8 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
     public void setModel(@NonNull MediaModel model, @NonNull Environment environment) {
         this.model = model;
         this.environment = environment;
+
+        setId(model.getViewId());
         configure();
     }
 
@@ -265,21 +266,18 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
             }
             switch (model.getMediaType()) {
                 case VIDEO:
-                    Logger.debug("LOADING VIDEO");
                     webView.loadData(
                             String.format(Locale.ROOT, VIDEO_HTML_FORMAT, model.getUrl()),
                             "text/html",
                             "UTF-8");
                     break;
                 case IMAGE:
-                    Logger.debug("LOADING IMAGE");
                     webView.loadData(
                             String.format(Locale.ROOT, IMAGE_HTML_FORMAT, model.getUrl()),
                             "text/html",
                             "UTF-8");
                     break;
                 default:
-                    Logger.debug("LOADING SOMETHING ELSE");
                     webView.loadUrl(model.getUrl());
                     break;
             }

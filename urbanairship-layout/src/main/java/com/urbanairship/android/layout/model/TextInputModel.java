@@ -124,6 +124,11 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
         return hintText;
     }
 
+    @Nullable
+    public String getValue() {
+        return value;
+    }
+
     public void onConfigured() {
         bubbleEvent(new TextInputEvent.Init(identifier, isValid()));
     }

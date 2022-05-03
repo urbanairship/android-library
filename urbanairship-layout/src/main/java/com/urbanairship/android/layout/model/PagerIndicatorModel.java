@@ -2,6 +2,8 @@
 
 package com.urbanairship.android.layout.model;
 
+import android.view.View;
+
 import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.PagerEvent;
@@ -15,7 +17,10 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
@@ -33,6 +38,8 @@ public class PagerIndicatorModel extends BaseModel {
     private int position = -1;
     @Nullable
     private Listener listener;
+
+    private final HashMap<Integer, Integer> indicatorViewIds = new HashMap<>();
 
     public PagerIndicatorModel(@NonNull Bindings bindings, int indicatorSpacing,
                                @Nullable Color backgroundColor, @Nullable Border border) {
@@ -121,6 +128,19 @@ public class PagerIndicatorModel extends BaseModel {
         public Icon getIcon() {
             return icon;
         }
+    }
+
+    /** Returns a stable viewId for the indicator view at the given {@code position}. */
+    public int getIndicatorViewId(int position) {
+        Integer viewId = null;
+        if (indicatorViewIds.containsKey(position)) {
+            viewId = indicatorViewIds.get(position);
+        }
+        if (viewId == null) {
+            viewId = View.generateViewId();
+            indicatorViewIds.put(position, viewId);
+        }
+        return viewId;
     }
 
     //

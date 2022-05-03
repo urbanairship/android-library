@@ -31,7 +31,11 @@ public class CheckboxView extends CheckableView<CheckboxModel> {
     }
 
     @NonNull
-    public static CheckboxView create(@NonNull Context context, @NonNull CheckboxModel model, @NonNull Environment environment) {
+    public static CheckboxView create(
+        @NonNull Context context,
+        @NonNull CheckboxModel model,
+        @NonNull Environment environment
+    ) {
         CheckboxView view = new CheckboxView(context);
         view.setModel(model, environment);
         return view;

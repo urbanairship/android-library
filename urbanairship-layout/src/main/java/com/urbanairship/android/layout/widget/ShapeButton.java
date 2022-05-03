@@ -76,8 +76,6 @@ public class ShapeButton extends AppCompatButton implements Checkable, Clippable
     ) {
         super(context);
 
-        setId(generateViewId());
-
         this.checkedTextAppearance = checkedTextAppearance;
         this.uncheckedTextAppearance = uncheckedTextAppearance;
         this.text = text;

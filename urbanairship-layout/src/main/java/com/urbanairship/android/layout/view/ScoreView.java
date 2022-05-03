@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.SparseIntArray;
 import android.view.View;
 import android.widget.Checkable;
 
@@ -31,6 +32,8 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
     @Nullable
     private Integer selectedScore = null;
 
+    private final SparseIntArray scoreToViewIds = new SparseIntArray();
+
     public ScoreView(Context context) {
         super(context);
         init();
@@ -47,7 +50,6 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
     }
 
     private void init() {
-        setId(generateViewId());
     }
 
     @NonNull
@@ -60,6 +62,8 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
     @Override
     public void setModel(@NonNull ScoreModel model, @NonNull Environment environment) {
         this.model = model;
+
+        setId(model.getViewId());
         configure();
     }
 
@@ -80,6 +84,11 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
         }
 
         constraints.build().applyTo(this);
+
+        // Restore state from the model, if we have any.
+        if (model.getSelectedScore() != null) {
+            setSelectedScore(model.getSelectedScore());
+        }
 
         model.onConfigured();
         LayoutUtils.doOnAttachToWindow(this, model::onAttachedToWindow);
@@ -106,8 +115,11 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
                 }
             };
 
-            int viewId = button.getId();
+            int viewId = generateViewId();
+            button.setId(viewId);
             viewIds[i - start] = viewId;
+
+            scoreToViewIds.append(score, viewId);
 
             button.setOnClickListener(v -> onScoreClick(v, score));
 
@@ -118,6 +130,17 @@ public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> 
 
         constraints.setHorizontalChainStyle(viewIds, ConstraintSet.CHAIN_PACKED)
                 .createHorizontalChainInParent(viewIds, 0, style.getSpacing());
+    }
+
+    private void setSelectedScore(int score) {
+        selectedScore = score;
+        int viewId = scoreToViewIds.get(score, -1);
+        if (viewId > -1) {
+            View view = findViewById(viewId);
+            if (view instanceof Checkable) {
+                ((Checkable) view).setChecked(true);
+            }
+        }
     }
 
     private void onScoreClick(@NonNull View view, int score) {

@@ -2,6 +2,9 @@
 
 package com.urbanairship.android.layout.model;
 
+import android.view.View;
+
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.event.EventSource;
@@ -29,10 +32,14 @@ public abstract class BaseModel implements EventSource, EventListener {
     @Nullable
     private final Border border;
 
+    private final int viewId;
+
     public BaseModel(@NonNull ViewType viewType, @Nullable Color backgroundColor, @Nullable Border border) {
         this.viewType = viewType;
         this.backgroundColor = backgroundColor;
         this.border = border;
+
+        this.viewId = View.generateViewId();
     }
 
     @NonNull
@@ -61,6 +68,10 @@ public abstract class BaseModel implements EventSource, EventListener {
         return borderJson.isEmpty() ? null : Border.fromJson(borderJson);
     }
 
+    public int getViewId() {
+        return viewId;
+    }
+
     //
     // EventSource impl
     //
@@ -79,6 +90,13 @@ public abstract class BaseModel implements EventSource, EventListener {
     @Override
     public void removeListener(EventListener listener) {
         listeners.remove(listener);
+    }
+
+    /** Sets an event listener, removing any previously set listeners. */
+    @Override
+    public void setListener(EventListener listener) {
+        listeners.clear();
+        listeners.add(listener);
     }
 
     //

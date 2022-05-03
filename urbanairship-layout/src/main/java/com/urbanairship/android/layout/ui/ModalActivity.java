@@ -118,11 +118,11 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             );
 
             BaseModel view = args.getPayload().getView();
-            view.addListener(this);
+            view.setListener(this);
 
             // Add thomas listener last so its the last thing to receive events
             if (this.externalListener != null) {
-                addListener(new ThomasListenerProxy(this.externalListener));
+                setListener(new ThomasListenerProxy(this.externalListener));
             }
 
             modalView = ModalView.create(this, view, presentation, environment);
@@ -215,6 +215,12 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
     @Override
     public void removeListener(EventListener listener) {
         this.listeners.remove(listener);
+    }
+
+    @Override
+    public void setListener(EventListener listener) {
+        this.listeners.clear();
+        this.listeners.add(listener);
     }
 
     private void reportDismissFromButton(ButtonEvent event) {

@@ -2,6 +2,9 @@
 
 package com.urbanairship.android.layout.model;
 
+import android.view.View;
+
+import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.PagerEvent;
@@ -14,6 +17,7 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +39,10 @@ public class PagerModel extends LayoutModel {
     private Listener listener;
 
     private int lastIndex = 0;
+
+    private final int recyclerViewId = View.generateViewId();
+
+    private final HashMap<Integer, Integer> pageViewIds = new HashMap<>();
 
     public PagerModel(@NonNull List<PagerModel.Item> items, boolean disableSwipe, @Nullable Color backgroundColor, @Nullable Border border) {
         super(ViewType.PAGER, backgroundColor, border);
@@ -62,6 +70,24 @@ public class PagerModel extends LayoutModel {
     @Override
     public List<BaseModel> getChildren() {
         return children;
+    }
+
+    /** Stable viewId for the recycler view. */
+    public int getRecyclerViewId() {
+        return recyclerViewId;
+    }
+
+    /** Returns a stable viewId for the pager item view at the given adapter {@code position}. */
+    public int getPageViewId(int position) {
+        Integer viewId = null;
+        if (pageViewIds.containsKey(position)) {
+            viewId = pageViewIds.get(position);
+        }
+        if (viewId == null) {
+            viewId = View.generateViewId();
+            pageViewIds.put(position, viewId);
+        }
+        return viewId;
     }
 
     //
@@ -95,10 +121,15 @@ public class PagerModel extends LayoutModel {
     //
 
     public void onScrollTo(int position, boolean isInternalScroll, long time) {
+        // Bail if this is a duplicate scroll event, which can sometimes happen if
+        // the user starts scrolling and then lets go without changing pages after a recreate.
+        if (position == lastIndex) { return; }
+
         Item item = items.get(position);
         String pageId = item.identifier;
         Map<String, JsonValue> pageActions = item.actions;
         String previousPageId = this.items.get(lastIndex).identifier;
+
         bubbleEvent(new PagerEvent.Scroll(this, position, pageId, pageActions, lastIndex, previousPageId, isInternalScroll, time));
         lastIndex = position;
     }
@@ -116,6 +147,7 @@ public class PagerModel extends LayoutModel {
 
     @Override
     public boolean onEvent(@NonNull Event event) {
+        Logger.verbose("onEvent: %s", event);
         return onEvent(event, true);
     }
 

@@ -52,7 +52,6 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
     }
 
     private void init() {
-        setId(generateViewId());
     }
 
     protected int getMinWidth() {
@@ -109,6 +108,8 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
     public void setModel(@NonNull M model, @NonNull Environment environment) {
         this.model = model;
         this.environment = environment;
+
+        setId(model.getViewId());
         configure();
     }
 
@@ -145,6 +146,8 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
 
     protected void configureSwitch(SwitchStyle style) {
         SwitchCompat switchView = createSwitchView(style);
+        switchView.setId(model.getCheckableViewId());
+
         LayoutUtils.applySwitchStyle(switchView, style);
 
         view = new CheckableViewAdapter.Switch(switchView);
@@ -155,6 +158,7 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
 
     protected void configureCheckbox(CheckboxStyle style) {
         ShapeButton checkboxView = createCheckboxView(style);
+        checkboxView.setId(model.getCheckableViewId());
         LayoutUtils.applyBorderAndBackground(checkboxView, model);
 
         view = new CheckableViewAdapter.Checkbox(checkboxView);

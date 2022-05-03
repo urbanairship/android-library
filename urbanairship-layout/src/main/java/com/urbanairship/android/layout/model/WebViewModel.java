@@ -2,6 +2,8 @@
 
 package com.urbanairship.android.layout.model;
 
+import android.os.Bundle;
+
 import com.urbanairship.android.layout.event.WebViewEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
@@ -15,6 +17,9 @@ import androidx.annotation.Nullable;
 public class WebViewModel extends BaseModel {
     @NonNull
     private final String url;
+
+    @Nullable
+    private Bundle savedState;
 
     public WebViewModel(@NonNull String url, @Nullable Color backgroundColor, @Nullable Border border) {
         super(ViewType.WEB_VIEW, backgroundColor, border);
@@ -38,5 +43,14 @@ public class WebViewModel extends BaseModel {
 
     public void onClose() {
         bubbleEvent(new WebViewEvent.Close());
+    }
+
+    public void saveState(@NonNull Bundle bundle) {
+        savedState = bundle;
+    }
+
+    @Nullable
+    public Bundle getSavedState() {
+        return savedState;
     }
 }

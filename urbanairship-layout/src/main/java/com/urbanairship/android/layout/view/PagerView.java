@@ -42,7 +42,6 @@ public class PagerView extends FrameLayout implements BaseView<PagerModel> {
     }
 
     private void init() {
-        setId(generateViewId());
     }
 
     @NonNull
@@ -56,6 +55,8 @@ public class PagerView extends FrameLayout implements BaseView<PagerModel> {
     public void setModel(@NonNull PagerModel model, @NonNull Environment environment) {
         this.model = model;
         this.environment = environment;
+        setId(model.getViewId());
+
         configure();
     }
 

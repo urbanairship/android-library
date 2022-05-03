@@ -44,8 +44,6 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
     }
 
     private void init(@NonNull Context context) {
-        setId(generateViewId());
-
         Drawable ripple = ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple);
         setBackgroundDrawable(ripple);
         setClickable(true);
@@ -64,6 +62,8 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
     public void setModel(@NonNull ImageButtonModel model, @NonNull Environment environment) {
         this.model = model;
         this.environment = environment;
+
+        setId(model.getViewId());
         configureButton();
     }
 

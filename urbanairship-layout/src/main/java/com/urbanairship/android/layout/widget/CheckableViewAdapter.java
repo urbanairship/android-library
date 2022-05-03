@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.widget;
 
 import android.view.View;
 
+import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
@@ -21,6 +22,10 @@ public abstract class CheckableViewAdapter<V extends View> {
 
     public void setContentDescription(@NonNull String contentDescription) {
         view.setContentDescription(contentDescription);
+    }
+
+    public void setId(@IdRes int id) {
+        view.setId(id);
     }
 
     public static class Checkbox extends CheckableViewAdapter<ShapeButton> {

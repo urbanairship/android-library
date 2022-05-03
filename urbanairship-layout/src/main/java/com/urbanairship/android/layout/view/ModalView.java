@@ -57,7 +57,6 @@ public class ModalView extends ConstraintLayout {
     }
 
     public void init(@NonNull Context context) {
-        setId(generateViewId());
         windowTouchSlop = ViewConfiguration.get(context).getScaledWindowTouchSlop();
     }
 
@@ -82,6 +81,8 @@ public class ModalView extends ConstraintLayout {
         this.model = model;
         this.presentation = presentation;
         this.environment = environment;
+
+        setId(model.getViewId());
         configureModal();
     }
 
