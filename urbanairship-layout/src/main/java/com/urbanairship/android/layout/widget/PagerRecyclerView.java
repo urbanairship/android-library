@@ -100,6 +100,11 @@ public class PagerRecyclerView extends RecyclerView {
 
         @Override
         public void onScrollStateChanged(@NonNull RecyclerView v, int state) {
+            // Ignore callbacks if we're still in the process of scrolling, since we only
+            // want to update the model (which bubbles the scroll and page view events) once
+            // the scroll has finished.
+            if (state != SCROLL_STATE_IDLE) { return; }
+
             int position = getDisplayedItemPosition();
             if (position != NO_POSITION && position != previousPosition) {
                 int step = position > previousPosition ? 1 : -1;

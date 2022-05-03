@@ -214,6 +214,7 @@ public class PagerControllerTest {
         // event, so we don't expect any further events after the initial page view.
         assertEquals(1, testListener.getCount());
     }
+
     @Test
     public void testPagerPageActions() {
         Map<String, JsonValue> firstPageActions = new HashMap<String, JsonValue>() {{
