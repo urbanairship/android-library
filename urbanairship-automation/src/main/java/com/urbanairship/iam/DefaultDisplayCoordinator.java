@@ -85,5 +85,4 @@ class DefaultDisplayCoordinator extends DisplayCoordinator {
         currentMessage = null;
         mainHandler.postDelayed(postDisplayRunnable, displayInterval);
     }
-
 }

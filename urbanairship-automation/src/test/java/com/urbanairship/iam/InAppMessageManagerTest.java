@@ -226,6 +226,31 @@ public class InAppMessageManagerTest {
     }
 
     @Test
+    public void testDisplayDelegate() {
+        when(mockAssetManager.onPrepare(scheduleId, message)).thenReturn(AssetManager.PREPARE_RESULT_OK);
+        when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
+        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
+
+        // Prepare the schedule
+        AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
+        verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
+        verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+
+        manager.setDisplayDelegate(message -> false);
+        assertEquals(AutomationDriver.READY_RESULT_NOT_READY, manager.onCheckExecutionReadiness(scheduleId));
+
+        manager.setDisplayDelegate(message -> true);
+        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, manager.onCheckExecutionReadiness(scheduleId));
+    }
+
+    @Test
+    public void testNotifyDisplayConditionsChanged() {
+        manager.notifyDisplayConditionsChanged();
+        verify(mockDelegate).onReadinessChanged();
+    }
+
+    @Test
     public void testAddEvent() {
         when(mockAssetManager.onPrepare(scheduleId, message)).thenReturn(AssetManager.PREPARE_RESULT_OK);
         when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
@@ -449,7 +474,6 @@ public class InAppMessageManagerTest {
     @Test
     public void testNotifyScheduleFinished() {
         manager.onMessageScheduleFinished(scheduleId);
-
         verify(mockAssetManager, times(1)).onFinish(scheduleId);
     }
 

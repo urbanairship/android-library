@@ -6,13 +6,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Looper;
 
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
@@ -51,6 +44,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * In-app automation.
@@ -690,23 +690,32 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return AutomationDriver.READY_RESULT_INVALIDATE;
         }
 
-        FrequencyChecker frequencyChecker = frequencyCheckerMap.remove(schedule.getId());
+        ScheduleDelegate<?> delegate = scheduleDelegateMap.get(schedule.getId());
+        if (delegate == null) {
+           return AutomationDriver.READY_RESULT_NOT_READY;
+        }
+
+        int result = delegate.onCheckExecutionReadiness(schedule);
+        if (result != AutomationDriver.READY_RESULT_CONTINUE) {
+            return result;
+        }
+
+        FrequencyChecker frequencyChecker = frequencyCheckerMap.get(schedule.getId());
         if (frequencyChecker != null && !frequencyChecker.checkAndIncrement()) {
-            ScheduleDelegate<?> delegate = scheduleDelegateMap.remove(schedule.getId());
-            if (delegate != null) {
-                delegate.onExecutionInvalidated(schedule);
-            }
+            delegate.onExecutionInvalidated(schedule);
             return AutomationDriver.READY_RESULT_SKIP;
         }
 
-        ScheduleDelegate<?> delegate = scheduleDelegateMap.get(schedule.getId());
-        return delegate == null ? AutomationDriver.READY_RESULT_NOT_READY : delegate.onCheckExecutionReadiness(schedule);
+
+        return AutomationDriver.READY_RESULT_CONTINUE;
     }
 
     @MainThread
     private void onExecuteTriggeredSchedule(@NonNull Schedule<? extends
             ScheduleData> schedule, @NonNull AutomationDriver.ExecutionCallback callback) {
         Logger.verbose("onExecuteTriggeredSchedule schedule: %s", schedule.getId());
+        frequencyCheckerMap.remove(schedule.getId());
+
         ScheduleDelegate<?> delegate = scheduleDelegateMap.remove(schedule.getId());
         if (delegate != null) {
             delegate.onExecute(schedule, callback);

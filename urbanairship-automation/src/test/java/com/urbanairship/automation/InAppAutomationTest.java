@@ -369,6 +369,42 @@ public class InAppAutomationTest {
     }
 
     @Test
+    public void testOnCheckExecutionReadinessFrequencyLimits() {
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .build();
+
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setFrequencyConstraintIds(Collections.singletonList("foo"))
+                                                  .build();
+
+        FrequencyChecker mockFrequencyChecker = mock(FrequencyChecker.class);
+        PendingResult<FrequencyChecker> pendingResult = new PendingResult<>();
+        pendingResult.setResult(mockFrequencyChecker);
+        when(mockFrequencyLimitManager.getFrequencyChecker(schedule.getFrequencyConstraintIds())).thenReturn(pendingResult);
+        when(mockFrequencyChecker.checkAndIncrement()).thenReturn(true);
+        when(mockFrequencyChecker.isOverLimit()).thenReturn(false);
+
+        // Prepare schedule
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+        ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
+        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(message), argumentCaptor.capture());
+        argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+        verify(mockFrequencyChecker).isOverLimit();
+
+        when(mockMessageScheduleDelegate.onCheckExecutionReadiness(schedule)).thenReturn(AutomationDriver.READY_RESULT_NOT_READY);
+        assertEquals(AutomationDriver.READY_RESULT_NOT_READY, driver.onCheckExecutionReadiness(schedule));
+
+        when(mockMessageScheduleDelegate.onCheckExecutionReadiness(schedule)).thenReturn(AutomationDriver.READY_RESULT_CONTINUE);
+        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, driver.onCheckExecutionReadiness(schedule));
+
+        verify(mockFrequencyChecker, times(1)).checkAndIncrement();
+    }
+
+    @Test
     public void testPrepareDeferredScheduleNoMessage() throws AuthException, RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 

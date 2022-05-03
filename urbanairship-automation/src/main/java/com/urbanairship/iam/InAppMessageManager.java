@@ -4,6 +4,7 @@ package com.urbanairship.iam;
 
 import android.content.Context;
 import android.os.Looper;
+import android.view.Display;
 
 import com.urbanairship.Logger;
 import com.urbanairship.PreferenceDataStore;
@@ -34,6 +35,7 @@ import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.arch.core.util.Function;
 
 /**
  * In-app messaging manager.
@@ -50,6 +52,24 @@ public class InAppMessageManager {
 
         void onReadinessChanged();
 
+    }
+
+    /**
+     * A display delegate that can be used to determine if an In-App message is ready
+     * for display or not. This method will be called for every message that is pending
+     * display whenever a display condition changes. Use {@link InAppMessageManager#notifyDisplayConditionsChanged()}
+     * to notify whenever a condition changes to reevaluate the pending in-app messages.
+     */
+    public interface DisplayDelegate {
+
+        /**
+         * Checks if a message is able to display.
+         *
+         * @param message The message.
+         * @return {@code true} if the message can be displayed, otherwise {@code false}.
+         */
+        @MainThread
+        boolean isReady(@NonNull InAppMessage message);
     }
 
     /**
@@ -76,6 +96,9 @@ public class InAppMessageManager {
     private final Context context;
     private final PreferenceDataStore dataStore;
     private final Delegate delegate;
+
+    @Nullable
+    private DisplayDelegate appDisplayDelegate;
 
     @Nullable
     private InAppMessageExtender messageExtender;
@@ -132,7 +155,6 @@ public class InAppMessageManager {
         setAdapterFactory(InAppMessage.TYPE_AIRSHIP_LAYOUT, new AirshipLayoutAdapterFactory());
 
     }
-
 
     /**
      * Sets a {@link InAppMessageAdapter} for a given display type.
@@ -310,7 +332,8 @@ public class InAppMessageManager {
             return AutomationDriver.READY_RESULT_INVALIDATE;
         }
 
-        if (adapterWrapper.isReady(context)) {
+        DisplayDelegate displayDelegate = this.appDisplayDelegate;
+        if (adapterWrapper.isReady(context) && (displayDelegate == null || displayDelegate.isReady(adapterWrapper.message))) {
             return AutomationDriver.READY_RESULT_CONTINUE;
         } else {
             return AutomationDriver.READY_RESULT_NOT_READY;
@@ -377,12 +400,7 @@ public class InAppMessageManager {
             return;
         }
 
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                assetManager.onDisplayFinished(scheduleId, adapterWrapper.message);
-            }
-        });
+        executor.execute(() -> assetManager.onDisplayFinished(scheduleId, adapterWrapper.message));
     }
 
     /**
@@ -460,7 +478,6 @@ public class InAppMessageManager {
             assetManager.onDisplayFinished(adapterWrapper.scheduleId, adapterWrapper.message);
         });
     }
-
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
@@ -617,4 +634,24 @@ public class InAppMessageManager {
             }
         }
     }
+
+    /**
+     * Sets a custom display delegate that can be used to prevent In-App message from displaying.
+     *
+     * @param displayDelegate The display delegate.
+     */
+    public void setDisplayDelegate(@Nullable DisplayDelegate displayDelegate) {
+        this.appDisplayDelegate = displayDelegate;
+    }
+
+    /**
+     * Notifies In-App messages that the display conditions should be reevaluated.
+     *
+     * This should only be called when state from {@link InAppMessageManager#setDisplayDelegate(DisplayDelegate)}
+     * changes.
+     */
+    public void notifyDisplayConditionsChanged() {
+        delegate.onReadinessChanged();
+    }
+
 }
