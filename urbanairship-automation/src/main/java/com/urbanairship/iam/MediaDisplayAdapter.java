@@ -79,7 +79,7 @@ public abstract class MediaDisplayAdapter extends ForegroundDisplayAdapter {
         }
 
         if (assets == null || !assets.file(mediaInfo.getUrl()).exists()) {
-            return Network.isConnected();
+            return Network.shared().isConnected(context);
         }
 
         return true;

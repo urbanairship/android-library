@@ -64,7 +64,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
     private final InAppMessage message;
     private final AirshipLayoutDisplayContent displayContent;
     private final DisplayRequestCallback prepareDisplayCallback;
-    private final Supplier<Boolean> isConnectedSupplier;
+    private final Network network;
     private final UrlAllowList urlAllowList;
     private final List<UrlInfo> urlInfoList;
     private final Map<String, String> assetCacheMap = new HashMap<>();
@@ -75,13 +75,13 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                                 @NonNull AirshipLayoutDisplayContent displayContent,
                                 @NonNull DisplayRequestCallback prepareDisplayCallback,
                                 @NonNull UrlAllowList urlAllowList,
-                                @NonNull Supplier<Boolean> isConnectedSupplier) {
+                                @NonNull Network network) {
 
         this.message = message;
         this.displayContent = displayContent;
         this.prepareDisplayCallback = prepareDisplayCallback;
         this.urlAllowList = urlAllowList;
-        this.isConnectedSupplier = isConnectedSupplier;
+        this.network = network;
         this.urlInfoList = UrlInfo.from(displayContent.getPayload().getView());
     }
 
@@ -103,7 +103,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                 displayContent,
                 DEFAULT_CALLBACK,
                 UAirship.shared().getUrlAllowList(),
-                Network::isConnected
+                Network.shared()
         );
     }
 
@@ -140,7 +140,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
             return false;
         }
 
-        boolean isConnected = isConnectedSupplier.get();
+        boolean isConnected = network.isConnected(context);
 
         for (UrlInfo urlInfo : this.urlInfoList) {
             switch (urlInfo.getType()) {

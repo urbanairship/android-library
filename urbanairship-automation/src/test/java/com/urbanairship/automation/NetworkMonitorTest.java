@@ -33,7 +33,7 @@ public class NetworkMonitorTest {
     @Test
     public void testNetworkResumed() {
         android.net.Network mockNetwork = mock(android.net.Network.class);
-        Network.ConnectionListener mockConnectionListener = mock(Network.ConnectionListener.class);
+        NetworkMonitor.ConnectionListener mockConnectionListener = mock(NetworkMonitor.ConnectionListener.class);
 
         Context context = ApplicationProvider.getApplicationContext();
 

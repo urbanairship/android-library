@@ -26,12 +26,15 @@ import com.urbanairship.iam.events.InAppReportingEvent;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.util.Network;
 import com.urbanairship.webkit.AirshipWebViewClient;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 
@@ -51,6 +54,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -78,6 +82,8 @@ import static org.mockito.Mockito.when;
     private DisplayHandler displayHandler = mock(DisplayHandler.class);
     private String scheduleId = UUID.randomUUID().toString();
     private TestCallback testCallback = new TestCallback();
+    private Network network = mock(Network.class);
+
     private boolean isConnected = false;
 
     private InAppMessage message;
@@ -176,8 +182,8 @@ import static org.mockito.Mockito.when;
                               .setName("layout name")
                               .build();
 
-        Supplier<Boolean> isConnectedSupplier = () -> isConnected;
-        adapter = new AirshipLayoutDisplayAdapter(message, displayContent, testCallback, allowList, isConnectedSupplier);
+        when(network.isConnected(any(Context.class))).then((Answer<Boolean>) invocation -> isConnected);
+        adapter = new AirshipLayoutDisplayAdapter(message, displayContent, testCallback, allowList, network);
 
         when(displayHandler.getScheduleId()).thenReturn(scheduleId);
         when(assets.file(anyString())).thenReturn(new File(UUID.randomUUID().toString()));

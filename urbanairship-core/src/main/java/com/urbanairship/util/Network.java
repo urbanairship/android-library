@@ -10,6 +10,7 @@ import android.telephony.TelephonyManager;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
@@ -20,15 +21,21 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Network {
 
+    private static Network SHARED = new Network();
+
+    public static Network shared() {
+        return SHARED;
+    }
+
     /**
      * Determines whether or not the device has an active network connection.
      *
      * @return <code>true</code> if the network has a connection, otherwise
      * <code>false</code>.
      */
-    public static boolean isConnected() {
+    public boolean isConnected(@NonNull Context context) {
         ConnectivityManager cm = (ConnectivityManager)
-                UAirship.getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+                context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         NetworkInfo info;
         if (cm != null) {
@@ -55,14 +62,5 @@ public class Network {
             Logger.warn("Unable to get network operator name", e);
             return null;
         }
-    }
-
-    public interface ConnectionListener {
-
-        /**
-         * Called when the connection state changed.
-         * @param isConnected
-         */
-        void onConnectionChanged(boolean isConnected);
     }
 }

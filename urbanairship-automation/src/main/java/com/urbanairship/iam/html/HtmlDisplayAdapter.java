@@ -68,7 +68,7 @@ public class HtmlDisplayAdapter extends ForegroundDisplayAdapter {
             return false;
         }
 
-        return !displayContent.getRequireConnectivity() || Network.isConnected();
+        return !displayContent.getRequireConnectivity() || Network.shared().isConnected(context);
     }
 
     @Override

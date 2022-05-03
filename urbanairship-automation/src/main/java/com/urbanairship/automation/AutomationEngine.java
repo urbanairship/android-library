@@ -168,12 +168,9 @@ public class AutomationEngine {
         }
     };
 
-    private final Network.ConnectionListener connectionListener = new Network.ConnectionListener() {
-        @Override
-        public void onConnectionChanged(boolean isConnected) {
-            if (isConnected) {
-                checkPendingSchedules();
-            }
+    private final NetworkMonitor.ConnectionListener connectionListener = isConnected -> {
+        if (isConnected) {
+            checkPendingSchedules();
         }
     };
 

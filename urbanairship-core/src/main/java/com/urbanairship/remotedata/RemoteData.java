@@ -19,6 +19,7 @@ import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.app.SimpleApplicationListener;
+import com.urbanairship.base.Supplier;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
@@ -36,6 +37,7 @@ import com.urbanairship.reactive.Schedulers;
 import com.urbanairship.reactive.Subject;
 import com.urbanairship.util.AirshipHandlerThread;
 import com.urbanairship.util.Clock;
+import com.urbanairship.util.Network;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -124,6 +126,7 @@ public class RemoteData extends AirshipComponent {
     private final Clock clock;
     private final RemoteDataApiClient apiClient;
     private final PrivacyManager privacyManager;
+    private final Network network;
 
     private boolean isRefreshing = false;
     private final Object refreshLock = new Object();
@@ -184,10 +187,10 @@ public class RemoteData extends AirshipComponent {
     public RemoteData(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                       @NonNull AirshipRuntimeConfig configOptions, @NonNull PrivacyManager privacyManager,
                       @NonNull PushManager pushManager, @NonNull LocaleManager localeManager,
-                      @NonNull com.urbanairship.base.Supplier<PushProviders> pushProviders) {
+                      @NonNull Supplier<PushProviders> pushProviders) {
         this(context, preferenceDataStore, configOptions, privacyManager, GlobalActivityMonitor.shared(context),
                 JobDispatcher.shared(context), localeManager, pushManager, Clock.DEFAULT_CLOCK,
-                new RemoteDataApiClient(configOptions, pushProviders));
+                new RemoteDataApiClient(configOptions, pushProviders), Network.shared());
     }
 
     @VisibleForTesting
@@ -195,7 +198,7 @@ public class RemoteData extends AirshipComponent {
                @NonNull AirshipRuntimeConfig configOptions, @NonNull PrivacyManager privacyManager,
                @NonNull ActivityMonitor activityMonitor, @NonNull JobDispatcher dispatcher,
                @NonNull LocaleManager localeManager, @NonNull PushManager pushManager,
-               @NonNull Clock clock, @NonNull RemoteDataApiClient apiClient) {
+               @NonNull Clock clock, @NonNull RemoteDataApiClient apiClient, @NonNull Network network) {
         super(context, preferenceDataStore);
         this.jobDispatcher = dispatcher;
         this.dataStore = new RemoteDataStore(context, configOptions.getConfigOptions().appKey, DATABASE_NAME);
@@ -208,6 +211,7 @@ public class RemoteData extends AirshipComponent {
         this.pushManager = pushManager;
         this.clock = clock;
         this.apiClient = apiClient;
+        this.network = network;
     }
 
     @Override
@@ -286,15 +290,17 @@ public class RemoteData extends AirshipComponent {
      */
     public PendingResult<Boolean> refresh(boolean force) {
         PendingResult<Boolean> pendingResult = new PendingResult<>();
+
         synchronized (refreshLock) {
-            if (isRefreshing || force || shouldRefresh()) {
+            if (!force && !shouldRefresh()) {
+                pendingResult.setResult(true);
+            } else if (network.isConnected(getContext())) {
                 pendingRefreshResults.add(pendingResult);
                 if (!isRefreshing) {
                     dispatchRefreshJob(JobInfo.REPLACE);
                 }
-                isRefreshing = true;
             } else {
-                pendingResult.setResult(true);
+                pendingResult.setResult(false);
             }
         }
 
@@ -313,7 +319,14 @@ public class RemoteData extends AirshipComponent {
                                  .setConflictStrategy(conflictStrategy)
                                  .build();
 
-        jobDispatcher.dispatch(jobInfo);
+        synchronized (refreshLock) {
+            if (conflictStrategy == JobInfo.REPLACE) {
+                isRefreshing = true;
+            }
+
+            jobDispatcher.dispatch(jobInfo);
+        }
+
     }
 
     /**
@@ -511,6 +524,7 @@ public class RemoteData extends AirshipComponent {
     }
 
     private void onRefreshFinished(boolean success) {
+
         if (success) {
             refreshedSinceLastForeground = true;
             PackageInfo packageInfo = UAirship.getPackageInfo();
@@ -521,8 +535,9 @@ public class RemoteData extends AirshipComponent {
         }
 
         synchronized (refreshLock) {
-            this.isRefreshing = false;
-
+            if (success) {
+                this.isRefreshing = false;
+            }
             for (PendingResult<Boolean> pendingResult : pendingRefreshResults) {
                 pendingResult.setResult(success);
             }
@@ -545,5 +560,4 @@ public class RemoteData extends AirshipComponent {
                       .putOpt(LAST_MODIFIED_METADATA_KEY, lastModified)
                       .build();
     }
-
 }

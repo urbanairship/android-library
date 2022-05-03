@@ -2,6 +2,7 @@
 
 package com.urbanairship.remotedata;
 
+import android.content.Context;
 import android.net.Uri;
 import android.os.Looper;
 
@@ -30,6 +31,7 @@ import com.urbanairship.push.PushMessage;
 import com.urbanairship.reactive.Observable;
 import com.urbanairship.reactive.Subscriber;
 import com.urbanairship.shadow.ShadowNotificationManagerExtension;
+import com.urbanairship.util.Network;
 
 import org.junit.After;
 import org.junit.Before;
@@ -92,6 +94,7 @@ public class RemoteDataTest extends BaseTestCase {
     private RemoteDataPayload otherPayload;
     private RemoteDataPayload emptyPayload;
     private PrivacyManager privacyManager;
+    private Network mockNetwork = mock(Network.class);
 
     @Before
     public void setup() {
@@ -112,7 +115,7 @@ public class RemoteDataTest extends BaseTestCase {
         when(mockClient.getRemoteDataUrl(any(Locale.class))).thenReturn(Uri.parse("https://airship.com"));
 
         remoteData = new RemoteData(TestApplication.getApplication(), preferenceDataStore, TestAirshipRuntimeConfig.newTestConfig(),
-                privacyManager, activityMonitor, mockDispatcher, localeManager, pushManager, clock, mockClient);
+                privacyManager, activityMonitor, mockDispatcher, localeManager, pushManager, clock, mockClient, mockNetwork);
 
         ArgumentCaptor<PushListener> pushListenerArgumentCaptor = ArgumentCaptor.forClass(PushListener.class);
         remoteData.init();
@@ -610,6 +613,7 @@ public class RemoteDataTest extends BaseTestCase {
 
     @Test
     public void testRefresh() throws RequestException, ExecutionException, InterruptedException {
+        when(mockNetwork.isConnected(any(Context.class))).thenReturn(true);
         activityMonitor.foreground();
         clearInvocations(mockDispatcher);
 
@@ -643,6 +647,7 @@ public class RemoteDataTest extends BaseTestCase {
 
     @Test
     public void testForceRefresh() throws RequestException, ExecutionException, InterruptedException {
+        when(mockNetwork.isConnected(any(Context.class))).thenReturn(true);
         PendingResult<Boolean> pendingResult = remoteData.refresh(true);
         verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.REPLACE));
 
@@ -664,6 +669,7 @@ public class RemoteDataTest extends BaseTestCase {
 
     @Test
     public void testRefreshFailed() throws RequestException, ExecutionException, InterruptedException {
+        when(mockNetwork.isConnected(any(Context.class))).thenReturn(true);
         PendingResult<Boolean> pendingResult = remoteData.refresh(true);
         verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.REPLACE));
 
@@ -677,6 +683,16 @@ public class RemoteDataTest extends BaseTestCase {
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
         assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
+
+        assertTrue(pendingResult.isDone());
+        assertFalse(pendingResult.get());
+    }
+
+    @Test
+    public void testRefreshNoNetwork() throws ExecutionException, InterruptedException {
+        when(mockNetwork.isConnected(any(Context.class))).thenReturn(false);
+        verifyNoMoreInteractions(mockDispatcher);
+        PendingResult<Boolean> pendingResult = remoteData.refresh(true);
 
         assertTrue(pendingResult.isDone());
         assertFalse(pendingResult.get());

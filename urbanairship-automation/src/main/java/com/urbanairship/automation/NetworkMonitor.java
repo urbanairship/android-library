@@ -9,13 +9,21 @@ import android.os.Build;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.util.Network.ConnectionListener;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class NetworkMonitor {
+
+    public interface ConnectionListener {
+
+        /**
+         * Called when the connection state changed.
+         * @param isConnected
+         */
+        void onConnectionChanged(boolean isConnected);
+    }
 
     private ConnectionListener connectionListener;
 
