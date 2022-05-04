@@ -2,6 +2,21 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.4.0 May 4, 2022
+Minor release that adds support for randomizing response order in a Survey, adds a new delegate method to InAppMessageManager that controls when a message can be displayed, and fixes several issues with Scenes & Surveys reporting. Apps using Scenes & Surveys should update.
+
+### Changes
+- Added new `InAppMessageManager.setDisplayDelegate` method that can control when a message is able to be displayed.
+- Added support for randomizing Survey responses.
+- Added subscription list action.
+- In-App rules will now attempt to refresh before displaying. This change should reduce the chances of showing out of data or cancelled in-app automations, scenes, or surveys when background refresh is disabled.
+- Updated localizations. All strings within the SDK are now localized in 48 different languages.
+- Improved accessibility with OOTB Message Center UI.
+- Fixed reporting issue with a single page Scene.
+- Fixed rendering issues for Scenes & Surveys.
+- Fixed a crash in Scenes on Android 8.
+- Fixed Survey attribute storage.
+
 ## Version 16.3.3 March 4, 2022
 
 A patch release that fixes potential crashes in the urbanairship-automation module when
