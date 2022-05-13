@@ -8,6 +8,7 @@
         android:protectionLevel="signature" />
     <uses-permission android:name="${applicationId}.permission.RECEIVE_ADM_MESSAGE" />
 
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application>
 
         <!-- ADM -->
@@ -15,6 +16,14 @@
             android:name="com.amazon.device.messaging"
             android:required="false" />
 
+        <service
+            android:name="com.urbanairship.push.adm.AdmHandlerJobBase"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+
+        <service
+            android:name="com.urbanairship.push.adm.AdmHandlerBase"
+            android:exported="false" />
 
         <receiver
             android:name="com.urbanairship.push.adm.AdmPushReceiver"
@@ -22,6 +31,7 @@
             android:exported="true">
 
             <intent-filter>
+                <action android:name="com.amazon.device.messaging.intent.REGISTRATION" />
                 <action android:name="com.amazon.device.messaging.intent.RECEIVE" />
                 <category android:name="${applicationId}" />
             </intent-filter>
