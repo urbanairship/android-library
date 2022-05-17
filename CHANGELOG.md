@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.5.0 May 17, 2022
+Minor release that fixes ADM registration on Windows 11 Android subsystem.
+
+### Changes
+- Updated the ADM plugin to the version 1.1.0
+- Fixed using restricted App Compat APIs in Scenes & Surveys
+
 ## Version 16.4.0 May 4, 2022
 Minor release that adds support for randomizing response order in a Survey, adds a new delegate method to InAppMessageManager that controls when a message can be displayed, and fixes several issues with Scenes & Surveys reporting. Apps using Scenes & Surveys should update.
 
