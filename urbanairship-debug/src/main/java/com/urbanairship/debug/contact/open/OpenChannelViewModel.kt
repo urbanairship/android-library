@@ -19,6 +19,7 @@ class OpenChannelViewModel : ViewModel() {
     init {
         addressValidator.value = true
         platformNameValidator.value = true
+        identifiers.value = identifiersMap
 
         addressValidator.addSource(address) { addressValidator.value = true }
         platformNameValidator.addSource(platformName) { platformNameValidator.value = true }
@@ -33,6 +34,7 @@ class OpenChannelViewModel : ViewModel() {
 
     fun removeIdentifier(name: String) {
         identifiersMap.remove(name)
+        identifiers.value = identifiersMap
     }
 
     fun getIdentifier(name: String): String? {

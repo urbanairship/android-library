@@ -23,8 +23,6 @@ import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
-import androidx.appcompat.widget.TintTypedArray;
-import androidx.appcompat.widget.ViewUtils;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 
@@ -63,20 +61,20 @@ public class WeightlessLinearLayout extends ViewGroup {
         @NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        TintTypedArray a = TintTypedArray.obtainStyledAttributes(context, attrs, R.styleable.WeightlessLinearLayout, defStyleAttr, 0);
-        ViewCompat.saveAttributeDataForStyleable(this, context, R.styleable.WeightlessLinearLayout, attrs, a.getWrappedTypeArray(), defStyleAttr, 0);
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.WeightlessLinearLayout, defStyleAttr, 0);
+        ViewCompat.saveAttributeDataForStyleable(this, context, R.styleable.WeightlessLinearLayout, attrs, typedArray, defStyleAttr, 0);
 
-        int index = a.getInt(R.styleable.WeightlessLinearLayout_android_orientation, -1);
+        int index = typedArray.getInt(R.styleable.WeightlessLinearLayout_android_orientation, -1);
         if (index >= 0) {
             setOrientation(index);
         }
 
-        index = a.getInt(R.styleable.WeightlessLinearLayout_android_gravity, -1);
+        index = typedArray.getInt(R.styleable.WeightlessLinearLayout_android_gravity, -1);
         if (index >= 0) {
             setGravity(index);
         }
 
-        a.recycle();
+        typedArray.recycle();
     }
 
     @Override
@@ -762,7 +760,7 @@ public class WeightlessLinearLayout extends ViewGroup {
      * @see #onLayout(boolean, int, int, int, int)
      */
     private void layoutHorizontal(int left, int top, int right, int bottom) {
-        boolean isLayoutRtl = ViewUtils.isLayoutRtl(this);
+        boolean isLayoutRtl = ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL;
         int paddingTop = getPaddingTop();
 
         int childTop;
