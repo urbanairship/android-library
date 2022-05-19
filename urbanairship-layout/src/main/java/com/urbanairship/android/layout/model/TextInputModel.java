@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.property.FormInputType;
 import com.urbanairship.android.layout.property.TextInputTextAppearance;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.UAStringUtil;
@@ -130,15 +131,15 @@ public class TextInputModel extends BaseModel implements Identifiable, Accessibl
     }
 
     public void onConfigured() {
-        bubbleEvent(new TextInputEvent.Init(identifier, isValid()));
+        bubbleEvent(new TextInputEvent.Init(identifier, isValid()), LayoutData.empty());
     }
 
     public void onAttachedToWindow() {
-        bubbleEvent(new Event.ViewAttachedToWindow(this));
+        bubbleEvent(new Event.ViewAttachedToWindow(this), LayoutData.empty());
     }
 
     public void onInputChange(@NonNull String value) {
         this.value = value;
-        bubbleEvent(new FormEvent.DataChange(new FormData.TextInput(identifier, value), isValid()));
+        bubbleEvent(new FormEvent.DataChange(new FormData.TextInput(identifier, value), isValid()), LayoutData.empty());
     }
 }

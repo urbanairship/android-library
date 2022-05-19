@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -126,27 +127,27 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
     }
 
     @Override
-    public boolean onEvent(@NonNull Event event) {
+    public boolean onEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
         switch (event.getType()) {
             case VIEW_INIT:
-                return onViewInit((Event.ViewInit) event);
+                return onViewInit((Event.ViewInit) event, layoutData);
 
             case CHECKBOX_INPUT_CHANGE:
-                return onCheckboxInputChange((CheckboxEvent.InputChange) event);
+                return onCheckboxInputChange((CheckboxEvent.InputChange) event, layoutData);
 
             case VIEW_ATTACHED:
-                return onViewAttached((Event.ViewAttachedToWindow) event);
+                return onViewAttached((Event.ViewAttachedToWindow) event, layoutData);
 
             default:
                 // Pass along any other events
-                return super.onEvent(event);
+                return super.onEvent(event, layoutData);
         }
     }
 
-    private boolean onViewInit(Event.ViewInit event) {
+    private boolean onViewInit(Event.ViewInit event, @NonNull LayoutData layoutData) {
         if (event.getViewType() == ViewType.CHECKBOX) {
             if (checkboxes.isEmpty()) {
-                bubbleEvent(new CheckboxEvent.ControllerInit(identifier, isValid()));
+                bubbleEvent(new CheckboxEvent.ControllerInit(identifier, isValid()), layoutData);
             }
             CheckboxModel model = (CheckboxModel) event.getModel();
 
@@ -161,7 +162,7 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
         }
     }
 
-    private boolean onCheckboxInputChange(CheckboxEvent.InputChange event) {
+    private boolean onCheckboxInputChange(@NonNull CheckboxEvent.InputChange event, @NonNull LayoutData layoutData) {
         if (event.isChecked() && selectedValues.size() + 1 > maxSelection) {
             // Can't check any more boxes, so we'll ignore it and consume the event.
             Logger.debug("Ignoring checkbox input change for '%s'. Max selections reached!", event.getValue());
@@ -174,21 +175,21 @@ public class CheckboxController extends LayoutModel implements Identifiable, Acc
             selectedValues.remove(event.getValue());
         }
 
-        trickleEvent(new CheckboxEvent.ViewUpdate(event.getValue(), event.isChecked()));
-        bubbleEvent(new FormEvent.DataChange(new FormData.CheckboxController(identifier, selectedValues), isValid()));
+        trickleEvent(new CheckboxEvent.ViewUpdate(event.getValue(), event.isChecked()), layoutData);
+        bubbleEvent(new FormEvent.DataChange(new FormData.CheckboxController(identifier, selectedValues), isValid()), layoutData);
         return true;
     }
 
-    private boolean onViewAttached(Event.ViewAttachedToWindow event) {
+    private boolean onViewAttached(@NonNull Event.ViewAttachedToWindow event, @NonNull LayoutData layoutData) {
         if (event.getViewType() == ViewType.CHECKBOX
             && event.getModel() instanceof CheckboxModel
             && !selectedValues.isEmpty()) {
 
             CheckboxModel model = (CheckboxModel) event.getModel();
             boolean isChecked = selectedValues.contains(model.getReportingValue());
-            trickleEvent(new CheckboxEvent.ViewUpdate(model.getReportingValue(), isChecked));
+            trickleEvent(new CheckboxEvent.ViewUpdate(model.getReportingValue(), isChecked), layoutData);
         }
         // Always pass the event on.
-        return super.onEvent(event);
+        return super.onEvent(event, layoutData);
     }
 }

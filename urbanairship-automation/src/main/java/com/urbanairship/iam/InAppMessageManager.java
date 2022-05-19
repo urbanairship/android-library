@@ -479,30 +479,6 @@ public class InAppMessageManager {
         });
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @MainThread
-    void onAddEvent(@NonNull String scheduleId, @NonNull InAppReportingEvent event) {
-        final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
-        // No record
-        if (adapterWrapper == null) {
-            return;
-        }
-
-        if (adapterWrapper.message.isReportingEnabled()) {
-            event.setCampaigns(adapterWrapper.campaigns)
-                 .setReportingContext(adapterWrapper.reportingContext)
-                 .record(analytics);
-        }
-    }
-
-    private void addEvent(AdapterWrapper adapterWrapper, InAppReportingEvent event) {
-        if (adapterWrapper.message.isReportingEnabled()) {
-            event.setCampaigns(adapterWrapper.campaigns)
-                 .setReportingContext(adapterWrapper.reportingContext)
-                 .record(analytics);
-        }
-    }
-
     /**
      * Called by the display handler to see if an in-app message is allowed to display.
      *
@@ -529,17 +505,7 @@ public class InAppMessageManager {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onNewMessageSchedule(@NonNull final String scheduleId, @NonNull final InAppMessage message) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                assetManager.onSchedule(scheduleId, new Callable<InAppMessage>() {
-                    @Override
-                    public InAppMessage call() {
-                        return extendMessage(message);
-                    }
-                });
-            }
-        });
+        executor.execute(() -> assetManager.onSchedule(scheduleId, () -> extendMessage(message)));
     }
 
     /**

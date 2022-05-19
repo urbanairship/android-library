@@ -17,6 +17,8 @@ import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionStatus;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -245,7 +247,7 @@ public class InAppReportingEventTest {
 
     @Test
     public void testPagerViewSwipe() {
-        PagerData pagerData = new PagerData("pager id", 1, "page1",2, false);
+        PagerData pagerData = new PagerData("pager id", 1, "page1", 2, false);
 
         InAppReportingEvent.pageSwipe("schedule ID", message, pagerData, 1, "page1", 0, "page0")
                            .record(mockAnalytics);
@@ -267,7 +269,7 @@ public class InAppReportingEventTest {
 
     @Test
     public void testPageCompleted() {
-        PagerData pagerData = new PagerData("pager id", 1, "page1",2, true);
+        PagerData pagerData = new PagerData("pager id", 1, "page1", 2, true);
 
         InAppReportingEvent.pagerCompleted("schedule ID", message, pagerData)
                            .record(mockAnalytics);
@@ -301,13 +303,13 @@ public class InAppReportingEventTest {
 
     @Test
     public void testPageSummary() {
-        PagerData pagerData = new PagerData("pager id", 1, "page1",2, true);
+        PagerData pagerData = new PagerData("pager id", 1, "page1", 2, true);
 
         List<InAppReportingEvent.PageViewSummary> views = new ArrayList<>();
-        views.add(new InAppReportingEvent.PageViewSummary(0, "page0",100));
-        views.add(new InAppReportingEvent.PageViewSummary(1, "page1",200));
-        views.add(new InAppReportingEvent.PageViewSummary(0, "page0",300));
-        views.add(new InAppReportingEvent.PageViewSummary(1, "page1",100));
+        views.add(new InAppReportingEvent.PageViewSummary(0, "page0", 100));
+        views.add(new InAppReportingEvent.PageViewSummary(1, "page1", 200));
+        views.add(new InAppReportingEvent.PageViewSummary(0, "page0", 300));
+        views.add(new InAppReportingEvent.PageViewSummary(1, "page1", 100));
 
         InAppReportingEvent.pagerSummary("schedule ID", message, pagerData, views)
                            .record(mockAnalytics);
@@ -325,7 +327,6 @@ public class InAppReportingEventTest {
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPES_PAGER_SUMMARY, expectedData)));
     }
-
 
     @Test
     public void testFormDisplay() {
@@ -410,8 +411,8 @@ public class InAppReportingEventTest {
     @Test
     public void testContext() {
         FormInfo formInfo = new FormInfo("form id", "form type", "response type", true);
-        PagerData pagerData = new PagerData("pager id", 1, "page1",2, true);
-        LayoutData layoutData = new LayoutData(formInfo, pagerData);
+        PagerData pagerData = new PagerData("pager id", 1, "page1", 2, true);
+        LayoutData layoutData = new LayoutData(formInfo, pagerData, "button ID!");
         InAppReportingEvent.display("schedule ID", message)
                            .setLayoutData(layoutData)
                            .setReportingContext(JsonValue.wrap("reporting bits!"))
@@ -427,11 +428,14 @@ public class InAppReportingEventTest {
                                                           .put("completed", true)
                                                           .build())
                                      .put("form", JsonMap.newBuilder()
-                                                          .put("identifier", "form id")
-                                                          .put("submitted", true)
-                                                          .put("type", "form type")
-                                                          .put("response_type", "response type")
-                                                          .build())
+                                                         .put("identifier", "form id")
+                                                         .put("submitted", true)
+                                                         .put("type", "form type")
+                                                         .put("response_type", "response type")
+                                                         .build())
+                                     .put("button", JsonMap.newBuilder()
+                                                           .put("identifier", "button ID!")
+                                                           .build())
                                      .build();
 
         JsonMap expectedData = JsonMap.newBuilder()
@@ -448,7 +452,7 @@ public class InAppReportingEventTest {
     @Test
     public void testEmptyContextData() {
         InAppReportingEvent.display("schedule ID", message)
-                           .setLayoutData(new LayoutData(null, null))
+                           .setLayoutData(new LayoutData(null, null, null))
                            .setReportingContext(JsonValue.NULL)
                            .record(mockAnalytics);
 
@@ -468,7 +472,7 @@ public class InAppReportingEventTest {
         when(mockAnalytics.getConversionSendId()).thenReturn("conversion send id!");
 
         InAppReportingEvent.display("schedule ID", message)
-                           .setLayoutData(new LayoutData(null, null))
+                           .setLayoutData(new LayoutData(null, null, null))
                            .setReportingContext(JsonValue.NULL)
                            .record(mockAnalytics);
 
@@ -482,6 +486,24 @@ public class InAppReportingEventTest {
                                       .build();
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_DISPLAY, expectedData)));
+    }
+
+    @Test
+    public void testPermissionResult() {
+        InAppReportingEvent.permissionResultEvent("schedule ID", message, Permission.MEDIA, PermissionStatus.DENIED, PermissionStatus.GRANTED)
+                           .record(mockAnalytics);
+
+        JsonMap expectedData = JsonMap.newBuilder()
+                                      .put("source", "urban-airship")
+                                      .put("id", JsonMap.newBuilder()
+                                                        .put("message_id", "schedule ID")
+                                                        .build())
+                                      .put("permission", Permission.MEDIA)
+                                      .put("starting_permission_status", PermissionStatus.DENIED)
+                                      .put("ending_permission_status", PermissionStatus.GRANTED)
+                                      .build();
+
+        verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_PERMISSION_RESULT_EVENT, expectedData)));
     }
 
 }

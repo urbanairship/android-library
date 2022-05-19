@@ -4,12 +4,14 @@ package com.urbanairship.android.layout.event;
 
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.PagerModel;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public abstract class PagerEvent extends Event {
     private final long time;

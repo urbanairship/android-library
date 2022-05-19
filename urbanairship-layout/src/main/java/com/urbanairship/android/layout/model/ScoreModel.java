@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.property.ScoreStyle;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -108,16 +109,16 @@ public class ScoreModel extends BaseModel implements Identifiable, Accessible, V
     }
 
     public void onConfigured() {
-        bubbleEvent(new ScoreEvent.Init(identifier, isValid()));
+        bubbleEvent(new ScoreEvent.Init(identifier, isValid()), LayoutData.empty());
     }
 
     public void onAttachedToWindow() {
-        bubbleEvent(new Event.ViewAttachedToWindow(this));
+        bubbleEvent(new Event.ViewAttachedToWindow(this), LayoutData.empty());
     }
 
     public void onScoreChange(int score) {
         selectedScore = score;
 
-        bubbleEvent(new FormEvent.DataChange(new FormData.Score(identifier, score), isValid(), attributeName, JsonValue.wrap(score)));
+        bubbleEvent(new FormEvent.DataChange(new FormData.Score(identifier, score), isValid(), attributeName, JsonValue.wrap(score)), LayoutData.empty());
     }
 }

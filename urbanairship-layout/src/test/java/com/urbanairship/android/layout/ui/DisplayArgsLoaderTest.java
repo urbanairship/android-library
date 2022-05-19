@@ -66,8 +66,7 @@ public class DisplayArgsLoaderTest extends TestCase {
         ThomasListener listener = mock(ThomasListener.class);
         ImageCache imageCache = url -> null;
         Factory<AirshipWebViewClient> clientFactory = AirshipWebViewClient::new;
-        ActionsRunner actionsRunner = actions -> {};
-        DisplayArgs displayArgs = new DisplayArgs(payload, listener, clientFactory, imageCache, actionsRunner);
+        DisplayArgs displayArgs = new DisplayArgs(payload, listener, clientFactory, imageCache);
         DisplayArgsLoader loader = DisplayArgsLoader.newLoader(displayArgs);
 
         // Write
@@ -84,12 +83,11 @@ public class DisplayArgsLoaderTest extends TestCase {
         assertEquals(loader.getDisplayArgs().getListener(), fromParcel.getDisplayArgs().getListener());
         assertEquals(loader.getDisplayArgs().getImageCache(), fromParcel.getDisplayArgs().getImageCache());
         assertEquals(loader.getDisplayArgs().getWebViewClientFactory(), fromParcel.getDisplayArgs().getWebViewClientFactory());
-        assertEquals(loader.getDisplayArgs().getActionsRunner(), fromParcel.getDisplayArgs().getActionsRunner());
     }
 
     @Test(expected = DisplayArgsLoader.LoadException.class)
     public void testDismiss() throws DisplayArgsLoader.LoadException {
-        DisplayArgs displayArgs = new DisplayArgs(payload, null, null, null, null);
+        DisplayArgs displayArgs = new DisplayArgs(payload, null, null, null);
         DisplayArgsLoader loader = DisplayArgsLoader.newLoader(displayArgs);
         loader.dispose();
         loader.getDisplayArgs();
@@ -97,7 +95,7 @@ public class DisplayArgsLoaderTest extends TestCase {
 
     @Test(expected = DisplayArgsLoader.LoadException.class)
     public void testDismissParcel() throws DisplayArgsLoader.LoadException {
-        DisplayArgs displayArgs = new DisplayArgs(payload, null, null, null, null);
+        DisplayArgs displayArgs = new DisplayArgs(payload, null, null, null);
         DisplayArgsLoader loader = DisplayArgsLoader.newLoader(displayArgs);
 
         Parcel parcel = Parcel.obtain();

@@ -13,6 +13,8 @@ import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -52,6 +54,7 @@ public class InAppReportingEvent {
                           .build()
                           .toJsonValue();
         }
+
     }
 
     // Event types
@@ -73,6 +76,13 @@ public class InAppReportingEvent {
     public static final String TYPES_PAGER_COMPLETED = "in_app_pager_completed";
     @NonNull
     public static final String TYPE_BUTTON_TAP = "in_app_button_tap";
+    @NonNull
+    public static final String TYPE_PERMISSION_RESULT_EVENT = "in_app_permission_result";
+
+    // Permission result keys
+    private static final String PERMISSION_KEY = "permission";
+    private static final String STARTING_PERMISSION_STATUS_KEY = "starting_permission_status";
+    private static final String ENDING_PERMISSION_STATUS_KEY = "ending_permission_status";
 
     // Form keys
     private static final String FORM_ID = "form_identifier";
@@ -127,6 +137,9 @@ public class InAppReportingEvent {
     private static final String REPORTING_CONTEXT_PAGER = "pager";
     private static final String REPORTING_CONTEXT_PAGER_ID = "identifier";
     private static final String REPORTING_CONTEXT_PAGER_COUNT = "count";
+
+    private static final String REPORTING_CONTEXT_BUTTON = "button";
+    private static final String REPORTING_CONTEXT_BUTTON_ID = "identifier";
 
     // ID keys
     private static final String MESSAGE_ID = "message_id";
@@ -197,6 +210,20 @@ public class InAppReportingEvent {
 
         return new InAppReportingEvent(TYPE_RESOLUTION, scheduleId, InAppMessage.SOURCE_LEGACY_PUSH)
                 .setOverrides(JsonMap.newBuilder().put(RESOLUTION, resolutionInfo).build());
+    }
+
+    public static InAppReportingEvent permissionResultEvent(@NonNull String scheduleId,
+                                                            @NonNull InAppMessage message,
+                                                            @NonNull Permission permission,
+                                                            @NonNull PermissionStatus before,
+                                                            @NonNull PermissionStatus after) {
+
+        return new InAppReportingEvent(TYPE_PERMISSION_RESULT_EVENT, scheduleId, message)
+                .setOverrides(JsonMap.newBuilder()
+                                     .put(PERMISSION_KEY, permission)
+                                     .put(STARTING_PERMISSION_STATUS_KEY, before)
+                                     .put(ENDING_PERMISSION_STATUS_KEY, after)
+                                     .build());
     }
 
     public static InAppReportingEvent formDisplay(@NonNull String scheduleId,
@@ -368,6 +395,14 @@ public class InAppReportingEvent {
                                               .build();
 
                 contextBuilder.put(REPORTING_CONTEXT_PAGER, pagerContext);
+            }
+
+            String buttonId = layoutState.getButtonIdentifier();
+            if (buttonId != null) {
+                JsonMap buttonContext = JsonMap.newBuilder()
+                                             .put(REPORTING_CONTEXT_BUTTON_ID, buttonId)
+                                             .build();
+                contextBuilder.put(REPORTING_CONTEXT_BUTTON, buttonContext);
             }
         }
 

@@ -23,20 +23,17 @@ public class DisplayArgs {
     private final ThomasListener listener;
     private final Factory<AirshipWebViewClient> webViewClientFactory;
     private final ImageCache imageCache;
-    private final ActionsRunner actionsRunner;
 
     public DisplayArgs(
         @NonNull BasePayload payload,
         @Nullable ThomasListener listener,
         @Nullable Factory<AirshipWebViewClient> webViewClientFactory,
-        @Nullable ImageCache imageCache,
-        @Nullable ActionsRunner actionsRunner
+        @Nullable ImageCache imageCache
     ) {
         this.payload = payload;
         this.listener = listener;
         this.webViewClientFactory = webViewClientFactory;
         this.imageCache = imageCache;
-        this.actionsRunner = actionsRunner;
     }
 
     @Nullable
@@ -59,7 +56,4 @@ public class DisplayArgs {
         return webViewClientFactory;
     }
 
-    public ActionsRunner getActionsRunner() {
-        return actionsRunner;
-    }
 }

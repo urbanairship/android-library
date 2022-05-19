@@ -13,6 +13,7 @@ import com.urbanairship.android.layout.property.ButtonClickBehaviorType;
 import com.urbanairship.android.layout.property.ButtonEnableBehaviorType;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -107,16 +108,18 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
     }
 
     public void onClick() {
+        LayoutData layoutData = LayoutData.button(identifier);
+
         // Report button tap event.
-        bubbleEvent(new ReportingEvent.ButtonTap(identifier));
+        bubbleEvent(new ReportingEvent.ButtonTap(identifier), layoutData);
 
         if (hasActions()) {
-            bubbleEvent(new ButtonEvent.Actions(this));
+            bubbleEvent(new ButtonEvent.Actions(this), layoutData);
         }
 
         for (ButtonClickBehaviorType behavior : buttonClickBehaviors) {
             try {
-                bubbleEvent(ButtonEvent.fromBehavior(behavior, this));
+                bubbleEvent(ButtonEvent.fromBehavior(behavior, this), layoutData);
             } catch (JsonException e) {
                 Logger.warn(e, "Skipping button click behavior!");
             }
@@ -131,7 +134,7 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
     public abstract String reportingDescription();
 
     @Override
-    public boolean onEvent(@NonNull Event event) {
+    public boolean onEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
         switch (event.getType()) {
             case FORM_VALIDATION:
                return handleFormSubmitUpdate((FormEvent.ValidationUpdate) event);
@@ -142,7 +145,7 @@ public abstract class ButtonModel extends BaseModel implements Accessible, Ident
                 PagerEvent.Scroll scroll = (PagerEvent.Scroll) event;
                 return handlePagerScroll(scroll.hasNext(), scroll.hasPrevious());
             default:
-                return super.onEvent(event);
+                return super.onEvent(event, layoutData);
         }
     }
 

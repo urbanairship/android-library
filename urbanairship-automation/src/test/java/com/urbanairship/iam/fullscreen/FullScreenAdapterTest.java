@@ -5,7 +5,6 @@ package com.urbanairship.iam.fullscreen;
 import android.content.Context;
 import android.content.Intent;
 
-import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.iam.DisplayHandler;
@@ -14,6 +13,7 @@ import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.iam.TextInfo;
 import com.urbanairship.iam.assets.Assets;
+import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +21,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.annotation.Config;
-import org.robolectric.annotation.LooperMode;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -54,7 +53,7 @@ public class FullScreenAdapterTest  {
                               .setDisplayContent(displayContent)
                               .build();
 
-        displayHandler = new DisplayHandler("schedule ID");
+        displayHandler = new DisplayHandler("schedule ID", true, JsonValue.NULL, JsonValue.NULL);
 
         adapter = FullScreenAdapter.newAdapter(message);
     }

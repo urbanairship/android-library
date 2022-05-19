@@ -3,6 +3,8 @@ package com.urbanairship.android.layout.playground
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.webkit.WebView
 import android.widget.ArrayAdapter
@@ -11,6 +13,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import com.urbanairship.Logger
+import com.urbanairship.actions.ActionRunRequest
+import com.urbanairship.actions.ActionRunRequestFactory
+import com.urbanairship.actions.PermissionResultReceiver
+import com.urbanairship.actions.PromptPermissionAction
 import com.urbanairship.android.layout.BasePayload
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.ThomasListener
@@ -21,6 +27,9 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.iam.InAppActionUtils
+import com.urbanairship.json.JsonValue
+import com.urbanairship.permission.Permission
+import com.urbanairship.permission.PermissionStatus
 
 class MainActivity : AppCompatActivity() {
 
@@ -101,7 +110,6 @@ class MainActivity : AppCompatActivity() {
             val payload = BasePayload.fromJson(jsonMap)
             Thomas.prepareDisplay(payload)
                 .setListener(thomasListener)
-                .setActionsRunner(InAppActionUtils::runActions)
                 .display(this)
         } catch (e: Exception) {
             Logger.error(e)
@@ -112,21 +120,21 @@ class MainActivity : AppCompatActivity() {
     private val thomasListener = object : ThomasListener {
         private val events = mutableListOf<String>()
 
-        override fun onPageView(pagerData: PagerData, state: LayoutData?, displayedAt: Long) {
+        override fun onPageView(pagerData: PagerData, state: LayoutData, displayedAt: Long) {
             "onPageView(pagerData: $pagerData, state: $state, displayedAt: $displayedAt)".let {
                 events.add(it)
                 Logger.debug(it)
             }
         }
 
-        override fun onPageSwipe(pagerData: PagerData, toPageIndex: Int, toPageId: String, fromPageIndex: Int, fromPageId: String, state: LayoutData?) {
+        override fun onPageSwipe(pagerData: PagerData, toPageIndex: Int, toPageId: String, fromPageIndex: Int, fromPageId: String, state: LayoutData) {
             "onPageSwipe(pagerData: $pagerData, toPageIndex: $toPageIndex, toPageId: $toPageId, fromPageIndex: $fromPageIndex, fromPageId: $fromPageId, state: $state)".let {
                 events.add(it)
                 Logger.debug(it)
             }
         }
 
-        override fun onButtonTap(buttonId: String, state: LayoutData?) {
+        override fun onButtonTap(buttonId: String, state: LayoutData) {
             "onButtonTap(buttonId: $buttonId, state: $state)".let {
                 events.add(it)
                 Logger.debug(it)
@@ -141,7 +149,7 @@ class MainActivity : AppCompatActivity() {
             dumpEvents()
         }
 
-        override fun onDismiss(buttonId: String, buttonDescription: String?, cancel: Boolean, displayTime: Long, state: LayoutData?) {
+        override fun onDismiss(buttonId: String, buttonDescription: String?, cancel: Boolean, displayTime: Long, state: LayoutData) {
             "onDismiss(buttonId: $buttonId, buttonDescription: $buttonDescription, cancel: $cancel, displayTime: $displayTime, state: $state".let {
                 events.add(it)
                 Logger.debug(it)
@@ -149,18 +157,41 @@ class MainActivity : AppCompatActivity() {
             dumpEvents()
         }
 
-        override fun onFormResult(formData: FormData.BaseForm, state: LayoutData?) {
+        override fun onFormResult(formData: FormData.BaseForm, state: LayoutData) {
             "onFormResult(formData: ${formData.toJsonValue()}, state: $state)".let {
                 events.add(it)
                 Logger.debug(it)
             }
         }
 
-        override fun onFormDisplay(formInfo: FormInfo, state: LayoutData?) {
+        override fun onFormDisplay(formInfo: FormInfo, state: LayoutData) {
             "onFormDisplay(formInfo: $formInfo, state: $state)".let {
                 events.add(it)
                 Logger.debug(it)
             }
+        }
+
+        override fun onRunActions(actions: MutableMap<String, JsonValue>, state: LayoutData) {
+            "onRunActions(actions: $actions, state: $state)".let {
+                events.add(it)
+                Logger.debug(it)
+            }
+
+            val permissionResultReceiver = object : PermissionResultReceiver(Handler(Looper.getMainLooper())) {
+                override fun onResult(permission: Permission, before: PermissionStatus, after: PermissionStatus) {
+                    "onPermissionResult(permission: $permission, before: $before, after: $after, state: $state)".let {
+                        events.add(it)
+                        Logger.debug(it)
+                    }
+                }
+            }
+
+            InAppActionUtils.runActions(actions, ActionRunRequestFactory {
+                val bundle = Bundle()
+                bundle.putParcelable(PromptPermissionAction.RECEIVER_METADATA, permissionResultReceiver)
+
+                ActionRunRequest.createRequest(it).setMetadata(bundle)
+            })
         }
 
         private fun dumpEvents() {

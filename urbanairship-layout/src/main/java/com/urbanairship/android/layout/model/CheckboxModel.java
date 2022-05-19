@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ToggleStyle;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -67,7 +68,7 @@ public class CheckboxModel extends CheckableModel {
     }
 
     @Override
-    public boolean onEvent(@NonNull Event event) {
+    public boolean onEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
         switch (event.getType()) {
             case CHECKBOX_VIEW_UPDATE:
                 CheckboxEvent.ViewUpdate update = (CheckboxEvent.ViewUpdate) event;
@@ -78,7 +79,7 @@ public class CheckboxModel extends CheckableModel {
                 return false;
 
             default:
-                return super.onEvent(event);
+                return super.onEvent(event, layoutData);
         }
     }
 }

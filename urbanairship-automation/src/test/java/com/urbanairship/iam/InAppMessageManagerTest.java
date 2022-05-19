@@ -251,31 +251,6 @@ public class InAppMessageManagerTest {
     }
 
     @Test
-    public void testAddEvent() {
-        when(mockAssetManager.onPrepare(scheduleId, message)).thenReturn(AssetManager.PREPARE_RESULT_OK);
-        when(mockAdapter.isReady(any(Context.class))).thenReturn(true);
-        when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-
-        // Prepare the schedule
-        AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
-        verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
-        verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
-
-        // Make sure it's ready
-        assertEquals(AutomationDriver.READY_RESULT_CONTINUE, manager.onCheckExecutionReadiness(scheduleId));
-
-        // Display the message
-        AutomationDriver.ExecutionCallback mockExecuteCallback = mock(AutomationDriver.ExecutionCallback.class);
-        manager.onExecute(scheduleId, mockExecuteCallback);
-        verify(mockListener).onMessageDisplayed(scheduleId, message);
-
-        manager.onAddEvent(scheduleId, InAppReportingEvent.buttonTap(scheduleId, message, "button id"));
-
-        verify(mockAnalytics).addEvent(argThat(EventMatchers.eventType(InAppReportingEvent.TYPE_BUTTON_TAP)));
-    }
-
-    @Test
     public void testMessageFinishedReportingDisabled() {
         when(mockAssetManager.onPrepare(scheduleId, message)).thenReturn(AssetManager.PREPARE_RESULT_OK);
         when(mockAdapter.isReady(any(Context.class))).thenReturn(true);

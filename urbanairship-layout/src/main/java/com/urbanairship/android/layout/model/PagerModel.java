@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.event.PagerEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -130,7 +131,7 @@ public class PagerModel extends LayoutModel {
         Map<String, JsonValue> pageActions = item.actions;
         String previousPageId = this.items.get(lastIndex).identifier;
 
-        bubbleEvent(new PagerEvent.Scroll(this, position, pageId, pageActions, lastIndex, previousPageId, isInternalScroll, time));
+        bubbleEvent(new PagerEvent.Scroll(this, position, pageId, pageActions, lastIndex, previousPageId, isInternalScroll, time), LayoutData.empty());
         lastIndex = position;
     }
 
@@ -138,7 +139,7 @@ public class PagerModel extends LayoutModel {
         Item item = items.get(position);
         String pageId = item.identifier;
         Map<String, JsonValue> pageActions = item.actions;
-        bubbleEvent(new PagerEvent.Init(this, position, pageId, pageActions, time));
+        bubbleEvent(new PagerEvent.Init(this, position, pageId, pageActions, time), LayoutData.empty());
     }
 
     //
@@ -146,12 +147,12 @@ public class PagerModel extends LayoutModel {
     //
 
     @Override
-    public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event);
-        return onEvent(event, true);
+    public boolean onEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
+        Logger.verbose("onEvent: %s, layoutData: %s", event, layoutData);
+        return onEvent(event, layoutData, true);
     }
 
-    private boolean onEvent(@NonNull Event event, boolean bubbleIfUnhandled) {
+    private boolean onEvent(@NonNull Event event, @NonNull LayoutData layoutData, boolean bubbleIfUnhandled) {
         switch (event.getType()) {
             case BUTTON_BEHAVIOR_PAGER_NEXT:
                 if (listener != null) {
@@ -165,16 +166,16 @@ public class PagerModel extends LayoutModel {
                 return true;
         }
 
-        return bubbleIfUnhandled && super.onEvent(event);
+        return bubbleIfUnhandled && super.onEvent(event, layoutData);
     }
 
     @Override
-    public boolean trickleEvent(@NonNull Event event) {
-        if (onEvent(event, false)) {
+    public boolean trickleEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
+        if (onEvent(event, layoutData, false)) {
             return true;
         }
 
-        return super.trickleEvent(event);
+        return super.trickleEvent(event, layoutData);
     }
 
     public static class Item {

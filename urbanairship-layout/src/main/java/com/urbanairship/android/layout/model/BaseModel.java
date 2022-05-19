@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.event.EventSource;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
@@ -21,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public abstract class BaseModel implements EventSource, EventListener {
+
     private final List<EventListener> listeners = new CopyOnWriteArrayList<>();
 
     @NonNull
@@ -92,7 +94,9 @@ public abstract class BaseModel implements EventSource, EventListener {
         listeners.remove(listener);
     }
 
-    /** Sets an event listener, removing any previously set listeners. */
+    /**
+     * Sets an event listener, removing any previously set listeners.
+     */
     @Override
     public void setListener(EventListener listener) {
         listeners.clear();
@@ -107,7 +111,7 @@ public abstract class BaseModel implements EventSource, EventListener {
      * {@inheritDoc}
      */
     @Override
-    public boolean onEvent(@NonNull Event event) {
+    public boolean onEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
         return false;
     }
 
@@ -119,11 +123,14 @@ public abstract class BaseModel implements EventSource, EventListener {
      * Bubbles the given {@code Event} to any upstream listeners.
      *
      * @param event The {@code Event} to bubble up.
+     * @param layoutData The {@code LayoutData} to bubble up.
      * @return {@code true} if the event was handled upstream, {@code false} otherwise.
      */
-    protected boolean bubbleEvent(@NonNull Event event) {
+    protected boolean bubbleEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
         for (EventListener listener : listeners) {
-            if (listener.onEvent(event)) { return true; }
+            if (listener.onEvent(event, layoutData)) {
+                return true;
+            }
         }
         return false;
     }
@@ -132,9 +139,11 @@ public abstract class BaseModel implements EventSource, EventListener {
      * Trickles the given {@code Event} to any downstream listeners.
      *
      * @param event The {@code Event} to trickle down.
+     * @param layoutData The {@code LayoutData} to bubble up.
      * @return {@code true} if the event was handled downstream, {@code false} otherwise.
      */
-    protected boolean trickleEvent(@NonNull Event event) {
-        return onEvent(event);
+    protected boolean trickleEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
+        return onEvent(event, layoutData);
     }
+
 }

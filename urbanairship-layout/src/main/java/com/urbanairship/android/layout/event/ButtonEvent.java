@@ -22,14 +22,11 @@ public abstract class ButtonEvent extends Event {
     private final String identifier;
     @NonNull
     private final String reportingDescription;
-    @NonNull
-    private final LayoutData state;
 
-    public ButtonEvent(@NonNull EventType type, @NonNull String identifier, @NonNull String reportingDescription, @Nullable LayoutData state) {
+    public ButtonEvent(@NonNull EventType type, @NonNull String identifier, @NonNull String reportingDescription) {
         super(type);
         this.identifier = identifier;
         this.reportingDescription = reportingDescription;
-        this.state = state != null ? state : new LayoutData(null,null);
     }
 
     @NonNull
@@ -44,22 +41,6 @@ public abstract class ButtonEvent extends Event {
 
     public boolean isCancel() {
         return false;
-    }
-
-    @NonNull
-    public LayoutData getState() {
-        return state;
-    }
-
-    public abstract ButtonEvent overrideState(@NonNull FormInfo formInfo);
-    public abstract ButtonEvent overrideState(@NonNull PagerData pagerData);
-
-    protected LayoutData copyState(@NonNull FormInfo formInfo) {
-        return state.withFormInfo(formInfo);
-    }
-
-    protected LayoutData copyState(@NonNull PagerData data) {
-        return state.withPagerData(data);
     }
 
     public static ButtonEvent fromBehavior(@NonNull ButtonClickBehaviorType behavior, @NonNull ButtonModel model) throws JsonException {
@@ -81,22 +62,13 @@ public abstract class ButtonEvent extends Event {
 
     public static class Dismiss extends ButtonEvent {
         public Dismiss(@NonNull ButtonModel button) {
-            this(button.getIdentifier(), button.reportingDescription(), null);
+            this(button.getIdentifier(), button.reportingDescription());
         }
 
-        private Dismiss(@NonNull String identifier, @NonNull String reportingDescription, @Nullable LayoutData state) {
-            super(EventType.BUTTON_BEHAVIOR_DISMISS, identifier, reportingDescription, state);
+        private Dismiss(@NonNull String identifier, @NonNull String reportingDescription) {
+            super(EventType.BUTTON_BEHAVIOR_DISMISS, identifier, reportingDescription);
         }
 
-        @Override
-        public Dismiss overrideState(@NonNull FormInfo formInfo) {
-            return new Dismiss(getIdentifier(), getReportingDescription(), copyState(formInfo));
-        }
-
-        @Override
-        public Dismiss overrideState(@NonNull PagerData pagerData) {
-            return new Dismiss(getIdentifier(), getReportingDescription(), copyState(pagerData));
-        }
 
         @Override
         @NonNull
@@ -104,18 +76,17 @@ public abstract class ButtonEvent extends Event {
             return "ButtonEvent.Dismiss{" +
                 "identifier='" + getIdentifier() + '\'' +
                 ", reportingDescription='" + getReportingDescription() + '\'' +
-                ", state=" + getState() +
                 '}';
         }
     }
 
     public static class Cancel extends ButtonEvent {
         public Cancel(@NonNull ButtonModel button) {
-            this(button.getIdentifier(), button.reportingDescription(), null);
+            this(button.getIdentifier(), button.reportingDescription());
         }
 
-        private Cancel(@NonNull String identifier, @NonNull String reportingDescription, @Nullable LayoutData state) {
-            super(EventType.BUTTON_BEHAVIOR_CANCEL, identifier, reportingDescription, state);
+        private Cancel(@NonNull String identifier, @NonNull String reportingDescription) {
+            super(EventType.BUTTON_BEHAVIOR_CANCEL, identifier, reportingDescription);
         }
 
         @Override
@@ -123,15 +94,6 @@ public abstract class ButtonEvent extends Event {
             return true;
         }
 
-        @Override
-        public Cancel overrideState(@NonNull FormInfo formInfo) {
-            return new Cancel(getIdentifier(), getReportingDescription(), copyState(formInfo));
-        }
-
-        @Override
-        public Cancel overrideState(@NonNull PagerData pagerData) {
-            return new Cancel(getIdentifier(), getReportingDescription(), copyState(pagerData));
-        }
 
         @Override
         @NonNull
@@ -139,29 +101,19 @@ public abstract class ButtonEvent extends Event {
             return "ButtonEvent.Cancel{" +
                 "identifier='" + getIdentifier() + '\'' +
                 ", reportingDescription='" + getReportingDescription() + '\'' +
-                ", state=" + getState() +
                 '}';
         }
     }
 
     public static class PagerNext extends ButtonEvent {
         public PagerNext(@NonNull ButtonModel button) {
-            this(button.getIdentifier(), button.reportingDescription(), null);
+            this(button.getIdentifier(), button.reportingDescription());
         }
 
-        private PagerNext(@NonNull String identifier, @NonNull String reportingDescription, @Nullable LayoutData state) {
-            super(EventType.BUTTON_BEHAVIOR_PAGER_NEXT, identifier, reportingDescription, state);
+        private PagerNext(@NonNull String identifier, @NonNull String reportingDescription) {
+            super(EventType.BUTTON_BEHAVIOR_PAGER_NEXT, identifier, reportingDescription);
         }
 
-        @Override
-        public PagerNext overrideState(@NonNull FormInfo formInfo) {
-            return new PagerNext(getIdentifier(), getReportingDescription(), copyState(formInfo));
-        }
-
-        @Override
-        public PagerNext overrideState(@NonNull PagerData pagerData) {
-            return new PagerNext(getIdentifier(), getReportingDescription(), copyState(pagerData));
-        }
 
         @Override
         @NonNull
@@ -169,28 +121,17 @@ public abstract class ButtonEvent extends Event {
             return "ButtonEvent.PagerNext{" +
                 "identifier='" + getIdentifier() + '\'' +
                 ", reportingDescription='" + getReportingDescription() + '\'' +
-                ", state=" + getState() +
                 '}';
         }
     }
 
     public static class PagerPrevious extends ButtonEvent {
         public PagerPrevious(@NonNull ButtonModel button) {
-            this(button.getIdentifier(), button.reportingDescription(), null);
+            this(button.getIdentifier(), button.reportingDescription());
         }
 
-        private PagerPrevious(@NonNull String identifier, @NonNull String reportingDescription, @Nullable LayoutData state) {
-            super(EventType.BUTTON_BEHAVIOR_PAGER_PREVIOUS, identifier, reportingDescription, state);
-        }
-
-        @Override
-        public PagerPrevious overrideState(@NonNull FormInfo formInfo) {
-            return new PagerPrevious(getIdentifier(), getReportingDescription(), copyState(formInfo));
-        }
-
-        @Override
-        public PagerPrevious overrideState(@NonNull PagerData pagerData) {
-            return new PagerPrevious(getIdentifier(), getReportingDescription(), copyState(pagerData));
+        private PagerPrevious(@NonNull String identifier, @NonNull String reportingDescription) {
+            super(EventType.BUTTON_BEHAVIOR_PAGER_PREVIOUS, identifier, reportingDescription);
         }
 
         @Override
@@ -199,28 +140,17 @@ public abstract class ButtonEvent extends Event {
             return "ButtonEvent.PagerPrevious{" +
                 "identifier='" + getIdentifier() + '\'' +
                 ", reportingDescription='" + getReportingDescription() + '\'' +
-                ", state=" + getState() +
                 '}';
         }
     }
 
     public static class FormSubmit extends ButtonEvent {
         public FormSubmit(@NonNull ButtonModel button) {
-            this(button.getIdentifier(), button.reportingDescription(), null);
+            this(button.getIdentifier(), button.reportingDescription());
         }
 
-        private FormSubmit(@NonNull String identifier, @NonNull String reportingDescription, @Nullable LayoutData state) {
-            super(EventType.BUTTON_BEHAVIOR_FORM_SUBMIT, identifier, reportingDescription, state);
-        }
-
-        @Override
-        public FormSubmit overrideState(@NonNull FormInfo formInfo) {
-            return new FormSubmit(getIdentifier(), getReportingDescription(), copyState(formInfo));
-        }
-
-        @Override
-        public FormSubmit overrideState(@NonNull PagerData pagerData) {
-            return new FormSubmit(getIdentifier(), getReportingDescription(), copyState(pagerData));
+        private FormSubmit(@NonNull String identifier, @NonNull String reportingDescription) {
+            super(EventType.BUTTON_BEHAVIOR_FORM_SUBMIT, identifier, reportingDescription);
         }
 
         @Override
@@ -229,7 +159,6 @@ public abstract class ButtonEvent extends Event {
             return "ButtonEvent.FormSubmit{" +
                 "identifier='" + getIdentifier() + '\'' +
                 ", reportingDescription='" + getReportingDescription() + '\'' +
-                ", state=" + getState() +
                 '}';
         }
     }
@@ -239,22 +168,12 @@ public abstract class ButtonEvent extends Event {
         private final Map<String, JsonValue> actions;
 
         public Actions(@NonNull ButtonModel button) {
-            this(button.getIdentifier(), button.reportingDescription(), button.getActions(), null);
+            this(button.getIdentifier(), button.reportingDescription(), button.getActions());
         }
 
-        private Actions(@NonNull String identifier, @NonNull String reportingDescription, @NonNull Map<String, JsonValue> actions, @Nullable LayoutData state) {
-            super(EventType.BUTTON_ACTIONS, identifier, reportingDescription, state);
+        private Actions(@NonNull String identifier, @NonNull String reportingDescription, @NonNull Map<String, JsonValue> actions) {
+            super(EventType.BUTTON_ACTIONS, identifier, reportingDescription);
             this.actions = actions;
-        }
-
-        @Override
-        public Actions overrideState(@NonNull FormInfo formInfo) {
-            return new Actions(getIdentifier(), getReportingDescription(), getActions(), copyState(formInfo));
-        }
-
-        @Override
-        public Actions overrideState(@NonNull PagerData pagerData) {
-            return new Actions(getIdentifier(), getReportingDescription(), getActions(), copyState(pagerData));
         }
 
         @Override
@@ -270,7 +189,6 @@ public abstract class ButtonEvent extends Event {
                 "identifier='" + getIdentifier() + '\'' +
                 ", reportingDescription='" + getReportingDescription() + '\'' +
                 ", actions=" + getActions() +
-                ", state=" + getState() +
                 '}';
         }
     }

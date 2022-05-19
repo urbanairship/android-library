@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ToggleStyle;
 import com.urbanairship.android.layout.property.ToggleType;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
@@ -81,15 +82,15 @@ public abstract class CheckableModel extends BaseModel implements Accessible {
 
     @CallSuper
     public void onConfigured() {
-        bubbleEvent(buildInitEvent());
+        bubbleEvent(buildInitEvent(), LayoutData.empty());
     }
 
     public void onAttachedToWindow() {
-        bubbleEvent(new Event.ViewAttachedToWindow(this));
+        bubbleEvent(new Event.ViewAttachedToWindow(this), LayoutData.empty());
     }
 
     public void onCheckedChange(boolean isChecked) {
-        bubbleEvent(buildInputChangeEvent(isChecked));
+        bubbleEvent(buildInputChangeEvent(isChecked), LayoutData.empty());
     }
 
     @NonNull

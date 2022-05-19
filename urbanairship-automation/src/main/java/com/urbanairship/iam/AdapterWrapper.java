@@ -36,6 +36,7 @@ final class AdapterWrapper {
         DisplayException(String message, Exception e) {
             super(message, e);
         }
+
     }
 
     public final String scheduleId;
@@ -54,8 +55,8 @@ final class AdapterWrapper {
                    @NonNull InAppMessageAdapter adapter,
                    @NonNull DisplayCoordinator coordinator) {
         this.scheduleId = scheduleId;
-        this.campaigns = campaigns;
-        this.reportingContext = reportingContext;
+        this.campaigns = campaigns == null ? JsonValue.NULL : campaigns;
+        this.reportingContext = reportingContext == null ? JsonValue.NULL : reportingContext;
         this.message = message;
         this.adapter = adapter;
         this.coordinator = coordinator;
@@ -103,7 +104,7 @@ final class AdapterWrapper {
         displayed = true;
 
         try {
-            DisplayHandler displayHandler = new DisplayHandler(scheduleId);
+            DisplayHandler displayHandler = new DisplayHandler(scheduleId, message.isReportingEnabled(), campaigns, reportingContext);
             adapter.onDisplay(context, displayHandler);
             coordinator.onDisplayStarted(message);
         } catch (Exception e) {
@@ -117,14 +118,11 @@ final class AdapterWrapper {
     @MainThread
     void displayFinished() {
         Logger.debug("Display finished for schedule %s", scheduleId);
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    coordinator.onDisplayFinished(message);
-                } catch (Exception e) {
-                    Logger.error(e, "AdapterWrapper - Exception during onDisplayFinished().");
-                }
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                coordinator.onDisplayFinished(message);
+            } catch (Exception e) {
+                Logger.error(e, "AdapterWrapper - Exception during onDisplayFinished().");
             }
         });
     }

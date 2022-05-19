@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.event.EventType;
 import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.After;
@@ -60,12 +61,12 @@ public class CheckboxControllerTest {
 
     @Test
     public void testViewInit() {
-        controller.onEvent(makeViewInitEvent());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
         // Verify that we observed a form input init event after the first checkbox is initialized.
         assertEquals(1, testListener.getCount(EventType.FORM_INPUT_INIT));
 
-        controller.onEvent(makeViewInitEvent());
-        controller.onEvent(makeViewInitEvent());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
 
         // Verify that we didn't emit any further input init events after the first.
         assertEquals(1, testListener.getCount(EventType.FORM_INPUT_INIT));
@@ -81,9 +82,9 @@ public class CheckboxControllerTest {
 
     @Test
     public void testInputChange() {
-        controller.onEvent(makeViewInitEvent());
-        controller.onEvent(makeViewInitEvent());
-        controller.onEvent(makeViewInitEvent());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
 
         // Sanity check
         assertEquals(1, testListener.getCount(EventType.FORM_INPUT_INIT));
@@ -93,7 +94,7 @@ public class CheckboxControllerTest {
         assertFalse(controller.isValid());
 
         // Simulate checking an option
-        controller.onEvent(new CheckboxEvent.InputChange(SELECTED_VALUE, true));
+        controller.onEvent(new CheckboxEvent.InputChange(SELECTED_VALUE, true), LayoutData.empty());
         assertEquals(1, testListener.getCount(EventType.FORM_DATA_CHANGE));
 
         FormEvent.DataChange changeEvent = (FormEvent.DataChange) testListener.getEventAt(1);
@@ -106,7 +107,7 @@ public class CheckboxControllerTest {
         assertEquals(1, controller.getSelectedValues().size());
 
         // Simulate unchecking the option
-        controller.onEvent(new CheckboxEvent.InputChange(SELECTED_VALUE, false));
+        controller.onEvent(new CheckboxEvent.InputChange(SELECTED_VALUE, false), LayoutData.empty());
         assertEquals(2, testListener.getCount(EventType.FORM_DATA_CHANGE));
 
         changeEvent = (FormEvent.DataChange) testListener.getEventAt(2);
@@ -123,15 +124,15 @@ public class CheckboxControllerTest {
 
     @Test
     public void testMaxSelection() {
-        controller.onEvent(makeViewInitEvent());
-        controller.onEvent(makeViewInitEvent());
-        controller.onEvent(makeViewInitEvent());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
 
         assertEquals(3, controller.getCheckboxes().size());
 
-        controller.onEvent(new CheckboxEvent.InputChange(JsonValue.wrap("one"), true));
-        controller.onEvent(new CheckboxEvent.InputChange(JsonValue.wrap("two"), true));
-        controller.onEvent(new CheckboxEvent.InputChange(JsonValue.wrap("three"), true));
+        controller.onEvent(new CheckboxEvent.InputChange(JsonValue.wrap("one"), true), LayoutData.empty());
+        controller.onEvent(new CheckboxEvent.InputChange(JsonValue.wrap("two"), true), LayoutData.empty());
+        controller.onEvent(new CheckboxEvent.InputChange(JsonValue.wrap("three"), true), LayoutData.empty());
 
         // Verify that we didn't accept the third input change
         Set<JsonValue> expected = new HashSet<JsonValue>() {{

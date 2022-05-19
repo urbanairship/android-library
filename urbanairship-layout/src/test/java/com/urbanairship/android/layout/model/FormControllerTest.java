@@ -2,13 +2,11 @@
 
 package com.urbanairship.android.layout.model;
 
-import com.urbanairship.android.layout.event.ButtonEvent;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.EventType;
 import com.urbanairship.android.layout.event.FormEvent;
 import com.urbanairship.android.layout.event.ReportingEvent;
 import com.urbanairship.android.layout.event.TextInputEvent;
-import com.urbanairship.android.layout.event.WebViewEvent;
 import com.urbanairship.android.layout.property.FormBehaviorType;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.LayoutData;
@@ -23,11 +21,13 @@ import org.mockito.Spy;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import test.TestEventListener;
 
 import static androidx.core.util.ObjectsCompat.requireNonNull;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
@@ -79,8 +79,8 @@ public class FormControllerTest {
     }
 
     private void initForm() {
-        controller.onEvent(inputViewAttachedEvent);
-        controller.onEvent(inputFormFieldInitEvent);
+        controller.onEvent(inputViewAttachedEvent, LayoutData.empty());
+        controller.onEvent(inputFormFieldInitEvent, LayoutData.empty());
     }
 
     @After
@@ -95,89 +95,41 @@ public class FormControllerTest {
         // Verify that the text input received a form validity update from the form controller.
         Mockito.verify(mockSubmitButton).trickleEvent(argThat(event ->
             event instanceof FormEvent.ValidationUpdate
-                && !((FormEvent.ValidationUpdate) event).isValid()));
+                && !((FormEvent.ValidationUpdate) event).isValid()), any());
 
         // Verify reporting event was sent for the initial page view and form data was added to the event.
         assertEquals(1, testListener.getCount(EventType.REPORTING_EVENT));
         ReportingEvent.FormDisplay reportingEvent = (ReportingEvent.FormDisplay) testListener.getEventAt(EventType.REPORTING_EVENT, 0);
+        LayoutData layoutData =  testListener.getLayoutDataAt(EventType.REPORTING_EVENT, 0);
+
+
         assertEquals(ReportingEvent.ReportType.FORM_DISPLAY, reportingEvent.getReportType());
         assertEquals(FORM_ID, reportingEvent.getFormInfo().getIdentifier());
-        assertEquals(false, reportingEvent.getState().getFormInfo().getFormSubmitted());
+        assertEquals(false, layoutData.getFormInfo().getFormSubmitted());
         assertEquals(RESPONSE_TYPE, reportingEvent.getFormInfo().getFormResponseType());
         // Check to make sure no additional events were received.
         assertEquals(1, testListener.getCount());
     }
 
     @Test
-    public void testOverridesStateForReportingEvents() {
+    public void testOverrideState() {
         initForm();
 
         // Bubble a Reporting Event to the form controller.
-        controller.onEvent(new ReportingEvent.ButtonTap("buttonId"));
+        controller.onEvent(new ReportingEvent.ButtonTap("buttonId"), LayoutData.empty());
 
         // Verify that the listener was notified and form data was added to the event.
         assertEquals(2, testListener.getCount(EventType.REPORTING_EVENT));
+
         ReportingEvent.ButtonTap reportingEvent = (ReportingEvent.ButtonTap) testListener.getEventAt(EventType.REPORTING_EVENT, 1);
+        LayoutData layoutData = requireNonNull(testListener.getLayoutDataAt(EventType.REPORTING_EVENT, 0));
+
         assertEquals(ReportingEvent.ReportType.BUTTON_TAP, reportingEvent.getReportType());
-        LayoutData state = reportingEvent.getState();
-        assertEquals(FORM_ID, state.getFormInfo().getIdentifier());
-        assertEquals(RESPONSE_TYPE, state.getFormInfo().getFormResponseType());
-        assertEquals(false, state.getFormInfo().getFormSubmitted());
+        assertEquals(FORM_ID, layoutData.getFormInfo().getIdentifier());
+        assertEquals(RESPONSE_TYPE, layoutData.getFormInfo().getFormResponseType());
+        assertEquals(false, layoutData.getFormInfo().getFormSubmitted());
         // Check to make sure no additional events were received.
         assertEquals(2, testListener.getCount());
     }
 
-    @Test
-    public void testOverridesStateForWebViewEvents() {
-        initForm();
-
-        // Simulate a webview close from within the form.
-        controller.onEvent(new WebViewEvent.Close());
-
-        // Verify that the listener was notified and form data was added to the event.
-        assertEquals(1, testListener.getCount(EventType.WEBVIEW_CLOSE));
-        WebViewEvent.Close closeEvent = (WebViewEvent.Close) testListener.getEventAt(EventType.WEBVIEW_CLOSE, 0);
-        LayoutData state = requireNonNull(closeEvent.getState());
-        assertEquals(FORM_ID, state.getFormInfo().getIdentifier());
-        assertEquals(false, state.getFormInfo().getFormSubmitted());
-        assertEquals(RESPONSE_TYPE, state.getFormInfo().getFormResponseType());
-        // Check to make sure no additional events were received.
-        assertEquals(2, testListener.getCount());
-    }
-
-    @Test
-    public void testOverridesStateForButtonCancel() {
-        initForm();
-
-        // Simulate a cancel event from a button within the pager.
-        controller.onEvent(new ButtonEvent.Cancel(mockSubmitButton));
-
-        // Verify that the listener was notified and pager data was added to the event.
-        assertEquals(1, testListener.getCount(EventType.BUTTON_BEHAVIOR_CANCEL));
-        ButtonEvent cancelEvent = (ButtonEvent) testListener.getEventAt(EventType.BUTTON_BEHAVIOR_CANCEL, 0);
-        LayoutData state = requireNonNull(cancelEvent.getState());
-        assertEquals(FORM_ID, state.getFormInfo().getIdentifier());
-        assertEquals(false, state.getFormInfo().getFormSubmitted());
-        assertEquals(RESPONSE_TYPE, state.getFormInfo().getFormResponseType());
-        // Check to make sure no additional events were received (aside from the form display event).
-        assertEquals(2, testListener.getCount());
-    }
-
-    @Test
-    public void testOverridesStateForButtonDismiss() {
-        initForm();
-
-        // Simulate a dismiss event from a button
-        controller.onEvent(new ButtonEvent.Dismiss(mockSubmitButton));
-
-        // Verify that the listener was notified and updated pager data was added to the event
-        assertEquals(1, testListener.getCount(EventType.BUTTON_BEHAVIOR_DISMISS));
-        ButtonEvent dismissEvent = (ButtonEvent) testListener.getEventAt(EventType.BUTTON_BEHAVIOR_DISMISS, 0);
-        LayoutData state = requireNonNull(dismissEvent.getState());
-        assertEquals(FORM_ID, state.getFormInfo().getIdentifier());
-        assertEquals(false, state.getFormInfo().getFormSubmitted());
-        assertEquals(RESPONSE_TYPE, state.getFormInfo().getFormResponseType());
-        // Check to make sure no additional events were received (aside from the form display event).
-        assertEquals(2, testListener.getCount());
-    }
 }

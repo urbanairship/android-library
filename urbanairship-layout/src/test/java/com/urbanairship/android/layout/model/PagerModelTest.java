@@ -59,7 +59,7 @@ public class PagerModelTest {
 
         // User scrolls are not internal, which results in a page swipe event.
         boolean isInternal = false;
-        PagerEvent.Scroll scroll = (PagerEvent.Scroll) testListener.getEvents().get(1);
+        PagerEvent.Scroll scroll = (PagerEvent.Scroll) testListener.getEventAt(1);
         verifyPagerScroll(scroll, 0, PAGE_1_ID, 1, PAGE_2_ID, true, true, isInternal);
     }
 
@@ -71,7 +71,7 @@ public class PagerModelTest {
 
         // Button next/previous scrolls are internal, which should not report a page swipe event.
         boolean isInternal = true;
-        PagerEvent.Scroll scroll = (PagerEvent.Scroll) testListener.getEvents().get(1);
+        PagerEvent.Scroll scroll = (PagerEvent.Scroll) testListener.getEventAt(1);
         verifyPagerScroll(scroll, 0, PAGE_1_ID, 1, PAGE_2_ID, true, true, isInternal);
     }
 
@@ -79,18 +79,18 @@ public class PagerModelTest {
     public void testScrollEventHasNextAndPrevious() {
         // Scroll to the middle page (has both previous and next).
         pagerModel.onScrollTo(1, true, 1L);
-        PagerEvent.Scroll scroll1 = (PagerEvent.Scroll) testListener.getEvents().get(1);
+        PagerEvent.Scroll scroll1 = (PagerEvent.Scroll) testListener.getEventAt(1);
         verifyPagerScroll(scroll1, 0, PAGE_1_ID, 1, PAGE_2_ID, true, true, true);
 
         // Scroll to the last page (has only previous).
         pagerModel.onScrollTo(2, true, 1L);
-        PagerEvent.Scroll scroll2 = (PagerEvent.Scroll) testListener.getEvents().get(2);
+        PagerEvent.Scroll scroll2 = (PagerEvent.Scroll) testListener.getEventAt(2);
         verifyPagerScroll(scroll2, 1, PAGE_2_ID, 2, PAGE_3_ID, false, true, true);
 
         // Scroll back to the first page (has only next).
         pagerModel.onScrollTo(1, true, 1L);
         pagerModel.onScrollTo(0, true, 1L);
-        PagerEvent.Scroll scroll3 = (PagerEvent.Scroll) testListener.getEvents().get(4);
+        PagerEvent.Scroll scroll3 = (PagerEvent.Scroll) testListener.getEventAt(4);
         verifyPagerScroll(scroll3, 1, PAGE_2_ID, 0, PAGE_1_ID, true, false, true);
     }
 

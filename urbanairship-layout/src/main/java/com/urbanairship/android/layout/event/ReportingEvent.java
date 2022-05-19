@@ -30,13 +30,10 @@ public abstract class ReportingEvent extends Event {
 
     @NonNull
     private final ReportType reportType;
-    @NonNull
-    private final LayoutData state;
 
-    protected ReportingEvent(@NonNull ReportType reportType, @Nullable LayoutData state) {
+    protected ReportingEvent(@NonNull ReportType reportType) {
         super(EventType.REPORTING_EVENT);
         this.reportType = reportType;
-        this.state = state != null ? state : new LayoutData(null, null);
     }
 
     @NonNull
@@ -44,46 +41,16 @@ public abstract class ReportingEvent extends Event {
         return reportType;
     }
 
-    @NonNull
-    public LayoutData getState() {
-        return state;
-    }
-
-    public abstract ReportingEvent overrideState(@NonNull FormInfo formInfo);
-    public abstract ReportingEvent overrideState(@NonNull PagerData pagerData);
-
-    protected LayoutData copyState(@NonNull FormInfo formInfo) {
-        return state.withFormInfo(formInfo);
-    }
-
-    protected LayoutData copyState(@NonNull PagerData data) {
-        return state.withPagerData(data);
-    }
-
     /**
      * Bubbled up to the top level when a pager changes page.
      */
     public static class PageView extends PagerReportingEvent {
+
         private final long displayedAt;
 
         public PageView(@NonNull PagerData pagerData, long displayedAt) {
-            super(ReportType.PAGE_VIEW, pagerData, new LayoutData(null, pagerData));
+            super(ReportType.PAGE_VIEW, pagerData);
             this.displayedAt = displayedAt;
-        }
-
-        private PageView(@NonNull PagerData pagerData, @Nullable LayoutData state, long displayedAt) {
-            super(ReportType.PAGE_VIEW, pagerData, state);
-            this.displayedAt = displayedAt;
-        }
-
-        @Override
-        public ReportingEvent overrideState(@NonNull FormInfo formInfo) {
-            return new PageView(getPagerData(), copyState(formInfo), displayedAt);
-        }
-
-        @Override
-        public ReportingEvent overrideState(@NonNull PagerData pagerData) {
-            return new PageView(getPagerData(), copyState(pagerData), displayedAt);
         }
 
         public long getDisplayedAt() {
@@ -94,28 +61,25 @@ public abstract class ReportingEvent extends Event {
         @Override
         public String toString() {
             return "ReportingEvent.PageView{" +
-                "pagerData=" + getPagerData() +
-                ", state=" + getState() +
-                ", displayedAt=" + getDisplayedAt() +
-                '}';
+                    "pagerData=" + getPagerData() +
+                    ", displayedAt=" + getDisplayedAt() +
+                    '}';
         }
+
     }
 
     /**
      * Bubbled up to the top level when a pager changes page due to a swipe.
      */
     public static class PageSwipe extends PagerReportingEvent {
+
         private final int fromPageIndex;
         private final int toPageIndex;
         private final String fromPageId;
         private final String toPageId;
 
         public PageSwipe(@NonNull PagerData pagerData, int fromPageIndex, @NonNull String fromPageId, int toPageIndex, @NonNull String toPageId) {
-            this(pagerData, fromPageIndex, fromPageId, toPageIndex, toPageId, new LayoutData(null, pagerData));
-        }
-
-        private PageSwipe(@NonNull PagerData pagerData, int fromPageIndex, @NonNull String fromPageId, int toPageIndex, @NonNull String toPageId, @Nullable LayoutData state) {
-            super(ReportType.PAGE_SWIPE, pagerData, state);
+            super(ReportType.PAGE_SWIPE, pagerData);
             this.fromPageIndex = fromPageIndex;
             this.fromPageId = fromPageId;
             this.toPageIndex = toPageIndex;
@@ -141,16 +105,6 @@ public abstract class ReportingEvent extends Event {
         }
 
         @Override
-        public ReportingEvent overrideState(@NonNull FormInfo formInfo) {
-            return new PageSwipe(getPagerData(), fromPageIndex, fromPageId, toPageIndex, toPageId, copyState(formInfo));
-        }
-
-        @Override
-        public ReportingEvent overrideState(@NonNull PagerData data) {
-            return new PageSwipe(getPagerData(), fromPageIndex, fromPageId, toPageIndex, toPageId, copyState(data));
-        }
-
-        @Override
         public String toString() {
             return "PageSwipe{" +
                     "fromPageIndex=" + fromPageIndex +
@@ -159,21 +113,19 @@ public abstract class ReportingEvent extends Event {
                     ", toPageId='" + toPageId + '\'' +
                     '}';
         }
+
     }
 
     /**
      * Bubbled up to the top level when a button is tapped.
      */
     public static class ButtonTap extends ReportingEvent {
+
         @NonNull
         private final String buttonId;
 
         public ButtonTap(@NonNull String buttonId) {
-            this(buttonId, null);
-        }
-
-        private ButtonTap(@NonNull String buttonId, @Nullable LayoutData state) {
-            super(ReportType.BUTTON_TAP, state);
+            super(ReportType.BUTTON_TAP);
             this.buttonId = buttonId;
         }
 
@@ -183,23 +135,13 @@ public abstract class ReportingEvent extends Event {
         }
 
         @Override
-        public ReportingEvent overrideState(@NonNull FormInfo formInfo) {
-            return new ButtonTap(buttonId, copyState(formInfo));
-        }
-
-        @Override
-        public ReportingEvent overrideState(@NonNull PagerData pagerData) {
-            return new ButtonTap(buttonId, copyState(pagerData));
-        }
-
-        @Override
         @NonNull
         public String toString() {
             return "ReportingEvent.ButtonTap{" +
-                "buttonId='" + buttonId + '\'' +
-                ", state=" + getState() +
-                '}';
+                    "buttonId='" + buttonId + '\'' +
+                    '}';
         }
+
     }
 
     /**
@@ -208,37 +150,24 @@ public abstract class ReportingEvent extends Event {
     public static class DismissFromOutside extends DismissReportingEvent {
 
         public DismissFromOutside(long displayTime) {
-            this(displayTime, null);
-        }
-
-        public DismissFromOutside(long displayTime, @Nullable LayoutData state) {
-            super(ReportType.OUTSIDE_DISMISS, displayTime, state);
+            super(ReportType.OUTSIDE_DISMISS, displayTime);
         }
 
         @Override
         @NonNull
         public String toString() {
             return "ReportingEvent.DismissFromOutside{" +
-                "displayTime=" + getDisplayTime() +
-                '}';
+                    "displayTime=" + getDisplayTime() +
+                    '}';
         }
 
-        @Override
-        public ReportingEvent overrideState(@NonNull FormInfo formInfo) {
-            return new DismissFromOutside(getDisplayTime(), copyState(formInfo));
-
-        }
-
-        @Override
-        public ReportingEvent overrideState(@NonNull PagerData pagerData) {
-            return new DismissFromOutside(getDisplayTime(), copyState(pagerData));
-        }
     }
 
     /**
      * Bubbled up to the top level when the view is dismissed from a button.
      */
     public static class DismissFromButton extends DismissReportingEvent {
+
         @NonNull
         private final String buttonId;
         @Nullable
@@ -246,23 +175,12 @@ public abstract class ReportingEvent extends Event {
         private final boolean cancel;
 
         public DismissFromButton(
-            @NonNull String buttonId,
-            @Nullable String buttonDescription,
-            boolean cancel,
-            long displayTime
+                @NonNull String buttonId,
+                @Nullable String buttonDescription,
+                boolean cancel,
+                long displayTime
         ) {
-            this(buttonId, buttonDescription, cancel, displayTime, null);
-        }
-
-        public DismissFromButton(
-            @NonNull String buttonId,
-            @Nullable String buttonDescription,
-            boolean cancel,
-            long displayTime,
-            @Nullable LayoutData state
-        ) {
-            super(ReportType.BUTTON_DISMISS, displayTime, state);
-
+            super(ReportType.BUTTON_DISMISS, displayTime);
             this.buttonId = buttonId;
             this.buttonDescription = buttonDescription;
             this.cancel = cancel;
@@ -283,29 +201,20 @@ public abstract class ReportingEvent extends Event {
         }
 
         @Override
-        public ReportingEvent overrideState(@NonNull FormInfo formInfo) {
-            return new DismissFromButton(buttonId, buttonDescription, cancel, getDisplayTime(), copyState(formInfo));
-        }
-
-        @Override
-        public ReportingEvent overrideState(@NonNull PagerData pagerData) {
-            return new DismissFromButton(buttonId, buttonDescription, cancel, getDisplayTime(), copyState(pagerData));
-        }
-
-        @Override
         @NonNull
         public String toString() {
             return "ReportingEvent.DismissFromButton{" +
-                "buttonId='" + buttonId + '\'' +
-                ", buttonDescription='" + buttonDescription + '\'' +
-                ", cancel=" + cancel +
-                ", state=" + getState() +
-                ", displayTime=" + getDisplayTime() +
-                '}';
+                    "buttonId='" + buttonId + '\'' +
+                    ", buttonDescription='" + buttonDescription + '\'' +
+                    ", cancel=" + cancel +
+                    ", displayTime=" + getDisplayTime() +
+                    '}';
         }
+
     }
 
     public static class FormResult extends ReportingEvent {
+
         @NonNull
         private final FormData.BaseForm formData;
 
@@ -316,13 +225,9 @@ public abstract class ReportingEvent extends Event {
         private final Map<AttributeName, JsonValue> attributes;
 
         public FormResult(@NonNull FormData.BaseForm formData, @NonNull FormInfo formInfo, @NonNull Map<AttributeName, JsonValue> attributes) {
-            this(formData, formInfo, new LayoutData(formInfo, null), attributes);
-        }
-
-        private FormResult(@NonNull FormData.BaseForm formData, @NonNull FormInfo formInfo, @Nullable LayoutData state, @NonNull Map<AttributeName, JsonValue> attributes) {
-            super(ReportType.FORM_RESULT, state);
+            super(ReportType.FORM_RESULT);
             this.formData = formData;
-            this.formInfo  = formInfo;
+            this.formInfo = formInfo;
             this.attributes = attributes;
         }
 
@@ -350,27 +255,15 @@ public abstract class ReportingEvent extends Event {
             return attributes;
         }
 
-        @Override
-        public ReportingEvent overrideState(@NonNull FormInfo formInfo) {
-            return new FormResult(getFormData(), getFormInfo(), copyState(formInfo), attributes);
-        }
-
-        @Override
-        public ReportingEvent overrideState(@NonNull PagerData pagerData) {
-            return new FormResult(getFormData(), getFormInfo(), copyState(pagerData), attributes);
-        }
     }
 
     public static class FormDisplay extends ReportingEvent {
+
         @NonNull
         private final FormInfo formInfo;
 
         public FormDisplay(@NonNull FormInfo formInfo) {
-            this(formInfo, new LayoutData(formInfo, null));
-        }
-
-        private FormDisplay(@NonNull FormInfo formInfo, @Nullable LayoutData state) {
-            super(ReportType.FORM_DISPLAY, state);
+            super(ReportType.FORM_DISPLAY);
             this.formInfo = formInfo;
         }
 
@@ -379,46 +272,38 @@ public abstract class ReportingEvent extends Event {
             return formInfo;
         }
 
-
-        @Override
-        public ReportingEvent overrideState(@NonNull FormInfo formInfo) {
-            return new FormDisplay(getFormInfo(), copyState(formInfo));
-        }
-
-        @Override
-        public ReportingEvent overrideState(@NonNull PagerData pagerData) {
-            return new FormDisplay(getFormInfo(), copyState(pagerData));
-        }
-
         @Override
         @NonNull
         public String toString() {
             return "ReportingEvent.FormDisplay{" +
-                "formInfo='" + formInfo + '\'' +
-                ", state=" + getState() +
-                '}';
+                    "formInfo='" + formInfo + '\'' +
+                    '}';
         }
+
     }
 
     private abstract static class DismissReportingEvent extends ReportingEvent {
+
         private final long displayTime;
 
-        public DismissReportingEvent(@NonNull ReportType type, long displayTime, @Nullable LayoutData state) {
-            super(type, state);
+        public DismissReportingEvent(@NonNull ReportType type, long displayTime) {
+            super(type);
             this.displayTime = displayTime;
         }
 
         public long getDisplayTime() {
             return displayTime;
         }
+
     }
 
     private abstract static class PagerReportingEvent extends ReportingEvent {
+
         @NonNull
         private final PagerData pagerData;
 
-        public PagerReportingEvent(@NonNull ReportType type, @NonNull PagerData pagerData, @Nullable LayoutData state) {
-            super(type, state);
+        public PagerReportingEvent(@NonNull ReportType type, @NonNull PagerData pagerData) {
+            super(type);
             this.pagerData = pagerData;
         }
 
@@ -426,5 +311,7 @@ public abstract class ReportingEvent extends Event {
         public PagerData getPagerData() {
             return pagerData;
         }
+
     }
+
 }

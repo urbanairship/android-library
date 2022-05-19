@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.event.WebViewEvent;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
@@ -42,7 +43,7 @@ public class WebViewModel extends BaseModel {
     }
 
     public void onClose() {
-        bubbleEvent(new WebViewEvent.Close());
+        bubbleEvent(new WebViewEvent.Close(), LayoutData.empty());
     }
 
     public void saveState(@NonNull Bundle bundle) {

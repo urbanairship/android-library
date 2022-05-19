@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.event.RadioEvent;
 import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.After;
@@ -61,12 +62,12 @@ public class RadioInputControllerTest {
 
     @Test
     public void testViewInit() {
-        controller.onEvent(makeViewInitEvent());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
         // Verify that we observed a form input init event after the first radio input is initialized.
         assertEquals(1, testListener.getCount(EventType.FORM_INPUT_INIT));
 
-        controller.onEvent(makeViewInitEvent());
-        controller.onEvent(makeViewInitEvent());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
 
         // Verify that we didn't emit any further input init events after the first.
         assertEquals(1, testListener.getCount(EventType.FORM_INPUT_INIT));
@@ -82,9 +83,9 @@ public class RadioInputControllerTest {
 
     @Test
     public void testInputChange() {
-        controller.onEvent(makeViewInitEvent());
-        controller.onEvent(makeViewInitEvent());
-        controller.onEvent(makeViewInitEvent());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
+        controller.onEvent(makeViewInitEvent(), LayoutData.empty());
 
         // Sanity check
         assertEquals(1, testListener.getCount(EventType.FORM_INPUT_INIT));
@@ -94,7 +95,7 @@ public class RadioInputControllerTest {
         assertFalse(controller.isValid());
 
         // Simulate checking an option
-        controller.onEvent(new RadioEvent.InputChange(SELECTED_VALUE, ATTRIBUTE_VALUE, true));
+        controller.onEvent(new RadioEvent.InputChange(SELECTED_VALUE, ATTRIBUTE_VALUE, true), LayoutData.empty());
         assertEquals(1, testListener.getCount(EventType.FORM_DATA_CHANGE));
 
         FormEvent.DataChange changeEvent = (FormEvent.DataChange) testListener.getEventAt(1);
@@ -106,13 +107,13 @@ public class RadioInputControllerTest {
         assertEquals(SELECTED_VALUE, data.getValue());
 
         // Simulate another click on the selected radio input
-        controller.onEvent(new RadioEvent.InputChange(SELECTED_VALUE, ATTRIBUTE_VALUE, true));
+        controller.onEvent(new RadioEvent.InputChange(SELECTED_VALUE, ATTRIBUTE_VALUE, true), LayoutData.empty());
 
         // Verify that the controller didn't broadcast a new data change event
         assertEquals(1, testListener.getCount(EventType.FORM_DATA_CHANGE));
 
         // Simulate a click on a different radio input
-        controller.onEvent(new RadioEvent.InputChange(SELECTED_VALUE_2, ATTRIBUTE_VALUE,true));
+        controller.onEvent(new RadioEvent.InputChange(SELECTED_VALUE_2, ATTRIBUTE_VALUE,true), LayoutData.empty());
 
         // Verify that the controller did broadcast a data change this time
         assertEquals(2, testListener.getCount(EventType.FORM_DATA_CHANGE));

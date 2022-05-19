@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.Image.Icon;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.shape.Shape;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -191,7 +192,7 @@ public class PagerIndicatorModel extends BaseModel {
     //
 
     public void onConfigured() {
-        bubbleEvent(new PagerEvent.IndicatorInit(this));
+        bubbleEvent(new PagerEvent.IndicatorInit(this), LayoutData.empty());
     }
 
     //
@@ -199,8 +200,8 @@ public class PagerIndicatorModel extends BaseModel {
     //
 
     @Override
-    public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event);
+    public boolean onEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
+        Logger.verbose("onEvent: %s layoutData: %s", event, layoutData);
 
         switch (event.getType()) {
             case PAGER_INIT:
@@ -210,7 +211,7 @@ public class PagerIndicatorModel extends BaseModel {
                 if (onPagerScroll((PagerEvent.Scroll) event)) { return true; }
                 break;
         }
-        return super.onEvent(event);
+        return super.onEvent(event, layoutData);
     }
 
     private boolean onPagerInit(PagerEvent.Init event) {

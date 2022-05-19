@@ -17,11 +17,9 @@ import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.event.ButtonEvent;
 import com.urbanairship.android.layout.event.Event;
-import com.urbanairship.android.layout.event.Event.EventWithActions;
 import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.event.EventSource;
 import com.urbanairship.android.layout.event.ReportingEvent;
-import com.urbanairship.android.layout.event.WebViewEvent;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.property.ModalPlacement;
@@ -52,6 +50,7 @@ import static com.urbanairship.android.layout.event.ReportingEvent.ReportType.FO
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ModalActivity extends AppCompatActivity implements EventListener, EventSource {
+
     // Asset loader
     public static final String EXTRA_DISPLAY_ARGS_LOADER = "com.urbanairship.android.layout.ui.EXTRA_DISPLAY_ARGS_LOADER";
 
@@ -65,9 +64,6 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
     @Nullable
     private ThomasListener externalListener;
 
-    @Nullable
-    private ActionsRunner actionsRunner;
-
     private DisplayTimer displayTimer;
     private boolean disableBackButton = false;
     private ModalView modalView;
@@ -75,7 +71,6 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
 
         this.loader = getIntent().getParcelableExtra(EXTRA_DISPLAY_ARGS_LOADER);
         if (this.loader == null) {
@@ -93,7 +88,6 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             }
 
             this.externalListener = args.getListener();
-            this.actionsRunner = args.getActionsRunner();
 
             ModalPresentation presentation = (ModalPresentation) args.getPayload().getPresentation();
 
@@ -110,11 +104,11 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             }
 
             Environment environment = new ViewEnvironment(
-                this,
-                args.getWebViewClientFactory(),
-                args.getImageCache(),
-                displayTimer,
-                placement.shouldIgnoreSafeArea()
+                    this,
+                    args.getWebViewClientFactory(),
+                    args.getImageCache(),
+                    displayTimer,
+                    placement.shouldIgnoreSafeArea()
             );
 
             BaseModel view = args.getPayload().getView();
@@ -130,7 +124,7 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
 
             if (presentation.isDismissOnTouchOutside()) {
                 modalView.setOnClickOutsideListener(v -> {
-                    onEvent(new ReportingEvent.DismissFromOutside(displayTimer.getTime()));
+                    onEvent(new ReportingEvent.DismissFromOutside(displayTimer.getTime()), LayoutData.empty());
                     finish();
                 });
             }
@@ -167,22 +161,18 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
     }
 
     @Override
-    public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event);
+    public boolean onEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
+        Logger.verbose("onEvent: %s, layoutData: %s", event, layoutData);
         switch (event.getType()) {
             case BUTTON_BEHAVIOR_CANCEL:
             case BUTTON_BEHAVIOR_DISMISS:
-                reportDismissFromButton((ButtonEvent) event);
+                reportDismissFromButton((ButtonEvent) event, layoutData);
                 finish();
                 return true;
 
             case WEBVIEW_CLOSE:
-                reportDismissFromOutside(((WebViewEvent) event).getState());
+                reportDismissFromOutside(layoutData);
                 return true;
-
-            case BUTTON_ACTIONS:
-            case PAGER_PAGE_ACTIONS:
-                return runActions(((EventWithActions) event).getActions());
 
             case REPORTING_EVENT:
                 if (((ReportingEvent) event).getReportType() == FORM_RESULT) {
@@ -192,17 +182,9 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
         }
 
         for (EventListener listener : listeners) {
-            if (listener.onEvent(event)) {
+            if (listener.onEvent(event, layoutData)) {
                 return true;
             }
-        }
-        return false;
-    }
-
-    private boolean runActions(Map<String, JsonValue> actions) {
-        if (actionsRunner != null) {
-            actionsRunner.run(actions);
-            return true;
         }
         return false;
     }
@@ -223,19 +205,18 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
         this.listeners.add(listener);
     }
 
-    private void reportDismissFromButton(ButtonEvent event) {
+    private void reportDismissFromButton(@NonNull ButtonEvent event, @NonNull LayoutData layoutData) {
         // Re-wrap the event as a reporting event and run it back through so we'll notify the external listener.
         onEvent(new ReportingEvent.DismissFromButton(
-            event.getIdentifier(),
-            event.getReportingDescription(),
-            event.isCancel(),
-            displayTimer.getTime(),
-            event.getState()
-        ));
+                        event.getIdentifier(),
+                        event.getReportingDescription(),
+                        event.isCancel(),
+                        displayTimer.getTime()),
+                layoutData);
     }
 
-    private void reportDismissFromOutside(@Nullable LayoutData state) {
-        onEvent(new ReportingEvent.DismissFromOutside(displayTimer.getTime(), state));
+    private void reportDismissFromOutside(@NonNull LayoutData state) {
+        onEvent(new ReportingEvent.DismissFromOutside(displayTimer.getTime()), state);
     }
 
     private void applyAttributeUpdates(ReportingEvent.FormResult result) {
@@ -251,7 +232,7 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             }
 
             Logger.debug("Setting %s attribute: \"%s\" => %s",
-                key.isChannel() ? "channel" : "contact", attribute, value.toString());
+                    key.isChannel() ? "channel" : "contact", attribute, value.toString());
 
             AttributeEditor editor = key.isContact() ? contactEditor : channelEditor;
             setAttribute(editor, attribute, value);
@@ -300,4 +281,5 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             Logger.error(e, "Unable to set orientation lock.");
         }
     }
+
 }

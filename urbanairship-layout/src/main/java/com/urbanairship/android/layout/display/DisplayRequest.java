@@ -26,7 +26,6 @@ public class DisplayRequest {
     private ThomasListener listener;
     private ImageCache imageCache;
     private Factory<AirshipWebViewClient> webViewClientFactory;
-    private ActionsRunner actionsRunner;
 
     public interface Callback {
         void display(@NonNull Context context, @NonNull DisplayArgs args);
@@ -56,14 +55,8 @@ public class DisplayRequest {
         return this;
     }
 
-    @NonNull
-    public DisplayRequest setActionsRunner(@Nullable ActionsRunner actionsRunner) {
-        this.actionsRunner = actionsRunner;
-        return this;
-    }
-
     public void display(@NonNull Context context) {
-        DisplayArgs args = new DisplayArgs(payload, listener, webViewClientFactory, imageCache, actionsRunner);
+        DisplayArgs args = new DisplayArgs(payload, listener, webViewClientFactory, imageCache);
         callback.display(context, args);
     }
 }

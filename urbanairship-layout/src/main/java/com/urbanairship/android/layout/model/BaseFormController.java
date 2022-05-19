@@ -14,6 +14,7 @@ import com.urbanairship.android.layout.property.ViewType;
 import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.android.layout.reporting.FormInfo;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -113,12 +114,15 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     }
 
     @Override
-    public boolean onEvent(@NonNull Event event) {
-        Logger.verbose("onEvent: %s", event);
+    public boolean onEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
+        Logger.verbose("onEvent: %s, layoutData: %s", event, layoutData);
+
+        LayoutData dataOverride = layoutData.withFormInfo(getFormInfo());
+
         switch (event.getType()) {
             case FORM_INIT:
                 onNestedFormInit((FormEvent.Init) event);
-                return hasSubmitBehavior() || super.onEvent(event);
+                return hasSubmitBehavior() || super.onEvent(event, dataOverride);
 
             case FORM_INPUT_INIT:
                 onInputInit((FormEvent.InputInit) event);
@@ -126,6 +130,10 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
 
             case FORM_DATA_CHANGE:
                 onDataChange((FormEvent.DataChange) event);
+                if (!hasSubmitBehavior()) {
+                    // Update parent controller if this is a child form
+                    bubbleEvent(getFormDataChangeEvent(), layoutData);
+                }
                 return true;
 
             case VIEW_ATTACHED:
@@ -133,7 +141,7 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
                 if (hasSubmitBehavior()) {
                     return true;
                 }
-                return super.onEvent(event);
+                return super.onEvent(event, dataOverride);
 
             case BUTTON_BEHAVIOR_FORM_SUBMIT:
                 // Submit form if this controller has a submit behavior.
@@ -142,29 +150,15 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
                     return true;
                 }
                 // Otherwise update with our form data and let parent form controller handle it.
-                return super.onEvent(((ButtonEvent) event).overrideState(getFormInfo()));
-
-            case BUTTON_BEHAVIOR_CANCEL:
-            case BUTTON_BEHAVIOR_DISMISS:
-                // Update the event with our form data and continue bubbling it up.
-                return super.onEvent(((ButtonEvent) event).overrideState(getFormInfo()));
-
-            case WEBVIEW_CLOSE:
-                // Update the event with our form data and continue bubbling it up.
-                return super.onEvent(((WebViewEvent.Close) event).overrideState(getFormInfo()));
-
-            case REPORTING_EVENT:
-                // Update the event with our form data and continue bubbling it up.
-                return super.onEvent(((ReportingEvent) event).overrideState(getFormInfo()));
-
+                return super.onEvent(event, dataOverride);
             default:
-                return super.onEvent(event);
+                return super.onEvent(event, dataOverride);
         }
     }
 
     private void onSubmit() {
         isSubmitted = true;
-        bubbleEvent(getFormResultEvent());
+        bubbleEvent(getFormResultEvent(), LayoutData.form(getFormInfo()));
     }
 
     protected abstract FormEvent.Init getInitEvent();
@@ -182,7 +176,7 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
             if (!hasSubmitBehavior()) {
                 // This is a nested form, since it has no submit behavior.
                 // Bubble an init event to announce this form to a parent form controller.
-                bubbleEvent(getInitEvent());
+                bubbleEvent(getInitEvent(), LayoutData.form(getFormInfo()));
             }
         }
     }
@@ -190,11 +184,12 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
     private void onViewAttached(Event.ViewAttachedToWindow attach) {
         if (attach.getViewType().isFormInput() && !isDisplayReported) {
             isDisplayReported = true;
-            bubbleEvent(new ReportingEvent.FormDisplay(getFormInfo()));
+            FormInfo formInfo = getFormInfo();
+            bubbleEvent(new ReportingEvent.FormDisplay(formInfo), LayoutData.form(formInfo));
         }
     }
 
-    private void onDataChange(FormEvent.DataChange data) {
+    private void onDataChange(@NonNull FormEvent.DataChange data) {
         String identifier = data.getValue().getIdentifier();
         boolean isValid = data.isValid();
 
@@ -210,15 +205,11 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
 
         updateFormValidity(identifier, isValid);
 
-        if (!hasSubmitBehavior()) {
-            // Update parent controller if this is a child form
-            bubbleEvent(getFormDataChangeEvent());
-        }
     }
 
     private void updateFormValidity(@NonNull String inputId, boolean isValid) {
         inputValidity.put(inputId, isValid);
-        trickleEvent(new FormEvent.ValidationUpdate(isFormValid()));
+        trickleEvent(new FormEvent.ValidationUpdate(isFormValid()), LayoutData.form(getFormInfo()));
     }
 
     protected boolean isFormValid() {
@@ -247,4 +238,5 @@ public abstract class BaseFormController extends LayoutModel implements Identifi
 
     @NonNull
     protected abstract String getFormType();
+
 }

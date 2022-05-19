@@ -10,6 +10,7 @@ import com.urbanairship.android.layout.event.PagerEvent;
 import com.urbanairship.android.layout.event.ReportingEvent;
 import com.urbanairship.android.layout.event.WebViewEvent;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static com.urbanairship.android.layout.model.Identifiable.identifierFromJson;
 
@@ -70,15 +72,18 @@ public class PagerController extends LayoutModel implements Identifiable {
     }
 
     @Override
-    public boolean onEvent(@NonNull Event event) {
+    public boolean onEvent(@NonNull Event event, @Nullable LayoutData layoutData) {
         Logger.verbose("onEvent: %s", event);
+
+        LayoutData override = layoutData.withPagerData(buildPagerData());
+
 
         switch (event.getType()) {
             case PAGER_INIT:
                 PagerEvent.Init init = (PagerEvent.Init) event;
                 boolean isReinit = isInitialized();
                 // Trickle the event to update the pager indicator, if this controller contains one.
-                trickleEvent(init);
+                trickleEvent(init, override);
                 // Update our local state.
                 reducePagerState(init);
                 // If this is the first time we've been initialized, report and handle actions.
@@ -98,7 +103,7 @@ public class PagerController extends LayoutModel implements Identifiable {
                 // Bubble up any actions so that they can be passed along to our actions runner at the top level.
                 handlePageActions(scroll);
                 // Trickle the event to update the pager indicator, if this controller contains one.
-                trickleEvent(scroll);
+                trickleEvent(scroll, override);
                 // Update our local state.
                 reducePagerState(scroll);
                 // Report the page view now that we've completed the pager scroll and updated state.
@@ -107,7 +112,7 @@ public class PagerController extends LayoutModel implements Identifiable {
 
             case BUTTON_BEHAVIOR_PAGER_NEXT:
             case BUTTON_BEHAVIOR_PAGER_PREVIOUS:
-                trickleEvent(event);
+                trickleEvent(event, override);
                 return false;
 
             case VIEW_INIT:
@@ -115,24 +120,11 @@ public class PagerController extends LayoutModel implements Identifiable {
                     // Consume indicator init events.
                     return true;
                 }
-                return super.onEvent(event);
-
-            case BUTTON_BEHAVIOR_CANCEL:
-            case BUTTON_BEHAVIOR_DISMISS:
-                // Update the event with our pager data and continue bubbling it up.
-                return super.onEvent(((ButtonEvent) event).overrideState(buildPagerData()));
-
-            case WEBVIEW_CLOSE:
-                // Update the event with our pager data and continue bubbling it up.
-                return super.onEvent((((WebViewEvent.Close) event).overrideState(buildPagerData())));
-
-            case REPORTING_EVENT:
-                // Update the event with our pager data and continue bubbling it up.
-                return super.onEvent(((ReportingEvent) event).overrideState(buildPagerData()));
+                return super.onEvent(event, override);
 
             default:
                 // Pass along any other events.
-                return super.onEvent(event);
+                return super.onEvent(event, override);
         }
     }
 
@@ -155,7 +147,8 @@ public class PagerController extends LayoutModel implements Identifiable {
     }
 
     private void reportPageView(PagerEvent event) {
-        bubbleEvent(new ReportingEvent.PageView(buildPagerData(), event.getTime()));
+        PagerData pagerData = buildPagerData();
+        bubbleEvent(new ReportingEvent.PageView(pagerData, event.getTime()), LayoutData.pager(pagerData));
     }
 
     private void reportPageSwipe(PagerEvent.Scroll event) {
@@ -164,13 +157,14 @@ public class PagerController extends LayoutModel implements Identifiable {
                 event.getPreviousPageIndex(),
                 event.getPreviousPageId(),
                 event.getPageIndex(),
-                event.getPageId()));
+                event.getPageId()),
+                LayoutData.pager(data));
     }
 
     /** Bubble up any page actions set on the event so that they can be handled by the layout host. */
     private void handlePageActions(PagerEvent event) {
         if (event.hasPageActions()) {
-            bubbleEvent(new PagerEvent.PageActions(event.getPageActions()));
+            bubbleEvent(new PagerEvent.PageActions(event.getPageActions()), LayoutData.pager(buildPagerData()));
         }
     }
 

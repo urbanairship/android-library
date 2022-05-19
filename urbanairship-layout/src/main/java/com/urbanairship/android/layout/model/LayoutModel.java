@@ -6,6 +6,7 @@ import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.ViewType;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
@@ -61,8 +62,8 @@ public abstract class LayoutModel extends BaseModel {
      * Overrides the default behavior in {@link BaseModel} to propagate the event by bubbling it up.
      */
     @Override
-    public boolean onEvent(@NonNull Event event) {
-        return bubbleEvent(event);
+    public boolean onEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
+        return bubbleEvent(event, layoutData);
     }
 
     /**
@@ -72,9 +73,9 @@ public abstract class LayoutModel extends BaseModel {
      * down to the children of this layout.
      */
     @Override
-    public boolean trickleEvent(@NonNull Event event) {
+    public boolean trickleEvent(@NonNull Event event, @NonNull LayoutData layoutData) {
         for (BaseModel child : getChildren()) {
-            if (child.trickleEvent(event)) { return true; }
+            if (child.trickleEvent(event, layoutData)) { return true; }
         }
         return false;
     }
