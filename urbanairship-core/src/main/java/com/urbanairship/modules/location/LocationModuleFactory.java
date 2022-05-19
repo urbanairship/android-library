@@ -9,6 +9,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.permission.PermissionsManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -26,6 +27,7 @@ public interface LocationModuleFactory extends AirshipVersionInfo {
                          @NonNull PreferenceDataStore dataStore,
                          @NonNull PrivacyManager privacyManager,
                          @NonNull AirshipChannel airshipChannel,
-                         @NonNull Analytics analytics);
+                         @NonNull Analytics analytics,
+                         @NonNull PermissionsManager permissionsManager);
 
 }

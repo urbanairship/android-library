@@ -10,6 +10,7 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.modules.location.LocationModuleFactory;
+import com.urbanairship.permission.PermissionsManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -28,8 +29,9 @@ public class LocationModuleFactoryImpl implements LocationModuleFactory {
                                 @NonNull PreferenceDataStore dataStore,
                                 @NonNull PrivacyManager privacyManager,
                                 @NonNull AirshipChannel airshipChannel,
-                                @NonNull Analytics analytics) {
-        AirshipLocationManager locationManager = new AirshipLocationManager(context, dataStore, privacyManager, airshipChannel, analytics);
+                                @NonNull Analytics analytics,
+                                @NonNull PermissionsManager permissionsManager) {
+        AirshipLocationManager locationManager = new AirshipLocationManager(context, dataStore, privacyManager, airshipChannel, analytics, permissionsManager);
         return new LocationModule(locationManager, locationManager);
     }
 

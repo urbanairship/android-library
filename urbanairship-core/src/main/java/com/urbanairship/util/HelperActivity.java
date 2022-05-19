@@ -16,10 +16,15 @@ import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.core.content.ContextCompat;
+import androidx.core.util.Consumer;
 
 /**
  * An activity that is used by the Action framework to enable starting other activities
@@ -115,16 +120,8 @@ public class HelperActivity extends Activity {
         finish();
     }
 
-    /**
-     * Requests permissions.
-     *
-     * @param context The application context.
-     * @param permissions The permissions to request.
-     * @return The result from requesting permissions.
-     */
-    @WorkerThread
-    @NonNull
-    public static int[] requestPermissions(@NonNull Context context, @NonNull String... permissions) {
+    @MainThread
+    public static void requestPermissions(@NonNull Context context, @NonNull String[] permissions, @Nullable Consumer<int[]> consumer) {
         context = context.getApplicationContext();
         boolean permissionsDenied = false;
 
@@ -136,21 +133,19 @@ public class HelperActivity extends Activity {
             }
         }
 
+
+        Handler handler = new Handler(Looper.getMainLooper());
+
         if (!permissionsDenied || Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return result;
+            handler.post(() -> consumer.accept(result));
+            return;
         }
 
-        ResultReceiver receiver = new ResultReceiver(new Handler(Looper.getMainLooper())) {
+        ResultReceiver receiver = new ResultReceiver(handler) {
             @Override
             public void onReceiveResult(int resultCode, Bundle resultData) {
                 int[] receiverResults = resultData.getIntArray(HelperActivity.RESULT_INTENT_EXTRA);
-                if (receiverResults != null && receiverResults.length == result.length) {
-                    System.arraycopy(receiverResults, 0, result, 0, result.length);
-                }
-
-                synchronized (result) {
-                    result.notify();
-                }
+                consumer.accept(receiverResults);
             }
         };
 
@@ -160,8 +155,32 @@ public class HelperActivity extends Activity {
                 .putExtra(HelperActivity.PERMISSIONS_EXTRA, permissions)
                 .putExtra(HelperActivity.RESULT_RECEIVER_EXTRA, receiver);
 
+        context.startActivity(startingIntent);
+    }
+
+    /**
+     * Requests permissions.
+     *
+     * @param context The application context.
+     * @param permissions The permissions to request.
+     * @return The result from requesting permissions.
+     */
+    @WorkerThread
+    @NonNull
+    public static int[] requestPermissions(@NonNull Context context, @NonNull String... permissions) {
+        final int[] result = new int[permissions.length];
+
         synchronized (result) {
-            context.startActivity(startingIntent);
+            requestPermissions(context, permissions, receiverResults -> {
+                if (receiverResults != null && receiverResults.length == result.length) {
+                    System.arraycopy(receiverResults, 0, result, 0, result.length);
+                }
+
+                synchronized (result) {
+                    result.notify();
+                }
+            });
+
             try {
                 result.wait();
             } catch (InterruptedException e) {

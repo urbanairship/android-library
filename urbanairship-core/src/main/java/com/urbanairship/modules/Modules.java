@@ -24,6 +24,7 @@ import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.modules.location.LocationModuleFactory;
 import com.urbanairship.modules.messagecenter.MessageCenterModuleFactory;
 import com.urbanairship.modules.preferencecenter.PreferenceCenterModuleFactory;
+import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remotedata.RemoteData;
 
@@ -90,11 +91,12 @@ public class Modules {
                                           @NonNull PreferenceDataStore preferenceDataStore,
                                           @NonNull PrivacyManager privacyManager,
                                           @NonNull AirshipChannel channel,
-                                          @NonNull Analytics analytics) {
+                                          @NonNull Analytics analytics,
+                                          @NonNull PermissionsManager permissionsManager) {
         try {
             LocationModuleFactory moduleFactory = createFactory(LOCATION_MODULE_FACTORY, LocationModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, preferenceDataStore, privacyManager, channel, analytics);
+                return moduleFactory.build(context, preferenceDataStore, privacyManager, channel, analytics, permissionsManager);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Location module");

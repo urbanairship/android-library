@@ -25,6 +25,9 @@ import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionStatus;
+import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.notifications.AirshipNotificationProvider;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationChannelRegistry;
@@ -48,6 +51,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 import androidx.annotation.XmlRes;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.util.Consumer;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -215,10 +219,10 @@ public class PushManager extends AirshipComponent {
     private final Analytics analytics;
     private final AirshipRuntimeConfig config;
     private final Supplier<PushProviders> pushProvidersSupplier;
+    private final PermissionsManager permissionsManager;
     private NotificationProvider notificationProvider;
     private final Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
     private final PreferenceDataStore preferenceDataStore;
-    private final NotificationManagerCompat notificationManagerCompat;
 
     private final JobDispatcher jobDispatcher;
     private final NotificationChannelRegistry notificationChannelRegistry;
@@ -248,15 +252,16 @@ public class PushManager extends AirshipComponent {
      * @param pushProvidersSupplier The push providers supplier.
      * @param airshipChannel The airship channel.
      * @param analytics The analytics instance.
+     * @param permissionsManager The permissions manager.
      * @hide
      */
     public PushManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                        @NonNull AirshipRuntimeConfig config, @NonNull PrivacyManager privacyManager,
                        @NonNull Supplier<PushProviders> pushProvidersSupplier, @NonNull AirshipChannel airshipChannel,
-                       @NonNull Analytics analytics) {
+                       @NonNull Analytics analytics, @NonNull PermissionsManager permissionsManager) {
 
         this(context, preferenceDataStore, config, privacyManager, pushProvidersSupplier,
-                airshipChannel, analytics, JobDispatcher.shared(context));
+                airshipChannel, analytics, permissionsManager, JobDispatcher.shared(context));
     }
 
     /**
@@ -265,7 +270,8 @@ public class PushManager extends AirshipComponent {
     @VisibleForTesting
     PushManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore,
                 @NonNull AirshipRuntimeConfig config, @NonNull PrivacyManager privacyManager,
-                @NonNull Supplier<PushProviders> pushProvidersSupplier, @NonNull AirshipChannel airshipChannel, @NonNull Analytics analytics,
+                @NonNull Supplier<PushProviders> pushProvidersSupplier, @NonNull AirshipChannel airshipChannel,
+                @NonNull Analytics analytics, @NonNull PermissionsManager permissionsManager,
                 @NonNull JobDispatcher dispatcher) {
         super(context, preferenceDataStore);
         this.context = context;
@@ -275,9 +281,9 @@ public class PushManager extends AirshipComponent {
         this.pushProvidersSupplier = pushProvidersSupplier;
         this.airshipChannel = airshipChannel;
         this.analytics = analytics;
+        this.permissionsManager = permissionsManager;
         this.jobDispatcher = dispatcher;
         this.notificationProvider = new AirshipNotificationProvider(context, config.getConfigOptions());
-        this.notificationManagerCompat = NotificationManagerCompat.from(context);
         this.notificationChannelRegistry = new NotificationChannelRegistry(context, config.getConfigOptions());
 
         this.actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons));
@@ -289,28 +295,19 @@ public class PushManager extends AirshipComponent {
     @Override
     protected void init() {
         super.init();
-        airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
-            @NonNull
-            @Override
-            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                return extendChannelRegistrationPayload(builder);
+        airshipChannel.addChannelRegistrationPayloadExtender(builder -> extendChannelRegistrationPayload(builder));
+        analytics.addHeaderDelegate(() -> createAnalyticsHeaders());
+        privacyManager.addListener(() -> updatePush());
+
+        permissionsManager.addAirshipEnabler(permission -> {
+            if (permission == Permission.POST_NOTIFICATIONS) {
+                privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+                setUserNotificationsEnabled(true);
             }
         });
 
-        analytics.addHeaderDelegate(new Analytics.AnalyticsHeaderDelegate() {
-            @NonNull
-            @Override
-            public Map<String, String> onCreateAnalyticsHeaders() {
-                return createAnalyticsHeaders();
-            }
-        });
+        permissionsManager.setPermissionDelegate(Permission.POST_NOTIFICATIONS, new NotificationsPermissionDelegate());
 
-        privacyManager.addListener(new PrivacyManager.Listener() {
-            @Override
-            public void onEnabledFeaturesChanged() {
-                updatePush();
-            }
-        });
         updatePush();
     }
 
@@ -494,7 +491,7 @@ public class PushManager extends AirshipComponent {
      */
     public void setUserNotificationsEnabled(boolean enabled) {
         preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled);
-        airshipChannel.updateRegistration();
+        permissionsManager.requestPermission(Permission.POST_NOTIFICATIONS, permissionStatus -> airshipChannel.updateRegistration());
     }
 
     /**
@@ -701,7 +698,7 @@ public class PushManager extends AirshipComponent {
      * @return {@code true} if notifications are opted in, otherwise {@code false}.
      */
     public boolean areNotificationsOptedIn() {
-        return getUserNotificationsEnabled() && notificationManagerCompat.areNotificationsEnabled();
+        return getUserNotificationsEnabled() && permissionsManager.checkPermissionStatus(Permission.POST_NOTIFICATIONS) == PermissionStatus.GRANTED;
     }
 
     /**
@@ -1084,4 +1081,5 @@ public class PushManager extends AirshipComponent {
             dispatchUpdateJob();
         }
     }
+
 }

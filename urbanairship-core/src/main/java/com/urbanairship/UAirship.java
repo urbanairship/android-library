@@ -36,6 +36,7 @@ import com.urbanairship.modules.accengage.AccengageModule;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.modules.location.LocationModule;
+import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
@@ -151,6 +152,7 @@ public class UAirship {
     LocaleManager localeManager;
     PrivacyManager privacyManager;
     Contact contact;
+    PermissionsManager permissionsManager;
 
     /**
      * Constructs an instance of UAirship.
@@ -700,6 +702,9 @@ public class UAirship {
         this.privacyManager = new PrivacyManager(preferenceDataStore, airshipConfigOptions.enabledFeatures);
         this.privacyManager.migrateData();
 
+
+        this.permissionsManager = new PermissionsManager(application);
+
         this.localeManager = new LocaleManager(application, preferenceDataStore);
 
         Supplier<PushProviders> pushProviders = PushProviders.lazyLoader(application, airshipConfigOptions);
@@ -736,7 +741,7 @@ public class UAirship {
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, privacyManager);
         components.add(this.applicationMetrics);
 
-        this.pushManager = new PushManager(application, preferenceDataStore, runtimeConfig, privacyManager, pushProviders, channel, analytics);
+        this.pushManager = new PushManager(application, preferenceDataStore, runtimeConfig, privacyManager, pushProviders, channel, analytics, permissionsManager);
         components.add(this.pushManager);
 
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
@@ -770,7 +775,7 @@ public class UAirship {
         processModule(messageCenterModule);
 
         // Location
-        LocationModule locationModule = Modules.location(application, preferenceDataStore, privacyManager, channel, analytics);
+        LocationModule locationModule = Modules.location(application, preferenceDataStore, privacyManager, channel, analytics, permissionsManager);
         processModule(locationModule);
         this.locationClient = locationModule == null ? null : locationModule.getLocationClient();
 
@@ -889,6 +894,16 @@ public class UAirship {
     @NonNull
     public Analytics getAnalytics() {
         return analytics;
+    }
+
+    /**
+     * Returns the UAirship {@link com.urbanairship.permission.PermissionsManager} instance.
+     *
+     * @return The {@link com.urbanairship.permission.PermissionsManager} instance.
+     */
+    @NonNull
+    public PermissionsManager getPermissionsManager() {
+        return permissionsManager;
     }
 
     /**

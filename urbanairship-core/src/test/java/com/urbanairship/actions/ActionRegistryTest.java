@@ -39,7 +39,7 @@ public class ActionRegistryTest extends BaseTestCase {
     @Test
     public void testDefaultActions() {
         registry.registerDefaultActions(TestApplication.getApplication());
-        assertEquals("Default entries changed", 14, registry.getEntries().size());
+        assertEquals("Default entries changed", 15, registry.getEntries().size());
 
         validateEntry(registry.getEntry("^d"), "^d", "deep_link_action");
         validateEntry(registry.getEntry("^+t"), "^+t", "add_tags_action");
@@ -55,27 +55,8 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("^ra"), "^ra", "rate_app_action");
         validateEntry(registry.getEntry("^a"), "^a", "set_attributes_action");
         validateEntry(registry.getEntry("^sla"), "^sla", "subscription_list_action");
-    }
+        validateEntry(registry.getEntry("^pp"), "^pp", "prompt_permission_action");
 
-    @Test
-    public void testDefaultActionsFromResource() {
-        registry.registerDefaultActions(TestApplication.getApplication().getApplicationContext());
-        assertEquals("Default entries changed", 14, registry.getEntries().size());
-
-        validateEntry(registry.getEntry("^d"), "^d", "deep_link_action");
-        validateEntry(registry.getEntry("^+t"), "^+t", "add_tags_action");
-        validateEntry(registry.getEntry("^-t"), "^-t", "remove_tags_action");
-        validateEntry(registry.getEntry("^u"), "^u", "open_external_url_action");
-        validateEntry(registry.getEntry("add_custom_event_action"), "add_custom_event_action");
-        validateEntry(registry.getEntry("^s"), "^s", "share_action");
-        validateEntry(registry.getEntry("^c"), "^c", "clipboard_action");
-        validateEntry(registry.getEntry("toast_action"), "toast_action");
-        validateEntry(registry.getEntry("^w"), "^w", "wallet_action");
-        validateEntry(registry.getEntry("^fdi"), "^fdi", "fetch_device_info");
-        validateEntry(registry.getEntry("^ef"), "^ef", "enable_feature");
-        validateEntry(registry.getEntry("^ra"), "^ra", "rate_app_action");
-        validateEntry(registry.getEntry("^a"), "^a", "set_attributes_action");
-        validateEntry(registry.getEntry("^sla"), "^sla", "subscription_list_action");
     }
 
     /**

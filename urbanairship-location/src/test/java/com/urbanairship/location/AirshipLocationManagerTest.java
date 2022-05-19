@@ -11,6 +11,9 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
+import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionStatus;
+import com.urbanairship.permission.PermissionsManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +24,7 @@ import org.robolectric.annotation.Config;
 import java.util.HashMap;
 import java.util.Map;
 
+import androidx.core.util.Consumer;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -30,6 +34,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Config(sdk = 28)
 @RunWith(AndroidJUnit4.class)
@@ -37,22 +42,21 @@ public class AirshipLocationManagerTest {
 
     private AirshipLocationManager locationManager;
     private LocationRequestOptions options;
-    private Analytics mockAnalytics;
-    private AirshipChannel mockChannel;
     private PreferenceDataStore dataStore;
     private PrivacyManager privacyManager;
 
+    private final Analytics mockAnalytics = mock(Analytics.class);
+    private final AirshipChannel mockChannel = mock(AirshipChannel.class);
+    private final PermissionsManager mockPermissionManager = mock(PermissionsManager.class);
+
     @Before
     public void setUp() {
-        mockAnalytics = mock(Analytics.class);
-        mockChannel = mock(AirshipChannel.class);
-
         dataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext());
         privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
 
         Context context = ApplicationProvider.getApplicationContext();
         locationManager = new AirshipLocationManager(context, dataStore, privacyManager,
-                mockChannel, mockAnalytics, GlobalActivityMonitor.shared(context));
+                mockChannel, mockAnalytics, mockPermissionManager, GlobalActivityMonitor.shared(context));
         options = LocationRequestOptions.newBuilder().setMinDistance(100).build();
     }
 
@@ -86,7 +90,6 @@ public class AirshipLocationManagerTest {
         locationManager.setLocationRequestOptions(options);
         assertEquals("LocationRequestOptions not being restored properly.", options, locationManager.getLocationRequestOptions());
     }
-
 
     @Test
     public void testLocationUpdatesDataCollectionDisabled() {
@@ -165,4 +168,28 @@ public class AirshipLocationManagerTest {
         assertEquals(expectedHeaders, headers);
     }
 
+    @Test
+    public void testPermissionEnabler() {
+        ArgumentCaptor<Consumer> captor = ArgumentCaptor.forClass(Consumer.class);
+        locationManager.init();
+        verify(mockPermissionManager).addAirshipEnabler(captor.capture());
+
+        Consumer<Permission> consumer = (Consumer<Permission>) captor.getValue();
+        assertNotNull(consumer);
+
+        privacyManager.disable(PrivacyManager.FEATURE_LOCATION);
+        assertFalse(locationManager.isLocationUpdatesEnabled());
+
+        consumer.accept(Permission.LOCATION);
+
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_LOCATION));
+        assertTrue(locationManager.isLocationUpdatesEnabled());
+    }
+
+    @Test
+    public void testIsLocationPermitted() {
+        assertFalse(locationManager.isLocationPermitted());
+        when(mockPermissionManager.checkPermissionStatus(Permission.LOCATION)).thenReturn(PermissionStatus.GRANTED);
+        assertTrue(locationManager.isLocationPermitted());
+    }
 }

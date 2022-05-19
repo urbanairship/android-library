@@ -28,6 +28,11 @@
         <name>^ef</name>
     </ActionEntry>
 
+    <ActionEntry class="com.urbanairship.actions.PromptPermissionAction">
+        <name>prompt_permission_action</name>
+        <name>^pp</name>
+    </ActionEntry>
+
     <ActionEntry
         class="com.urbanairship.actions.FetchDeviceInfoAction"
         predicate="com.urbanairship.actions.FetchDeviceInfoAction$FetchDeviceInfoPredicate">

@@ -2,6 +2,7 @@
 
 package com.urbanairship.location;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -30,6 +31,10 @@ import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.modules.location.AirshipLocationClient;
+import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionStatus;
+import com.urbanairship.permission.PermissionsManager;
+import com.urbanairship.permission.SinglePermissionDelegate;
 import com.urbanairship.util.AirshipHandlerThread;
 
 import java.util.ArrayList;
@@ -44,6 +49,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.content.ContextCompat;
 import androidx.core.location.LocationManagerCompat;
+import androidx.core.util.Consumer;
 
 /**
  * High level interface for interacting with location.
@@ -68,7 +74,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
     private final AirshipChannel airshipChannel;
     private final Analytics analytics;
     private final PrivacyManager privacyManager;
-
+    private final PermissionsManager permissionsManager;
 
     @VisibleForTesting
     final HandlerThread backgroundThread;
@@ -118,8 +124,9 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
                                   @NonNull PreferenceDataStore preferenceDataStore,
                                   @NonNull PrivacyManager privacyManager,
                                   @NonNull AirshipChannel airshipChannel,
-                                  @NonNull Analytics analytics) {
-        this(context, preferenceDataStore, privacyManager, airshipChannel, analytics, GlobalActivityMonitor.shared(context));
+                                  @NonNull Analytics analytics,
+                                  @NonNull PermissionsManager permissionsManager) {
+        this(context, preferenceDataStore, privacyManager, airshipChannel, analytics, permissionsManager, GlobalActivityMonitor.shared(context));
     }
 
     @VisibleForTesting
@@ -128,6 +135,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
                            @NonNull PrivacyManager privacyManager,
                            @NonNull AirshipChannel airshipChannel,
                            @NonNull Analytics analytics,
+                           @NonNull PermissionsManager permissionsManager,
                            @NonNull ActivityMonitor activityMonitor) {
         super(context, preferenceDataStore);
 
@@ -153,6 +161,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
 
         this.airshipChannel = airshipChannel;
         this.analytics = analytics;
+        this.permissionsManager = permissionsManager;
     }
 
     @Override
@@ -165,32 +174,25 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
         activityMonitor.addApplicationListener(listener);
         updateServiceConnection();
 
-        airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
-            @NonNull
-            @Override
-            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                if (privacyManager.isEnabled(PrivacyManager.FEATURE_LOCATION)) {
-                    return builder.setLocationSettings(isLocationUpdatesEnabled());
-                }
+        airshipChannel.addChannelRegistrationPayloadExtender(builder -> {
+            if (privacyManager.isEnabled(PrivacyManager.FEATURE_LOCATION)) {
+                return builder.setLocationSettings(isLocationUpdatesEnabled());
+            }
 
-                return builder;
+            return builder;
+        });
+
+        analytics.addHeaderDelegate(this::createAnalyticsHeaders);
+        privacyManager.addListener(this::updateServiceConnection);
+
+        permissionsManager.addAirshipEnabler(permission -> {
+            if (permission == Permission.LOCATION) {
+                privacyManager.enable(PrivacyManager.FEATURE_LOCATION);
+                setLocationUpdatesEnabled(true);
             }
         });
 
-        analytics.addHeaderDelegate(new Analytics.AnalyticsHeaderDelegate() {
-            @NonNull
-            @Override
-            public Map<String, String> onCreateAnalyticsHeaders() {
-                return createAnalyticsHeaders();
-            }
-        });
-
-        privacyManager.addListener(new PrivacyManager.Listener() {
-            @Override
-            public void onEnabledFeaturesChanged() {
-                updateServiceConnection();
-            }
-        });
+        permissionsManager.setPermissionDelegate(Permission.LOCATION, new SinglePermissionDelegate(Manifest.permission.ACCESS_COARSE_LOCATION));
     }
 
     /**
@@ -434,14 +436,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
      * otherwise <code>false</code>.
      */
     boolean isLocationPermitted() {
-        try {
-            int fineLocationPermissionCheck = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION);
-            int coarseLocationPermissionCheck = ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION);
-            return fineLocationPermissionCheck == PackageManager.PERMISSION_GRANTED || coarseLocationPermissionCheck == PackageManager.PERMISSION_GRANTED;
-        } catch (RuntimeException e) {
-            Logger.error(e, "UALocationManager - Unable to retrieve location permissions.");
-            return false;
-        }
+        return permissionsManager.checkPermissionStatus(Permission.LOCATION) == PermissionStatus.GRANTED;
     }
 
     /**
@@ -534,6 +529,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
         return LocationManagerCompat.isLocationEnabled(locationManager);
     }
 
+    @NonNull
     private Map<String, String> createAnalyticsHeaders() {
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_LOCATION)) {
             return Collections.emptyMap();

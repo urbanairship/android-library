@@ -5,7 +5,6 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.os.Bundle;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
@@ -13,22 +12,21 @@ import com.urbanairship.PushProviders;
 import com.urbanairship.R;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
-import com.urbanairship.TestPushProvider;
-import com.urbanairship.TestPushProviders;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
-import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.job.JobInfo;
+import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionStatus;
+import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
@@ -37,7 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import androidx.annotation.Nullable;
+import androidx.core.util.Consumer;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -61,43 +59,28 @@ public class PushManagerTest extends BaseTestCase {
 
     private PushManager pushManager;
     private PreferenceDataStore preferenceDataStore;
-    private TestAirshipRuntimeConfig runtimeConfig;
-    private PushProviders mockPushProviders;
-
     private PrivacyManager privacyManager;
 
-    private JobDispatcher mockDispatcher;
-    private AirshipChannel mockAirshipChannel;
-    private PushProvider mockPushProvider;
-    private Analytics mockAnalytics;
-    private Supplier<PushProviders> pushProvidersSupplier;
+    private final TestAirshipRuntimeConfig runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+    private final PushProviders mockPushProviders = mock(PushProviders.class);
+    private final JobDispatcher mockDispatcher = mock(JobDispatcher.class);
+    private final AirshipChannel mockAirshipChannel = mock(AirshipChannel.class);
+    private final PushProvider mockPushProvider = mock(PushProvider.class);
+    private final Analytics mockAnalytics = mock(Analytics.class);
+    private final PermissionsManager mockPermissionManager = mock(PermissionsManager.class);
+    private final Supplier<PushProviders> pushProvidersSupplier = () -> mockPushProviders;
 
     @Before
     public void setup() {
-        mockDispatcher = mock(JobDispatcher.class);
-        mockAirshipChannel = mock(AirshipChannel.class);
-        mockPushProvider = mock(PushProvider.class);
-        when(mockPushProvider.getDeliveryType()).thenReturn("some type");
-
-        mockAnalytics = mock(Analytics.class);
 
         preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
         privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);
-        mockPushProviders = mock(PushProviders.class);
+        when(mockPushProvider.getDeliveryType()).thenReturn("some type");
         when(mockPushProviders.getBestProvider(anyInt())).thenReturn(mockPushProvider);
 
-        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
-        pushProvidersSupplier = new Supplier<PushProviders>() {
-
-            @Nullable
-            @Override
-            public PushProviders get() {
-                return mockPushProviders;
-            }
-        };
-
         pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, runtimeConfig,
-                privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockDispatcher);
+                privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockPermissionManager,
+                mockDispatcher);
     }
 
     /**
@@ -107,12 +90,7 @@ public class PushManagerTest extends BaseTestCase {
     public void testInit() {
         pushManager.init();
 
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION);
-            }
-        }));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION)));
 
         verifyNoMoreInteractions(mockDispatcher);
     }
@@ -132,14 +110,16 @@ public class PushManagerTest extends BaseTestCase {
 
         // Init to verify token does not clear if the delivery type is the same
         pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, runtimeConfig,
-                privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockDispatcher);
+                privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockPermissionManager,
+                mockDispatcher);
         pushManager.init();
         assertEquals("token", pushManager.getPushToken());
 
         // Change the delivery type, should clear the token on init
         when(mockPushProvider.getDeliveryType()).thenReturn("some other type");
         pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, runtimeConfig,
-                privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockDispatcher);
+                privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockPermissionManager,
+                mockDispatcher);
         pushManager.init();
         assertNull(pushManager.getPushToken());
     }
@@ -184,12 +164,12 @@ public class PushManagerTest extends BaseTestCase {
     public void testOptIn() throws PushProvider.RegistrationException {
         pushManager.init();
 
-        assertFalse(pushManager.isOptIn());
-
-        pushManager.setPushEnabled(true);
-        assertFalse(pushManager.isOptIn());
-
+        // Enable and have permission
+        when(mockPermissionManager.checkPermissionStatus(Permission.POST_NOTIFICATIONS)).thenReturn(PermissionStatus.GRANTED);
         pushManager.setUserNotificationsEnabled(true);
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+
+        // Still needs a token
         assertFalse(pushManager.isOptIn());
 
         // Register for a token
@@ -199,11 +179,20 @@ public class PushManagerTest extends BaseTestCase {
 
         assertTrue(pushManager.isOptIn());
 
-        pushManager.setPushEnabled(false);
+        // Disable notifications
+        pushManager.setUserNotificationsEnabled(false);
         assertFalse(pushManager.isOptIn());
 
-        pushManager.setPushEnabled(true);
-        pushManager.setUserNotificationsEnabled(false);
+        pushManager.setUserNotificationsEnabled(true);
+
+        // Disable push privacy manager
+        privacyManager.disable(PrivacyManager.FEATURE_PUSH);
+        assertFalse(pushManager.isOptIn());
+
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+
+        // Revoke permission
+        when(mockPermissionManager.checkPermissionStatus(Permission.POST_NOTIFICATIONS)).thenReturn(PermissionStatus.DENIED);
         assertFalse(pushManager.isOptIn());
     }
 
@@ -258,7 +247,7 @@ public class PushManagerTest extends BaseTestCase {
         when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
         pushManager.performPushRegistration(true);
         pushManager.setUserNotificationsEnabled(true);
-        pushManager.setPushEnabled(true);
+        when(mockPermissionManager.checkPermissionStatus(Permission.POST_NOTIFICATIONS)).thenReturn(PermissionStatus.GRANTED);
 
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder();
 
@@ -335,12 +324,7 @@ public class PushManagerTest extends BaseTestCase {
     public void testComponentEnabled() {
         pushManager.onComponentEnableChange(true);
 
-        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION);
-            }
-        }));
+        verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION)));
     }
 
     @Test
@@ -433,12 +417,7 @@ public class PushManagerTest extends BaseTestCase {
         pushManager.setNotificationListener(notificationListener);
 
         pushManager.onNotificationPosted(message, 100, "neat");
-        verify(notificationListener).onNotificationPosted(ArgumentMatchers.argThat(new ArgumentMatcher<NotificationInfo>() {
-            @Override
-            public boolean matches(NotificationInfo argument) {
-                return argument.getMessage().equals(message) && argument.getNotificationId() == 100 && argument.getNotificationTag().equals("neat");
-            }
-        }));
+        verify(notificationListener).onNotificationPosted(ArgumentMatchers.argThat(argument -> argument.getMessage().equals(message) && argument.getNotificationId() == 100 && argument.getNotificationTag().equals("neat")));
     }
 
     @Test
@@ -454,12 +433,7 @@ public class PushManagerTest extends BaseTestCase {
 
         pushManager.onTokenChanged(mockPushProvider.getClass(), "some-other-token");
         assertNull(pushManager.getPushToken());
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION);
-            }
-        }));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION)));
     }
 
     @Test
@@ -475,12 +449,7 @@ public class PushManagerTest extends BaseTestCase {
 
         pushManager.onTokenChanged(mockPushProvider.getClass(), "token");
         assertEquals("token", pushManager.getPushToken());
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION);
-            }
-        }));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION)));
     }
 
     @Test
@@ -496,11 +465,25 @@ public class PushManagerTest extends BaseTestCase {
 
         pushManager.onTokenChanged(null, null);
         assertEquals("token", pushManager.getPushToken());
-        verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
-            @Override
-            public boolean matches(JobInfo jobInfo) {
-                return jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION);
-            }
-        }));
+        verify(mockDispatcher).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(PushManager.ACTION_UPDATE_PUSH_REGISTRATION)));
     }
+
+    @Test
+    public void testPermissionEnabler() {
+        ArgumentCaptor<Consumer> captor = ArgumentCaptor.forClass(Consumer.class);
+        pushManager.init();
+        verify(mockPermissionManager).addAirshipEnabler(captor.capture());
+
+        Consumer<Permission> consumer = (Consumer<Permission>) captor.getValue();
+        assertNotNull(consumer);
+
+        privacyManager.disable(PrivacyManager.FEATURE_PUSH);
+        pushManager.setUserNotificationsEnabled(false);
+
+        consumer.accept(Permission.POST_NOTIFICATIONS);
+
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH));
+        assertTrue(pushManager.getUserNotificationsEnabled());
+    }
+
 }
