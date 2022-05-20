@@ -31,6 +31,7 @@ import androidx.annotation.Keep;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.Consumer;
 
 /**
  * An action that prompts for permission.
@@ -154,24 +155,26 @@ public class PromptPermissionAction extends Action {
         PermissionsManager permissionsManager = permissionsManagerSupplier.get();
         Objects.requireNonNull(permissionsManager);
 
-        PermissionStatus before = permissionsManager.checkPermissionStatus(args.permission);
-        if (shouldFallbackToNotificationSystemSettings(args, before)) {
-            navigateToNotificationSettings();
+        permissionsManager.checkPermissionStatus(args.permission, before -> {
+            if (shouldFallbackToNotificationSystemSettings(args, before)) {
+                navigateToNotificationSettings();
 
-            if (resultReceiver != null) {
-                GlobalActivityMonitor activityMonitor = GlobalActivityMonitor.shared(UAirship.getApplicationContext());
-                activityMonitor.addApplicationListener(new SimpleApplicationListener() {
-                    @Override
-                    public void onForeground(long time) {
-                        PermissionStatus after = permissionsManager.checkPermissionStatus(args.permission);
-                        sendResult(args.permission, before, after, resultReceiver);
-                        activityMonitor.removeApplicationListener(this);
-                    }
-                });
+                if (resultReceiver != null) {
+                    GlobalActivityMonitor activityMonitor = GlobalActivityMonitor.shared(UAirship.getApplicationContext());
+                    activityMonitor.addApplicationListener(new SimpleApplicationListener() {
+                        @Override
+                        public void onForeground(long time) {
+                            permissionsManager.checkPermissionStatus(args.permission, after -> {
+                                sendResult(args.permission, before, after, resultReceiver);
+                                activityMonitor.removeApplicationListener(this);
+                            });
+                        }
+                    });
+                }
+            } else {
+                permissionsManager.requestPermission(args.permission, args.enableAirshipUsage, after -> sendResult(args.permission, before, after, resultReceiver));
             }
-        } else {
-            permissionsManager.requestPermission(args.permission, args.enableAirshipUsage, after -> sendResult(args.permission, before, after, resultReceiver));
-        }
+        });
     }
 
     public void sendResult(@NonNull Permission permission,

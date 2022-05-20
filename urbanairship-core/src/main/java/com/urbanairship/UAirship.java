@@ -734,7 +734,7 @@ public class UAirship {
         this.actionRegistry.registerDefaultActions(getApplicationContext());
 
         // Airship components
-        this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager);
+        this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, permissionsManager);
         components.add(this.analytics);
 
         //noinspection deprecation
@@ -775,7 +775,7 @@ public class UAirship {
         processModule(messageCenterModule);
 
         // Location
-        LocationModule locationModule = Modules.location(application, preferenceDataStore, privacyManager, channel, analytics, permissionsManager);
+        LocationModule locationModule = Modules.location(application, preferenceDataStore, privacyManager, channel, permissionsManager);
         processModule(locationModule);
         this.locationClient = locationModule == null ? null : locationModule.getLocationClient();
 

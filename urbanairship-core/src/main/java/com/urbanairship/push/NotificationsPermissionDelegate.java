@@ -22,18 +22,17 @@ class NotificationsPermissionDelegate implements PermissionDelegate {
     NotificationsPermissionDelegate(Function<Context, Boolean> notificationsEnabledCheck) {
         this.notificationsEnabledCheck = notificationsEnabledCheck;
     }
-
-    @NonNull
-    public PermissionStatus checkPermissionStatus(@NonNull Context context) {
+    @Override
+    public void checkPermissionStatus(@NonNull Context context, @NonNull Consumer<PermissionStatus> callback) {
         if (notificationsEnabledCheck.apply(context)) {
-            return PermissionStatus.GRANTED;
+            callback.accept(PermissionStatus.GRANTED);
         } else {
-            return PermissionStatus.DENIED;
+            callback.accept(PermissionStatus.DENIED);
         }
     }
 
     @MainThread
     public void requestPermission(@NonNull Context context, @NonNull Consumer<PermissionStatus> callback) {
-        callback.accept(checkPermissionStatus(context));
+        checkPermissionStatus(context, callback);
     }
 }

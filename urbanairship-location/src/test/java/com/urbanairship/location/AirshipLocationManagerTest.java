@@ -45,7 +45,6 @@ public class AirshipLocationManagerTest {
     private PreferenceDataStore dataStore;
     private PrivacyManager privacyManager;
 
-    private final Analytics mockAnalytics = mock(Analytics.class);
     private final AirshipChannel mockChannel = mock(AirshipChannel.class);
     private final PermissionsManager mockPermissionManager = mock(PermissionsManager.class);
 
@@ -56,7 +55,7 @@ public class AirshipLocationManagerTest {
 
         Context context = ApplicationProvider.getApplicationContext();
         locationManager = new AirshipLocationManager(context, dataStore, privacyManager,
-                mockChannel, mockAnalytics, mockPermissionManager, GlobalActivityMonitor.shared(context));
+                mockChannel, mockPermissionManager, GlobalActivityMonitor.shared(context));
         options = LocationRequestOptions.newBuilder().setMinDistance(100).build();
     }
 
@@ -152,23 +151,6 @@ public class AirshipLocationManagerTest {
     }
 
     @Test
-    public void testAnalyticHeaders() {
-        ArgumentCaptor<Analytics.AnalyticsHeaderDelegate> captor = ArgumentCaptor.forClass(Analytics.AnalyticsHeaderDelegate.class);
-        locationManager.init();
-        verify(mockAnalytics).addHeaderDelegate(captor.capture());
-
-        Analytics.AnalyticsHeaderDelegate delegate = captor.getValue();
-        assertNotNull(delegate);
-
-        Map<String, String> expectedHeaders = new HashMap<>();
-        expectedHeaders.put("X-UA-Location-Permission", "NOT_ALLOWED");
-        expectedHeaders.put("X-UA-Location-Service-Enabled", "false");
-
-        Map<String, String> headers = delegate.onCreateAnalyticsHeaders();
-        assertEquals(expectedHeaders, headers);
-    }
-
-    @Test
     public void testPermissionEnabler() {
         ArgumentCaptor<Consumer> captor = ArgumentCaptor.forClass(Consumer.class);
         locationManager.init();
@@ -186,10 +168,4 @@ public class AirshipLocationManagerTest {
         assertTrue(locationManager.isLocationUpdatesEnabled());
     }
 
-    @Test
-    public void testIsLocationPermitted() {
-        assertFalse(locationManager.isLocationPermitted());
-        when(mockPermissionManager.checkPermissionStatus(Permission.LOCATION)).thenReturn(PermissionStatus.GRANTED);
-        assertTrue(locationManager.isLocationPermitted());
-    }
 }

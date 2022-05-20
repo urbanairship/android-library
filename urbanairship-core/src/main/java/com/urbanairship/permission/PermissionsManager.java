@@ -6,6 +6,9 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.urbanairship.PendingResult;
+import com.urbanairship.ResultCallback;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +33,6 @@ public class PermissionsManager {
     private final List<Consumer<Permission>> airshipEnablers = new CopyOnWriteArrayList<>();
 
     private final Object lock = new Object();
-    Handler mainHandler = new Handler(Looper.getMainLooper());
 
     /**
      * @hide
@@ -76,12 +78,36 @@ public class PermissionsManager {
      * Checks the current permission status.
      *
      * @param permission The permission.
-     * @return The {@link PermissionStatus}.
+     * @param callback The callback with the result.
+     */
+    public void checkPermissionStatus(@NonNull Permission permission, @NonNull Consumer<PermissionStatus> callback) {
+        checkPermissionStatus(permission).addResultCallback(callback::accept);
+    }
+
+    /**
+     * Checks the current permission status.
+     *
+     * @param permission The permission.
+     * @return A pending result.
      */
     @NonNull
-    public PermissionStatus checkPermissionStatus(@NonNull Permission permission) {
+    public PendingResult<PermissionStatus> checkPermissionStatus(@NonNull Permission permission) {
+        PendingResult<PermissionStatus> pendingResult = new PendingResult<>();
         PermissionDelegate delegate = getDelegate(permission);
-        return delegate == null ? PermissionStatus.NOT_DETERMINED : delegate.checkPermissionStatus(context);
+        if (delegate != null) {
+            delegate.checkPermissionStatus(context, pendingResult::setResult);
+        } else {
+            pendingResult.setResult(PermissionStatus.NOT_DETERMINED);
+        }
+        return pendingResult;
+    }
+
+    public void requestPermission(@NonNull Permission permission, @NonNull Consumer<PermissionStatus> callback) {
+        requestPermission(permission, false, callback);
+    }
+
+    public void requestPermission(@NonNull Permission permission, boolean enableAirshipUsageOnGrant, @NonNull Consumer<PermissionStatus> callback) {
+        requestPermission(permission, enableAirshipUsageOnGrant).addResultCallback(callback::accept);
     }
 
     /**
@@ -89,10 +115,11 @@ public class PermissionsManager {
      * be returned.
      *
      * @param permission The permission.
-     * @param callback The callback with the result.
+     * @return A pending result.
      */
-    public void requestPermission(@NonNull Permission permission, @Nullable Consumer<PermissionStatus> callback) {
-        requestPermission(permission, false, callback);
+    @NonNull
+    public PendingResult<PermissionStatus> requestPermission(@NonNull Permission permission) {
+        return requestPermission(permission, false);
     }
 
     /**
@@ -104,33 +131,38 @@ public class PermissionsManager {
      * be enabled, e.g., enabling {@link com.urbanairship.PrivacyManager#FEATURE_PUSH} and
      * {@link com.urbanairship.push.PushManager#setUserNotificationsEnabled(boolean)} if the push permission
      * is granted.
-     * @param callback The callback with the result.
+     * @return A pending result.
      */
-    public void requestPermission(@NonNull Permission permission, boolean enableAirshipUsageOnGrant, @Nullable Consumer<PermissionStatus> callback) {
-        Consumer<PermissionStatus> callbackWrapper = permissionStatus -> {
-            if (enableAirshipUsageOnGrant && permissionStatus == PermissionStatus.GRANTED) {
-                for (Consumer<Permission> enabler : this.airshipEnablers) {
-                    enabler.accept(permission);
-                }
-            }
-
-            if (callback != null) {
-                callback.accept(permissionStatus);
-            }
-        };
-
-        PermissionDelegate delegate = getDelegate(permission);
-        mainHandler.post(() -> {
-            if (delegate == null) {
-                callbackWrapper.accept(PermissionStatus.NOT_DETERMINED);
+    @NonNull
+    public PendingResult<PermissionStatus> requestPermission(@NonNull Permission permission, boolean enableAirshipUsageOnGrant) {
+        PendingResult<PermissionStatus> pendingResult = new PendingResult<>();
+        checkPermissionStatus(permission).addResultCallback(Looper.getMainLooper(), result -> {
+            if (result == PermissionStatus.GRANTED) {
+                onPermissionEnabled(permission, enableAirshipUsageOnGrant);
+                pendingResult.setResult(result);
             } else {
-                if (delegate.checkPermissionStatus(context) == PermissionStatus.GRANTED) {
-                    callbackWrapper.accept(PermissionStatus.GRANTED);
+                PermissionDelegate delegate = getDelegate(permission);
+                if (delegate == null) {
+                    pendingResult.setResult(PermissionStatus.NOT_DETERMINED);
                 } else {
-                    delegate.requestPermission(context, callbackWrapper);
+                    delegate.requestPermission(context, status -> {
+                        if (status == PermissionStatus.GRANTED) {
+                            onPermissionEnabled(permission, enableAirshipUsageOnGrant);
+                        }
+                        pendingResult.setResult(status);
+                    });
                 }
             }
         });
+        return pendingResult;
+    }
+
+    private void onPermissionEnabled(Permission permission, boolean enableAirshipUsageOnGrant) {
+        if (enableAirshipUsageOnGrant) {
+            for (Consumer<Permission> enabler : this.airshipEnablers) {
+                enabler.accept(permission);
+            }
+        }
     }
 
     private PermissionDelegate getDelegate(Permission permission) {

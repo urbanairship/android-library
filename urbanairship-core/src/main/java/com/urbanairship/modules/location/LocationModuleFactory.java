@@ -27,7 +27,6 @@ public interface LocationModuleFactory extends AirshipVersionInfo {
                          @NonNull PreferenceDataStore dataStore,
                          @NonNull PrivacyManager privacyManager,
                          @NonNull AirshipChannel airshipChannel,
-                         @NonNull Analytics analytics,
                          @NonNull PermissionsManager permissionsManager);
 
 }

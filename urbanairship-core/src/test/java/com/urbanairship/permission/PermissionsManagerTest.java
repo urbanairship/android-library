@@ -21,7 +21,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class PermissionsManagerTest extends BaseTestCase {
 
@@ -33,7 +32,9 @@ public class PermissionsManagerTest extends BaseTestCase {
 
     @Test
     public void testCheckPermissionNoDelegate() {
-        assertEquals(PermissionStatus.NOT_DETERMINED, permissionsManager.checkPermissionStatus(Permission.MEDIA));
+        permissionsManager.requestPermission(Permission.MEDIA, testStatusCallback);
+        shadowMainLooper().runToEndOfTasks();
+        assertEquals(PermissionStatus.NOT_DETERMINED, testStatusCallback.result);
     }
 
     @Test
@@ -60,7 +61,12 @@ public class PermissionsManagerTest extends BaseTestCase {
     @Test
     public void testRequestPermissionAlreadyGranted() {
         permissionsManager.setPermissionDelegate(Permission.MIC, mockDelegate);
-        when(mockDelegate.checkPermissionStatus(context)).thenReturn(PermissionStatus.GRANTED);
+
+        doAnswer(invocation -> {
+            Consumer<PermissionStatus> statusConsumer = invocation.getArgument(1);
+            statusConsumer.accept(PermissionStatus.GRANTED);
+            return null;
+        }).when(mockDelegate).checkPermissionStatus(any(), any());
 
         permissionsManager.requestPermission(Permission.MIC, testStatusCallback);
         shadowMainLooper().runToEndOfTasks();
@@ -72,7 +78,12 @@ public class PermissionsManagerTest extends BaseTestCase {
     @Test
     public void testRequestPermission() {
         permissionsManager.setPermissionDelegate(Permission.MIC, mockDelegate);
-        when(mockDelegate.checkPermissionStatus(context)).thenReturn(PermissionStatus.DENIED);
+
+        doAnswer(invocation -> {
+            Consumer<PermissionStatus> statusConsumer = invocation.getArgument(1);
+            statusConsumer.accept(PermissionStatus.DENIED);
+            return null;
+        }).when(mockDelegate).checkPermissionStatus(any(), any());
 
         doAnswer(invocation -> {
             Consumer<PermissionStatus> statusConsumer = invocation.getArgument(1);
@@ -88,7 +99,13 @@ public class PermissionsManagerTest extends BaseTestCase {
     @Test
     public void testOnEnableAirship() {
         permissionsManager.setPermissionDelegate(Permission.BLUETOOTH, mockDelegate);
-        when(mockDelegate.checkPermissionStatus(context)).thenReturn(PermissionStatus.DENIED);
+
+        doAnswer(invocation -> {
+            Consumer<PermissionStatus> statusConsumer = invocation.getArgument(1);
+            statusConsumer.accept(PermissionStatus.DENIED);
+            return null;
+        }).when(mockDelegate).checkPermissionStatus(any(), any());
+
 
         permissionsManager.addAirshipEnabler(testAirshipEnabler);
 
@@ -98,7 +115,7 @@ public class PermissionsManagerTest extends BaseTestCase {
             return null;
         }).when(mockDelegate).requestPermission(any(), any());
 
-        permissionsManager.requestPermission(Permission.BLUETOOTH, true, null);
+        permissionsManager.requestPermission(Permission.BLUETOOTH, true);
         shadowMainLooper().runToEndOfTasks();
 
         assertEquals(Permission.BLUETOOTH, testAirshipEnabler.result);
@@ -107,7 +124,13 @@ public class PermissionsManagerTest extends BaseTestCase {
     @Test
     public void testOnEnableAirshipDenied() {
         permissionsManager.setPermissionDelegate(Permission.BLUETOOTH, mockDelegate);
-        when(mockDelegate.checkPermissionStatus(context)).thenReturn(PermissionStatus.DENIED);
+
+        doAnswer(invocation -> {
+            Consumer<PermissionStatus> statusConsumer = invocation.getArgument(1);
+            statusConsumer.accept(PermissionStatus.DENIED);
+            return null;
+        }).when(mockDelegate).checkPermissionStatus(any(), any());
+
 
         permissionsManager.addAirshipEnabler(testAirshipEnabler);
 
@@ -117,7 +140,7 @@ public class PermissionsManagerTest extends BaseTestCase {
             return null;
         }).when(mockDelegate).requestPermission(any(), any());
 
-        permissionsManager.requestPermission(Permission.BLUETOOTH, true, null);
+        permissionsManager.requestPermission(Permission.BLUETOOTH, true);
         shadowMainLooper().runToEndOfTasks();
 
         assertNull(testAirshipEnabler.result);
@@ -126,7 +149,12 @@ public class PermissionsManagerTest extends BaseTestCase {
     @Test
     public void testOnEnableAirshipNotDetermined() {
         permissionsManager.setPermissionDelegate(Permission.BLUETOOTH, mockDelegate);
-        when(mockDelegate.checkPermissionStatus(context)).thenReturn(PermissionStatus.DENIED);
+
+        doAnswer(invocation -> {
+            Consumer<PermissionStatus> statusConsumer = invocation.getArgument(1);
+            statusConsumer.accept(PermissionStatus.DENIED);
+            return null;
+        }).when(mockDelegate).checkPermissionStatus(any(), any());
 
         permissionsManager.addAirshipEnabler(testAirshipEnabler);
 
@@ -136,7 +164,7 @@ public class PermissionsManagerTest extends BaseTestCase {
             return null;
         }).when(mockDelegate).requestPermission(any(), any());
 
-        permissionsManager.requestPermission(Permission.BLUETOOTH, true, null);
+        permissionsManager.requestPermission(Permission.BLUETOOTH, true);
         shadowMainLooper().runToEndOfTasks();
 
         assertNull(testAirshipEnabler.result);

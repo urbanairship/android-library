@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import androidx.arch.core.util.Function;
 import androidx.core.util.Consumer;
 
 import static junit.framework.Assert.assertEquals;
@@ -69,6 +70,7 @@ public class PushManagerTest extends BaseTestCase {
     private final Analytics mockAnalytics = mock(Analytics.class);
     private final PermissionsManager mockPermissionManager = mock(PermissionsManager.class);
     private final Supplier<PushProviders> pushProvidersSupplier = () -> mockPushProviders;
+    private final Function<Context, Boolean> notificationsEnabledCheck = mock(Function.class);
 
     @Before
     public void setup() {
@@ -80,7 +82,7 @@ public class PushManagerTest extends BaseTestCase {
 
         pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, runtimeConfig,
                 privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockPermissionManager,
-                mockDispatcher);
+                mockDispatcher, notificationsEnabledCheck);
     }
 
     /**
@@ -111,7 +113,7 @@ public class PushManagerTest extends BaseTestCase {
         // Init to verify token does not clear if the delivery type is the same
         pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, runtimeConfig,
                 privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockPermissionManager,
-                mockDispatcher);
+                mockDispatcher, notificationsEnabledCheck);
         pushManager.init();
         assertEquals("token", pushManager.getPushToken());
 
@@ -119,7 +121,7 @@ public class PushManagerTest extends BaseTestCase {
         when(mockPushProvider.getDeliveryType()).thenReturn("some other type");
         pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, runtimeConfig,
                 privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockPermissionManager,
-                mockDispatcher);
+                mockDispatcher, notificationsEnabledCheck);
         pushManager.init();
         assertNull(pushManager.getPushToken());
     }
@@ -165,7 +167,7 @@ public class PushManagerTest extends BaseTestCase {
         pushManager.init();
 
         // Enable and have permission
-        when(mockPermissionManager.checkPermissionStatus(Permission.POST_NOTIFICATIONS)).thenReturn(PermissionStatus.GRANTED);
+        when(notificationsEnabledCheck.apply(any())).thenReturn(true);
         pushManager.setUserNotificationsEnabled(true);
         privacyManager.enable(PrivacyManager.FEATURE_PUSH);
 
@@ -192,7 +194,7 @@ public class PushManagerTest extends BaseTestCase {
         privacyManager.enable(PrivacyManager.FEATURE_PUSH);
 
         // Revoke permission
-        when(mockPermissionManager.checkPermissionStatus(Permission.POST_NOTIFICATIONS)).thenReturn(PermissionStatus.DENIED);
+        when(notificationsEnabledCheck.apply(any())).thenReturn(false);
         assertFalse(pushManager.isOptIn());
     }
 
@@ -247,7 +249,7 @@ public class PushManagerTest extends BaseTestCase {
         when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
         pushManager.performPushRegistration(true);
         pushManager.setUserNotificationsEnabled(true);
-        when(mockPermissionManager.checkPermissionStatus(Permission.POST_NOTIFICATIONS)).thenReturn(PermissionStatus.GRANTED);
+        when(notificationsEnabledCheck.apply(any())).thenReturn(true);
 
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder();
 

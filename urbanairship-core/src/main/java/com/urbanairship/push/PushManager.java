@@ -50,8 +50,8 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 import androidx.annotation.XmlRes;
+import androidx.arch.core.util.Function;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.core.util.Consumer;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -227,6 +227,7 @@ public class PushManager extends AirshipComponent {
     private final JobDispatcher jobDispatcher;
     private final NotificationChannelRegistry notificationChannelRegistry;
     private final PrivacyManager privacyManager;
+    private final Function<Context, Boolean> notificationsEnabledCheck;
 
     private NotificationListener notificationListener;
     private final List<PushTokenListener> pushTokenListeners = new CopyOnWriteArrayList<>();
@@ -261,7 +262,8 @@ public class PushManager extends AirshipComponent {
                        @NonNull Analytics analytics, @NonNull PermissionsManager permissionsManager) {
 
         this(context, preferenceDataStore, config, privacyManager, pushProvidersSupplier,
-                airshipChannel, analytics, permissionsManager, JobDispatcher.shared(context));
+                airshipChannel, analytics, permissionsManager, JobDispatcher.shared(context),
+                input -> NotificationManagerCompat.from(input).areNotificationsEnabled());
     }
 
     /**
@@ -272,7 +274,7 @@ public class PushManager extends AirshipComponent {
                 @NonNull AirshipRuntimeConfig config, @NonNull PrivacyManager privacyManager,
                 @NonNull Supplier<PushProviders> pushProvidersSupplier, @NonNull AirshipChannel airshipChannel,
                 @NonNull Analytics analytics, @NonNull PermissionsManager permissionsManager,
-                @NonNull JobDispatcher dispatcher) {
+                @NonNull JobDispatcher dispatcher, Function<Context, Boolean> notificationsEnabledCheck) {
         super(context, preferenceDataStore);
         this.context = context;
         this.preferenceDataStore = preferenceDataStore;
@@ -283,6 +285,7 @@ public class PushManager extends AirshipComponent {
         this.analytics = analytics;
         this.permissionsManager = permissionsManager;
         this.jobDispatcher = dispatcher;
+        this.notificationsEnabledCheck = notificationsEnabledCheck;
         this.notificationProvider = new AirshipNotificationProvider(context, config.getConfigOptions());
         this.notificationChannelRegistry = new NotificationChannelRegistry(context, config.getConfigOptions());
 
@@ -698,7 +701,7 @@ public class PushManager extends AirshipComponent {
      * @return {@code true} if notifications are opted in, otherwise {@code false}.
      */
     public boolean areNotificationsOptedIn() {
-        return getUserNotificationsEnabled() && permissionsManager.checkPermissionStatus(Permission.POST_NOTIFICATIONS) == PermissionStatus.GRANTED;
+        return getUserNotificationsEnabled() && this.notificationsEnabledCheck.apply(context);
     }
 
     /**

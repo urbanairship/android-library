@@ -25,7 +25,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class PromptPermissionActionTest extends BaseTestCase {
 
@@ -66,6 +65,13 @@ public class PromptPermissionActionTest extends BaseTestCase {
 
     @Test
     public void testPermissions() {
+        doAnswer(invocation -> {
+            Consumer<PermissionStatus> consumer = invocation.getArgument(1);
+            consumer.accept(PermissionStatus.DENIED);
+            return null;
+        }).when(mockPermissionManager).checkPermissionStatus(any(), any());
+
+
         for (Permission permission : Permission.values()) {
             JsonMap value = JsonMap.newBuilder()
                                    .put(PromptPermissionAction.PERMISSION_ARG_KEY, permission)
@@ -74,13 +80,19 @@ public class PromptPermissionActionTest extends BaseTestCase {
             ActionArguments actionArguments = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, value);
             action.perform(actionArguments);
 
-            verify(mockPermissionManager).checkPermissionStatus(permission);
-            verify(mockPermissionManager).requestPermission(eq(permission), eq(false), any(Consumer.class));
+            verify(mockPermissionManager).checkPermissionStatus(eq(permission), any());
+            verify(mockPermissionManager).requestPermission(eq(permission), eq(false), any());
         }
     }
 
     @Test
     public void testEnableAirshipUsage() {
+        doAnswer(invocation -> {
+            Consumer<PermissionStatus> consumer = invocation.getArgument(1);
+            consumer.accept(PermissionStatus.DENIED);
+            return null;
+        }).when(mockPermissionManager).checkPermissionStatus(any(), any());
+
         JsonMap value = JsonMap.newBuilder()
                                .put(PromptPermissionAction.PERMISSION_ARG_KEY, Permission.BLUETOOTH)
                                .put(PromptPermissionAction.ENABLE_AIRSHIP_USAGE_ARG_KEY, true)
@@ -89,18 +101,22 @@ public class PromptPermissionActionTest extends BaseTestCase {
         ActionArguments actionArguments = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, value);
         action.perform(actionArguments);
 
-        verify(mockPermissionManager).requestPermission(eq(Permission.BLUETOOTH), eq(true), any(Consumer.class));
+        verify(mockPermissionManager).requestPermission(eq(Permission.BLUETOOTH), eq(true), any());
     }
 
     @Test
     public void testResult() {
-        when(mockPermissionManager.checkPermissionStatus(Permission.POST_NOTIFICATIONS)).thenReturn(PermissionStatus.DENIED);
+        doAnswer(invocation -> {
+            Consumer<PermissionStatus> consumer = invocation.getArgument(1);
+            consumer.accept(PermissionStatus.DENIED);
+            return null;
+        }).when(mockPermissionManager).checkPermissionStatus(eq(Permission.POST_NOTIFICATIONS), any());
 
         doAnswer(invocation -> {
             Consumer<PermissionStatus> consumer = invocation.getArgument(2);
             consumer.accept(PermissionStatus.GRANTED);
             return null;
-        }).when(mockPermissionManager).requestPermission(eq(Permission.POST_NOTIFICATIONS), eq(false), any(Consumer.class));
+        }).when(mockPermissionManager).requestPermission(eq(Permission.POST_NOTIFICATIONS), eq(false), any());
 
         Handler handler = new Handler(Looper.getMainLooper());
         TestReceiver resultReceiver = new TestReceiver(handler);

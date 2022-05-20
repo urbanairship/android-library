@@ -25,6 +25,11 @@ public enum Permission implements JsonSerializable {
     }
 
     @NonNull
+    public String getValue() {
+        return value;
+    }
+
+    @NonNull
     public static Permission fromJson(@NonNull JsonValue value) throws JsonException {
         String valueString = value.optString();
         for (Permission type : Permission.values()) {

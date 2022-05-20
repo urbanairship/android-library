@@ -34,6 +34,7 @@ import com.urbanairship.permission.PermissionStatus
 class MainActivity : AppCompatActivity() {
 
     companion object {
+
         private const val PREF_NAME = "layout-playground"
         private const val PREF_KEY = "selected-layout"
         private const val SAMPLE_LAYOUTS_PATH = "sample_layouts"
@@ -108,9 +109,7 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             val payload = BasePayload.fromJson(jsonMap)
-            Thomas.prepareDisplay(payload)
-                .setListener(thomasListener)
-                .display(this)
+            Thomas.prepareDisplay(payload).setListener(thomasListener).display(this)
         } catch (e: Exception) {
             Logger.error(e)
             Toast.makeText(this, "Error trying to display layout", Toast.LENGTH_LONG).show()

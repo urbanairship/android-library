@@ -4,7 +4,9 @@ package com.urbanairship.permission;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.util.Log;
 
+import com.urbanairship.Logger;
 import com.urbanairship.util.HelperActivity;
 
 import androidx.annotation.MainThread;
@@ -30,14 +32,15 @@ public class SinglePermissionDelegate implements PermissionDelegate {
 
     @NonNull
     @Override
-    public PermissionStatus checkPermissionStatus(@NonNull Context context) {
+    public void checkPermissionStatus(@NonNull Context context, @NonNull Consumer<PermissionStatus> callback) {
         try {
-            if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
-                return PermissionStatus.DENIED;
+            if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+                callback.accept(PermissionStatus.GRANTED);
             }
-            return PermissionStatus.GRANTED;
+            callback.accept(PermissionStatus.DENIED);
         } catch (Exception e) {
-            return PermissionStatus.DENIED;
+            Logger.error(e, "Failed to get permission status.");
+            callback.accept(PermissionStatus.NOT_DETERMINED);
         }
     }
 

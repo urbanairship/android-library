@@ -26,6 +26,9 @@ import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleManager;
+import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionStatus;
+import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
@@ -38,6 +41,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -46,11 +50,13 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
 import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * This class is the primary interface to the Airship Analytics API.
  */
 public class Analytics extends AirshipComponent {
+
 
     /**
      * Listener for all Airship events.
@@ -147,6 +153,8 @@ public class Analytics extends AirshipComponent {
     private final Executor executor;
     private final LocaleManager localeManager;
     private final PrivacyManager privacyManager;
+    private final PermissionsManager permissionsManager;
+
     private final List<AnalyticsListener> analyticsListeners = new CopyOnWriteArrayList<>();
     private final List<EventListener> eventListeners = new CopyOnWriteArrayList<>();
     private final List<AnalyticsHeaderDelegate> headerDelegates = new CopyOnWriteArrayList<>();
@@ -171,10 +179,11 @@ public class Analytics extends AirshipComponent {
                      @NonNull AirshipRuntimeConfig runtimeConfig,
                      @NonNull PrivacyManager privacyManager,
                      @NonNull AirshipChannel channel,
-                     @NonNull LocaleManager localeManager) {
+                     @NonNull LocaleManager localeManager,
+                     @NonNull PermissionsManager permissionsManager) {
         this(context, dataStore, runtimeConfig, privacyManager, channel, GlobalActivityMonitor.shared(context),
                 localeManager, AirshipExecutors.newSerialExecutor(),
-                new EventManager(context, dataStore, runtimeConfig));
+                new EventManager(context, dataStore, runtimeConfig), permissionsManager);
     }
 
     @VisibleForTesting
@@ -186,7 +195,8 @@ public class Analytics extends AirshipComponent {
               @NonNull ActivityMonitor activityMonitor,
               @NonNull LocaleManager localeManager,
               @NonNull Executor executor,
-              @NonNull EventManager eventManager) {
+              @NonNull EventManager eventManager,
+              @NonNull PermissionsManager permissionsManager) {
         super(context, dataStore);
         this.runtimeConfig = runtimeConfig;
         this.privacyManager = privacyManager;
@@ -195,6 +205,7 @@ public class Analytics extends AirshipComponent {
         this.localeManager = localeManager;
         this.executor = executor;
         this.eventManager = eventManager;
+        this.permissionsManager = permissionsManager;
 
         this.sessionId = UUID.randomUUID().toString();
         this.listener = new ApplicationListener() {
@@ -639,12 +650,24 @@ public class Analytics extends AirshipComponent {
         }
     }
 
+    @WorkerThread
     private Map<String, String> getAnalyticHeaders() {
         Map<String, String> headers = new HashMap<>();
 
         // Delegates
         for (AnalyticsHeaderDelegate delegate : headerDelegates) {
             headers.putAll(delegate.onCreateAnalyticsHeaders());
+        }
+
+        for (Permission permission : permissionsManager.getConfiguredPermissions()) {
+            try {
+                PermissionStatus currentStatus = permissionsManager.checkPermissionStatus(permission).get();
+                if (currentStatus != null) {
+                    headers.put("X-UA-Permission-" + permission.getValue(), currentStatus.getValue());
+                }
+            } catch (Exception e) {
+                Logger.error(e, "Failed to get status for permission %s", permission);
+            }
         }
 
         // App info

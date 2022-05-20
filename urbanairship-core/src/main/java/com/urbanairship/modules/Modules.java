@@ -91,12 +91,11 @@ public class Modules {
                                           @NonNull PreferenceDataStore preferenceDataStore,
                                           @NonNull PrivacyManager privacyManager,
                                           @NonNull AirshipChannel channel,
-                                          @NonNull Analytics analytics,
                                           @NonNull PermissionsManager permissionsManager) {
         try {
             LocationModuleFactory moduleFactory = createFactory(LOCATION_MODULE_FACTORY, LocationModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, preferenceDataStore, privacyManager, channel, analytics, permissionsManager);
+                return moduleFactory.build(context, preferenceDataStore, privacyManager, channel, permissionsManager);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Location module");

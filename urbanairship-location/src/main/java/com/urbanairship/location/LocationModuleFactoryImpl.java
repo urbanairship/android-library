@@ -29,9 +29,8 @@ public class LocationModuleFactoryImpl implements LocationModuleFactory {
                                 @NonNull PreferenceDataStore dataStore,
                                 @NonNull PrivacyManager privacyManager,
                                 @NonNull AirshipChannel airshipChannel,
-                                @NonNull Analytics analytics,
                                 @NonNull PermissionsManager permissionsManager) {
-        AirshipLocationManager locationManager = new AirshipLocationManager(context, dataStore, privacyManager, airshipChannel, analytics, permissionsManager);
+        AirshipLocationManager locationManager = new AirshipLocationManager(context, dataStore, privacyManager, airshipChannel, permissionsManager);
         return new LocationModule(locationManager, locationManager);
     }
 

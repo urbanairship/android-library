@@ -2,10 +2,12 @@
 
 package com.urbanairship.analytics;
 
+import android.content.Context;
 import android.os.Build;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.TestActivityMonitor;
@@ -18,6 +20,9 @@ import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobResult;
 import com.urbanairship.locale.LocaleManager;
+import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionStatus;
+import com.urbanairship.permission.PermissionsManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -25,16 +30,21 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.Consumer;
+import androidx.test.core.app.ApplicationProvider;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -42,6 +52,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -50,41 +63,34 @@ import static org.mockito.Mockito.when;
 
 public class AnalyticsTest extends BaseTestCase {
 
-    private Analytics analytics;
-    private JobDispatcher mockJobDispatcher;
-    private EventManager mockEventManager;
-    private AirshipChannel mockChannel;
-    private PreferenceDataStore dataStore;
-    private LocaleManager localeManager;
-    private Executor executor;
-    private TestAirshipRuntimeConfig runtimeConfig;
-    private TestActivityMonitor activityMonitor;
-    private PrivacyManager privacyManager;
+    private Context context = ApplicationProvider.getApplicationContext();
+    private JobDispatcher mockJobDispatcher = mock(JobDispatcher.class);
+    private EventManager mockEventManager = mock(EventManager.class);
+    private AirshipChannel mockChannel = mock(AirshipChannel.class);
+    private PermissionsManager mockPermissionsManager = mock(PermissionsManager.class);
+
+    private PreferenceDataStore dataStore = TestApplication.getApplication().preferenceDataStore;
+    private LocaleManager localeManager = new LocaleManager(context, dataStore);
+    private Executor executor = Runnable::run;
+    private TestAirshipRuntimeConfig runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+    private TestActivityMonitor activityMonitor = new TestActivityMonitor();
+    private PrivacyManager privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
+
+    private Analytics analytics = new Analytics(
+            context,
+            dataStore,
+            runtimeConfig,
+            privacyManager,
+            mockChannel,
+            activityMonitor,
+            localeManager,
+            executor,
+            mockEventManager,
+            mockPermissionsManager
+    );
 
     @Before
     public void setup() {
-
-        this.mockJobDispatcher = Mockito.mock(JobDispatcher.class);
-        this.mockEventManager = Mockito.mock(EventManager.class);
-        this.mockChannel = Mockito.mock(AirshipChannel.class);
-
-        this.dataStore = TestApplication.getApplication().preferenceDataStore;
-        this.privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
-        this.localeManager = new LocaleManager(getApplication(), getApplication().preferenceDataStore);
-        this.activityMonitor = new TestActivityMonitor();
-
-        this.executor = new Executor() {
-            @Override
-            public void execute(@NonNull Runnable runnable) {
-                runnable.run();
-            }
-        };
-
-        this.runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
-
-        this.analytics = new Analytics(TestApplication.getApplication(), dataStore, runtimeConfig,
-                privacyManager, mockChannel, activityMonitor, localeManager, executor, mockEventManager);
-
         this.analytics.init();
     }
 
@@ -208,7 +214,7 @@ public class AnalyticsTest extends BaseTestCase {
      */
     @Test
     public void testAddInvalidEvent() {
-        Event event = Mockito.mock(Event.class);
+        Event event = mock(Event.class);
         when(event.getEventId()).thenReturn("event-id");
         when(event.getType()).thenReturn("event-type");
         when(event.createEventPayload(Mockito.anyString())).thenReturn("event-data");
@@ -592,6 +598,40 @@ public class AnalyticsTest extends BaseTestCase {
         Map<String, String> headers = argumentCaptor.getValue();
         String expected = "cordova:1.0.0,unity:2.0.0,flutter:3.0.0,react-native:4.0.0,xamarin:5.0.0,titanum:6.0.0";
         assertEquals(expected, headers.get("X-UA-Frameworks"));
+    }
+
+    @Test
+    public void testPermissionHeaders() {
+        when(mockChannel.getId()).thenReturn("channel");
+
+        Map<Permission, PermissionStatus> configuredPermissions = new HashMap<>();
+        configuredPermissions.put(Permission.MIC, PermissionStatus.GRANTED);
+        configuredPermissions.put(Permission.POST_NOTIFICATIONS, PermissionStatus.NOT_DETERMINED);
+        configuredPermissions.put(Permission.BLUETOOTH, PermissionStatus.DENIED);
+
+        when(mockPermissionsManager.getConfiguredPermissions()).thenReturn(configuredPermissions.keySet());
+        when(mockPermissionsManager.checkPermissionStatus(any())).thenAnswer(new Answer<PendingResult<PermissionStatus>>() {
+            @Override
+            public PendingResult<PermissionStatus> answer(InvocationOnMock invocation) throws Throwable {
+                PendingResult<PermissionStatus> pendingResult = new PendingResult<>();
+                pendingResult.setResult(configuredPermissions.get(invocation.getArgument(0)));
+                return pendingResult;
+            }
+        });
+
+        JobInfo jobInfo = JobInfo.newBuilder()
+                                 .setAction(EventManager.ACTION_SEND)
+                                 .build();
+
+        analytics.onPerformJob(UAirship.shared(), jobInfo);
+
+        ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+
+        Map<String, String> headers = argumentCaptor.getValue();
+        assertEquals("granted", headers.get("X-UA-Permission-mic"));
+        assertEquals("not_determined", headers.get("X-UA-Permission-post_notifications"));
+        assertEquals("denied", headers.get("X-UA-Permission-bluetooth"));
     }
 
     /**

@@ -6,6 +6,7 @@ import android.content.Context;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 import androidx.core.util.Consumer;
 
 /**
@@ -17,10 +18,10 @@ public interface PermissionDelegate {
      * Checks the current status of the permission.
      *
      * @param context The application context.
+     * @param callback The callback.
      * @return The {@link PermissionStatus}.
      */
-    @NonNull
-    PermissionStatus checkPermissionStatus(@NonNull Context context);
+    void checkPermissionStatus(@NonNull Context context, @NonNull Consumer<PermissionStatus> callback);
 
     /**
      * Called when the delegate should request permissions.
