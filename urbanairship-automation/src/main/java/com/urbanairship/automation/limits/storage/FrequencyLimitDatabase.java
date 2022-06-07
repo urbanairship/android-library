@@ -19,7 +19,7 @@ import androidx.room.RoomDatabase;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities = { ConstraintEntity.class, OccurrenceEntity.class }, version = 1, exportSchema = false)
+@Database(entities = { ConstraintEntity.class, OccurrenceEntity.class }, version = 1)
 public abstract class FrequencyLimitDatabase extends RoomDatabase {
 
     public abstract FrequencyLimitDao getDao();

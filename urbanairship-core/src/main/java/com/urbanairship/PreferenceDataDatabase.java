@@ -22,7 +22,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities = {PreferenceData.class}, version = 2, exportSchema = false)
+@Database(entities = {PreferenceData.class}, version = 2)
 public abstract class PreferenceDataDatabase extends RoomDatabase {
 
     private static final String DATABASE_DIRECTORY_NAME = "com.urbanairship.databases";

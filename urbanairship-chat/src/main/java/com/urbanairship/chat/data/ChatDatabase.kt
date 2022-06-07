@@ -15,7 +15,7 @@ import java.io.File
 /**
  * @hide
  */
-@Database(entities = [MessageEntity::class], version = 2, exportSchema = false)
+@Database(entities = [MessageEntity::class], version = 2)
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @TypeConverters(Converters::class)
 internal abstract class ChatDatabase : RoomDatabase() {

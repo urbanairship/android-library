@@ -60,6 +60,21 @@ class AirshipModulePlugin : Plugin<Project> {
                 buildConfigField("String", "SDK_VERSION", "\"${getSdkVersionString()}\"")
 
                 consumerProguardFiles("proguard-rules.pro")
+
+                javaCompileOptions {
+                    annotationProcessorOptions {
+                        arguments += listOf(
+                            "room.schemaLocation" to "$projectDir/schemas",
+                            "room.incremental" to "true"
+                        )
+                    }
+                }
+
+                testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+            }
+
+            sourceSets.getByName("androidTest") {
+                assets.srcDir("$projectDir/schemas")
             }
 
             compileOptions.apply {

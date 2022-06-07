@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
  * Event database.
  * @hide
  */
-@Database(entities = [EventEntity::class], version = 1, exportSchema = false)
+@Database(entities = [EventEntity::class], version = 1)
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 abstract class EventDatabase : RoomDatabase() {
 

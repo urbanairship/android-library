@@ -4,7 +4,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -15,15 +14,17 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "richpush")
+@Entity(tableName = "richpush", indices = {
+    @Index(value = {"message_id"}, unique = true)
+})
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class MessageEntity {
 
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "_id")
-    @NonNull
     protected int id;
 
     @ColumnInfo(name = "message_id")
@@ -64,16 +65,17 @@ public class MessageEntity {
         this.expirationTimestamp = expirationTimestamp;
     }
 
+    @Nullable
     static protected MessageEntity createMessageFromPayload(@Nullable String messageId, @NonNull JsonValue messagePayload) {
-        if (messagePayload == null || !messagePayload.isJsonMap()) {
-            Logger.error("RichPushResolver - Unexpected message: %s", messagePayload);
+        if (messagePayload == JsonValue.NULL || !messagePayload.isJsonMap()) {
+            Logger.error("MessageEntity - Unexpected message: %s", messagePayload);
             return null;
         }
 
         JsonMap messageMap = messagePayload.optMap();
 
         if (UAStringUtil.isEmpty(messageMap.opt(Message.MESSAGE_ID_KEY).getString())) {
-            Logger.error("RichPushResolver - Message is missing an ID: %s", messagePayload);
+            Logger.error("MessageEntity - Message is missing an ID: %s", messagePayload);
             return null;
         }
 
@@ -92,25 +94,17 @@ public class MessageEntity {
                 messageMap.containsKey(Message.MESSAGE_EXPIRY_KEY) ? messageMap.opt(Message.MESSAGE_EXPIRY_KEY).getString() : null);
     }
 
-    static protected List<MessageEntity> createMessagesFromPayload(@Nullable List<String> messageIds, @NonNull List<JsonValue> messagePayloads) {
+    @NonNull
+    static protected List<MessageEntity> createMessagesFromPayload(@NonNull List<JsonValue> messagePayloads) {
         ArrayList<MessageEntity> messageEntities = new ArrayList<>();
 
-        if (messageIds == null) {
-            for (JsonValue messagePayload : messagePayloads) {
-                MessageEntity messageEntity = createMessageFromPayload(null, messagePayload);
-                if (messageEntity != null) {
-                    messageEntities.add(messageEntity);
-                }
-            }
-            return messageEntities;
-        }
-
-        for (int i = 0; i < messageIds.size(); i++) {
-            MessageEntity messageEntity = createMessageFromPayload(messageIds.get(i), messagePayloads.get(i));
+        for (JsonValue messagePayload : messagePayloads) {
+            MessageEntity messageEntity = createMessageFromPayload(null, messagePayload);
             if (messageEntity != null) {
                 messageEntities.add(messageEntity);
             }
         }
+
         return messageEntities;
     }
 
@@ -118,27 +112,21 @@ public class MessageEntity {
         return messageId;
     }
 
-    public String getMessageBodyUrl() {
-        return messageBodyUrl;
-    }
-
+    @Nullable
     protected JsonValue getMessageReporting() {
-        JsonMap messageMap = null;
         try {
-            messageMap = JsonValue.parseString(this.rawMessageObject).getMap();
+            JsonMap messageMap = JsonValue.parseString(this.rawMessageObject).getMap();
+            if (messageMap != null) {
+                return messageMap.get(Message.MESSAGE_REPORTING_KEY);
+            }
         } catch (JsonException e) {
             Logger.error(e, "MessageEntity - Failed to parse Message reporting.");
         }
-        return messageMap.get(Message.MESSAGE_REPORTING_KEY);
+        return null;
     }
 
     public boolean isDeleted() {
         return this.deleted;
-    }
-
-    public boolean isExpired() {
-        long expirationMS = DateUtils.parseIso8601(expirationTimestamp, Long.MAX_VALUE);
-        return this.expirationTimestamp != null && System.currentTimeMillis() >= expirationMS;
     }
 
     protected Message createMessageFromEntity(MessageEntity entity) {
