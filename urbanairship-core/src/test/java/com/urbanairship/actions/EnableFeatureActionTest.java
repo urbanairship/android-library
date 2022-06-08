@@ -52,7 +52,7 @@ public class EnableFeatureActionTest extends BaseTestCase {
         assertTrue(action.acceptsArguments(arguments));
 
         PromptPermissionAction.Args args = action.parseArg(arguments);
-        assertEquals(Permission.POST_NOTIFICATIONS, args.permission);
+        assertEquals(Permission.DISPLAY_NOTIFICATIONS, args.permission);
         assertTrue(args.enableAirshipUsage);
         assertTrue(args.fallbackSystemSettings);
     }

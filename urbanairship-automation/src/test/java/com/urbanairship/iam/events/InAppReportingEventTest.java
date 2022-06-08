@@ -490,7 +490,7 @@ public class InAppReportingEventTest {
 
     @Test
     public void testPermissionResult() {
-        InAppReportingEvent.permissionResultEvent("schedule ID", message, Permission.MEDIA, PermissionStatus.DENIED, PermissionStatus.GRANTED)
+        InAppReportingEvent.permissionResultEvent("schedule ID", message, Permission.DISPLAY_NOTIFICATIONS, PermissionStatus.DENIED, PermissionStatus.GRANTED)
                            .record(mockAnalytics);
 
         JsonMap expectedData = JsonMap.newBuilder()
@@ -498,7 +498,7 @@ public class InAppReportingEventTest {
                                       .put("id", JsonMap.newBuilder()
                                                         .put("message_id", "schedule ID")
                                                         .build())
-                                      .put("permission", Permission.MEDIA)
+                                      .put("permission", Permission.DISPLAY_NOTIFICATIONS)
                                       .put("starting_permission_status", PermissionStatus.DENIED)
                                       .put("ending_permission_status", PermissionStatus.GRANTED)
                                       .build();

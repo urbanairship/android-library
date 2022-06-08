@@ -605,9 +605,8 @@ public class AnalyticsTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn("channel");
 
         Map<Permission, PermissionStatus> configuredPermissions = new HashMap<>();
-        configuredPermissions.put(Permission.MIC, PermissionStatus.GRANTED);
-        configuredPermissions.put(Permission.POST_NOTIFICATIONS, PermissionStatus.NOT_DETERMINED);
-        configuredPermissions.put(Permission.BLUETOOTH, PermissionStatus.DENIED);
+        configuredPermissions.put(Permission.DISPLAY_NOTIFICATIONS, PermissionStatus.GRANTED);
+        configuredPermissions.put(Permission.LOCATION, PermissionStatus.NOT_DETERMINED);
 
         when(mockPermissionsManager.getConfiguredPermissions()).thenReturn(configuredPermissions.keySet());
         when(mockPermissionsManager.checkPermissionStatus(any())).thenAnswer(new Answer<PendingResult<PermissionStatus>>() {
@@ -629,9 +628,8 @@ public class AnalyticsTest extends BaseTestCase {
         verify(mockEventManager).uploadEvents(argumentCaptor.capture());
 
         Map<String, String> headers = argumentCaptor.getValue();
-        assertEquals("granted", headers.get("X-UA-Permission-mic"));
-        assertEquals("not_determined", headers.get("X-UA-Permission-post_notifications"));
-        assertEquals("denied", headers.get("X-UA-Permission-bluetooth"));
+        assertEquals("not_determined", headers.get("X-UA-Permission-location"));
+        assertEquals("granted", headers.get("X-UA-Permission-display_notifications"));
     }
 
     /**

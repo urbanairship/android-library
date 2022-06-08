@@ -19,11 +19,9 @@ import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.permission.Permission;
-import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -482,10 +480,11 @@ public class PushManagerTest extends BaseTestCase {
         privacyManager.disable(PrivacyManager.FEATURE_PUSH);
         pushManager.setUserNotificationsEnabled(false);
 
-        consumer.accept(Permission.POST_NOTIFICATIONS);
+        consumer.accept(Permission.DISPLAY_NOTIFICATIONS);
 
         assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH));
         assertTrue(pushManager.getUserNotificationsEnabled());
+        verify(mockAirshipChannel).updateRegistration();
     }
 
 }

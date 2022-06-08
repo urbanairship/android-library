@@ -94,14 +94,14 @@ public class PromptPermissionActionTest extends BaseTestCase {
         }).when(mockPermissionManager).checkPermissionStatus(any(), any());
 
         JsonMap value = JsonMap.newBuilder()
-                               .put(PromptPermissionAction.PERMISSION_ARG_KEY, Permission.BLUETOOTH)
+                               .put(PromptPermissionAction.PERMISSION_ARG_KEY, Permission.DISPLAY_NOTIFICATIONS)
                                .put(PromptPermissionAction.ENABLE_AIRSHIP_USAGE_ARG_KEY, true)
                                .build();
 
         ActionArguments actionArguments = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, value);
         action.perform(actionArguments);
 
-        verify(mockPermissionManager).requestPermission(eq(Permission.BLUETOOTH), eq(true), any());
+        verify(mockPermissionManager).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), eq(true), any());
     }
 
     @Test
@@ -110,19 +110,19 @@ public class PromptPermissionActionTest extends BaseTestCase {
             Consumer<PermissionStatus> consumer = invocation.getArgument(1);
             consumer.accept(PermissionStatus.DENIED);
             return null;
-        }).when(mockPermissionManager).checkPermissionStatus(eq(Permission.POST_NOTIFICATIONS), any());
+        }).when(mockPermissionManager).checkPermissionStatus(eq(Permission.DISPLAY_NOTIFICATIONS), any());
 
         doAnswer(invocation -> {
             Consumer<PermissionStatus> consumer = invocation.getArgument(2);
             consumer.accept(PermissionStatus.GRANTED);
             return null;
-        }).when(mockPermissionManager).requestPermission(eq(Permission.POST_NOTIFICATIONS), eq(false), any());
+        }).when(mockPermissionManager).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), eq(false), any());
 
         Handler handler = new Handler(Looper.getMainLooper());
         TestReceiver resultReceiver = new TestReceiver(handler);
 
         JsonMap value = JsonMap.newBuilder()
-                               .put(PromptPermissionAction.PERMISSION_ARG_KEY, Permission.POST_NOTIFICATIONS)
+                               .put(PromptPermissionAction.PERMISSION_ARG_KEY, Permission.DISPLAY_NOTIFICATIONS)
                                .build();
 
         Bundle metadata = new Bundle();
@@ -135,7 +135,7 @@ public class PromptPermissionActionTest extends BaseTestCase {
 
         assertEquals(PermissionStatus.DENIED, resultReceiver.before);
         assertEquals(PermissionStatus.GRANTED, resultReceiver.after);
-        assertEquals(Permission.POST_NOTIFICATIONS, resultReceiver.permission);
+        assertEquals(Permission.DISPLAY_NOTIFICATIONS, resultReceiver.permission);
     }
 
     static class TestReceiver extends PermissionResultReceiver {

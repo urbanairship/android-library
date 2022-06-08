@@ -199,7 +199,7 @@ public class PromptPermissionAction extends Action {
     boolean shouldFallbackToNotificationSystemSettings(@NonNull Args args, @NonNull PermissionStatus before) {
         Context context = UAirship.getApplicationContext();
         return args.fallbackSystemSettings &&
-                args.permission == Permission.POST_NOTIFICATIONS &&
+                args.permission == Permission.DISPLAY_NOTIFICATIONS &&
                 before == PermissionStatus.DENIED &&
                 !NotificationUtils.isPermissionPromptSupported(context);
     }

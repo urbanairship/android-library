@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.permission;
 
 import com.urbanairship.json.JsonException;
@@ -8,14 +10,15 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
+/**
+ * Device permissions.
+ */
 public enum Permission implements JsonSerializable {
-    POST_NOTIFICATIONS("post_notifications"),
-    LOCATION("location"),
-    BLUETOOTH("bluetooth"),
-    CAMERA("camera"),
-    MIC("mic"),
-    MEDIA("media"),
-    CONTACTS("contacts");
+    // Display notifications
+    DISPLAY_NOTIFICATIONS("display_notifications"),
+
+    // Access location
+    LOCATION("location");
 
     @NonNull
     private final String value;

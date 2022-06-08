@@ -78,7 +78,7 @@ public class EnableFeatureAction extends PromptPermissionAction {
                 return new PromptPermissionAction.Args(Permission.LOCATION, true, true);
 
             case FEATURE_USER_NOTIFICATIONS:
-                return new PromptPermissionAction.Args(Permission.POST_NOTIFICATIONS, true, true);
+                return new PromptPermissionAction.Args(Permission.DISPLAY_NOTIFICATIONS, true, true);
         }
 
         return super.parseArg(arguments);

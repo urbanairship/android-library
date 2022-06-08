@@ -26,7 +26,6 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
-import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.notifications.AirshipNotificationProvider;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -303,13 +302,14 @@ public class PushManager extends AirshipComponent {
         privacyManager.addListener(() -> updatePush());
 
         permissionsManager.addAirshipEnabler(permission -> {
-            if (permission == Permission.POST_NOTIFICATIONS) {
+            if (permission == Permission.DISPLAY_NOTIFICATIONS) {
                 privacyManager.enable(PrivacyManager.FEATURE_PUSH);
-                setUserNotificationsEnabled(true);
+                preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true);
+                airshipChannel.updateRegistration();
             }
         });
 
-        permissionsManager.setPermissionDelegate(Permission.POST_NOTIFICATIONS, new NotificationsPermissionDelegate());
+        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, new NotificationsPermissionDelegate());
 
         updatePush();
     }
@@ -494,7 +494,7 @@ public class PushManager extends AirshipComponent {
      */
     public void setUserNotificationsEnabled(boolean enabled) {
         preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled);
-        permissionsManager.requestPermission(Permission.POST_NOTIFICATIONS, permissionStatus -> airshipChannel.updateRegistration());
+        permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS);
     }
 
     /**
