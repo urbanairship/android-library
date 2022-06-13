@@ -23,6 +23,7 @@ android {
             }
         }
     }
+    namespace 'com.urbanairship.chat'
 }
 
 kapt.includeCompileClasspath = false

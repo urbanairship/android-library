@@ -20,9 +20,10 @@ import com.urbanairship.base.Supplier;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionRequestResult;
 import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
-import com.urbanairship.push.notifications.NotificationUtils;
+import com.urbanairship.push.AirshipNotificationManager;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -31,14 +32,14 @@ import androidx.annotation.Keep;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.util.Consumer;
+import androidx.core.content.ContextCompat;
 
 /**
  * An action that prompts for permission.
  * <p>
  * Expected value:
  * - permission: post_notifications, contacts, bluetooth, location, media, mic, or camera
- * - fallback_system_settings: On older Android versions, fallback to system settings for disabled notifications.
+ * - fallback_system_settings: {@code true} to navigate to app settings if the permission is silently denied.
  * - allow_airship_usage: If the permission is granted, any Airship features that depend on the
  * permission will be enabled as well, e.g., enable user notifications on PushManager and push feature
  * on privacy Manager if notifications are allowed.
@@ -152,28 +153,29 @@ public class PromptPermissionAction extends Action {
     }
 
     protected void prompt(@NonNull Args args, @Nullable ResultReceiver resultReceiver) throws ExecutionException, InterruptedException {
-        PermissionsManager permissionsManager = permissionsManagerSupplier.get();
-        Objects.requireNonNull(permissionsManager);
+        PermissionsManager permissionsManager = Objects.requireNonNull(permissionsManagerSupplier.get());
 
         permissionsManager.checkPermissionStatus(args.permission, before -> {
-            if (shouldFallbackToNotificationSystemSettings(args, before)) {
-                navigateToNotificationSettings();
+            permissionsManager.requestPermission(args.permission, args.enableAirshipUsage, requestResult -> {
+                if (shouldFallbackToAppSettings(args, requestResult)) {
+                    navigatePermissionSettings(args.permission);
 
-                if (resultReceiver != null) {
-                    GlobalActivityMonitor activityMonitor = GlobalActivityMonitor.shared(UAirship.getApplicationContext());
-                    activityMonitor.addApplicationListener(new SimpleApplicationListener() {
-                        @Override
-                        public void onForeground(long time) {
-                            permissionsManager.checkPermissionStatus(args.permission, after -> {
-                                sendResult(args.permission, before, after, resultReceiver);
-                                activityMonitor.removeApplicationListener(this);
-                            });
-                        }
-                    });
+                    if (resultReceiver != null) {
+                        GlobalActivityMonitor activityMonitor = GlobalActivityMonitor.shared(UAirship.getApplicationContext());
+                        activityMonitor.addApplicationListener(new SimpleApplicationListener() {
+                            @Override
+                            public void onForeground(long time) {
+                                permissionsManager.checkPermissionStatus(args.permission, after -> {
+                                    sendResult(args.permission, before, after, resultReceiver);
+                                    activityMonitor.removeApplicationListener(this);
+                                });
+                            }
+                        });
+                    }
+                } else {
+                    permissionsManager.requestPermission(args.permission, args.enableAirshipUsage, after -> sendResult(args.permission, before, requestResult.getPermissionStatus(), resultReceiver));
                 }
-            } else {
-                permissionsManager.requestPermission(args.permission, args.enableAirshipUsage, after -> sendResult(args.permission, before, after, resultReceiver));
-            }
+            });
         });
     }
 
@@ -196,12 +198,19 @@ public class PromptPermissionAction extends Action {
         return true;
     }
 
-    boolean shouldFallbackToNotificationSystemSettings(@NonNull Args args, @NonNull PermissionStatus before) {
-        Context context = UAirship.getApplicationContext();
+    boolean shouldFallbackToAppSettings(@NonNull Args args, @NonNull PermissionRequestResult result) {
         return args.fallbackSystemSettings &&
-                args.permission == Permission.DISPLAY_NOTIFICATIONS &&
-                before == PermissionStatus.DENIED &&
-                !NotificationUtils.isPermissionPromptSupported(context);
+                result.getPermissionStatus() == PermissionStatus.DENIED &&
+                result.isSilentlyDenied();
+    }
+
+    @MainThread
+    private static void navigatePermissionSettings(@NonNull Permission permission) {
+        if (permission == Permission.DISPLAY_NOTIFICATIONS) {
+            navigateToNotificationSettings();
+        } else {
+            navigateToAppSettings();
+        }
     }
 
     @MainThread
@@ -232,7 +241,23 @@ public class PromptPermissionAction extends Action {
             Logger.debug(e, "Failed to launch notification settings.");
         }
 
-        intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        navigateToAppSettings();
+    }
+
+    private static void navigateToAppSettings() {
+        Context context = UAirship.getApplicationContext();
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                .addCategory(Intent.CATEGORY_DEFAULT)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .setData(Uri.parse("package:" + UAirship.getPackageName()));
+
+        try {
+            context.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Logger.error(e, "Unable to launch settings details activity.");
+        }
+
+        intent = new Intent(Settings.ACTION_APPLICATION_SETTINGS)
                 .addCategory(Intent.CATEGORY_DEFAULT)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .setData(Uri.parse("package:" + UAirship.getPackageName()));

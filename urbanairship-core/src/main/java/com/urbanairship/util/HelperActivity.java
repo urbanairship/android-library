@@ -16,13 +16,14 @@ import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.util.Consumer;
 
@@ -30,8 +31,11 @@ import androidx.core.util.Consumer;
  * An activity that is used by the Action framework to enable starting other activities
  * for results. Ordinarily this class should not be instantiated directly. Instead, see
  * {@link com.urbanairship.util.HelperActivity#startActivityForResult(android.content.Context, android.content.Intent)}.
+ *
+ * @deprecated Will be removed in SDK 17. Use your own activity to request results.
  */
-public class HelperActivity extends Activity {
+@Deprecated
+public class HelperActivity extends AppCompatActivity {
 
     /**
      * Intent extra holding the permissions.
@@ -57,8 +61,7 @@ public class HelperActivity extends Activity {
     @NonNull
     public static final String START_ACTIVITY_INTENT_EXTRA = "com.urbanairship.util.START_ACTIVITY_INTENT_EXTRA";
 
-    private ResultReceiver resultReceiver;
-    private static int requestCode = 0;
+    private List<Intent> intents = new ArrayList<>();
 
     @Override
     public final void onCreate(@Nullable Bundle savedInstanceState) {
@@ -71,33 +74,53 @@ public class HelperActivity extends Activity {
             return;
         }
 
-        Intent intent = getIntent();
+        if (savedInstanceState == null) {
+            addIntent(getIntent());
+            processNextIntent();
+        }
+    }
 
-        if (intent == null) {
-            Logger.error("HelperActivity - Started with null intent");
+    private void addIntent(@Nullable Intent intent) {
+        if (intent != null) {
+            intents.add(intent);
+        }
+    }
+
+    private void processNextIntent() {
+        if (intents.isEmpty()) {
             finish();
             return;
         }
 
-        if (savedInstanceState == null) {
-            Intent startActivityIntent = intent.getParcelableExtra(START_ACTIVITY_INTENT_EXTRA);
-            String[] permissions = intent.getStringArrayExtra(PERMISSIONS_EXTRA);
+        Intent intent = intents.get(0);
+        Intent startActivityIntent = intent.getParcelableExtra(START_ACTIVITY_INTENT_EXTRA);
+        String[] permissions = intent.getStringArrayExtra(PERMISSIONS_EXTRA);
 
-            if (startActivityIntent != null) {
-                resultReceiver = intent.getParcelableExtra(RESULT_RECEIVER_EXTRA);
-                startActivityForResult(startActivityIntent, ++requestCode);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && permissions != null) {
-                resultReceiver = intent.getParcelableExtra(RESULT_RECEIVER_EXTRA);
-                requestPermissions(permissions, ++requestCode);
-            } else {
-                Logger.error("HelperActivity - Started without START_ACTIVITY_INTENT_EXTRA or PERMISSIONS_EXTRA extra.");
-                finish();
-            }
+        if (startActivityIntent != null) {
+            startActivityForResult(startActivityIntent, 0);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && permissions != null) {
+            requestPermissions(permissions, 0);
+        } else {
+            Logger.error("HelperActivity - Started without START_ACTIVITY_INTENT_EXTRA or PERMISSIONS_EXTRA extra.");
+            intents.remove(0);
+            processNextIntent();
         }
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        intents.add(intent);
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (intents.isEmpty()) {
+            finish();
+            return;
+        }
+
+        ResultReceiver resultReceiver = intents.remove(0).getParcelableExtra(RESULT_RECEIVER_EXTRA);
         if (resultReceiver != null) {
             Bundle bundledData = new Bundle();
             bundledData.putParcelable(RESULT_INTENT_EXTRA, data);
@@ -105,11 +128,18 @@ public class HelperActivity extends Activity {
         }
 
         super.onActivityResult(requestCode, resultCode, data);
-        this.finish();
+        processNextIntent();
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        if (intents.isEmpty()) {
+            finish();
+            return;
+        }
+
+        ResultReceiver resultReceiver = intents.remove(0).getParcelableExtra(RESULT_RECEIVER_EXTRA);
+
         if (resultReceiver != null) {
             Bundle bundledData = new Bundle();
             bundledData.putIntArray(RESULT_INTENT_EXTRA, grantResults);
@@ -117,11 +147,11 @@ public class HelperActivity extends Activity {
         }
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        finish();
+        processNextIntent();
     }
 
     @MainThread
-    public static void requestPermissions(@NonNull Context context, @NonNull String[] permissions, @Nullable Consumer<int[]> consumer) {
+    private static void requestPermissions(@NonNull Context context, @NonNull String[] permissions, @Nullable Consumer<int[]> consumer) {
         context = context.getApplicationContext();
         boolean permissionsDenied = false;
 
@@ -133,11 +163,12 @@ public class HelperActivity extends Activity {
             }
         }
 
-
         Handler handler = new Handler(Looper.getMainLooper());
 
         if (!permissionsDenied || Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            handler.post(() -> consumer.accept(result));
+            if (consumer != null) {
+                handler.post(() -> consumer.accept(result));
+            }
             return;
         }
 
@@ -145,7 +176,13 @@ public class HelperActivity extends Activity {
             @Override
             public void onReceiveResult(int resultCode, Bundle resultData) {
                 int[] receiverResults = resultData.getIntArray(HelperActivity.RESULT_INTENT_EXTRA);
-                consumer.accept(receiverResults);
+                if (receiverResults == null) {
+                    receiverResults = new int[0];
+                }
+
+                if (consumer != null) {
+                    consumer.accept(receiverResults);
+                }
             }
         };
 
@@ -233,6 +270,20 @@ public class HelperActivity extends Activity {
         }
 
         return result;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        for (Intent intent : intents) {
+            ResultReceiver resultReceiver = intent.getParcelableExtra(RESULT_RECEIVER_EXTRA);
+            if (resultReceiver != null) {
+                resultReceiver.send(RESULT_CANCELED, new Bundle());
+            }
+        }
+
+        intents.clear();
     }
 
     /**

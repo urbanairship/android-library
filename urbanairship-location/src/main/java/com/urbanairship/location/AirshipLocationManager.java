@@ -61,10 +61,6 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
     private static final String BACKGROUND_UPDATES_ALLOWED_KEY = "com.urbanairship.location.BACKGROUND_UPDATES_ALLOWED";
     private static final String LOCATION_OPTIONS_KEY = "com.urbanairship.location.LOCATION_OPTIONS";
 
-    private static final String NOT_ALLOWED = "NOT_ALLOWED";
-    private static final String ALWAYS_ALLOWED = "ALWAYS_ALLOWED";
-    private static final String SYSTEM_LOCATION_DISABLED = "SYSTEM_LOCATION_DISABLED";
-
     private final Context context;
     private final UALocationProvider locationProvider;
     private final ApplicationListener listener;
@@ -115,7 +111,7 @@ public class AirshipLocationManager extends AirshipComponent implements AirshipL
      * @param preferenceDataStore The data store.
      * @param privacyManager The privacy manager.
      * @param airshipChannel The channel instance.
-     * @param analytics The analytics instance.
+     * @param permissionsManager The permissions manager.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

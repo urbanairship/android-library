@@ -6,7 +6,6 @@ import android.content.Context;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
 import androidx.core.util.Consumer;
 
 /**
@@ -21,6 +20,7 @@ public interface PermissionDelegate {
      * @param callback The callback.
      * @return The {@link PermissionStatus}.
      */
+    @MainThread
     void checkPermissionStatus(@NonNull Context context, @NonNull Consumer<PermissionStatus> callback);
 
     /**
@@ -30,6 +30,6 @@ public interface PermissionDelegate {
      * @param callback The callback.
      */
     @MainThread
-    void requestPermission(@NonNull Context context, @NonNull Consumer<PermissionStatus> callback);
+    void requestPermission(@NonNull Context context, @NonNull Consumer<PermissionRequestResult> callback);
 
 }

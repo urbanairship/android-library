@@ -15,6 +15,9 @@ import com.urbanairship.PushProviders;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
@@ -26,6 +29,8 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionDelegate;
+import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.notifications.AirshipNotificationProvider;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -49,8 +54,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 import androidx.annotation.XmlRes;
-import androidx.arch.core.util.Function;
-import androidx.core.app.NotificationManagerCompat;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -209,9 +213,9 @@ public class PushManager extends AirshipComponent {
 
     static final String QUIET_TIME_ENABLED = KEY_PREFIX + ".QUIET_TIME_ENABLED";
     static final String QUIET_TIME_INTERVAL = KEY_PREFIX + ".QUIET_TIME_INTERVAL";
-
-    // As of version 8.0.0
     static final String PUSH_TOKEN_KEY = KEY_PREFIX + ".REGISTRATION_TOKEN_KEY";
+
+    static final String REQUEST_PERMISSION_KEY = KEY_PREFIX + ".REQUEST_PERMISSION_KEY";
 
     //singleton stuff
     private final Context context;
@@ -222,11 +226,12 @@ public class PushManager extends AirshipComponent {
     private NotificationProvider notificationProvider;
     private final Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
     private final PreferenceDataStore preferenceDataStore;
+    private final ActivityMonitor activityMonitor;
 
     private final JobDispatcher jobDispatcher;
     private final NotificationChannelRegistry notificationChannelRegistry;
     private final PrivacyManager privacyManager;
-    private final Function<Context, Boolean> notificationsEnabledCheck;
+    private final AirshipNotificationManager notificationManager;
 
     private NotificationListener notificationListener;
     private final List<PushTokenListener> pushTokenListeners = new CopyOnWriteArrayList<>();
@@ -239,6 +244,7 @@ public class PushManager extends AirshipComponent {
 
     private final AirshipChannel airshipChannel;
     private PushProvider pushProvider;
+    private Boolean isPushManagerEnabled;
 
     private volatile boolean shouldDispatchUpdateTokenJob = true;
 
@@ -262,7 +268,7 @@ public class PushManager extends AirshipComponent {
 
         this(context, preferenceDataStore, config, privacyManager, pushProvidersSupplier,
                 airshipChannel, analytics, permissionsManager, JobDispatcher.shared(context),
-                input -> NotificationManagerCompat.from(input).areNotificationsEnabled());
+                AirshipNotificationManager.from(context), GlobalActivityMonitor.shared(context));
     }
 
     /**
@@ -273,7 +279,8 @@ public class PushManager extends AirshipComponent {
                 @NonNull AirshipRuntimeConfig config, @NonNull PrivacyManager privacyManager,
                 @NonNull Supplier<PushProviders> pushProvidersSupplier, @NonNull AirshipChannel airshipChannel,
                 @NonNull Analytics analytics, @NonNull PermissionsManager permissionsManager,
-                @NonNull JobDispatcher dispatcher, Function<Context, Boolean> notificationsEnabledCheck) {
+                @NonNull JobDispatcher dispatcher, @NonNull AirshipNotificationManager notificationManager,
+                @NonNull ActivityMonitor activityMonitor) {
         super(context, preferenceDataStore);
         this.context = context;
         this.preferenceDataStore = preferenceDataStore;
@@ -284,7 +291,8 @@ public class PushManager extends AirshipComponent {
         this.analytics = analytics;
         this.permissionsManager = permissionsManager;
         this.jobDispatcher = dispatcher;
-        this.notificationsEnabledCheck = notificationsEnabledCheck;
+        this.notificationManager = notificationManager;
+        this.activityMonitor = activityMonitor;
         this.notificationProvider = new AirshipNotificationProvider(context, config.getConfigOptions());
         this.notificationChannelRegistry = new NotificationChannelRegistry(context, config.getConfigOptions());
 
@@ -297,9 +305,9 @@ public class PushManager extends AirshipComponent {
     @Override
     protected void init() {
         super.init();
-        airshipChannel.addChannelRegistrationPayloadExtender(builder -> extendChannelRegistrationPayload(builder));
-        analytics.addHeaderDelegate(() -> createAnalyticsHeaders());
-        privacyManager.addListener(() -> updatePush());
+        airshipChannel.addChannelRegistrationPayloadExtender(this::extendChannelRegistrationPayload);
+        analytics.addHeaderDelegate(this::createAnalyticsHeaders);
+        privacyManager.addListener(this::updateManagerEnablement);
 
         permissionsManager.addAirshipEnabler(permission -> {
             if (permission == Permission.DISPLAY_NOTIFICATIONS) {
@@ -309,13 +317,56 @@ public class PushManager extends AirshipComponent {
             }
         });
 
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, new NotificationsPermissionDelegate());
+        permissionsManager.addOnPermissionStatusChangedListener((permission, status) -> {
+            if (permission == Permission.DISPLAY_NOTIFICATIONS) {
+                airshipChannel.updateRegistration();
+            }
+        });
 
-        updatePush();
+        String defaultChannelId = config.getConfigOptions().notificationChannel;
+        if (defaultChannelId == null) {
+            defaultChannelId = AirshipNotificationProvider.DEFAULT_NOTIFICATION_CHANNEL;
+        }
+
+        PermissionDelegate delegate = new NotificationsPermissionDelegate(
+                defaultChannelId,
+                preferenceDataStore,
+                notificationManager,
+                notificationChannelRegistry,
+                activityMonitor
+        );
+
+        activityMonitor.addApplicationListener(new SimpleApplicationListener() {
+            @Override
+            public void onForeground(long time) {
+                checkPermission();
+            }
+        });
+
+        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, delegate);
+        updateManagerEnablement();
     }
 
-    private void updatePush() {
+    private void checkPermission() {
+        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)) {
+            return;
+        }
+
+        permissionsManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS,  status -> {
+            if (preferenceDataStore.getBoolean(REQUEST_PERMISSION_KEY, true) && activityMonitor.isAppForegrounded() && getUserNotificationsEnabled()) {
+                permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS);
+                preferenceDataStore.put(REQUEST_PERMISSION_KEY, false);
+            }
+        });
+    }
+
+    private void updateManagerEnablement() {
         if (privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH) && isComponentEnabled()) {
+            if (isPushManagerEnabled != null && isPushManagerEnabled) {
+                return;
+            }
+
+            isPushManagerEnabled = true;
             if (pushProvider == null) {
                 pushProvider = resolvePushProvider();
                 String pushDeliveryType = preferenceDataStore.getString(PUSH_DELIVERY_TYPE, null);
@@ -328,7 +379,14 @@ public class PushManager extends AirshipComponent {
             if (shouldDispatchUpdateTokenJob) {
                 dispatchUpdateJob();
             }
+
+            checkPermission();
         } else {
+            if (isPushManagerEnabled != null && !shouldDispatchUpdateTokenJob) {
+                return;
+            }
+
+            isPushManagerEnabled = false;
             preferenceDataStore.remove(PUSH_DELIVERY_TYPE);
             preferenceDataStore.remove(PUSH_TOKEN_KEY);
             shouldDispatchUpdateTokenJob = true;
@@ -349,7 +407,7 @@ public class PushManager extends AirshipComponent {
     private PushProvider resolvePushProvider() {
         // Existing provider class
         String existingProviderClass = preferenceDataStore.getString(PROVIDER_CLASS_KEY, null);
-        PushProviders pushProviders = pushProvidersSupplier.get();
+        PushProviders pushProviders = ObjectsCompat.requireNonNull(pushProvidersSupplier.get());
         // Try to use the same provider
         if (!UAStringUtil.isEmpty(existingProviderClass)) {
             PushProvider provider = pushProviders.getProvider(config.getPlatform(), existingProviderClass);
@@ -407,7 +465,7 @@ public class PushManager extends AirshipComponent {
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onComponentEnableChange(boolean isEnabled) {
-        updatePush();
+        updateManagerEnablement();
     }
 
     /**
@@ -493,8 +551,13 @@ public class PushManager extends AirshipComponent {
      * @param enabled A boolean indicating whether user push is enabled.
      */
     public void setUserNotificationsEnabled(boolean enabled) {
-        preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled);
-        permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS);
+        if (getUserNotificationsEnabled() != enabled) {
+            preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled);
+            if (enabled) {
+                preferenceDataStore.put(REQUEST_PERMISSION_KEY, true);
+            }
+            checkPermission();
+        }
     }
 
     /**
@@ -701,7 +764,7 @@ public class PushManager extends AirshipComponent {
      * @return {@code true} if notifications are opted in, otherwise {@code false}.
      */
     public boolean areNotificationsOptedIn() {
-        return getUserNotificationsEnabled() && this.notificationsEnabledCheck.apply(context);
+        return getUserNotificationsEnabled() && notificationManager.areNotificationsEnabled();
     }
 
     /**
@@ -978,7 +1041,7 @@ public class PushManager extends AirshipComponent {
                 Logger.debug(e, "Unable to parse canonical Ids.");
             }
 
-            List<JsonValue> canonicalIds = jsonList == null ? new ArrayList<JsonValue>() : jsonList.getList();
+            List<JsonValue> canonicalIds = jsonList == null ? new ArrayList<>() : jsonList.getList();
 
             // Wrap the canonicalId
             JsonValue id = JsonValue.wrap(canonicalId);
@@ -1011,49 +1074,49 @@ public class PushManager extends AirshipComponent {
     JobResult performPushRegistration(boolean updateChannelOnChange) {
         shouldDispatchUpdateTokenJob = false;
         String currentToken = getPushToken();
+        final PushProvider provider = pushProvider;
 
-        if (pushProvider == null) {
+        if (provider == null) {
             Logger.info("PushManager - Push registration failed. Missing push provider.");
             return JobResult.SUCCESS;
         }
 
-        synchronized (pushProvider) {
-            if (!pushProvider.isAvailable(context)) {
-                Logger.warn("PushManager - Push registration failed. Push provider unavailable: %s", pushProvider);
-                return JobResult.RETRY;
-            }
-
-            String token;
-            try {
-                token = pushProvider.getRegistrationToken(context);
-            } catch (PushProvider.RegistrationException e) {
-                if (e.isRecoverable()) {
-                    Logger.debug("Push registration failed with error: %s. Will retry.", e.getMessage());
-                    Logger.verbose(e);
-                    return JobResult.RETRY;
-                } else {
-                    Logger.error(e, "PushManager - Push registration failed.");
-                    return JobResult.SUCCESS;
-                }
-            }
-
-            if (token != null && !UAStringUtil.equals(token, currentToken)) {
-                Logger.info("PushManager - Push registration updated.");
-
-                preferenceDataStore.put(PUSH_DELIVERY_TYPE, pushProvider.getDeliveryType());
-                preferenceDataStore.put(PUSH_TOKEN_KEY, token);
-
-                for (PushTokenListener listener : pushTokenListeners) {
-                    listener.onPushTokenUpdated(token);
-                }
-
-                if (updateChannelOnChange) {
-                    airshipChannel.updateRegistration();
-                }
-            }
-
-            return JobResult.SUCCESS;
+        if (!provider.isAvailable(context)) {
+            Logger.warn("PushManager - Push registration failed. Push provider unavailable: %s", provider);
+            return JobResult.RETRY;
         }
+
+        String token;
+        try {
+            token = provider.getRegistrationToken(context);
+        } catch (PushProvider.RegistrationException e) {
+            if (e.isRecoverable()) {
+                Logger.debug("Push registration failed with error: %s. Will retry.", e.getMessage());
+                Logger.verbose(e);
+                return JobResult.RETRY;
+            } else {
+                Logger.error(e, "PushManager - Push registration failed.");
+                return JobResult.SUCCESS;
+            }
+        }
+
+        if (token != null && !UAStringUtil.equals(token, currentToken)) {
+            Logger.info("PushManager - Push registration updated.");
+
+            preferenceDataStore.put(PUSH_DELIVERY_TYPE, provider.getDeliveryType());
+            preferenceDataStore.put(PUSH_TOKEN_KEY, token);
+
+            for (PushTokenListener listener : pushTokenListeners) {
+                listener.onPushTokenUpdated(token);
+            }
+
+            if (updateChannelOnChange) {
+                airshipChannel.updateRegistration();
+            }
+        }
+
+        return JobResult.SUCCESS;
+
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -1061,6 +1124,7 @@ public class PushManager extends AirshipComponent {
         return internalNotificationListeners;
     }
 
+    @NonNull
     private Map<String, String> createAnalyticsHeaders() {
         if (isComponentEnabled() && privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)) {
             Map<String, String> headers = new HashMap<>();

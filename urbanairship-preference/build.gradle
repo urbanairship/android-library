@@ -8,3 +8,7 @@ dependencies {
     api project(':urbanairship-core')
     api "androidx.preference:preference:$rootProject.androidxPreferenceVersion"
 }
+
+android {
+    namespace 'com.urbanairship.preference'
+}

@@ -15,16 +15,11 @@
         </item>
     </style>
 
-    <!-- Style for Helper Activity -->
-    <style name="UrbanAirship.HelperActivity">
+    <style name="UrbanAirship.PermissionsActivity" parent="Theme.AppCompat.Dialog">
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:colorBackgroundCacheHint">@null</item>
-        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowTranslucentStatus" tools:targetApi="kitkat">true</item>
-        <item name="android:statusBarColor" tools:targetApi="lollipop">@android:color/transparent
-        </item>
+        <item name="windowNoTitle">true</item>
     </style>
+
+    <style name="UrbanAirship.HelperActivity" parent="UrbanAirship.PermissionsActivity" />
 
 </resources>

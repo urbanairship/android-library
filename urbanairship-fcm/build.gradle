@@ -9,3 +9,7 @@ dependencies {
     implementation "com.google.firebase:firebase-messaging:$rootProject.firebaseMessagingVersion"
     implementation "com.google.android.gms:play-services-base:$rootProject.playServicesBaseVersion"
 }
+
+android {
+    namespace 'com.urbanairship.push.fcm'
+}

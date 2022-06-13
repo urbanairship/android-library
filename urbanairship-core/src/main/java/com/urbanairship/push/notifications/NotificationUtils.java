@@ -74,16 +74,4 @@ public class NotificationUtils {
 
         return null;
     }
-
-    /**
-     * Checks if the app supports the notification permissions.
-     *
-     * @param context The context.
-     * @return {@code true} if the permission prompt is supported, otherwise {@code false}.
-     */
-    public static boolean isPermissionPromptSupported(@NonNull Context context) {
-        // Android 13 - 33
-        return context.getApplicationInfo().targetSdkVersion >= 33 && Build.VERSION.SDK_INT >= 33;
-    }
-
 }

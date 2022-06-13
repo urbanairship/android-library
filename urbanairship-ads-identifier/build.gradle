@@ -8,3 +8,7 @@ dependencies {
     api project(':urbanairship-core')
     implementation "com.google.android.gms:play-services-ads-identifier:$rootProject.playServicesAdsIdentifierVersion"
 }
+
+android {
+    namespace 'com.urbanairship.aaid'
+}

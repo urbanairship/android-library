@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.permission;
 
 import com.urbanairship.json.JsonException;
@@ -8,9 +10,23 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 
+/**
+ * Permissions status.
+ */
 public enum PermissionStatus implements JsonSerializable {
+    /**
+     * Granted status.
+     */
     GRANTED("granted"),
+
+    /**
+     * Denied status.
+     */
     DENIED("denied"),
+
+    /**
+     * Not determined status.
+     */
     NOT_DETERMINED("not_determined");
 
     @NonNull

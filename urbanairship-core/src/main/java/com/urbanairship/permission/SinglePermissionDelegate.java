@@ -4,12 +4,9 @@ package com.urbanairship.permission;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.util.Log;
 
 import com.urbanairship.Logger;
-import com.urbanairship.util.HelperActivity;
 
-import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.core.util.Consumer;
@@ -45,24 +42,7 @@ public class SinglePermissionDelegate implements PermissionDelegate {
     }
 
     @Override
-    public void requestPermission(@NonNull Context context, @NonNull Consumer<PermissionStatus> callback) {
-        HelperActivity.requestPermissions(context, new String[] { permission }, result -> {
-            for (int i : result) {
-                if (i == PackageManager.PERMISSION_GRANTED) {
-                    callback.accept(PermissionStatus.GRANTED);
-                    onPermissionGranted();
-                    return;
-                }
-            }
-            callback.accept(PermissionStatus.DENIED);
-        });
+    public void requestPermission(@NonNull Context context, @NonNull Consumer<PermissionRequestResult> callback) {
+        PermissionsActivity.requestPermission(context, permission, callback);
     }
-
-    /**
-     * Called when the permission is granted.
-     */
-    @MainThread
-    protected void onPermissionGranted() {
-    }
-
 }

@@ -1,17 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion rootProject.compileSdkVersion
+    compileSdkVersion rootProject.sampleCompileSdkVersion
 
-    lintOptions {
-        disable 'MissingTranslation', 'AppCompatResource'
-        abortOnError false
-    }
 
     defaultConfig {
         applicationId "com.urbanairship.sample"
         minSdkVersion 21
-        targetSdkVersion rootProject.targetSdkVersion
+        targetSdkVersion rootProject.sampleTargetSdkVersion
         versionCode 1
         versionName "1.0"
         vectorDrawables.useSupportLibrary = true
@@ -33,6 +29,11 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    lint {
+        abortOnError false
+        disable 'MissingTranslation', 'AppCompatResource'
+    }
+    namespace 'com.urbanairship.sample'
 }
 
 dependencies {

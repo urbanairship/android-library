@@ -12,8 +12,12 @@ buildscript {
         targetSdkVersion = 31
         minSdkVersion = 21
 
+        // Sample override
+        sampleCompileSdkVersion = 33
+        sampleTargetSdkVersion = 33
+
         // Gradle plugins
-        gradlePluginVersion = '7.1.3'
+        gradlePluginVersion = '7.2.1'
         googleServicesPluginVersion = '4.3.10'
         spotlessPluginVersion = '6.4.2'
 

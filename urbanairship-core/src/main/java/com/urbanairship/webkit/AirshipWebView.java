@@ -104,8 +104,6 @@ public class AirshipWebView extends WebView {
     private void init(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle, int defResStyle) {
         WebSettings settings = getSettings();
 
-        settings.setAppCacheEnabled(true);
-        settings.setAppCachePath(getCachePath());
         settings.setDomStorageEnabled(true);
 
         if (attrs != null) {
@@ -224,21 +222,6 @@ public class AirshipWebView extends WebView {
         return webViewClient;
     }
 
-    /**
-     * Gets the cache directory path. Creates the directories if
-     * it does not exist.
-     *
-     * @return The absolute path to the cache directory.
-     */
-    @NonNull
-    private String getCachePath() {
-        File cacheDirectory = new File(UAirship.getApplicationContext().getCacheDir(), CACHE_DIRECTORY);
-        if (!cacheDirectory.exists() && !cacheDirectory.mkdirs()) {
-            Logger.error("Failed to create the web cache directory.");
-        }
-
-        return cacheDirectory.getAbsolutePath();
-    }
 
     /**
      * Set the client authorization request.

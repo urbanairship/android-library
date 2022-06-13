@@ -9,6 +9,7 @@ import android.os.Looper;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionRequestResult;
 import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
 
@@ -113,8 +114,8 @@ public class PromptPermissionActionTest extends BaseTestCase {
         }).when(mockPermissionManager).checkPermissionStatus(eq(Permission.DISPLAY_NOTIFICATIONS), any());
 
         doAnswer(invocation -> {
-            Consumer<PermissionStatus> consumer = invocation.getArgument(2);
-            consumer.accept(PermissionStatus.GRANTED);
+            Consumer<PermissionRequestResult> consumer = invocation.getArgument(2);
+            consumer.accept(PermissionRequestResult.granted());
             return null;
         }).when(mockPermissionManager).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), eq(false), any());
 

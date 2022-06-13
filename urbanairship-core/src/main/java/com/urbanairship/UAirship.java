@@ -703,7 +703,7 @@ public class UAirship {
         this.privacyManager.migrateData();
 
 
-        this.permissionsManager = new PermissionsManager(application);
+        this.permissionsManager = PermissionsManager.newPermissionsManager(application);
 
         this.localeManager = new LocaleManager(application, preferenceDataStore);
 

@@ -17,3 +17,7 @@ dependencies {
     testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
     testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
 }
+
+android {
+    namespace 'com.urbanairship.location'
+}

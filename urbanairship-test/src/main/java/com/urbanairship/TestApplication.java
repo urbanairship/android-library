@@ -4,9 +4,6 @@ package com.urbanairship;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
-import android.app.Application.ActivityLifecycleCallbacks;
-import android.content.Context;
-import android.content.pm.ProviderInfo;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.analytics.Analytics;
@@ -14,9 +11,6 @@ import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.contacts.Contact;
 import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.job.JobInfo;
-import com.urbanairship.job.Scheduler;
-import com.urbanairship.job.SchedulerException;
 import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
@@ -27,13 +21,10 @@ import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.PlatformUtils;
 
-import org.robolectric.Robolectric;
 import org.robolectric.TestLifecycleApplication;
 
 import java.lang.reflect.Method;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 @SuppressLint("VisibleForTests")
@@ -73,7 +64,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.localeManager = new LocaleManager(this, preferenceDataStore);
         UAirship.sharedAirship.runtimeConfig = testRuntimeConfig;
 
-        UAirship.sharedAirship.permissionsManager = new PermissionsManager(this);
+        UAirship.sharedAirship.permissionsManager = PermissionsManager.newPermissionsManager(this);
         UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, privacyManager, UAirship.sharedAirship.localeManager);
 
         UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.channel, UAirship.sharedAirship.localeManager, UAirship.sharedAirship.permissionsManager);
