@@ -2,12 +2,33 @@
 
 package com.urbanairship.channel;
 
+import static android.os.Looper.getMainLooper;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 
-import com.google.common.cache.Cache;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
@@ -44,28 +65,6 @@ import java.util.UUID;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import static android.os.Looper.getMainLooper;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-import static org.robolectric.Shadows.shadowOf;
-
 /**
  * Tests for {@link AirshipChannel}.
  */
@@ -83,9 +82,9 @@ public class AirshipChannelTests extends BaseTestCase {
     private PreferenceDataStore dataStore;
 
     private TestAirshipRuntimeConfig runtimeConfig;
-    private TestClock clock = new TestClock();
+    private final TestClock clock = new TestClock();
     private PrivacyManager privacyManager;
-    private CachedValue<Set<String>> subscriptionListCache = new CachedValue<>(clock);
+    private final CachedValue<Set<String>> subscriptionListCache = new CachedValue<>(clock);
     private static final JobInfo UPDATE_CHANNEL_JOB = JobInfo.newBuilder()
                                                                   .setAction("ACTION_UPDATE_CHANNEL")
                                                                   .build();
@@ -764,10 +763,10 @@ public class AirshipChannelTests extends BaseTestCase {
                       .unsubscribe("bar")
                       .apply();
 
-        List<SubscriptionListMutation> expectedMutations = Arrays.asList(
-                SubscriptionListMutation.newSubscribeMutation("foo", 100L),
-                SubscriptionListMutation.newUnsubscribeMutation("bar", 100L)
-        );
+        SubscriptionListMutation mutation1 = SubscriptionListMutation.newSubscribeMutation("foo", 100L);
+        SubscriptionListMutation mutation2 = SubscriptionListMutation.newUnsubscribeMutation("bar", 100L);
+        List<SubscriptionListMutation> expectedMutations = Arrays.asList(mutation1, mutation2);
+
         verify(mockSubscriptionListRegistrar).addPendingMutations(expectedMutations);
 
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
@@ -1013,8 +1012,10 @@ public class AirshipChannelTests extends BaseTestCase {
         PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists(false);
         shadowMainLooper().idle();
 
-        // Result should be available immediately when returning from the cache.
-        assertEquals(result.getResult(), subscriptions);
+        result.addResultCallback(result1 -> {
+            assertEquals(subscriptions, result1);
+        });
+
         verify(mockSubscriptionListRegistrar, never()).fetchChannelSubscriptionLists();
     }
 

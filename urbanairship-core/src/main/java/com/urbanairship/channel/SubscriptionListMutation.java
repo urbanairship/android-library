@@ -1,5 +1,10 @@
 package com.urbanairship.channel;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.core.util.ObjectsCompat;
+
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -13,11 +18,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.core.util.ObjectsCompat;
 
 /**
  * Defines subscription list mutations.
@@ -147,6 +147,14 @@ public class SubscriptionListMutation implements JsonSerializable {
         }
 
         return result;
+    }
+
+    public void apply(Set<String> subscriptions) {
+        if (getAction().equals(ACTION_SUBSCRIBE)) {
+            subscriptions.add(getListId());
+        } else {
+            subscriptions.remove(getListId());
+        }
     }
 
     /**

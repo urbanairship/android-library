@@ -4,6 +4,13 @@ package com.urbanairship.contacts;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.Size;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
@@ -20,7 +27,6 @@ import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.channel.AttributeEditor;
 import com.urbanairship.channel.AttributeListener;
 import com.urbanairship.channel.AttributeMutation;
-import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.channel.TagGroupListener;
 import com.urbanairship.channel.TagGroupsEditor;
 import com.urbanairship.channel.TagGroupsMutation;
@@ -42,14 +48,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.Size;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
 /**
  * Airship contact. A contact is distinct from a channel and represents a "user"
@@ -81,6 +81,11 @@ public class Contact extends AirshipComponent {
      */
     private static final long SUBSCRIPTION_CACHE_LIFETIME_MS = 10 * 60 * 1000; // 10M
 
+    /**
+     * Max age for the contact subscription listing cache.
+     */
+    private static final long SUBSCRIPTION_LOCAL_HISTORY_CACHE_LIFETIME_MS = 10 * 60 * 1000; // 10M
+
     private static final String OPERATIONS_KEY = "com.urbanairship.contacts.OPERATIONS";
     private static final String LAST_RESOLVED_DATE_KEY = "com.urbanairship.contacts.LAST_RESOLVED_DATE_KEY";
     private static final String ANON_CONTACT_DATA_KEY = "com.urbanairship.contacts.ANON_CONTACT_DATA_KEY";
@@ -95,7 +100,7 @@ public class Contact extends AirshipComponent {
     private final ActivityMonitor activityMonitor;
     private final Clock clock;
     private final CachedValue<Map<String, Set<Scope>>> subscriptionListCache;
-
+    private final List<CachedValue<ScopedSubscriptionListMutation>> subscriptionListLocalHistory;
     private final Object operationLock = new Object();
     private final ContactApiClient contactApiClient;
     private boolean isContactIdRefreshed = false;
@@ -117,7 +122,7 @@ public class Contact extends AirshipComponent {
                    @NonNull AirshipChannel airshipChannel) {
         this(context, preferenceDataStore, JobDispatcher.shared(context), privacyManager,
                 airshipChannel, new ContactApiClient(runtimeConfig), GlobalActivityMonitor.shared(context),
-                Clock.DEFAULT_CLOCK, new CachedValue<>());
+                Clock.DEFAULT_CLOCK, new CachedValue<>(), new CopyOnWriteArrayList<>());
     }
 
     /**
@@ -126,7 +131,8 @@ public class Contact extends AirshipComponent {
     @VisibleForTesting
     Contact(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull JobDispatcher jobDispatcher,
             @NonNull PrivacyManager privacyManager, @NonNull AirshipChannel airshipChannel, @NonNull ContactApiClient contactApiClient,
-            @NonNull ActivityMonitor activityMonitor, @NonNull Clock clock, @NonNull CachedValue<Map<String, Set<Scope>>> subscriptionListCache) {
+            @NonNull ActivityMonitor activityMonitor, @NonNull Clock clock, @NonNull CachedValue<Map<String, Set<Scope>>> subscriptionListCache,
+            @NonNull List<CachedValue<ScopedSubscriptionListMutation>> subscriptionListLocalHistory) {
         super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
         this.jobDispatcher = jobDispatcher;
@@ -136,6 +142,7 @@ public class Contact extends AirshipComponent {
         this.activityMonitor = activityMonitor;
         this.clock = clock;
         this.subscriptionListCache = subscriptionListCache;
+        this.subscriptionListLocalHistory = subscriptionListLocalHistory;
     }
 
     @Override
@@ -167,24 +174,15 @@ public class Contact extends AirshipComponent {
             }
         });
 
-        airshipChannel.addChannelRegistrationPayloadExtender(new AirshipChannel.ChannelRegistrationPayloadExtender() {
-            @NonNull
-            @Override
-            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                ContactIdentity lastContactIdentity = getLastContactIdentity();
-                if (lastContactIdentity != null) {
-                    builder.setContactId(lastContactIdentity.getContactId());
-                }
-                return builder;
+        airshipChannel.addChannelRegistrationPayloadExtender(builder -> {
+            ContactIdentity lastContactIdentity = getLastContactIdentity();
+            if (lastContactIdentity != null) {
+                builder.setContactId(lastContactIdentity.getContactId());
             }
+            return builder;
         });
 
-        privacyManager.addListener(new PrivacyManager.Listener() {
-            @Override
-            public void onEnabledFeaturesChanged() {
-                checkPrivacyManager();
-            }
-        });
+        privacyManager.addListener(this::checkPrivacyManager);
 
         jobDispatcher.setRateLimit(IDENTITY_RATE_LIMIT, 1, 5, TimeUnit.SECONDS);
         jobDispatcher.setRateLimit(UPDATE_RATE_LIMIT, 1, 500, TimeUnit.MILLISECONDS);
@@ -196,6 +194,7 @@ public class Contact extends AirshipComponent {
     private void checkPrivacyManager() {
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES) || !privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
             this.subscriptionListCache.invalidate();
+            subscriptionListLocalHistory.clear();
         }
 
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
@@ -780,10 +779,10 @@ public class Contact extends AirshipComponent {
                             listener.onTagGroupsMutationUploaded(updatePayload.getTagGroupMutations());
                         }
                     }
-                }
 
-                if (updateResponse.isSuccessful() && !updatePayload.getSubscriptionListMutations().isEmpty()) {
-                    subscriptionListCache.invalidate();
+                    if (!updatePayload.getSubscriptionListMutations().isEmpty()) {
+                        cacheInSubscriptionListLocalHistory(updatePayload.getSubscriptionListMutations());
+                    }
                 }
 
                 return updateResponse;
@@ -1161,25 +1160,7 @@ public class Contact extends AirshipComponent {
             return result;
         }
 
-        PendingResult<Map<String, Set<Scope>>> subscriptionListsResult = getSubscriptionLists(contactId);
-        subscriptionListsResult.addResultCallback(subscriptions -> {
-            if (subscriptions == null) {
-                result.setResult(null);
-                return;
-            }
-
-            if (!includePendingUpdates) {
-                result.setResult(subscriptions);
-                return;
-            }
-
-            for (ScopedSubscriptionListMutation mutation : getPendingSubscriptionListUpdates()) {
-                mutation.apply(subscriptions);
-            }
-            result.setResult(subscriptions);
-        });
-
-        return result;
+        return getSubscriptionLists(contactId, includePendingUpdates);
     }
 
     /**
@@ -1187,7 +1168,7 @@ public class Contact extends AirshipComponent {
      * or fetches from the network, if not.
      */
     @NonNull
-    private PendingResult<Map<String, Set<Scope>>> getSubscriptionLists(@NonNull String contactId) {
+    private PendingResult<Map<String, Set<Scope>>> getSubscriptionLists(@NonNull String contactId, boolean includePendingUpdates) {
         final PendingResult<Map<String, Set<Scope>>> result = new PendingResult<>();
 
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
@@ -1195,29 +1176,71 @@ public class Contact extends AirshipComponent {
             return result;
         }
 
-        Map<String, Set<Scope>> cachedSubscriptions = subscriptionListCache.get();
-        if (cachedSubscriptions != null) {
-            // Return subscription lists from the in-memory cache, if available.
-            result.setResult(cachedSubscriptions);
-        } else {
-            // Otherwise, fetch the current subscriptions over the network and update the cache.
-            AirshipExecutors.threadPoolExecutor().submit(() -> {
-                try {
-                    Response<Map<String, Set<Scope>>> response = contactApiClient.getSubscriptionLists(contactId);
-                    if (response.isSuccessful()) {
-                        Map<String, Set<Scope>> subscriptions = response.getResult();
-                        subscriptionListCache.set(subscriptions, SUBSCRIPTION_CACHE_LIFETIME_MS);
-                        result.setResult(subscriptions);
-                    } else {
-                        result.setResult(null);
-                    }
-                } catch (RequestException e) {
-                    result.setResult(null);
+        defaultExecutor.execute(() -> {
+            // Get the subscription lists from the in-memory cache, if available.
+            Map<String, Set<Scope>> subscriptions = subscriptionListCache.get();
+            if (subscriptions == null) {
+                // Fallback to fetching
+                subscriptions = fetchContactSubscriptionList(contactId);
+                if (subscriptions != null) {
+                    subscriptionListCache.set(subscriptions, SUBSCRIPTION_CACHE_LIFETIME_MS);
                 }
-            });
-        }
+            }
+
+            if (subscriptions != null) {
+                // Local history
+                applySubscriptionListLocalChanges(subscriptions);
+
+                // Pending
+                if (includePendingUpdates) {
+                    for (ScopedSubscriptionListMutation mutation : getPendingSubscriptionListUpdates()) {
+                        mutation.apply(subscriptions);
+                    }
+                }
+            }
+
+            result.setResult(subscriptions);
+        });
 
         return result;
+    }
+
+    @Nullable
+    private Map<String, Set<Scope>> fetchContactSubscriptionList(@NonNull String contactId) {
+        Response<Map<String, Set<Scope>>> response;
+        try {
+            response = contactApiClient.getSubscriptionLists(contactId);
+        } catch (RequestException e) {
+            Logger.error(e, "Failed to fetch contact subscription lists!");
+            return null;
+        }
+
+        if (response.isSuccessful()) {
+            return response.getResult();
+        } else {
+            Logger.error("Failed to fetch contact subscription lists! error: %d message: %s", response.getStatus(), response.getResponseBody());
+            return null;
+        }
+    }
+
+    private void cacheInSubscriptionListLocalHistory(List<ScopedSubscriptionListMutation> mutations) {
+        for (ScopedSubscriptionListMutation mutation : mutations) {
+            CachedValue<ScopedSubscriptionListMutation> cache = new CachedValue<>();
+            cache.set(mutation, SUBSCRIPTION_LOCAL_HISTORY_CACHE_LIFETIME_MS);
+            subscriptionListLocalHistory.add(cache);
+        }
+    }
+
+    private void applySubscriptionListLocalChanges(Map<String, Set<Scope>> subscriptions) {
+        for (CachedValue<ScopedSubscriptionListMutation> localHistoryCachedMutations : subscriptionListLocalHistory) {
+            ScopedSubscriptionListMutation mutation = localHistoryCachedMutations.get();
+            if (mutation != null) {
+                mutation.apply(subscriptions);
+            } else {
+                // Remove from local history cache when it expired
+                subscriptionListLocalHistory.remove(localHistoryCachedMutations);
+            }
+        }
     }
 
 }

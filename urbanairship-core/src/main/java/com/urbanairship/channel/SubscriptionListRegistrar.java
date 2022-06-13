@@ -1,8 +1,14 @@
 package com.urbanairship.channel;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+
 import com.urbanairship.Logger;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
+import com.urbanairship.util.CachedValue;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -10,24 +16,30 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
 /**
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class SubscriptionListRegistrar {
 
+    /**
+     * Max age for the channel subscription listing cache.
+     */
+    private static final long LOCAL_HISTORY_CACHE_LIFETIME_MS = 10 * 60 * 1000; // 10M
+
     private final List<SubscriptionListListener> listeners = new CopyOnWriteArrayList<>();
-    private final Object idLock = new Object();
+    private final Object lock = new Object();
     private final SubscriptionListApiClient apiClient;
     private final PendingSubscriptionListMutationStore mutationStore;
 
+    @VisibleForTesting
+    @NonNull
+    final List<CachedValue<SubscriptionListMutation>> localHistory = new CopyOnWriteArrayList<>();
+
     private String identifier;
 
-    SubscriptionListRegistrar(SubscriptionListApiClient apiClient, PendingSubscriptionListMutationStore mutationStore) {
+    SubscriptionListRegistrar(SubscriptionListApiClient apiClient,
+                              PendingSubscriptionListMutationStore mutationStore) {
         this.apiClient = apiClient;
         this.mutationStore = mutationStore;
         this.mutationStore.collapseAndSaveMutations();
@@ -38,7 +50,7 @@ public class SubscriptionListRegistrar {
     }
 
     void setId(String identifier, boolean clearPendingOnIdChange) {
-        synchronized (idLock) {
+        synchronized (lock) {
             if (clearPendingOnIdChange && !UAStringUtil.equals(this.identifier, identifier)) {
                 mutationStore.removeAll();
             }
@@ -50,7 +62,7 @@ public class SubscriptionListRegistrar {
         while (true) {
             List<SubscriptionListMutation> mutations;
             String uploadIdentifier;
-            synchronized (idLock) {
+            synchronized (lock) {
                 mutationStore.collapseAndSaveMutations();
                 mutations = mutationStore.peek();
                 uploadIdentifier = identifier;
@@ -82,9 +94,12 @@ public class SubscriptionListRegistrar {
                 }
             }
 
-            synchronized (idLock) {
+            synchronized (lock) {
                 if (mutations.equals(mutationStore.peek()) && uploadIdentifier.equals(identifier)) {
                     mutationStore.pop();
+                    if (response.isSuccessful()) {
+                        cacheInLocalHistory(mutations);
+                    }
                 }
             }
         }
@@ -93,7 +108,7 @@ public class SubscriptionListRegistrar {
     @Nullable
     Set<String> fetchChannelSubscriptionLists() {
         String fetchIdentifier;
-        synchronized (idLock) {
+        synchronized (lock) {
             fetchIdentifier = identifier;
         }
 
@@ -105,7 +120,7 @@ public class SubscriptionListRegistrar {
             return null;
         }
 
-        Logger.verbose("Subscription list fetched: %s", response);
+        Logger.verbose("Channel Subscription list fetched: %s", response);
 
         if (response.isSuccessful()) {
             return response.getResult();
@@ -126,6 +141,30 @@ public class SubscriptionListRegistrar {
             combined.addAll(mutations);
         }
         return combined;
+    }
+
+    void clearLocalHistory() {
+        localHistory.clear();
+    }
+
+    void cacheInLocalHistory(@NonNull List<SubscriptionListMutation> mutations) {
+        for (SubscriptionListMutation mutation : mutations) {
+            CachedValue<SubscriptionListMutation> cache = new CachedValue<>();
+            cache.set(mutation, LOCAL_HISTORY_CACHE_LIFETIME_MS);
+            localHistory.add(cache);
+        }
+    }
+
+    void applyLocalChanges(@NonNull Set<String> subscriptions) {
+        for (CachedValue<SubscriptionListMutation> localHistoryCachedMutation : localHistory) {
+            SubscriptionListMutation mutation = localHistoryCachedMutation.get();
+            if (mutation != null) {
+                mutation.apply(subscriptions);
+            } else {
+                // Remove from local history cache when it expired
+                localHistory.remove(localHistoryCachedMutation);
+            }
+        }
     }
 
     void addSubscriptionListListener(@NonNull SubscriptionListListener listener) {

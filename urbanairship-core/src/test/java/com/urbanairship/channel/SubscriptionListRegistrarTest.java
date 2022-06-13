@@ -1,17 +1,5 @@
 package com.urbanairship.channel;
 
-import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestApplication;
-import com.urbanairship.http.RequestException;
-import com.urbanairship.http.Response;
-import com.urbanairship.util.UAHttpStatusUtil;
-
-import org.junit.Before;
-import org.junit.Test;
-
-import java.util.Collections;
-import java.util.List;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -19,6 +7,23 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.urbanairship.BaseTestCase;
+import com.urbanairship.TestApplication;
+import com.urbanairship.TestClock;
+import com.urbanairship.http.RequestException;
+import com.urbanairship.http.Response;
+import com.urbanairship.util.CachedValue;
+import com.urbanairship.util.UAHttpStatusUtil;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class SubscriptionListRegistrarTest extends BaseTestCase {
 
@@ -120,5 +125,54 @@ public class SubscriptionListRegistrarTest extends BaseTestCase {
         if (UAHttpStatusUtil.inSuccessRange(status)) {
             verify(listener).onSubscriptionListMutationUploaded("identifier", pendingMutations);
         }
+    }
+
+    @Test
+    public void testCleanLocalHistory() {
+        CachedValue<SubscriptionListMutation> cache = new CachedValue<>();
+        cache.set(SubscriptionListMutation.newSubscribeMutation("foo", 0L), 5000);
+        registrar.localHistory.add(cache);
+
+        assertEquals(1, registrar.localHistory.size());
+
+        registrar.clearLocalHistory();
+
+        assertEquals(0, registrar.localHistory.size());
+    }
+
+    @Test
+    public void testCacheInLocalHistory() {
+        assertEquals(0, registrar.localHistory.size());
+
+        CachedValue<SubscriptionListMutation> cache = new CachedValue<>();
+        cache.set(SubscriptionListMutation.newSubscribeMutation("foo", 0L), 5000);
+        registrar.localHistory.add(cache);
+
+        assertEquals(1, registrar.localHistory.size());
+    }
+
+    @Test
+    public void testApplyLocalChanges() {
+        TestClock clock = new TestClock();
+
+        Set<String> subscriptions = new HashSet<String>() {{
+            add("foo");
+            add("bar");
+        }};
+
+        CachedValue<SubscriptionListMutation> localMutation1 = new CachedValue<>(clock);
+        localMutation1.set(SubscriptionListMutation.newSubscribeMutation("local", 1000), 100);
+        CachedValue<SubscriptionListMutation> localMutation2 = new CachedValue<>(clock);
+        localMutation2.set(SubscriptionListMutation.newUnsubscribeMutation("foo", 1000), 100);
+        registrar.localHistory.addAll(Arrays.asList(localMutation1, localMutation2));
+
+        registrar.applyLocalChanges(subscriptions);
+
+        Set<String> expectedSubscriptions = new HashSet<String>() {{
+            add("bar");
+            add("local");
+        }};
+
+        assertEquals(expectedSubscriptions, subscriptions);
     }
 }
