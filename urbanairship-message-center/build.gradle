@@ -17,6 +17,13 @@ dependencies {
     testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
     testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+
+    // Instrumentation Test
+    androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
+    androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
+    androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
+    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+    androidTestImplementation "androidx.room:room-testing:$rootProject.androidxRoomVersion"
 }
 
 android {

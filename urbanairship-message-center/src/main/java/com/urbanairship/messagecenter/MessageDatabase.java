@@ -19,81 +19,98 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 /**
  * Message database
  */
+@Database(
+    version = 3,
+    entities = { MessageEntity.class }
+)
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities = {MessageEntity.class}, version = 2)
 public abstract class MessageDatabase extends RoomDatabase {
 
-    private static final String DATABASE_DIRECTORY_NAME = "com.urbanairship.databases";
-    static final String DATABASE_NAME = "ua_richpush.db";
+    static final String DB_NAME = "ua_richpush.db";
     static final String TABLE_NAME = "richpush";
-    static final String NEW_TABLE_NAME = "richpush_new";
-    static final String COLUMN_NAME_KEY = "_id";
-    static final String COLUMN_NAME_MESSAGE_ID = "message_id";
-    static final String COLUMN_NAME_MESSAGE_URL = "message_url";
-    static final String COLUMN_NAME_MESSAGE_BODY_URL = "message_body_url";
-    static final String COLUMN_NAME_MESSAGE_READ_URL = "message_read_url";
-    static final String COLUMN_NAME_TITLE = "title";
-    static final String COLUMN_NAME_EXTRA = "extra";
-    static final String COLUMN_NAME_UNREAD = "unread";
-    static final String COLUMN_NAME_UNREAD_ORIG = "unread_orig";
-    static final String COLUMN_NAME_DELETED = "deleted";
-    static final String COLUMN_NAME_TIMESTAMP = "timestamp";
-    static final String COLUMN_NAME_RAW_MESSAGE_OBJECT = "raw_message_object";
-    static final String COLUMN_NAME_EXPIRATION_TIMESTAMP = "expiration_timestamp";
+    static final String KEY = "_id";
+    static final String MESSAGE_ID = "message_id";
+    static final String MESSAGE_URL = "message_url";
+    static final String BODY_URL = "message_body_url";
+    static final String READ_URL = "message_read_url";
+    static final String TITLE = "title";
+    static final String EXTRA = "extra";
+    static final String UNREAD = "unread";
+    static final String UNREAD_ORIG = "unread_orig";
+    static final String DELETED = "deleted";
+    static final String TIMESTAMP = "timestamp";
+    static final String RAW_MESSAGE = "raw_message_object";
+    static final String EXPIRATION = "expiration_timestamp";
 
-    static final int DATABASE_VERSION = 2;
+    private static final String DB_DIR = "com.urbanairship.databases";
 
     public abstract MessageDao getDao();
 
+    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        static final String INDEX_MESSAGE_ID = "index_richpush_message_id";
+
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            // Clean up duplicate messages, if any are present.
+            db.execSQL("DELETE FROM " + TABLE_NAME + " WHERE " + KEY + " NOT IN "
+                    + "(SELECT MIN(" + KEY + ") FROM " + TABLE_NAME + " GROUP BY " + MESSAGE_ID + ")");
+            // Add unique index on message_id.
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `" + INDEX_MESSAGE_ID + "` "
+                    + "ON `" + TABLE_NAME + "` (`" + MESSAGE_ID + "`)");
+        }
+    };
+
     static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+        static final String NEW_TABLE_NAME = "richpush_new";
+
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase db) {
             // Create new table
             db.execSQL("CREATE TABLE " + NEW_TABLE_NAME + " ("
-                    + COLUMN_NAME_KEY + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
-                    + COLUMN_NAME_MESSAGE_ID + " TEXT UNIQUE, "
-                    + COLUMN_NAME_MESSAGE_URL + " TEXT, "
-                    + COLUMN_NAME_MESSAGE_BODY_URL + " TEXT, "
-                    + COLUMN_NAME_MESSAGE_READ_URL + " TEXT, "
-                    + COLUMN_NAME_TITLE + " TEXT, "
-                    + COLUMN_NAME_EXTRA + " TEXT, "
-                    + COLUMN_NAME_UNREAD + " INTEGER, "
-                    + COLUMN_NAME_UNREAD_ORIG + " INTEGER, "
-                    + COLUMN_NAME_DELETED + " INTEGER, "
-                    + COLUMN_NAME_TIMESTAMP + " TEXT, "
-                    + COLUMN_NAME_RAW_MESSAGE_OBJECT + " TEXT, "
-                    + COLUMN_NAME_EXPIRATION_TIMESTAMP + " TEXT "
+                    + KEY + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                    + MESSAGE_ID + " TEXT UNIQUE, "
+                    + MESSAGE_URL + " TEXT, "
+                    + BODY_URL + " TEXT, "
+                    + READ_URL + " TEXT, "
+                    + TITLE + " TEXT, "
+                    + EXTRA + " TEXT, "
+                    + UNREAD + " INTEGER, "
+                    + UNREAD_ORIG + " INTEGER, "
+                    + DELETED + " INTEGER, "
+                    + TIMESTAMP + " TEXT, "
+                    + RAW_MESSAGE + " TEXT, "
+                    + EXPIRATION + " TEXT "
                     + ");");
 
             // Copy the table
             db.execSQL("INSERT INTO " + NEW_TABLE_NAME + " ("
-                    + COLUMN_NAME_KEY + ", "
-                    + COLUMN_NAME_MESSAGE_ID + ", "
-                    + COLUMN_NAME_MESSAGE_URL + ", "
-                    + COLUMN_NAME_MESSAGE_BODY_URL + ", "
-                    + COLUMN_NAME_MESSAGE_READ_URL + ", "
-                    + COLUMN_NAME_TITLE + ", "
-                    + COLUMN_NAME_EXTRA + ", "
-                    + COLUMN_NAME_UNREAD + ", "
-                    + COLUMN_NAME_UNREAD_ORIG + ", "
-                    + COLUMN_NAME_DELETED + ", "
-                    + COLUMN_NAME_TIMESTAMP + ", "
-                    + COLUMN_NAME_RAW_MESSAGE_OBJECT + ", "
-                    + COLUMN_NAME_EXPIRATION_TIMESTAMP + ") "
+                    + KEY + ", "
+                    + MESSAGE_ID + ", "
+                    + MESSAGE_URL + ", "
+                    + BODY_URL + ", "
+                    + READ_URL + ", "
+                    + TITLE + ", "
+                    + EXTRA + ", "
+                    + UNREAD + ", "
+                    + UNREAD_ORIG + ", "
+                    + DELETED + ", "
+                    + TIMESTAMP + ", "
+                    + RAW_MESSAGE + ", "
+                    + EXPIRATION + ") "
                     + "SELECT "
-                    + COLUMN_NAME_KEY + ", "
-                    + COLUMN_NAME_MESSAGE_ID + ", "
-                    + COLUMN_NAME_MESSAGE_URL + ", "
-                    + COLUMN_NAME_MESSAGE_BODY_URL + ", "
-                    + COLUMN_NAME_MESSAGE_READ_URL + ", "
-                    + COLUMN_NAME_TITLE + ", "
-                    + COLUMN_NAME_EXTRA + ", "
-                    + COLUMN_NAME_UNREAD + ", "
-                    + COLUMN_NAME_UNREAD_ORIG + ", "
-                    + COLUMN_NAME_DELETED + ", "
-                    + COLUMN_NAME_TIMESTAMP + ", "
-                    + COLUMN_NAME_RAW_MESSAGE_OBJECT + ", "
-                    + COLUMN_NAME_EXPIRATION_TIMESTAMP + " "
+                    + KEY + ", "
+                    + MESSAGE_ID + ", "
+                    + MESSAGE_URL + ", "
+                    + BODY_URL + ", "
+                    + READ_URL + ", "
+                    + TITLE + ", "
+                    + EXTRA + ", "
+                    + UNREAD + ", "
+                    + UNREAD_ORIG + ", "
+                    + DELETED + ", "
+                    + TIMESTAMP + ", "
+                    + RAW_MESSAGE + ", "
+                    + EXPIRATION + " "
                     + "FROM " + TABLE_NAME);
 
             // Drop existing table
@@ -105,12 +122,12 @@ public abstract class MessageDatabase extends RoomDatabase {
     };
 
     public static MessageDatabase createDatabase(@NonNull Context context, @NonNull AirshipConfigOptions config) {
-        String name = config.appKey + "_" + DATABASE_NAME;
-        File urbanAirshipNoBackupDirectory = new File(ContextCompat.getNoBackupFilesDir(context), DATABASE_DIRECTORY_NAME);
+        String name = config.appKey + "_" + DB_NAME;
+        File urbanAirshipNoBackupDirectory = new File(ContextCompat.getNoBackupFilesDir(context), DB_DIR);
         String path = new File(urbanAirshipNoBackupDirectory, name).getAbsolutePath();
 
         return Room.databaseBuilder(context, MessageDatabase.class, path)
-                   .addMigrations(MIGRATION_1_2)
+                   .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                    .fallbackToDestructiveMigrationOnDowngrade()
                    .build();
     }
@@ -121,10 +138,4 @@ public abstract class MessageDatabase extends RoomDatabase {
                    .allowMainThreadQueries()
                    .build();
     }
-
-    public boolean exists(@NonNull Context context) {
-        return getOpenHelper().getDatabaseName() == null ||
-                context.getDatabasePath(getOpenHelper().getDatabaseName()).exists();
-    }
-
-};
+}

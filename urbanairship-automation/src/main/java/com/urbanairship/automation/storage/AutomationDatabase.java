@@ -25,7 +25,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities = { ScheduleEntity.class, TriggerEntity.class }, version = 4, exportSchema = false)
+@Database(entities = { ScheduleEntity.class, TriggerEntity.class }, version = 4)
 @TypeConverters({ Converters.class, JsonTypeConverters.class })
 public abstract class AutomationDatabase extends RoomDatabase {
 

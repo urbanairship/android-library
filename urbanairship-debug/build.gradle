@@ -23,14 +23,7 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
     }
-
-    defaultConfig {
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments = [ "room.incremental":"true" ]
-            }
-        }
-    }
+    
     namespace 'com.urbanairship.debug'
 }
 

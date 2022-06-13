@@ -29,8 +29,7 @@ public class AnalyticsDatabaseMigrationTest {
     @Rule
     public MigrationTestHelper helper = new MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        AnalyticsDatabase.class.getCanonicalName(),
-        new FrameworkSQLiteOpenHelperFactory()
+        AnalyticsDatabase.class
     );
 
     private static final String TEST_DB = "ua_analytics.db";

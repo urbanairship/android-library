@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
  * PushItem database.
  * @hide
  */
-@Database(entities = [PushEntity::class], version = 2, exportSchema = false)
+@Database(entities = [PushEntity::class], version = 2)
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 abstract class PushDatabase : RoomDatabase() {
 

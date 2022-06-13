@@ -257,7 +257,7 @@ class InboxJobHandler {
 
         // Bulk insert any new messages
         if (messagesToInsert.size() > 0) {
-            messageDao.insertMessages(MessageEntity.createMessagesFromPayload(null, messagesToInsert));
+            messageDao.insertMessages(MessageEntity.createMessagesFromPayload(messagesToInsert));
         }
 
         List<String> deletedMessageIds = messageDao.getMessageIds();
@@ -274,7 +274,6 @@ class InboxJobHandler {
             return;
         }
 
-        messageDao.deleteDuplicates();
         Collection<MessageEntity> messagesToUpdate = messageDao.getLocallyDeletedMessages();
         List<String> idsToDelete = new ArrayList<>();
         List<JsonValue> reportings = new ArrayList<>();
@@ -313,7 +312,6 @@ class InboxJobHandler {
             return;
         }
 
-        messageDao.deleteDuplicates();
         Collection<MessageEntity> messagesToUpdate = messageDao.getLocallyReadMessages();
         List<String> idsToUpdate = new ArrayList<>();
         List<JsonValue> reportings = new ArrayList<>();

@@ -44,7 +44,7 @@ public abstract class AirshipComponent {
     /**
      * Default job executor.
      */
-    private final Executor jobExecutor = AirshipExecutors.newSerialExecutor();
+    protected final Executor defaultExecutor = AirshipExecutors.newSerialExecutor();
 
     /**
      * Initialize the manager.
@@ -85,7 +85,7 @@ public abstract class AirshipComponent {
     @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public Executor getJobExecutor(@NonNull JobInfo jobInfo) {
-        return jobExecutor;
+        return defaultExecutor;
     }
 
     /**

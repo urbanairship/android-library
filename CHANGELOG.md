@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.5.1 Jun 7, 2022
+
+Patch release that fixes an issue that could potentially lead to duplicate messages in the Message Center Inbox table.
+
+### Changes
+- Prevent duplicate messages in the Inbox table and clean up duplicates, if any are present.
+
 ## Version 16.5.0 May 17, 2022
 Minor release that fixes ADM registration on Windows 11 Android subsystem.
 

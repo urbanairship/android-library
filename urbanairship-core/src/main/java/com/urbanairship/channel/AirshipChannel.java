@@ -20,7 +20,6 @@ import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
-import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
@@ -45,6 +44,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
 
 /**
  * Airship channel access.
@@ -110,6 +110,7 @@ public class AirshipChannel extends AirshipComponent {
     @NonNull
     private final CachedValue<Set<String>> subscriptionListCache;
 
+
     private final AirshipRuntimeConfig runtimeConfig;
 
     private boolean channelTagRegistrationEnabled = true;
@@ -158,7 +159,7 @@ public class AirshipChannel extends AirshipComponent {
                 new AttributeRegistrar(AttributeApiClient.channelClient(runtimeConfig), new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY)),
                 new TagGroupRegistrar(TagGroupApiClient.channelClient(runtimeConfig), new PendingTagGroupMutationStore(dataStore, TAG_GROUP_DATASTORE_KEY)),
                 new SubscriptionListRegistrar(SubscriptionListApiClient.channelClient(runtimeConfig), new PendingSubscriptionListMutationStore(dataStore, SUBSCRIPTION_LISTS_DATASTORE_KEY)),
-                new CachedValue<Set<String>>());
+                new CachedValue<>());
 
     }
 
@@ -216,6 +217,7 @@ public class AirshipChannel extends AirshipComponent {
                 tagGroupRegistrar.clearPendingMutations();
                 attributeRegistrar.clearPendingMutations();
                 subscriptionListRegistrar.clearPendingMutations();
+                subscriptionListRegistrar.clearLocalHistory();
                 subscriptionListCache.invalidate();
             }
 
@@ -564,70 +566,36 @@ public class AirshipChannel extends AirshipComponent {
      * @return A {@link PendingResult} of the current set of subscription lists.
      */
     @NonNull
-    public PendingResult<Set<String>> getSubscriptionLists(final boolean includePendingUpdates) {
-        final PendingResult<Set<String>> result = new PendingResult<>();
-
-        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-            result.setResult(null);
-        }
-
-        PendingResult<Set<String>> subscriptionListsResult = getSubscriptionLists();
-        subscriptionListsResult.addResultCallback(new ResultCallback<Set<String>>() {
-            @Override
-            public void onResult(@Nullable Set<String> subscriptions) {
-                if (subscriptions == null) {
-                    result.setResult(Collections.<String>emptySet());
-                    return;
-                }
-
-                if (!includePendingUpdates) {
-                    result.setResult(subscriptions);
-                    return;
-                }
-
-                for (SubscriptionListMutation mutation : getPendingSubscriptionListUpdates()) {
-                    if (mutation.getAction().equals(SubscriptionListMutation.ACTION_SUBSCRIBE)) {
-                        subscriptions.add(mutation.getListId());
-                    } else {
-                        subscriptions.remove(mutation.getListId());
-                    }
-                }
-                result.setResult(subscriptions);
-            }
-        });
-
-        return result;
-    }
-
-    /**
-     * Returns the current set of subscription lists for this channel from the cache, if available,
-     * or fetches from the network, if not.
-     */
-    @NonNull
-    private PendingResult<Set<String>> getSubscriptionLists() {
+    public PendingResult<Set<String>> getSubscriptionLists(boolean includePendingUpdates) {
         final PendingResult<Set<String>> result = new PendingResult<>();
 
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
             result.setResult(Collections.emptySet());
         }
 
-        Set<String> cachedSubscriptions = subscriptionListCache.get();
-        if (cachedSubscriptions != null) {
-            // Return subscription lists from the in-memory cache, if available.
-            result.setResult(cachedSubscriptions);
-        } else {
-            // Otherwise, fetch the current subscriptions over the network and update the cache.
-            AirshipExecutors.threadPoolExecutor().submit(new Runnable() {
-                @Override
-                public void run() {
-                    Set<String> fetchedSubscriptions = subscriptionListRegistrar.fetchChannelSubscriptionLists();
-                    if (fetchedSubscriptions != null) {
-                        subscriptionListCache.set(fetchedSubscriptions, SUBSCRIPTION_CACHE_LIFETIME_MS);
-                    }
-                    result.setResult(fetchedSubscriptions);
+        defaultExecutor.execute(() -> {
+            // Get the subscription lists from the in-memory cache, if available.
+            Set<String> subscriptions = subscriptionListCache.get();
+            if (subscriptions == null) {
+                // Fallback to fetching
+                subscriptions = subscriptionListRegistrar.fetchChannelSubscriptionLists();
+                if (subscriptions != null) {
+                    subscriptionListCache.set(new HashSet<>(subscriptions), SUBSCRIPTION_CACHE_LIFETIME_MS);
                 }
-            });
-        }
+            }
+
+            if (subscriptions != null) {
+                subscriptionListRegistrar.applyLocalChanges(subscriptions);
+
+                if (includePendingUpdates) {
+                    for (SubscriptionListMutation pending : getPendingSubscriptionListUpdates()) {
+                        pending.apply(subscriptions);
+                    }
+                }
+            }
+
+            result.setResult(subscriptions);
+        });
 
         return result;
     }
@@ -956,10 +924,6 @@ public class AirshipChannel extends AirshipComponent {
                 boolean attributeResult = attributeRegistrar.uploadPendingMutations();
                 boolean tagResult = tagGroupRegistrar.uploadPendingMutations();
                 boolean subscriptionListResult = subscriptionListRegistrar.uploadPendingMutations();
-
-                if (subscriptionListResult) {
-                    subscriptionListCache.invalidate();
-                }
 
                 if (!attributeResult || !tagResult || !subscriptionListResult) {
                     return JobResult.RETRY;
