@@ -22,7 +22,7 @@ dependencies {
     implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
     annotationProcessor "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
 
-    implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
+    api "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
     compileOnly "com.google.android.gms:play-services-base:$rootProject.playServicesBaseVersion"
 
     implementation "androidx.work:work-runtime:$rootProject.androidXWork"
