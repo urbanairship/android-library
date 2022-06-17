@@ -30,6 +30,7 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
 import com.urbanairship.permission.PermissionDelegate;
+import com.urbanairship.permission.PermissionRequestResult;
 import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.notifications.AirshipNotificationProvider;
@@ -54,6 +55,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 import androidx.annotation.XmlRes;
+import androidx.core.util.Consumer;
 import androidx.core.util.ObjectsCompat;
 
 /**
@@ -348,14 +350,26 @@ public class PushManager extends AirshipComponent {
     }
 
     private void checkPermission() {
+        checkPermission(null);
+    }
+
+    private void checkPermission(@Nullable Runnable onCheckComplete) {
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)) {
             return;
         }
 
-        permissionsManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS,  status -> {
+        permissionsManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS, status -> {
             if (preferenceDataStore.getBoolean(REQUEST_PERMISSION_KEY, true) && activityMonitor.isAppForegrounded() && getUserNotificationsEnabled()) {
-                permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS);
+                permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS, requestResult -> {
+                    if (onCheckComplete != null) {
+                        onCheckComplete.run();
+                    }
+                });
                 preferenceDataStore.put(REQUEST_PERMISSION_KEY, false);
+            } else {
+                if (onCheckComplete != null) {
+                    onCheckComplete.run();
+                }
             }
         });
     }
@@ -555,8 +569,11 @@ public class PushManager extends AirshipComponent {
             preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled);
             if (enabled) {
                 preferenceDataStore.put(REQUEST_PERMISSION_KEY, true);
+                checkPermission(airshipChannel::updateRegistration);
+            } else {
+                airshipChannel.updateRegistration();
             }
-            checkPermission();
+
         }
     }
 

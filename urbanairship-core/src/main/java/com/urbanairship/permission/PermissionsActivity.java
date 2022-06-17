@@ -52,8 +52,8 @@ public class PermissionsActivity extends AppCompatActivity {
 
     // The only way to know about a silent dismiss if both before and after showRationale are false. However
     // on Android 11+ you can press back to skip or touch outside which will result in a none silent false/false.
-    // This amount of time is not a guarantee to catch all but it helps reduce the number false positves.
-    private static final long SILENT_DISMISS_MAX_TIME_MS = 300;
+    // This amount of time is not a guarantee to catch all but it helps reduce the number false positives.
+    private static final long SILENT_DISMISS_MAX_TIME_MS = 2000;
 
     private List<Intent> intents = new ArrayList<>();
     private PermissionRequest currentRequest;

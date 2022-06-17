@@ -159,21 +159,18 @@ public class PromptPermissionAction extends Action {
             permissionsManager.requestPermission(args.permission, args.enableAirshipUsage, requestResult -> {
                 if (shouldFallbackToAppSettings(args, requestResult)) {
                     navigatePermissionSettings(args.permission);
-
-                    if (resultReceiver != null) {
-                        GlobalActivityMonitor activityMonitor = GlobalActivityMonitor.shared(UAirship.getApplicationContext());
-                        activityMonitor.addApplicationListener(new SimpleApplicationListener() {
-                            @Override
-                            public void onForeground(long time) {
-                                permissionsManager.checkPermissionStatus(args.permission, after -> {
-                                    sendResult(args.permission, before, after, resultReceiver);
-                                    activityMonitor.removeApplicationListener(this);
-                                });
-                            }
-                        });
-                    }
+                    GlobalActivityMonitor activityMonitor = GlobalActivityMonitor.shared(UAirship.getApplicationContext());
+                    activityMonitor.addApplicationListener(new SimpleApplicationListener() {
+                        @Override
+                        public void onForeground(long time) {
+                            permissionsManager.checkPermissionStatus(args.permission, after -> {
+                                sendResult(args.permission, before, after, resultReceiver);
+                                activityMonitor.removeApplicationListener(this);
+                            });
+                        }
+                    });
                 } else {
-                    permissionsManager.requestPermission(args.permission, args.enableAirshipUsage, after -> sendResult(args.permission, before, requestResult.getPermissionStatus(), resultReceiver));
+                    sendResult(args.permission, before, requestResult.getPermissionStatus(), resultReceiver);
                 }
             });
         });
