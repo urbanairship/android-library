@@ -18,7 +18,7 @@ Airship SDK for Android.
 
 ```
    dependencies {
-     def airshipVersion = "16.5.0"
+     def airshipVersion = "16.6.0"
 
      // FCM push provider
      implementation "com.urbanairship.android:urbanairship-fcm:$airshipVersion"
@@ -66,4 +66,3 @@ Airship SDK for Android.
 A [sample](sample) application is available that showcases the majority of the features offered by
 the Airship SDK. Before running the sample, copy the file in `sample/src/main/assets/airshipconfig.properties.sample` to
 `sample/src/main/assets/airshipconfig.properties` and modify the properties to match your application's config.
-
