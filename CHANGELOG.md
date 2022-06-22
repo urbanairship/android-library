@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.6.0 Jun 21, 2022
+
+Minor release that adds support for Android 13 (API 33) and fixes a Preference Center issue that could occur under poor network conditions.
+
+### Changes
+- Adds support for the new notification permissions prompt in Android 13 for apps that target API 33, with fallback prompt support on older API levels.
+- Fixed Preference Center to always display the correct toggle states when navigating away and back to Preference Center under poor network conditions.
+
 ## Version 16.5.1 Jun 7, 2022
 
 Patch release that fixes an issue that could potentially lead to duplicate messages in the Message Center Inbox table.
