@@ -13,8 +13,11 @@ import com.urbanairship.push.PushProviderBridge;
 public class AdmHandlerBase extends ADMMessageHandlerBase {
 
     //Class that is used for legacy ADM devices
-    protected AdmHandlerBase(String className) {
+    public AdmHandlerBase(String className) {
         super(className);
+    }
+    public AdmHandlerBase() {
+        super("AdmHandlerBase");
     }
 
     @Override

@@ -23,3 +23,6 @@
 # ADM is compile time only depedency
 -dontwarn com.amazon.device.messaging.**
 -dontnote com.urbanairship.push.adm.AdmPushProvider
+
+-keep class com.amazon.device.messaging.** {*;}
+-keep class com.urbanairship.push.adm.** {*;}
