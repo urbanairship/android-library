@@ -2,7 +2,16 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
-## Version 16.6.0 Jun 21, 2022
+## Version 16.6.1 June 30, 2022
+
+Patch release that fixes issues with ADM push provider and a bad room migration when updating the SDK to a version before SDK 15.1 to SDK 16.5.1. Apps using SDK 15.0.0 and lower should update directly to SDK 16.6.1 or newer.
+
+### Changes
+- Added consumer proguard rules to prevent ADM crashes when using ADM push provider.
+- Fixed ADM crash on older ADM devices.
+- Fixed Message Center invalid schema exceptions.
+
+## Version 16.6.0 June 21, 2022
 
 Minor release that adds support for Android 13 (API 33) and fixes a Preference Center issue that could occur under poor network conditions.
 
@@ -10,7 +19,7 @@ Minor release that adds support for Android 13 (API 33) and fixes a Preference C
 - Adds support for the new notification permissions prompt in Android 13 for apps that target API 33, with fallback prompt support on older API levels.
 - Fixed Preference Center to always display the correct toggle states when navigating away and back to Preference Center under poor network conditions.
 
-## Version 16.5.1 Jun 7, 2022
+## Version 16.5.1 June 7, 2022
 
 Patch release that fixes an issue that could potentially lead to duplicate messages in the Message Center Inbox table.
 
