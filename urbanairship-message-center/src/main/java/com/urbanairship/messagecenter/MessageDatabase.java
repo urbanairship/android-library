@@ -20,7 +20,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
  * Message database
  */
 @Database(
-    version = 3,
+    version = 4,
     entities = { MessageEntity.class }
 )
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -45,6 +45,81 @@ public abstract class MessageDatabase extends RoomDatabase {
     private static final String DB_DIR = "com.urbanairship.databases";
 
     public abstract MessageDao getDao();
+
+    /**
+     * Recreates the table to match the schema expected by Room.
+     * No actual schema changes were introduced in v4.
+     */
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        static final String NEW_TABLE_NAME = "richpush_new";
+        static final String INDEX_MESSAGE_ID = "index_richpush_message_id";
+
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase db) {
+            db.execSQL("CREATE TABLE " + NEW_TABLE_NAME + " ("
+                    + KEY + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                    + MESSAGE_ID + " TEXT, "
+                    + MESSAGE_URL + " TEXT, "
+                    + BODY_URL + " TEXT, "
+                    + READ_URL + " TEXT, "
+                    + TITLE + " TEXT, "
+                    + EXTRA + " TEXT, "
+                    + UNREAD + " INTEGER NOT NULL, "
+                    + UNREAD_ORIG + " INTEGER NOT NULL, "
+                    + DELETED + " INTEGER NOT NULL, "
+                    + TIMESTAMP + " TEXT, "
+                    + RAW_MESSAGE + " TEXT, "
+                    + EXPIRATION + " TEXT "
+                    + ");");
+
+            // Apply default values to nullable columns in the existing table.
+            db.execSQL("UPDATE " + TABLE_NAME +
+                    " SET " + UNREAD_ORIG + " = 0 WHERE " + UNREAD_ORIG + " IS NULL");
+            db.execSQL("UPDATE " + TABLE_NAME + "" +
+                    " SET " + UNREAD + " = 0 WHERE " + UNREAD + " IS NULL");
+            db.execSQL("UPDATE " + TABLE_NAME + "" +
+                    " SET " + DELETED + " = 0 WHERE " + DELETED + " IS NULL");
+
+            // Copy into the new table.
+            db.execSQL("INSERT INTO " + NEW_TABLE_NAME + " ("
+                    + KEY + ", "
+                    + MESSAGE_ID + ", "
+                    + MESSAGE_URL + ", "
+                    + BODY_URL + ", "
+                    + READ_URL + ", "
+                    + TITLE + ", "
+                    + EXTRA + ", "
+                    + UNREAD + ", "
+                    + UNREAD_ORIG + ", "
+                    + DELETED + ", "
+                    + TIMESTAMP + ", "
+                    + RAW_MESSAGE + ", "
+                    + EXPIRATION + ") "
+                    + "SELECT "
+                    + KEY + ", "
+                    + MESSAGE_ID + ", "
+                    + MESSAGE_URL + ", "
+                    + BODY_URL + ", "
+                    + READ_URL + ", "
+                    + TITLE + ", "
+                    + EXTRA + ", "
+                    + UNREAD + ", "
+                    + UNREAD_ORIG + ", "
+                    + DELETED + ", "
+                    + TIMESTAMP + ", "
+                    + RAW_MESSAGE + ", "
+                    + EXPIRATION + " "
+                    + "FROM " + TABLE_NAME);
+
+            // Drop existing table and rename the new table to match the old one.
+            db.execSQL("DROP TABLE " + TABLE_NAME);
+            db.execSQL("ALTER TABLE " + NEW_TABLE_NAME + " RENAME TO " + TABLE_NAME);
+
+            // Add unique index on message_id.
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `" + INDEX_MESSAGE_ID + "` "
+                    + "ON `" + TABLE_NAME + "` (`" + MESSAGE_ID + "`)");
+        }
+    };
 
     static final Migration MIGRATION_2_3 = new Migration(2, 3) {
         static final String INDEX_MESSAGE_ID = "index_richpush_message_id";
@@ -127,7 +202,7 @@ public abstract class MessageDatabase extends RoomDatabase {
         String path = new File(urbanAirshipNoBackupDirectory, name).getAbsolutePath();
 
         return Room.databaseBuilder(context, MessageDatabase.class, path)
-                   .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                   .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                    .fallbackToDestructiveMigrationOnDowngrade()
                    .build();
     }

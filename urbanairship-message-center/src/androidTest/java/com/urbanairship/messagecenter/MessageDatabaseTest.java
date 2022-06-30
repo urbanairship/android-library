@@ -1,6 +1,7 @@
 package com.urbanairship.messagecenter;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
@@ -9,7 +10,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import androidx.room.Room;
 import androidx.room.testing.MigrationTestHelper;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -55,6 +61,48 @@ public class MessageDatabaseTest {
         db.close();
     }
 
+    @Test
+    public void migrate3to4() throws IOException {
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 3);
+
+        // Insert some messages.
+        for (int i = 0; i < 5; i++) {
+            insertMessage(db, "msg-" + i);
+        }
+
+        // Sanity check.
+        assertEquals(5, messageCount(db));
+
+        List<Map<String, String>> initialMessages = getMessages(db);
+
+        // Prepare for migration and run it.
+        db.close();
+        db = helper.runMigrationsAndValidate(TEST_DB, 4, true, MessageDatabase.MIGRATION_3_4);
+
+        // Validate migrated table still has 5 messages.
+        assertEquals(5, messageCount(db));
+        List<Map<String, String>> migratedMessages = getMessages(db);
+
+        assertEquals(initialMessages, migratedMessages);
+
+        db.close();
+    }
+
+    @Test
+    public void migrateAll() throws IOException {
+        // Skipping 1_2 because we don't have an initial schema as that was the migration to Room.
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 2);
+        db.close();
+
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        MessageDatabase messageDb = Room.databaseBuilder(context, MessageDatabase.class, TEST_DB)
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+            .build();
+
+        messageDb.getOpenHelper().getWritableDatabase();
+        messageDb.close();
+    }
+
     private static void insertMessage(SupportSQLiteDatabase db, String messageId) {
         ContentValues cv = new ContentValues();
         cv.put(MESSAGE_ID, messageId);
@@ -94,5 +142,30 @@ public class MessageDatabaseTest {
         cursor.close();
 
         return count;
+    }
+
+    /** Query all messages in the database. */
+    private static List<Map<String, String>> getMessages(SupportSQLiteDatabase db) {
+        Cursor cursor = db.query(
+            "SELECT * FROM " + TABLE_NAME + " " +
+            "ORDER BY " + TIMESTAMP + " DESC"
+        );
+        cursor.moveToFirst();
+        List<Map<String, String>> messages = new ArrayList<>();
+        for (int i = 0; i < cursor.getCount(); i++) {
+            messages.add(cursorToMap(cursor));
+            cursor.moveToNext();
+        }
+        cursor.close();
+
+        return messages;
+    }
+
+    private static Map<String, String> cursorToMap(Cursor cursor) {
+        Map<String, String> map = new HashMap<>();
+        for (String column : cursor.getColumnNames()) {
+            map.put(column, cursor.getString(cursor.getColumnIndex(column)));
+        }
+        return map;
     }
 }
