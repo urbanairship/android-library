@@ -97,6 +97,8 @@ public class Autopilot implements UAirship.OnReadyCallback {
             return;
         }
 
+        AirshipAppBootstrap.init(application);
+
         if (!instanceCreationAttempted) {
             ApplicationInfo ai;
             try {
