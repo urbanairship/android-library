@@ -80,6 +80,8 @@
 
     <ActionEntry class="com.urbanairship.actions.SubscriptionListAction">
         <name>subscription_list_action</name>
+        <name>edit_subscription_list_action</name>
         <name>^sla</name>
+        <name>^sl</name>
     </ActionEntry>
 </resources>

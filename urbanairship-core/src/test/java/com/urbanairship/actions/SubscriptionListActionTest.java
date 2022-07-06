@@ -3,121 +3,124 @@
 package com.urbanairship.actions;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
-import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.SubscriptionListEditor;
 import com.urbanairship.channel.SubscriptionListMutation;
-import com.urbanairship.contacts.Contact;
+import com.urbanairship.contacts.Scope;
 import com.urbanairship.contacts.ScopedSubscriptionListEditor;
 import com.urbanairship.contacts.ScopedSubscriptionListMutation;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class SubscriptionListActionTest extends BaseTestCase {
 
-    private SubscriptionListAction action;
-    private AirshipChannel channel;
-    private Contact contact;
-    private TestClock clock;
+    private static final String VALID_ARG = "[\n" +
+            "     {\n" +
+            "        \"type\": \"contact\",\n" +
+            "        \"action\": \"subscribe\",\n" +
+            "        \"list\": \"mylist\",\n" +
+            "        \"scope\": \"app\"\n" +
+            "     },\n" +
+            "     {\n" +
+            "        \"type\": \"channel\",\n" +
+            "        \"action\": \"unsubscribe\",\n" +
+            "       \"list\": \"thelist\"\n" +
+            "     }\n" +
+            " ]";
 
-    @Before
-    public void setup() {
-        channel = mock(AirshipChannel.class);
-        contact = mock(Contact.class);
-        action = new SubscriptionListAction();
-        clock = new TestClock();
-        clock.currentTimeMillis = 1000;
+    private final List<ScopedSubscriptionListMutation> contactMutations = new ArrayList<>();
+    private final TestClock clock = new TestClock();
+    final SubscriptionListEditor channelEditor = new SubscriptionListEditor(clock) {
+        @Override
+        protected void onApply(@NonNull List<SubscriptionListMutation> collapsedMutations) {
+            channelMutations.addAll(collapsedMutations);
+        }
+    };
 
-        TestApplication.getApplication().setChannel(channel);
-        TestApplication.getApplication().setContact(contact);
+    private final List<SubscriptionListMutation> channelMutations = new ArrayList<>();
+    private final ScopedSubscriptionListEditor contactEditor = new ScopedSubscriptionListEditor(clock) {
+        @Override
+        protected void onApply(@NonNull List<ScopedSubscriptionListMutation> collapsedMutations) {
+            contactMutations.addAll(collapsedMutations);
+        }
+    };
+
+    private final SubscriptionListAction action = new SubscriptionListAction(() -> channelEditor, () -> contactEditor);
+
+    @Test
+    public void testAcceptsArguments() throws ActionValueException, JsonException {
+        int[] acceptedSituations = new int[] {
+                Action.SITUATION_PUSH_OPENED,
+                Action.SITUATION_MANUAL_INVOCATION,
+                Action.SITUATION_WEB_VIEW_INVOCATION,
+                Action.SITUATION_AUTOMATION,
+                Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON,
+                Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON
+        };
+
+        // Check every accepted situation
+        for (@Action.Situation int situation : acceptedSituations) {
+            ActionArguments args = ActionTestUtils.createArgs(situation, ActionValue.wrap(JsonValue.parseString(VALID_ARG)));
+            assertTrue("Should accept arguments in situation " + situation,
+                    action.acceptsArguments(args));
+        }
     }
 
     @Test
-    public void testAcceptsArguments() throws ActionValueException, JSONException {
-        JSONArray payloadArray = new JSONArray();
-        JSONObject payload = new JSONObject();
-        payload.put("type", "contact");
-        payload.put("action", "subscribe");
-        payload.put("list", "mylist");
-        payload.put("scope", "app");
+    public void testRejectArguments() throws ActionValueException, JsonException {
+        ActionArguments invalidSituation = ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, ActionValue.wrap(JsonValue.parseString(VALID_ARG)));
+        assertFalse(action.acceptsArguments(invalidSituation));
 
-        JSONObject payload2 = new JSONObject();
-        payload2.put("type", "channel");
-        payload2.put("action", "unsubscribe");
-        payload2.put("list", "thelist");
-        payload2.put("scope", "app");
-
-        payloadArray.put(payload);
-        payloadArray.put(payload2);
-
-        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, ActionValue.wrap(payloadArray));
-
-        assertTrue(action.acceptsArguments(args));
+        ActionArguments emptyValue = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, ActionValue.wrap(
+                JsonValue.NULL));
+        assertFalse(action.acceptsArguments(emptyValue));
     }
 
     @Test
-    public void testPerform() throws JSONException, ActionValueException {
-        final List<SubscriptionListMutation> expected = new ArrayList<>();
-        final List<SubscriptionListMutation> mutations = new ArrayList<>();
-        final List<ScopedSubscriptionListMutation> contactMutations = new ArrayList<>();
+    public void testPerform() throws JsonException {
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, ActionValue.wrap(JsonValue.parseString(VALID_ARG)));
+        action.perform(args);
 
-        JSONArray payloadArray = new JSONArray();
-        JSONObject payload = new JSONObject();
-        payload.put("type", "channel");
-        payload.put("action", "subscribe");
-        payload.put("list", "mylist");
-        payload.put("scope", "app");
+        ScopedSubscriptionListMutation expectedContactMutation = ScopedSubscriptionListMutation.newSubscribeMutation("mylist", Scope.APP, clock.currentTimeMillis);
+        assertEquals(Collections.singletonList(expectedContactMutation), contactMutations);
 
-        JSONObject payload2 = new JSONObject();
-        payload2.put("type", "channel");
-        payload2.put("action", "unsubscribe");
-        payload2.put("list", "thelist");
-        payload2.put("scope", "app");
-
-        payloadArray.put(payload);
-        payloadArray.put(payload2);
-
-        SubscriptionListEditor channelEditor = new SubscriptionListEditor(clock) {
-            @Override
-            protected void onApply(@NonNull List<SubscriptionListMutation> collapsedMutations) {
-                mutations.addAll(collapsedMutations);
-            }
-        };
-
-        ScopedSubscriptionListEditor contactEditor = new ScopedSubscriptionListEditor(clock) {
-            @Override
-            protected void onApply(@NonNull List<ScopedSubscriptionListMutation> collapsedMutations) {
-                contactMutations.addAll(collapsedMutations);
-            }
-        };
-
-        expected.addAll(Arrays.asList(
-                    SubscriptionListMutation.newSubscribeMutation("mylist", 1000),
-                SubscriptionListMutation.newUnsubscribeMutation("thelist", 1000)));
-
-        when(channel.editSubscriptionLists()).thenReturn(channelEditor);
-        when(contact.editSubscriptionLists()).thenReturn(contactEditor);
-
-        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, ActionValue.wrap(payloadArray));
-        ActionResult result = action.perform(args);
-
-        assertEquals(result.getValue(), args.getValue());
-        assertEquals(expected, mutations);
+        SubscriptionListMutation expectedChannelMutation = SubscriptionListMutation.newUnsubscribeMutation("thelist", clock.currentTimeMillis);
+        assertEquals(Collections.singletonList(expectedChannelMutation), channelMutations);
     }
+
+    @Test
+    public void testPerformInvalidArg() throws JsonException {
+        String invalidArg = "[\n" +
+                "     {\n" +
+                "        \"type\": \"contact\",\n" +
+                "        \"action\": \"subscribe\",\n" +
+                "        \"list\": \"mylist\",\n" +
+                "        \"scope\": \"app\"\n" +
+                "     },\n" +
+                "     {\n" +
+                "        \"action\": \"unsubscribe\",\n" +
+                "       \"list\": \"thelist\"\n" +
+                "     }\n" +
+                " ]";
+
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, ActionValue.wrap(JsonValue.parseString(invalidArg)));
+        action.perform(args);
+
+        // Should skip all edits even if one is valid
+        assertTrue(contactMutations.isEmpty());
+        assertTrue(channelMutations.isEmpty());
+    }
+
 }
