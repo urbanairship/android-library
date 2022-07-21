@@ -8,6 +8,13 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.core.content.pm.PackageInfoCompat;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
@@ -48,14 +55,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-import androidx.core.content.pm.PackageInfoCompat;
 
 /**
  * RemoteData top-level class.
@@ -94,6 +95,12 @@ public class RemoteData extends AirshipComponent {
      * The key for getting and setting the app version of the last refresh from the preference datastore.
      */
     private static final String LAST_REFRESH_APP_VERSION_KEY = "com.urbanairship.remotedata.LAST_REFRESH_APP_VERSION";
+
+    /**
+     * The key for getting and setting the random value.
+     */
+    private static final String RANDOM_VALUE_KEY = "com.urbanairship.remotedata.RANDOM_VALUE";
+
     /**
      * Key for the URL that was used to fetch the remote-data in the metadata.
      */
@@ -108,6 +115,11 @@ public class RemoteData extends AirshipComponent {
      * Default foreground refresh interval in milliseconds.
      */
     public static final long DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS = 10000; // 10 seconds
+
+    /**
+     * Maximum random value.
+     */
+    public static final int MAX_RANDOM_VALUE = 9999;
 
     /**
      * Action to refresh remote data.
@@ -271,6 +283,21 @@ public class RemoteData extends AirshipComponent {
      */
     public long getForegroundRefreshInterval() {
         return preferenceDataStore.getLong(FOREGROUND_REFRESH_INTERVAL_KEY, DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS);
+    }
+
+    /**
+     * Gets the remote data random value.
+     *
+     * @return the remote data random value.
+     */
+    public int getRandomValue() {
+        int randomValue = preferenceDataStore.getInt(RANDOM_VALUE_KEY, -1);
+        if (randomValue == -1) {
+            Random random = new Random();
+            randomValue = random.nextInt(MAX_RANDOM_VALUE + 1);
+            preferenceDataStore.put(RANDOM_VALUE_KEY, randomValue);
+        }
+        return randomValue;
     }
 
     /**
@@ -455,7 +482,7 @@ public class RemoteData extends AirshipComponent {
      * @return {@code true} if the metadata is current, otherwise {@code false}.
      */
     public boolean isMetadataCurrent(@NonNull JsonMap jsonMap) {
-        Uri uri = apiClient.getRemoteDataUrl(localeManager.getLocale());
+        Uri uri = apiClient.getRemoteDataUrl(localeManager.getLocale(), getRandomValue());
         return jsonMap.equals(createMetadata(uri, preferenceDataStore.getString(LAST_MODIFIED_KEY, null)));
     }
 
@@ -485,7 +512,7 @@ public class RemoteData extends AirshipComponent {
 
         Response<RemoteDataApiClient.Result> response;
         try {
-            response = apiClient.fetchRemoteDataPayloads(lastModified, locale, (headers, url, payloads) -> {
+            response = apiClient.fetchRemoteDataPayloads(lastModified, locale, getRandomValue(), (headers, url, payloads) -> {
                 List<String> lmValues = headers.get("Last-Modified");
                 String lm = (lmValues != null && !lmValues.isEmpty()) ? lmValues.get(0) : null;
                 return RemoteDataPayload.parsePayloads(payloads, createMetadata(url, lm));
