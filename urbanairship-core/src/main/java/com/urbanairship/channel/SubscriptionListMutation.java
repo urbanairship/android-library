@@ -53,7 +53,7 @@ public class SubscriptionListMutation implements JsonSerializable {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    SubscriptionListMutation(@NonNull String action, @NonNull String listId, @Nullable String timestamp) {
+    public SubscriptionListMutation(@NonNull String action, @NonNull String listId, @Nullable String timestamp) {
         this.action = action;
         this.listId = listId;
         this.timestamp = timestamp;

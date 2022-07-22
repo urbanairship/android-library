@@ -42,6 +42,7 @@ import com.urbanairship.channel.AttributeEditor;
 import com.urbanairship.channel.AttributeListener;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.ChannelRegistrationPayload;
+import com.urbanairship.channel.SubscriptionListMutation;
 import com.urbanairship.channel.TagGroupListener;
 import com.urbanairship.channel.TagGroupsEditor;
 import com.urbanairship.channel.TagGroupsMutation;
@@ -869,7 +870,6 @@ public class ContactTest extends BaseTestCase {
         CachedValue<ScopedSubscriptionListMutation> localMutation2 = new CachedValue<>(testClock);
         localMutation2.set(ScopedSubscriptionListMutation.newUnsubscribeMutation("foo", Scope.SMS, 1000), 100);
 
-
         assertEquals(0, subscriptionListLocalHistory.size());
 
         subscriptionListLocalHistory.addAll(Arrays.asList(localMutation1, localMutation2));
@@ -1261,6 +1261,23 @@ public class ContactTest extends BaseTestCase {
         verify(mockContactApiClient).associatedChannel(fakeContactId, "new-fake-channel-id", ChannelType.EMAIL);
 
         verify(changeListener).onContactChanged();
+    }
+
+    @Test
+    public void testForwardAppScopeSubscriptionsToChannel() throws RequestException {
+        contact.editSubscriptionLists()
+               .subscribe("app 1", Scope.APP)
+               .subscribe("web 1", Scope.WEB)
+               .unsubscribe("web 2", Scope.WEB)
+               .unsubscribe("app 2", Scope.APP)
+               .apply();
+
+        List<SubscriptionListMutation> expected = new ArrayList<SubscriptionListMutation>() {{
+            add(SubscriptionListMutation.newSubscribeMutation("app 1", testClock.currentTimeMillis));
+            add(SubscriptionListMutation.newUnsubscribeMutation("app 2", testClock.currentTimeMillis));
+        }};
+
+        verify(mockChannel).processContactSubscriptionListMutations(expected);
     }
 
     /**

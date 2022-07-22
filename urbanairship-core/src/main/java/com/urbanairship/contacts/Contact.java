@@ -27,6 +27,7 @@ import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.channel.AttributeEditor;
 import com.urbanairship.channel.AttributeListener;
 import com.urbanairship.channel.AttributeMutation;
+import com.urbanairship.channel.SubscriptionListMutation;
 import com.urbanairship.channel.TagGroupListener;
 import com.urbanairship.channel.TagGroupsEditor;
 import com.urbanairship.channel.TagGroupsMutation;
@@ -189,6 +190,8 @@ public class Contact extends AirshipComponent {
 
         checkPrivacyManager();
         dispatchContactUpdateJob();
+
+        notifyChannelSubscriptionListChanges(getPendingSubscriptionListUpdates());
     }
 
     private void checkPrivacyManager() {
@@ -475,6 +478,8 @@ public class Contact extends AirshipComponent {
 
                 addOperation(ContactOperation.resolve());
                 addOperation(ContactOperation.updateSubscriptionLists(mutations));
+
+                notifyChannelSubscriptionListChanges(mutations);
                 dispatchContactUpdateJob();
             }
         };
@@ -1240,6 +1245,20 @@ public class Contact extends AirshipComponent {
                 // Remove from local history cache when it expired
                 subscriptionListLocalHistory.remove(localHistoryCachedMutations);
             }
+        }
+    }
+
+    private void notifyChannelSubscriptionListChanges(@NonNull List<ScopedSubscriptionListMutation> mutations) {
+        List<SubscriptionListMutation> channelMutations = new ArrayList<>();
+        for (ScopedSubscriptionListMutation mutation : mutations) {
+            if (mutation.getScope() == Scope.APP) {
+                SubscriptionListMutation channelMutation = new SubscriptionListMutation(mutation.getAction(), mutation.getListId(), mutation.getTimestamp());
+                channelMutations.add(channelMutation);
+            }
+        }
+
+        if (!channelMutations.isEmpty()) {
+            this.airshipChannel.processContactSubscriptionListMutations(channelMutations);
         }
     }
 
