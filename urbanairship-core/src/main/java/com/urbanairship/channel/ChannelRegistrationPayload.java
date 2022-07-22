@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
+import androidx.core.util.ObjectsCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.json.JsonException;
@@ -61,9 +62,9 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     static final String CARRIER_KEY = "carrier";
     static final String ACCENGAGE_DEVICE_ID = "accengage_device_id";
     static final String CONTACT_ID_KEY = "contact_id";
-
     static final String ANDROID_EXTRAS_KEY = "android";
     static final String ANDROID_DELIVERY_TYPE = "delivery_type";
+    static final String IS_ACTIVE = "is_activity";
 
     public final boolean optIn;
     public final boolean backgroundEnabled;
@@ -85,6 +86,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     public final String accengageDeviceId;
     public final String deliveryType;
     public final String contactId;
+    public final boolean isActive;
 
     /**
      * Builds the ChannelRegistrationPayload
@@ -111,6 +113,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         private String accengageDeviceId;
         private String deliveryType;
         private String contactId;
+        private boolean isActive;
 
         /**
          * Default ChannelRegistrationPayload.Builder constructor
@@ -143,6 +146,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             this.accengageDeviceId = payload.accengageDeviceId;
             this.deliveryType = payload.deliveryType;
             this.contactId = payload.contactId;
+            this.isActive = payload.isActive;
         }
 
         /**
@@ -351,6 +355,19 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             return this;
         }
 
+
+        /**
+         * Set isActive flag.
+         *
+         * @param isActive {@code true} if active, otherwise {@code false}.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder setIsActive(boolean isActive) {
+            this.isActive = isActive;
+            return this;
+        }
+
         /**
          * Set the Accengage Device ID
          *
@@ -403,6 +420,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         this.accengageDeviceId = builder.accengageDeviceId;
         this.deliveryType = builder.deliveryType;
         this.contactId = builder.contactId;
+        this.isActive = builder.isActive;
     }
 
     @NonNull
@@ -515,7 +533,8 @@ public class ChannelRegistrationPayload implements JsonSerializable {
                                          .put(SDK_VERSION_KEY, sdkVersion)
                                          .put(DEVICE_MODEL_KEY, deviceModel)
                                          .put(CARRIER_KEY, carrier)
-                                         .put(CONTACT_ID_KEY, contactId);
+                                         .put(CONTACT_ID_KEY, contactId)
+                                         .put(IS_ACTIVE, isActive);
 
         if (ANDROID_DEVICE_TYPE.equals(deviceType) && deliveryType != null) {
             channel.put(ANDROID_EXTRAS_KEY, JsonMap.newBuilder()
@@ -557,80 +576,76 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         return data.build().toJsonValue();
     }
 
-    /**
-     * The ChannelRegistrationPayload as a JSON formatted string
-     *
-     * @return The JSON formatted payload as a string
-     */
-    @NonNull
-    @Override
-    public String toString() {
-        return this.toJsonValue().toString();
+    public boolean equals(@Nullable ChannelRegistrationPayload payload, boolean compareIsActive) {
+        if (payload == null) {
+            return false;
+        }
+
+        if (compareIsActive && payload.isActive != isActive) {
+            return false;
+        }
+
+        return optIn == payload.optIn
+                && backgroundEnabled == payload.backgroundEnabled
+                && setTags == payload.setTags
+                && ObjectsCompat.equals(deviceType, payload.deviceType)
+                && ObjectsCompat.equals(pushAddress, payload.pushAddress)
+                && ObjectsCompat.equals(tags, payload.tags)
+                && ObjectsCompat.equals(tagChanges, payload.tagChanges)
+                && ObjectsCompat.equals(userId, payload.userId)
+                && ObjectsCompat.equals(timezone, payload.timezone)
+                && ObjectsCompat.equals(language, payload.language)
+                && ObjectsCompat.equals(country, payload.country)
+                && ObjectsCompat.equals(locationSettings, payload.locationSettings)
+                && ObjectsCompat.equals(appVersion, payload.appVersion)
+                && ObjectsCompat.equals(sdkVersion, payload.sdkVersion)
+                && ObjectsCompat.equals(deviceModel, payload.deviceModel)
+                && ObjectsCompat.equals(apiVersion, payload.apiVersion)
+                && ObjectsCompat.equals(carrier, payload.carrier)
+                && ObjectsCompat.equals(accengageDeviceId, payload.accengageDeviceId)
+                && ObjectsCompat.equals(deliveryType, payload.deliveryType)
+                && ObjectsCompat.equals(contactId, payload.contactId);
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         ChannelRegistrationPayload that = (ChannelRegistrationPayload) o;
-
-        if (optIn != that.optIn) return false;
-        if (backgroundEnabled != that.backgroundEnabled) return false;
-        if (setTags != that.setTags) return false;
-        if (deviceType != null ? !deviceType.equals(that.deviceType) : that.deviceType != null)
-            return false;
-        if (pushAddress != null ? !pushAddress.equals(that.pushAddress) : that.pushAddress != null)
-            return false;
-        if (tags != null ? !tags.equals(that.tags) : that.tags != null) return false;
-        if (tagChanges != null ? !tagChanges.equals(that.tagChanges) : that.tagChanges != null) return false;
-        if (userId != null ? !userId.equals(that.userId) : that.userId != null) return false;
-        if (timezone != null ? !timezone.equals(that.timezone) : that.timezone != null)
-            return false;
-        if (language != null ? !language.equals(that.language) : that.language != null)
-            return false;
-        if (country != null ? !country.equals(that.country) : that.country != null) return false;
-        if (locationSettings != null ? !locationSettings.equals(that.locationSettings) : that.locationSettings != null)
-            return false;
-        if (appVersion != null ? !appVersion.equals(that.appVersion) : that.appVersion != null)
-            return false;
-        if (sdkVersion != null ? !sdkVersion.equals(that.sdkVersion) : that.sdkVersion != null)
-            return false;
-        if (deviceModel != null ? !deviceModel.equals(that.deviceModel) : that.deviceModel != null)
-            return false;
-        if (apiVersion != null ? !apiVersion.equals(that.apiVersion) : that.apiVersion != null)
-            return false;
-        if (carrier != null ? !carrier.equals(that.carrier) : that.carrier != null) return false;
-        if (accengageDeviceId != null ? !accengageDeviceId.equals(that.accengageDeviceId) : that.accengageDeviceId != null)
-            return false;
-        if (contactId != null ? !contactId.equals(that.contactId) : that.contactId != null)
-            return false;
-        return deliveryType != null ? deliveryType.equals(that.deliveryType) : that.deliveryType == null;
+        return equals(that, true);
     }
 
     @Override
     public int hashCode() {
-        int result = (optIn ? 1 : 0);
-        result = 31 * result + (backgroundEnabled ? 1 : 0);
-        result = 31 * result + (deviceType != null ? deviceType.hashCode() : 0);
-        result = 31 * result + (pushAddress != null ? pushAddress.hashCode() : 0);
-        result = 31 * result + (setTags ? 1 : 0);
-        result = 31 * result + (tags != null ? tags.hashCode() : 0);
-        result = 31 * result + (tagChanges != null ? tagChanges.hashCode() : 0);
-        result = 31 * result + (userId != null ? userId.hashCode() : 0);
-        result = 31 * result + (timezone != null ? timezone.hashCode() : 0);
-        result = 31 * result + (language != null ? language.hashCode() : 0);
-        result = 31 * result + (country != null ? country.hashCode() : 0);
-        result = 31 * result + (locationSettings != null ? locationSettings.hashCode() : 0);
-        result = 31 * result + (appVersion != null ? appVersion.hashCode() : 0);
-        result = 31 * result + (sdkVersion != null ? sdkVersion.hashCode() : 0);
-        result = 31 * result + (deviceModel != null ? deviceModel.hashCode() : 0);
-        result = 31 * result + (apiVersion != null ? apiVersion.hashCode() : 0);
-        result = 31 * result + (carrier != null ? carrier.hashCode() : 0);
-        result = 31 * result + (accengageDeviceId != null ? accengageDeviceId.hashCode() : 0);
-        result = 31 * result + (contactId != null ? contactId.hashCode() : 0);
-        result = 31 * result + (deliveryType != null ? deliveryType.hashCode() : 0);
-        return result;
+        return ObjectsCompat.hash(optIn, backgroundEnabled, deviceType, pushAddress, setTags, tags, tagChanges, userId, timezone, language, country, locationSettings, appVersion, sdkVersion, deviceModel, apiVersion, carrier, accengageDeviceId, deliveryType, contactId);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "ChannelRegistrationPayload{" +
+                "optIn=" + optIn +
+                ", backgroundEnabled=" + backgroundEnabled +
+                ", deviceType='" + deviceType + '\'' +
+                ", pushAddress='" + pushAddress + '\'' +
+                ", setTags=" + setTags +
+                ", tags=" + tags +
+                ", tagChanges=" + tagChanges +
+                ", userId='" + userId + '\'' +
+                ", timezone='" + timezone + '\'' +
+                ", language='" + language + '\'' +
+                ", country='" + country + '\'' +
+                ", locationSettings=" + locationSettings +
+                ", appVersion='" + appVersion + '\'' +
+                ", sdkVersion='" + sdkVersion + '\'' +
+                ", deviceModel='" + deviceModel + '\'' +
+                ", apiVersion=" + apiVersion +
+                ", carrier='" + carrier + '\'' +
+                ", accengageDeviceId='" + accengageDeviceId + '\'' +
+                ", deliveryType='" + deliveryType + '\'' +
+                ", contactId='" + contactId + '\'' +
+                ", isActive=" + isActive +
+                '}';
     }
 
     /**
@@ -691,6 +706,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
                             .setCarrier(channelJson.opt(CARRIER_KEY).getString())
                             .setDeliveryType(deliveryType)
                             .setContactId(channelJson.opt(CONTACT_ID_KEY).getString())
+                            .setIsActive(channelJson.opt(IS_ACTIVE).getBoolean(false))
                             .build();
     }
 
