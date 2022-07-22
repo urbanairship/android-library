@@ -8,7 +8,11 @@ import com.urbanairship.Logger;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.modules.location.AirshipLocationClient;
+import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionStatus;
+import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.VersionUtils;
@@ -18,10 +22,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.WorkerThread;
 import androidx.core.os.ConfigurationCompat;
 import androidx.core.os.LocaleListCompat;
 
@@ -65,6 +71,7 @@ public abstract class AudienceChecks {
      * @param audience The audience.
      * @return {@code true} if the audience conditions are met, otherwise {@code false}.
      */
+    @WorkerThread
     public static boolean checkAudience(@NonNull Context context, @Nullable Audience audience) {
         if (audience == null) {
             return true;
@@ -79,14 +86,6 @@ public abstract class AudienceChecks {
         AirshipLocationClient locationClient = airship.getLocationClient();
         PushManager pushManager = airship.getPushManager();
         AirshipChannel channel = airship.getChannel();
-
-        // Location opt-in
-        if (audience.getLocationOptIn() != null) {
-            boolean optedIn = locationClient != null && locationClient.isOptIn();
-            if (audience.getLocationOptIn() != optedIn) {
-                return false;
-            }
-        }
 
         // Notification opt-in
         boolean notificationsOptIn = pushManager.areNotificationsOptedIn();
@@ -117,6 +116,27 @@ public abstract class AudienceChecks {
         if (audience.getRequiresAnalytics() != null && audience.getRequiresAnalytics()) {
             if (!airship.getPrivacyManager().isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
                 return false;
+            }
+        }
+
+        // Permissions and location
+        if (audience.getLocationOptIn() != null || audience.getPermissionsPredicate() != null) {
+            JsonMap permissionsMap = createPermissionsMap(airship.getPermissionsManager());
+
+            if (audience.getPermissionsPredicate() != null && !audience.getPermissionsPredicate().apply(permissionsMap)) {
+                return false;
+            }
+
+            if (audience.getLocationOptIn() != null) {
+                String permissionStatus = permissionsMap.opt(Permission.LOCATION.getValue()).getString();
+                if (permissionStatus == null) {
+                    return false;
+                }
+                boolean isGranted = PermissionStatus.GRANTED.getValue().equals(permissionStatus);
+
+                if (audience.getLocationOptIn() != isGranted) {
+                    return false;
+                }
             }
         }
 
@@ -231,4 +251,24 @@ public abstract class AudienceChecks {
         return true;
     }
 
+    @WorkerThread
+    @NonNull
+    private static JsonMap createPermissionsMap(@NonNull PermissionsManager permissionsManager) {
+        JsonMap.Builder builder = JsonMap.newBuilder();
+        for (Permission permission : permissionsManager.getConfiguredPermissions()) {
+            try {
+                PermissionStatus status = permissionsManager.checkPermissionStatus(permission).get();
+                if (status != null) {
+                    builder.putOpt(permission.getValue(), status.getValue());
+                }
+            } catch (ExecutionException e) {
+                Logger.error(e, "Failed to get permissions status: %s", permission);
+            } catch (InterruptedException e) {
+                Logger.error(e, "Failed to get permissions status: %s", permission);
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        return builder.build();
+    }
 }
