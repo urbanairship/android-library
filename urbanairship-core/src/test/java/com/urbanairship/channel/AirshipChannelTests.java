@@ -1275,6 +1275,18 @@ public class AirshipChannelTests extends BaseTestCase {
         }));
     }
 
+    @Test
+    public void testProcessContactSubscriptionListChanges() {
+        List<SubscriptionListMutation> updates = new ArrayList<SubscriptionListMutation>() {{
+            add(SubscriptionListMutation.newSubscribeMutation("app 1", 100));
+            add(SubscriptionListMutation.newUnsubscribeMutation("app 2", 100));
+        }};
+
+        airshipChannel.processContactSubscriptionListMutations(updates);
+
+        verify(mockSubscriptionListRegistrar).cacheInLocalHistory(updates);
+    }
+
     private static <T> Response<T> createResponse(T result, int status) {
         return new Response.Builder<T>(status)
                 .setResponseBody("test")

@@ -21,6 +21,7 @@ import com.urbanairship.preferencecenter.data.Condition.NotificationOptIn.Status
 import com.urbanairship.preferencecenter.data.IconDisplay
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Item.ContactSubscriptionGroup.Component
+import com.urbanairship.preferencecenter.data.Options
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Action
@@ -229,6 +230,44 @@ class PreferenceCenterViewModelTest {
         viewModel(mockPreferenceCenter = null, mockChannel = null).run {
             states.test {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
+                cancel()
+            }
+        }
+    }
+
+    @Test
+    fun handlesRefreshActionWithMergeChannelData() = runBlocking {
+        val config = spy(CHANNEL_SUBSCRIPTION_CONFIG)
+        whenever(config.hasChannelSubscriptions).doReturn(true)
+        whenever(config.hasContactSubscriptions).doReturn(true)
+        whenever(config.options).doReturn(Options(true))
+
+        val expectedContact = mapOf(
+            SUBSCRIPTION_ID_1 to setOf(Scope.APP),
+            SUBSCRIPTION_ID_2 to setOf(Scope.APP),
+            SUBSCRIPTION_ID_3 to setOf(Scope.WEB, Scope.APP),
+            SUBSCRIPTION_ID_4 to setOf(Scope.WEB)
+        )
+
+        viewModel(config = config,
+            channelSubscriptions = setOf(SUBSCRIPTION_ID_1, SUBSCRIPTION_ID_2, SUBSCRIPTION_ID_3),
+            contactSubscriptions = mapOf(
+                SUBSCRIPTION_ID_1 to setOf(Scope.APP),
+                SUBSCRIPTION_ID_3 to setOf(Scope.WEB),
+                SUBSCRIPTION_ID_4 to setOf(Scope.WEB)
+            )
+        ).run {
+            states.test {
+                assertThat(awaitItem()).isEqualTo(State.Loading)
+                handle(Action.Refresh)
+
+                val initialState = awaitItem()
+                assertThat(initialState).isInstanceOf(State.Content::class.java)
+                initialState as State.Content
+
+                assertThat(initialState.contactSubscriptions).containsExactlyEntriesIn(expectedContact)
+                assertThat(initialState.channelSubscriptions).containsExactly(SUBSCRIPTION_ID_1, SUBSCRIPTION_ID_2, SUBSCRIPTION_ID_3)
+
                 cancel()
             }
         }

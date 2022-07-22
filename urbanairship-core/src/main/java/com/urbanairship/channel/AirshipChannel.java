@@ -22,6 +22,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.contacts.ScopedSubscriptionListMutation;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
@@ -1022,6 +1023,14 @@ public class AirshipChannel extends AirshipComponent {
                                  .build();
 
         jobDispatcher.dispatch(jobInfo);
+    }
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void processContactSubscriptionListMutations(@NonNull List<SubscriptionListMutation> mutations) {
+        this.subscriptionListRegistrar.cacheInLocalHistory(mutations);
     }
 
     private boolean isRegistrationAllowed() {

@@ -148,10 +148,12 @@ public class SubscriptionListRegistrar {
     }
 
     void cacheInLocalHistory(@NonNull List<SubscriptionListMutation> mutations) {
-        for (SubscriptionListMutation mutation : mutations) {
-            CachedValue<SubscriptionListMutation> cache = new CachedValue<>();
-            cache.set(mutation, LOCAL_HISTORY_CACHE_LIFETIME_MS);
-            localHistory.add(cache);
+        synchronized (lock) {
+            for (SubscriptionListMutation mutation : mutations) {
+                CachedValue<SubscriptionListMutation> cache = new CachedValue<>();
+                cache.set(mutation, LOCAL_HISTORY_CACHE_LIFETIME_MS);
+                localHistory.add(cache);
+            }
         }
     }
 
