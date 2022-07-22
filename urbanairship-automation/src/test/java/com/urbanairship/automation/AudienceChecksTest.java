@@ -10,13 +10,24 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestUtils;
+import com.urbanairship.UAirship;
 import com.urbanairship.automation.tags.TagSelector;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.json.JsonMatcher;
+import com.urbanairship.json.JsonPredicate;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.json.ValueMatcher;
-import com.urbanairship.modules.location.AirshipLocationClient;
+import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionDelegate;
+import com.urbanairship.permission.PermissionRequestResult;
+import com.urbanairship.permission.PermissionStatus;
+import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.util.UAStringUtil;
 
+import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,14 +37,14 @@ import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
+import androidx.annotation.NonNull;
+import androidx.core.util.Consumer;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import static com.urbanairship.automation.tags.TestUtils.tagSet;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -50,37 +61,34 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 public class AudienceChecksTest {
 
-    private AirshipChannel airshipChannel;
-    private PushManager pushManager;
-    private AirshipLocationClient locationClient;
-    private Context context;
-    private ApplicationMetrics applicationMetrics;
-    private PrivacyManager privacyManager;
+    private Context context = ApplicationProvider.getApplicationContext();
+
+    private UAirship airship = mock(UAirship.class);
+    private AirshipChannel airshipChannel = mock(AirshipChannel.class);
+    private PushManager pushManager = mock(PushManager.class);
+    private ApplicationMetrics applicationMetrics = mock(ApplicationMetrics.class);
+    private PermissionsManager permissionsManager = PermissionsManager.newPermissionsManager(context);
+    private PreferenceDataStore dataStore = PreferenceDataStore.inMemoryStore(context);
+    private PrivacyManager privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
 
     @Before
     public void setup() {
-        airshipChannel = mock(AirshipChannel.class);
-        pushManager = mock(PushManager.class);
-        locationClient = mock(AirshipLocationClient.class);
-        applicationMetrics = mock(ApplicationMetrics.class);
+        when(airship.getChannel()).thenReturn(airshipChannel);
+        when(airship.getPushManager()).thenReturn(pushManager);
+        when(airship.getApplicationMetrics()).thenReturn(applicationMetrics);
+        when(airship.getPrivacyManager()).thenReturn(privacyManager);
+        when(airship.getPermissionsManager()).thenReturn(permissionsManager);
+        TestUtils.setAirshipInstance(airship);
+    }
 
-        PreferenceDataStore dataStore = PreferenceDataStore.inMemoryStore(TestApplication.getApplication());
-        privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
-
-        TestApplication app = TestApplication.getApplication();
-        context = app;
-
-        app.setChannel(airshipChannel);
-        app.setPushManager(pushManager);
-        app.setLocationClient(locationClient);
-        app.setApplicationMetrics(applicationMetrics);
-        app.setPrivacyManager(privacyManager);
+    @After
+    public void tearDown() {
+        TestUtils.setAirshipInstance(null);
     }
 
     @Test
     public void testEmptyAudience() {
         Audience audience = Audience.newBuilder().build();
-
         assertTrue(AudienceChecks.checkAudience(context, audience));
     }
 
@@ -104,22 +112,88 @@ public class AudienceChecksTest {
     }
 
     @Test
-    public void testLocationOptIn() {
+    public void testLocationOptInRequired() {
+        TestPermissionsDelegate locationDelegate = new TestPermissionsDelegate();
+
         Audience requiresOptedIn = Audience.newBuilder()
                                            .setLocationOptIn(true)
                                            .build();
+
+        // Not set
+        assertFalse(AudienceChecks.checkAudience(context, requiresOptedIn));
+
+        permissionsManager.setPermissionDelegate(Permission.LOCATION, locationDelegate);
+
+        // Denied
+        locationDelegate.status = PermissionStatus.DENIED;
+        assertFalse(AudienceChecks.checkAudience(context, requiresOptedIn));
+
+        // Not determined
+        locationDelegate.status = PermissionStatus.NOT_DETERMINED;
+        assertFalse(AudienceChecks.checkAudience(context, requiresOptedIn));
+
+        // Granted
+        locationDelegate.status = PermissionStatus.GRANTED;
+        assertTrue(AudienceChecks.checkAudience(context, requiresOptedIn));
+    }
+
+    @Test
+    public void testLocationOptOutRequired() {
+        TestPermissionsDelegate locationDelegate = new TestPermissionsDelegate();
 
         Audience requiresOptedOut = Audience.newBuilder()
                                             .setLocationOptIn(false)
                                             .build();
 
-        // LocationManager returns false by default
-        assertFalse(AudienceChecks.checkAudience(context, requiresOptedIn));
+        // Not set
+        assertFalse(AudienceChecks.checkAudience(context, requiresOptedOut));
+
+        permissionsManager.setPermissionDelegate(Permission.LOCATION, locationDelegate);
+
+        // Denied
+        locationDelegate.status = PermissionStatus.DENIED;
         assertTrue(AudienceChecks.checkAudience(context, requiresOptedOut));
 
-        when(locationClient.isOptIn()).thenReturn(true);
-        assertTrue(AudienceChecks.checkAudience(context, requiresOptedIn));
+        // Not determined
+        locationDelegate.status = PermissionStatus.NOT_DETERMINED;
+        assertTrue(AudienceChecks.checkAudience(context, requiresOptedOut));
+
+        // Granted
+        locationDelegate.status = PermissionStatus.GRANTED;
         assertFalse(AudienceChecks.checkAudience(context, requiresOptedOut));
+    }
+
+    @Test
+    public void testPermissionsPredicate() {
+        JsonPredicate predicate = JsonPredicate.newBuilder()
+                                               .addMatcher(JsonMatcher.newBuilder()
+                                                                        .setKey(Permission.DISPLAY_NOTIFICATIONS.getValue())
+                                                                        .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrap("granted")))
+                                                                        .build())
+                                               .build();
+
+        Audience audienceChecks = Audience.newBuilder()
+                                          .setPermissionsPredicate(predicate)
+                                          .build();
+
+
+        // Not set
+        assertFalse(AudienceChecks.checkAudience(context, audienceChecks));
+
+        TestPermissionsDelegate notificationDelegate = new TestPermissionsDelegate();
+        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, notificationDelegate);
+
+        // Denied
+        notificationDelegate.status = PermissionStatus.DENIED;
+        assertFalse(AudienceChecks.checkAudience(context, audienceChecks));
+
+        // Not determined
+        notificationDelegate.status = PermissionStatus.NOT_DETERMINED;
+        assertFalse(AudienceChecks.checkAudience(context, audienceChecks));
+
+        // Granted
+        notificationDelegate.status = PermissionStatus.GRANTED;
+        assertTrue(AudienceChecks.checkAudience(context, audienceChecks));
     }
 
     @Test
@@ -127,7 +201,6 @@ public class AudienceChecksTest {
         Audience audience = Audience.newBuilder()
                                     .setRequiresAnalytics(true)
                                     .build();
-
 
         privacyManager.enable(PrivacyManager.FEATURE_ANALYTICS);
         assertTrue(AudienceChecks.checkAudience(context, audience));
@@ -141,7 +214,6 @@ public class AudienceChecksTest {
         Audience audience = Audience.newBuilder()
                                     .setRequiresAnalytics(false)
                                     .build();
-
 
         privacyManager.enable(PrivacyManager.FEATURE_ANALYTICS);
         assertTrue(AudienceChecks.checkAudience(context, audience));
@@ -262,4 +334,21 @@ public class AudienceChecksTest {
 
         assertTrue(AudienceChecks.checkAudience(context, audience));
     }
+
+    private static class TestPermissionsDelegate implements PermissionDelegate {
+
+        private PermissionStatus status = PermissionStatus.NOT_DETERMINED;
+
+        @Override
+        public void checkPermissionStatus(@NonNull Context context, @NonNull Consumer<PermissionStatus> callback) {
+            callback.accept(status);
+        }
+
+        @Override
+        public void requestPermission(@NonNull Context context, @NonNull Consumer<PermissionRequestResult> callback) {
+            Assert.fail();
+        }
+
+    }
+
 }
