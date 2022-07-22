@@ -21,6 +21,9 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
+import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.contacts.ScopedSubscriptionListMutation;
 import com.urbanairship.http.RequestException;
@@ -113,6 +116,7 @@ public class AirshipChannel extends AirshipComponent {
 
 
     private final AirshipRuntimeConfig runtimeConfig;
+    private final ActivityMonitor activityMonitor;
 
     private boolean channelTagRegistrationEnabled = true;
     private boolean channelCreationDelayEnabled;
@@ -160,7 +164,7 @@ public class AirshipChannel extends AirshipComponent {
                 new AttributeRegistrar(AttributeApiClient.channelClient(runtimeConfig), new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY)),
                 new TagGroupRegistrar(TagGroupApiClient.channelClient(runtimeConfig), new PendingTagGroupMutationStore(dataStore, TAG_GROUP_DATASTORE_KEY)),
                 new SubscriptionListRegistrar(SubscriptionListApiClient.channelClient(runtimeConfig), new PendingSubscriptionListMutationStore(dataStore, SUBSCRIPTION_LISTS_DATASTORE_KEY)),
-                new CachedValue<>());
+                new CachedValue<>(), GlobalActivityMonitor.shared(context));
 
     }
 
@@ -176,7 +180,9 @@ public class AirshipChannel extends AirshipComponent {
                    @NonNull AttributeRegistrar attributeRegistrar,
                    @NonNull TagGroupRegistrar tagGroupRegistrar,
                    @NonNull SubscriptionListRegistrar subscriptionListRegistrar,
-                   @NonNull CachedValue<Set<String>> subscriptionListCache) {
+                   @NonNull CachedValue<Set<String>> subscriptionListCache,
+                   @NonNull ActivityMonitor activityMonitor) {
+
         super(context, dataStore);
 
         this.runtimeConfig = runtimeConfig;
@@ -189,6 +195,7 @@ public class AirshipChannel extends AirshipComponent {
         this.subscriptionListRegistrar = subscriptionListRegistrar;
         this.clock = clock;
         this.subscriptionListCache = subscriptionListCache;
+        this.activityMonitor = activityMonitor;
     }
 
     /**
@@ -223,6 +230,13 @@ public class AirshipChannel extends AirshipComponent {
             }
 
             updateRegistration();
+        });
+
+        activityMonitor.addApplicationListener(new SimpleApplicationListener() {
+            @Override
+            public void onForeground(long time) {
+                dispatchUpdateJob();
+            }
         });
     }
 
@@ -659,7 +673,8 @@ public class AirshipChannel extends AirshipComponent {
         boolean shouldSetTags = getChannelTagRegistrationEnabled();
 
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder()
-                .setTags(shouldSetTags, shouldSetTags ? getTags() : null);
+                .setTags(shouldSetTags, shouldSetTags ? getTags() : null)
+                .setIsActive(activityMonitor.isAppForegrounded());
 
         switch (runtimeConfig.getPlatform()) {
             case UAirship.ANDROID_PLATFORM:
@@ -696,7 +711,6 @@ public class AirshipChannel extends AirshipComponent {
             }
 
             builder.setSdkVersion(UAirship.getVersion());
-
 
             for (ChannelRegistrationPayloadExtender extender : channelRegistrationPayloadExtenders) {
                 builder = extender.extend(builder);
@@ -780,22 +794,19 @@ public class AirshipChannel extends AirshipComponent {
      * @return <code>True</code> if registration is required, <code>false</code> otherwise
      */
     private boolean shouldUpdateRegistration(@NonNull ChannelRegistrationPayload payload) {
-        // check time and payload
         ChannelRegistrationPayload lastSuccessPayload = getLastRegistrationPayload();
-        if (lastSuccessPayload == null) {
-            Logger.verbose("Should update registration. Last payload is null.");
-            return true;
-        }
-
-        long timeSinceLastRegistration = (System.currentTimeMillis() - getLastRegistrationTime());
-        if (privacyManager.isAnyFeatureEnabled() && timeSinceLastRegistration >= CHANNEL_REREGISTRATION_INTERVAL_MS) {
-            Logger.verbose("Should update registration. Time since last registration time is greater than 24 hours.");
-            return true;
-        }
-
-        if (!payload.equals(lastSuccessPayload)) {
+        if (!payload.equals(lastSuccessPayload, false)) {
             Logger.verbose("Should update registration. Channel registration payload has changed.");
             return true;
+        }
+
+        // Only do a time check if a feature is enabled and is in foreground
+        if (privacyManager.isAnyFeatureEnabled() && activityMonitor.isAppForegrounded()) {
+            long timeSinceLastRegistration = (System.currentTimeMillis() - getLastRegistrationTime());
+            if (timeSinceLastRegistration >= CHANNEL_REREGISTRATION_INTERVAL_MS) {
+                Logger.verbose("Should update registration. Time since last registration time is greater than 24 hours.");
+                return true;
+            }
         }
 
         return false;
