@@ -350,7 +350,7 @@ public class UAirship {
         }
 
         isMainProcess = ProcessUtils.isMainProcess(application);
-        GlobalActivityMonitor.shared(application);
+        AirshipAppBootstrap.init(application);
 
         if (LOG_TAKE_OFF_STACKTRACE) {
             StringBuilder sb = new StringBuilder();

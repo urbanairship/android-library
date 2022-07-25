@@ -5,8 +5,6 @@ package com.urbanairship;
 import android.app.Application;
 import android.content.Context;
 
-import com.urbanairship.app.GlobalActivityMonitor;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -23,7 +21,6 @@ public class AirshipInitializer implements Initializer<Boolean> {
     @NonNull
     @Override
     public Boolean create(@NonNull Context context) {
-        GlobalActivityMonitor.shared(context.getApplicationContext());
         Autopilot.automaticTakeOff((Application) context.getApplicationContext(), true);
         return UAirship.isTakingOff() || UAirship.isFlying();
     }
