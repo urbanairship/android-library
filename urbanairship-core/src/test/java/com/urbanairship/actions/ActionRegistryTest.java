@@ -54,7 +54,7 @@ public class ActionRegistryTest extends BaseTestCase {
         validateEntry(registry.getEntry("^ef"), "^ef", "enable_feature");
         validateEntry(registry.getEntry("^ra"), "^ra", "rate_app_action");
         validateEntry(registry.getEntry("^a"), "^a", "set_attributes_action");
-        validateEntry(registry.getEntry("^sla"), "^sla", "subscription_list_action");
+        validateEntry(registry.getEntry("^sla"), "^sla", "subscription_list_action", "^sl", "edit_subscription_list_action");
         validateEntry(registry.getEntry("^pp"), "^pp", "prompt_permission_action");
 
     }

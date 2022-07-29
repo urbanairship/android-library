@@ -24,6 +24,7 @@ import static org.robolectric.Shadows.shadowOf;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.telephony.TelephonyManager;
 
 import androidx.annotation.NonNull;
@@ -35,9 +36,11 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.ResultCallback;
+import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestClock;
 import com.urbanairship.UAirship;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
@@ -50,6 +53,7 @@ import com.urbanairship.util.CachedValue;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 
@@ -85,9 +89,11 @@ public class AirshipChannelTests extends BaseTestCase {
     private final TestClock clock = new TestClock();
     private PrivacyManager privacyManager;
     private final CachedValue<Set<String>> subscriptionListCache = new CachedValue<>(clock);
+    private final TestActivityMonitor testActivityMonitor = new TestActivityMonitor();
+
     private static final JobInfo UPDATE_CHANNEL_JOB = JobInfo.newBuilder()
-                                                                  .setAction("ACTION_UPDATE_CHANNEL")
-                                                                  .build();
+                                                             .setAction("ACTION_UPDATE_CHANNEL")
+                                                             .build();
 
     @Before
     public void setUp() {
@@ -105,7 +111,7 @@ public class AirshipChannelTests extends BaseTestCase {
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar, mockSubscriptionListRegistrar,
-                subscriptionListCache);
+                subscriptionListCache, testActivityMonitor);
     }
 
     @Test
@@ -184,7 +190,7 @@ public class AirshipChannelTests extends BaseTestCase {
      */
     @Test
     public void testCreateChannelWithExtendedBroadcasts() throws RequestException {
-        AirshipConfigOptions configOptions =  new AirshipConfigOptions.Builder()
+        AirshipConfigOptions configOptions = new AirshipConfigOptions.Builder()
                 .setAppKey("appKey")
                 .setAppSecret("appSecret")
                 .setExtendedBroadcastsEnabled(true)
@@ -573,11 +579,37 @@ public class AirshipChannelTests extends BaseTestCase {
                 .setApiVersion(Build.VERSION.SDK_INT)
                 .setCarrier(tm.getNetworkOperatorName())
                 .setSdkVersion(UAirship.getVersion())
+                .setIsActive(false)
                 .build();
 
         // Update registration
         airshipChannel.onPerformJob(UAirship.shared(), UPDATE_CHANNEL_JOB);
         verify(mockClient).createChannelWithPayload(expectedPayload);
+    }
+
+    /**
+     * Test channel registration payload when in foreground.
+     */
+    @Test
+    public void testChannelRegistrationPayloadActive() throws RequestException {
+        testActivityMonitor.foreground();
+
+        when(mockClient.createChannelWithPayload(any(ChannelRegistrationPayload.class)))
+                .thenReturn(createResponse("channel", 200));
+
+        // Update registration
+        airshipChannel.onPerformJob(UAirship.shared(), UPDATE_CHANNEL_JOB);
+        verify(mockClient).createChannelWithPayload(ArgumentMatchers.argThat(argument -> argument.isActive));
+    }
+
+    @Test
+    public void testForegroundDispatchesUpdate()  {
+        airshipChannel.init();
+
+        testActivityMonitor.foreground();
+
+        verify(mockDispatcher, times(1))
+                .dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals("ACTION_UPDATE_CHANNEL") && jobInfo.getConflictStrategy() == JobInfo.KEEP));
     }
 
     /**
@@ -679,8 +711,8 @@ public class AirshipChannelTests extends BaseTestCase {
         privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES);
 
         airshipChannel.editAttributes()
-                .setAttribute("expected_key", "expected_value")
-                .apply();
+                      .setAttribute("expected_key", "expected_value")
+                      .apply();
 
         verify(mockDispatcher, times(0)).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
             @Override
@@ -1001,8 +1033,8 @@ public class AirshipChannelTests extends BaseTestCase {
     @Test
     public void testGetSubscriptionListsFromCache() {
         Set<String> subscriptions = new HashSet<String>() {{
-           add("foo");
-           add("bar");
+            add("foo");
+            add("bar");
         }};
 
         assertNull(subscriptionListCache.get());
@@ -1155,7 +1187,7 @@ public class AirshipChannelTests extends BaseTestCase {
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar, mockSubscriptionListRegistrar,
-                subscriptionListCache);
+                subscriptionListCache, testActivityMonitor);
 
         airshipChannel.init();
         assertFalse(airshipChannel.isChannelCreationDelayEnabled());
@@ -1171,7 +1203,7 @@ public class AirshipChannelTests extends BaseTestCase {
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar, mockSubscriptionListRegistrar,
-                subscriptionListCache);
+                subscriptionListCache, testActivityMonitor);
 
         airshipChannel.init();
         assertTrue(airshipChannel.isChannelCreationDelayEnabled());
@@ -1194,7 +1226,7 @@ public class AirshipChannelTests extends BaseTestCase {
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar, mockSubscriptionListRegistrar,
-                subscriptionListCache);
+                subscriptionListCache, testActivityMonitor);
 
         airshipChannel.init();
 
@@ -1273,6 +1305,18 @@ public class AirshipChannelTests extends BaseTestCase {
                         jobInfo.getConflictStrategy() == JobInfo.REPLACE;
             }
         }));
+    }
+
+    @Test
+    public void testProcessContactSubscriptionListChanges() {
+        List<SubscriptionListMutation> updates = new ArrayList<SubscriptionListMutation>() {{
+            add(SubscriptionListMutation.newSubscribeMutation("app 1", 100));
+            add(SubscriptionListMutation.newUnsubscribeMutation("app 2", 100));
+        }};
+
+        airshipChannel.processContactSubscriptionListMutations(updates);
+
+        verify(mockSubscriptionListRegistrar).cacheInLocalHistory(updates);
     }
 
     private static <T> Response<T> createResponse(T result, int status) {

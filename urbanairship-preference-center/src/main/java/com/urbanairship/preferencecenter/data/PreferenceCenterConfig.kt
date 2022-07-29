@@ -12,12 +12,17 @@ import com.urbanairship.preferencecenter.util.toJsonList
 data class PreferenceCenterConfig(
     val id: String,
     val sections: List<Section>,
-    val display: CommonDisplay
+    val display: CommonDisplay,
+    val options: Options? = null
 ) {
+
+    constructor(id: String, sections: List<Section>, display: CommonDisplay) : this(id, sections, display, null)
+
     companion object {
         internal const val KEY_ID = "id"
         private const val KEY_DISPLAY = "display"
         private const val KEY_SECTIONS = "sections"
+        private const val KEY_OPTIONS = "options"
 
         /**
          * Parses a `JsonMap` into a `PreferenceCenterConfig` object.
@@ -29,7 +34,8 @@ data class PreferenceCenterConfig(
             PreferenceCenterConfig(
                 id = json.requireField(KEY_ID),
                 sections = json.opt(KEY_SECTIONS).optList().map { Section.parse(it.optMap()) },
-                display = json.get(KEY_DISPLAY)?.map?.let { CommonDisplay.parse(it) } ?: CommonDisplay.EMPTY
+                display = json.get(KEY_DISPLAY)?.map?.let { CommonDisplay.parse(it) } ?: CommonDisplay.EMPTY,
+                options = json.get(KEY_OPTIONS)?.map?.let { Options.parse(it) }
             )
     }
 
@@ -41,6 +47,7 @@ data class PreferenceCenterConfig(
     internal fun toJson(): JsonMap = jsonMapOf(
         KEY_ID to id,
         KEY_SECTIONS to sections.map(Section::toJson).toJsonList(),
-        KEY_DISPLAY to display.toJson()
+        KEY_DISPLAY to display.toJson(),
+        KEY_OPTIONS to options?.toJson()
     )
 }

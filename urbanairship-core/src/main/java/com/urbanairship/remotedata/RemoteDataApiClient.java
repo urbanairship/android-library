@@ -5,6 +5,11 @@ package com.urbanairship.remotedata;
 import android.net.Uri;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+
 import com.urbanairship.PushProviders;
 import com.urbanairship.UAirship;
 import com.urbanairship.base.Supplier;
@@ -14,7 +19,6 @@ import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
-import com.urbanairship.http.ResponseParser;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
@@ -27,11 +31,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 
 /**
  * API client for fetching remote data.
@@ -47,6 +46,8 @@ public class RemoteDataApiClient {
     private static final String COUNTRY_QUERY_PARAM = "country";
     // ISO 3166-2 two digit language code
     private static final String LANGUAGE_QUERY_PARAM = "language";
+
+    private static final String RANDOM_VALUE_QUERY_PARAM = "random_value";
 
     private static final String MANUFACTURER_QUERY_PARAM = "manufacturer";
     private static final String PUSH_PROVIDER_QUERY_PARAM = "push_providers";
@@ -107,11 +108,12 @@ public class RemoteDataApiClient {
      *
      * @param lastModified An optional last-modified timestamp in ISO-8601 format.
      * @param locale The current locale.
+     * @param randomValue The remote data random value.
      * @return The fetch payload response.
      */
     @NonNull
-    Response<Result> fetchRemoteDataPayloads(@Nullable String lastModified, @NonNull final Locale locale, @NonNull final PayloadParser payloadParser) throws RequestException {
-        final Uri url = getRemoteDataUrl(locale);
+    Response<Result> fetchRemoteDataPayloads(@Nullable String lastModified, @NonNull final Locale locale, int randomValue, @NonNull final PayloadParser payloadParser) throws RequestException {
+        final Uri url = getRemoteDataUrl(locale, randomValue);
 
         Request request = requestFactory.createRequest()
                                         .setOperation("GET", url)
@@ -141,17 +143,19 @@ public class RemoteDataApiClient {
      * Gets a device url for a given path.
      *
      * @param locale The current locale.
+     * @param randomValue The remote data random value.
      * @return The device URL or {@code null} if the URL is invalid.
      */
     @Nullable
-    public Uri getRemoteDataUrl(@NonNull Locale locale) {
+    public Uri getRemoteDataUrl(@NonNull Locale locale, int randomValue) {
         // api/remote-data/app/{appkey}/{platform}?sdk_version={version}&language={language}&country={country}&manufacturer={manufacturer}&push_providers={push_providers}
         UrlBuilder builder = runtimeConfig.getUrlConfig()
                                           .remoteDataUrl()
                                           .appendEncodedPath(REMOTE_DATA_PATH)
                                           .appendPath(runtimeConfig.getConfigOptions().appKey)
                                           .appendPath(runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM ? AMAZON : ANDROID)
-                                          .appendQueryParameter(SDK_VERSION_QUERY_PARAM, UAirship.getVersion());
+                                          .appendQueryParameter(SDK_VERSION_QUERY_PARAM, UAirship.getVersion())
+                                          .appendQueryParameter(RANDOM_VALUE_QUERY_PARAM, String.valueOf(randomValue));
 
         String manufacturer = getManufacturer();
         if (shouldIncludeManufacturer(manufacturer)) {

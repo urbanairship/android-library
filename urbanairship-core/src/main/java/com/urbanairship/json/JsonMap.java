@@ -110,6 +110,23 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
     }
 
     /**
+     * Returns the required value in the map with the specified key. If the value is not in the map
+     * an exception will be thrown.
+     *
+     * @param key the key.
+     * @return The value of the mapping with the specified key.
+     * @throws JsonException if the value is not in the map.
+     */
+    @NonNull
+    public JsonValue require(@NonNull String key) throws JsonException {
+        JsonValue value = get(key);
+        if (value == null) {
+            throw new JsonException("Expected value for key: " + key);
+        }
+        return value;
+    }
+
+    /**
      * Returns whether this map is empty.
      *
      * @return {@code true} if this map has no elements, {@code false}

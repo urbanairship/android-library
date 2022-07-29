@@ -38,6 +38,7 @@ public class Audience implements JsonSerializable {
     private static final String TEST_DEVICES_KEY = "test_devices";
     private static final String MISS_BEHAVIOR_KEY = "miss_behavior";
     private static final String REQUIRES_ANALYTICS_KEY = "requires_analytics";
+    private static final String PERMISSIONS_KEY = "permissions";
 
     @StringDef({ MISS_BEHAVIOR_CANCEL, MISS_BEHAVIOR_SKIP, MISS_BEHAVIOR_PENALIZE })
     @Retention(RetentionPolicy.SOURCE)
@@ -69,6 +70,8 @@ public class Audience implements JsonSerializable {
     private final List<String> testDevices;
     private final TagSelector tagSelector;
     private final JsonPredicate versionPredicate;
+    private final JsonPredicate permissionsPredicate;
+
     private final String missBehavior;
 
     /**
@@ -86,6 +89,7 @@ public class Audience implements JsonSerializable {
         this.versionPredicate = builder.versionPredicate;
         this.testDevices = builder.testDevices;
         this.missBehavior = builder.missBehavior;
+        this.permissionsPredicate = builder.permissionsPredicate;
     }
 
     @NonNull
@@ -101,6 +105,7 @@ public class Audience implements JsonSerializable {
                       .put(TAGS_KEY, tagSelector)
                       .put(APP_VERSION_KEY, versionPredicate)
                       .put(MISS_BEHAVIOR_KEY, missBehavior)
+                      .put(PERMISSIONS_KEY, permissionsPredicate)
                       .build().toJsonValue();
     }
 
@@ -168,6 +173,11 @@ public class Audience implements JsonSerializable {
         // App Version
         if (content.containsKey(APP_VERSION_KEY)) {
             builder.setVersionPredicate(JsonPredicate.parse(content.get(APP_VERSION_KEY)));
+        }
+
+        // Permissions
+        if (content.containsKey(PERMISSIONS_KEY)) {
+            builder.setPermissionsPredicate(JsonPredicate.parse(content.get(PERMISSIONS_KEY)));
         }
 
         // Tags
@@ -300,6 +310,16 @@ public class Audience implements JsonSerializable {
     }
 
     /**
+     * Gets the permissions predicate.
+     *
+     * @return The permissions predicate.
+     */
+    @Nullable
+    public JsonPredicate getPermissionsPredicate() {
+        return permissionsPredicate;
+    }
+
+    /**
      * Gets the audience miss behavior.
      *
      * @return The audience miss behavior.
@@ -310,53 +330,52 @@ public class Audience implements JsonSerializable {
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         Audience audience = (Audience) o;
-
-        if (newUser != null ? !newUser.equals(audience.newUser) : audience.newUser != null) {
-            return false;
-        }
-        if (notificationsOptIn != null ? !notificationsOptIn.equals(audience.notificationsOptIn) : audience.notificationsOptIn != null) {
-            return false;
-        }
-        if (locationOptIn != null ? !locationOptIn.equals(audience.locationOptIn) : audience.locationOptIn != null) {
-            return false;
-        }
-        if (languageTags != null ? !languageTags.equals(audience.languageTags) : audience.languageTags != null) {
-            return false;
-        }
-        if (tagSelector != null ? !tagSelector.equals(audience.tagSelector) : audience.tagSelector != null) {
-            return false;
-        }
-        if (missBehavior != null ? !missBehavior.equals(audience.missBehavior) : audience.missBehavior != null) {
-            return false;
-        }
-
-        if (!ObjectsCompat.equals(requiresAnalytics, audience.requiresAnalytics)) {
-            return false;
-        }
-
-        return versionPredicate != null ? versionPredicate.equals(audience.versionPredicate) : audience.versionPredicate == null;
+        return ObjectsCompat.equals(newUser, audience.newUser)
+                && ObjectsCompat.equals(notificationsOptIn, audience.notificationsOptIn)
+                && ObjectsCompat.equals(locationOptIn, audience.locationOptIn)
+                && ObjectsCompat.equals(requiresAnalytics, audience.requiresAnalytics)
+                && ObjectsCompat.equals(languageTags, audience.languageTags)
+                && ObjectsCompat.equals(testDevices, audience.testDevices)
+                && ObjectsCompat.equals(tagSelector, audience.tagSelector)
+                && ObjectsCompat.equals(versionPredicate, audience.versionPredicate)
+                && ObjectsCompat.equals(permissionsPredicate, audience.permissionsPredicate)
+                && ObjectsCompat.equals(missBehavior, audience.missBehavior);
     }
 
     @Override
     public int hashCode() {
-        int result = newUser != null ? newUser.hashCode() : 0;
-        result = 31 * result + (notificationsOptIn != null ? notificationsOptIn.hashCode() : 0);
-        result = 31 * result + (locationOptIn != null ? locationOptIn.hashCode() : 0);
-        result = 31 * result + (languageTags != null ? languageTags.hashCode() : 0);
-        result = 31 * result + (tagSelector != null ? tagSelector.hashCode() : 0);
-        result = 31 * result + (versionPredicate != null ? versionPredicate.hashCode() : 0);
-        result = 31 * result + (missBehavior != null ? missBehavior.hashCode() : 0);
-        result = 31 * result + (requiresAnalytics != null ? requiresAnalytics.hashCode() : 0);
-        return result;
+        return ObjectsCompat.hash(
+                newUser,
+                notificationsOptIn,
+                locationOptIn,
+                requiresAnalytics,
+                languageTags,
+                testDevices,
+                tagSelector,
+                versionPredicate,
+                permissionsPredicate,
+                missBehavior
+        );
+    }
+
+    @Override
+    public String toString() {
+        return "Audience{" +
+                "newUser=" + newUser +
+                ", notificationsOptIn=" + notificationsOptIn +
+                ", locationOptIn=" + locationOptIn +
+                ", requiresAnalytics=" + requiresAnalytics +
+                ", languageTags=" + languageTags +
+                ", testDevices=" + testDevices +
+                ", tagSelector=" + tagSelector +
+                ", versionPredicate=" + versionPredicate +
+                ", permissionsPredicate=" + permissionsPredicate +
+                ", missBehavior='" + missBehavior + '\'' +
+                '}';
     }
 
     /**
@@ -384,6 +403,7 @@ public class Audience implements JsonSerializable {
 
         private TagSelector tagSelector;
         private JsonPredicate versionPredicate;
+        private JsonPredicate permissionsPredicate;
 
         private Builder() {
         }
@@ -442,7 +462,6 @@ public class Audience implements JsonSerializable {
             return this;
         }
 
-
         /**
          * Sets the notification opt-in audience condition for the in-app message.
          *
@@ -478,6 +497,18 @@ public class Audience implements JsonSerializable {
         @NonNull
         private Builder setVersionPredicate(@Nullable JsonPredicate predicate) {
             this.versionPredicate = predicate;
+            return this;
+        }
+
+        /**
+         * JSON predicate to be used to match the app's permissions map.
+         *
+         * @param predicate Json predicate to match the permissions map.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder setPermissionsPredicate(@NonNull JsonPredicate predicate) {
+            this.permissionsPredicate = predicate;
             return this;
         }
 
@@ -527,6 +558,7 @@ public class Audience implements JsonSerializable {
         public Audience build() {
             return new Audience(this);
         }
+
     }
 
 }

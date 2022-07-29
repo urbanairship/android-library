@@ -20,6 +20,7 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -607,6 +608,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                                                            .put("device_type", "android")
                                                            .put("opt_in", false)
                                                            .put("background", false)
+                                                           .put("is_activity", false)
                                                            .put("android", JsonMap.newBuilder()
                                                                                   .put("delivery_type", "hms")
                                                                                   .build())
@@ -630,6 +632,7 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                                                            .put("device_type", "amazon")
                                                            .put("opt_in", false)
                                                            .put("background", false)
+                                                           .put("is_activity", false)
                                                            .build())
                                     .build()
                                     .toJsonValue();
@@ -716,5 +719,22 @@ public class ChannelRegistrationPayloadTest extends BaseTestCase {
                 .build();
 
         assertEquals(expected, minPayload);
+    }
+
+
+    @Test
+    public void testEqualsIgnoreActive() {
+        ChannelRegistrationPayload active = new ChannelRegistrationPayload.Builder()
+                .setIsActive(true)
+                .build();
+
+        ChannelRegistrationPayload inActive = new ChannelRegistrationPayload.Builder()
+                .setIsActive(false)
+                .build();
+
+        assertNotEquals(active, inActive);
+        assertTrue(active.equals(inActive, false));
+        assertFalse(active.equals(inActive, true));
+
     }
 }

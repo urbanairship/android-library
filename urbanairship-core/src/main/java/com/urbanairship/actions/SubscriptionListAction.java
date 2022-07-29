@@ -14,7 +14,9 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Action for subscribing/unsubscribing to lists.
@@ -39,45 +41,19 @@ import androidx.annotation.VisibleForTesting;
  * <p>
  * Result value: The payload used.
  * <p>
- * Default Registration Names: ^sla, subscription_list_action
+ * Default Registration Names: ^sla, ^sl, subscription_list_action, edit_subscription_list_action
  * <p>
  * Default Registration Predicate: none
  */
 public class SubscriptionListAction extends Action {
 
-    /**
-     * JSON key for subscription type.
-     */
-    @NonNull
+    // Arg keys
     private static final String TYPE_KEY = "type";
-
-    /**
-     * JSON key for list name to subscribe for.
-     */
-    @NonNull
     private static final String LIST_KEY = "list";
-
-    /**
-     * JSON key for action (subscribe or unsubscribe).
-     */
-    @NonNull
     private static final String ACTION_KEY = "action";
-
-    /**
-     * JSON key for scope (app, web, email or SMS).
-     */
-    @NonNull
     private static final String SCOPE_KEY = "scope";
-
-    /**
-     * JSON key for edits list.
-     */
-    @NonNull
-    private static final String EDITS_KEY = "edits";
-
     private static final String SUBSCRIBE_KEY = "subscribe";
     private static final String UNSUBSCRIBE_KEY = "unsubscribe";
-
     private static final String CHANNEL_KEY = "channel";
     private static final String CONTACT_KEY = "contact";
 
@@ -93,67 +69,107 @@ public class SubscriptionListAction extends Action {
     @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^sla";
 
+    /**
+     * Default registry short name
+     */
+    @NonNull
+    public static final String ALT_DEFAULT_REGISTRY_SHORT_NAME = "^sl";
+
+    /**
+     * Default registry short name
+     */
+    @NonNull
+    public static final String ALT_DEFAULT_REGISTRY_NAME = "edit_subscription_list_action";
+
+    private final Supplier<SubscriptionListEditor> channelEditorSupplier;
+    private final Supplier<ScopedSubscriptionListEditor> contactEditorSupplier;
+
+    /**
+     * Default constructor.
+     */
+    public SubscriptionListAction() {
+        this(
+                () -> UAirship.shared().getChannel().editSubscriptionLists(),
+                () -> UAirship.shared().getContact().editSubscriptionLists()
+        );
+    }
+
+    @VisibleForTesting
+    SubscriptionListAction(@NonNull Supplier<SubscriptionListEditor> channelEditorSupplier,
+                           @NonNull Supplier<ScopedSubscriptionListEditor> contactEditorSupplier) {
+        this.channelEditorSupplier = channelEditorSupplier;
+        this.contactEditorSupplier = contactEditorSupplier;
+    }
+
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
-        if (arguments.getValue().getMap() != null) {
-            JsonValue edits = arguments.getValue().getMap().opt(EDITS_KEY);
-            Logger.debug(edits.toString());
-        }
+        SubscriptionListEditor channelEditor = ObjectsCompat.requireNonNull(channelEditorSupplier.get());
+        ScopedSubscriptionListEditor contactEditor = ObjectsCompat.requireNonNull(contactEditorSupplier.get());
+        JsonList operations = arguments.getValue().toJsonValue().optList();
 
-        SubscriptionListEditor channelEditor = UAirship.shared().getChannel().editSubscriptionLists();
-        ScopedSubscriptionListEditor contactEditor = UAirship.shared().getContact().editSubscriptionLists();
-        JsonList edits = arguments.getValue().toJsonValue().getList();
+        for (JsonValue operation : operations) {
+            try {
+                JsonMap map = operation.requireMap();
+                String listId = map.require(LIST_KEY).requireString();
+                String type = map.require(TYPE_KEY).requireString();
+                String action = map.require(ACTION_KEY).requireString();
 
-        for (JsonValue edit : edits) {
-            JsonMap editMap = edit.getMap();
-            String listId = editMap.opt(LIST_KEY).getString();
-            if (listId != null) {
-                if (editMap.opt(TYPE_KEY).getString().equals(CHANNEL_KEY)) {
-                    if (editMap.opt(ACTION_KEY).getString().equals(SUBSCRIBE_KEY)) {
-                        channelEditor.subscribe(listId);
-                    } else if (editMap.opt(ACTION_KEY).getString().equals(UNSUBSCRIBE_KEY)) {
-                        channelEditor.unsubscribe(listId);
-                    }
-                } else if (editMap.opt(TYPE_KEY).getString().equals(CONTACT_KEY)) {
-                    try {
-                        Scope scope = Scope.fromJson(editMap.opt(SCOPE_KEY));
-                        if (editMap.opt(ACTION_KEY).getString().equals(SUBSCRIBE_KEY)) {
-                            contactEditor.subscribe(listId, scope);
-                        } else if (editMap.opt(ACTION_KEY).getString().equals(UNSUBSCRIBE_KEY)) {
-                            contactEditor.unsubscribe(listId, scope);
-                        }
-                    } catch (JsonException e) {
-                        Logger.error("Scope error : " + e.getMessage());
-                        e.printStackTrace();
-                        return ActionResult.newEmptyResult();
-                    }
+                switch (type) {
+                    case CHANNEL_KEY:
+                        applyChannelOperation(channelEditor, listId, action);
+                        break;
+                    case CONTACT_KEY:
+                        Scope scope = Scope.fromJson(map.require(SCOPE_KEY));
+                        applyContactOperation(contactEditor, listId, action, scope);
+                        break;
                 }
-            } else {
-                Logger.error("Error : the List ID is missing");
-                return ActionResult.newEmptyResult();
+            } catch (JsonException e) {
+                Logger.error(e, "Invalid argument");
+                return ActionResult.newErrorResult(e);
             }
         }
 
         channelEditor.apply();
         contactEditor.apply();
-
         return ActionResult.newResult(arguments.getValue());
+    }
+
+    private void applyContactOperation(@NonNull ScopedSubscriptionListEditor editor,
+                                       @NonNull String listId,
+                                       @NonNull String action,
+                                       @NonNull Scope scope) throws JsonException {
+        switch (action) {
+            case SUBSCRIBE_KEY:
+                editor.subscribe(listId, scope);
+                break;
+            case UNSUBSCRIBE_KEY:
+                editor.unsubscribe(listId, scope);
+                break;
+            default:
+                throw new JsonException("Invalid action: " + action);
+        }
+    }
+
+    private void applyChannelOperation(@NonNull SubscriptionListEditor editor,
+                                       @NonNull String listId,
+                                       @NonNull String action) throws JsonException {
+
+        switch (action) {
+            case SUBSCRIBE_KEY:
+                editor.subscribe(listId);
+                break;
+            case UNSUBSCRIBE_KEY:
+                editor.unsubscribe(listId);
+                break;
+            default:
+                throw new JsonException("Invalid action: " + action);
+        }
     }
 
     @Override
     public boolean acceptsArguments(@NonNull ActionArguments arguments) {
-        if (arguments.getValue().isNull()) {
-            return false;
-        }
-
-        if (arguments.getValue().toJsonValue().getList() == null) {
-            return false;
-        }
-
-        return true;
+        return !arguments.getValue().isNull() && arguments.getSituation() != SITUATION_PUSH_RECEIVED;
     }
-
-
 
 }

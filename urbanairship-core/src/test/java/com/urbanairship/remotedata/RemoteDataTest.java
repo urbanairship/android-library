@@ -2,9 +2,27 @@
 
 package com.urbanairship.remotedata;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
 import android.content.Context;
 import android.net.Uri;
 import android.os.Looper;
+
+import androidx.annotation.NonNull;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
@@ -37,14 +55,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 import org.robolectric.shadows.ShadowLooper;
 
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,23 +72,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-
-import androidx.annotation.NonNull;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 @Config(
         sdk = 28,
@@ -112,7 +111,7 @@ public class RemoteDataTest extends BaseTestCase {
         clock = new TestClock();
 
         mockClient = mock(RemoteDataApiClient.class);
-        when(mockClient.getRemoteDataUrl(any(Locale.class))).thenReturn(Uri.parse("https://airship.com"));
+        when(mockClient.getRemoteDataUrl(any(Locale.class), anyInt())).thenReturn(Uri.parse("https://airship.com"));
 
         remoteData = new RemoteData(TestApplication.getApplication(), preferenceDataStore, TestAirshipRuntimeConfig.newTestConfig(),
                 privacyManager, activityMonitor, mockDispatcher, localeManager, pushManager, clock, mockClient, mockNetwork);
@@ -444,7 +443,7 @@ public class RemoteDataTest extends BaseTestCase {
                 .setResponseHeaders(headers)
                 .build();
 
-        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), eq(locale), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), eq(locale), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
@@ -455,7 +454,7 @@ public class RemoteDataTest extends BaseTestCase {
         assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
         runLooperTasks();
 
-        verify(mockClient).fetchRemoteDataPayloads(eq("lastModifiedResponse"), eq(locale), any(RemoteDataApiClient.PayloadParser.class));
+        verify(mockClient).fetchRemoteDataPayloads(eq("lastModifiedResponse"), eq(locale), anyInt(), any(RemoteDataApiClient.PayloadParser.class));
     }
 
     /**
@@ -465,8 +464,8 @@ public class RemoteDataTest extends BaseTestCase {
     public void testLastModifiedMetadataChanges() throws RequestException {
         Locale locale = Locale.forLanguageTag("en-US");
         Locale otherLocale = Locale.forLanguageTag("de-de");
-        when(mockClient.getRemoteDataUrl(otherLocale)).thenReturn(Uri.parse("https://airship.com/some-locale"));
-        when(mockClient.getRemoteDataUrl(locale)).thenReturn(Uri.parse("https://airship.com/some-locale"));
+        when(mockClient.getRemoteDataUrl(otherLocale, 555)).thenReturn(Uri.parse("https://airship.com/some-locale"));
+        when(mockClient.getRemoteDataUrl(locale, 555)).thenReturn(Uri.parse("https://airship.com/some-locale"));
 
         localeManager.setLocaleOverride(locale);
 
@@ -478,7 +477,7 @@ public class RemoteDataTest extends BaseTestCase {
                 .setResponseHeaders(headers)
                 .build();
 
-        when(mockClient.fetchRemoteDataPayloads(eq((String) null), eq(locale), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+        when(mockClient.fetchRemoteDataPayloads(eq((String) null), eq(locale), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
@@ -487,7 +486,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         localeManager.setLocaleOverride(otherLocale);
 
-        when(mockClient.fetchRemoteDataPayloads(eq((String) null), eq(otherLocale), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+        when(mockClient.fetchRemoteDataPayloads(eq((String) null), eq(otherLocale), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         // Perform the update
         assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(UAirship.shared(), jobInfo));
@@ -505,12 +504,12 @@ public class RemoteDataTest extends BaseTestCase {
         Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(304)
                 .build();
 
-        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
         remoteData.onPerformJob(UAirship.shared(), jobInfo);
 
-        verify(mockClient).fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), parserArgumentCaptor.capture());
+        verify(mockClient).fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), parserArgumentCaptor.capture());
 
         RemoteDataApiClient.PayloadParser parser = parserArgumentCaptor.getValue();
 
@@ -545,7 +544,7 @@ public class RemoteDataTest extends BaseTestCase {
                 .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
                 .build();
 
-        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
@@ -572,7 +571,7 @@ public class RemoteDataTest extends BaseTestCase {
                 .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
                 .build();
 
-        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
@@ -588,7 +587,7 @@ public class RemoteDataTest extends BaseTestCase {
                 .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
                 .build();
 
-        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
@@ -604,7 +603,7 @@ public class RemoteDataTest extends BaseTestCase {
                 .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
                 .build();
 
-        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
@@ -626,7 +625,7 @@ public class RemoteDataTest extends BaseTestCase {
                 .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
                 .build();
 
-        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
@@ -657,7 +656,7 @@ public class RemoteDataTest extends BaseTestCase {
                 .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
                 .build();
 
-        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
@@ -678,7 +677,7 @@ public class RemoteDataTest extends BaseTestCase {
         Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(400)
                 .build();
 
-        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();
@@ -700,10 +699,10 @@ public class RemoteDataTest extends BaseTestCase {
 
     private void updatePayloads(RemoteDataPayload... payloads) throws RequestException {
         Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
-                .setResult(new RemoteDataApiClient.Result(mockClient.getRemoteDataUrl(localeManager.getLocale()), asSet(payloads)))
+                .setResult(new RemoteDataApiClient.Result(mockClient.getRemoteDataUrl(localeManager.getLocale(), 555), asSet(payloads)))
                 .build();
 
-        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
+        when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
         // Perform the update
         JobInfo jobInfo = JobInfo.newBuilder().setAction(RemoteData.ACTION_REFRESH).build();

@@ -184,16 +184,25 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         emitAll(
             // Fetch config first to determine which subscriptions are needed and flat map them into the flow.
             configFlow.flatMapConcat { config ->
+
+                val mergeChannelDataToContact = config.options?.mergeChannelDataToContact ?: false
+                val fetchChannelSubscriptions = config.hasChannelSubscriptions || mergeChannelDataToContact
+                val fetchContactSubscriptions = config.hasContactSubscriptions
+
                 when {
-                    config.hasChannelSubscriptions && config.hasContactSubscriptions ->
+                    fetchChannelSubscriptions && fetchContactSubscriptions ->
                         channelSubscriptionsFlow.zip(contactSubscriptionsFlow) { channelSubs, contactSubs ->
-                            Triple(config, channelSubs, contactSubs)
+                            if (mergeChannelDataToContact) {
+                                Triple(config, channelSubs, mergeSubscriptions(channelSubs, contactSubs))
+                            } else {
+                                Triple(config, channelSubs, contactSubs)
+                            }
                         }
-                    config.hasChannelSubscriptions ->
+                    fetchChannelSubscriptions ->
                         channelSubscriptionsFlow.map { channelSubs ->
                             Triple(config, channelSubs, emptyMap())
                         }
-                    config.hasContactSubscriptions ->
+                    fetchContactSubscriptions ->
                         contactSubscriptionsFlow.map { contactSubs ->
                             Triple(config, emptySet(), contactSubs)
                         }
@@ -220,6 +229,16 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 emit(Change.ShowError(error = error))
             }.flowOn(ioDispatcher)
         )
+    }
+
+    private fun mergeSubscriptions(channelSubscriptions: Set<String>, contactSubscriptions: Map<String, Set<Scope>>): Map<String, Set<Scope>> {
+        val map = contactSubscriptions.toMutableMap()
+        channelSubscriptions.forEach {
+            map[it] = map[it]?.toMutableSet()?.apply {
+                add(Scope.APP)
+            } ?: setOf(Scope.APP)
+        }
+        return map.toMap()
     }
 
     private fun updatePreference(
