@@ -2,7 +2,9 @@
 
 package com.urbanairship.util;
 
+import android.content.Context;
 import android.view.View;
+import android.view.accessibility.AccessibilityManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;

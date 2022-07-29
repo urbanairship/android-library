@@ -1,11 +1,11 @@
 package com.urbanairship.preferencecenter.ui
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Button
-import android.widget.CompoundButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -39,6 +39,7 @@ import com.urbanairship.preferencecenter.util.ActionsMap
 import com.urbanairship.preferencecenter.util.loadImageOrHide
 import com.urbanairship.preferencecenter.util.setTextOrHide
 import com.urbanairship.preferencecenter.widget.SubscriptionTypeChip
+import com.urbanairship.util.AccessibilityUtils
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -437,19 +438,9 @@ internal sealed class PrefCenterItem(val type: Int) {
         class ViewHolder(
             itemView: View,
             private val isChecked: (id: String) -> Boolean,
-            onCheckedChange: (position: Int, isChecked: Boolean) -> Unit,
+            private val onCheckedChange: (position: Int, isChecked: Boolean) -> Unit,
         ) : CommonViewHolder<ChannelSubscriptionItem>(itemView) {
             private val switch: SwitchMaterial = itemView.findViewById(R.id.ua_pref_widget_switch)
-
-            private val checkedChangeListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
-                if (adapterPosition != RecyclerView.NO_POSITION) {
-                    onCheckedChange(adapterPosition, isChecked)
-                }
-            }
-
-            init {
-                switch.setOnCheckedChangeListener(checkedChangeListener)
-            }
 
             override fun bind(item: ChannelSubscriptionItem) {
                 titleView.setTextOrHide(item.title)
@@ -459,8 +450,42 @@ internal sealed class PrefCenterItem(val type: Int) {
                     // Unset and re-set listener so that we can set up the switch without notifying listeners.
                     setOnCheckedChangeListener(null)
                     isChecked = isChecked(item.subscriptionId)
-                    setOnCheckedChangeListener(checkedChangeListener)
+                    setOnCheckedChangeListener { _, isChecked ->
+                        if (adapterPosition != RecyclerView.NO_POSITION) {
+                            onCheckedChange(adapterPosition, isChecked)
+                            updateAccessibilityDescription(itemView.context, item, isChecked)
+                        }
+                    }
                 }
+
+                // Add a click listener on the whole item to provide a better experience for toggling subscriptions
+                // when using screen readers.
+                itemView.setOnClickListener {
+                    if (adapterPosition != RecyclerView.NO_POSITION) {
+                        switch.isChecked = !switch.isChecked
+                    }
+                }
+
+                updateAccessibilityDescription(itemView.context, item, isChecked(item.subscriptionId))
+            }
+
+            private fun updateAccessibilityDescription(context: Context, item: ChannelSubscriptionItem, isChecked: Boolean) {
+                itemView.contentDescription = context.getString(
+                    R.string.ua_preference_center_subscription_item_description,
+                    item.title,
+                    item.subtitle,
+                    if (isChecked) {
+                        R.string.ua_preference_center_subscribed_description
+                    } else {
+                        R.string.ua_preference_center_unsubscribed_description
+                    }.let(context::getString)
+                )
+
+                AccessibilityUtils.setClickActionLabel(itemView, if (isChecked) {
+                    R.string.ua_preference_center_action_unsubscribe
+                } else {
+                    R.string.ua_preference_center_action_subscribe
+                })
             }
         }
     }
@@ -521,18 +546,46 @@ internal sealed class PrefCenterItem(val type: Int) {
                 titleView.setTextOrHide(item.title)
                 descriptionView.setTextOrHide(item.subtitle)
 
-                val checkedChangeListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
-                    if (adapterPosition != RecyclerView.NO_POSITION) {
-                        onCheckedChange(adapterPosition, item.scopes, isChecked)
-                    }
-                }
-
                 with(switch) {
                     // Unset and re-set listener so that we can set up the switch without notifying listeners.
                     setOnCheckedChangeListener(null)
                     isChecked = isChecked(item.subscriptionId, item.scopes)
-                    setOnCheckedChangeListener(checkedChangeListener)
+                    setOnCheckedChangeListener { _, isChecked ->
+                        if (adapterPosition != RecyclerView.NO_POSITION) {
+                            onCheckedChange(adapterPosition, item.scopes, isChecked)
+                            updateAccessibilityDescription(itemView.context, item, isChecked)
+                        }
+                    }
                 }
+
+                // Add a click listener on the whole item to provide a better experience for toggling subscriptions
+                // when using screen readers.
+                itemView.setOnClickListener {
+                    if (adapterPosition != RecyclerView.NO_POSITION) {
+                        switch.isChecked = !switch.isChecked
+                    }
+                }
+
+                updateAccessibilityDescription(itemView.context, item, isChecked(item.subscriptionId, item.scopes))
+            }
+
+            private fun updateAccessibilityDescription(context: Context, item: ContactSubscriptionItem, isChecked: Boolean) {
+                itemView.contentDescription = context.getString(
+                    R.string.ua_preference_center_subscription_item_description,
+                    item.title,
+                    item.subtitle,
+                    if (isChecked) {
+                        R.string.ua_preference_center_subscribed_description
+                    } else {
+                        R.string.ua_preference_center_unsubscribed_description
+                    }.let(context::getString)
+                )
+
+                AccessibilityUtils.setClickActionLabel(itemView, if (isChecked) {
+                    R.string.ua_preference_center_action_unsubscribe
+                } else {
+                    R.string.ua_preference_center_action_subscribe
+                })
             }
         }
     }

@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:baselineAligned="false"
+    android:importantForAccessibility="yes"
     android:orientation="horizontal">
 
     <LinearLayout
@@ -18,6 +19,7 @@
             style="@style/UrbanAirship.PreferenceCenter.Item.PreferenceTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:importantForAccessibility="no"
             tools:text="Title" />
 
         <TextView
@@ -26,6 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
+            android:importantForAccessibility="no"
             tools:text="Description"
             tools:visibility="visible" />
     </LinearLayout>
