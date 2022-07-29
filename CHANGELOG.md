@@ -11,6 +11,7 @@ Minor release that adds support for sending a new `isActive` attribute on channe
 - Added the ability to initialize the Airship SDK without any external dependencies, to better support apps that initialize Jetpack WorkManager via dependency-injection frameworks.
 - Improved accessibility descriptions for Preference Center subscription list items.
 - Location integration with Airship can be replaced with setting a location permission delegate on `PermissionsManager`.
+- Fixed subscription list action.
 
 ## Version 16.6.1 June 30, 2022
 
