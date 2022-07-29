@@ -2,6 +2,15 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.7.0 July 29, 2022
+
+Minor release that adds support for sending a new `isActive` attribute on channel registration updates, improves accessibility descriptions for Preference Center subscription list items, and improves initialization of the Airship SDK for apps that make use of dependency-injection frameworks.
+
+### Changes
+- Channel registration will now send up `isActive` when updating registration in the foreground, for better MAU tracking.
+- Added the ability to initialize the Airship SDK without any external dependencies, to better support apps that initialize Jetpack WorkManager via dependency-injection frameworks.
+- Improved accessibility descriptions for Preference Center subscription list items.
+
 ## Version 16.6.1 June 30, 2022
 
 Patch release that fixes issues with ADM push provider and a bad room migration when updating the SDK to a version before SDK 15.1 to SDK 16.5.1. Apps using SDK 15.0.0 and lower should update directly to SDK 16.6.1 or newer.
