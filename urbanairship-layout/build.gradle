@@ -1,5 +1,7 @@
 plugins {
     id 'airship-module'
+    id 'kotlin-android'
+    id 'kotlin-allopen'
 }
 
 description = "Airship Layout Rendering Library"
@@ -9,12 +11,12 @@ airshipModule {
 }
 
 android {
-    compileSdkVersion 31
+    compileSdk rootProject.compileSdkVersion
 
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
-        targetSdkVersion 31
+        targetSdk rootProject.targetSdkVersion
     }
 
     testOptions {
@@ -28,11 +30,24 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+        freeCompilerArgs = ["-Xexplicit-api=strict"]
+    }
+
     namespace 'com.urbanairship.android.layout'
+}
+
+allOpen {
+    annotation "com.urbanairship.android.layout.testing.OpenClass"
 }
 
 dependencies {
     api project(':urbanairship-core')
+
+    // Kotlin
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.kotlinCoroutinesVersion"
 
     // AndroidX
     implementation "androidx.core:core:$rootProject.androidxCoreVersion"

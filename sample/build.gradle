@@ -77,7 +77,10 @@ dependencies {
     implementation project(':urbanairship-chat')
 
     // Testing-only dependencies
-    androidTestImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"
+    androidTestImplementation("androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion") {
+        // https://github.com/android/android-test/issues/861
+        exclude group: 'org.checkerframework', module: 'checker'
+    }
     androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
     androidTestImplementation "androidx.test.espresso:espresso-web:$rootProject.androidxEspressoVersion"
     androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.androidxEspressoVersion"
@@ -106,7 +109,10 @@ dependencies {
 
 
     androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
-    androidTestImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"
+    androidTestImplementation("androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion") {
+        // https://github.com/android/android-test/issues/861
+        exclude group: 'org.checkerframework', module: 'checker'
+    }
     androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.androidxEspressoVersion"
 
     androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"

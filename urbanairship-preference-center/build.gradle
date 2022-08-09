@@ -85,7 +85,10 @@ dependencies {
     testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
     testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
     testImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
-    testImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"
+    testImplementation("androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion") {
+        // https://github.com/android/android-test/issues/861
+        exclude group: 'org.checkerframework', module: 'checker'
+    }
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$rootProject.kotlinxCorutinesTest"
     testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.mockitoKotlinVersion"
     testImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
@@ -97,13 +100,10 @@ dependencies {
     androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
     androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
 
-    androidTestImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:$rootProject.kotlinxCorutinesTest"){
-        // https://github.com/Kotlin/kotlinx.coroutines/issues/2023
-        exclude group: "org.jetbrains.kotlinx", module: "kotlinx-coroutines-debug"
-    }
+    androidTestImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:$rootProject.kotlinxCorutinesTest")
 
     androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
-    androidTestImplementation("androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"){
+    androidTestImplementation("androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion") {
         // https://github.com/android/android-test/issues/861
         exclude group: 'org.checkerframework', module: 'checker'
     }

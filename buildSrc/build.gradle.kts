@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
     implementation("com.android.tools.build:gradle:7.2.1")
-    implementation(kotlin("gradle-plugin", version = "1.5.31"))
+    implementation(kotlin("gradle-plugin", version = "1.7.10"))
     implementation("io.github.gradle-nexus:publish-plugin:1.1.0")
     implementation("org.jetbrains.dokka:dokka-gradle-plugin:1.4.32")
 }

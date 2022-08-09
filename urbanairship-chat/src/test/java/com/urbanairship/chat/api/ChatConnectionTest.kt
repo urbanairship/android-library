@@ -12,6 +12,8 @@ import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.util.DateUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.pauseDispatcher
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before

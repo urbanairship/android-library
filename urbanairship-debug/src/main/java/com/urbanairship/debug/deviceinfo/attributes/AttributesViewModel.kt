@@ -57,6 +57,7 @@ class AttributesViewModel() : ViewModel() {
             AttributeType.DATE -> {
                 editAttributes().setAttribute(key.value!!, dateValue.value!!).apply()
             }
+            else -> Unit // Do nothing
         }
     }
 

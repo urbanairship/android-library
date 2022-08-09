@@ -14,7 +14,7 @@ import android.widget.FrameLayout;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.environment.Environment;
 import com.urbanairship.android.layout.model.BaseModel;
-import com.urbanairship.android.layout.model.ModalPresentation;
+import com.urbanairship.android.layout.ModalPresentation;
 import com.urbanairship.android.layout.property.ConstrainedSize;
 import com.urbanairship.android.layout.property.Margin;
 import com.urbanairship.android.layout.property.ModalPlacement;

@@ -61,7 +61,7 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
             return super.onPreferenceTreeClick(preference)
         }
 
-        override fun onDisplayPreferenceDialog(preference: Preference?) {
+        override fun onDisplayPreferenceDialog(preference: Preference) {
             if (preference is InAppAutomationDisplayIntervalPreference) {
                 val dialogFragment = InAppAutomationDisplayIntervalPreferenceDialogFragment.newInstance(preference.key)
                 dialogFragment.setTargetFragment(this, 0)

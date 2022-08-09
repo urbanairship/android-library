@@ -22,7 +22,6 @@ import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.model.LayoutModel;
 import com.urbanairship.android.layout.model.LinearLayoutModel;
 import com.urbanairship.android.layout.model.MediaModel;
-import com.urbanairship.android.layout.model.ModalPresentation;
 import com.urbanairship.android.layout.model.NpsFormController;
 import com.urbanairship.android.layout.model.PagerController;
 import com.urbanairship.android.layout.model.PagerIndicatorModel;
