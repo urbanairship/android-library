@@ -126,10 +126,11 @@ public abstract class FileUtils {
             }
 
             return new DownloadResult(false, statusCode);
-        } catch (IOException e) {
+        } catch (IOException | IllegalStateException e) {
             // the file may have been partially created - delete it
             file.delete();
-            throw e;
+            Logger.error(e, "Failed to download file from: %s", url);
+            return new DownloadResult(false, -1);
         } finally {
             endRequest(conn, inputStream, outputStream);
         }

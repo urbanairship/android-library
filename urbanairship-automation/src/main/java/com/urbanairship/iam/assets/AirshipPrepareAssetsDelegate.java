@@ -72,7 +72,7 @@ public class AirshipPrepareAssetsDelegate implements PrepareAssetsDelegate {
 
                     return AssetManager.PREPARE_RESULT_RETRY;
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 Logger.error(e, "Unable to download file: %s ", url);
                 return AssetManager.PREPARE_RESULT_RETRY;
             }
