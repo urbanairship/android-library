@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.7.1 August 12, 2022
+
+Patch release that prevents potential crashes when downloading files.
+
+### Changes
+- Fix potential crashes during file downloads.
+
 ## Version 16.7.0 July 29, 2022
 
 Minor release that adds support for sending a new `isActive` attribute on channel registration updates, improves accessibility descriptions for Preference Center subscription list items, and improves initialization of the Airship SDK for apps that make use of dependency-injection frameworks.
