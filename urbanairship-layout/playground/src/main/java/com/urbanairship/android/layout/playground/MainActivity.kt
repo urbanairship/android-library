@@ -17,9 +17,9 @@ import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.actions.PermissionResultReceiver
 import com.urbanairship.actions.PromptPermissionAction
-import com.urbanairship.android.layout.BasePayload
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.ThomasListener
+import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.FormInfo
@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Not a valid JSON object", Toast.LENGTH_LONG).show()
                 return
             }
-            val payload = BasePayload.fromJson(jsonMap)
+            val payload = LayoutInfo(jsonMap)
             Thomas.prepareDisplay(payload).setListener(thomasListener).display(this)
         } catch (e: Exception) {
             Logger.error(e)

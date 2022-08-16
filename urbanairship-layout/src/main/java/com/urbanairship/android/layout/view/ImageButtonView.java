@@ -4,12 +4,10 @@ package com.urbanairship.android.layout.view;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.graphics.drawable.Drawable;
-import android.util.AttributeSet;
 
 import com.urbanairship.UAirship;
 import com.urbanairship.android.layout.R;
-import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.ButtonModel;
 import com.urbanairship.android.layout.model.ImageButtonModel;
 import com.urbanairship.android.layout.property.Image;
@@ -20,58 +18,36 @@ import com.urbanairship.util.UAStringUtil;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.core.content.ContextCompat;
 
-public class ImageButtonView extends AppCompatImageButton implements BaseView<ImageButtonModel> {
-    private ImageButtonModel model;
-    private Environment environment;
+public class ImageButtonView extends AppCompatImageButton implements BaseView {
+    private final ImageButtonModel model;
+    private final ViewEnvironment viewEnvironment;
 
-    public ImageButtonView(@NonNull Context context) {
+    public ImageButtonView(
+        @NonNull Context context,
+        @NonNull ImageButtonModel model,
+        @NonNull ViewEnvironment viewEnvironment
+    ) {
         super(context);
-        init(context);
+        this.model = model;
+        this.viewEnvironment = viewEnvironment;
+
+        setId(model.getViewId());
+
+        configure();
     }
 
-    public ImageButtonView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init(context);
-    }
-
-    public ImageButtonView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(context);
-    }
-
-    private void init(@NonNull Context context) {
-        Drawable ripple = ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple);
-        setBackgroundDrawable(ripple);
+    private void configure() {
+        setBackgroundDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ua_layout_imagebutton_ripple));
         setClickable(true);
         setFocusable(true);
         setPadding(0,0,0,0);
-    }
 
-    @NonNull
-    public static ImageButtonView create(@NonNull Context context, @NonNull ImageButtonModel model, @NonNull Environment environment) {
-        ImageButtonView view = new ImageButtonView(context);
-        view.setModel(model, environment);
-        return view;
-    }
-
-    @Override
-    public void setModel(@NonNull ImageButtonModel model, @NonNull Environment environment) {
-        this.model = model;
-        this.environment = environment;
-
-        setId(model.getViewId());
-        configureButton();
-    }
-
-    private void configureButton() {
         setScaleType(ScaleType.FIT_CENTER);
         LayoutUtils.applyBorderAndBackground(this, model);
         model.setViewListener(modelListener);
-
 
         if (!UAStringUtil.isEmpty(model.getContentDescription())) {
             setContentDescription(model.getContentDescription());
@@ -81,7 +57,7 @@ public class ImageButtonView extends AppCompatImageButton implements BaseView<Im
         switch (image.getType()) {
             case URL:
                 String url = ((Image.Url) image).getUrl();
-                String cachedImage = environment.imageCache().get(url);
+                String cachedImage = viewEnvironment.imageCache().get(url);
                 if (cachedImage != null) {
                     url = cachedImage;
                 }

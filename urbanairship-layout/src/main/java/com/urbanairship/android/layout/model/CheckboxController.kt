@@ -3,21 +3,19 @@ package com.urbanairship.android.layout.model
 
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Logger
-import com.urbanairship.android.layout.Thomas
+import com.urbanairship.android.layout.ModelEnvironment
 import com.urbanairship.android.layout.event.CheckboxEvent
 import com.urbanairship.android.layout.event.Event
 import com.urbanairship.android.layout.event.Event.ViewAttachedToWindow
 import com.urbanairship.android.layout.event.Event.ViewInit
 import com.urbanairship.android.layout.event.EventType
 import com.urbanairship.android.layout.event.FormEvent.DataChange
-import com.urbanairship.android.layout.model.Accessible.Companion.contentDescriptionFromJson
-import com.urbanairship.android.layout.model.Identifiable.Companion.identifierFromJson
-import com.urbanairship.android.layout.model.Validatable.Companion.requiredFromJson
+import com.urbanairship.android.layout.info.CheckboxControllerInfo
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 
 /**
@@ -26,20 +24,32 @@ import com.urbanairship.json.JsonValue
  * Must be a descendant of `FormController` or `NpsFormController`.
  */
 internal class CheckboxController(
-    override val identifier: String,
     val view: BaseModel,
-    private val minSelection: Int,
-    private val maxSelection: Int,
-    override val isRequired: Boolean,
-    override val contentDescription: String?
-) : LayoutModel(ViewType.CHECKBOX_CONTROLLER), Identifiable, Accessible, Validatable {
-
-    private val checkboxes: MutableList<CheckboxModel> = mutableListOf()
-    private val selectedValues: MutableSet<JsonValue> = mutableSetOf()
-
-    init {
-        view.addListener(this)
-    }
+    override val identifier: String,
+    override val isRequired: Boolean = false,
+    private val minSelection: Int = if (isRequired) 1 else 0,
+    private val maxSelection: Int = Int.MAX_VALUE,
+    override val contentDescription: String? = null,
+    backgroundColor: Color? = null,
+    border: Border? = null,
+    environment: ModelEnvironment
+) : LayoutModel<CheckboxControllerInfo>(
+    viewType = ViewType.CHECKBOX_CONTROLLER,
+    backgroundColor = backgroundColor,
+    border = border,
+    environment = environment
+), Identifiable, Accessible, Validatable {
+    constructor(info: CheckboxControllerInfo, env: ModelEnvironment) : this(
+        view = env.modelProvider.create(info.view, env),
+        identifier = info.identifier,
+        isRequired = info.isRequired,
+        minSelection = info.minSelection,
+        maxSelection = info.maxSelection,
+        contentDescription = info.contentDescription,
+        backgroundColor = info.backgroundColor,
+        border = info.border,
+        environment = env
+    )
 
     override val children: List<BaseModel> = listOf(view)
 
@@ -51,11 +61,18 @@ internal class CheckboxController(
             return isFilled || isOptional
         }
 
-    @VisibleForTesting
-    fun getCheckboxes(): List<CheckboxModel> = checkboxes
+    private val checkboxes: MutableList<CheckboxModel> = mutableListOf()
+    private val selectedValues: MutableSet<JsonValue> = mutableSetOf()
+
+    init {
+        view.addListener(this)
+    }
 
     @VisibleForTesting
-    fun getSelectedValues(): Set<JsonValue> = selectedValues
+    fun getCheckboxes(): List<CheckboxModel> = checkboxes.toList()
+
+    @VisibleForTesting
+    fun getSelectedValues(): Set<JsonValue> = selectedValues.toSet()
 
     override fun onEvent(event: Event, layoutData: LayoutData): Boolean =
         when (event.type) {
@@ -121,22 +138,5 @@ internal class CheckboxController(
         }
         // Always pass the event on.
         return super.onEvent(event, layoutData)
-    }
-
-    companion object {
-
-        @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): CheckboxController {
-            val viewJson = json.opt("view").optMap()
-            val isRequired = requiredFromJson(json)
-            return CheckboxController(
-                identifier = identifierFromJson(json),
-                view = Thomas.model(viewJson),
-                minSelection = json.opt("min_selection").getInt(if (isRequired) 1 else 0),
-                maxSelection = json.opt("max_selection").getInt(Int.MAX_VALUE),
-                isRequired = isRequired,
-                contentDescription = contentDescriptionFromJson(json)
-            )
-        }
     }
 }

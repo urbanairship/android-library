@@ -3,10 +3,9 @@
 package com.urbanairship.android.layout.widget;
 
 import android.content.Context;
-import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
-import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.CheckableModel;
 import com.urbanairship.android.layout.property.CheckboxStyle;
 import com.urbanairship.android.layout.property.SwitchStyle;
@@ -15,15 +14,15 @@ import com.urbanairship.android.layout.util.ResourceUtils;
 import com.urbanairship.android.layout.view.BaseView;
 import com.urbanairship.util.UAStringUtil;
 
+import androidx.annotation.CallSuper;
 import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 
 import static android.view.View.MeasureSpec.EXACTLY;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
-public abstract class CheckableView<M extends CheckableModel> extends FrameLayout implements BaseView<M> {
+public abstract class CheckableView<M extends CheckableModel> extends FrameLayout implements BaseView {
     @Dimension(unit = Dimension.DP)
     private static final int CHECKBOX_MIN_DIMENSION = 24;
     @Dimension(unit = Dimension.DP)
@@ -32,26 +31,23 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
     private static final int SWITCH_MIN_WIDTH = 48;
     private static final int NO_MIN_SIZE = -1;
 
-    private M model;
-    private Environment environment;
+    protected final CheckableViewAdapter.OnCheckedChangeListener checkedChangeListener;
+
+    private final M model;
+    private final ViewEnvironment viewEnvironment;
     private CheckableViewAdapter<?> view = null;
 
-    public CheckableView(@NonNull Context context) {
+    public CheckableView(@NonNull Context context, @NonNull M model, @NonNull ViewEnvironment viewEnvironment) {
         super(context);
-        init();
-    }
 
-    public CheckableView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init();
-    }
+        this.model = model;
+        this.viewEnvironment = viewEnvironment;
 
-    public CheckableView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init();
-    }
+        this.checkedChangeListener = (v, isChecked) -> model.onCheckedChange(isChecked);
 
-    private void init() {
+        setId(model.getViewId());
+
+        configure();
     }
 
     protected int getMinWidth() {
@@ -104,27 +100,19 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
         }
     }
 
-    @Override
-    public void setModel(@NonNull M model, @NonNull Environment environment) {
-        this.model = model;
-        this.environment = environment;
-
-        setId(model.getViewId());
-        configure();
-    }
-
     protected M getModel() {
         return model;
     }
 
-    protected Environment environment() {
-        return environment;
+    protected ViewEnvironment environment() {
+        return viewEnvironment;
     }
 
     public CheckableViewAdapter<?> getCheckableView() {
         return view;
     }
 
+    @CallSuper
     protected void configure() {
         switch(model.getToggleType()) {
             case SWITCH:
@@ -182,7 +170,4 @@ public abstract class CheckableView<M extends CheckableModel> extends FrameLayou
         view.setChecked(isChecked);
         view.setOnCheckedChangeListener(checkedChangeListener);
     }
-
-    protected final CheckableViewAdapter.OnCheckedChangeListener checkedChangeListener =
-        (v, isChecked) -> model.onCheckedChange(isChecked);
 }

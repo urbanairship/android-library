@@ -3,71 +3,42 @@
 package com.urbanairship.android.layout.view;
 
 import android.content.Context;
-import android.os.Parcelable;
-import android.util.AttributeSet;
-import android.util.SparseArray;
 import android.view.View;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.Thomas;
-import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.ScrollLayoutModel;
 import com.urbanairship.android.layout.property.Direction;
 import com.urbanairship.android.layout.util.LayoutUtils;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
 import androidx.core.widget.NestedScrollView;
 
-public class ScrollLayoutView extends NestedScrollView implements BaseView<ScrollLayoutModel> {
-    private ScrollLayoutModel model;
-    private Environment environment;
+public class ScrollLayoutView extends NestedScrollView implements BaseView {
+    private final ScrollLayoutModel model;
+    private final ViewEnvironment viewEnvironment;
 
-    public ScrollLayoutView(@NonNull Context context) {
-        super(context);
-        init();
-    }
-
-    public ScrollLayoutView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init();
-    }
-
-    public ScrollLayoutView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init();
-    }
-
-    private void init() {
-        setFillViewport(false);
-    }
-
-    @NonNull
-    public static ScrollLayoutView create(
-        @NonNull Context context,
-        @NonNull ScrollLayoutModel model,
-        @NonNull Environment environment
+    public ScrollLayoutView(
+            @NonNull Context context,
+            @NonNull ScrollLayoutModel model,
+            @NonNull ViewEnvironment viewEnvironment
     ) {
-        ScrollLayoutView view = new ScrollLayoutView(context);
-        view.setModel(model, environment);
-        return view;
-    }
-
-    @Override
-    public void setModel(@NonNull ScrollLayoutModel model, @NonNull Environment environment) {
+        super(context);
         this.model = model;
-        this.environment = environment;
+        this.viewEnvironment = viewEnvironment;
 
         setId(model.getViewId());
-        configureScrollLayout();
+
+        configure();
     }
 
-    private void configureScrollLayout() {
+    private void configure() {
+        setFillViewport(false);
         LayoutUtils.applyBorderAndBackground(this, model);
 
         Direction direction = model.getDirection();
-        View contentView = Thomas.view(getContext(), model.getView(), environment);
+        View contentView = Thomas.view(getContext(), model.getView(), viewEnvironment);
 
         LayoutParams layoutParams;
         if (direction == Direction.VERTICAL) {

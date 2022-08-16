@@ -1,8 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.Logger
-import com.urbanairship.android.layout.Thomas
+import com.urbanairship.android.layout.ModelEnvironment
 import com.urbanairship.android.layout.event.Event
 import com.urbanairship.android.layout.event.Event.ViewAttachedToWindow
 import com.urbanairship.android.layout.event.EventType
@@ -12,14 +11,15 @@ import com.urbanairship.android.layout.event.FormEvent.InputInit
 import com.urbanairship.android.layout.event.FormEvent.ValidationUpdate
 import com.urbanairship.android.layout.event.ReportingEvent.FormDisplay
 import com.urbanairship.android.layout.event.ReportingEvent.FormResult
+import com.urbanairship.android.layout.info.FormInfo
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
-import com.urbanairship.android.layout.reporting.FormInfo
+import com.urbanairship.android.layout.reporting.FormInfo as FormReportingInfo
 import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 
 /**
@@ -28,21 +28,25 @@ import com.urbanairship.json.JsonValue
  * @see FormController
  * @see NpsFormController
  */
-internal abstract class BaseFormController(
+internal abstract class BaseFormController<VI : FormInfo>(
     viewType: ViewType,
     override val identifier: String,
     val responseType: String?,
-    val view: BaseModel,
-    private val submitBehavior: FormBehaviorType?
-) : LayoutModel(viewType, null, null), Identifiable {
+    private val submitBehavior: FormBehaviorType?,
+    backgroundColor: Color? = null,
+    border: Border? = null,
+    environment: ModelEnvironment,
+) : LayoutModel<VI>(viewType, backgroundColor, border, environment), Identifiable {
 
     protected abstract val formType: String
     protected abstract val initEvent: FormEvent.Init
     protected abstract val formDataChangeEvent: DataChange
     protected abstract val formResultEvent: FormResult
 
-    protected val formInfo: FormInfo
-        get() = FormInfo(identifier, formType, responseType, isSubmitted)
+    abstract val view: BaseModel
+
+    protected val formInfo: FormReportingInfo
+        get() = FormReportingInfo(identifier, formType, responseType, isSubmitted)
 
     protected val formData: MutableMap<String, FormData<*>> = mutableMapOf()
     protected val attributes: MutableMap<AttributeName, JsonValue> = mutableMapOf()
@@ -58,14 +62,7 @@ internal abstract class BaseFormController(
     private var isDisplayReported = false
     private var isSubmitted = false
 
-    init {
-        view.addListener(this)
-    }
-
-    override val children: List<BaseModel> = listOf(view)
-
     override fun onEvent(event: Event, layoutData: LayoutData): Boolean {
-        Logger.verbose("onEvent: $event, layoutData: $layoutData")
         val dataOverride = layoutData.withFormInfo(formInfo)
         return when (event.type) {
             EventType.FORM_INIT -> {
@@ -149,21 +146,5 @@ internal abstract class BaseFormController(
     private fun updateFormValidity(inputId: String, isValid: Boolean) {
         inputValidity[inputId] = isValid
         trickleEvent(ValidationUpdate(isFormValid), LayoutData.form(formInfo))
-    }
-
-    companion object {
-        @JvmStatic
-        @Throws(JsonException::class)
-        protected fun viewFromJson(json: JsonMap): BaseModel {
-            val viewJson = json.opt("view").optMap()
-            return Thomas.model(viewJson)
-        }
-
-        @JvmStatic
-        @Throws(JsonException::class)
-        protected fun submitBehaviorFromJson(json: JsonMap): FormBehaviorType? {
-            val submitString = json.opt("submit").string
-            return submitString?.let { FormBehaviorType.from(it) }
-        }
     }
 }

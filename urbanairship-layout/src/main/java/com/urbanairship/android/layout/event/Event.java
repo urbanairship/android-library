@@ -4,15 +4,11 @@ package com.urbanairship.android.layout.event;
 
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.property.ViewType;
-import com.urbanairship.android.layout.reporting.FormInfo;
-import com.urbanairship.android.layout.reporting.LayoutData;
-import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /** Base event. */
 public abstract class Event {
@@ -50,7 +46,7 @@ public abstract class Event {
         }
 
         public ViewType getViewType() {
-            return model.getType();
+            return model.getViewType();
         }
 
         public BaseModel getModel() {
@@ -76,7 +72,7 @@ public abstract class Event {
         }
 
         public ViewType getViewType() {
-            return model.getType();
+            return model.getViewType();
         }
 
         public BaseModel getModel() {

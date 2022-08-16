@@ -2,34 +2,48 @@
 package com.urbanairship.android.layout.model
 
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.android.layout.Thomas
+import com.urbanairship.android.layout.ModelEnvironment
 import com.urbanairship.android.layout.event.Event
 import com.urbanairship.android.layout.event.Event.ViewAttachedToWindow
 import com.urbanairship.android.layout.event.Event.ViewInit
 import com.urbanairship.android.layout.event.EventType
 import com.urbanairship.android.layout.event.FormEvent.DataChange
 import com.urbanairship.android.layout.event.RadioEvent
-import com.urbanairship.android.layout.model.Accessible.Companion.contentDescriptionFromJson
-import com.urbanairship.android.layout.model.Identifiable.Companion.identifierFromJson
-import com.urbanairship.android.layout.model.Validatable.Companion.requiredFromJson
+import com.urbanairship.android.layout.info.RadioInputControllerInfo
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.android.layout.testing.OpenForTesting
-import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 
 /** Controller for radio inputs. */
-@OpenForTesting
 internal class RadioInputController(
-    override val identifier: String,
     val view: BaseModel,
-    private val attributeName: AttributeName?,
-    override val isRequired: Boolean,
-    override val contentDescription: String?
-) : LayoutModel(ViewType.RADIO_INPUT_CONTROLLER), Identifiable, Accessible, Validatable {
+    override val identifier: String,
+    override val isRequired: Boolean = false,
+    private val attributeName: AttributeName? = null,
+    override val contentDescription: String? = null,
+    backgroundColor: Color? = null,
+    border: Border? = null,
+    environment: ModelEnvironment
+) : LayoutModel<RadioInputControllerInfo>(
+    viewType = ViewType.RADIO_INPUT_CONTROLLER,
+    backgroundColor = backgroundColor,
+    border = border,
+    environment = environment
+), Identifiable, Accessible, Validatable {
+    constructor(info: RadioInputControllerInfo, env: ModelEnvironment) : this(
+        view = env.modelProvider.create(info.view, env),
+        identifier = info.identifier,
+        isRequired = info.isRequired,
+        attributeName = info.attributeName,
+        contentDescription = info.contentDescription,
+        backgroundColor = info.backgroundColor,
+        border = info.border,
+        environment = env
+    )
 
     override val children: List<BaseModel> = listOf(view)
 
@@ -104,20 +118,5 @@ internal class RadioInputController(
         }
         // Always pass the event on.
         return super.onEvent(event, layoutData)
-    }
-
-    companion object {
-        @JvmStatic
-        @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): RadioInputController {
-            val viewJson = json.opt("view").optMap()
-            return RadioInputController(
-                identifier = identifierFromJson(json),
-                view = Thomas.model(viewJson),
-                attributeName = AttributeName.attributeNameFromJson(json),
-                isRequired = requiredFromJson(json),
-                contentDescription = contentDescriptionFromJson(json)
-            )
-        }
     }
 }

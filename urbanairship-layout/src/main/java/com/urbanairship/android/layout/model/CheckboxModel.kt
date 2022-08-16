@@ -1,32 +1,46 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import com.urbanairship.android.layout.ModelEnvironment
 import com.urbanairship.android.layout.event.CheckboxEvent
 import com.urbanairship.android.layout.event.Event
 import com.urbanairship.android.layout.event.Event.ViewInit
 import com.urbanairship.android.layout.event.EventType
-import com.urbanairship.android.layout.model.Accessible.Companion.contentDescriptionFromJson
+import com.urbanairship.android.layout.info.CheckboxInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.ToggleStyle
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.android.layout.testing.OpenForTesting
-import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 
 /**
  * Checkbox input for use within a `CheckboxController`.
  */
-@OpenForTesting
 internal class CheckboxModel(
+    toggleStyle: ToggleStyle,
     val reportingValue: JsonValue,
-    style: ToggleStyle,
-    contentDescription: String?,
-    backgroundColor: Color?,
-    border: Border?
-) : CheckableModel(ViewType.CHECKBOX, style, contentDescription, backgroundColor, border) {
+    contentDescription: String? = null,
+    backgroundColor: Color? = null,
+    border: Border? = null,
+    environment: ModelEnvironment
+) : CheckableModel(
+    viewType = ViewType.CHECKBOX,
+    style = toggleStyle,
+    toggleType = toggleStyle.type,
+    contentDescription = contentDescription,
+    backgroundColor = backgroundColor,
+    border = border,
+    environment = environment
+) {
+    constructor(info: CheckboxInfo, env: ModelEnvironment) : this(
+        toggleStyle = info.style,
+        reportingValue = info.reportingValue,
+        contentDescription = info.contentDescription,
+        backgroundColor = info.backgroundColor,
+        border = info.border,
+        environment = env
+    )
 
     override fun buildInitEvent(): Event = ViewInit(this)
 
@@ -45,18 +59,5 @@ internal class CheckboxModel(
             }
             else -> super.onEvent(event, layoutData)
         }
-    }
-
-    companion object {
-        @JvmStatic
-        @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): CheckboxModel =
-            CheckboxModel(
-                reportingValue = json.opt("reporting_value").toJsonValue(),
-                style = toggleStyleFromJson(json),
-                contentDescription = contentDescriptionFromJson(json),
-                backgroundColor = backgroundColorFromJson(json),
-                border = borderFromJson(json)
-            )
     }
 }

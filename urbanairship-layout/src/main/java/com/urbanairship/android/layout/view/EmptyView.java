@@ -3,15 +3,13 @@
 package com.urbanairship.android.layout.view;
 
 import android.content.Context;
-import android.util.AttributeSet;
 import android.view.View;
 
-import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.EmptyModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * An empty view that can have a background and border.
@@ -20,33 +18,15 @@ import androidx.annotation.Nullable;
  *
  * @see EmptyModel
  */
-public class EmptyView extends View implements BaseView<EmptyModel> {
-    private EmptyModel model;
+public class EmptyView extends View implements BaseView {
+    private final EmptyModel model;
 
-    public EmptyView(Context context) {
+    public EmptyView(@NonNull Context context, @NonNull EmptyModel model, @NonNull ViewEnvironment viewEnvironment) {
         super(context);
-    }
-
-    public EmptyView(Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-    }
-
-    public EmptyView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-    }
-
-    @NonNull
-    public static EmptyView create(@NonNull Context context, @NonNull EmptyModel model, @NonNull Environment environment) {
-        EmptyView view = new EmptyView(context);
-        view.setModel(model, environment);
-        return view;
-    }
-
-    @Override
-    public void setModel(@NonNull EmptyModel model, @NonNull Environment environment) {
         this.model = model;
 
         setId(model.getViewId());
+
         configure();
     }
 

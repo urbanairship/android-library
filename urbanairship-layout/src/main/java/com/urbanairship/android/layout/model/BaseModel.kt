@@ -2,24 +2,32 @@
 package com.urbanairship.android.layout.model
 
 import android.view.View
+import com.urbanairship.android.layout.ModelEnvironment
+import com.urbanairship.android.layout.ModelProvider
 import com.urbanairship.android.layout.event.Event
 import com.urbanairship.android.layout.event.EventListener
 import com.urbanairship.android.layout.event.EventSource
+import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.android.layout.testing.OpenForTesting
-import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 import java.util.concurrent.CopyOnWriteArrayList
 
-@OpenForTesting
 internal abstract class BaseModel(
-    val type: ViewType,
+    val viewType: ViewType,
     val backgroundColor: Color? = null,
-    val border: Border? = null
+    val border: Border? = null,
+    protected final val environment: ModelEnvironment
 ) : EventSource, EventListener {
+    constructor(info: ViewInfo, environment: ModelEnvironment) : this(
+        viewType = info.type,
+        backgroundColor = info.backgroundColor,
+        border = info.border,
+        environment
+    )
+
+    protected val modelProvider: ModelProvider = environment.modelProvider
 
     val viewId: Int = View.generateViewId()
 
@@ -91,20 +99,5 @@ internal abstract class BaseModel(
      */
     open fun trickleEvent(event: Event, layoutData: LayoutData): Boolean {
         return onEvent(event, layoutData)
-    }
-
-    companion object {
-        @JvmStatic
-        @Throws(JsonException::class)
-        fun backgroundColorFromJson(json: JsonMap): Color? {
-            return Color.fromJsonField(json, "background_color")
-        }
-
-        @JvmStatic
-        @Throws(JsonException::class)
-        fun borderFromJson(json: JsonMap): Border? {
-            val borderJson = json.opt("border").optMap()
-            return if (borderJson.isEmpty) null else Border.fromJson(borderJson)
-        }
     }
 }

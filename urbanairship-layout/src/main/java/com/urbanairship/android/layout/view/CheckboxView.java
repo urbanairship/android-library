@@ -3,9 +3,8 @@
 package com.urbanairship.android.layout.view;
 
 import android.content.Context;
-import android.util.AttributeSet;
 
-import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.CheckboxModel;
 import com.urbanairship.android.layout.property.CheckboxStyle;
 import com.urbanairship.android.layout.property.SwitchStyle;
@@ -13,32 +12,16 @@ import com.urbanairship.android.layout.widget.CheckableView;
 import com.urbanairship.android.layout.widget.ShapeButton;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 
 public class CheckboxView extends CheckableView<CheckboxModel> {
 
-    public CheckboxView(@NonNull Context context) {
-        super(context);
-    }
-
-    public CheckboxView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-    }
-
-    public CheckboxView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-    }
-
-    @NonNull
-    public static CheckboxView create(
+    public CheckboxView(
         @NonNull Context context,
         @NonNull CheckboxModel model,
-        @NonNull Environment environment
+        @NonNull ViewEnvironment viewEnvironment
     ) {
-        CheckboxView view = new CheckboxView(context);
-        view.setModel(model, environment);
-        return view;
+        super(context, model, viewEnvironment);
     }
 
     @Override

@@ -6,7 +6,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +19,7 @@ import android.widget.ProgressBar;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.WebViewModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.js.UrlAllowList;
@@ -37,38 +36,26 @@ import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 
 /** Web view... view? */
-public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
-    private WebViewModel model;
-    private Environment environment;
+public class WebViewView extends FrameLayout implements BaseView {
+    private final WebViewModel model;
+    private final ViewEnvironment viewEnvironment;
 
     @Nullable
     private WebView webView;
     @Nullable
     private WebChromeClient chromeClient;
 
-    public WebViewView(@NonNull Context context) {
-        this(context, null);
-        init();
-    }
+    public WebViewView(
+        @NonNull Context context,
+        @NonNull WebViewModel model,
+        @NonNull ViewEnvironment viewEnvironment
+    ) {
+        super(context, null);
+        this.model = model;
+        this.viewEnvironment = viewEnvironment;
 
-    public WebViewView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, 0);
-        init();
-    }
-
-    public WebViewView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        init();
-    }
-
-    private void init() {
-    }
-
-    @NonNull
-    public static WebViewView create(@NonNull Context context, @NonNull WebViewModel model, Environment environment) {
-        WebViewView view = new WebViewView(context);
-        view.setModel(model, environment);
-        return view;
+        setId(model.getViewId());
+        configure();
     }
 
     /**
@@ -83,22 +70,9 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
         }
     }
 
-    /**
-     * Sets the media info.
-     *  @param model The media info.
-     * @param environment
-     */
-    public void setModel(@NonNull WebViewModel model, @NonNull Environment environment) {
-        this.model = model;
-        this.environment = environment;
-
-        setId(model.getViewId());
-        configure();
-    }
-
     private void configure() {
-        environment.lifecycle().addObserver(lifecycleListener);
-        setChromeClient(environment.webChromeClientFactory().create());
+        viewEnvironment.lifecycle().addObserver(lifecycleListener);
+        setChromeClient(viewEnvironment.webChromeClientFactory().create());
 
         LayoutUtils.applyBorderAndBackground(this, model);
 
@@ -139,7 +113,7 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
             settings.setDatabaseEnabled(true);
         }
 
-        AirshipWebViewClient client = environment.webViewClientFactory().create();
+        AirshipWebViewClient client = viewEnvironment.webViewClientFactory().create();
         client.addListener(new ClientListener() {
             @Override
             protected void onPageFinished(@NonNull WebView webView) {

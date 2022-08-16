@@ -2,9 +2,8 @@
 
 package com.urbanairship.android.layout.display;
 
-import com.urbanairship.android.layout.BasePayload;
 import com.urbanairship.android.layout.ThomasListener;
-import com.urbanairship.android.layout.util.ActionsRunner;
+import com.urbanairship.android.layout.info.LayoutInfo;
 import com.urbanairship.android.layout.util.Factory;
 import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.webkit.AirshipWebViewClient;
@@ -19,13 +18,13 @@ import androidx.annotation.RestrictTo;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public class DisplayArgs {
-    private final BasePayload payload;
+    private final LayoutInfo payload;
     private final ThomasListener listener;
     private final Factory<AirshipWebViewClient> webViewClientFactory;
     private final ImageCache imageCache;
 
     public DisplayArgs(
-        @NonNull BasePayload payload,
+        @NonNull LayoutInfo payload,
         @Nullable ThomasListener listener,
         @Nullable Factory<AirshipWebViewClient> webViewClientFactory,
         @Nullable ImageCache imageCache
@@ -42,7 +41,7 @@ public class DisplayArgs {
     }
 
     @NonNull
-    public BasePayload getPayload() {
+    public LayoutInfo getPayload() {
         return payload;
     }
 

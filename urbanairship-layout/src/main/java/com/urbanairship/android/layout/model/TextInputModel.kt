@@ -1,12 +1,11 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import com.urbanairship.android.layout.ModelEnvironment
 import com.urbanairship.android.layout.event.Event.ViewAttachedToWindow
 import com.urbanairship.android.layout.event.FormEvent.DataChange
 import com.urbanairship.android.layout.event.TextInputEvent
-import com.urbanairship.android.layout.model.Accessible.Companion.contentDescriptionFromJson
-import com.urbanairship.android.layout.model.Identifiable.Companion.identifierFromJson
-import com.urbanairship.android.layout.model.Validatable.Companion.requiredFromJson
+import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.FormInputType
@@ -14,19 +13,35 @@ import com.urbanairship.android.layout.property.TextInputTextAppearance
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.FormData.TextInput
 import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 
 internal class TextInputModel(
-    override val identifier: String,
     val inputType: FormInputType,
     val textAppearance: TextInputTextAppearance,
-    val hintText: String?,
-    override val contentDescription: String?,
-    override val isRequired: Boolean,
-    backgroundColor: Color?,
-    border: Border?
-) : BaseModel(ViewType.TEXT_INPUT, backgroundColor, border), Identifiable, Accessible, Validatable {
+    val hintText: String? = null,
+    override val identifier: String,
+    override val contentDescription: String? = null,
+    override val isRequired: Boolean = false,
+    backgroundColor: Color? = null,
+    border: Border? = null,
+    environment: ModelEnvironment
+) : BaseModel(
+    viewType = ViewType.TEXT_INPUT,
+    backgroundColor = backgroundColor,
+    border = border,
+    environment = environment
+), Identifiable, Accessible, Validatable {
+
+    constructor(info: TextInputInfo, env: ModelEnvironment) : this(
+        inputType = info.inputType,
+        textAppearance = info.textAppearance,
+        hintText = info.hintText,
+        identifier = info.identifier,
+        contentDescription = info.contentDescription,
+        isRequired = info.isRequired,
+        backgroundColor = info.backgroundColor,
+        border = info.border,
+        environment = env
+    )
 
     final var value: String? = null
         private set
@@ -45,25 +60,5 @@ internal class TextInputModel(
     fun onInputChange(value: String) {
         this.value = value
         bubbleEvent(DataChange(TextInput(identifier, value), isValid), LayoutData.empty())
-    }
-
-    companion object {
-        @JvmStatic
-        @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): TextInputModel {
-            val inputTypeString = json.opt("input_type").optString()
-            val hintText = json.opt("place_holder").string
-            val textAppearanceJson = json.opt("text_appearance").optMap()
-            return TextInputModel(
-                identifier = identifierFromJson(json),
-                inputType = FormInputType.from(inputTypeString),
-                textAppearance = TextInputTextAppearance.fromJson(textAppearanceJson),
-                hintText = hintText,
-                contentDescription = contentDescriptionFromJson(json),
-                isRequired = requiredFromJson(json),
-                backgroundColor = backgroundColorFromJson(json),
-                border = borderFromJson(json)
-            )
-        }
     }
 }

@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import com.urbanairship.Logger
+import com.urbanairship.android.layout.ModelEnvironment
 import com.urbanairship.android.layout.event.ButtonEvent
 import com.urbanairship.android.layout.event.Event
 import com.urbanairship.android.layout.event.EventType
@@ -16,19 +17,19 @@ import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 
 internal abstract class ButtonModel(
-    type: ViewType,
+    viewType: ViewType,
     override val identifier: String,
-    private val buttonClickBehaviors: List<ButtonClickBehaviorType>,
     val actions: Map<String, JsonValue>,
+    private val clickBehaviors: List<ButtonClickBehaviorType>,
     private val enableBehaviors: List<ButtonEnableBehaviorType>,
-    backgroundColor: Color?,
-    border: Border?,
-    override val contentDescription: String?
-) : BaseModel(type, backgroundColor, border), Accessible, Identifiable {
+    override val contentDescription: String? = null,
+    backgroundColor: Color? = null,
+    border: Border? = null,
+    environment: ModelEnvironment
+) : BaseModel(viewType, backgroundColor, border, environment), Accessible, Identifiable {
     abstract fun reportingDescription(): String
 
     private var viewListener: Listener? = null
@@ -51,7 +52,7 @@ internal abstract class ButtonModel(
         if (actions.isNotEmpty()) {
             bubbleEvent(ButtonEvent.Actions(this), layoutData)
         }
-        for (behavior in buttonClickBehaviors) {
+        for (behavior in clickBehaviors) {
             try {
                 bubbleEvent(ButtonEvent.fromBehavior(behavior, this), layoutData)
             } catch (e: JsonException) {
@@ -103,25 +104,5 @@ internal abstract class ButtonModel(
         }
         // Always return false so other views can react to pager scroll events.
         return false
-    }
-
-    companion object {
-        @JvmStatic
-        @Throws(JsonException::class)
-        fun buttonClickBehaviorsFromJson(json: JsonMap): List<ButtonClickBehaviorType> {
-            val clickBehaviorsList = json.opt("button_click").optList()
-            return ButtonClickBehaviorType.fromList(clickBehaviorsList)
-        }
-
-        @JvmStatic
-        fun actionsFromJson(json: JsonMap): Map<String, JsonValue> =
-            json.opt("actions").optMap().map
-
-        @JvmStatic
-        @Throws(JsonException::class)
-        fun buttonEnableBehaviorsFromJson(json: JsonMap): List<ButtonEnableBehaviorType> {
-            val enableBehaviorsList = json.opt("enabled").optList()
-            return ButtonEnableBehaviorType.fromList(enableBehaviorsList)
-        }
     }
 }

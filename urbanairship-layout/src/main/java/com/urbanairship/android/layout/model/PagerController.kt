@@ -2,7 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import com.urbanairship.Logger
-import com.urbanairship.android.layout.Thomas
+import com.urbanairship.android.layout.ModelEnvironment
 import com.urbanairship.android.layout.event.Event
 import com.urbanairship.android.layout.event.Event.ViewInit
 import com.urbanairship.android.layout.event.EventType
@@ -11,20 +11,35 @@ import com.urbanairship.android.layout.event.PagerEvent.PageActions
 import com.urbanairship.android.layout.event.PagerEvent.Scroll
 import com.urbanairship.android.layout.event.ReportingEvent.PageSwipe
 import com.urbanairship.android.layout.event.ReportingEvent.PageView
-import com.urbanairship.android.layout.model.Identifiable.Companion.identifierFromJson
+import com.urbanairship.android.layout.info.PagerControllerInfo
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
-import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 
 /**
  * Controller that manages communication between Pager and PagerIndicator children.
  */
 internal class PagerController(
-    val view: BaseModel,
-    override val identifier: String
-) : LayoutModel(ViewType.PAGER_CONTROLLER), Identifiable {
+    final val view: BaseModel,
+    override val identifier: String,
+    backgroundColor: Color? = null,
+    border: Border? = null,
+    environment: ModelEnvironment
+) : LayoutModel<PagerControllerInfo>(
+    viewType = ViewType.PAGER_CONTROLLER,
+    backgroundColor = backgroundColor,
+    border = border,
+    environment = environment
+), Identifiable {
+    constructor(info: PagerControllerInfo, env: ModelEnvironment) : this(
+        view = env.modelProvider.create(info.view, env),
+        identifier = info.identifier,
+        backgroundColor = info.backgroundColor,
+        border = info.border,
+        environment = env
+    )
 
     override val children: List<BaseModel> = listOf(view)
 
@@ -137,16 +152,4 @@ internal class PagerController(
 
     private fun buildPagerData(): PagerData =
         PagerData(identifier, pageIndex, pageIdentifier ?: "", count, completed)
-
-    companion object {
-        @JvmStatic
-        @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): PagerController {
-            val viewJson = json.opt("view").optMap()
-            return PagerController(
-                view = Thomas.model(viewJson),
-                identifier = identifierFromJson(json)
-            )
-        }
-    }
 }

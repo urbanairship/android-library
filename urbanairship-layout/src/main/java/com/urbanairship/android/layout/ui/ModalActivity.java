@@ -8,19 +8,23 @@ import android.os.Bundle;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.android.layout.ModalPresentation;
+import com.urbanairship.android.layout.ModelEnvironment;
+import com.urbanairship.android.layout.ModelFactoryException;
+import com.urbanairship.android.layout.ModelProvider;
 import com.urbanairship.android.layout.R;
 import com.urbanairship.android.layout.ThomasListener;
 import com.urbanairship.android.layout.display.DisplayArgs;
 import com.urbanairship.android.layout.display.DisplayArgsLoader;
-import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.DefaultViewEnvironment;
 import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.event.ButtonEvent;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.event.EventSource;
 import com.urbanairship.android.layout.event.ReportingEvent;
+import com.urbanairship.android.layout.info.ViewInfo;
 import com.urbanairship.android.layout.model.BaseModel;
-import com.urbanairship.android.layout.ModalPresentation;
 import com.urbanairship.android.layout.property.ModalPlacement;
 import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.DisplayTimer;
@@ -29,6 +33,7 @@ import com.urbanairship.android.layout.view.ModalView;
 import com.urbanairship.channel.AttributeEditor;
 import com.urbanairship.json.JsonValue;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -101,7 +106,7 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
                 getWindow().setNavigationBarColor(R.color.system_bar_scrim_dark);
             }
 
-            Environment environment = new ViewEnvironment(
+            ViewEnvironment viewEnvironment = new DefaultViewEnvironment(
                     this,
                     args.getWebViewClientFactory(),
                     args.getImageCache(),
@@ -109,15 +114,22 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
                     placement.shouldIgnoreSafeArea()
             );
 
-            BaseModel view = args.getPayload().getView();
-            view.setListener(this);
+            ViewInfo view = args.getPayload().getView();
+
+            ModelProvider modelProvider = new ModelProvider();
+
+            ModelEnvironment modelEnvironment = new ModelEnvironment(modelProvider, new HashMap<>());
+
+            BaseModel model = modelProvider.create(view, modelEnvironment);
+
+            model.setListener(this);
 
             // Add thomas listener last so its the last thing to receive events
             if (this.externalListener != null) {
                 setListener(new ThomasListenerProxy(this.externalListener));
             }
 
-            modalView = ModalView.create(this, view, presentation, environment);
+            modalView = new ModalView(this, model, presentation, viewEnvironment);
             modalView.setLayoutParams(new ConstraintLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));
 
             if (presentation.isDismissOnTouchOutside()) {
@@ -130,7 +142,7 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             disableBackButton = presentation.isDisableBackButton();
 
             setContentView(modalView);
-        } catch (@NonNull DisplayArgsLoader.LoadException e) {
+        } catch (DisplayArgsLoader.LoadException | ModelFactoryException e) {
             Logger.error("Failed to load model!", e);
             finish();
         }
@@ -154,7 +166,7 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
     public void onBackPressed() {
         if (!disableBackButton) {
             super.onBackPressed();
-            reportDismissFromOutside(null);
+            reportDismissFromOutside(LayoutData.empty());
         }
     }
 
@@ -279,5 +291,4 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
             Logger.error(e, "Unable to set orientation lock.");
         }
     }
-
 }

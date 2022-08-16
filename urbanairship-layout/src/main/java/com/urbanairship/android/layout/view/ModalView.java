@@ -4,17 +4,16 @@ package com.urbanairship.android.layout.view;
 
 import android.content.Context;
 import android.graphics.Rect;
-import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 
-import com.urbanairship.android.layout.Thomas;
-import com.urbanairship.android.layout.environment.Environment;
-import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.ModalPresentation;
+import com.urbanairship.android.layout.Thomas;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
+import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.property.ConstrainedSize;
 import com.urbanairship.android.layout.property.Margin;
 import com.urbanairship.android.layout.property.ModalPlacement;
@@ -31,9 +30,9 @@ import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.view.ViewCompat;
 
 public class ModalView extends ConstraintLayout {
-    private BaseModel model;
-    private ModalPresentation presentation;
-    private Environment environment;
+    private final BaseModel model;
+    private final ModalPresentation presentation;
+    private final ViewEnvironment viewEnvironment;
 
     private ConstrainedFrameLayout modalFrame;
     private View containerView;
@@ -41,52 +40,25 @@ public class ModalView extends ConstraintLayout {
 
     @Nullable private OnClickListener clickOutsideListener = null;
 
-    public ModalView(@NonNull Context context) {
-        super(context);
-        init(context);
-    }
-
-    public ModalView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init(context);
-    }
-
-    public ModalView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(context);
-    }
-
-    public void init(@NonNull Context context) {
-        windowTouchSlop = ViewConfiguration.get(context).getScaledWindowTouchSlop();
-    }
-
-    @NonNull
-    public static ModalView create(
+    public ModalView(
         @NonNull Context context,
         @NonNull BaseModel model,
         @NonNull ModalPresentation presentation,
-        @NonNull Environment environment
+        @NonNull ViewEnvironment viewEnvironment
     ) {
-        ModalView view = new ModalView(context);
-
-        view.setModal(model, presentation, environment);
-        return view;
-    }
-
-    public void setModal(
-        @NonNull BaseModel model,
-        @NonNull ModalPresentation presentation,
-        @NonNull Environment environment
-    ) {
+        super(context);
         this.model = model;
         this.presentation = presentation;
-        this.environment = environment;
+        this.viewEnvironment = viewEnvironment;
 
         setId(model.getViewId());
-        configureModal();
+
+        configure();
     }
 
-    public void configureModal() {
+    public void configure() {
+        windowTouchSlop = ViewConfiguration.get(getContext()).getScaledWindowTouchSlop();
+
         ModalPlacement placement = presentation.getResolvedPlacement(getContext());
 
         ConstrainedSize size = placement.getSize();
@@ -96,7 +68,7 @@ public class ModalView extends ConstraintLayout {
             ? placement.getShadeColor().resolve(getContext()) : null;
         makeFrame(size);
 
-        containerView = Thomas.view(getContext(), model, environment);
+        containerView = Thomas.view(getContext(), model, viewEnvironment);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         lp.gravity = position != null ? position.getGravity() : Gravity.CENTER;
         if (margin != null) {
@@ -120,7 +92,7 @@ public class ModalView extends ConstraintLayout {
 
         constraints.applyTo(this);
 
-        if (environment.isIgnoringSafeAreas()) {
+        if (viewEnvironment.isIgnoringSafeAreas()) {
            ViewCompat.setOnApplyWindowInsetsListener(modalFrame, (v, insets) ->
                ViewCompat.dispatchApplyWindowInsets(containerView, insets)
            );

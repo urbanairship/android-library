@@ -3,12 +3,11 @@
 package com.urbanairship.android.layout.view;
 
 import android.content.Context;
-import android.util.AttributeSet;
 import android.util.SparseIntArray;
 import android.view.View;
 import android.widget.Checkable;
 
-import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.ScoreModel;
 import com.urbanairship.android.layout.property.ScoreStyle;
 import com.urbanairship.android.layout.util.ConstraintSetBuilder;
@@ -26,44 +25,20 @@ import androidx.constraintlayout.widget.ConstraintSet;
 /**
  * Form input that presents a set of numeric options representing a score.
  */
-public class ScoreView extends ConstraintLayout implements BaseView<ScoreModel> {
-    private ScoreModel model;
+public class ScoreView extends ConstraintLayout implements BaseView {
+    private final ScoreModel model;
 
     @Nullable
     private Integer selectedScore = null;
 
     private final SparseIntArray scoreToViewIds = new SparseIntArray();
 
-    public ScoreView(Context context) {
+    public ScoreView(Context context, @NonNull ScoreModel model, @NonNull ViewEnvironment viewEnvironment) {
         super(context);
-        init();
-    }
-
-    public ScoreView(Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init();
-    }
-
-    public ScoreView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init();
-    }
-
-    private void init() {
-    }
-
-    @NonNull
-    public static ScoreView create(@NonNull Context context, @NonNull ScoreModel model, Environment environment) {
-        ScoreView view = new ScoreView(context);
-        view.setModel(model, environment);
-        return view;
-    }
-
-    @Override
-    public void setModel(@NonNull ScoreModel model, @NonNull Environment environment) {
         this.model = model;
 
         setId(model.getViewId());
+
         configure();
     }
 

@@ -3,16 +3,14 @@
 package com.urbanairship.android.layout.view;
 
 import android.content.Context;
-import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
-import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.PagerModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.android.layout.widget.PagerRecyclerView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.view.ViewCompat;
 
@@ -20,57 +18,35 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class PagerView extends FrameLayout implements BaseView<PagerModel> {
-    private PagerModel model;
-    private Environment environment;
+public class PagerView extends FrameLayout implements BaseView {
+    private final PagerModel model;
+    private final ViewEnvironment viewEnvironment;
+    private final PagerRecyclerView view;
 
-    private PagerRecyclerView view = null;
-
-    public PagerView(@NonNull Context context) {
+    public PagerView(
+            @NonNull Context context,
+            @NonNull PagerModel model,
+            @NonNull ViewEnvironment viewEnvironment
+    ) {
         super(context);
-        init();
-    }
-
-    public PagerView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init();
-    }
-
-    public PagerView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init();
-    }
-
-    private void init() {
-    }
-
-    @NonNull
-    public static PagerView create(@NonNull Context context, @NonNull PagerModel model, @NonNull Environment environment) {
-        PagerView view = new PagerView(context);
-        view.setModel(model, environment);
-        return view;
-    }
-
-    @Override
-    public void setModel(@NonNull PagerModel model, @NonNull Environment environment) {
         this.model = model;
-        this.environment = environment;
+        this.viewEnvironment = viewEnvironment;
+
         setId(model.getViewId());
+
+        this.view = new PagerRecyclerView(context, model, viewEnvironment);
+        addView(view, MATCH_PARENT, MATCH_PARENT);
 
         configure();
     }
 
     private void configure() {
-        view = new PagerRecyclerView(getContext());
-        view.configure(model, environment);
-        addView(view, MATCH_PARENT, MATCH_PARENT);
-
         LayoutUtils.applyBorderAndBackground(this, model);
 
         model.setListener(modelListener);
 
         // Emit an init event so that we can connect to the indicator view, if one exists.
-        model.onConfigured(view.getDisplayedItemPosition(), environment.displayTimer().getTime());
+        model.onConfigured(view.getDisplayedItemPosition(), viewEnvironment.displayTimer().getTime());
 
         // Pass along any calls to apply insets to the view.
         ViewCompat.setOnApplyWindowInsetsListener(this, (v, insets) ->

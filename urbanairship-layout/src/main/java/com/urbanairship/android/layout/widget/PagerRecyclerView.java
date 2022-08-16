@@ -5,7 +5,7 @@ package com.urbanairship.android.layout.widget;
 import android.content.Context;
 import android.view.View;
 
-import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.PagerModel;
 
 import androidx.annotation.NonNull;
@@ -22,35 +22,33 @@ import androidx.recyclerview.widget.RecyclerView.Adapter.StateRestorationPolicy;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PagerRecyclerView extends RecyclerView {
-    private PagerModel model;
-    private Environment environment;
+    private final PagerModel model;
+    private final ViewEnvironment viewEnvironment;
     private PagerAdapter adapter;
     private LinearLayoutManager layoutManager;
     private PagerSnapHelper snapHelper;
 
     private boolean isInternalScroll = false;
 
-    public PagerRecyclerView(@NonNull Context context) {
+    public PagerRecyclerView(@NonNull Context context, @NonNull PagerModel model, @NonNull ViewEnvironment viewEnvironment) {
         super(context);
-        init();
-    }
-
-    private void init() {
-        snapHelper = new SnapHelper();
-        snapHelper.attachToRecyclerView(this);
-
-        setHorizontalScrollBarEnabled(false);
-    }
-
-    public void configure(@NonNull PagerModel model, @NonNull Environment environment) {
         this.model = model;
-        this.environment = environment;
+        this.viewEnvironment = viewEnvironment;
 
         setId(model.getRecyclerViewId());
 
+        configure();
+    }
+
+    public void configure() {
+        setHorizontalScrollBarEnabled(false);
+
+        snapHelper = new SnapHelper();
+        snapHelper.attachToRecyclerView(this);
+
         final Consumer<Boolean> onLayoutComplete = (isInitialLayout) -> {
             if (!isInitialLayout) { return; }
-            model.onConfigured(getDisplayedItemPosition(), environment.displayTimer().getTime());
+            model.onConfigured(getDisplayedItemPosition(), viewEnvironment.displayTimer().getTime());
         };
 
         if (model.getChildren().size() <= 1 || model.isSwipeDisabled()) {
@@ -67,7 +65,7 @@ public class PagerRecyclerView extends RecyclerView {
 
         addOnScrollListener(recyclerScrollListener);
 
-        adapter = new PagerAdapter(model, environment);
+        adapter = new PagerAdapter(model, viewEnvironment);
         adapter.setStateRestorationPolicy(StateRestorationPolicy.PREVENT_WHEN_EMPTY);
         adapter.setItems(model.getChildren());
         setAdapter(adapter);
@@ -111,7 +109,7 @@ public class PagerRecyclerView extends RecyclerView {
                 int distance = Math.abs(position - previousPosition);
                 for (int i = 0; i < distance; i++) {
                     int calculated = previousPosition + (step * (i + 1));
-                    model.onScrollTo(calculated, isInternalScroll, environment.displayTimer().getTime());
+                    model.onScrollTo(calculated, isInternalScroll, viewEnvironment.displayTimer().getTime());
                 }
             }
             previousPosition = position;

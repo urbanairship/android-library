@@ -4,11 +4,9 @@ package com.urbanairship.android.layout.view;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -20,7 +18,7 @@ import android.widget.ProgressBar;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.MediaModel;
 import com.urbanairship.android.layout.property.MediaType;
 import com.urbanairship.android.layout.util.LayoutUtils;
@@ -49,10 +47,10 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class MediaView extends FrameLayout implements BaseView<MediaModel> {
+public class MediaView extends FrameLayout implements BaseView {
 
-    private MediaModel model;
-    private Environment environment;
+    private final MediaModel model;
+    private final ViewEnvironment viewEnvironment;
 
     @Nullable
     private WebView webView;
@@ -67,56 +65,17 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
      *
      * @param context A Context object used to access application assets.
      */
-    public MediaView(@NonNull Context context) {
-        this(context, null);
-        init();
-    }
-
-    /**
-     * Default constructor.
-     *
-     * @param context A Context object used to access application assets.
-     * @param attrs An AttributeSet passed to our parent.
-     */
-    public MediaView(@NonNull Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, 0);
-        init();
-    }
-
-    /**
-     * Default constructor.
-     *
-     * @param context A Context object used to access application assets.
-     * @param attrs An AttributeSet passed to our parent.
-     * @param defStyle The default style resource ID.
-     */
-    public MediaView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        init();
-    }
-
-    private void init() {
-    }
-
-    @NonNull
-    public static MediaView create(@NonNull Context context, @NonNull MediaModel model, @NonNull Environment environment) {
-        MediaView view = new MediaView(context);
-        view.setModel(model, environment);
-        return view;
-    }
-
-    /**
-     * Sets the media info.
-     *
-     * @param model The media info.
-     * @param environment The environment.
-     */
-    @Override
-    public void setModel(@NonNull MediaModel model, @NonNull Environment environment) {
+    public MediaView(
+            @NonNull Context context,
+            @NonNull MediaModel model,
+            @NonNull ViewEnvironment viewEnvironment
+    ) {
+        super(context, null);
         this.model = model;
-        this.environment = environment;
+        this.viewEnvironment = viewEnvironment;
 
         setId(model.getViewId());
+
         configure();
     }
 
@@ -147,7 +106,7 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
 
     private void configureImage(@NonNull MediaModel model) {
         String url = model.getUrl();
-        String cachedImage = environment.imageCache().get(url);
+        String cachedImage = viewEnvironment.imageCache().get(url);
         if (cachedImage != null) {
             url = cachedImage;
         }
@@ -225,10 +184,10 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
             setLayoutParams(params);
         });
 
-        environment.lifecycle().addObserver(lifecycleListener);
+        viewEnvironment.lifecycle().addObserver(lifecycleListener);
 
         this.webView = new WebView(getContext());
-        this.webView.setWebChromeClient(environment.webChromeClientFactory().create());
+        this.webView.setWebChromeClient(viewEnvironment.webChromeClientFactory().create());
 
         FrameLayout frameLayout = new FrameLayout(getContext());
         frameLayout.setLayoutParams(new FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT));

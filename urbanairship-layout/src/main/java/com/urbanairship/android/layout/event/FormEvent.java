@@ -198,6 +198,7 @@ public abstract class FormEvent extends Event {
             return attributes;
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "DataChange{" +

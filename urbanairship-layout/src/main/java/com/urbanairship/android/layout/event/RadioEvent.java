@@ -29,7 +29,7 @@ public abstract class RadioEvent {
      */
     public static final class InputChange extends FormEvent.CheckedChange {
 
-        private JsonValue attributeValue;
+        private final JsonValue attributeValue;
 
         public InputChange(@NonNull JsonValue value, @Nullable JsonValue attributeValue, boolean isChecked) {
             super(EventType.RADIO_INPUT_CHANGE, value, isChecked);

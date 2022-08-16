@@ -3,29 +3,38 @@ package com.urbanairship.android.layout.model
 
 import android.view.View
 import com.urbanairship.Logger
-import com.urbanairship.android.layout.Thomas
+import com.urbanairship.android.layout.ModelEnvironment
 import com.urbanairship.android.layout.event.Event
 import com.urbanairship.android.layout.event.EventType
 import com.urbanairship.android.layout.event.PagerEvent
 import com.urbanairship.android.layout.event.PagerEvent.Scroll
-import com.urbanairship.android.layout.model.Identifiable.Companion.identifierFromJson
+import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.android.layout.testing.OpenForTesting
-import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonList
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 
-@OpenForTesting
 internal class PagerModel(
-    val items: List<Item>,
-    val isSwipeDisabled: Boolean,
-    backgroundColor: Color?,
-    border: Border?
-) : LayoutModel(ViewType.PAGER, backgroundColor, border) {
+    final val items: List<Item>,
+    val isSwipeDisabled: Boolean = false,
+    backgroundColor: Color? = null,
+    border: Border? = null,
+    environment: ModelEnvironment
+) : LayoutModel<PagerInfo>(
+    ViewType.PAGER,
+    backgroundColor,
+    border,
+    environment
+) {
+    constructor(info: PagerInfo, env: ModelEnvironment) : this(
+        info.items.map { Item(it, env) },
+        info.isSwipeDisabled,
+        info.backgroundColor,
+        info.border,
+        env
+    )
+
     /** Stable viewId for the recycler view.  */
     val recyclerViewId = View.generateViewId()
 
@@ -37,8 +46,8 @@ internal class PagerModel(
     private var lastIndex = 0
 
     init {
-        for (item in items) {
-            item.view.addListener(this)
+        for (c in children) {
+            c.addListener(this)
         }
     }
 
@@ -129,35 +138,10 @@ internal class PagerModel(
         val identifier: String,
         val actions: Map<String, JsonValue>
     ) {
-
-        companion object {
-            @Throws(JsonException::class)
-            fun fromJson(json: JsonMap): Item {
-                val viewJson = json.opt("view").optMap()
-                return Item(
-                    view = Thomas.model(viewJson),
-                    identifier = identifierFromJson(json),
-                    actions = json.opt("display_actions").optMap().map
-                )
-            }
-
-            @Throws(JsonException::class)
-            fun fromJsonList(json: JsonList): List<Item> =
-                json.list.map { fromJson(it.optMap()) }
-        }
-    }
-
-    companion object {
-        @JvmStatic
-        @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): PagerModel {
-            val itemsJson = json.opt("items").optList()
-            return PagerModel(
-                items = Item.fromJsonList(itemsJson),
-                isSwipeDisabled = json.opt("disable_swipe").getBoolean(false),
-                backgroundColor = backgroundColorFromJson(json),
-                border = borderFromJson(json)
-            )
-        }
+       constructor(info: PagerInfo.ItemInfo, env: ModelEnvironment) : this(
+            env.modelProvider.create(info.info, env),
+            info.identifier,
+            info.actions
+        )
     }
 }

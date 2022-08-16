@@ -1,25 +1,48 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import com.urbanairship.android.layout.ModelEnvironment
 import com.urbanairship.android.layout.event.FormEvent
 import com.urbanairship.android.layout.event.FormEvent.DataChange
 import com.urbanairship.android.layout.event.ReportingEvent.FormResult
-import com.urbanairship.android.layout.model.Identifiable.Companion.identifierFromJson
+import com.urbanairship.android.layout.info.FormControllerInfo
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.FormData
-import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 
 /**
  * Controller that manages form input views.
  */
 internal class FormController(
+    final override val view: BaseModel,
     identifier: String,
     responseType: String?,
-    view: BaseModel,
-    submitBehavior: FormBehaviorType?
-) : BaseFormController(ViewType.FORM_CONTROLLER, identifier, responseType, view, submitBehavior) {
+    submitBehavior: FormBehaviorType?,
+    backgroundColor: Color? = null,
+    border: Border? = null,
+    environment: ModelEnvironment
+) : BaseFormController<FormControllerInfo>(
+    viewType = ViewType.FORM_CONTROLLER,
+    identifier = identifier,
+    responseType = responseType,
+    submitBehavior = submitBehavior,
+    backgroundColor = backgroundColor,
+    border = border,
+    environment = environment
+) {
+    constructor(info: FormControllerInfo, env: ModelEnvironment) : this(
+        view = env.modelProvider.create(info.view, env),
+        identifier = info.identifier,
+        responseType = info.responseType,
+        submitBehavior = info.submitBehavior,
+        backgroundColor = info.backgroundColor,
+        border = info.border,
+        environment = env
+    )
+
+    override val children: List<BaseModel> = listOf(view)
 
     override val formType: String = "form"
 
@@ -39,15 +62,7 @@ internal class FormController(
             attributes
         )
 
-    companion object {
-        @JvmStatic
-        @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): FormController =
-            FormController(
-                identifier = identifierFromJson(json),
-                responseType = json.opt("response_type").string,
-                view = viewFromJson(json),
-                submitBehavior = submitBehaviorFromJson(json)
-            )
+    init {
+        view.addListener(this)
     }
 }

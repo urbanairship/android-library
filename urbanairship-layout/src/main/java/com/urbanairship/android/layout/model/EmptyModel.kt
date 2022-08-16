@@ -1,12 +1,12 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import com.urbanairship.android.layout.ModelEnvironment
+import com.urbanairship.android.layout.info.EmptyInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.view.EmptyView
-import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 
 /**
  * An empty view that can have a background and border.
@@ -15,17 +15,18 @@ import com.urbanairship.json.JsonMap
  * @see EmptyView
  */
 internal class EmptyModel(
-    backgroundColor: Color?,
-    border: Border?
-) : BaseModel(ViewType.EMPTY_VIEW, backgroundColor, border) {
-
-    companion object {
-        @JvmStatic
-        @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): EmptyModel =
-            EmptyModel(
-                backgroundColor = backgroundColorFromJson(json),
-                border = borderFromJson(json)
-            )
-    }
+    backgroundColor: Color? = null,
+    border: Border? = null,
+    environment: ModelEnvironment
+) : BaseModel(
+    viewType = ViewType.EMPTY_VIEW,
+    backgroundColor = backgroundColor,
+    border = border,
+    environment = environment
+) {
+    constructor(info: EmptyInfo, env: ModelEnvironment) : this(
+        backgroundColor = info.backgroundColor,
+        border = info.border,
+        environment = env
+    )
 }
