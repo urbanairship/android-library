@@ -2,6 +2,10 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.7.3 September 9, 2022
+
+Patch release that fixes a caching issue with named contact subscription lists when edits are made. Applications using contact based preference centers or accessing contact subscription lists should update.
+
 ## Version 16.7.2 September 2, 2022
 
 Patch release that fixes a Message Center data migration and prevents any exceptions with failed migrations going forward.
