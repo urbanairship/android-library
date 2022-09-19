@@ -5,6 +5,7 @@ package com.urbanairship.messagecenter;
 import android.content.Context;
 
 import com.urbanairship.AirshipConfigOptions;
+import com.urbanairship.db.RetryingSQLiteOpenHelper;
 
 import java.io.File;
 
@@ -16,6 +17,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
 
 /**
  * Message database
@@ -56,11 +58,14 @@ public abstract class MessageDatabase extends RoomDatabase {
         String name = config.appKey + "_" + DB_NAME;
         File urbanAirshipNoBackupDirectory = new File(ContextCompat.getNoBackupFilesDir(context), DB_DIR);
         String path = new File(urbanAirshipNoBackupDirectory, name).getAbsolutePath();
+        RetryingSQLiteOpenHelper.Factory retryingOpenHelperFactory =
+                new RetryingSQLiteOpenHelper.Factory(new FrameworkSQLiteOpenHelperFactory(), true);
 
         return Room.databaseBuilder(context, MessageDatabase.class, path)
-                   .addMigrations(MIGRATION_1_5, MIGRATION_2_5, MIGRATION_3_5, MIGRATION_4_5)
-                   .fallbackToDestructiveMigration()
-                   .build();
+            .openHelperFactory(retryingOpenHelperFactory)
+            .addMigrations(MIGRATION_1_5, MIGRATION_2_5, MIGRATION_3_5, MIGRATION_4_5)
+            .fallbackToDestructiveMigration()
+            .build();
     }
 
     @VisibleForTesting
