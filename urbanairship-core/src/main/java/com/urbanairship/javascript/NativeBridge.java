@@ -5,6 +5,11 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Looper;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Logger;
@@ -33,11 +38,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-
 /**
  * Native bridge.
  *
@@ -51,7 +51,7 @@ public class NativeBridge {
      * URLs that have this scheme by default.
      */
     @NonNull
-    private static final String UA_ACTION_SCHEME = "uairship";
+    public static final String UA_ACTION_SCHEME = "uairship";
 
     /**
      * Run basic actions command.

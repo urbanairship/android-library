@@ -3,9 +3,11 @@
 package com.urbanairship.webkit;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Message;
 import android.view.Gravity;
 import android.view.View;
@@ -16,12 +18,14 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.urbanairship.Logger;
+import com.urbanairship.javascript.NativeBridge;
 import com.urbanairship.util.UriUtils;
 
 import java.lang.ref.WeakReference;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Web Chrome Client that enables full screen video.
@@ -95,9 +99,19 @@ public class AirshipWebChromeClient extends WebChromeClient {
                 @Override
                 public boolean shouldOverrideUrlLoading (WebView view, String url) {
                     if (url != null) {
+                        Uri uri = Uri.parse(url);
+
+                        if (uri.getHost() == null || NativeBridge.UA_ACTION_SCHEME.equals(uri.getScheme())) {
+                            return false;
+                        }
+
                         Intent intent = new Intent(Intent.ACTION_VIEW, UriUtils.parse(url));
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        view.getContext().startActivity(intent);
+                        try {
+                            view.getContext().startActivity(intent);
+                        } catch (ActivityNotFoundException e) {
+                            Logger.error(e);
+                        }
                     }
                     return true;
                 }

@@ -5,6 +5,14 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.annotation.XmlRes;
+import androidx.core.util.ObjectsCompat;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
@@ -30,8 +38,6 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
 import com.urbanairship.permission.PermissionDelegate;
-import com.urbanairship.permission.PermissionRequestResult;
-import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.notifications.AirshipNotificationProvider;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -48,15 +54,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-import androidx.annotation.XmlRes;
-import androidx.core.util.Consumer;
-import androidx.core.util.ObjectsCompat;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -385,8 +382,7 @@ public class PushManager extends AirshipComponent {
                 pushProvider = resolvePushProvider();
                 String pushDeliveryType = preferenceDataStore.getString(PUSH_DELIVERY_TYPE, null);
                 if (pushProvider == null || !pushProvider.getDeliveryType().equals(pushDeliveryType)) {
-                    preferenceDataStore.remove(PUSH_DELIVERY_TYPE);
-                    preferenceDataStore.remove(PUSH_TOKEN_KEY);
+                    clearPushToken();
                 }
             }
 
@@ -1027,6 +1023,15 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
+     * Clear the push token.
+     *
+     */
+    private void clearPushToken() {
+        preferenceDataStore.remove(PUSH_TOKEN_KEY);
+        preferenceDataStore.remove(PUSH_DELIVERY_TYPE);
+    }
+
+    /**
      * Gets the push provider.
      *
      * @return The available push provider.
@@ -1110,9 +1115,11 @@ public class PushManager extends AirshipComponent {
             if (e.isRecoverable()) {
                 Logger.debug("Push registration failed with error: %s. Will retry.", e.getMessage());
                 Logger.verbose(e);
+                clearPushToken();
                 return JobResult.RETRY;
             } else {
                 Logger.error(e, "PushManager - Push registration failed.");
+                clearPushToken();
                 return JobResult.SUCCESS;
             }
         }
@@ -1158,8 +1165,7 @@ public class PushManager extends AirshipComponent {
             if (pushProviderClass != null && pushProvider.getClass().equals(pushProviderClass)) {
                 String oldToken = preferenceDataStore.getString(PUSH_TOKEN_KEY, null);
                 if (token != null && !UAStringUtil.equals(token, oldToken)) {
-                    preferenceDataStore.remove(PUSH_TOKEN_KEY);
-                    preferenceDataStore.remove(PUSH_DELIVERY_TYPE);
+                    clearPushToken();
                 }
             }
             dispatchUpdateJob();
