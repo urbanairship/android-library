@@ -8,6 +8,8 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.urbanairship.AirshipLoopers;
+import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
 import androidx.annotation.NonNull;
@@ -90,15 +92,9 @@ public class ClipboardAction extends Action {
             label = null;
         }
 
-        // Clipboard must be accessed from a thread with a prepared looper
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                ClipboardManager clipboardManager = (ClipboardManager) UAirship.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clip = ClipData.newPlainText(label, text);
-                clipboardManager.setPrimaryClip(clip);
-            }
-        });
+        ClipboardManager clipboardManager = (ClipboardManager) UAirship.getApplicationContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText(label, text);
+        clipboardManager.setPrimaryClip(clip);
 
         // Return the text we are setting
         return ActionResult.newResult(arguments.getValue());
@@ -106,7 +102,7 @@ public class ClipboardAction extends Action {
 
     @Override
     public boolean shouldRunOnMainThread() {
-        return true;
+        return false;
     }
 
 }
