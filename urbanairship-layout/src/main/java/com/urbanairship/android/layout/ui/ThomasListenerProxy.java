@@ -2,16 +2,15 @@
 
 package com.urbanairship.android.layout.ui;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+
 import com.urbanairship.Logger;
 import com.urbanairship.android.layout.ThomasListener;
-import com.urbanairship.android.layout.event.ButtonEvent;
 import com.urbanairship.android.layout.event.Event;
 import com.urbanairship.android.layout.event.EventListener;
 import com.urbanairship.android.layout.event.ReportingEvent;
 import com.urbanairship.android.layout.reporting.LayoutData;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
 
 /**
  * An event listener that calls through to a ThomasListener.

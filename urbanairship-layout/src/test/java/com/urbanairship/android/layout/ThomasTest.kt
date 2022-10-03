@@ -77,7 +77,10 @@ public class ThomasTest {
     @Throws(JsonException::class)
     public fun validatePresentation() {
         val banner = LayoutInfo(json = readJsonMapResource("banner.json"))
-        assertFalse(Thomas.isValid(banner))
+        assertTrue(Thomas.isValid(banner))
+
+        val modal = LayoutInfo(json = readJsonMapResource("modal.json"))
+        assertTrue(Thomas.isValid(modal))
     }
 
     private fun readJsonMapResource(path: String): JsonMap {

@@ -6,6 +6,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+
 import com.urbanairship.android.layout.display.DisplayArgsLoader;
 import com.urbanairship.android.layout.display.DisplayException;
 import com.urbanairship.android.layout.display.DisplayRequest;
@@ -33,6 +37,7 @@ import com.urbanairship.android.layout.model.ScrollLayoutModel;
 import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.model.ToggleModel;
 import com.urbanairship.android.layout.model.WebViewModel;
+import com.urbanairship.android.layout.ui.LayoutBanner;
 import com.urbanairship.android.layout.ui.ModalActivity;
 import com.urbanairship.android.layout.view.CheckboxView;
 import com.urbanairship.android.layout.view.ContainerLayoutView;
@@ -50,10 +55,7 @@ import com.urbanairship.android.layout.view.ScrollLayoutView;
 import com.urbanairship.android.layout.view.TextInputView;
 import com.urbanairship.android.layout.view.ToggleView;
 import com.urbanairship.android.layout.view.WebViewView;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
+import com.urbanairship.app.GlobalActivityMonitor;
 
 /**
  * Entry point and related helper methods for rendering layouts based on our internal DSL.
@@ -79,11 +81,12 @@ public final class Thomas {
             return false;
         }
 
-        if (!(payload.getPresentation() instanceof ModalPresentation)) {
-            return false;
+        if (payload.getPresentation() instanceof ModalPresentation
+                || payload.getPresentation() instanceof BannerPresentation) {
+          return true;
         }
 
-        return true;
+        return false;
     }
 
     @NonNull
@@ -98,6 +101,11 @@ public final class Thomas {
                         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         .putExtra(ModalActivity.EXTRA_DISPLAY_ARGS_LOADER, DisplayArgsLoader.newLoader(args));
                 context.startActivity(intent);
+            });
+        } else if (payload.getPresentation() instanceof BannerPresentation) {
+            return new DisplayRequest(payload, (context, args) -> {
+                LayoutBanner layoutBanner = new LayoutBanner(context, GlobalActivityMonitor.shared(context), args);
+                layoutBanner.display();
             });
         } else {
             throw new DisplayException("Presentation not supported: " + payload.getPresentation());

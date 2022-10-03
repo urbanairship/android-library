@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.iam.banner;
+package com.urbanairship.android.layout.util;
 
 import android.os.Handler;
 import android.os.SystemClock;

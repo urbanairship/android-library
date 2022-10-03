@@ -2,9 +2,19 @@
 
 package com.urbanairship.android.layout.ui;
 
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static com.urbanairship.android.layout.event.ReportingEvent.ReportType.FORM_RESULT;
+
 import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.view.WindowCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
@@ -37,16 +47,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.view.WindowCompat;
-
-import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-import static com.urbanairship.android.layout.event.ReportingEvent.ReportType.FORM_RESULT;
 
 /**
  * @hide

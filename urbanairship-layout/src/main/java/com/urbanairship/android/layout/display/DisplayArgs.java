@@ -2,15 +2,15 @@
 
 package com.urbanairship.android.layout.display;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+
 import com.urbanairship.android.layout.ThomasListener;
 import com.urbanairship.android.layout.info.LayoutInfo;
 import com.urbanairship.android.layout.util.Factory;
 import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.webkit.AirshipWebViewClient;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
 
 /**
  * Display arguments.

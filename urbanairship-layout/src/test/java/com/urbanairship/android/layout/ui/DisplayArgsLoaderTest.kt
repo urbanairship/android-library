@@ -35,14 +35,14 @@ public class DisplayArgsLoaderTest : TestCase() {
                       "width": "100%",
                       "height": "100%"
                     },
-                    "position": { 
+                    "position": {
                         "horizontal": "center",
-                        "vertical": "center" 
+                        "vertical": "center"
                     },
                     "shade_color": {
-                      "default": { 
-                          "type": "hex", 
-                          "hex": "#000000", 
+                      "default": {
+                          "type": "hex",
+                          "hex": "#000000",
                           "alpha": 0.2 }
                     }
                   }
