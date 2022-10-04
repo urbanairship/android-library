@@ -45,6 +45,7 @@ buildscript {
         androidxNavigationVersion = '2.4.2'
         androidxSwipeRefreshLayoutVersion = '1.1.0'
         androidXWork = '2.7.1'
+        androidxWebKitVersion = '1.4.0'
         androidXConcurrentFutures = '1.1.0'
         androidXStartup = '1.1.1'
         androidxRecyclerViewVersion = "1.2.0"

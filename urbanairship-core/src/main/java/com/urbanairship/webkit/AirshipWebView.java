@@ -16,14 +16,15 @@ import android.webkit.WebViewClient;
 
 import com.urbanairship.Logger;
 import com.urbanairship.R;
-import com.urbanairship.UAirship;
 import com.urbanairship.util.ManifestUtils;
 
-import java.io.File;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
 
 /**
  * A web view that sets settings appropriate for Airship content.
@@ -35,6 +36,9 @@ public class AirshipWebView extends WebView {
     private static final String CACHE_DIRECTORY = "urbanairship";
 
     private String currentClientAuthRequestUrl;
+
+    /** Flag indicating whether starting safe browsing has been attempted. */
+    private boolean isStartSafeBrowsingAttempted = false;
 
     /**
      * AirshipWebView Constructor
@@ -150,15 +154,13 @@ public class AirshipWebView extends WebView {
 
     @Override
     public void loadData(@NonNull String data, @Nullable String mimeType, @Nullable String encoding) {
-        onPreLoad();
-        super.loadData(data, mimeType, encoding);
+        onPreLoad(() -> AirshipWebView.super.loadData(data, mimeType, encoding));
     }
 
     @Override
     public void loadDataWithBaseURL(@Nullable String baseUrl, @NonNull String data, @Nullable String mimeType, @Nullable String encoding,
                                     @Nullable String historyUrl) {
-        onPreLoad();
-        super.loadDataWithBaseURL(baseUrl, data, mimeType, encoding, historyUrl);
+        onPreLoad(() -> AirshipWebView.super.loadDataWithBaseURL(baseUrl, data, mimeType, encoding, historyUrl));
     }
 
     /**
@@ -167,8 +169,7 @@ public class AirshipWebView extends WebView {
      * @param url The URL of the resource to load.
      */
     public void loadUrl(@NonNull String url) {
-        onPreLoad();
-        super.loadUrl(url);
+        onPreLoad(() -> AirshipWebView.super.loadUrl(url));
     }
 
     /**
@@ -179,10 +180,8 @@ public class AirshipWebView extends WebView {
      * this URL.
      */
     public void loadUrl(@NonNull String url, @NonNull Map<String, String> additionalHttpHeaders) {
-        onPreLoad();
-        super.loadUrl(url, additionalHttpHeaders);
+        onPreLoad(() -> AirshipWebView.super.loadUrl(url, additionalHttpHeaders));
     }
-
 
     @Override
     public void setWebViewClient(@Nullable WebViewClient webViewClient) {
@@ -198,7 +197,7 @@ public class AirshipWebView extends WebView {
      * Called right before data or a URL is passed to the web view to be loaded.
      */
     @SuppressLint("NewApi")
-    protected void onPreLoad() {
+    protected void onPreLoad(@NonNull Runnable onReadyCallback) {
         if (getWebViewClientCompat() == null) {
             Logger.debug("No web view client set, setting a default AirshipWebViewClient for landing page view.");
             setWebViewClient(new AirshipWebViewClient());
@@ -209,6 +208,22 @@ public class AirshipWebView extends WebView {
             AirshipWebViewClient webViewClient = (AirshipWebViewClient) getWebViewClientCompat();
             webViewClient.removeAuthRequestCredentials(currentClientAuthRequestUrl);
             currentClientAuthRequestUrl = null;
+        }
+
+        // Try to start Safe Browsing
+        if (!isStartSafeBrowsingAttempted && shouldStartSafeBrowsing()) {
+            WebViewCompat.startSafeBrowsing(getContext().getApplicationContext(), started -> {
+                if (!started) {
+                    Logger.debug("Unable to start Safe Browsing. Feature is not supported or disabled in the manifest.");
+                }
+                isStartSafeBrowsingAttempted = true;
+                onReadyCallback.run();
+            });
+        } else {
+            Logger.debug("Unable to start Safe Browsing. Feature is not supported or disabled in the manifest.");
+            // Safe browsing not supported or disabled, continue loading without it.
+            isStartSafeBrowsingAttempted = true;
+            onReadyCallback.run();
         }
     }
 
@@ -256,4 +271,10 @@ public class AirshipWebView extends WebView {
         return "Basic " + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
     }
 
+    private boolean shouldStartSafeBrowsing() {
+        return WebViewFeature.isFeatureSupported(WebViewFeature.START_SAFE_BROWSING)
+                && WebViewFeature.isFeatureSupported(WebViewFeature.SAFE_BROWSING_ENABLE)
+                && WebSettingsCompat.getSafeBrowsingEnabled(getSettings())
+                && ManifestUtils.isWebViewSafeBrowsingEnabled();
+    }
 }

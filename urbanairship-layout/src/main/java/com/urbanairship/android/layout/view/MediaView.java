@@ -355,5 +355,11 @@ public class MediaView extends FrameLayout implements BaseView<MediaModel> {
                 webView.onResume();
             }
         }
+
+        @Override
+        public void onDestroy(@NonNull LifecycleOwner owner) {
+            webView = null;
+            environment.lifecycle().removeObserver(lifecycleListener);
+        }
     };
 }

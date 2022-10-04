@@ -107,7 +107,7 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
 
     @SuppressLint("SetJavaScriptEnabled")
     private void loadWebView(@NonNull WebViewModel model) {
-        this.webView = new AirshipWebView(getContext());
+        this.webView = new AirshipWebView(getContext().getApplicationContext());
 
         // Restore saved state from the model, if available.
         Bundle savedState = model.getSavedState();
@@ -242,6 +242,12 @@ public class WebViewView extends FrameLayout implements BaseView<WebViewModel> {
                 webView.saveState(bundle);
                 model.saveState(bundle);
             }
+        }
+
+        @Override
+        public void onDestroy(@NonNull LifecycleOwner owner) {
+            webView = null;
+            environment.lifecycle().removeObserver(lifecycleListener);
         }
     };
 }
