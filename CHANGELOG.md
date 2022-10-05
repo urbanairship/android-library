@@ -2,6 +2,15 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.7.5 October 4, 2022
+
+Patch release that fixes an issue with the HMS push provider, improves WebView Safe Browsing for supported devices, and avoids Strict Mode warnings related to clipboard operations.
+
+### Changes
+- Ignore calls to `processNewToken` on HMS, if the new token is identical to one we've received previously.
+- Wait for start Safe Browsing callback before loading URLs in WebViews, to improve security.
+- Move clipboard copy operations for actions and Channel capture to a background thread.
+
 ## Version 16.7.4 September 20, 2022
 
 Patch release that prevents a potential crash on WebView with uairship commands and on Message Center database at initialization. Also clears push token on FCM registration failure. 
