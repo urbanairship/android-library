@@ -14,7 +14,6 @@ import com.urbanairship.android.layout.event.PagerEvent.PageActions
 import com.urbanairship.android.layout.event.PagerEvent.Scroll
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.event.ReportingEvent.ButtonTap
-import com.urbanairship.android.layout.info.ViewGroupInfo
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.json.JsonValue
@@ -41,8 +40,8 @@ public class PagerControllerTest {
     private val mockEnv = spyk(ModelEnvironment(ModelProvider(), emptyMap()))
     private val mockButton = mockk<ButtonModel>()
 
-    private val mockView: LayoutModel<*> = spyk(
-        object : LayoutModel<ViewGroupInfo>(
+    private val mockView: LayoutModel = spyk(
+        object : LayoutModel(
             viewType = ViewType.CONTAINER,
             environment = mockEnv
         ) {

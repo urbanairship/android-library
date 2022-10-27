@@ -10,10 +10,12 @@ import com.urbanairship.android.layout.event.FormEvent.ValidationUpdate
 import com.urbanairship.android.layout.event.PagerEvent
 import com.urbanairship.android.layout.event.PagerEvent.Scroll
 import com.urbanairship.android.layout.event.ReportingEvent.ButtonTap
+import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
-import com.urbanairship.android.layout.property.ButtonEnableBehaviorType
 import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.property.EnableBehaviorType
+import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.json.JsonException
@@ -24,12 +26,22 @@ internal abstract class ButtonModel(
     override val identifier: String,
     val actions: Map<String, JsonValue>,
     private val clickBehaviors: List<ButtonClickBehaviorType>,
-    private val enableBehaviors: List<ButtonEnableBehaviorType>,
     override val contentDescription: String? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
+    visibility: VisibilityInfo? = null,
+    eventHandlers: List<EventHandler>? = null,
+    enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
-) : BaseModel(viewType, backgroundColor, border, environment), Accessible, Identifiable {
+) : BaseModel(
+    viewType = viewType,
+    backgroundColor = backgroundColor,
+    border = border,
+    visibility = visibility,
+    eventHandlers = eventHandlers,
+    enableBehaviors = enableBehaviors,
+    environment = environment
+), Accessible, Identifiable {
     abstract fun reportingDescription(): String
 
     private var viewListener: Listener? = null
@@ -81,11 +93,11 @@ internal abstract class ButtonModel(
     }
 
     private fun isEnabled(): Boolean {
-        return enableBehaviors.isEmpty() || isEnabled
+        return enableBehaviors.isNullOrEmpty() || isEnabled
     }
 
     private fun handleFormSubmitUpdate(update: ValidationUpdate): Boolean {
-        if (enableBehaviors.contains(ButtonEnableBehaviorType.FORM_VALIDATION)) {
+        if (enableBehaviors?.contains(EnableBehaviorType.FORM_VALIDATION) == true) {
             isEnabled = update.isValid
             viewListener?.setEnabled(update.isValid)
             return true
@@ -94,11 +106,11 @@ internal abstract class ButtonModel(
     }
 
     private fun handlePagerScroll(hasNext: Boolean, hasPrevious: Boolean): Boolean {
-        if (enableBehaviors.contains(ButtonEnableBehaviorType.PAGER_NEXT)) {
+        if (enableBehaviors?.contains(EnableBehaviorType.PAGER_NEXT) == true) {
             isEnabled = hasNext
             viewListener?.setEnabled(hasNext)
         }
-        if (enableBehaviors.contains(ButtonEnableBehaviorType.PAGER_PREVIOUS)) {
+        if (enableBehaviors?.contains(EnableBehaviorType.PAGER_PREVIOUS) == true) {
             isEnabled = hasPrevious
             viewListener?.setEnabled(hasPrevious)
         }

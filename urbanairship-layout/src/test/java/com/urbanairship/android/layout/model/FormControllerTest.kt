@@ -9,7 +9,6 @@ import com.urbanairship.android.layout.event.EventType
 import com.urbanairship.android.layout.event.FormEvent
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.event.TextInputEvent
-import com.urbanairship.android.layout.info.ViewGroupInfo
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.ViewType.CONTAINER
@@ -34,14 +33,14 @@ public class FormControllerTest {
 
     private val mockEnv: ModelEnvironment = spyk(ModelEnvironment(ModelProvider(), emptyMap()))
 
-    private lateinit var mockView: LayoutModel<*>
+    private lateinit var mockView: LayoutModel
     private lateinit var inputViewAttachedEvent: Event
     private lateinit var inputFormFieldInitEvent: Event
 
     @Before
     public fun setUp() {
         mockView = spyk(
-            object : LayoutModel<ViewGroupInfo>(viewType = CONTAINER, environment = mockEnv) {
+            object : LayoutModel(viewType = CONTAINER, environment = mockEnv) {
                 override val children: List<BaseModel> = listOf(mockInput, mockSubmitButton)
             }
         )

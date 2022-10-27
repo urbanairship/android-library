@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import androidx.lifecycle.ViewModelProvider;
+
 /**
  * @hide
  */
@@ -118,9 +120,26 @@ public class ModalActivity extends AppCompatActivity implements EventListener, E
 
             ModelProvider modelProvider = new ModelProvider();
 
-            ModelEnvironment modelEnvironment = new ModelEnvironment(modelProvider, new HashMap<>());
+            LayoutViewModel layoutViewModel =
+                    new ViewModelProvider(this).get(LayoutViewModel.class);
 
-            BaseModel model = modelProvider.create(view, modelEnvironment);
+            // Try to restore the model and environment from the saved state, otherwise create them.
+            // TODO: revisit this once the models and environment stuff is more fleshed out...
+            //  Ideally, we'd only need to save the environment, but we'll see if that works out.
+            ModelEnvironment restoredEnvironment = layoutViewModel.getEnvironment();
+            ModelEnvironment modelEnvironment = restoredEnvironment != null
+                    ? restoredEnvironment
+                    : new ModelEnvironment(modelProvider, new HashMap<>());
+
+            BaseModel restoredModel = layoutViewModel.getModel();
+            BaseModel model = restoredModel != null
+                    ? restoredModel
+                    : modelProvider.create(view, modelEnvironment);
+
+            // Store environment and model in the view model, so we can restore after config changes.
+            layoutViewModel.setEnvironment(modelEnvironment);
+            layoutViewModel.setModel(model);
+
 
             model.setListener(this);
 

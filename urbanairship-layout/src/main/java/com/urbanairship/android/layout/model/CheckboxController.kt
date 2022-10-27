@@ -11,8 +11,11 @@ import com.urbanairship.android.layout.event.Event.ViewInit
 import com.urbanairship.android.layout.event.EventType
 import com.urbanairship.android.layout.event.FormEvent.DataChange
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
+import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.property.EnableBehaviorType
+import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.LayoutData
@@ -32,11 +35,17 @@ internal class CheckboxController(
     override val contentDescription: String? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
+    visibility: VisibilityInfo? = null,
+    eventHandlers: List<EventHandler>? = null,
+    enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
-) : LayoutModel<CheckboxControllerInfo>(
+) : LayoutModel(
     viewType = ViewType.CHECKBOX_CONTROLLER,
     backgroundColor = backgroundColor,
     border = border,
+    visibility = visibility,
+    eventHandlers = eventHandlers,
+    enableBehaviors = enableBehaviors,
     environment = environment
 ), Identifiable, Accessible, Validatable {
     constructor(info: CheckboxControllerInfo, env: ModelEnvironment) : this(
@@ -48,6 +57,9 @@ internal class CheckboxController(
         contentDescription = info.contentDescription,
         backgroundColor = info.backgroundColor,
         border = info.border,
+        visibility = info.visibility,
+        eventHandlers = info.eventHandlers,
+        enableBehaviors = info.enableBehaviors,
         environment = env
     )
 

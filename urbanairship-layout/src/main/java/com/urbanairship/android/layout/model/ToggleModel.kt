@@ -6,8 +6,11 @@ import com.urbanairship.android.layout.event.Event
 import com.urbanairship.android.layout.event.FormEvent.DataChange
 import com.urbanairship.android.layout.event.ToggleEvent
 import com.urbanairship.android.layout.info.ToggleInfo
+import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.property.EnableBehaviorType
+import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ToggleStyle
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.AttributeName
@@ -26,6 +29,9 @@ internal class ToggleModel(
     contentDescription: String? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
+    visibility: VisibilityInfo? = null,
+    eventHandlers: List<EventHandler>? = null,
+    enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
 ) : CheckableModel(
     viewType = ViewType.TOGGLE,
@@ -34,6 +40,9 @@ internal class ToggleModel(
     contentDescription = contentDescription,
     backgroundColor = backgroundColor,
     border = border,
+    visibility = visibility,
+    eventHandlers = eventHandlers,
+    enableBehaviors = enableBehaviors,
     environment = environment
 ), Identifiable, Validatable {
 
@@ -46,6 +55,9 @@ internal class ToggleModel(
         contentDescription = info.contentDescription,
         backgroundColor = info.backgroundColor,
         border = info.border,
+        visibility = info.visibility,
+        eventHandlers = info.eventHandlers,
+        enableBehaviors = info.enableBehaviors,
         environment = env
     )
 

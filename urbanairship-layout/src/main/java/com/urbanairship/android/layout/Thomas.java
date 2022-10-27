@@ -34,6 +34,7 @@ import com.urbanairship.android.layout.model.RadioInputController;
 import com.urbanairship.android.layout.model.RadioInputModel;
 import com.urbanairship.android.layout.model.ScoreModel;
 import com.urbanairship.android.layout.model.ScrollLayoutModel;
+import com.urbanairship.android.layout.model.StateController;
 import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.model.ToggleModel;
 import com.urbanairship.android.layout.model.WebViewModel;
@@ -133,6 +134,8 @@ public final class Thomas {
                 return view(context, ((CheckboxController) model).getView(), environment);
             case RADIO_INPUT_CONTROLLER:
                 return view(context, ((RadioInputController) model).getView(), environment);
+            case STATE_CONTROLLER:
+                return view(context, ((StateController) model).getView(), environment);
 
             case MEDIA:
                 return new MediaView(context, (MediaModel) model, environment);

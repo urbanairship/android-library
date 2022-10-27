@@ -6,8 +6,11 @@ import com.urbanairship.android.layout.event.FormEvent
 import com.urbanairship.android.layout.event.FormEvent.DataChange
 import com.urbanairship.android.layout.event.ReportingEvent.FormResult
 import com.urbanairship.android.layout.info.NpsFormControllerInfo
+import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.property.EnableBehaviorType
+import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.FormData
@@ -16,21 +19,27 @@ import com.urbanairship.android.layout.reporting.FormData
  * Controller that manages NPS form views.
  */
 internal class NpsFormController(
-    final override val view: BaseModel,
+    override val view: BaseModel,
     private val npsIdentifier: String,
     identifier: String,
     responseType: String?,
     submitBehavior: FormBehaviorType?,
     backgroundColor: Color? = null,
     border: Border? = null,
+    visibility: VisibilityInfo? = null,
+    eventHandlers: List<EventHandler>? = null,
+    enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
-) : BaseFormController<NpsFormControllerInfo>(
+) : BaseFormController(
     ViewType.NPS_FORM_CONTROLLER,
     identifier = identifier,
     responseType = responseType,
     submitBehavior = submitBehavior,
     backgroundColor = backgroundColor,
     border = border,
+    visibility = visibility,
+    eventHandlers = eventHandlers,
+    enableBehaviors = enableBehaviors,
     environment = environment
 ) {
     constructor(info: NpsFormControllerInfo, env: ModelEnvironment) : this(
@@ -41,6 +50,9 @@ internal class NpsFormController(
         submitBehavior = info.submitBehavior,
         backgroundColor = info.backgroundColor,
         border = info.border,
+        visibility = info.visibility,
+        eventHandlers = info.eventHandlers,
+        enableBehaviors = info.enableBehaviors,
         environment = env
     )
 

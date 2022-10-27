@@ -3,18 +3,31 @@ package com.urbanairship.android.layout.model
 
 import com.urbanairship.android.layout.ModelEnvironment
 import com.urbanairship.android.layout.event.Event
-import com.urbanairship.android.layout.info.ViewGroupInfo
+import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.property.EnableBehaviorType
+import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.LayoutData
 
-internal abstract class LayoutModel<VI : ViewGroupInfo>(
+internal abstract class LayoutModel(
     viewType: ViewType,
     backgroundColor: Color? = null,
     border: Border? = null,
+    visibility: VisibilityInfo? = null,
+    eventHandlers: List<EventHandler>? = null,
+    enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
-) : BaseModel(viewType, backgroundColor, border, environment) {
+) : BaseModel(
+    viewType = viewType,
+    backgroundColor = backgroundColor,
+    border = border,
+    visibility = visibility,
+    eventHandlers = eventHandlers,
+    enableBehaviors = enableBehaviors,
+    environment = environment
+) {
 
     /**
      * Implement in subclasses to return a list of [BaseModels][BaseModel] for items in the layout.

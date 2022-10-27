@@ -30,6 +30,7 @@ public enum ViewType {
     RADIO_INPUT("radio_input"),
     TEXT_INPUT("text_input"),
     SCORE("score"),
+    STATE_CONTROLLER("state_controller"),
     UNKNOWN("");
 
     /** View types that provide values for forms (possibly via an intermediate controller). */

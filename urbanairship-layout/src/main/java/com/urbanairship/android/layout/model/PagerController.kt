@@ -12,8 +12,11 @@ import com.urbanairship.android.layout.event.PagerEvent.Scroll
 import com.urbanairship.android.layout.event.ReportingEvent.PageSwipe
 import com.urbanairship.android.layout.event.ReportingEvent.PageView
 import com.urbanairship.android.layout.info.PagerControllerInfo
+import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.property.EnableBehaviorType
+import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
@@ -26,11 +29,17 @@ internal class PagerController(
     override val identifier: String,
     backgroundColor: Color? = null,
     border: Border? = null,
+    visibility: VisibilityInfo? = null,
+    eventHandlers: List<EventHandler>? = null,
+    enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
-) : LayoutModel<PagerControllerInfo>(
+) : LayoutModel(
     viewType = ViewType.PAGER_CONTROLLER,
     backgroundColor = backgroundColor,
     border = border,
+    visibility = visibility,
+    eventHandlers = eventHandlers,
+    enableBehaviors = enableBehaviors,
     environment = environment
 ), Identifiable {
     constructor(info: PagerControllerInfo, env: ModelEnvironment) : this(
@@ -38,6 +47,9 @@ internal class PagerController(
         identifier = info.identifier,
         backgroundColor = info.backgroundColor,
         border = info.border,
+        visibility = info.visibility,
+        eventHandlers = info.eventHandlers,
+        enableBehaviors = info.enableBehaviors,
         environment = env
     )
 

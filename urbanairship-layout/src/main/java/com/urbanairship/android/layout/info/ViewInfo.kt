@@ -4,9 +4,10 @@ import android.widget.ImageView.ScaleType
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
-import com.urbanairship.android.layout.property.ButtonEnableBehaviorType
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Direction
+import com.urbanairship.android.layout.property.EnableBehaviorType
+import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.Image
@@ -38,6 +39,7 @@ import com.urbanairship.android.layout.property.ViewType.RADIO_INPUT
 import com.urbanairship.android.layout.property.ViewType.RADIO_INPUT_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.SCORE
 import com.urbanairship.android.layout.property.ViewType.SCROLL_LAYOUT
+import com.urbanairship.android.layout.property.ViewType.STATE_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.TEXT_INPUT
 import com.urbanairship.android.layout.property.ViewType.TOGGLE
 import com.urbanairship.android.layout.property.ViewType.UNKNOWN
@@ -50,6 +52,7 @@ import com.urbanairship.android.layout.util.requireField
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonValue
 
 public sealed class ViewInfo : View {
@@ -79,6 +82,7 @@ public sealed class ViewInfo : View {
                 RADIO_INPUT -> RadioInputInfo(json)
                 TEXT_INPUT -> TextInputInfo(json)
                 SCORE -> ScoreInfo(json)
+                STATE_CONTROLLER -> StateControllerInfo(json)
                 UNKNOWN -> throw JsonException("Unknown view type! '$type'")
             }
         }
@@ -89,12 +93,27 @@ internal sealed class ViewGroupInfo : ViewInfo() {
     abstract val children: List<ViewInfo>
 }
 
+internal data class VisibilityInfo(
+    val invertWhenStateMatcher: JsonPredicate,
+    val default: Boolean
+) {
+    constructor(json: JsonMap) : this(
+        invertWhenStateMatcher = JsonPredicate.parse(
+            json.requireField("invert_when_state_matches")),
+        default = json.requireField("default")
+    )
+}
+
 // ------ Base Interfaces ------
 
 internal interface View {
     val type: ViewType
     val backgroundColor: Color?
     val border: Border?
+
+    val visibility: VisibilityInfo?
+    val eventHandlers: List<EventHandler>?
+    val enableBehaviors: List<EnableBehaviorType>?
 }
 
 internal class BaseViewInfo(json: JsonMap) : View {
@@ -103,6 +122,15 @@ internal class BaseViewInfo(json: JsonMap) : View {
         json.optionalField<JsonMap>("background_color")?.let { Color.fromJson(it) }
     override val border =
         json.optionalField<JsonMap>("border")?.let { Border.fromJson(it) }
+    override val visibility = json.optionalField<JsonMap>("visibility")?.let { VisibilityInfo(it) }
+    override val eventHandlers: List<EventHandler>? =
+        json.optionalField<JsonList>("event_handlers")?.let { list ->
+            list.map { EventHandler(it.requireMap()) }
+        }
+    override val enableBehaviors =
+        json.optionalField<JsonList>("enable_behaviors")?.let { list ->
+            list.map { EnableBehaviorType.from(it.requireString()) }
+        }
 }
 
 private fun view(json: JsonMap): View = BaseViewInfo(json)
@@ -161,6 +189,7 @@ private fun controller(json: JsonMap): Controller = ControllerInfo(json)
 internal interface FormController : Controller {
     val responseType: String?
     val submitBehavior: FormBehaviorType?
+    val formEnabled: List<EnableBehaviorType>?
 }
 
 internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo(), FormController, Controller by controller(json) {
@@ -168,12 +197,13 @@ internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo(), FormControlle
         json.optionalField("response_type")
     override val submitBehavior: FormBehaviorType? =
         json.optionalField<String>("submit")?.let { FormBehaviorType.from(it) }
+    override val formEnabled: List<EnableBehaviorType>? =
+        json.optionalField<JsonList>("form_enabled")?.map { EnableBehaviorType.from(it.optString()) }
 }
 
 internal interface Button : View, Accessible, Identifiable {
     val clickBehaviors: List<ButtonClickBehaviorType>
     val actions: Map<String, JsonValue>
-    val enableBehaviors: List<ButtonEnableBehaviorType>
 }
 
 internal open class ButtonInfo(
@@ -185,10 +215,6 @@ internal open class ButtonInfo(
 
     override val actions: Map<String, JsonValue> =
         json.optionalField<JsonMap>("actions")?.map ?: emptyMap()
-
-    override val enableBehaviors: List<ButtonEnableBehaviorType> =
-        json.optionalField<JsonList>("enabled")
-            ?.let { ButtonEnableBehaviorType.fromList(it) } ?: emptyList()
 }
 
 internal interface Checkable : View, Accessible {
@@ -207,6 +233,7 @@ internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo(), View by view(j
     val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
     val direction: Direction = Direction.from(json.requireField("direction"))
     val items = json.requireField<JsonList>("items").map { LinearLayoutItemInfo(it.requireMap()) }
+        .also { if (randomizeChildren) it.shuffled() }
 
     override val children: List<ViewInfo> = items.map { it.info }
 }
@@ -330,6 +357,11 @@ internal class PagerIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json
         val icon: Image.Icon? =
             json.optionalField<JsonMap>("icon")?.let { Image.Icon.fromJson(it) }
     }
+}
+
+internal class StateControllerInfo(json: JsonMap) : ViewGroupInfo(), View by view(json) {
+    val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
+    override val children: List<ViewInfo> = listOf(view)
 }
 
 internal class FormControllerInfo(json: JsonMap) : FormInfo(json) {

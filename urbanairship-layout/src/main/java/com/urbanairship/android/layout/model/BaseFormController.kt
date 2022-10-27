@@ -11,9 +11,11 @@ import com.urbanairship.android.layout.event.FormEvent.InputInit
 import com.urbanairship.android.layout.event.FormEvent.ValidationUpdate
 import com.urbanairship.android.layout.event.ReportingEvent.FormDisplay
 import com.urbanairship.android.layout.event.ReportingEvent.FormResult
-import com.urbanairship.android.layout.info.FormInfo
+import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.property.EnableBehaviorType
+import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.AttributeName
@@ -28,15 +30,26 @@ import com.urbanairship.json.JsonValue
  * @see FormController
  * @see NpsFormController
  */
-internal abstract class BaseFormController<VI : FormInfo>(
+internal abstract class BaseFormController(
     viewType: ViewType,
     override val identifier: String,
     val responseType: String?,
     private val submitBehavior: FormBehaviorType?,
     backgroundColor: Color? = null,
     border: Border? = null,
+    visibility: VisibilityInfo?,
+    eventHandlers: List<EventHandler>?,
+    enableBehaviors: List<EnableBehaviorType>?,
     environment: ModelEnvironment,
-) : LayoutModel<VI>(viewType, backgroundColor, border, environment), Identifiable {
+) : LayoutModel(
+    viewType = viewType,
+    backgroundColor = backgroundColor,
+    border = border,
+    visibility = visibility,
+    eventHandlers = eventHandlers,
+    enableBehaviors = enableBehaviors,
+    environment = environment
+), Identifiable {
 
     protected abstract val formType: String
     protected abstract val initEvent: FormEvent.Init

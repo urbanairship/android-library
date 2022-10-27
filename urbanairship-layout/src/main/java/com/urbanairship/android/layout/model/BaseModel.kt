@@ -3,13 +3,15 @@ package com.urbanairship.android.layout.model
 
 import android.view.View
 import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.ModelProvider
 import com.urbanairship.android.layout.event.Event
 import com.urbanairship.android.layout.event.EventListener
 import com.urbanairship.android.layout.event.EventSource
 import com.urbanairship.android.layout.info.ViewInfo
+import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.property.EnableBehaviorType
+import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.LayoutData
 import java.util.concurrent.CopyOnWriteArrayList
@@ -18,16 +20,20 @@ internal abstract class BaseModel(
     val viewType: ViewType,
     val backgroundColor: Color? = null,
     val border: Border? = null,
-    protected final val environment: ModelEnvironment
+    val visibility: VisibilityInfo? = null,
+    val eventHandlers: List<EventHandler>? = null,
+    val enableBehaviors: List<EnableBehaviorType>? = null,
+    protected val environment: ModelEnvironment
 ) : EventSource, EventListener {
     constructor(info: ViewInfo, environment: ModelEnvironment) : this(
         viewType = info.type,
         backgroundColor = info.backgroundColor,
         border = info.border,
+        visibility = info.visibility,
+        eventHandlers = info.eventHandlers,
+        enableBehaviors = info.enableBehaviors,
         environment
     )
-
-    protected val modelProvider: ModelProvider = environment.modelProvider
 
     val viewId: Int = View.generateViewId()
 
