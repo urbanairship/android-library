@@ -66,6 +66,7 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertEquals("https://play.google.com/store/apps/topic?id=editors_choice", production.appStoreUri.toString());
         assertTrue(production.extendedBroadcastsEnabled);
         assertTrue(production.requireInitialRemoteConfigEnabled);
+        assertEquals("config://", production.initialConfigUrl);
         assertEquals(PrivacyManager.FEATURE_NONE, production.enabledFeatures);
     }
 
@@ -127,7 +128,7 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertFalse(defaultConfig.channelCreationDelayEnabled);
         assertFalse(defaultConfig.dataCollectionOptInEnabled);
         assertFalse(defaultConfig.extendedBroadcastsEnabled);
-        assertFalse(defaultConfig.requireInitialRemoteConfigEnabled);
+        assertTrue(defaultConfig.requireInitialRemoteConfigEnabled);
         assertEquals(PrivacyManager.FEATURE_ALL, defaultConfig.enabledFeatures);
     }
 
