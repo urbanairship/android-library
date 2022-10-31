@@ -5,6 +5,7 @@ package com.urbanairship;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.os.Handler;
 
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
@@ -131,9 +132,19 @@ public class ChannelCapture extends AirshipComponent {
         String channel = airshipChannel.getId();
         String channelIdForClipboard = UAStringUtil.isEmpty(channel) ? "ua:" : "ua:" + channel;
 
-        ClipData clipData = ClipData.newPlainText("UA Channel ID", channelIdForClipboard);
-        clipboardManager.setPrimaryClip(clipData);
-        Logger.debug("Channel ID copied to clipboard");
+        try {
+            new Handler(AirshipLoopers.getBackgroundLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    ClipData clipData = ClipData.newPlainText("UA Channel ID", channelIdForClipboard);
+                    clipboardManager.setPrimaryClip(clipData);
+                    Logger.debug("Channel ID copied to clipboard");
+                }
+            });
+        } catch (Exception e) {
+            Logger.warn(e, "Channel capture failed! Unable to copy Channel ID to clipboard.");
+        }
+
     }
 
     /**

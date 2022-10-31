@@ -78,7 +78,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         when(mockChannel.getId()).thenReturn("channel ID");
 
-        knock(6);
+        knockAndRunLooperTasks(6);
 
         ClipData clipData = clipboardManager.getPrimaryClip();
         if (clipData != null) {
@@ -108,7 +108,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         when(mockChannel.getId()).thenReturn("channel ID");
 
-        knock(6);
+        knockAndRunLooperTasks(6);
 
         ClipData clipData = clipboardManager.getPrimaryClip();
         assertEquals("ua:" + mockChannel.getId(), clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
@@ -134,7 +134,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         when(mockChannel.getId()).thenReturn(null);
 
-        knock(6);
+        knockAndRunLooperTasks(6);
 
         ClipData clipData = clipboardManager.getPrimaryClip();
         assertEquals("ua:", clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
@@ -160,7 +160,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         when(mockChannel.getId()).thenReturn("Channel ID");
 
-        knock(1);
+        knockAndRunLooperTasks(1);
 
         ClipData clipData = clipboardManager.getPrimaryClip();
         if (clipData != null) {
@@ -190,7 +190,7 @@ public class ChannelCaptureTest extends BaseTestCase {
 
         when(mockChannel.getId()).thenReturn("channel ID");
 
-        knock(6);
+        knockAndRunLooperTasks(6);
 
         ClipData clipData = clipboardManager.getPrimaryClip();
         assertEquals("ua:" + mockChannel.getId(), clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
@@ -198,7 +198,7 @@ public class ChannelCaptureTest extends BaseTestCase {
         clearClipboard();
         clipData = clipboardManager.getPrimaryClip();
 
-        knock(1);
+        knockAndRunLooperTasks(1);
 
         clipData = clipboardManager.getPrimaryClip();
         if (clipData != null) {
@@ -207,7 +207,7 @@ public class ChannelCaptureTest extends BaseTestCase {
             assert true;
         }
 
-        knock(5);
+        knockAndRunLooperTasks(5);
 
         clipData = clipboardManager.getPrimaryClip();
         assertEquals("ua:" + mockChannel.getId(), clipData.getItemAt(0).coerceToText(ApplicationProvider.getApplicationContext()));
@@ -234,12 +234,13 @@ public class ChannelCaptureTest extends BaseTestCase {
     }
 
     /**
-     * Send one or more knocks
+     * Send one or more knocks, followed by {@code runToEndOfTasks} on the background looper.
      */
-    public void knock(int repeat) {
+    public void knockAndRunLooperTasks(int repeat) {
         for (int i = 0; i < repeat; i++) {
             activityMonitor.foreground(Calendar.getInstance().getTimeInMillis());
         }
+        shadowBackgroundLooper().idle();
     }
 
     public void clearClipboard() {

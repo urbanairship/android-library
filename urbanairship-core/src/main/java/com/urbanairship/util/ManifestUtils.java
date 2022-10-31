@@ -39,6 +39,12 @@ public class ManifestUtils {
     public final static String LOCAL_STORAGE_DATABASE_DIRECTORY = "com.urbanairship.webview.localstorage";
 
     /**
+     * Metadata an app can use to enable or disable WebView Safe Browsing.
+     */
+    @NonNull
+    private final static String ENABLE_WEBVIEW_SAFE_BROWSING = "android.webkit.WebView.EnableSafeBrowsing";
+
+    /**
      * Returns whether the specified permission is granted for the application or not.
      *
      * @param permission Permission to check.
@@ -114,5 +120,26 @@ public class ManifestUtils {
         }
 
         return false;
+    }
+
+    /**
+     * Helper method to check if WebView Safe Browsing should be enabled. Safe browsing is enabled
+     * by default, so this method checks for the presence of a metadata tag that disables it.
+     *
+     * @return {@code true} if safe browsing is not disabled via the manifest, otherwise {@code false}.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static boolean isWebViewSafeBrowsingEnabled() {
+        ApplicationInfo info = getApplicationInfo();
+        if (info == null || info.metaData == null) {
+            return true;
+        }
+
+        if (!info.metaData.containsKey(ENABLE_WEBVIEW_SAFE_BROWSING)) {
+            return true;
+        }
+
+        return info.metaData.getBoolean(ENABLE_WEBVIEW_SAFE_BROWSING, true);
     }
 }

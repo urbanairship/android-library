@@ -414,7 +414,7 @@ public class AirshipConfigOptions {
     /**
      * Flag indicating whether the SDK will wait for an initial remote config instead of falling back on default API URLs.
      * <p>
-     * Defaults to <code>false</code>.
+     * Defaults to <code>true</code>.
      */
     public final boolean requireInitialRemoteConfigEnabled;
 
@@ -423,6 +423,12 @@ public class AirshipConfigOptions {
      */
     @Nullable
     public final String fcmFirebaseAppName;
+
+    /**
+     * The initial config URL.
+     */
+    @Nullable
+    public final String initialConfigUrl;
 
     private AirshipConfigOptions(@NonNull Builder builder) {
         if (builder.inProduction) {
@@ -477,6 +483,7 @@ public class AirshipConfigOptions {
         this.extendedBroadcastsEnabled = builder.extendedBroadcastsEnabled;
         this.requireInitialRemoteConfigEnabled = builder.requireInitialRemoteConfigEnabled;
         this.fcmFirebaseAppName = builder.fcmFirebaseAppName;
+        this.initialConfigUrl = builder.initialConfigUrl;
     }
 
     /**
@@ -637,6 +644,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_SUPPRESS_ALLOW_LIST_ERROR = "suppressAllowListError";
         private static final String FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED = "requireInitialRemoteConfigEnabled";
         private static final String FIELD_ENABLED_FEATURES = "enabledFeatures";
+        private static final String FIELD_INITIAL_CONFIG_URL = "initialConfigUrl";
 
         private String appKey;
         private String appSecret;
@@ -678,8 +686,10 @@ public class AirshipConfigOptions {
         public int enabledFeatures = PrivacyManager.FEATURE_ALL;
 
         private boolean suppressAllowListError = false;
-        private boolean requireInitialRemoteConfigEnabled = false;
+        private boolean requireInitialRemoteConfigEnabled = true;
         private String fcmFirebaseAppName;
+
+        private String initialConfigUrl;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -845,6 +855,10 @@ public class AirshipConfigOptions {
                         case FIELD_LEGACY_REMOTE_DATA_URL:
                         case FIELD_REMOTE_DATA_URL:
                             this.setRemoteDataUrl(configParser.getString(name, remoteDataUrl));
+                            break;
+
+                        case FIELD_INITIAL_CONFIG_URL:
+                            this.setInitialConfigUrl(configParser.getString(name, null));
                             break;
 
                         case FIELD_CHAT_URL:
@@ -1231,6 +1245,19 @@ public class AirshipConfigOptions {
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder setRemoteDataUrl(@Nullable String remoteDataUrl) {
             this.remoteDataUrl = remoteDataUrl;
+            return this;
+        }
+
+        /**
+         * The Airship URL used to pull the initial config. This should only be set
+         * if you are using custom domains that forward to Airship.
+         * @param initialConfigUrl
+         * @return
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder setInitialConfigUrl(@Nullable String initialConfigUrl) {
+            this.initialConfigUrl = initialConfigUrl;
             return this;
         }
 

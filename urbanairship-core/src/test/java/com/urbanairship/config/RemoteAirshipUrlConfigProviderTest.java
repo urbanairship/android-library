@@ -26,7 +26,10 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
 
     @Test
     public void testDefaultUrls() {
-        AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder().build();
+        AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder()
+                                                                 .setRequireInitialRemoteConfigEnabled(false)
+                                                                 .build();
+
         RemoteAirshipUrlConfigProvider provider = new RemoteAirshipUrlConfigProvider(configOptions, dataStore);
 
         AirshipUrlConfig urlConfig = provider.getConfig();
@@ -104,7 +107,9 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
 
     @Test
     public void testEmptyRemoteConfigFallbacksToOptions() {
-        AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder().build();
+        AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder()
+                                                                 .setRequireInitialRemoteConfigEnabled(false)
+                                                                 .build();
         RemoteAirshipUrlConfigProvider provider = new RemoteAirshipUrlConfigProvider(configOptions, dataStore);
 
         provider.onRemoteConfigUpdated(new RemoteAirshipConfig(null, null, null, null, null, null));
@@ -142,6 +147,16 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertEquals("http://wallet", provider.getConfig().walletUrl().build().toString());
         assertEquals("http://chat", provider.getConfig().chatUrl().build().toString());
         assertEquals("wss://chat", provider.getConfig().chatSocketUrl().build().toString());
+    }
+
+    @Test
+    public void testInitialConfigUrl() {
+        AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder()
+                                                                 .setInitialConfigUrl("custom://")
+                                                                 .build();
+
+        RemoteAirshipUrlConfigProvider provider = new RemoteAirshipUrlConfigProvider(configOptions, dataStore);
+        assertEquals("custom://", provider.getConfig().remoteDataUrl().build().toString());
     }
 
     @Test

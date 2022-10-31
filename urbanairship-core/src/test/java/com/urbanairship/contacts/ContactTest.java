@@ -2,36 +2,13 @@
 
 package com.urbanairship.contacts;
 
-import static android.os.Looper.getMainLooper;
-import static com.urbanairship.AirshipLoopers.getBackgroundLooper;
-import static junit.framework.Assert.assertNotNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.robolectric.Shadows.shadowOf;
-
 import android.content.Context;
-import android.os.Looper;
 
 import com.google.common.collect.Lists;
-import com.urbanairship.AirshipExecutors;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
-import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
@@ -54,7 +31,6 @@ import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 import com.urbanairship.util.CachedValue;
 
 import org.junit.After;
@@ -78,16 +54,26 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
-@Config(
-        sdk = 28,
-        shadows = {
-                ShadowNotificationManagerExtension.class,
-                ShadowAirshipExecutorsLegacy.class
-        }
-)
-@LooperMode(LooperMode.Mode.LEGACY)
+import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+@Config(sdk = 28)
+@LooperMode(LooperMode.Mode.PAUSED)
 public class ContactTest extends BaseTestCase {
 
     private final String fakeNamedUserId = "fake-named-user-id";
@@ -118,7 +104,8 @@ public class ContactTest extends BaseTestCase {
         privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
 
         contact = new Contact(context, dataStore, mockDispatcher, privacyManager, mockChannel,
-                mockContactApiClient, testActivityMonitor, testClock, subscriptionCache, subscriptionListLocalHistory);
+                mockContactApiClient, testActivityMonitor, testClock, subscriptionCache, subscriptionListLocalHistory,
+                command -> command.run());
         contact.addContactChangeListener(changeListener);
         contact.addTagGroupListener(tagGroupListener);
         contact.addAttributeListener(attributeListener);
@@ -126,9 +113,6 @@ public class ContactTest extends BaseTestCase {
 
     @After
     public void tearDown() {
-        runLooperTasks();
-        runSerialExecutorTasks();
-
         dataStore.tearDown();
     }
 
@@ -797,19 +781,18 @@ public class ContactTest extends BaseTestCase {
             assertEquals(subscriptions, result1);
         });
 
-        runLooperTasks();
-
         verify(mockContactApiClient, never()).getSubscriptionLists(anyString());
     }
 
     @Test
-    public void testGetSubscriptionListsFromCacheWithLocalHistory() throws RequestException, JsonException {
+    public void testGetSubscriptionListsFromCacheWithLocalHistory() throws RequestException, JsonException, ExecutionException, InterruptedException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
         Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         // Resolve contact
         contact.resolve();
+
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
         Map<String, Set<Scope>> cachedSubscriptions = new HashMap<String, Set<Scope>>() {{
@@ -838,11 +821,50 @@ public class ContactTest extends BaseTestCase {
         }};
 
         // Result should be available immediately when returning from the cache.
-        assertEquals(expectedSubscriptions, result.getResult());
-
-        runLooperTasks();
+        assertEquals(expectedSubscriptions, result.get());
 
         verify(mockContactApiClient, never()).getSubscriptionLists(anyString());
+    }
+
+    @Test
+    public void testGetSubscriptionListsNamedContact() throws RequestException, ExecutionException, InterruptedException {
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, false, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        // Always return empty list from server
+        when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(200)
+                .setResult(new HashMap<>())
+                .build()
+        );
+
+        // Updates
+        when(mockContactApiClient.update(eq(fakeContactId), anyList(), anyList(), anyList()))
+                .thenReturn(new Response.Builder<Void>(200).build());
+
+        // Resolve contact
+        contact.resolve();
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+
+        // Apply subscriptions
+        contact.editSubscriptionLists()
+               .subscribe("foo", Scope.APP)
+               .apply();
+
+        // Pending
+        Map<String, Set<Scope>> expected = new HashMap<String, Set<Scope>>() {{
+            put("foo", Collections.singleton(Scope.APP));
+        }};
+
+        assertTrue(contact.getSubscriptionLists(false).get().isEmpty());
+        assertEquals(expected, contact.getSubscriptionLists(true).get());
+
+        // Send updates
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+
+        // Check local history is applied
+        assertEquals(expected, contact.getSubscriptionLists(true).get());
+        assertEquals(expected, contact.getSubscriptionLists(false).get());
     }
 
     @Test
@@ -886,8 +908,6 @@ public class ContactTest extends BaseTestCase {
             // Verify that the cache was updated
             assertEquals(networkSubscriptions, subscriptionCache.get());
         });
-
-        runLooperTasks();
 
         verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
     }
@@ -933,8 +953,6 @@ public class ContactTest extends BaseTestCase {
             assertEquals(networkSubscriptions, subscriptionCache.get());
         });
 
-        runLooperTasks();
-
         verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
     }
 
@@ -966,13 +984,11 @@ public class ContactTest extends BaseTestCase {
             assertEquals(networkSubscriptions, subscriptionCache.get());
         });
 
-        runLooperTasks();
-
         verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
     }
 
     @Test
-    public void testGetSubscriptionListsIncludesPending() throws RequestException {
+    public void testGetSubscriptionListsIncludesPending() throws RequestException, ExecutionException, InterruptedException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
         Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
@@ -987,27 +1003,25 @@ public class ContactTest extends BaseTestCase {
                .apply();
 
         Map<String, Set<Scope>> networkSubscriptions = new HashMap<String, Set<Scope>>() {{
-            put("foo", Collections.singleton(Scope.SMS));
-            put("bar", Collections.singleton(Scope.APP));
+            put("foo", new HashSet<>(Collections.singleton(Scope.SMS)));
+            put("bar", new HashSet<>(Collections.singleton(Scope.APP)));
         }};
+
+        when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(200)
+                .setResult(networkSubscriptions)
+                .build()
+        );
 
         Map<String, Set<Scope>> expectedSubscriptions = new HashMap<String, Set<Scope>>() {{
             put("foo", Collections.singleton(Scope.SMS));
             put("fizz", Collections.singleton(Scope.SMS));
         }};
 
-        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
-        result.addResultCallback(result1 -> {
-            assertEquals(expectedSubscriptions, result1);
+        Map<String, Set<Scope>> result = contact.getSubscriptionLists(true).get();
+        assertEquals(expectedSubscriptions, result);
 
-            // Verify that the cache was updated
-            assertEquals(networkSubscriptions, subscriptionCache.get());
-        });
-
-        runLooperTasks();
-
+        assertEquals(networkSubscriptions, subscriptionCache.get());
         verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
-        ;
     }
 
     @Test
@@ -1081,8 +1095,6 @@ public class ContactTest extends BaseTestCase {
             assertNull(result1);
             assertNull(subscriptionCache.get());
         });
-
-        runLooperTasks();
 
         verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
     }
@@ -1278,31 +1290,6 @@ public class ContactTest extends BaseTestCase {
         }};
 
         verify(mockChannel).processContactSubscriptionListMutations(expected);
-    }
-
-    /**
-     * Helper method to run all the looper tasks.
-     */
-    private void runLooperTasks() {
-        Looper mainLooper = getMainLooper();
-        Looper backgroundLooper = getBackgroundLooper();
-
-        do {
-            shadowOf(mainLooper).runToEndOfTasks();
-            shadowOf(backgroundLooper).runToEndOfTasks();
-        }
-        while (shadowOf(mainLooper).getScheduler().areAnyRunnable() || shadowOf(backgroundLooper).getScheduler().areAnyRunnable());
-    }
-
-    /**
-     * Helper method to run any queued serial executor tasks.
-     */
-    private void runSerialExecutorTasks() {
-        try {
-            AirshipExecutors.threadPoolExecutor().awaitTermination(200, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
 }

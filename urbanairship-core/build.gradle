@@ -30,6 +30,8 @@ dependencies {
 
     implementation "androidx.startup:startup-runtime:$rootProject.androidXStartup"
 
+    implementation "androidx.webkit:webkit:$rootProject.androidxWebKitVersion"
+
 
     // Unit Tests
     testImplementation project(':urbanairship-test')

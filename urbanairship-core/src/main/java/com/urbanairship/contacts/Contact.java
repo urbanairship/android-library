@@ -99,12 +99,14 @@ public class Contact extends AirshipComponent {
     private final AirshipChannel airshipChannel;
     private final PrivacyManager privacyManager;
     private final ActivityMonitor activityMonitor;
+    private final Executor executor;
     private final Clock clock;
     private final CachedValue<Map<String, Set<Scope>>> subscriptionListCache;
     private final List<CachedValue<ScopedSubscriptionListMutation>> subscriptionListLocalHistory;
     private final Object operationLock = new Object();
     private final ContactApiClient contactApiClient;
     private boolean isContactIdRefreshed = false;
+
 
     private ContactConflictListener contactConflictListener;
 
@@ -123,7 +125,7 @@ public class Contact extends AirshipComponent {
                    @NonNull AirshipChannel airshipChannel) {
         this(context, preferenceDataStore, JobDispatcher.shared(context), privacyManager,
                 airshipChannel, new ContactApiClient(runtimeConfig), GlobalActivityMonitor.shared(context),
-                Clock.DEFAULT_CLOCK, new CachedValue<>(), new CopyOnWriteArrayList<>());
+                Clock.DEFAULT_CLOCK, new CachedValue<>(), new CopyOnWriteArrayList<>(), null);
     }
 
     /**
@@ -133,7 +135,7 @@ public class Contact extends AirshipComponent {
     Contact(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore, @NonNull JobDispatcher jobDispatcher,
             @NonNull PrivacyManager privacyManager, @NonNull AirshipChannel airshipChannel, @NonNull ContactApiClient contactApiClient,
             @NonNull ActivityMonitor activityMonitor, @NonNull Clock clock, @NonNull CachedValue<Map<String, Set<Scope>>> subscriptionListCache,
-            @NonNull List<CachedValue<ScopedSubscriptionListMutation>> subscriptionListLocalHistory) {
+            @NonNull List<CachedValue<ScopedSubscriptionListMutation>> subscriptionListLocalHistory, @Nullable Executor executor) {
         super(context, preferenceDataStore);
         this.preferenceDataStore = preferenceDataStore;
         this.jobDispatcher = jobDispatcher;
@@ -144,6 +146,7 @@ public class Contact extends AirshipComponent {
         this.clock = clock;
         this.subscriptionListCache = subscriptionListCache;
         this.subscriptionListLocalHistory = subscriptionListLocalHistory;
+        this.executor = executor == null ? defaultExecutor : executor;
     }
 
     @Override
@@ -192,6 +195,12 @@ public class Contact extends AirshipComponent {
         dispatchContactUpdateJob();
 
         notifyChannelSubscriptionListChanges(getPendingSubscriptionListUpdates());
+    }
+
+    @NonNull
+    @Override
+    public Executor getJobExecutor(@NonNull JobInfo jobInfo) {
+        return executor;
     }
 
     private void checkPrivacyManager() {
@@ -770,8 +779,11 @@ public class Contact extends AirshipComponent {
                         updatePayload.getSubscriptionListMutations()
                 );
 
-                if (updateResponse.isSuccessful() && lastContactIdentity.isAnonymous()) {
-                    updateAnonData(updatePayload, null);
+                if (updateResponse.isSuccessful()) {
+
+                    if (lastContactIdentity.isAnonymous()) {
+                        updateAnonData(updatePayload, null);
+                    }
 
                     if (!updatePayload.getAttributeMutations().isEmpty()) {
                         for (AttributeListener listener : this.attributeListeners) {
@@ -1181,7 +1193,9 @@ public class Contact extends AirshipComponent {
             return result;
         }
 
-        defaultExecutor.execute(() -> {
+        // This is using the same single thread executor that runs the jobs to avoid race
+        // conditions with updates going from pending -> local history.
+        executor.execute(() -> {
             // Get the subscription lists from the in-memory cache, if available.
             Map<String, Set<Scope>> subscriptions = subscriptionListCache.get();
             if (subscriptions == null) {
