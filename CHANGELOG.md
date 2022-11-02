@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.8.0 November 2, 2022
+Minor release that adds support for custom Airship domains.
+
+### Changes
+- Adds support for setting the initialConfigUrl when using custom domains.
+
 ## Version 16.7.5 October 4, 2022
 
 Patch release that fixes an issue with the HMS push provider, improves WebView Safe Browsing for supported devices, and avoids Strict Mode warnings related to clipboard operations.
