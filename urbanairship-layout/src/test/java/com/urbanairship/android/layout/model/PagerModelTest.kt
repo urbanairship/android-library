@@ -1,107 +1,176 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.ModelProvider
-import com.urbanairship.android.layout.event.PagerEvent.Scroll
+import app.cash.turbine.test
+import com.urbanairship.android.layout.environment.ActionsRunner
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.Reporter
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.util.PagerScrollEvent
+import com.urbanairship.android.layout.util.pagerScrolls
+import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.spyk
+import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import test.TestEventListener
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 public class PagerModelTest {
 
-    private val mockEnv = spyk(ModelEnvironment(ModelProvider(), emptyMap()))
+    private val scrollsFlow = MutableSharedFlow<PagerScrollEvent>()
 
-    private val pagerModel = spyk(PagerModel(
-        items = ITEMS,
-        isSwipeDisabled = false,
-        environment = mockEnv
-    ))
+    private val mockReporter: Reporter = mockk(relaxed = true)
+    private val mockActionsRunner: ActionsRunner = mockk(relaxed = true)
+    private val mockEnv: ModelEnvironment = mockk(relaxed = true) {
+        every { reporter } returns mockReporter
+        every { actionsRunner } returns mockActionsRunner
+        every { modelScope } returns TestScope()
+    }
+    private val mockView: PagerView = mockk(relaxed = true)
+    private val mockViewListener: PagerModel.Listener = mockk(relaxed = true)
 
-    private val testListener = TestEventListener()
+    private val pagerState: SharedState<State.Pager> =
+        spyk(SharedState(State.Pager(identifier = PAGER_ID)))
+
+    private lateinit var pagerModel: PagerModel
 
     @Before
     public fun setup() {
-        pagerModel.addListener(testListener)
-        pagerModel.onConfigured(0, 0L)
-        // Sanity check init event.
-        assertEquals(1, testListener.count.toLong())
+        pagerModel = spyk(PagerModel(
+            items = ITEMS,
+            isSwipeDisabled = false,
+            pagerState = pagerState,
+            environment = mockEnv
+        )).apply {
+            listener = mockViewListener
+        }
+
+        mockkStatic(PagerView::pagerScrolls)
+        every { mockView.pagerScrolls() } returns scrollsFlow
     }
 
     @Test
-    public fun testUserScroll() {
-        // Simulate a user swipe (internalScroll = false).
-        pagerModel.onScrollTo(1, false, 1L)
-        assertEquals(2, testListener.count.toLong())
+    public fun testInitialState(): TestResult = runTest {
+        pagerModel.onViewAttached(mockView)
 
-        // User scrolls are not internal, which results in a page swipe event.
-        val isInternal = false
-        val scroll = testListener.getEventAt(1) as Scroll
-        verifyPagerScroll(scroll, 0, PAGE_1_ID, 1, PAGE_2_ID, true, true, isInternal)
+        verify { pagerState.update(any()) }
+
+        val state = pagerState.changes.first()
+        // Sanity check
+        assertEquals(PAGER_ID, state.identifier)
+        // Verify that the model set page IDs on pagerState
+        assertEquals(PAGE_IDS, state.pages)
+        // Verify that the correct number of page items is available via the model
+        assertEquals(3, pagerModel.items.size)
+
+        verify { mockViewListener.scrollTo(0) }
     }
 
     @Test
-    public fun testButtonEventScroll() {
-        // Simulate a button next (internalScroll = true).
-        pagerModel.onScrollTo(1, true, 1L)
-        assertEquals(2, testListener.count.toLong())
+    public fun testUserScrolls(): TestResult = runTest {
+        pagerState.changes.test {
+            pagerModel.onViewAttached(mockView)
+            verify { mockViewListener.scrollTo(0) }
 
-        // Button next/previous scrolls are internal, which should not report a page swipe event.
-        val isInternal = true
-        val scroll = testListener.getEventAt(1) as Scroll
-        verifyPagerScroll(scroll, 0, PAGE_1_ID, 1, PAGE_2_ID, true, true, isInternal)
+            val initialState = awaitItem()
+            assertEquals(0, initialState.pageIndex)
+            assertEquals(0, initialState.lastPageIndex)
+            assertTrue(initialState.hasNext)
+            assertFalse(initialState.hasPrevious)
+
+            // Simulate a user swipe to the first page.
+            scrollsFlow.emit(PagerScrollEvent(position = 1, isInternalScroll = false))
+
+            val updatedState = awaitItem()
+            assertEquals(1, updatedState.pageIndex)
+            assertEquals(0, updatedState.lastPageIndex)
+            assertTrue(updatedState.hasNext)
+            assertTrue(updatedState.hasPrevious)
+
+            verify {
+                mockReporter.report(any(), any())
+                mockActionsRunner.run(any(), any())
+            }
+
+            ensureAllEventsConsumed()
+        }
     }
 
     @Test
-    public fun testScrollEventHasNextAndPrevious() {
-        // Scroll to the middle page (has both previous and next).
-        pagerModel.onScrollTo(1, true, 1L)
-        val scroll1 = testListener.getEventAt(1) as Scroll
-        verifyPagerScroll(scroll1, 0, PAGE_1_ID, 1, PAGE_2_ID, true, true, true)
+    public fun testInternalScrolls(): TestResult = runTest {
+        pagerState.changes.test {
+            pagerModel.onViewAttached(mockView)
+            verify { mockViewListener.scrollTo(0) }
 
-        // Scroll to the last page (has only previous).
-        pagerModel.onScrollTo(2, true, 1L)
-        val scroll2 = testListener.getEventAt(2) as Scroll
-        verifyPagerScroll(scroll2, 1, PAGE_2_ID, 2, PAGE_3_ID, false, true, true)
+            val initialState = awaitItem()
+            assertEquals(0, initialState.pageIndex)
+            assertEquals(0, initialState.lastPageIndex)
+            assertTrue(initialState.hasNext)
+            assertFalse(initialState.hasPrevious)
 
-        // Scroll back to the first page (has only next).
-        pagerModel.onScrollTo(1, true, 1L)
-        pagerModel.onScrollTo(0, true, 1L)
-        val scroll3 = testListener.getEventAt(4) as Scroll
-        verifyPagerScroll(scroll3, 1, PAGE_2_ID, 0, PAGE_1_ID, true, false, true)
+            // Simulate an internal scroll to the first page.
+            scrollsFlow.emit(PagerScrollEvent(position = 1, isInternalScroll = true))
+
+            val updatedState = awaitItem()
+            assertEquals(1, updatedState.pageIndex)
+            assertEquals(0, updatedState.lastPageIndex)
+            assertTrue(updatedState.hasNext)
+            assertTrue(updatedState.hasPrevious)
+
+            // Verify that we didn't report an event, but ran any actions for the given page.
+            verify(exactly = 0) { mockReporter.report(any(), any()) }
+            verify(exactly = 1) { mockActionsRunner.run(any(), any()) }
+
+            ensureAllEventsConsumed()
+        }
     }
 
-    private fun verifyPagerScroll(
-        scroll: Scroll,
-        previousPageIndex: Int,
-        previousPageId: String,
-        pageIndex: Int,
-        pageId: String,
-        hasNext: Boolean,
-        hasPrevious: Boolean,
-        isInternal: Boolean
-    ) {
-        assertEquals(
-            "previousPageIndex",
-            previousPageIndex.toLong(),
-            scroll.previousPageIndex.toLong()
-        )
-        assertEquals("previousPageId", previousPageId, scroll.previousPageId)
-        assertEquals("pageIndex", pageIndex.toLong(), scroll.pageIndex.toLong())
-        assertEquals("pageId", pageId, scroll.pageId)
-        assertEquals("hasNext", hasNext, scroll.hasNext())
-        assertEquals("hasPrevious", hasPrevious, scroll.hasPrevious())
-        assertEquals("isInternal", isInternal, scroll.isInternal)
+    @Test
+    public fun testStateChanges(): TestResult = runTest {
+        pagerModel.onViewAttached(mockView)
+
+        verify { mockViewListener.scrollTo(0) }
+
+        pagerState.update { it.copyWithPageIndex(1) }
+
+        val state = pagerState.changes.first()
+        // Sanity check
+        assertEquals(1, state.pageIndex)
+
+        verify { mockViewListener.scrollTo(1) }
+    }
+
+    @Test
+    public fun testPageViewIds() {
+        val id0 = pagerModel.getPageViewId(0)
+        val id1 = pagerModel.getPageViewId(1)
+        val id2 = pagerModel.getPageViewId(2)
+
+        // Ensure the same IDs are returned for subsequent gets
+        assertEquals(id0, pagerModel.getPageViewId(0))
+        assertEquals(id1, pagerModel.getPageViewId(1))
+        assertEquals(id2, pagerModel.getPageViewId(2))
     }
 
     private companion object {
+        private const val PAGER_ID = "pager"
         private const val PAGE_1_ID = "page-one-identifier"
         private const val PAGE_2_ID = "page-two-identifier"
         private const val PAGE_3_ID = "page-two-identifier"
@@ -111,5 +180,6 @@ public class PagerModelTest {
             PagerModel.Item(mockk(relaxed = true), PAGE_2_ID, EMPTY_ACTIONS),
             PagerModel.Item(mockk(relaxed = true), PAGE_3_ID, EMPTY_ACTIONS)
         )
+        private val PAGE_IDS = ITEMS.map { it.identifier }
     }
 }

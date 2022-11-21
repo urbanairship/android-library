@@ -1,7 +1,11 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.android.layout.ModelEnvironment
+import android.content.Context
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ImageButtonInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -11,12 +15,13 @@ import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.view.ImageButtonView
 import com.urbanairship.json.JsonValue
 
 internal class ImageButtonModel(
     identifier: String,
     val image: Image,
-    actions: Map<String, JsonValue>,
+    actions: Map<String, JsonValue>? = null,
     buttonClickBehaviors: List<ButtonClickBehaviorType>,
     contentDescription: String? = null,
     backgroundColor: Color? = null,
@@ -24,8 +29,10 @@ internal class ImageButtonModel(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
+    formState: SharedState<State.Form>?,
+    pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment
-) : ButtonModel(
+) : ButtonModel<ImageButtonView>(
     viewType = ViewType.IMAGE_BUTTON,
     identifier = identifier,
     actions = actions,
@@ -36,9 +43,16 @@ internal class ImageButtonModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
+    formState = formState,
+    pagerState = pagerState,
     environment = environment
 ) {
-    constructor(info: ImageButtonInfo, env: ModelEnvironment) : this(
+    constructor(
+        info: ImageButtonInfo,
+        formState: SharedState<State.Form>?,
+        pagerState: SharedState<State.Pager>?,
+        env: ModelEnvironment
+    ) : this(
         identifier = info.identifier,
         image = info.image,
         actions = info.actions,
@@ -49,7 +63,15 @@ internal class ImageButtonModel(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
+        formState = formState,
+        pagerState = pagerState,
         environment = env
     )
-    override fun reportingDescription(): String = contentDescription ?: identifier
+
+    override val reportingDescription: String = contentDescription ?: identifier
+
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        ImageButtonView(context, this, viewEnvironment).apply {
+            id = viewId
+        }
 }

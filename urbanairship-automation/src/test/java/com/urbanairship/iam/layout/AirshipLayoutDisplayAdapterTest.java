@@ -379,7 +379,7 @@ import static org.mockito.Mockito.when;
         LayoutData layoutData = mock(LayoutData.class);
         ThomasListener listener = prepareListenerTest();
 
-        Collection<FormData<?>> children = Collections.singleton(new FormData.Score("score_id",1));
+        Collection<FormData<?>> children = Collections.singleton(new FormData.Score("score_id", 1, true, null, null));
         FormData.BaseForm formData = new FormData.Nps("form_id", "response type", "score_id", children);
 
         listener.onFormResult(formData, layoutData);

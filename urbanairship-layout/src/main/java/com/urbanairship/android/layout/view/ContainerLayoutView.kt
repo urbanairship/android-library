@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import android.animation.LayoutTransition
 import android.content.Context
 import android.util.SparseArray
 import android.util.SparseBooleanArray
@@ -12,8 +13,9 @@ import androidx.core.graphics.Insets
 import androidx.core.view.OnApplyWindowInsetsListener as OnApplyWindowInsetsListenerCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.urbanairship.android.layout.Thomas
+import androidx.core.view.isGone
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel.Item
 import com.urbanairship.android.layout.property.Margin
@@ -23,7 +25,7 @@ import com.urbanairship.android.layout.widget.ClippableConstraintLayout
 
 internal class ContainerLayoutView(
     context: Context,
-    private val model: ContainerLayoutModel,
+    model: ContainerLayoutModel,
     private val viewEnvironment: ViewEnvironment
 ) : ClippableConstraintLayout(context), BaseView {
 
@@ -31,17 +33,23 @@ internal class ContainerLayoutView(
     private val frameMargins = SparseArray<Margin>()
 
     init {
-        id = model.viewId
-        configure()
-    }
-
-    private fun configure() {
         clipChildren = true
         val constraintBuilder = ConstraintSetBuilder.newBuilder(context)
         addItems(model.items, constraintBuilder)
         LayoutUtils.applyBorderAndBackground(this, model)
         constraintBuilder.build().applyTo(this)
         ViewCompat.setOnApplyWindowInsetsListener(this, WindowInsetsListener(constraintBuilder))
+
+        layoutTransition = LayoutTransition().apply {
+            // Prevent unwanted flickering when switching visibility between two views
+            disableTransitionType(LayoutTransition.APPEARING)
+        }
+
+        model.listener = object : BaseModel.Listener {
+            override fun setVisibility(visible: Boolean) {
+                this@ContainerLayoutView.isGone = visible
+            }
+        }
     }
 
     private fun addItems(items: List<Item>, constraintBuilder: ConstraintSetBuilder) {
@@ -51,7 +59,7 @@ internal class ContainerLayoutView(
     }
 
     private fun addItem(constraintBuilder: ConstraintSetBuilder, item: Item) {
-        val itemView = Thomas.view(context, item.model, viewEnvironment)
+        val itemView = item.model.createView(context, viewEnvironment)
 
         val frameId = View.generateViewId()
         val frame: ViewGroup = FrameLayout(context).apply {

@@ -1,15 +1,12 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import androidx.annotation.VisibleForTesting
-import com.urbanairship.Logger
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.event.CheckboxEvent
-import com.urbanairship.android.layout.event.Event
-import com.urbanairship.android.layout.event.Event.ViewAttachedToWindow
-import com.urbanairship.android.layout.event.Event.ViewInit
-import com.urbanairship.android.layout.event.EventType
-import com.urbanairship.android.layout.event.FormEvent.DataChange
+import android.content.Context
+import android.view.View
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -17,9 +14,10 @@ import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.reporting.FormData
-import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.json.JsonValue
+import kotlinx.coroutines.launch
 
 /**
  * Controller for checkbox inputs.
@@ -27,19 +25,21 @@ import com.urbanairship.json.JsonValue
  * Must be a descendant of `FormController` or `NpsFormController`.
  */
 internal class CheckboxController(
-    val view: BaseModel,
-    override val identifier: String,
-    override val isRequired: Boolean = false,
+    val view: AnyModel,
+    val identifier: String,
+    private val isRequired: Boolean = false,
     private val minSelection: Int = if (isRequired) 1 else 0,
     private val maxSelection: Int = Int.MAX_VALUE,
-    override val contentDescription: String? = null,
+    val contentDescription: String? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
+    private val formState: SharedState<State.Form>,
+    private val checkboxState: SharedState<State.Checkbox>,
     environment: ModelEnvironment
-) : LayoutModel(
+) : BaseModel<View, BaseModel.Listener>(
     viewType = ViewType.CHECKBOX_CONTROLLER,
     backgroundColor = backgroundColor,
     border = border,
@@ -47,9 +47,15 @@ internal class CheckboxController(
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
     environment = environment
-), Identifiable, Accessible, Validatable {
-    constructor(info: CheckboxControllerInfo, env: ModelEnvironment) : this(
-        view = env.modelProvider.create(info.view, env),
+) {
+    constructor(
+        info: CheckboxControllerInfo,
+        view: AnyModel,
+        formState: SharedState<State.Form>,
+        checkboxState: SharedState<State.Checkbox>,
+        env: ModelEnvironment
+    ) : this(
+        view = view,
         identifier = info.identifier,
         isRequired = info.isRequired,
         minSelection = info.minSelection,
@@ -60,95 +66,38 @@ internal class CheckboxController(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
+        formState = formState,
+        checkboxState = checkboxState,
         environment = env
     )
 
-    override val children: List<BaseModel> = listOf(view)
-
-    override val isValid: Boolean
-        get() {
-            val count = selectedValues.size
-            val isFilled = count in minSelection..maxSelection
-            val isOptional = count == 0 && !isRequired
-            return isFilled || isOptional
-        }
-
-    private val checkboxes: MutableList<CheckboxModel> = mutableListOf()
-    private val selectedValues: MutableSet<JsonValue> = mutableSetOf()
-
     init {
-        view.addListener(this)
+        modelScope.launch {
+            checkboxState.changes.collect { checkbox ->
+                formState.update { form ->
+                    form.copyWithFormInput(
+                        FormData.CheckboxController(
+                            identifier = checkbox.identifier,
+                            value = checkbox.selectedItems,
+                            isValid = isValid(checkbox.selectedItems)
+                        )
+                    )
+                }
+
+                if (eventHandlers.hasFormInputHandler()) {
+                    handleViewEvent(EventHandler.Type.FORM_INPUT, checkbox.selectedItems.toList())
+                }
+            }
+        }
     }
 
-    @VisibleForTesting
-    fun getCheckboxes(): List<CheckboxModel> = checkboxes.toList()
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        view.createView(context, viewEnvironment)
 
-    @VisibleForTesting
-    fun getSelectedValues(): Set<JsonValue> = selectedValues.toSet()
-
-    override fun onEvent(event: Event, layoutData: LayoutData): Boolean =
-        when (event.type) {
-            EventType.VIEW_INIT ->
-                onViewInit(event as ViewInit, layoutData)
-            EventType.CHECKBOX_INPUT_CHANGE ->
-                onCheckboxInputChange(event as CheckboxEvent.InputChange, layoutData)
-            EventType.VIEW_ATTACHED ->
-                onViewAttached(event as ViewAttachedToWindow, layoutData)
-            // Pass along any other events
-            else -> super.onEvent(event, layoutData)
-        }
-
-    private fun onViewInit(event: ViewInit, layoutData: LayoutData): Boolean =
-        if (event.viewType == ViewType.CHECKBOX) {
-            if (checkboxes.isEmpty()) {
-                bubbleEvent(CheckboxEvent.ControllerInit(identifier, isValid), layoutData)
-            }
-            val model = event.model as CheckboxModel
-            if (!checkboxes.contains(model)) {
-                // This is the first time we've seen this checkbox; Add it to our list.
-                checkboxes.add(model)
-            }
-            true
-        } else {
-            false
-        }
-
-    private fun onCheckboxInputChange(
-        event: CheckboxEvent.InputChange,
-        layoutData: LayoutData
-    ): Boolean =
-        if (event.isChecked && selectedValues.size + 1 > maxSelection) {
-            // Can't check any more boxes, so we'll ignore it and consume the event.
-            Logger.debug(
-                "Ignoring checkbox input change for '%s'. Max selections reached!",
-                event.value
-            )
-            true
-        } else {
-            if (event.isChecked) {
-                selectedValues.add(event.value)
-            } else {
-                selectedValues.remove(event.value)
-            }
-
-            trickleEvent(CheckboxEvent.ViewUpdate(event.value, event.isChecked), layoutData)
-            bubbleEvent(
-                DataChange(FormData.CheckboxController(identifier, selectedValues), isValid),
-                layoutData
-            )
-            true
-        }
-
-    private fun onViewAttached(event: ViewAttachedToWindow, layoutData: LayoutData): Boolean {
-        if (event.viewType == ViewType.CHECKBOX &&
-            event.model is CheckboxModel &&
-            selectedValues.isNotEmpty()) {
-
-            val model = event.model as CheckboxModel
-            val isChecked = selectedValues.contains(model.reportingValue)
-            trickleEvent(CheckboxEvent.ViewUpdate(model.reportingValue, isChecked), layoutData)
-        }
-        // Always pass the event on.
-        return super.onEvent(event, layoutData)
+    private fun isValid(selectedItems: Set<JsonValue>): Boolean {
+        val count = selectedItems.size
+        val isFilled = count in minSelection..maxSelection
+        val isOptional = count == 0 && !isRequired
+        return isFilled || isOptional
     }
 }

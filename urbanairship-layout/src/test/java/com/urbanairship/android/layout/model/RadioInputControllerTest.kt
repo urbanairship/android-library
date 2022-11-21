@@ -1,137 +1,133 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.ModelProvider
-import com.urbanairship.android.layout.event.Event.ViewInit
-import com.urbanairship.android.layout.event.EventType
-import com.urbanairship.android.layout.event.FormEvent.DataChange
-import com.urbanairship.android.layout.event.FormEvent.InputInit
-import com.urbanairship.android.layout.event.RadioEvent
-import com.urbanairship.android.layout.property.ViewType
+import app.cash.turbine.test
+import com.urbanairship.android.layout.environment.FormType
+import com.urbanairship.android.layout.environment.LayoutState
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.inputData
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
-import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import test.TestEventListener
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
 public class RadioInputControllerTest {
 
-    private lateinit var controller: RadioInputController
-    private lateinit var testListener: TestEventListener
+    private val testDispatcher = StandardTestDispatcher()
+    private val testScope = TestScope(testDispatcher)
 
-    private val mockView = mockk<BaseModel>(relaxed = true)
-    private val mockEnv = spyk(ModelEnvironment(ModelProvider(), emptyMap()))
+    private val mockEnv: ModelEnvironment = mockk {
+        every { modelScope } returns testScope
+        every { layoutState } returns LayoutState.EMPTY
+    }
+    private val mockView: AnyModel = mockk(relaxed = true)
+
+    private val formState = spyk(SharedState(
+        State.Form(identifier = "form-id", formType = FormType.Form, formResponseType = "form")
+    ))
+
+    private val radioState = spyk(SharedState(State.Radio(identifier = IDENTIFIER)))
+
+    private lateinit var controller: RadioInputController
 
     @Before
     public fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    public fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    public fun testInit(): TestResult = runTest {
+        formState.changes.test {
+            // Sanity check initial form state.
+            assertTrue(awaitItem().data.isEmpty())
+
+            initRadioInputController()
+
+            val item = awaitItem()
+            // Verify that our checkbox controller updated the form state.
+            assertTrue(item.data.containsKey(IDENTIFIER))
+            // Verify that the response is valid, since the checkbox controller is not required.
+            assertTrue(item.inputValidity[IDENTIFIER]!!)
+
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    public fun testRequired(): TestResult = runTest {
+        formState.changes.test {
+            // Sanity check initial form state.
+            assertTrue(awaitItem().data.isEmpty())
+
+            initRadioInputController(isRequired = true)
+
+            awaitItem().let {
+                // Verify that our checkbox controller updated the form state.
+                assertTrue(it.data.containsKey(IDENTIFIER))
+                // Not valid yet, since nothing is selected.
+                assertFalse(it.inputValidity[IDENTIFIER]!!)
+            }
+            radioState.update { it.copy(selectedItem = SELECTED_VALUE) }
+            testScheduler.runCurrent()
+
+            awaitItem().let {
+                // Valid now that we've selected a value
+                assertTrue(it.inputValidity[IDENTIFIER]!!)
+                // Make sure the controller updated form state with the selected value
+                assertEquals(
+                    SELECTED_VALUE,
+                    it.inputData<FormData.RadioInputController>(IDENTIFIER)?.value
+                )
+            }
+
+            ensureAllEventsConsumed()
+        }
+    }
+
+    private fun initRadioInputController(
+        isRequired: Boolean = false,
+        attributeName: AttributeName? = null
+    ) {
         controller = RadioInputController(
             view = mockView,
             identifier = IDENTIFIER,
-            isRequired = IS_REQUIRED,
-            attributeName = ATTRIBUTE_NAME,
-            contentDescription = CONTENT_DESCRIPTION,
+            isRequired = isRequired,
+            attributeName = attributeName,
+            formState = formState,
+            radioState = radioState,
             environment = mockEnv
         )
-        testListener = TestEventListener()
-        controller.addListener(testListener)
-    }
-
-    @Test
-    public fun testViewInit() {
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-        // Verify that we observed a form input init event after the first radio input is initialized.
-        assertEquals(1, testListener.getCount(EventType.FORM_INPUT_INIT).toLong())
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-
-        // Verify that we didn't emit any further input init events after the first.
-        assertEquals(1, testListener.getCount(EventType.FORM_INPUT_INIT).toLong())
-        val initEvent = testListener.getEventAt(0) as InputInit
-        assertEquals(IDENTIFIER, initEvent.identifier)
-        assertEquals(ViewType.RADIO_INPUT_CONTROLLER, initEvent.viewType)
-        assertFalse(initEvent.isValid)
-        assertEquals(3, controller.radioInputs.size.toLong())
-        assertNull(controller.selectedValue)
-    }
-
-    @Test
-    public fun testInputChange() {
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-
-        // Sanity check
-        assertEquals(1, testListener.getCount(EventType.FORM_INPUT_INIT).toLong())
-        assertEquals(3, controller.radioInputs.size.toLong())
-        assertNull(controller.selectedValue)
-        assertTrue(controller.isRequired)
-        assertFalse(controller.isValid)
-
-        // Simulate checking an option
-        controller.onEvent(
-            RadioEvent.InputChange(SELECTED_VALUE, ATTRIBUTE_VALUE, true),
-            LayoutData.empty()
-        )
-        assertEquals(1, testListener.getCount(EventType.FORM_DATA_CHANGE).toLong())
-        var changeEvent = testListener.getEventAt(1) as DataChange
-        var data = changeEvent.value as FormData.RadioInputController
-
-        // Verify event data
-        assertTrue(changeEvent.isValid)
-        assertEquals(IDENTIFIER, changeEvent.value.identifier)
-        assertEquals(SELECTED_VALUE, data.value)
-
-        // Simulate another click on the selected radio input
-        controller.onEvent(
-            RadioEvent.InputChange(SELECTED_VALUE, ATTRIBUTE_VALUE, true),
-            LayoutData.empty()
-        )
-
-        // Verify that the controller didn't broadcast a new data change event
-        assertEquals(1, testListener.getCount(EventType.FORM_DATA_CHANGE).toLong())
-
-        // Simulate a click on a different radio input
-        controller.onEvent(
-            RadioEvent.InputChange(SELECTED_VALUE_2, ATTRIBUTE_VALUE, true),
-            LayoutData.empty()
-        )
-
-        // Verify that the controller did broadcast a data change this time
-        assertEquals(2, testListener.getCount(EventType.FORM_DATA_CHANGE).toLong())
-        changeEvent = testListener.getEventAt(2) as DataChange
-        data = changeEvent.value as FormData.RadioInputController
-        val attributes = changeEvent.attributes
-        assertEquals(1, attributes.size.toLong())
-        assertEquals(ATTRIBUTE_VALUE, attributes[ATTRIBUTE_NAME])
-
-        // Verify the data change contains the new value
-        assertTrue(changeEvent.isValid)
-        assertEquals(IDENTIFIER, changeEvent.value.identifier)
-        assertEquals(SELECTED_VALUE_2, data.value)
     }
 
     private companion object {
         private const val IDENTIFIER = "identifier"
-        private const val IS_REQUIRED = true
-        private const val CONTENT_DESCRIPTION = "content description"
         private val SELECTED_VALUE = JsonValue.wrap("foo")
-        private val SELECTED_VALUE_2 = JsonValue.wrap("bar")
-        private val ATTRIBUTE_VALUE = JsonValue.wrap("some attribute value")
-        private val ATTRIBUTE_NAME = AttributeName("some-channel", null)
-        private fun makeViewInitEvent(): ViewInit {
-            val mockRadioInputModel = mockk<RadioInputModel>(relaxed = true)
-            every { mockRadioInputModel.viewType } returns ViewType.RADIO_INPUT
-            return ViewInit(mockRadioInputModel)
-        }
     }
 }

@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonValue
 internal sealed class StateAction(val type: Type) {
 
     object ClearState : StateAction(Type.CLEAR_STATE)
+
     data class SetState(
         val key: String,
         val value: JsonValue?

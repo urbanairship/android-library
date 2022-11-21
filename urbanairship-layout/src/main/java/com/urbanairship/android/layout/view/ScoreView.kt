@@ -8,7 +8,7 @@ import android.widget.Checkable
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
 import androidx.constraintlayout.widget.ConstraintSet
-import com.urbanairship.android.layout.environment.ViewEnvironment
+import androidx.core.view.isGone
 import com.urbanairship.android.layout.model.ScoreModel
 import com.urbanairship.android.layout.property.ScoreStyle.NumberRange
 import com.urbanairship.android.layout.property.ScoreType
@@ -16,25 +16,31 @@ import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.widget.ShapeButton
+import com.urbanairship.android.layout.widget.TappableView
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 
 /**
  * Form input that presents a set of numeric options representing a score.
  */
 internal class ScoreView(
     context: Context,
-    private val model: ScoreModel,
-    viewEnvironment: ViewEnvironment
-) : ConstraintLayout(context), BaseView {
+    model: ScoreModel,
+) : ConstraintLayout(context), BaseView, TappableView {
 
-    private var selectedScore: Int? = null
-    private val scoreToViewIds = SparseIntArray()
+    private val clicksChannel = Channel<Unit>(Channel.UNLIMITED)
 
-    init {
-        id = model.viewId
-        configure()
+    fun interface OnScoreSelectedListener {
+        fun onScoreSelected(score: Int)
     }
 
-    private fun configure() {
+    var scoreSelectedListener: OnScoreSelectedListener? = null
+
+    private val scoreToViewIds = SparseIntArray()
+    private var selectedScore: Int? = null
+
+    init {
         LayoutUtils.applyBorderAndBackground(this, model)
         val constraints = ConstraintSetBuilder.newBuilder(context)
         val style = model.style
@@ -45,12 +51,15 @@ internal class ScoreView(
 
         model.contentDescription.ifNotEmpty { contentDescription = it }
 
-        // Restore state from the model, if we have any.
-        model.selectedScore?.let { setSelectedScore(it) }
+        model.listener = object : ScoreModel.Listener {
+            override fun onSetSelectedScore(value: Int?) {
+                value?.let { setSelectedScore(it) }
+            }
 
-        model.onConfigured()
-
-        LayoutUtils.doOnAttachToWindow(this) { model.onAttachedToWindow() }
+            override fun setVisibility(visible: Boolean) {
+                this@ScoreView.isGone = visible
+            }
+        }
     }
 
     private fun configureNumberRange(style: NumberRange, constraints: ConstraintSetBuilder) {
@@ -84,12 +93,21 @@ internal class ScoreView(
             .createHorizontalChainInParent(viewIds, 0, style.spacing)
     }
 
-    private fun setSelectedScore(score: Int) {
+    fun setSelectedScore(score: Int?) {
         selectedScore = score
-        val viewId = scoreToViewIds[score, -1]
-        if (viewId > -1) {
-            val view = findViewById<View>(viewId)
-            (view as? Checkable)?.isChecked = true
+        if (score != null) {
+            // Check the selected view
+            val viewId = scoreToViewIds[score, -1]
+            if (viewId > -1) {
+                val view = findViewById<View>(viewId)
+                (view as? Checkable)?.isChecked = true
+            }
+        } else {
+            // Uncheck all items
+            for (i in 0 until childCount) {
+                val child = getChildAt(i)
+                (child as? Checkable)?.isChecked = false
+            }
         }
     }
 
@@ -103,7 +121,11 @@ internal class ScoreView(
             (child as? Checkable)?.isChecked = view.id == child.id
         }
 
-        // Notify our model
-        model.onScoreChange(score)
+        // Notify our listener
+        scoreSelectedListener?.onScoreSelected(score)
+        // Emit click for tap handling
+        clicksChannel.trySend(Unit)
     }
+
+    override fun taps(): Flow<Unit> = clicksChannel.receiveAsFlow()
 }

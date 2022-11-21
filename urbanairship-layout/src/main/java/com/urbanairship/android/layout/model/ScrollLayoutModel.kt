@@ -1,7 +1,9 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.android.layout.ModelEnvironment
+import android.content.Context
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ScrollLayoutInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -10,9 +12,10 @@ import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.view.ScrollLayoutView
 
 internal class ScrollLayoutModel(
-    val view: BaseModel,
+    val view: AnyModel,
     val direction: Direction = Direction.VERTICAL,
     backgroundColor: Color? = null,
     border: Border? = null,
@@ -20,7 +23,7 @@ internal class ScrollLayoutModel(
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
-) : LayoutModel(
+) : BaseModel<ScrollLayoutView, BaseModel.Listener>(
     viewType = ViewType.SCROLL_LAYOUT,
     backgroundColor = backgroundColor,
     border = border,
@@ -29,8 +32,12 @@ internal class ScrollLayoutModel(
     enableBehaviors = enableBehaviors,
     environment = environment
 ) {
-    constructor(info: ScrollLayoutInfo, env: ModelEnvironment) : this(
-        view = env.modelProvider.create(info.view, env),
+    constructor(
+        info: ScrollLayoutInfo,
+        view: AnyModel,
+        env: ModelEnvironment
+    ) : this(
+        view = view,
         direction = info.direction,
         backgroundColor = info.backgroundColor,
         border = info.border,
@@ -40,9 +47,8 @@ internal class ScrollLayoutModel(
         environment = env
     )
 
-    override val children: List<BaseModel> = listOf(view)
-
-    init {
-        view.addListener(this)
-    }
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        ScrollLayoutView(context, this, viewEnvironment).apply {
+            id = viewId
+        }
 }

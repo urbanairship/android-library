@@ -91,7 +91,7 @@ abstract class ImageRequest {
 
         final ImageView imageView = imageViewReference.get();
         if (imageView == null) {
-            onFinish(null);
+            onFinish(null, false);
             return;
         }
 
@@ -111,7 +111,7 @@ abstract class ImageRequest {
 
                         if (imageView.getViewTreeObserver().isAlive()) {
                             if (imageView.getHeight() == 0 && imageView.getWidth() == 0) {
-                                onFinish(imageView);
+                                onFinish(imageView, false);
                             } else {
                                 execute();
                             }
@@ -130,7 +130,7 @@ abstract class ImageRequest {
 
         if (cachedEntry != null) {
             imageView.setImageDrawable(cachedEntry);
-            onFinish(imageView);
+            onFinish(imageView, true);
         } else {
             if (imageRequestOptions.getPlaceHolder() != 0) {
                 imageView.setImageResource(imageRequestOptions.getPlaceHolder());
@@ -156,8 +156,8 @@ abstract class ImageRequest {
                                         return;
                                     }
 
-                                    applyDrawable(drawable);
-                                    onFinish(imageView);
+                                    boolean result = applyDrawable(drawable);
+                                    onFinish(imageView, result);
                                 }
                             });
 
@@ -187,7 +187,7 @@ abstract class ImageRequest {
      *
      * @param imageView The image view.
      */
-    abstract void onFinish(@Nullable ImageView imageView);
+    abstract void onFinish(@Nullable ImageView imageView, boolean success);
 
     @Nullable
     @WorkerThread
@@ -215,7 +215,7 @@ abstract class ImageRequest {
     }
 
     @MainThread
-    private void applyDrawable(Drawable drawable) {
+    private boolean applyDrawable(Drawable drawable) {
         final ImageView imageView = imageViewReference.get();
         if (drawable != null && imageView != null) {
             // Transition drawable with a transparent drawable and the final drawable
@@ -230,6 +230,8 @@ abstract class ImageRequest {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && drawable instanceof AnimatedImageDrawable) {
                 ((AnimatedImageDrawable) drawable).start();
             }
+            return true;
         }
+        return false;
     }
 }

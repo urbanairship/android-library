@@ -3,7 +3,8 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import androidx.appcompat.widget.SwitchCompat
-import com.urbanairship.android.layout.environment.ViewEnvironment
+import androidx.core.view.isGone
+import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.model.CheckboxModel
 import com.urbanairship.android.layout.property.CheckboxStyle
 import com.urbanairship.android.layout.property.SwitchStyle
@@ -13,19 +14,22 @@ import com.urbanairship.android.layout.widget.ShapeButton
 internal class CheckboxView(
     context: Context,
     model: CheckboxModel,
-    viewEnvironment: ViewEnvironment
-) : CheckableView<CheckboxModel>(context, model, viewEnvironment) {
-
-    override fun configure() {
-        super.configure()
-
-        model.setListener(::setCheckedInternal)
+) : CheckableView<CheckboxModel>(context, model) {
+    init {
+        model.listener = object : CheckableModel.Listener {
+            override fun onSetChecked(isChecked: Boolean) = setCheckedInternal(isChecked)
+            override fun onSetEnabled(isEnabled: Boolean) = setEnabled(isEnabled)
+            override fun setVisibility(visible: Boolean) {
+                this@CheckboxView.isGone = visible
+            }
+        }
     }
 
     override fun createSwitchView(style: SwitchStyle): SwitchCompat {
         return object : SwitchCompat(context) {
             override fun toggle() {
-                model.onCheckedChange(!isChecked)
+                // Not calling super, because the controller/model handles updating the view.
+                checkedChangeListener?.onCheckedChange(this, !isChecked)
             }
         }
     }
@@ -37,7 +41,8 @@ internal class CheckboxView(
             context, checked.shapes, unchecked.shapes, checked.icon, unchecked.icon
         ) {
             override fun toggle() {
-                model.onCheckedChange(!isChecked)
+                // Not calling super, because the controller/model handles updating the view.
+                checkedChangeListener?.onCheckedChange(this, !isChecked)
             }
         }
     }

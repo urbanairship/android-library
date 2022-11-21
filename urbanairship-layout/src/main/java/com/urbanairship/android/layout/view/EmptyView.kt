@@ -3,7 +3,8 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.view.View
-import com.urbanairship.android.layout.environment.ViewEnvironment
+import androidx.core.view.isGone
+import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.EmptyModel
 import com.urbanairship.android.layout.util.LayoutUtils
 
@@ -16,16 +17,16 @@ import com.urbanairship.android.layout.util.LayoutUtils
  */
 internal class EmptyView(
     context: Context,
-    private val model: EmptyModel,
-    viewEnvironment: ViewEnvironment
+    model: EmptyModel
 ) : View(context), BaseView {
 
     init {
-        id = model.viewId
-        configure()
-    }
-
-    private fun configure() {
         LayoutUtils.applyBorderAndBackground(this, model)
+
+        model.listener = object : BaseModel.Listener {
+            override fun setVisibility(visible: Boolean) {
+                this@EmptyView.isGone = visible
+            }
+        }
     }
 }

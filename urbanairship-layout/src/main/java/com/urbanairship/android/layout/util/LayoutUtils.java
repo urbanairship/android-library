@@ -66,7 +66,7 @@ public final class LayoutUtils {
 
     private LayoutUtils() {}
 
-    public static void applyBorderAndBackground(@NonNull View view, @NonNull BaseModel model) {
+    public static void applyBorderAndBackground(@NonNull View view, @NonNull BaseModel<?, ?> model) {
         applyBorderAndBackground(view, model.getBorder(), model.getBackgroundColor());
     }
 
@@ -109,15 +109,6 @@ public final class LayoutUtils {
             }
         } else if (backgroundColor != null) {
             mergeBackground(view, new ColorDrawable(backgroundColor.resolve(context)));
-        }
-    }
-
-    public static void resetBorderAndBackground(@NonNull View view) {
-        view.setBackground(null);
-        view.setPadding(0,0,0,0);
-
-        if (view instanceof Clippable) {
-            ((Clippable) view).setClipPathBorderRadius(0);
         }
     }
 

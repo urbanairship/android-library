@@ -39,6 +39,11 @@ public enum ViewType {
         TOGGLE, TEXT_INPUT, SCORE, FORM_CONTROLLER, NPS_FORM_CONTROLLER
     );
 
+    private static final List<ViewType> CONTROLLERS = Arrays.asList(
+            CHECKBOX_CONTROLLER, FORM_CONTROLLER, NPS_FORM_CONTROLLER, PAGER_CONTROLLER,
+            RADIO_INPUT_CONTROLLER, STATE_CONTROLLER
+    );
+
     @NonNull
     private final String value;
 
@@ -68,6 +73,10 @@ public enum ViewType {
 
     public boolean isFormInput() {
         return FORM_INPUTS.contains(this);
+    }
+
+    public boolean isController() {
+        return CONTROLLERS.contains(this);
     }
 
     @NonNull

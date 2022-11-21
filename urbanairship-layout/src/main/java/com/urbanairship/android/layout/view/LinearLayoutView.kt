@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import android.animation.LayoutTransition
 import android.content.Context
 import android.view.Gravity.CENTER_HORIZONTAL
 import android.view.Gravity.CENTER_VERTICAL
@@ -9,9 +10,10 @@ import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
-import com.urbanairship.android.layout.Thomas
+import androidx.core.view.isGone
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LinearLayoutItemInfo
+import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.LinearLayoutModel
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.Size.DimensionType.ABSOLUTE
@@ -24,22 +26,27 @@ import com.urbanairship.android.layout.widget.WeightlessLinearLayout.LayoutParam
 
 internal class LinearLayoutView(
     context: Context,
-    private val model: LinearLayoutModel,
+    model: LinearLayoutModel,
     private val viewEnvironment: ViewEnvironment
 ) : WeightlessLinearLayout(context), BaseView {
 
     init {
-        id = model.viewId
-        configure()
-    }
-
-    private fun configure() {
         clipChildren = false
         LayoutUtils.applyBorderAndBackground(this, model)
         orientation = if (model.direction == Direction.VERTICAL) VERTICAL else HORIZONTAL
         gravity = if (model.direction == Direction.VERTICAL) CENTER_HORIZONTAL else CENTER_VERTICAL
-
         addItems(model.items)
+
+        model.listener = object : BaseModel.Listener {
+            override fun setVisibility(visible: Boolean) {
+                isGone = visible
+            }
+        }
+
+        layoutTransition = LayoutTransition().apply {
+            // Prevent unwanted flickering when switching visibility between two views
+            disableTransitionType(LayoutTransition.APPEARING)
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(this) { _: View, _: WindowInsetsCompat ->
             val noInsets = WindowInsetsCompat.Builder()
@@ -56,7 +63,7 @@ internal class LinearLayoutView(
         for (i in items.indices) {
             val (itemInfo, itemModel) = items[i]
             val lp = generateItemLayoutParams(itemInfo)
-            val itemView = Thomas.view(context, itemModel, viewEnvironment).apply {
+            val itemView = itemModel.createView(context, viewEnvironment).apply {
                 layoutParams = lp
             }
             // Add view after any existing children, without requesting a layout pass on the child.

@@ -16,18 +16,17 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener
 import androidx.core.view.WindowInsetsCompat
 import com.urbanairship.android.layout.ModalPresentation
-import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.model.BaseModel
+import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
 
 internal class ModalView(
     context: Context,
-    private val model: BaseModel,
-    private val presentation: ModalPresentation,
-    private val viewEnvironment: ViewEnvironment
+    model: AnyModel,
+    presentation: ModalPresentation,
+    viewEnvironment: ViewEnvironment
 ) : ConstraintLayout(context) {
 
     private val windowTouchSlop by lazy {
@@ -39,11 +38,6 @@ internal class ModalView(
     private var clickOutsideListener: OnClickListener? = null
 
     init {
-        id = model.viewId
-        configure()
-    }
-
-    private fun configure() {
         val placement = presentation.getResolvedPlacement(context)
         val size = placement.size
         val position = placement.position
@@ -57,7 +51,7 @@ internal class ModalView(
         }
         modalFrame = frame
 
-        val container = Thomas.view(context, model, viewEnvironment).apply {
+        val container = model.createView(context, viewEnvironment).apply {
             layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
                 gravity = position?.gravity ?: Gravity.CENTER
                 margin?.let { setMargins(it.start, it.top, it.end, it.bottom) }
@@ -107,7 +101,7 @@ internal class ModalView(
     private fun isTouchOutside(event: MotionEvent): Boolean {
         // Get the bounds of the modal
         val r = Rect()
-        containerView?.getHitRect(r)
+        modalFrame?.getHitRect(r)
         // Expand the bounds by the amount of slop needed to be considered an outside touch
         r.inset(-windowTouchSlop, -windowTouchSlop)
         return !r.contains(event.x.toInt(), event.y.toInt())

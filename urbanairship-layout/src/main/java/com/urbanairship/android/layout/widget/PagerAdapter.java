@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.PagerModel;
@@ -26,7 +25,7 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> {
     @NonNull
-    private final List<BaseModel> items = new ArrayList<>();
+    private final List<BaseModel<?, ?>> items = new ArrayList<>();
 
     @NonNull
     private final PagerModel pagerModel;
@@ -46,7 +45,7 @@ public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull PagerAdapter.ViewHolder holder, int position) {
-        BaseModel model = getItemAtPosition(position);
+        BaseModel<?, ?> model = getItemAtPosition(position);
         holder.container.setId(pagerModel.getPageViewId(position));
         holder.bind(model, viewEnvironment);
     }
@@ -67,11 +66,11 @@ public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> 
         return items.get(position).getViewType().ordinal();
     }
 
-    public BaseModel getItemAtPosition(int position) {
+    public BaseModel<?, ?> getItemAtPosition(int position) {
         return items.get(position);
     }
 
-    public void setItems(@NonNull List<BaseModel> items) {
+    public void setItems(@NonNull List<BaseModel<?, ?>> items) {
         if (!this.items.equals(items)) {
             this.items.clear();
             this.items.addAll(items);
@@ -92,8 +91,8 @@ public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> 
             this.container = container;
         }
 
-        public void bind(@NonNull BaseModel item, @NonNull ViewEnvironment viewEnvironment) {
-            View view = Thomas.view(itemView.getContext(), item, viewEnvironment);
+        public void bind(@NonNull BaseModel<?, ?> item, @NonNull ViewEnvironment viewEnvironment) {
+            View view = item.createView(itemView.getContext(), viewEnvironment);
             container.addView(view, new RecyclerView.LayoutParams(MATCH_PARENT, MATCH_PARENT));
 
             // Register a listener, so we can request insets when the view is attached.

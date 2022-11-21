@@ -1,16 +1,12 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.event.Event
-import com.urbanairship.android.layout.event.Event.ViewAttachedToWindow
-import com.urbanairship.android.layout.event.EventType
-import com.urbanairship.android.layout.event.FormEvent
-import com.urbanairship.android.layout.event.FormEvent.DataChange
-import com.urbanairship.android.layout.event.FormEvent.InputInit
-import com.urbanairship.android.layout.event.FormEvent.ValidationUpdate
-import com.urbanairship.android.layout.event.ReportingEvent.FormDisplay
-import com.urbanairship.android.layout.event.ReportingEvent.FormResult
+import android.view.View
+import com.urbanairship.android.layout.environment.LayoutEvent
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
@@ -18,11 +14,11 @@ import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.ViewType
-import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
-import com.urbanairship.android.layout.reporting.FormInfo as FormReportingInfo
-import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.json.JsonValue
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.filterNot
+import kotlinx.coroutines.launch
 
 /**
  * Base model for top-level form controllers.
@@ -30,18 +26,20 @@ import com.urbanairship.json.JsonValue
  * @see FormController
  * @see NpsFormController
  */
-internal abstract class BaseFormController(
+internal abstract class BaseFormController<T : View>(
     viewType: ViewType,
-    override val identifier: String,
+    val identifier: String,
     val responseType: String?,
-    private val submitBehavior: FormBehaviorType?,
+    submitBehavior: FormBehaviorType?,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo?,
     eventHandlers: List<EventHandler>?,
     enableBehaviors: List<EnableBehaviorType>?,
+    private val formState: SharedState<State.Form>,
+    private val parentFormState: SharedState<State.Form>?,
     environment: ModelEnvironment,
-) : LayoutModel(
+) : BaseModel<T, BaseModel.Listener>(
     viewType = viewType,
     backgroundColor = backgroundColor,
     border = border,
@@ -49,115 +47,72 @@ internal abstract class BaseFormController(
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
     environment = environment
-), Identifiable {
+) {
+    abstract val view: AnyModel
+    abstract fun buildFormData(state: State.Form): FormData.BaseForm
 
-    protected abstract val formType: String
-    protected abstract val initEvent: FormEvent.Init
-    protected abstract val formDataChangeEvent: DataChange
-    protected abstract val formResultEvent: FormResult
+    private val isChildForm = submitBehavior == null
 
-    abstract val view: BaseModel
-
-    protected val formInfo: FormReportingInfo
-        get() = FormReportingInfo(identifier, formType, responseType, isSubmitted)
-
-    protected val formData: MutableMap<String, FormData<*>> = mutableMapOf()
-    protected val attributes: MutableMap<AttributeName, JsonValue> = mutableMapOf()
-
-    protected val isFormValid: Boolean
-        get() = inputValidity.values.all { isValid -> isValid }
-
-    private val hasSubmitBehavior: Boolean
-        get() = submitBehavior != null
-
-    private val inputValidity: MutableMap<String, Boolean> = HashMap()
-
-    private var isDisplayReported = false
-    private var isSubmitted = false
-
-    override fun onEvent(event: Event, layoutData: LayoutData): Boolean {
-        val dataOverride = layoutData.withFormInfo(formInfo)
-        return when (event.type) {
-            EventType.FORM_INIT -> {
-                onNestedFormInit(event as FormEvent.Init)
-                hasSubmitBehavior || super.onEvent(event, dataOverride)
-            }
-            EventType.FORM_INPUT_INIT -> {
-                onInputInit(event as InputInit)
-                true
-            }
-            EventType.FORM_DATA_CHANGE -> {
-                onDataChange(event as DataChange)
-                if (!hasSubmitBehavior) {
-                    // Update parent controller if this is a child form
-                    bubbleEvent(formDataChangeEvent, layoutData)
-                }
-                true
-            }
-            EventType.VIEW_ATTACHED -> {
-                onViewAttached(event as ViewAttachedToWindow)
-                if (hasSubmitBehavior) {
-                    true
-                } else super.onEvent(event, dataOverride)
-            }
-            EventType.BUTTON_BEHAVIOR_FORM_SUBMIT -> {
-                // Submit form if this controller has a submit behavior.
-                if (hasSubmitBehavior) {
-                    onSubmit()
-                    return true
-                }
-                // Otherwise update with our form data and let parent form controller handle it.
-                super.onEvent(event, dataOverride)
-            }
-            else -> super.onEvent(event, dataOverride)
-        }
-    }
-
-    private fun onSubmit() {
-        isSubmitted = true
-        bubbleEvent(formResultEvent, LayoutData.form(formInfo))
-    }
-
-    private fun onNestedFormInit(init: FormEvent.Init) {
-        updateFormValidity(init.identifier, init.isValid)
-    }
-
-    private fun onInputInit(init: InputInit) {
-        updateFormValidity(init.identifier, init.isValid)
-        if (inputValidity.size == 1) {
-            if (!hasSubmitBehavior) {
-                // This is a nested form, since it has no submit behavior.
-                // Bubble an init event to announce this form to a parent form controller.
-                bubbleEvent(initEvent, LayoutData.form(formInfo))
-            }
-        }
-    }
-
-    private fun onViewAttached(attach: ViewAttachedToWindow) {
-        if (attach.viewType.isFormInput && !isDisplayReported) {
-            isDisplayReported = true
-            val formInfo = formInfo
-            bubbleEvent(FormDisplay(formInfo), LayoutData.form(formInfo))
-        }
-    }
-
-    private fun onDataChange(data: DataChange) {
-        val identifier = data.value.identifier
-        val isValid = data.isValid
-        if (isValid) {
-            formData[identifier] = data.value
-            attributes.putAll(data.attributes)
+    init {
+        if (isChildForm) {
+            initChildForm()
         } else {
-            formData.remove(identifier)
-            for (key in data.attributes.keys) {
-                attributes.remove(key)
-            }
+            initParentForm()
         }
-        updateFormValidity(identifier, isValid)
     }
 
-    private fun updateFormValidity(inputId: String, isValid: Boolean) {
-        inputValidity[inputId] = isValid
-        trickleEvent(ValidationUpdate(isFormValid), LayoutData.form(formInfo))
+    private fun initChildForm() {
+        checkNotNull(parentFormState) { "Child form requires parent form state!" }
+
+        modelScope.launch {
+            formState.changes.collect { childState ->
+                parentFormState.update { parentState ->
+                    parentState.copyWithFormInput(buildFormData(childState))
+                }
+            }
+        }
+    }
+
+    private fun initParentForm() {
+        modelScope.launch {
+            environment.layoutEvents
+                .filterIsInstance<LayoutEvent.SubmitForm>()
+                .combine(formState.changes, ::Pair)
+                .filterNot { (_, form) -> form.isSubmitted }
+                .collect { (event, form) ->
+                    formState.update { state ->
+                        val submitted = state.copy(isSubmitted = true)
+                        val result = submitted.formResult()
+                        report(
+                            result,
+                            layoutState.reportingContext(
+                                formContext = form.reportingContext(),
+                                buttonId = event.buttonIdentifier
+                            )
+                        )
+                        updateAttributes(result.attributes)
+
+                        // Mark the form state as submitted.
+                        submitted
+                    }
+
+                    event.onSubmitted.invoke()
+                }
+        }
+
+        modelScope.launch {
+            formState.changes.collect { form ->
+                if (!form.isDisplayReported) {
+                    val formContext = form.reportingContext()
+                    report(
+                        ReportingEvent.FormDisplay(formContext),
+                        layoutState.reportingContext(formContext)
+                    )
+                    formState.update { state ->
+                        state.copy(isDisplayReported = true)
+                    }
+                }
+            }
+        }
     }
 }

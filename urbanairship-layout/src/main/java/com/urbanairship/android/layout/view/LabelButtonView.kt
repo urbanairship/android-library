@@ -3,30 +3,45 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.text.TextUtils
+import androidx.core.view.isGone
 import com.google.android.material.button.MaterialButton
 import com.urbanairship.android.layout.R
-import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.LabelButtonModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
+import com.urbanairship.android.layout.widget.TappableView
+import kotlinx.coroutines.flow.Flow
 
 internal class LabelButtonView(
     context: Context,
-    private val model: LabelButtonModel,
-    viewEnvironment: ViewEnvironment
-) : MaterialButton(context, null, R.attr.borderlessButtonStyle), BaseView {
-
-    private val modelListener: ButtonModel.Listener = object : ButtonModel.Listener {
-        override fun setEnabled(isEnabled: Boolean) {
-            this@LabelButtonView.isEnabled = isEnabled
-        }
-    }
+    model: LabelButtonModel
+) : MaterialButton(context, null, R.attr.borderlessButtonStyle), BaseView, TappableView {
 
     init {
-        id = model.viewId
-        configure()
+        isAllCaps = false
+        isSingleLine = true
+        ellipsize = TextUtils.TruncateAt.END
+        minHeight = 0
+        minimumHeight = 0
+        insetTop = 0
+        insetBottom = 0
+
+        LayoutUtils.applyButtonModel(this, model)
+
+        model.contentDescription.ifNotEmpty { contentDescription = it }
+
+        model.listener = object : ButtonModel.Listener {
+            override fun setEnabled(isEnabled: Boolean) {
+                this@LabelButtonView.isEnabled = isEnabled
+            }
+
+            override fun setVisibility(visible: Boolean) {
+                this@LabelButtonView.isGone = visible
+            }
+        }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -43,19 +58,5 @@ internal class LabelButtonView(
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
-    private fun configure() {
-        isAllCaps = false
-        isSingleLine = true
-        ellipsize = TextUtils.TruncateAt.END
-        LayoutUtils.applyButtonModel(this, model)
-        model.setViewListener(modelListener)
-        model.contentDescription.ifNotEmpty { contentDescription = it }
-
-        minHeight = 0
-        minimumHeight = 0
-        insetTop = 0
-        insetBottom = 0
-
-        setOnClickListener { model.onClick() }
-    }
+    override fun taps(): Flow<Unit> = debouncedClicks()
 }

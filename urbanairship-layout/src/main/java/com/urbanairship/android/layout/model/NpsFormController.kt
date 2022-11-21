@@ -1,10 +1,12 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.event.FormEvent
-import com.urbanairship.android.layout.event.FormEvent.DataChange
-import com.urbanairship.android.layout.event.ReportingEvent.FormResult
+import android.content.Context
+import android.view.View
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.NpsFormControllerInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -19,7 +21,7 @@ import com.urbanairship.android.layout.reporting.FormData
  * Controller that manages NPS form views.
  */
 internal class NpsFormController(
-    override val view: BaseModel,
+    override val view: AnyModel,
     private val npsIdentifier: String,
     identifier: String,
     responseType: String?,
@@ -29,8 +31,10 @@ internal class NpsFormController(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
+    formState: SharedState<State.Form>,
+    parentFormState: SharedState<State.Form>?,
     environment: ModelEnvironment
-) : BaseFormController(
+) : BaseFormController<View>(
     ViewType.NPS_FORM_CONTROLLER,
     identifier = identifier,
     responseType = responseType,
@@ -40,10 +44,18 @@ internal class NpsFormController(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
+    formState = formState,
+    parentFormState = parentFormState,
     environment = environment
 ) {
-    constructor(info: NpsFormControllerInfo, env: ModelEnvironment) : this(
-        view = env.modelProvider.create(info.view, env),
+    constructor(
+        info: NpsFormControllerInfo,
+        view: AnyModel,
+        formState: SharedState<State.Form>,
+        parentFormState: SharedState<State.Form>?,
+        env: ModelEnvironment
+    ) : this(
+        view = view,
         npsIdentifier = info.npsIdentifier,
         identifier = info.identifier,
         responseType = info.responseType,
@@ -53,31 +65,14 @@ internal class NpsFormController(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
+        formState = formState,
+        parentFormState = parentFormState,
         environment = env
     )
 
-    override val children: List<BaseModel> = listOf(view)
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        view.createView(context, viewEnvironment)
 
-    override val formType: String = "nps"
-
-    override val initEvent: FormEvent.Init
-        get() = FormEvent.Init(identifier, isFormValid)
-
-    init {
-        view.addListener(this)
-    }
-
-    override val formDataChangeEvent: DataChange
-        get() = DataChange(
-            FormData.Nps(identifier, responseType, npsIdentifier, formData.values),
-            isFormValid,
-            attributes
-        )
-
-    override val formResultEvent: FormResult
-        get() = FormResult(
-            FormData.Nps(identifier, responseType, npsIdentifier, formData.values),
-            formInfo,
-            attributes
-        )
+    override fun buildFormData(state: State.Form) =
+        FormData.Nps(identifier, npsIdentifier, responseType, state.data.values)
 }

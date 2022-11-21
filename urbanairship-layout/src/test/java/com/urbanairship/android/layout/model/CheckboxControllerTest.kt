@@ -1,144 +1,135 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.ModelProvider
-import com.urbanairship.android.layout.event.CheckboxEvent
-import com.urbanairship.android.layout.event.Event.ViewInit
-import com.urbanairship.android.layout.event.EventType
-import com.urbanairship.android.layout.event.FormEvent.DataChange
-import com.urbanairship.android.layout.event.FormEvent.InputInit
-import com.urbanairship.android.layout.property.ViewType
-import com.urbanairship.android.layout.reporting.FormData
-import com.urbanairship.android.layout.reporting.LayoutData
+import app.cash.turbine.test
+import com.urbanairship.android.layout.environment.FormType
+import com.urbanairship.android.layout.environment.LayoutState
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
 import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import test.TestEventListener
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
 public class CheckboxControllerTest {
 
+    private val testDispatcher = StandardTestDispatcher()
+    private val testScope = TestScope(testDispatcher)
+
+    private val mockEnv: ModelEnvironment = mockk {
+        every { modelScope } returns testScope
+        every { layoutState } returns LayoutState.EMPTY
+    }
+    private val mockView: AnyModel = mockk(relaxed = true)
+
+    private val formState = spyk(SharedState(
+        State.Form(identifier = "form-id", formType = FormType.Form, formResponseType = "form")
+    ))
+
+    private lateinit var checkboxState: SharedState<State.Checkbox>
+
     private lateinit var controller: CheckboxController
-    private lateinit var testListener: TestEventListener
-
-    private val mockView = mockk<BaseModel>(relaxed = true)
-
-    private val mockEnv = spyk(ModelEnvironment(ModelProvider(), emptyMap()))
 
     @Before
     public fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    public fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    public fun testInit(): TestResult = runTest {
+        formState.changes.test {
+            // Sanity check initial form state.
+            assertTrue(awaitItem().data.isEmpty())
+
+            initCheckboxController()
+
+            val item = awaitItem()
+            // Verify that our checkbox controller updated the form state.
+            assertTrue(item.data.containsKey(IDENTIFIER))
+            // Verify that the response is valid, since the checkbox controller is not required.
+            assertTrue(item.inputValidity[IDENTIFIER]!!)
+
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    public fun testRequiredWithMinSelection(): TestResult = runTest {
+        formState.changes.test {
+            // Sanity check initial form state.
+            assertTrue(awaitItem().data.isEmpty())
+
+            initCheckboxController(isRequired = true, minSelection = MIN_SELECTION)
+
+            // Not valid yet, because nothing is selected.
+            assertFalse(awaitItem().inputValidity[IDENTIFIER]!!)
+
+            checkboxState.update {
+                it.copy(selectedItems = it.selectedItems + SELECTED_VALUE)
+            }
+            testScheduler.runCurrent()
+
+            // Verify that the response is valid now that it has 1 selection
+            assertTrue(awaitItem().inputValidity[IDENTIFIER]!!)
+
+            ensureAllEventsConsumed()
+        }
+    }
+
+    private fun initCheckboxController(
+        isRequired: Boolean = false,
+        minSelection: Int = if (isRequired) 1 else 0,
+        maxSelection: Int = Int.MAX_VALUE
+    ) {
+        checkboxState = spyk(SharedState(
+            State.Checkbox(
+                identifier = IDENTIFIER,
+                minSelection = minSelection,
+                maxSelection = maxSelection
+            )
+        ))
+
         controller = CheckboxController(
-            mockView,
-            IDENTIFIER,
-            IS_REQUIRED,
-            MIN_SELECTION,
-            MAX_SELECTION,
-            CONTENT_DESCRIPTION,
+            view = mockView,
+            identifier = IDENTIFIER,
+            isRequired = isRequired,
+            minSelection = minSelection,
+            maxSelection = maxSelection,
+            formState = formState,
+            checkboxState = checkboxState,
             environment = mockEnv
         )
-        testListener = TestEventListener()
-        controller.addListener(testListener)
-    }
 
-    @Test
-    public fun testViewInit() {
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-        // Verify that we observed a form input init event after the first checkbox is initialized.
-        assertEquals(1, testListener.getCount(EventType.FORM_INPUT_INIT).toLong())
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-
-        // Verify that we didn't emit any further input init events after the first.
-        assertEquals(1, testListener.getCount(EventType.FORM_INPUT_INIT).toLong())
-        val initEvent = testListener.getEventAt(0) as InputInit
-        assertEquals(IDENTIFIER, initEvent.identifier)
-        assertEquals(ViewType.CHECKBOX_CONTROLLER, initEvent.viewType)
-        assertFalse(initEvent.isValid)
-        assertEquals(3, controller.getCheckboxes().size.toLong())
-        assertTrue(controller.getSelectedValues().isEmpty())
-    }
-
-    @Test
-    public fun testInputChange() {
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-
-        // Sanity check
-        assertEquals(1, testListener.getCount(EventType.FORM_INPUT_INIT).toLong())
-        assertEquals(3, controller.getCheckboxes().size.toLong())
-        assertTrue(controller.getSelectedValues().isEmpty())
-        assertTrue(controller.isRequired)
-        assertFalse(controller.isValid)
-
-        // Simulate checking an option
-        controller.onEvent(CheckboxEvent.InputChange(SELECTED_VALUE, true), LayoutData.empty())
-        assertEquals(1, testListener.getCount(EventType.FORM_DATA_CHANGE).toLong())
-        var changeEvent = testListener.getEventAt(1) as DataChange
-        var data = changeEvent.value as FormData.CheckboxController
-
-        // Verify event data
-        assertTrue(changeEvent.isValid)
-        assertEquals(IDENTIFIER, changeEvent.value.identifier)
-        assertEquals(setOf(SELECTED_VALUE), data.value)
-        assertEquals(1, controller.getSelectedValues().size.toLong())
-
-        // Simulate unchecking the option
-        controller.onEvent(CheckboxEvent.InputChange(SELECTED_VALUE, false), LayoutData.empty())
-        assertEquals(2, testListener.getCount(EventType.FORM_DATA_CHANGE).toLong())
-        changeEvent = testListener.getEventAt(2) as DataChange
-        data = changeEvent.value as FormData.CheckboxController
-
-        // Verify updated data
-        assertFalse(changeEvent.isValid)
-        assertEquals(IDENTIFIER, changeEvent.value.identifier)
-        assertEquals(emptySet<Any>(), data.value)
-        assertEquals(0, controller.getSelectedValues().size.toLong())
-        assertFalse(controller.isValid)
-    }
-
-    @Test
-    public fun testMaxSelection() {
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-        controller.onEvent(makeViewInitEvent(), LayoutData.empty())
-        assertEquals(3, controller.getCheckboxes().size.toLong())
-        controller.onEvent(
-            CheckboxEvent.InputChange(JsonValue.wrap("one"), true),
-            LayoutData.empty()
-        )
-        controller.onEvent(
-            CheckboxEvent.InputChange(JsonValue.wrap("two"), true),
-            LayoutData.empty()
-        )
-        controller.onEvent(
-            CheckboxEvent.InputChange(JsonValue.wrap("three"), true),
-            LayoutData.empty()
-        )
-
-        // Verify that we didn't accept the third input change
-        val expected: Set<JsonValue> = setOf(JsonValue.wrap("one"), JsonValue.wrap("two"))
-
-        assertEquals(expected, controller.getSelectedValues())
+        testScope.runCurrent()
     }
 
     private companion object {
-        private const val IDENTIFIER = "identifier"
+        private const val IDENTIFIER = "checkbox-controller-id"
         private const val MIN_SELECTION = 1
-        private const val MAX_SELECTION = 2
-        private const val IS_REQUIRED = true
-        private const val CONTENT_DESCRIPTION = "content description"
         private val SELECTED_VALUE = JsonValue.wrap("foo")
-        private fun makeViewInitEvent(): ViewInit {
-            val mockCheckboxModel = mockk<CheckboxModel>()
-            every { mockCheckboxModel.viewType } returns ViewType.CHECKBOX
-            return ViewInit(mockCheckboxModel)
-        }
     }
 }

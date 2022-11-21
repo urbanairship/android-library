@@ -2,22 +2,54 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
-import com.urbanairship.android.layout.environment.ViewEnvironment
+import androidx.appcompat.widget.SwitchCompat
+import androidx.core.view.isGone
+import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.model.ToggleModel
+import com.urbanairship.android.layout.property.CheckboxStyle
+import com.urbanairship.android.layout.property.SwitchStyle
 import com.urbanairship.android.layout.widget.CheckableView
+import com.urbanairship.android.layout.widget.ShapeButton
 
 /**
  * Checkbox or Switch view for use within a `FormController` or `NpsController`.
  */
 internal class ToggleView(
     context: Context,
-    model: ToggleModel,
-    viewEnvironment: ViewEnvironment
-) : CheckableView<ToggleModel>(context, model, viewEnvironment) {
+    model: ToggleModel
+) : CheckableView<ToggleModel>(context, model) {
 
-    override fun configure() {
-        super.configure()
+    init {
+        model.listener = object : CheckableModel.Listener {
+            override fun onSetChecked(isChecked: Boolean) = Unit
+            override fun onSetEnabled(isEnabled: Boolean) = setEnabled(isEnabled)
+            override fun setVisibility(visible: Boolean) {
+                this@ToggleView.isGone = visible
+            }
+        }
+    }
 
-        checkableView.setOnCheckedChangeListener(checkedChangeListener)
+    override fun createSwitchView(style: SwitchStyle): SwitchCompat {
+        return object : SwitchCompat(context) {
+            override fun toggle() {
+                // Super updates the toggle view
+                super.toggle()
+                checkedChangeListener?.onCheckedChange(this, isChecked)
+            }
+        }
+    }
+
+    override fun createCheckboxView(style: CheckboxStyle): ShapeButton {
+        val checked = style.bindings.selected
+        val unchecked = style.bindings.unselected
+        return object : ShapeButton(
+            context, checked.shapes, unchecked.shapes, checked.icon, unchecked.icon
+        ) {
+            override fun toggle() {
+                // Super updates the toggle view
+                super.toggle()
+                checkedChangeListener?.onCheckedChange(this, isChecked)
+            }
+        }
     }
 }

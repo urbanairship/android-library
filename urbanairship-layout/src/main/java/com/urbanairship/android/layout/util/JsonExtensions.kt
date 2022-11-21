@@ -17,6 +17,9 @@ internal fun jsonListOf(vararg values: Any): JsonList = JsonList(values.map(Json
 internal fun List<JsonMap>.toJsonList(): JsonList =
     JsonList(this.map { it.toJsonValue() })
 
+internal fun Map<String, JsonValue?>.toJsonMap(): JsonMap =
+    JsonMap(this)
+
 /**
  * Gets the field with the given [key] from the [JsonMap], ensuring it is non-null.
  *

@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.view
 
 import android.R
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
@@ -15,66 +16,79 @@ import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
 import android.widget.ProgressBar
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.LifecycleOwner
+import androidx.core.view.isGone
 import com.urbanairship.Logger
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.WebViewModel
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.util.isActionUp
+import com.urbanairship.android.layout.widget.TappableView
+import com.urbanairship.android.layout.widget.TouchAwareAirshipWebView
+import com.urbanairship.app.FilteredActivityListener
+import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.js.UrlAllowList
 import com.urbanairship.util.ManifestUtils
-import com.urbanairship.webkit.AirshipWebView
 import com.urbanairship.webkit.AirshipWebViewClient
 import java.lang.ref.WeakReference
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 
 /** Web view... view?  */
 internal class WebViewView(
     context: Context,
     private val model: WebViewModel,
     private val viewEnvironment: ViewEnvironment
-) : FrameLayout(context, null), BaseView {
+) : FrameLayout(context, null), BaseView, TappableView {
 
-    private val lifecycleListener: LifecycleObserver = object : DefaultLifecycleObserver {
-        override fun onPause(owner: LifecycleOwner) {
+    private val activityListener = object : SimpleActivityListener() {
+        override fun onActivityPaused(activity: Activity) {
             webView?.onPause()
         }
-
-        override fun onResume(owner: LifecycleOwner) {
+        override fun onActivityResumed(activity: Activity) {
             webView?.onResume()
         }
-
-        override fun onStop(owner: LifecycleOwner) {
+        override fun onActivityStopped(activity: Activity) {
             // WebView saved state is meant to work with Activity/Fragment APIs that use bundles.
             // Work around this by stashing state in the model instead. This won't survive process
             // restarts, but will at least restore scroll position for recreates.
             webView?.let {
                 val bundle = Bundle()
                 it.saveState(bundle)
-                model.saveState(bundle)
+                model.savedState = bundle
             }
         }
     }
 
-    private var webView: WebView? = null
+    private val filteredActivityListener =
+        FilteredActivityListener(activityListener, viewEnvironment.hostingActivityPredicate())
+
+    private var webView: TouchAwareAirshipWebView? = null
     private var chromeClient: WebChromeClient? = null
 
     init {
-        id = model.viewId
-        configure()
-    }
+        viewEnvironment.activityMonitor().addActivityListener(filteredActivityListener)
 
-    private fun configure() {
-        viewEnvironment.lifecycle().addObserver(lifecycleListener)
         setChromeClient(viewEnvironment.webChromeClientFactory().create())
         LayoutUtils.applyBorderAndBackground(this, model)
         loadWebView(model)
+
+        model.listener = object : BaseModel.Listener {
+            override fun setVisibility(visible: Boolean) {
+                this@WebViewView.isGone = visible
+            }
+        }
     }
+
+    override fun taps(): Flow<Unit> =
+        webView?.touchEvents()?.filter { it.isActionUp }?.map { } ?: emptyFlow()
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun loadWebView(model: WebViewModel) {
-        val wv = AirshipWebView(context)
+        val wv = TouchAwareAirshipWebView(context)
         webView = wv
 
         // Restore saved state from the model, if available.

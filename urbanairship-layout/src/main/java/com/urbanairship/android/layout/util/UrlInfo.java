@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.util;
 
 import com.urbanairship.android.layout.info.ImageButtonInfo;
+import com.urbanairship.android.layout.info.ItemInfo;
 import com.urbanairship.android.layout.info.MediaInfo;
 import com.urbanairship.android.layout.info.ViewGroupInfo;
 import com.urbanairship.android.layout.info.ViewInfo;
@@ -73,9 +74,9 @@ public class UrlInfo {
                 break;
         }
 
-        if (info instanceof ViewGroupInfo) {
-            for (ViewInfo child : ((ViewGroupInfo) info).getChildren()) {
-                urlInfos.addAll(from(child));
+        if (info instanceof ViewGroupInfo<?>) {
+            for (ItemInfo child : ((ViewGroupInfo<?>) info).getChildren()) {
+                urlInfos.addAll(from(child.getInfo()));
             }
         }
 

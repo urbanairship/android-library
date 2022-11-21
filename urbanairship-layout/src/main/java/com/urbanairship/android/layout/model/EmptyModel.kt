@@ -1,7 +1,9 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.android.layout.ModelEnvironment
+import android.content.Context
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.EmptyInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -24,7 +26,7 @@ internal class EmptyModel(
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
-) : BaseModel(
+) : BaseModel<EmptyView, BaseModel.Listener>(
     viewType = ViewType.EMPTY_VIEW,
     backgroundColor = backgroundColor,
     border = border,
@@ -41,4 +43,9 @@ internal class EmptyModel(
         enableBehaviors = info.enableBehaviors,
         environment = env
     )
+
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        EmptyView(context, this).apply {
+            id = viewId
+        }
 }

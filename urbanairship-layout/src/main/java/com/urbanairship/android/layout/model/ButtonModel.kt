@@ -1,14 +1,13 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.Logger
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.event.ButtonEvent
-import com.urbanairship.android.layout.event.Event
-import com.urbanairship.android.layout.event.EventType
-import com.urbanairship.android.layout.event.FormEvent.ValidationUpdate
-import com.urbanairship.android.layout.event.PagerEvent
-import com.urbanairship.android.layout.event.PagerEvent.Scroll
+import android.view.View
+import androidx.annotation.CallSuper
+import com.urbanairship.android.layout.environment.LayoutEvent
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.event.ReportingEvent.ButtonTap
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -17,23 +16,28 @@ import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
-import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.json.JsonException
+import com.urbanairship.android.layout.property.hasTapHandler
+import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.json.JsonValue
+import java.lang.Integer.max
+import java.lang.Integer.min
+import kotlinx.coroutines.launch
 
-internal abstract class ButtonModel(
+internal abstract class ButtonModel<T>(
     viewType: ViewType,
-    override val identifier: String,
-    val actions: Map<String, JsonValue>,
+    val identifier: String,
+    val actions: Map<String, JsonValue>? = null,
     private val clickBehaviors: List<ButtonClickBehaviorType>,
-    override val contentDescription: String? = null,
+    val contentDescription: String? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
+    private val formState: SharedState<State.Form>?,
+    private val pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment
-) : BaseModel(
+) : BaseModel<T, ButtonModel.Listener>(
     viewType = viewType,
     backgroundColor = backgroundColor,
     border = border,
@@ -41,54 +45,129 @@ internal abstract class ButtonModel(
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
     environment = environment
-), Accessible, Identifiable {
-    abstract fun reportingDescription(): String
+) where T : View, T : TappableView {
+    abstract val reportingDescription: String
 
-    private var viewListener: Listener? = null
-    private var isEnabled = true
-
-    interface Listener {
+    interface Listener : BaseModel.Listener {
         fun setEnabled(isEnabled: Boolean)
     }
 
-    fun setViewListener(viewListener: Listener?) {
-        this.viewListener = viewListener
-        viewListener?.setEnabled(isEnabled())
-    }
-
-    fun onClick() {
-        val layoutData = LayoutData.button(identifier)
-
-        // Report button tap event.
-        bubbleEvent(ButtonTap(identifier), layoutData)
-        if (actions.isNotEmpty()) {
-            bubbleEvent(ButtonEvent.Actions(this), layoutData)
-        }
-        for (behavior in clickBehaviors) {
-            try {
-                bubbleEvent(ButtonEvent.fromBehavior(behavior, this), layoutData)
-            } catch (e: JsonException) {
-                Logger.warn(e, "Skipping button click behavior!")
-            }
+    override var listener: Listener? = null
+        set(listener) {
+            field = listener
+            listener?.setEnabled(isEnabled())
         }
 
-        // Note: Button dismiss events are reported at the top level when handled.
-        // We can't send them directly from here because we need to include
-        // the display time, which is tracked by the hosting Activity.
+    private var isEnabled = true
+
+    init {
+        val hasPagerEnableBehaviors = enableBehaviors.orEmpty().any {
+            it == EnableBehaviorType.PAGER_NEXT || it == EnableBehaviorType.PAGER_PREVIOUS
+        }
+        val hasFormEnableBehaviors = enableBehaviors.orEmpty().any {
+            it == EnableBehaviorType.FORM_VALIDATION || it == EnableBehaviorType.FORM_SUBMISSION
+        }
+
+        if (hasPagerEnableBehaviors) {
+            checkNotNull(pagerState) {
+                "Pager state is required for Buttons with pager enable behaviors!"
+            }
+            modelScope.launch {
+                pagerState.changes.collect { state ->
+                    handlePagerScroll(state.hasNext, state.hasPrevious)
+                }
+            }
+        }
+
+        if (hasFormEnableBehaviors) {
+            checkNotNull(formState) {
+                "Form state is required for Buttons with form enable behaviors!"
+            }
+            modelScope.launch {
+                formState.changes.collect { state ->
+                    handleFormUpdate(state)
+                }
+            }
+        }
     }
 
-    override fun onEvent(event: Event, layoutData: LayoutData): Boolean {
-        return when (event.type) {
-            EventType.FORM_VALIDATION -> handleFormSubmitUpdate(event as ValidationUpdate)
-            EventType.PAGER_INIT -> {
-                val init = event as PagerEvent.Init
-                handlePagerScroll(init.hasNext(), init.hasPrevious())
+    @CallSuper
+    override fun onViewAttached(view: T) {
+        viewScope.launch {
+            view.taps().collect {
+                val reportingContext = layoutState.reportingContext(buttonId = identifier)
+
+                // Report button tap event.
+                report(ButtonTap(identifier), reportingContext)
+
+                // Run any actions.
+                if (!actions.isNullOrEmpty()) {
+                    runActions(actions, reportingContext)
+                }
+
+                // Run any handlers for tap events.
+                if (eventHandlers.hasTapHandler()) {
+                    handleViewEvent(EventHandler.Type.TAP)
+                }
+
+                evaluateClickBehaviors()
             }
-            EventType.PAGER_SCROLL -> {
-                val scroll = event as Scroll
-                handlePagerScroll(scroll.hasNext(), scroll.hasPrevious())
+        }
+    }
+
+    private suspend fun evaluateClickBehaviors() {
+        // If we have a FORM_SUBMIT behavior, handle it first.
+        if (clickBehaviors.hasFormSubmit) {
+            val submitEvent = LayoutEvent.SubmitForm(
+                buttonIdentifier = identifier,
+                onSubmitted = {
+                    // If there's also a CANCEL or DISMISS, pass along a block
+                    // so we can handle it after the FORM_SUBMIT has completed.
+                    if (clickBehaviors.hasCancelOrDismiss) {
+                      handleDismiss(clickBehaviors.hasCancel)
+                    }
+                }
+            )
+            modelScope.launch {
+                environment.eventHandler.broadcast(submitEvent)
             }
-            else -> super.onEvent(event, layoutData)
+        } else if (clickBehaviors.hasCancelOrDismiss) {
+            // If there's only a CANCEL or DISMISS, and no FORM_SUBMIT, handle
+            // immediately.
+            handleDismiss(clickBehaviors.hasCancel)
+        }
+
+        if (clickBehaviors.hasPagerNext) {
+            checkNotNull(pagerState) {
+                "Pager state is required for Buttons with pager click behaviors!"
+            }
+            pagerState.update { state ->
+                state.copyWithPageIndex(min(state.pageIndex + 1, state.pages.size - 1))
+            }
+        }
+
+        if (clickBehaviors.hasPagerPrevious) {
+            checkNotNull(pagerState) {
+                "Pager state is required for Buttons with pager click behaviors!"
+            }
+            pagerState.update { state ->
+                state.copyWithPageIndex(max(state.pageIndex - 1, 0))
+            }
+        }
+    }
+
+    private suspend fun handleDismiss(isCancel: Boolean) {
+        report(
+            ReportingEvent.DismissFromButton(
+                identifier,
+                reportingDescription,
+                isCancel,
+                environment.displayTimer.time
+            ),
+            layoutState.reportingContext(buttonId = identifier)
+        )
+        modelScope.launch {
+            environment.eventHandler.broadcast(LayoutEvent.Finish)
         }
     }
 
@@ -96,25 +175,51 @@ internal abstract class ButtonModel(
         return enableBehaviors.isNullOrEmpty() || isEnabled
     }
 
-    private fun handleFormSubmitUpdate(update: ValidationUpdate): Boolean {
-        if (enableBehaviors?.contains(EnableBehaviorType.FORM_VALIDATION) == true) {
-            isEnabled = update.isValid
-            viewListener?.setEnabled(update.isValid)
-            return true
-        }
-        return false
+    private fun handleFormUpdate(state: State.Form) {
+        val behaviors = enableBehaviors.orEmpty()
+        val hasFormValidationBehavior = behaviors.contains(EnableBehaviorType.FORM_VALIDATION)
+        val hasFormSubmitBehavior = behaviors.contains(EnableBehaviorType.FORM_SUBMISSION)
+
+        val isValid = !hasFormValidationBehavior || state.isValid
+        val isSubmitted = !hasFormSubmitBehavior || state.isSubmitted
+        val enabled = isValid && isSubmitted
+
+        isEnabled = enabled
+        listener?.setEnabled(enabled)
     }
 
-    private fun handlePagerScroll(hasNext: Boolean, hasPrevious: Boolean): Boolean {
-        if (enableBehaviors?.contains(EnableBehaviorType.PAGER_NEXT) == true) {
+    private fun handlePagerScroll(hasNext: Boolean, hasPrevious: Boolean) {
+        val behaviors = enableBehaviors.orEmpty()
+        val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
+        val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
+
+        if (hasPagerNextBehavior) {
             isEnabled = hasNext
-            viewListener?.setEnabled(hasNext)
+            listener?.setEnabled(hasNext)
         }
-        if (enableBehaviors?.contains(EnableBehaviorType.PAGER_PREVIOUS) == true) {
+        if (hasPagerPrevBehavior) {
             isEnabled = hasPrevious
-            viewListener?.setEnabled(hasPrevious)
+            listener?.setEnabled(hasPrevious)
         }
-        // Always return false so other views can react to pager scroll events.
-        return false
     }
 }
+
+// Click behavior helper extensions
+
+private val List<ButtonClickBehaviorType>.hasFormSubmit: Boolean
+    get() = contains(ButtonClickBehaviorType.FORM_SUBMIT)
+
+private val List<ButtonClickBehaviorType>.hasDismiss: Boolean
+    get() = contains(ButtonClickBehaviorType.DISMISS)
+
+private val List<ButtonClickBehaviorType>.hasCancel: Boolean
+    get() = contains(ButtonClickBehaviorType.CANCEL)
+
+private val List<ButtonClickBehaviorType>.hasCancelOrDismiss: Boolean
+    get() = hasCancel || hasDismiss
+
+private val List<ButtonClickBehaviorType>.hasPagerNext: Boolean
+    get() = contains(ButtonClickBehaviorType.PAGER_NEXT)
+
+private val List<ButtonClickBehaviorType>.hasPagerPrevious: Boolean
+    get() = contains(ButtonClickBehaviorType.PAGER_PREVIOUS)

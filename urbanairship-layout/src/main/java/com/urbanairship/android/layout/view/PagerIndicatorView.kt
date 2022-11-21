@@ -8,7 +8,7 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Checkable
 import android.widget.ImageView
 import android.widget.LinearLayout
-import com.urbanairship.android.layout.environment.ViewEnvironment
+import androidx.core.view.isGone
 import com.urbanairship.android.layout.model.PagerIndicatorModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -16,15 +16,19 @@ import com.urbanairship.android.layout.widget.ShapeView
 
 internal class PagerIndicatorView(
     context: Context,
-    private val model: PagerIndicatorModel,
-    viewEnvironment: ViewEnvironment
+    private val model: PagerIndicatorModel
 ) : LinearLayout(context), BaseView {
 
-    private val modelListener: PagerIndicatorModel.Listener =
-        object : PagerIndicatorModel.Listener {
+    init {
+        orientation = HORIZONTAL
+        gravity = Gravity.CENTER
+
+        LayoutUtils.applyBorderAndBackground(this, model)
+
+        model.listener = object : PagerIndicatorModel.Listener {
             private var isInitialized = false
 
-            override fun onInit(size: Int, position: Int) {
+            override fun onUpdate(size: Int, position: Int) {
                 if (!isInitialized) {
                     isInitialized = true
                     setCount(size)
@@ -32,23 +36,10 @@ internal class PagerIndicatorView(
                 setPosition(position)
             }
 
-            override fun onUpdate(position: Int) = setPosition(position)
+            override fun setVisibility(visible: Boolean) {
+                this@PagerIndicatorView.isGone = visible
+            }
         }
-
-    init {
-        id = generateViewId()
-        configure()
-    }
-
-    private fun configure() {
-        orientation = HORIZONTAL
-        gravity = Gravity.CENTER
-
-        model.setListener(modelListener)
-
-        LayoutUtils.applyBorderAndBackground(this, model)
-
-        model.onConfigured()
     }
 
     /**
@@ -63,12 +54,12 @@ internal class PagerIndicatorView(
         val spacing = ResourceUtils.dpToPx(context, model.indicatorSpacing).toInt()
         val halfSpacing = (spacing / 2f).toInt()
         for (i in 0 until count) {
-            val view: ImageView = ShapeView(
-                context, checked.shapes, unchecked.shapes, checked.icon, unchecked.icon
-            ).apply {
-                id = model.getIndicatorViewId(i)
-                adjustViewBounds = true
-            }
+            val view: ImageView =
+                ShapeView(context, checked.shapes, unchecked.shapes, checked.icon, unchecked.icon)
+                    .apply {
+                        id = model.getIndicatorViewId(i)
+                        adjustViewBounds = true
+                    }
 
             val lp = LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
                 marginStart = if (i == 0) spacing else halfSpacing

@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.environment;
 
+import android.app.Activity;
 import android.webkit.WebChromeClient;
 
 import androidx.activity.ComponentActivity;
@@ -9,7 +10,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
 
-import com.urbanairship.android.layout.reporting.DisplayTimer;
+import com.urbanairship.Predicate;
+import com.urbanairship.android.layout.util.Factory;
+import com.urbanairship.android.layout.util.ImageCache;
+import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.webkit.AirshipWebChromeClient;
+import com.urbanairship.webkit.AirshipWebViewClient;
+
 import com.urbanairship.android.layout.util.Factory;
 import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.webkit.AirshipWebChromeClient;
@@ -22,7 +29,10 @@ import com.urbanairship.webkit.AirshipWebViewClient;
 public class DefaultViewEnvironment implements ViewEnvironment {
 
     @NonNull
-    private final ComponentActivity activity;
+    private final Activity activity;
+
+    @NonNull
+    private final ActivityMonitor activityMonitor;
 
     @NonNull
     private final Factory<WebChromeClient> webChromeClientFactory;
@@ -33,19 +43,18 @@ public class DefaultViewEnvironment implements ViewEnvironment {
     @NonNull
     private final ImageCache imageCache;
 
-    @NonNull
-    private final DisplayTimer displayTimer;
-
     private final boolean isIgnoringSafeAreas;
 
     public DefaultViewEnvironment(
-        @NonNull ComponentActivity activity,
+        @NonNull Activity activity,
+        @NonNull ActivityMonitor activityMonitor,
         @Nullable Factory<AirshipWebViewClient> webViewClientFactory,
         @Nullable ImageCache imageCache,
-        @NonNull DisplayTimer displayTimer,
         boolean isIgnoringSafeAreas
     ) {
         this.activity = activity;
+
+        this.activityMonitor = activityMonitor;
 
         this.webChromeClientFactory = () -> new AirshipWebChromeClient(activity);
 
@@ -61,15 +70,25 @@ public class DefaultViewEnvironment implements ViewEnvironment {
             this.imageCache = url -> null;
         }
 
-        this.displayTimer = displayTimer;
-
         this.isIgnoringSafeAreas = isIgnoringSafeAreas;
     }
 
     @NonNull
     @Override
-    public Lifecycle lifecycle() {
-        return activity.getLifecycle();
+    public Activity activity() {
+        return activity;
+    }
+
+    @NonNull
+    @Override
+    public ActivityMonitor activityMonitor() {
+        return activityMonitor;
+    }
+
+    @NonNull
+    @Override
+    public Predicate<Activity> hostingActivityPredicate() {
+        return activityToCheck -> activityToCheck == activity;
     }
 
     @NonNull
@@ -87,12 +106,6 @@ public class DefaultViewEnvironment implements ViewEnvironment {
     @Override
     public ImageCache imageCache() {
         return imageCache;
-    }
-
-    @NonNull
-    @Override
-    public DisplayTimer displayTimer() {
-        return displayTimer;
     }
 
     @Override

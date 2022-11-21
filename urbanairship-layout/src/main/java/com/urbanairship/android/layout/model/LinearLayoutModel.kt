@@ -1,7 +1,9 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.android.layout.ModelEnvironment
+import android.content.Context
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LinearLayoutInfo
 import com.urbanairship.android.layout.info.LinearLayoutItemInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
@@ -11,6 +13,7 @@ import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.view.LinearLayoutView
 
 internal class LinearLayoutModel(
     val items: List<Item>,
@@ -21,7 +24,7 @@ internal class LinearLayoutModel(
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
-) : LayoutModel(
+) : BaseModel<LinearLayoutView, BaseModel.Listener>(
     viewType = ViewType.LINEAR_LAYOUT,
     backgroundColor = backgroundColor,
     border = border,
@@ -30,10 +33,8 @@ internal class LinearLayoutModel(
     enableBehaviors = enableBehaviors,
     environment = environment
 ) {
-    constructor(info: LinearLayoutInfo, env: ModelEnvironment) : this(
-        items = info.items.map {
-            Item(info = it, model = env.modelProvider.create(it.info, env))
-        },
+    constructor(info: LinearLayoutInfo, items: List<Item>, env: ModelEnvironment) : this(
+        items = items,
         direction = info.direction,
         backgroundColor = info.backgroundColor,
         border = info.border,
@@ -43,16 +44,13 @@ internal class LinearLayoutModel(
         environment = env
     )
 
-    override val children: List<BaseModel> = items.map { it.model }
-
-    init {
-        for (c in children) {
-            c.addListener(this)
-        }
-    }
-
     data class Item(
         val info: LinearLayoutItemInfo,
-        val model: BaseModel
+        val model: AnyModel
     )
+
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        LinearLayoutView(context, this, viewEnvironment).apply {
+            id = viewId
+        }
 }

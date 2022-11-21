@@ -1,14 +1,12 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import androidx.annotation.VisibleForTesting
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.event.Event
-import com.urbanairship.android.layout.event.Event.ViewAttachedToWindow
-import com.urbanairship.android.layout.event.Event.ViewInit
-import com.urbanairship.android.layout.event.EventType
-import com.urbanairship.android.layout.event.FormEvent.DataChange
-import com.urbanairship.android.layout.event.RadioEvent
+import android.content.Context
+import android.view.View
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.RadioInputControllerInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -16,25 +14,27 @@ import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
-import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.json.JsonValue
+import kotlinx.coroutines.launch
 
 /** Controller for radio inputs. */
 internal class RadioInputController(
-    val view: BaseModel,
-    override val identifier: String,
-    override val isRequired: Boolean = false,
+    val view: AnyModel,
+    val identifier: String,
+    val isRequired: Boolean = false,
     private val attributeName: AttributeName? = null,
-    override val contentDescription: String? = null,
+    val contentDescription: String? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
+    private val formState: SharedState<State.Form>,
+    private val radioState: SharedState<State.Radio>,
     environment: ModelEnvironment
-) : LayoutModel(
+) : BaseModel<View, BaseModel.Listener>(
     viewType = ViewType.RADIO_INPUT_CONTROLLER,
     backgroundColor = backgroundColor,
     border = border,
@@ -42,9 +42,15 @@ internal class RadioInputController(
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
     environment = environment
-), Identifiable, Accessible, Validatable {
-    constructor(info: RadioInputControllerInfo, env: ModelEnvironment) : this(
-        view = env.modelProvider.create(info.view, env),
+) {
+    constructor(
+        info: RadioInputControllerInfo,
+        view: AnyModel,
+        formState: SharedState<State.Form>,
+        radioState: SharedState<State.Radio>,
+        env: ModelEnvironment
+    ) : this(
+        view = view,
         identifier = info.identifier,
         isRequired = info.isRequired,
         attributeName = info.attributeName,
@@ -54,81 +60,34 @@ internal class RadioInputController(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
+        formState = formState,
+        radioState = radioState,
         environment = env
     )
 
-    override val children: List<BaseModel> = listOf(view)
-
-    override val isValid: Boolean
-        get() = selectedValue != null || !isRequired
-
-    @get:VisibleForTesting
-    final var selectedValue: JsonValue? = null
-        private set
-
-    @get:VisibleForTesting
-    val radioInputs: MutableList<RadioInputModel> = ArrayList()
-
     init {
-        view.addListener(this)
-    }
+        // Listen to radio input state updates and push them into form state.
+        modelScope.launch {
+            radioState.changes.collect { radio ->
+                formState.update { form ->
+                    form.copyWithFormInput(
+                        FormData.RadioInputController(
+                            identifier = radio.identifier,
+                            value = radio.selectedItem,
+                            isValid = radio.selectedItem != null || !isRequired,
+                            attributeName = attributeName,
+                            attributeValue = radio.attributeValue
+                        )
+                    )
+                }
 
-    override fun onEvent(event: Event, layoutData: LayoutData): Boolean =
-        when (event.type) {
-            EventType.VIEW_INIT ->
-                onViewInit(event as ViewInit, layoutData)
-            EventType.RADIO_INPUT_CHANGE ->
-                onInputChange(event as RadioEvent.InputChange, layoutData)
-            EventType.VIEW_ATTACHED ->
-                onViewAttached(event as ViewAttachedToWindow, layoutData)
-            // Pass along any other events
-            else -> super.onEvent(event, layoutData)
-        }
-
-    private fun onViewInit(event: ViewInit, layoutData: LayoutData): Boolean =
-        if (event.viewType == ViewType.RADIO_INPUT) {
-            if (radioInputs.isEmpty()) {
-                bubbleEvent(RadioEvent.ControllerInit(identifier, isValid), layoutData)
-            }
-            val model = event.model as RadioInputModel
-            if (!radioInputs.contains(model)) {
-                // This is the first time we've seen this radio input; Add it to our list.
-                radioInputs.add(model)
-            }
-            true
-        } else {
-            false
-        }
-
-    private fun onInputChange(event: RadioEvent.InputChange, layoutData: LayoutData): Boolean {
-        if (event.isChecked && event.value != selectedValue) {
-            selectedValue = event.value
-            trickleEvent(RadioEvent.ViewUpdate(event.value, event.isChecked), layoutData)
-            bubbleEvent(
-                DataChange(
-                    FormData.RadioInputController(identifier, event.value),
-                    isValid,
-                    attributeName,
-                    event.attributeValue
-                ),
-                layoutData
-            )
-        }
-        return true
-    }
-
-    private fun onViewAttached(event: ViewAttachedToWindow, layoutData: LayoutData): Boolean {
-        if (event.viewType == ViewType.RADIO_INPUT &&
-            event.model is RadioInputModel &&
-            selectedValue != null) {
-
-            // Restore radio state.
-            val value = (event.model as RadioInputModel).reportingValue
-            if (selectedValue == value) {
-                trickleEvent(RadioEvent.ViewUpdate(value, true), layoutData)
+                if (eventHandlers.hasFormInputHandler()) {
+                    handleViewEvent(EventHandler.Type.FORM_INPUT, radio.selectedItem)
+                }
             }
         }
-        // Always pass the event on.
-        return super.onEvent(event, layoutData)
     }
+
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        view.createView(context, viewEnvironment)
 }

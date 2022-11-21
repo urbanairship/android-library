@@ -2,10 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import android.view.View
-import androidx.annotation.CallSuper
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.event.Event
-import com.urbanairship.android.layout.event.Event.ViewAttachedToWindow
+import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
@@ -14,20 +11,19 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ToggleStyle
 import com.urbanairship.android.layout.property.ToggleType
 import com.urbanairship.android.layout.property.ViewType
-import com.urbanairship.android.layout.reporting.LayoutData
 
-internal abstract class CheckableModel(
+internal abstract class CheckableModel<T : View>(
     viewType: ViewType,
     val style: ToggleStyle,
     val toggleType: ToggleType,
-    override val contentDescription: String? = null,
+    val contentDescription: String? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
-) : BaseModel(
+) : BaseModel<T, CheckableModel.Listener>(
     viewType = viewType,
     backgroundColor = backgroundColor,
     border = border,
@@ -35,37 +31,16 @@ internal abstract class CheckableModel(
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
     environment = environment
-), Accessible {
+) {
+
+    interface Listener : BaseModel.Listener {
+        fun onSetChecked(isChecked: Boolean)
+        fun onSetEnabled(isEnabled: Boolean)
+    }
 
     val checkableViewId = View.generateViewId()
 
-    abstract fun buildInputChangeEvent(isChecked: Boolean): Event
-    abstract fun buildInitEvent(): Event
+    fun setChecked(isChecked: Boolean) = listener?.onSetChecked(isChecked)
 
-    private var listener: Listener? = null
-
-    fun interface Listener {
-        fun onSetChecked(isChecked: Boolean)
-    }
-
-    fun setListener(listener: Listener?) {
-        this.listener = listener
-    }
-
-    fun setChecked(isChecked: Boolean) {
-        listener?.onSetChecked(isChecked)
-    }
-
-    @CallSuper
-    fun onConfigured() {
-        bubbleEvent(buildInitEvent(), LayoutData.empty())
-    }
-
-    fun onAttachedToWindow() {
-        bubbleEvent(ViewAttachedToWindow(this), LayoutData.empty())
-    }
-
-    open fun onCheckedChange(isChecked: Boolean) {
-        bubbleEvent(buildInputChangeEvent(isChecked), LayoutData.empty())
-    }
+    fun setEnabled(isEnabled: Boolean) = listener?.onSetEnabled(isEnabled)
 }

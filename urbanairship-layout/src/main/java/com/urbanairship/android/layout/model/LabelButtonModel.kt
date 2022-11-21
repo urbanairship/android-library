@@ -1,7 +1,11 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.android.layout.ModelEnvironment
+import android.content.Context
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LabelButtonInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -10,12 +14,13 @@ import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.view.LabelButtonView
 import com.urbanairship.json.JsonValue
 
 internal class LabelButtonModel(
     identifier: String,
     val label: LabelModel,
-    actions: Map<String, JsonValue>,
+    actions: Map<String, JsonValue>? = null,
     clickBehaviors: List<ButtonClickBehaviorType>,
     contentDescription: String? = null,
     backgroundColor: Color? = null,
@@ -23,8 +28,10 @@ internal class LabelButtonModel(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
+    formState: SharedState<State.Form>?,
+    pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment
-) : ButtonModel(
+) : ButtonModel<LabelButtonView>(
     viewType = ViewType.LABEL_BUTTON,
     identifier = identifier,
     actions = actions,
@@ -35,11 +42,19 @@ internal class LabelButtonModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
+    formState = formState,
+    pagerState = pagerState,
     environment = environment
 ) {
-    constructor(info: LabelButtonInfo, env: ModelEnvironment) : this(
+    constructor(
+        info: LabelButtonInfo,
+        label: LabelModel,
+        formState: SharedState<State.Form>?,
+        pagerState: SharedState<State.Pager>?,
+        env: ModelEnvironment
+    ) : this(
         identifier = info.identifier,
-        label = env.modelProvider.create(info.label, env) as LabelModel,
+        label = label,
         actions = info.actions,
         clickBehaviors = info.clickBehaviors,
         contentDescription = info.contentDescription,
@@ -48,9 +63,16 @@ internal class LabelButtonModel(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors ?: emptyList(),
+        formState = formState,
+        pagerState = pagerState,
         environment = env
     )
 
-    override fun reportingDescription(): String =
+    override val reportingDescription: String =
         contentDescription ?: label.text.ifEmpty { identifier }
+
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        LabelButtonView(context, this).apply {
+            id = viewId
+        }
 }

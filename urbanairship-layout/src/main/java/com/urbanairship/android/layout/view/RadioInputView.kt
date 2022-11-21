@@ -2,21 +2,49 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
-import com.urbanairship.android.layout.environment.ViewEnvironment
+import androidx.appcompat.widget.SwitchCompat
+import androidx.core.view.isGone
+import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.model.RadioInputModel
+import com.urbanairship.android.layout.property.CheckboxStyle
+import com.urbanairship.android.layout.property.SwitchStyle
 import com.urbanairship.android.layout.widget.CheckableView
+import com.urbanairship.android.layout.widget.ShapeButton
 
 internal class RadioInputView(
     context: Context,
-    model: RadioInputModel,
-    viewEnvironment: ViewEnvironment
-) : CheckableView<RadioInputModel>(context, model, viewEnvironment) {
+    model: RadioInputModel
+) : CheckableView<RadioInputModel>(context, model) {
 
-    override fun configure() {
-        super.configure()
+    init {
+        model.listener = object : CheckableModel.Listener {
+            override fun onSetChecked(isChecked: Boolean) = setCheckedInternal(isChecked)
+            override fun onSetEnabled(isEnabled: Boolean) = setEnabled(isEnabled)
+            override fun setVisibility(visible: Boolean) {
+                this@RadioInputView.isGone = visible
+            }
+        }
+    }
 
-        model.setListener { isChecked: Boolean -> setCheckedInternal(isChecked) }
+    override fun createSwitchView(style: SwitchStyle): SwitchCompat {
+        return object : SwitchCompat(context) {
+            override fun toggle() {
+                // Not calling super, because the controller/model handles updating the view.
+                checkedChangeListener?.onCheckedChange(this, !isChecked)
+            }
+        }
+    }
 
-        checkableView.setOnCheckedChangeListener(checkedChangeListener)
+    override fun createCheckboxView(style: CheckboxStyle): ShapeButton {
+        val checked = style.bindings.selected
+        val unchecked = style.bindings.unselected
+        return object : ShapeButton(
+            context, checked.shapes, unchecked.shapes, checked.icon, unchecked.icon
+        ) {
+            override fun toggle() {
+                // Not calling super, because the controller/model handles updating the view.
+                checkedChangeListener?.onCheckedChange(this, !isChecked)
+            }
+        }
     }
 }

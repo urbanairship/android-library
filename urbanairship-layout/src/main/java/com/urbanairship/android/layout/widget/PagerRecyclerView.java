@@ -7,11 +7,11 @@ import android.view.View;
 
 import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.PagerModel;
+import com.urbanairship.android.layout.view.PagerView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
-import androidx.core.util.Consumer;
 import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScroller;
@@ -30,6 +30,9 @@ public class PagerRecyclerView extends RecyclerView {
 
     private boolean isInternalScroll = false;
 
+    @Nullable
+    private PagerView.OnScrollListener listener = null;
+
     public PagerRecyclerView(@NonNull Context context, @NonNull PagerModel model, @NonNull ViewEnvironment viewEnvironment) {
         super(context);
         this.model = model;
@@ -46,28 +49,23 @@ public class PagerRecyclerView extends RecyclerView {
         snapHelper = new SnapHelper();
         snapHelper.attachToRecyclerView(this);
 
-        final Consumer<Boolean> onLayoutComplete = (isInitialLayout) -> {
-            if (!isInitialLayout) { return; }
-            model.onConfigured(getDisplayedItemPosition(), viewEnvironment.displayTimer().getTime());
-        };
-
-        if (model.getChildren().size() <= 1 || model.isSwipeDisabled()) {
+        if (model.getPages().size() <= 1 || model.isSwipeDisabled()) {
             layoutManager = new SwipeDisabledLinearLayoutManager(
-                getContext(), LinearLayoutManager.HORIZONTAL, onLayoutComplete);
+                getContext(), LinearLayoutManager.HORIZONTAL);
         } else {
             layoutManager = new ThomasLinearLayoutManager(
-                getContext(), HORIZONTAL, onLayoutComplete);
+                getContext(), HORIZONTAL);
         }
 
         // Disable prefetch so we won't get display events from items that aren't yet visible.
-        layoutManager.setItemPrefetchEnabled(false);
+        //layoutManager.setItemPrefetchEnabled(false);
         setLayoutManager(layoutManager);
 
         addOnScrollListener(recyclerScrollListener);
 
         adapter = new PagerAdapter(model, viewEnvironment);
         adapter.setStateRestorationPolicy(StateRestorationPolicy.PREVENT_WHEN_EMPTY);
-        adapter.setItems(model.getChildren());
+        adapter.setItems(model.getPages());
         setAdapter(adapter);
 
         // Pass along any calls to apply insets to the view.
@@ -84,13 +82,13 @@ public class PagerRecyclerView extends RecyclerView {
         return snapView != null ? getChildAdapterPosition(snapView) : 0;
     }
 
-    public int getAdapterItemCount() {
-        return adapter.getItemCount();
-    }
-
     public void scrollTo(int position) {
         isInternalScroll = true;
         smoothScrollToPosition(position);
+    }
+
+    public void setPagerScrollListener(@Nullable PagerView.OnScrollListener listener) {
+        this.listener = listener;
     }
 
     private final RecyclerView.OnScrollListener recyclerScrollListener = new RecyclerView.OnScrollListener() {
@@ -109,7 +107,9 @@ public class PagerRecyclerView extends RecyclerView {
                 int distance = Math.abs(position - previousPosition);
                 for (int i = 0; i < distance; i++) {
                     int calculated = previousPosition + (step * (i + 1));
-                    model.onScrollTo(calculated, isInternalScroll, viewEnvironment.displayTimer().getTime());
+                    if (listener != null) {
+                        listener.onScrollTo(calculated, isInternalScroll);
+                    }
                 }
             }
             previousPosition = position;
@@ -118,23 +118,8 @@ public class PagerRecyclerView extends RecyclerView {
     };
 
     private static class ThomasLinearLayoutManager extends LinearLayoutManager {
-        private final Consumer<Boolean> layoutCompletedCallback;
-        private boolean isInitialLayout = true;
-
-        public ThomasLinearLayoutManager(
-            Context context,
-            int orientation,
-            Consumer<Boolean> completedCallback
-        ) {
+        public ThomasLinearLayoutManager(Context context, int orientation) {
             super(context, orientation, false);
-            this.layoutCompletedCallback = completedCallback;
-        }
-
-        @Override
-        public void onLayoutCompleted(State state) {
-            super.onLayoutCompleted(state);
-            layoutCompletedCallback.accept(isInitialLayout);
-            isInitialLayout = false;
         }
     }
 
@@ -142,12 +127,8 @@ public class PagerRecyclerView extends RecyclerView {
      * Custom {@code LinearLayoutManager} that disables scrolling via touch, but can still be scrolled programmatically.
      */
     private static class SwipeDisabledLinearLayoutManager extends ThomasLinearLayoutManager {
-        public SwipeDisabledLinearLayoutManager(
-            Context context,
-            int orientation,
-            Consumer<Boolean> completedCallback
-        ) {
-            super(context, orientation, completedCallback);
+        public SwipeDisabledLinearLayoutManager(Context context, int orientation) {
+            super(context, orientation);
         }
 
         @Override

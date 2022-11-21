@@ -1,7 +1,9 @@
 package com.urbanairship.android.layout.info
 
 import android.widget.ImageView.ScaleType
+import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
+import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.Color
@@ -89,8 +91,8 @@ public sealed class ViewInfo : View {
     }
 }
 
-internal sealed class ViewGroupInfo : ViewInfo() {
-    abstract val children: List<ViewInfo>
+internal sealed class ViewGroupInfo<C : ItemInfo> : ViewInfo() {
+    abstract val children: List<C>
 }
 
 internal data class VisibilityInfo(
@@ -102,6 +104,13 @@ internal data class VisibilityInfo(
             json.requireField("invert_when_state_matches")),
         default = json.requireField("default")
     )
+}
+
+internal sealed class ItemInfo(
+    val info: ViewInfo
+) {
+    val type = info.type
+    class ViewItemInfo(info: ViewInfo) : ItemInfo(info)
 }
 
 // ------ Base Interfaces ------
@@ -128,7 +137,7 @@ internal class BaseViewInfo(json: JsonMap) : View {
             list.map { EventHandler(it.requireMap()) }
         }
     override val enableBehaviors =
-        json.optionalField<JsonList>("enable_behaviors")?.let { list ->
+        json.optionalField<JsonList>("enabled")?.let { list ->
             list.map { EnableBehaviorType.from(it.requireString()) }
         }
 }
@@ -179,9 +188,9 @@ internal interface Controller : View, Identifiable {
 
 internal class ControllerInfo(
     json: JsonMap
-) : ViewGroupInfo(), Controller, View by view(json), Identifiable by identifiable(json) {
+) : ViewGroupInfo<ViewItemInfo>(), Controller, View by view(json), Identifiable by identifiable(json) {
     override val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
-    override val children: List<ViewInfo> = listOf(view)
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }
 
 private fun controller(json: JsonMap): Controller = ControllerInfo(json)
@@ -192,7 +201,7 @@ internal interface FormController : Controller {
     val formEnabled: List<EnableBehaviorType>?
 }
 
-internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo(), FormController, Controller by controller(json) {
+internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), FormController, Controller by controller(json) {
     override val responseType: String? =
         json.optionalField("response_type")
     override val submitBehavior: FormBehaviorType? =
@@ -203,7 +212,7 @@ internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo(), FormControlle
 
 internal interface Button : View, Accessible, Identifiable {
     val clickBehaviors: List<ButtonClickBehaviorType>
-    val actions: Map<String, JsonValue>
+    val actions: Map<String, JsonValue>?
 }
 
 internal open class ButtonInfo(
@@ -213,8 +222,8 @@ internal open class ButtonInfo(
         json.optionalField<JsonList>("button_click")
             ?.let { ButtonClickBehaviorType.fromList(it) } ?: emptyList()
 
-    override val actions: Map<String, JsonValue> =
-        json.optionalField<JsonMap>("actions")?.map ?: emptyMap()
+    override val actions: Map<String, JsonValue>? =
+        json.optionalField<JsonMap>("actions")?.map
 }
 
 internal interface Checkable : View, Accessible {
@@ -229,39 +238,43 @@ internal open class CheckableInfo(
 
 // ------ Components ------
 
-internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo(), View by view(json) {
+internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemInfo>(), View by view(json) {
     val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
     val direction: Direction = Direction.from(json.requireField("direction"))
     val items = json.requireField<JsonList>("items").map { LinearLayoutItemInfo(it.requireMap()) }
         .also { if (randomizeChildren) it.shuffled() }
 
-    override val children: List<ViewInfo> = items.map { it.info }
+    override val children: List<LinearLayoutItemInfo> = items
 }
 
-internal class LinearLayoutItemInfo(val json: JsonMap) {
-    val info = viewInfoFromJson(json.requireField("view"))
+internal class LinearLayoutItemInfo(
+    val json: JsonMap
+) : ItemInfo(viewInfoFromJson(json.requireField("view"))) {
     val size = Size.fromJson(json.requireField("size"))
     val margin = json.optionalField<JsonMap>("margin")?.let { Margin.fromJson(it) }
 }
 
-internal class ContainerLayoutInfo(json: JsonMap) : ViewGroupInfo(), View by view(json) {
-    val items = json.requireField<JsonList>("items").map { ContainerItemInfo(it.requireMap()) }
+internal class ContainerLayoutInfo(
+    json: JsonMap
+) : ViewGroupInfo<ContainerLayoutItemInfo>(), View by view(json) {
+    val items = json.requireField<JsonList>("items").map { ContainerLayoutItemInfo(it.requireMap()) }
 
-    override val children: List<ViewInfo> = items.map { it.info }
+    override val children: List<ContainerLayoutItemInfo> = items
 }
 
-internal class ContainerItemInfo(json: JsonMap) : SafeAreaAware by safeAreaAware(json) {
-    val info = viewInfoFromJson(json.requireField("view"))
+internal class ContainerLayoutItemInfo(
+    json: JsonMap
+) : ItemInfo(viewInfoFromJson(json.requireField("view"))), SafeAreaAware by safeAreaAware(json) {
     val position: Position = Position.fromJson(json.requireField("position"))
     val size = Size.fromJson(json.requireField("size"))
     val margin: Margin? = json.optionalField<JsonMap>("margin")?.let { Margin.fromJson(it) }
 }
 
-internal class ScrollLayoutInfo(json: JsonMap) : ViewGroupInfo(), View by view(json) {
+internal class ScrollLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), View by view(json) {
     val view = viewInfoFromJson(json.requireField("view"))
     val direction: Direction = Direction.from(json.requireField("direction"))
 
-    override val children: List<ViewInfo> = listOf(view)
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }
 
 internal class EmptyInfo(json: JsonMap) : ViewInfo(), View by view(json)
@@ -299,12 +312,12 @@ internal class ToggleInfo(
 ) : CheckableInfo(json), Identifiable by identifiable(json),
     Validatable by validatable(json) {
     val attributeName: AttributeName? = attributeNameFromJson(json)
-    val attributeValue: JsonValue? = json.optionalField("attribute_value")
+    val attributeValue: AttributeValue? = json.optionalField("attribute_value")
 }
 
 internal class RadioInputInfo(json: JsonMap) : CheckableInfo(json) {
     val reportingValue: JsonValue = json.requireField("reporting_value")
-    val attributeValue: JsonValue? = json.optionalField("attribute_value")
+    val attributeValue: AttributeValue? = json.optionalField("attribute_value")
 }
 
 internal class TextInputInfo(
@@ -329,17 +342,18 @@ internal class WebViewInfo(json: JsonMap) : ViewInfo(), View by view(json) {
     val url: String = json.requireField("url")
 }
 
-internal class PagerInfo(json: JsonMap) : ViewGroupInfo(), View by view(json) {
-    val items = json.requireField<JsonList>("items").map { ItemInfo(it.requireMap()) }
+internal class PagerInfo(json: JsonMap) : ViewGroupInfo<PagerItemInfo>(), View by view(json) {
+    val items = json.requireField<JsonList>("items").map { PagerItemInfo(it.requireMap()) }
     val isSwipeDisabled = json.optionalField("disable_swipe") ?: false
 
-    override val children: List<ViewInfo> = items.map { it.info }
+    override val children: List<PagerItemInfo> = items
+}
 
-    internal class ItemInfo(json: JsonMap) : Identifiable by identifiable(json) {
-        val info = viewInfoFromJson(json.requireField("view"))
-        val actions: Map<String, JsonValue> =
-            json.optionalField<JsonMap>("display_actions")?.map ?: emptyMap()
-    }
+internal class PagerItemInfo(
+    json: JsonMap
+) : ItemInfo(viewInfoFromJson(json.requireField("view"))), Identifiable by identifiable(json) {
+    val actions: Map<String, JsonValue>? =
+        json.optionalField<JsonMap>("display_actions")?.map
 }
 
 internal class PagerIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json) {
@@ -359,43 +373,43 @@ internal class PagerIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json
     }
 }
 
-internal class StateControllerInfo(json: JsonMap) : ViewGroupInfo(), View by view(json) {
+internal class StateControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), View by view(json) {
     val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
-    override val children: List<ViewInfo> = listOf(view)
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }
 
 internal class FormControllerInfo(json: JsonMap) : FormInfo(json) {
     override val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
-    override val children: List<ViewInfo> = listOf(view)
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }
 
 internal class NpsFormControllerInfo(json: JsonMap) : FormInfo(json) {
     override val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
-    override val children: List<ViewInfo> = listOf(view)
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 
     val npsIdentifier: String = json.requireField("nps_identifier")
 }
 
-internal class PagerControllerInfo(json: JsonMap) : ViewGroupInfo(), Controller by controller(json) {
+internal class PagerControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json) {
     override val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
-    override val children: List<ViewInfo> = listOf(view)
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }
 
 internal class CheckboxControllerInfo(
     json: JsonMap
-) : ViewGroupInfo(), Controller by controller(json), Validatable by validatable(json),
+) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json), Validatable by validatable(json),
     Accessible by accessible(json) {
     val minSelection: Int = json.optionalField<Int>("min_selection") ?: if (isRequired) 1 else 0
     val maxSelection: Int = json.optionalField<Int>("max_selection") ?: Int.MAX_VALUE
 
-    override val children: List<ViewInfo> = listOf(view)
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }
 
 internal class RadioInputControllerInfo(
     json: JsonMap
-) : ViewGroupInfo(), Controller by controller(json), Validatable by validatable(json),
+) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json), Validatable by validatable(json),
     Accessible by accessible(json) {
     val attributeName: AttributeName? = attributeNameFromJson(json)
 
-    override val children: List<ViewInfo> = listOf(view)
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }

@@ -50,15 +50,20 @@ dependencies {
     implementation "androidx.recyclerview:recyclerview:$rootProject.androidxRecyclerViewVersion"
     implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
     implementation "androidx.lifecycle:lifecycle-common:$rootProject.androidxLifeCycleVersion"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.androidxLifeCycleVersion"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.androidxLifeCycleVersion"
 
     // Material
     implementation "com.google.android.material:material:$rootProject.materialVersion"
 
     // Unit Tests
+    testImplementation project(':urbanairship-test')
     testImplementation "junit:junit:$rootProject.junitVersion"
     testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
     testImplementation "androidx.test:runner:$rootProject.androidxTestCoreVersion"
     testImplementation "androidx.test:rules:$rootProject.androidxTestCoreVersion"
     testImplementation "io.mockk:mockk:1.12.5"
     testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$rootProject.kotlinCoroutinesVersion"
+    testImplementation "app.cash.turbine:turbine:$rootProject.turbineVersion"
 }

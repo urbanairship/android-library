@@ -350,7 +350,7 @@ public class InAppReportingEventTest {
 
     @Test
     public void testFormResult() {
-        FormData.BaseForm formData = new FormData.Nps("form_id", "response type", "score_id", Collections.singleton(new FormData.Score("score_id", 1)));
+        FormData.BaseForm formData = new FormData.Nps("form_id", "response type", "score_id", Collections.singleton(new FormData.Score("score_id", 1, true, null, null)));
 
         InAppReportingEvent.formResult("schedule ID", message, formData)
                            .record(mockAnalytics);

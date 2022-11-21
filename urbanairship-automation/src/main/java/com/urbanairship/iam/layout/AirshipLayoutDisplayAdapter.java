@@ -33,6 +33,7 @@ import com.urbanairship.android.layout.util.UrlInfo;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.ForegroundDisplayAdapter;
 import com.urbanairship.iam.InAppActionUtils;
+import com.urbanairship.iam.InAppActivityMonitor;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.InAppMessageWebViewClient;
@@ -181,6 +182,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
     public void onDisplay(@NonNull Context context, @NonNull DisplayHandler displayHandler) {
         this.displayRequest.setListener(new Listener(message, displayHandler))
                            .setImageCache(new AssetImageCache(assetCacheMap))
+                           .setInAppActivityMonitor(InAppActivityMonitor.shared(context))
                            .setWebViewClientFactory(() -> new InAppMessageWebViewClient(message))
                            .display(context);
     }

@@ -7,6 +7,7 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isGone
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.PagerModel
@@ -15,42 +16,38 @@ import com.urbanairship.android.layout.widget.PagerRecyclerView
 
 internal class PagerView(
     context: Context,
-    private val model: PagerModel,
-    private val viewEnvironment: ViewEnvironment
+    model: PagerModel,
+    viewEnvironment: ViewEnvironment
 ) : FrameLayout(context), BaseView {
+
+    fun interface OnScrollListener {
+        fun onScrollTo(Position: Int, isInternalScroll: Boolean)
+    }
+
+    var scrollListener: OnScrollListener? = null
 
     private val view: PagerRecyclerView = PagerRecyclerView(context, model, viewEnvironment)
 
     private val modelListener = object : PagerModel.Listener {
-        override fun onScrollToNext() {
-            val position = view.displayedItemPosition
-            val nextPosition = position + 1
-            if (position != NO_POSITION && nextPosition < view.adapterItemCount) {
-                view.scrollTo(nextPosition)
+        override fun scrollTo(position: Int) {
+            if (position != NO_POSITION && position != view.displayedItemPosition) {
+                view.scrollTo(position)
             }
         }
 
-        override fun onScrollToPrevious() {
-            val position = view.displayedItemPosition
-            val previousPosition = position - 1
-            if (position != NO_POSITION && previousPosition > -1) {
-                view.scrollTo(previousPosition)
-            }
+        override fun setVisibility(visible: Boolean) {
+            this@PagerView.isGone = visible
         }
     }
 
     init {
-        id = model.viewId
-        configure()
-    }
-
-    private fun configure() {
         addView(view, MATCH_PARENT, MATCH_PARENT)
         LayoutUtils.applyBorderAndBackground(this, model)
-        model.setListener(modelListener)
+        model.listener = modelListener
 
-        // Emit an init event so that we can connect to the indicator view, if one exists.
-        model.onConfigured(view.displayedItemPosition, viewEnvironment.displayTimer().time)
+        view.setPagerScrollListener { position, isInternalScroll ->
+            scrollListener?.onScrollTo(position, isInternalScroll)
+        }
 
         // Pass along any calls to apply insets to the view.
         ViewCompat.setOnApplyWindowInsetsListener(this) { _: View, insets: WindowInsetsCompat ->

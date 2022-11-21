@@ -1,16 +1,13 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.Logger
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.event.Event
-import com.urbanairship.android.layout.event.Event.ViewInit
-import com.urbanairship.android.layout.event.EventType
-import com.urbanairship.android.layout.event.PagerEvent
-import com.urbanairship.android.layout.event.PagerEvent.PageActions
-import com.urbanairship.android.layout.event.PagerEvent.Scroll
-import com.urbanairship.android.layout.event.ReportingEvent.PageSwipe
-import com.urbanairship.android.layout.event.ReportingEvent.PageView
+import android.content.Context
+import android.view.View
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.PagerControllerInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -18,22 +15,22 @@ import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
-import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.android.layout.reporting.PagerData
+import kotlinx.coroutines.launch
 
 /**
  * Controller that manages communication between Pager and PagerIndicator children.
  */
 internal class PagerController(
-    final val view: BaseModel,
-    override val identifier: String,
+    val view: AnyModel,
+    val identifier: String,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
+    private val pagerState: SharedState<State.Pager>,
     environment: ModelEnvironment
-) : LayoutModel(
+) : BaseModel<View, BaseModel.Listener>(
     viewType = ViewType.PAGER_CONTROLLER,
     backgroundColor = backgroundColor,
     border = border,
@@ -41,127 +38,40 @@ internal class PagerController(
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
     environment = environment
-), Identifiable {
-    constructor(info: PagerControllerInfo, env: ModelEnvironment) : this(
-        view = env.modelProvider.create(info.view, env),
+) {
+    constructor(
+        info: PagerControllerInfo,
+        view: AnyModel,
+        pagerState: SharedState<State.Pager>,
+        env: ModelEnvironment
+    ) : this(
+        view = view,
         identifier = info.identifier,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
+        pagerState = pagerState,
         environment = env
     )
 
-    override val children: List<BaseModel> = listOf(view)
-
-    private var pageIdentifier: String? = null
-    private var pageIndex = -1
-    private var count = -1
-    private var completed = false
-
-    /** Returns `true` if the controller has been initialized with state from a pager view.  */
-    private val isInitialized: Boolean
-        get() = pageIdentifier != null && pageIndex != -1 && count != -1
-
     init {
-        view.addListener(this)
-    }
-
-    override fun onEvent(event: Event, layoutData: LayoutData): Boolean {
-        Logger.verbose("onEvent: $event")
-        val updatedLayoutData = layoutData.withPagerData(buildPagerData())
-        return when (event.type) {
-            EventType.PAGER_INIT -> {
-                val init = event as PagerEvent.Init
-                val wasInitialized = isInitialized
-                // Trickle the event to update the pager indicator, if this controller contains one.
-                trickleEvent(init, updatedLayoutData)
-                // Update our local state.
-                reducePagerState(init)
-                // If this is the first time we've been initialized, report and handle actions.
-                if (!wasInitialized) {
-                    reportPageView(init)
-                    handlePageActions(init)
-                }
-                true
+        modelScope.launch {
+            pagerState.changes.collect { state ->
+                reportPageView(state)
             }
-            EventType.PAGER_SCROLL -> {
-                val scroll = event as Scroll
-                // Report the scroll event first, so that the pager context reflects
-                // the state of the pager when the swipe was initiated.
-                if (!scroll.isInternal) {
-                    reportPageSwipe(scroll)
-                }
-                // Bubble up any actions so that they can be passed along to our actions runner at the top level.
-                handlePageActions(scroll)
-                // Trickle the event to update the pager indicator, if this controller contains one.
-                trickleEvent(scroll, updatedLayoutData)
-                // Update our local state.
-                reducePagerState(scroll)
-                // Report the page view now that we've completed the pager scroll and updated state.
-                reportPageView(scroll)
-                true
-            }
-            EventType.BUTTON_BEHAVIOR_PAGER_NEXT, EventType.BUTTON_BEHAVIOR_PAGER_PREVIOUS -> {
-                trickleEvent(event, updatedLayoutData)
-                false
-            }
-            EventType.VIEW_INIT -> {
-                if ((event as ViewInit).viewType == ViewType.PAGER_INDICATOR) {
-                    // Consume indicator init events.
-                    true
-                } else {
-                    super.onEvent(event, updatedLayoutData)
-                }
-            }
-            // Pass along any other events.
-            else -> super.onEvent(event, updatedLayoutData)
         }
     }
 
-    private fun reducePagerState(event: PagerEvent) {
-        when (event.type) {
-            EventType.PAGER_INIT -> {
-                val init = event as PagerEvent.Init
-                count = init.size
-                pageIndex = init.pageIndex
-                pageIdentifier = init.pageId
-                completed = count == 1
-            }
-            EventType.PAGER_SCROLL -> {
-                val scroll = event as Scroll
-                pageIndex = scroll.pageIndex
-                pageIdentifier = scroll.pageId
-                completed = completed || pageIndex == count - 1
-            }
-            else -> Unit // Ignore other events.
-        }
-    }
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        view.createView(context, viewEnvironment)
 
-    private fun reportPageView(event: PagerEvent) {
-        val pagerData = buildPagerData()
-        bubbleEvent(PageView(pagerData, event.time), LayoutData.pager(pagerData))
-    }
-
-    private fun reportPageSwipe(event: Scroll) {
-        val data = buildPagerData()
-        bubbleEvent(
-            PageSwipe(
-                data, event.previousPageIndex, event.previousPageId, event.pageIndex, event.pageId
-            ), LayoutData.pager(data)
+    private fun reportPageView(pagerState: State.Pager) {
+        val pagerContext = pagerState.reportingContext()
+        report(
+            ReportingEvent.PageView(pagerContext, environment.displayTimer.time),
+            layoutState.reportingContext(pagerContext = pagerContext)
         )
     }
-
-    /**
-     * Bubble up any page actions set on the event so that they can be handled by the layout host.
-     */
-    private fun handlePageActions(event: PagerEvent) {
-        if (event.hasPageActions()) {
-            bubbleEvent(PageActions(event.pageActions), LayoutData.pager(buildPagerData()))
-        }
-    }
-
-    private fun buildPagerData(): PagerData =
-        PagerData(identifier, pageIndex, pageIdentifier ?: "", count, completed)
 }

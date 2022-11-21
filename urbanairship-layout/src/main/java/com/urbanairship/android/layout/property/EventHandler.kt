@@ -17,8 +17,6 @@ internal data class EventHandler(
     )
 
     internal enum class Type(val value: String) {
-        SHOW("show"),
-        HIDE("hide"),
         TAP("tap"),
         FORM_INPUT("form_input");
 
@@ -30,3 +28,9 @@ internal data class EventHandler(
         }
     }
 }
+
+internal fun List<EventHandler>?.hasTapHandler(): Boolean =
+    orEmpty().any { it.type == EventHandler.Type.TAP }
+
+internal fun List<EventHandler>?.hasFormInputHandler(): Boolean =
+    orEmpty().any { it.type == EventHandler.Type.FORM_INPUT }

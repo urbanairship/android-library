@@ -1,10 +1,12 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.event.FormEvent
-import com.urbanairship.android.layout.event.FormEvent.DataChange
-import com.urbanairship.android.layout.event.ReportingEvent.FormResult
+import android.content.Context
+import android.view.View
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.FormControllerInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -19,7 +21,9 @@ import com.urbanairship.android.layout.reporting.FormData
  * Controller that manages form input views.
  */
 internal class FormController(
-    override val view: BaseModel,
+    override val view: AnyModel,
+    formState: SharedState<State.Form>,
+    parentFormState: SharedState<State.Form>?,
     identifier: String,
     responseType: String?,
     submitBehavior: FormBehaviorType?,
@@ -29,8 +33,10 @@ internal class FormController(
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
-) : BaseFormController(
+) : BaseFormController<View>(
     viewType = ViewType.FORM_CONTROLLER,
+    formState = formState,
+    parentFormState = parentFormState,
     identifier = identifier,
     responseType = responseType,
     submitBehavior = submitBehavior,
@@ -41,8 +47,16 @@ internal class FormController(
     enableBehaviors = enableBehaviors,
     environment = environment
 ) {
-    constructor(info: FormControllerInfo, env: ModelEnvironment) : this(
-        view = env.modelProvider.create(info.view, env),
+    constructor(
+        info: FormControllerInfo,
+        view: AnyModel,
+        formState: SharedState<State.Form>,
+        parentFormState: SharedState<State.Form>?,
+        env: ModelEnvironment
+    ) : this(
+        view = view,
+        formState = formState,
+        parentFormState = parentFormState,
         identifier = info.identifier,
         responseType = info.responseType,
         submitBehavior = info.submitBehavior,
@@ -54,27 +68,9 @@ internal class FormController(
         environment = env
     )
 
-    override val children: List<BaseModel> = listOf(view)
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        view.createView(context, viewEnvironment)
 
-    override val formType: String = "form"
-
-    override val initEvent: FormEvent.Init
-        get() = FormEvent.Init(identifier, isFormValid)
-
-    override val formDataChangeEvent: DataChange
-        get() = DataChange(
-            FormData.Form(identifier, responseType, formData.values),
-            isFormValid
-        )
-
-    override val formResultEvent: FormResult
-        get() = FormResult(
-            FormData.Form(identifier, responseType, formData.values),
-            formInfo,
-            attributes
-        )
-
-    init {
-        view.addListener(this)
-    }
+    override fun buildFormData(state: State.Form) =
+        FormData.Form(identifier, responseType, state.data.values)
 }

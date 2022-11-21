@@ -1,8 +1,10 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import android.content.Context
 import android.widget.ImageView
-import com.urbanairship.android.layout.ModelEnvironment
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -11,19 +13,22 @@ import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.MediaType
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.property.hasTapHandler
+import com.urbanairship.android.layout.view.MediaView
+import kotlinx.coroutines.launch
 
 internal class MediaModel(
     val url: String,
     val mediaType: MediaType,
     val scaleType: ImageView.ScaleType,
-    override val contentDescription: String? = null,
+    val contentDescription: String? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
-) : BaseModel(
+) : BaseModel<MediaView, BaseModel.Listener>(
     viewType = ViewType.MEDIA,
     backgroundColor = backgroundColor,
     border = border,
@@ -31,7 +36,7 @@ internal class MediaModel(
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
     environment = environment
-), Accessible {
+) {
     constructor(info: MediaInfo, env: ModelEnvironment) : this(
         url = info.url,
         mediaType = info.mediaType,
@@ -44,4 +49,17 @@ internal class MediaModel(
         enableBehaviors = info.enableBehaviors,
         environment = env
     )
+
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        MediaView(context, this, viewEnvironment).apply {
+            id = viewId
+        }
+
+    override fun onViewAttached(view: MediaView) {
+        if (eventHandlers.hasTapHandler()) {
+            viewScope.launch {
+                view.taps().collect { handleViewEvent(EventHandler.Type.TAP) }
+            }
+        }
+    }
 }

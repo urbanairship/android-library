@@ -1,9 +1,12 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import android.content.Context
 import android.os.Bundle
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.event.WebViewEvent
+import com.urbanairship.android.layout.environment.LayoutEvent
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.info.WebViewInfo
 import com.urbanairship.android.layout.property.Border
@@ -11,7 +14,9 @@ import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
-import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.android.layout.property.hasTapHandler
+import com.urbanairship.android.layout.view.WebViewView
+import kotlinx.coroutines.launch
 
 internal class WebViewModel(
     val url: String,
@@ -21,7 +26,7 @@ internal class WebViewModel(
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment
-) : BaseModel(
+) : BaseModel<WebViewView, BaseModel.Listener>(
     viewType = ViewType.WEB_VIEW,
     backgroundColor = backgroundColor,
     border = border,
@@ -41,13 +46,25 @@ internal class WebViewModel(
     )
 
     var savedState: Bundle? = null
-        private set
 
-    fun onClose() {
-        bubbleEvent(WebViewEvent.Close(), LayoutData.empty())
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        WebViewView(context, this, viewEnvironment).apply {
+            id = viewId
+        }
+
+    override fun onViewAttached(view: WebViewView) {
+        if (eventHandlers.hasTapHandler()) {
+            viewScope.launch {
+                view.taps().collect { handleViewEvent(EventHandler.Type.TAP) }
+            }
+        }
     }
 
-    fun saveState(bundle: Bundle) {
-        savedState = bundle
+    fun onClose() {
+        report(
+            ReportingEvent.DismissFromOutside(environment.displayTimer.time),
+            layoutState.reportingContext()
+        )
+        broadcast(LayoutEvent.Finish)
     }
 }

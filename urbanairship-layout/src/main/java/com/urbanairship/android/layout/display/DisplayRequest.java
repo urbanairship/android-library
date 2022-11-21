@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.ThomasListener;
 import com.urbanairship.android.layout.info.LayoutInfo;
 import com.urbanairship.android.layout.util.Factory;
 import com.urbanairship.android.layout.util.ImageCache;
+import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.webkit.AirshipWebViewClient;
 
 /**
@@ -22,6 +23,7 @@ import com.urbanairship.webkit.AirshipWebViewClient;
 public class DisplayRequest {
     private final Callback callback;
     private final LayoutInfo payload;
+    private ActivityMonitor activityMonitor;
     private ThomasListener listener;
     private ImageCache imageCache;
     private Factory<AirshipWebViewClient> webViewClientFactory;
@@ -43,6 +45,12 @@ public class DisplayRequest {
     }
 
     @NonNull
+    public DisplayRequest setInAppActivityMonitor(ActivityMonitor activityMonitor) {
+        this.activityMonitor = activityMonitor;
+        return this;
+    }
+
+    @NonNull
     public DisplayRequest setImageCache(@Nullable ImageCache imageCache) {
         this.imageCache = imageCache;
         return this;
@@ -55,7 +63,7 @@ public class DisplayRequest {
     }
 
     public void display(@NonNull Context context) {
-        DisplayArgs args = new DisplayArgs(payload, listener, webViewClientFactory, imageCache);
+        DisplayArgs args = new DisplayArgs(payload, listener, activityMonitor, webViewClientFactory, imageCache);
         callback.display(context, args);
     }
 }

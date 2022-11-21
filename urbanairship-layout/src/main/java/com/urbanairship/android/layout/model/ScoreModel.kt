@@ -1,22 +1,30 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.event.Event.ViewAttachedToWindow
-import com.urbanairship.android.layout.event.FormEvent.DataChange
-import com.urbanairship.android.layout.event.ScoreEvent
+import android.content.Context
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.environment.inputData
 import com.urbanairship.android.layout.info.ScoreInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
+import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ScoreStyle
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.property.hasFormInputHandler
+import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
-import com.urbanairship.android.layout.reporting.FormData.Score
-import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.json.JsonValue
+import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.util.debouncedClicks
+import com.urbanairship.android.layout.util.scoreChanges
+import com.urbanairship.android.layout.view.ScoreView
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.launch
 
 /**
  * Model for Score views.
@@ -28,17 +36,18 @@ import com.urbanairship.json.JsonValue
  */
 internal class ScoreModel(
     val style: ScoreStyle,
-    override val identifier: String,
-    override val isRequired: Boolean = false,
-    override val contentDescription: String? = null,
+    val identifier: String,
+    val isRequired: Boolean = false,
+    val contentDescription: String? = null,
     private val attributeName: AttributeName? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
+    private val formState: SharedState<State.Form>,
     environment: ModelEnvironment
-) : BaseModel(
+) : BaseModel<ScoreView, ScoreModel.Listener>(
     viewType = ViewType.SCORE,
     backgroundColor = backgroundColor,
     border = border,
@@ -46,9 +55,13 @@ internal class ScoreModel(
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
     environment = environment
-), Identifiable, Accessible, Validatable {
+) {
 
-    constructor(info: ScoreInfo, env: ModelEnvironment) : this(
+    constructor(
+        info: ScoreInfo,
+        formState: SharedState<State.Form>,
+        env: ModelEnvironment
+    ) : this(
         style = info.style,
         identifier = info.identifier,
         isRequired = info.isRequired,
@@ -59,33 +72,51 @@ internal class ScoreModel(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
+        formState = formState,
         environment = env
     )
 
-    final var selectedScore: Int? = null
-        private set
-
-    override val isValid: Boolean
-        get() = selectedScore?.let { it > -1 } == true || !isRequired
-
-    fun onConfigured() {
-        bubbleEvent(ScoreEvent.Init(identifier, isValid), LayoutData.empty())
+    interface Listener : BaseModel.Listener {
+        fun onSetSelectedScore(value: Int?)
     }
 
-    fun onAttachedToWindow() {
-        bubbleEvent(ViewAttachedToWindow(this), LayoutData.empty())
-    }
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+        ScoreView(context, this).apply {
+            id = viewId
 
-    fun onScoreChange(score: Int) {
-        selectedScore = score
-        bubbleEvent(
-            DataChange(
-                Score(identifier, score),
-                isValid,
-                attributeName,
-                JsonValue.wrap(score)
-            ),
-            LayoutData.empty()
-        )
+            // Restore state, if available
+            formState.inputData<FormData.Score>(identifier)?.value?.let {
+                setSelectedScore(it)
+            }
+        }
+
+    override fun onViewAttached(view: ScoreView) {
+        viewScope.launch {
+            view.scoreChanges().collect { score ->
+                formState.update { state ->
+                    state.copyWithFormInput(
+                        FormData.Score(
+                            identifier = identifier,
+                            value = score,
+                            isValid = score > -1 || !isRequired,
+                            attributeName = attributeName,
+                            attributeValue = AttributeValue.wrap(score)
+                        )
+                    )
+                }
+
+                if (eventHandlers.hasFormInputHandler()) {
+                    handleViewEvent(EventHandler.Type.FORM_INPUT, score)
+                }
+            }
+        }
+
+        if (eventHandlers.hasTapHandler()) {
+            viewScope.launch {
+                // Merge score item clicks with any clicks on the score view, outside the items.
+                merge(view.taps(), view.debouncedClicks())
+                    .collect { handleViewEvent(EventHandler.Type.TAP) }
+            }
+        }
     }
 }

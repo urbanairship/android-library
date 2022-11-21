@@ -5,7 +5,7 @@ import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.util.requireField
 import com.urbanairship.json.JsonMap
 
-public class LayoutInfo(
+public data class LayoutInfo(
     public val version: Int,
     public val presentation: BasePresentation,
     public val view: ViewInfo

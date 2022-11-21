@@ -1,120 +1,264 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import androidx.core.util.ObjectsCompat
-import com.urbanairship.android.layout.ModelEnvironment
-import com.urbanairship.android.layout.ModelProvider
-import com.urbanairship.android.layout.event.Event
-import com.urbanairship.android.layout.event.EventType
-import com.urbanairship.android.layout.event.FormEvent
+import app.cash.turbine.test
+import app.cash.turbine.testIn
+import com.urbanairship.android.layout.environment.ActionsRunner
+import com.urbanairship.android.layout.environment.AttributeHandler
+import com.urbanairship.android.layout.environment.FormType
+import com.urbanairship.android.layout.environment.LayoutEvent
+import com.urbanairship.android.layout.environment.LayoutEventHandler
+import com.urbanairship.android.layout.environment.LayoutState
+import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.Reporter
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.inputData
 import com.urbanairship.android.layout.event.ReportingEvent
-import com.urbanairship.android.layout.event.TextInputEvent
 import com.urbanairship.android.layout.property.FormBehaviorType
-import com.urbanairship.android.layout.property.ViewType
-import com.urbanairship.android.layout.property.ViewType.CONTAINER
-import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.android.layout.reporting.AttributeName
+import com.urbanairship.android.layout.reporting.DisplayTimer
+import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.util.jsonMapOf
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import test.TestEventListener
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
 public class FormControllerTest {
 
-    private lateinit var controller: FormController
-    private lateinit var testListener: TestEventListener
+    private val testDispatcher = StandardTestDispatcher()
+    private val testScope = TestScope(testDispatcher)
 
-    private val mockSubmitButton = mockk<ButtonModel>(relaxed = true)
+    private val mockReporter: Reporter = mockk(relaxUnitFun = true)
+    private val mockActionsRunner: ActionsRunner = mockk()
+    private val mockAttributeHandler: AttributeHandler = mockk {
+        every { update(any()) } returns Unit
+    }
+    private val mockDisplayTimer: DisplayTimer = mockk {
+        every { time } returns System.currentTimeMillis()
+    }
+    private val testEventHandler = spyk(LayoutEventHandler(testScope))
+    private val mockEnv: ModelEnvironment = mockk {
+        every { reporter } returns mockReporter
+        every { actionsRunner } returns mockActionsRunner
+        every { attributeHandler } returns mockAttributeHandler
+        every { displayTimer } returns mockDisplayTimer
+        every { layoutState } returns LayoutState.EMPTY
+        every { eventHandler } returns testEventHandler
+        every { layoutEvents } returns testEventHandler.layoutEvents
+        every { modelScope } returns testScope
+    }
+    private val mockView: AnyModel = mockk(relaxed = true)
 
-    private val mockInput = mockk<TextInputModel>(relaxed = true)
+    private val parentFormState = spyk(SharedState(State.Form(
+        identifier = PARENT_FORM_ID, formType = FormType.Form, formResponseType = "form")
+    ))
 
-    private val mockEnv: ModelEnvironment = spyk(ModelEnvironment(ModelProvider(), emptyMap()))
+    private val childFormState = spyk(SharedState(State.Form(
+        identifier = CHILD_FORM_ID, formType = FormType.Form, formResponseType = "form")
+    ))
 
-    private lateinit var mockView: LayoutModel
-    private lateinit var inputViewAttachedEvent: Event
-    private lateinit var inputFormFieldInitEvent: Event
+    private lateinit var formController: FormController
 
     @Before
     public fun setUp() {
-        mockView = spyk(
-            object : LayoutModel(viewType = CONTAINER, environment = mockEnv) {
-                override val children: List<BaseModel> = listOf(mockInput, mockSubmitButton)
-            }
-        )
-
-        every { mockInput.viewType } returns ViewType.TEXT_INPUT
-        every { mockSubmitButton.viewType } returns ViewType.LABEL_BUTTON
-        every { mockSubmitButton.identifier } returns BUTTON_ID
-        every { mockSubmitButton.reportingDescription() } returns BUTTON_DESCRIPTION
-
-        inputViewAttachedEvent = Event.ViewAttachedToWindow(mockInput)
-        inputFormFieldInitEvent = TextInputEvent.Init(TEXT_INPUT_ID, false)
-
-        controller = FormController(mockView, FORM_ID, RESPONSE_TYPE, FormBehaviorType.SUBMIT_EVENT, environment = mockEnv)
-        testListener = TestEventListener()
-        controller.addListener(testListener)
+        Dispatchers.setMain(testDispatcher)
     }
 
-    private fun initForm() {
-        controller.onEvent(inputViewAttachedEvent, LayoutData.empty())
-        controller.onEvent(inputFormFieldInitEvent, LayoutData.empty())
+    @After
+    public fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
-    public fun testViewInit() {
-        initForm()
+    public fun testParentFormInit(): TestResult = runTest {
+        initParentFormController()
 
-        // Verify that the text input received a form validity update from the form controller.
-        verify {
-            mockSubmitButton.trickleEvent(
-                match { event -> event is FormEvent.ValidationUpdate && !event.isValid },
-                any()
+        verify { mockEnv.layoutEvents }
+        verify { parentFormState.changes }
+    }
+
+    @Test
+    public fun testParentFormReportsDisplay(): TestResult = runTest {
+        parentFormState.changes.test {
+            assertFalse(awaitItem().isDisplayReported)
+
+            initParentFormController()
+
+            assertTrue(awaitItem().isDisplayReported)
+
+            verify { mockReporter.report(any<ReportingEvent.FormDisplay>(), any()) }
+
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    public fun testParentFormSubmit(): TestResult = runTest {
+        parentFormState.changes.test {
+            skipItems(1)
+
+            // Init controller and verify initial state
+            initParentFormController()
+            assertTrue(awaitItem().data.isEmpty())
+
+            // Update form data
+            parentFormState.update {
+                it.copyWithFormInput(
+                    FormData.TextInput(
+                        identifier = TEXT_INPUT_ID,
+                        value = TEXT_INPUT_VALUE,
+                        isValid = true,
+                        attributeName = ATTR_NAME,
+                        attributeValue = ATTR_VALUE
+                    )
+                )
+            }
+            assertFalse(awaitItem().data.isEmpty())
+
+            // Emit FORM_SUBMIT event
+            val event = spyk(LayoutEvent.SubmitForm(BUTTON_ID))
+            testEventHandler.broadcast(event)
+            // Verify state was updated
+            assertTrue(awaitItem().isSubmitted)
+
+            // Verify submit logic was called
+            coVerify { event.onSubmitted }
+            coVerify { mockAttributeHandler.update(eq(ATTRIBUTES)) }
+            coVerify { mockReporter.report(any<ReportingEvent.FormResult>(), any()) }
+
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    public fun testChildFormInit(): TestResult = runTest {
+        initChildFormController()
+
+        verify { childFormState.changes }
+    }
+
+    @Test
+    public fun testChildFormDoesNotReportDisplay(): TestResult = runTest {
+        childFormState.changes.test {
+            assertFalse(awaitItem().isDisplayReported)
+
+            initChildFormController()
+
+            verify(exactly = 0) { mockReporter.report(any<ReportingEvent.FormDisplay>(), any()) }
+
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    public fun testChildFormStateChangesUpdateParentForm(): TestResult = runTest {
+        val parentChanges = parentFormState.changes.testIn(testScope)
+        val childChanges = childFormState.changes.testIn(testScope)
+
+        // Sanity check initial empty states
+        assertTrue(parentChanges.awaitItem().data.isEmpty())
+        assertTrue(childChanges.awaitItem().data.isEmpty())
+
+        initChildFormController()
+
+        parentChanges.awaitItem().run {
+            // Verify that the parent form is aware of the child form, now that it's initialized.
+            assertTrue(data.containsKey(CHILD_FORM_ID))
+            // Sanity check: child form shouldn't have any data from inputs yet.
+            assertEquals(0, inputData<FormData.Form>(CHILD_FORM_ID)?.children?.size)
+        }
+
+        childFormState.update { form ->
+            form.copyWithFormInput(
+                FormData.TextInput(
+                    identifier = TEXT_INPUT_ID,
+                    value = TEXT_INPUT_VALUE,
+                    isValid = true
+                )
             )
         }
 
-        // Verify reporting event was sent for the initial page view and form data was added to the event.
-        assertEquals(1, testListener.getCount(EventType.REPORTING_EVENT).toLong())
-        val reportingEvent: ReportingEvent.FormDisplay =
-            testListener.getEventAt(EventType.REPORTING_EVENT, 0) as ReportingEvent.FormDisplay
-        val layoutData: LayoutData = testListener.getLayoutDataAt(EventType.REPORTING_EVENT, 0)
-        assertEquals(ReportingEvent.ReportType.FORM_DISPLAY, reportingEvent.reportType)
-        assertEquals(FORM_ID, reportingEvent.formInfo.identifier)
-        assertEquals(false, layoutData.formInfo?.formSubmitted)
-        assertEquals(RESPONSE_TYPE, reportingEvent.formInfo.formResponseType)
-        // Check to make sure no additional events were received.
-        assertEquals(1, testListener.getCount().toLong())
+        // Verify that the child state was updated appropriately.
+        childChanges.awaitItem().run {
+            assertTrue(data.containsKey(TEXT_INPUT_ID))
+            val inputData = requireNotNull(inputData<FormData.TextInput>(TEXT_INPUT_ID))
+            assertEquals(TEXT_INPUT_ID, inputData.identifier)
+            assertEquals(TEXT_INPUT_VALUE, inputData.value)
+        }
+
+        // Verify that the child form input change caused an update to the parent form state.
+        verify { parentFormState.update(any()) }
+
+        // Verify that the text input from the child form made it to the parent form state.
+        parentChanges.awaitItem().run {
+            assertTrue(data.containsKey(CHILD_FORM_ID))
+            assertEquals(1, inputData<FormData.Form>(CHILD_FORM_ID)?.children?.count {
+                it.identifier == TEXT_INPUT_ID && it.value == TEXT_INPUT_VALUE
+            })
+        }
+
+        parentChanges.ensureAllEventsConsumed()
+        childChanges.ensureAllEventsConsumed()
     }
 
-    @Test
-    public fun testOverrideState() {
-        initForm()
-
-        // Bubble a Reporting Event to the form controller.
-        controller.onEvent(ReportingEvent.ButtonTap("buttonId"), LayoutData.empty())
-
-        // Verify that the listener was notified and form data was added to the event.
-        assertEquals(2, testListener.getCount(EventType.REPORTING_EVENT).toLong())
-        val reportingEvent: ReportingEvent.ButtonTap =
-            testListener.getEventAt(EventType.REPORTING_EVENT, 1) as ReportingEvent.ButtonTap
-        val layoutData: LayoutData = ObjectsCompat.requireNonNull<LayoutData>(
-            testListener.getLayoutDataAt(EventType.REPORTING_EVENT, 0)
+    private fun initParentFormController() {
+        formController = FormController(
+            view = mockView,
+            formState = parentFormState,
+            parentFormState = null,
+            identifier = PARENT_FORM_ID,
+            responseType = "form",
+            submitBehavior = FormBehaviorType.SUBMIT_EVENT,
+            environment = mockEnv
         )
-        assertEquals(ReportingEvent.ReportType.BUTTON_TAP, reportingEvent.reportType)
-        assertEquals(FORM_ID, layoutData.formInfo?.identifier)
-        assertEquals(RESPONSE_TYPE, layoutData.formInfo?.formResponseType)
-        assertEquals(false, layoutData.formInfo?.formSubmitted)
-        // Check to make sure no additional events were received.
-        assertEquals(2, testListener.getCount().toLong())
+        testScope.runCurrent()
+    }
+
+    private fun initChildFormController() {
+        formController = FormController(
+            view = mockView,
+            formState = childFormState,
+            parentFormState = parentFormState,
+            identifier = CHILD_FORM_ID,
+            responseType = "form",
+            submitBehavior = null,
+            environment = mockEnv
+        )
+        testScope.runCurrent()
     }
 
     private companion object {
-        private const val FORM_ID = "form-identifier"
-        private const val RESPONSE_TYPE = "some-response-type"
+        private const val PARENT_FORM_ID = "parent-form-identifier"
+        private const val CHILD_FORM_ID = "child-form-identifier"
         private const val TEXT_INPUT_ID = "text-input-identifier"
+        private const val TEXT_INPUT_VALUE = "no comment."
         private const val BUTTON_ID = "button-identifier"
-        private const val BUTTON_DESCRIPTION = "button-description"
+        private const val CHANNEL_ID = "channel-identifier"
+
+        private val ATTR_NAME = AttributeName(CHANNEL_ID, null)
+        private val ATTR_VALUE = jsonMapOf("foo" to "bar").toJsonValue()
+        private val ATTRIBUTES = mapOf(ATTR_NAME to ATTR_VALUE)
     }
 }
