@@ -75,21 +75,21 @@ dependencies {
     implementation project(":urbanairship-layout")
     implementation project(":urbanairship-automation")
 
-    implementation "androidx.core:core-ktx:${rootProject.androidxCoreVersion}"
-    implementation "androidx.appcompat:appcompat:${rootProject.androidxAppCompatVersion}"
-    implementation "com.google.android.material:material:${rootProject.materialVersion}"
-    implementation "androidx.constraintlayout:constraintlayout:${rootProject.androidxConstraintLayoutVersion}"
+    implementation(libs.androidx.corektx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.google.material)
+    implementation(libs.androidx.constraintlayout)
 
     // Leak Canary (for debug builds only)
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.9.1'
+    debugImplementation(libs.leakcanary.android)
 
-    testImplementation "junit:junit:${rootProject.junitVersion}"
+    testImplementation(libs.junit)
 
-    androidTestImplementation "androidx.test:core-ktx:${rootProject.androidxTestCoreVersion}"
-    androidTestImplementation "androidx.test.ext:junit-ktx:${rootProject.androidxTestJunitVersion}"
-    androidTestImplementation "androidx.test:runner:${rootProject.androidxTestRunnerVersion}"
-    androidTestImplementation "androidx.test:rules:${rootProject.androidxTestRulesVersion}"
-    androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.androidxEspressoVersion}"
+    androidTestImplementation(libs.androidx.test.corektx)
+    androidTestImplementation(libs.androidx.test.ext.junitktx)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.espresso.core)
 }
 
 task generateSampleLayouts {

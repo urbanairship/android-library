@@ -13,5 +13,5 @@ android {
 }
 
 dependencies {
-    api "androidx.annotation:annotation:$rootProject.androidxAnnotationVersion"
+    api(libs.androidx.annotation)
 }

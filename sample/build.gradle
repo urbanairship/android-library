@@ -1,13 +1,16 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+}
 
 android {
-    compileSdkVersion rootProject.sampleCompileSdkVersion
+    namespace 'com.urbanairship.sample'
 
+    compileSdk rootProject.compileSdkVersion
 
     defaultConfig {
         applicationId "com.urbanairship.sample"
-        minSdkVersion 21
-        targetSdkVersion rootProject.sampleTargetSdkVersion
+        minSdk rootProject.minSdkVersion
+        targetSdk rootProject.targetSdkVersion
         versionCode 1
         versionName "1.0"
         vectorDrawables.useSupportLibrary = true
@@ -33,28 +36,24 @@ android {
         abortOnError false
         disable 'MissingTranslation', 'AppCompatResource'
     }
-    namespace 'com.urbanairship.sample'
 }
 
 dependencies {
-    implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
-    implementation "com.google.android.material:material:$rootProject.materialVersion"
-    implementation "androidx.preference:preference:$rootProject.androidxPreferenceVersion"
-    implementation "androidx.lifecycle:lifecycle-viewmodel:$rootProject.androidxLifeCycleVersion"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.androidxLifeCycleVersion"
-    implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
-    implementation "androidx.navigation:navigation-fragment:$rootProject.androidxNavigationVersion"
-    implementation "androidx.navigation:navigation-ui:$rootProject.androidxNavigationVersion"
+    implementation(libs.androidx.appcompat)
+    implementation(libs.google.material)
+    implementation(libs.androidx.preference)
+    implementation(libs.androidx.lifecycle.viewmodel)
+    implementation(libs.androidx.lifecycle.viewmodelktx)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.navigation.fragment)
+    implementation(libs.androidx.navigation.ui)
+    implementation(libs.playservices.instantapps)
 
     // Airship ADM
     implementation project(':urbanairship-adm')
 
     // Airship FCM
     implementation project(':urbanairship-fcm')
-
-    // Airship Debug: Normally this is a debug only dependency but we
-    // embed the view in sample app
-    implementation project(':urbanairship-debug')
 
     // Airship Advertising ID tracking
     implementation project(':urbanairship-ads-identifier')
@@ -71,58 +70,44 @@ dependencies {
     // Airship location
     implementation project(':urbanairship-location')
     // Allows Airship location services to use Fused Location
-    implementation "com.google.android.gms:play-services-location:$rootProject.playServicesLocationVersion"
+    implementation(libs.playservices.location) // com.google.android.gms:play-services-location
+
+    // Airship Debug: Normally this is a debug only dependency but we embed the view in sample app
+    implementation project(':urbanairship-debug')
 
     // Airship Chat
     implementation project(':urbanairship-chat')
 
     // Testing-only dependencies
-    androidTestImplementation("androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion") {
+
+    // Espresso
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.test.espresso.contrib) {
         // https://github.com/android/android-test/issues/861
         exclude group: 'org.checkerframework', module: 'checker'
     }
-    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
-    androidTestImplementation "androidx.test.espresso:espresso-web:$rootProject.androidxEspressoVersion"
-    androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.androidxEspressoVersion"
-    androidTestImplementation "androidx.test.espresso.idling:idling-concurrent:$rootProject.androidxEspressoVersion"
+    androidTestImplementation(libs.androidx.test.espresso.web)
+    androidTestImplementation(libs.androidx.test.espresso.intents)
+    androidTestImplementation(libs.androidx.test.espresso.idling.concurrent)
 
     // AndroidJUnitRunner and JUnit Rules
-    androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
-    androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
-    androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
-    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.ext.junit)
 
     // Assertions
-    androidTestImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
-    androidTestImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
+    androidTestImplementation(libs.google.truth)
+    androidTestImplementation(libs.androidx.test.ext.truth)
 
-    implementation 'com.google.android.gms:play-services-instantapps:18.0.1'
-    // Instrumentation Tests
+    // Robolectric / Mockito
+    testImplementation(libs.robolectric.core)
+    androidTestImplementation(libs.robolectric.annotations)
+    androidTestImplementation(libs.mockito.core)
+    androidTestImplementation(libs.mockito.android)
 
-    testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
-    androidTestImplementation "androidx.navigation:navigation-testing:$rootProject.androidxNavigationVersion"
-
-    debugImplementation "androidx.fragment:fragment-testing:$rootProject.androidxFragmentVersion"
-    androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
-    androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
-    androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
-
-
-    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
-    androidTestImplementation("androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion") {
-        // https://github.com/android/android-test/issues/861
-        exclude group: 'org.checkerframework', module: 'checker'
-    }
-    androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.androidxEspressoVersion"
-
-    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
-    androidTestImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
-    androidTestImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
-
-    androidTestImplementation "org.robolectric:annotations:$rootProject.robolectricVersion"
-
-    androidTestImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
-    androidTestImplementation "org.mockito:mockito-android:$rootProject.mockitoVersion"
+    androidTestImplementation(libs.androidx.navigation.testing)
+    debugImplementation(libs.androidx.fragment.testing)
 }
 
 

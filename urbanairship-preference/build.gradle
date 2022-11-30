@@ -6,7 +6,7 @@ description = "Airship Android SDK preference extension."
 
 dependencies {
     api project(':urbanairship-core')
-    api "androidx.preference:preference:$rootProject.androidxPreferenceVersion"
+    api(libs.androidx.preference)
 }
 
 android {

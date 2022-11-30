@@ -25,30 +25,30 @@ dependencies {
     api project(':urbanairship-core')
 
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$rootProject.kotlinVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.kotlinCoroutinesVersion"
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlinx.coroutines.android)
 
     // AndroidX
-    implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
-    implementation "androidx.paging:paging-runtime:$rootProject.androidxPagingVersion"
-    implementation "androidx.core:core:$rootProject.androidxCoreVersion"
-    implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
-    kapt "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.core)
+    implementation(libs.androidx.room.runtime)
+    kapt(libs.androidx.room.compiler)
 
     // OkHttp
-    implementation "com.squareup.okhttp3:okhttp:$rootProject.okHttpVersion"
+    implementation(libs.okhttp)
 
     // Support libraries
-    implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
-    implementation "com.google.android.material:material:$rootProject.materialVersion"
+    implementation(libs.androidx.appcompat)
+    implementation(libs.google.material)
 
     // Tests
     testImplementation project(':urbanairship-test')
-    testImplementation "junit:junit:$rootProject.junitVersion"
-    testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
-    testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
-    testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
-    testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
-    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$rootProject.kotlinxCorutinesTest"
-    testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.mockitoKotlinVersion"
+    testImplementation(libs.junit)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.robolectric.core)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockito.kotlin)
 }

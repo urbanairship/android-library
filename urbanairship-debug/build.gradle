@@ -37,33 +37,32 @@ dependencies {
     implementation project(':urbanairship-preference')
 
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$rootProject.kotlinVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.kotlinCoroutinesVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.kotlinCoroutinesVersion"
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
 
     // Room
-    implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
-    kapt "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
+    implementation(libs.androidx.room.runtime)
+    kapt(libs.androidx.room.compiler)
 
     // Navigation
-    implementation "androidx.navigation:navigation-fragment-ktx:$rootProject.androidxNavigationVersion"
-    implementation "androidx.navigation:navigation-ui-ktx:$rootProject.androidxNavigationVersion"
+    implementation(libs.androidx.navigation.fragmentktx)
+    implementation(libs.androidx.navigation.uiktx)
 
     // Constraint layout
-    implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
+    implementation(libs.androidx.constraintlayout)
 
     // Lifecycle
-    implementation "androidx.lifecycle:lifecycle-common-java8:$rootProject.androidxLifeCycleVersion"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.androidxLifeCycleVersion"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.androidxLifeCycleVersion"
-    implementation "androidx.lifecycle:lifecycle-common-java8:$rootProject.androidxLifeCycleVersion"
+    implementation(libs.androidx.lifecycle.common.java8)
+    implementation(libs.androidx.lifecycle.runtimektx)
+    implementation(libs.androidx.lifecycle.viewmodelktx)
 
     // Paging
-    implementation "androidx.paging:paging-runtime-ktx:$rootProject.androidxPagingVersion"
+    implementation(libs.androidx.paging.runtimektx)
 
     // Support libraries
-    implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
-    implementation "com.google.android.material:material:$rootProject.materialVersion"
-    implementation "androidx.vectordrawable:vectordrawable:$rootProject.androidxVectorDrawableVersion"
-    implementation "androidx.preference:preference-ktx:$rootProject.androidxPreferenceVersion"
+    implementation(libs.androidx.appcompat)
+    implementation(libs.google.material)
+    implementation(libs.androidx.vectordrawable)
+    implementation(libs.androidx.preferencektx)
 }
