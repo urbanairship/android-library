@@ -35,12 +35,12 @@ import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.js.UrlAllowList
 import com.urbanairship.util.ManifestUtils
+import java.lang.ref.WeakReference
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
-import java.lang.ref.WeakReference
-import kotlin.math.roundToInt
 
 /**
  * Media view.
