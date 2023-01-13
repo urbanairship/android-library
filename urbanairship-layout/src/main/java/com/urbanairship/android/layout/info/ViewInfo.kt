@@ -285,9 +285,12 @@ internal class MediaInfo(
     val url: String = json.requireField("url")
     val mediaType: MediaType = MediaType.from(json.requireField("media_type"))
     val scaleType: ScaleType = MediaFit.asScaleType(json.requireField("media_fit"))
-    val width: Int = json.optionalField<Int>("width") ?: 0
-    val height: Int = json.optionalField<Int>("height") ?: 0
-    val autoplay: Boolean = json.optionalField<Boolean>("autoplay") ?: false
+    val videoWidth: Int = json.optionalField<Int>("video_width") ?: 0
+    val videoHeight: Int = json.optionalField<Int>("video_height") ?: 0
+    val videoControls: Boolean = json.optionalField<Boolean>("video_controls") ?: true
+    val videoAutoplay: Boolean = json.optionalField<Boolean>("video_autoplay") ?: false
+    val videoMuted: Boolean = json.optionalField<Boolean>("video_muted") ?: false
+    val videoLoop: Boolean = json.optionalField<Boolean>("video_loop") ?: false
 }
 
 internal class LabelInfo(

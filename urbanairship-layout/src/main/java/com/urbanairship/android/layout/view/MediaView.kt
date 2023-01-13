@@ -35,12 +35,12 @@ import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.js.UrlAllowList
 import com.urbanairship.util.ManifestUtils
-import java.lang.ref.WeakReference
-import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import java.lang.ref.WeakReference
+import kotlin.math.roundToInt
 
 /**
  * Media view.
@@ -164,8 +164,8 @@ internal class MediaView(
     @SuppressLint("SetJavaScriptEnabled")
     private fun configureWebView(model: MediaModel) {
         // Default to a 16:9 aspect ratio
-        val width = if (model.width != 0) model.width else 16
-        val height = if (model.height != 0) model.height else 9
+        val width = if (model.videoWidth != 0) model.videoWidth else 16
+        val height = if (model.videoHeight != 0) model.videoHeight else 9
 
         // Adjust view bounds if the WebView is displaying a video.
         // SVG images also fall back to loading in a WebView, where we don't want this behavior.
@@ -234,19 +234,16 @@ internal class MediaView(
             webViewWeakReference.get()?.let { weakWebView ->
                 when (model.mediaType) {
                     MediaType.VIDEO ->
-                        if (model.autoplay) {
-                            weakWebView.loadData(
-                                String.format(AUTOPLAY_VIDEO_HTML_FORMAT, model.url),
-                                "text/html",
-                                "UTF-8"
-                            )
-                        } else {
-                            weakWebView.loadData(
-                                String.format(VIDEO_HTML_FORMAT, model.url),
-                                "text/html",
-                                "UTF-8"
-                            )
-                        }
+                        weakWebView.loadData(
+                            String.format(VIDEO_HTML_FORMAT,
+                                if (model.videoControls) "controls" else "",
+                                if (model.videoAutoplay) "autoplay" else "",
+                                if (model.videoMuted) "muted" else "",
+                                if (model.videoLoop) "loop" else "",
+                                model.url),
+                            "text/html",
+                            "UTF-8"
+                        )
                     MediaType.IMAGE -> weakWebView.loadData(
                         String.format(IMAGE_HTML_FORMAT, model.url),
                         "text/html",
@@ -311,10 +308,7 @@ internal class MediaView(
 
     companion object {
         private const val VIDEO_HTML_FORMAT = "<body style=\"margin:0\">" +
-                "<video playsinline controls height=\"100%%\" width=\"100%%\" src=\"%s\"></video>" +
-                "</body>"
-        private const val AUTOPLAY_VIDEO_HTML_FORMAT = "<body style=\"margin:0\">" +
-                "<video playsinline autoplay muted loop controls height=\"100%%\" width=\"100%%\" src=\"%s\"></video>" +
+                "<video playsinline %s %s %s %s height=\"100%%\" width=\"100%%\" src=\"%s\"></video>" +
                 "</body>"
         private const val IMAGE_HTML_FORMAT = "<body style=\"margin:0\">" +
                 "<img height=\"100%%\" width=\"100%%\" src=\"%s\"/>" +
