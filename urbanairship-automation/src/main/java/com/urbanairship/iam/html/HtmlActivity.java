@@ -161,10 +161,11 @@ public class HtmlActivity extends InAppMessageActivity {
             }
         });
 
-        if (displayContent.getBackgroundColor() == -1) {
+        content.setBackgroundColor(displayContent.getBackgroundColor());
+        if (Color.alpha(displayContent.getBackgroundColor()) != 255) {
             webView.setBackgroundColor(Color.TRANSPARENT);
         } else {
-            content.setBackgroundColor(displayContent.getBackgroundColor());
+            webView.setBackgroundColor(displayContent.getBackgroundColor());
             // Border radius casts a shadow, not good-looking with a transparent background
             if (borderRadius > 0) {
                 content.setClipPathBorderRadius(borderRadius);
