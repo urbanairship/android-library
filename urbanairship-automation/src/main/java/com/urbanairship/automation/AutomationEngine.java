@@ -124,20 +124,20 @@ public class AutomationEngine {
         @Override
         public void onForeground(long time) {
             AutomationEngine.this.onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_FOREGROUND, 1.00);
-            onScheduleConditionsChanged();
+            checkPendingSchedules();
         }
 
         @Override
         public void onBackground(long time) {
             AutomationEngine.this.onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_BACKGROUND, 1.00);
-            onScheduleConditionsChanged();
+            checkPendingSchedules();
         }
     };
 
     private final ActivityListener activityListener = new SimpleActivityListener() {
         @Override
         public void onActivityResumed(@NonNull Activity activity) {
-            onScheduleConditionsChanged();
+            checkPendingSchedules();
         }
     };
 
@@ -147,7 +147,7 @@ public class AutomationEngine {
             regionId = regionEvent.toJsonValue().optMap().opt("region_id").getString();
             int type = regionEvent.getBoundaryEvent() == RegionEvent.BOUNDARY_EVENT_ENTER ? Trigger.REGION_ENTER : Trigger.REGION_EXIT;
             onEventAdded(regionEvent.toJsonValue(), type, 1.00);
-            onScheduleConditionsChanged();
+            checkPendingSchedules();
         }
 
         @Override
@@ -164,7 +164,7 @@ public class AutomationEngine {
         public void onScreenTracked(@NonNull String screenName) {
             screen = screenName;
             onEventAdded(JsonValue.wrap(screenName), Trigger.SCREEN_VIEW, 1.00);
-            onScheduleConditionsChanged();
+            checkPendingSchedules();
         }
     };
 
@@ -305,7 +305,7 @@ public class AutomationEngine {
         onEventAdded(JsonValue.NULL, Trigger.LIFE_CYCLE_APP_INIT, 1.00);
 
         isStarted = true;
-        onScheduleConditionsChanged();
+        checkPendingSchedules();
     }
 
 
@@ -319,7 +319,7 @@ public class AutomationEngine {
         pausedManager.setPaused(isPaused);
 
         if (!isPaused && isStarted) {
-            onScheduleConditionsChanged();
+            checkPendingSchedules();
         }
     }
 
@@ -682,7 +682,17 @@ public class AutomationEngine {
      */
     public void checkPendingSchedules() {
         if (isStarted) {
-            onScheduleConditionsChanged();
+            backgroundHandler.post(() -> {
+                List<FullSchedule> entries = dao.getSchedulesWithStates(ScheduleState.WAITING_SCHEDULE_CONDITIONS);
+                if (entries.isEmpty()) {
+                    return;
+                }
+
+                sortSchedulesByPriority(entries);
+                for (FullSchedule entry : entries) {
+                    attemptExecution(entry);
+                }
+            });
         }
     }
 
@@ -1053,26 +1063,6 @@ public class AutomationEngine {
     }
 
     /**
-     * Called when one of the schedule conditions changes.
-     */
-    private void onScheduleConditionsChanged() {
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                List<FullSchedule> entries = dao.getSchedulesWithStates(ScheduleState.WAITING_SCHEDULE_CONDITIONS);
-                if (entries.isEmpty()) {
-                    return;
-                }
-
-                sortSchedulesByPriority(entries);
-                for (FullSchedule entry : entries) {
-                    attemptExecution(entry);
-                }
-            }
-        });
-    }
-
-    /**
      * For a given event, retrieves and iterates through any relevant triggers.
      *
      * @param json The relevant event data.
@@ -1272,7 +1262,7 @@ public class AutomationEngine {
                                 case AutomationDriver.PREPARE_RESULT_CONTINUE:
                                     updateExecutionState(entry, ScheduleState.WAITING_SCHEDULE_CONDITIONS);
                                     dao.update(entry);
-                                    attemptExecution(entry);
+                                    checkPendingSchedules();
                                     break;
 
                                 case AutomationDriver.PREPARE_RESULT_SKIP:
