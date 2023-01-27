@@ -73,8 +73,8 @@ class AirshipPublishPlugin : Plugin<Project> {
                     artifactId = project.name
                     version = project.version.toString()
 
-                    // artifact("$buildDir/outputs/aar/${project.name}-release.aar")
-                    // artifact(sourcesJar.get())
+                    artifact("$buildDir/outputs/aar/${project.name}-release.aar")
+                    artifact(sourcesJar.get())
 
                     pom {
                         name.set(project.name)
