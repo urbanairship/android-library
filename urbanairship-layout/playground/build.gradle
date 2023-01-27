@@ -10,6 +10,7 @@ buildscript {
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven { url "https://jitpack.io" }
     }
 
     dependencies {
@@ -20,6 +21,7 @@ buildscript {
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'maven-publish'
 }
 
 group = "com.urbanairship.android"

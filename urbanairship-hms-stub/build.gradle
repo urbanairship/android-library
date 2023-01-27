@@ -1,7 +1,14 @@
 plugins {
     id 'com.android.library'
+    id 'maven-publish'
 }
 
+repositories {
+    gradlePluginPortal()
+    google()
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+}
 android {
     compileSdkVersion rootProject.compileSdkVersion
 
