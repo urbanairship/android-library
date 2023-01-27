@@ -19,13 +19,6 @@ dependencyResolutionManagement {
         mavenCentral()
         maven { url "https://jitpack.io" }
     }
-
-    pluginManagement {
-        plugins {
-            id 'com.android.library'
-            id 'maven-publish'
-        }
-    }
 }
 
 include ':urbanairship-accengage',
