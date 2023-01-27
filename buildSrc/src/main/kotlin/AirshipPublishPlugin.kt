@@ -69,7 +69,7 @@ class AirshipPublishPlugin : Plugin<Project> {
         configure<PublishingExtension> {
             publications {
                 register<MavenPublication>("Production") {
-                    groupId = "com.github.freetradeUmair"
+                    groupId = project.group.toString()
                     artifactId = project.name
                     version = project.version.toString()
 

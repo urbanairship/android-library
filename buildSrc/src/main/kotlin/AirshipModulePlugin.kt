@@ -23,7 +23,7 @@ class AirshipModulePlugin : Plugin<Project> {
         val ext: AirshipModuleExtension = project.extensions.create("airshipModule")
 
         version = getMavenVersion()
-        group = "com.github.freetradeUmair"
+        group = "com.urbanairship.android"
 
         applyCommonModulePlugins()
         configureAndroid()
