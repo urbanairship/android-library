@@ -129,13 +129,3 @@ android.applicationVariants.all { variant ->
         dependsOn generateSampleLayouts
     }
 }
-
-afterEvaluate {
-    publishing {
-        publications {
-            release(MavenPublication) {
-                from components.release
-            }
-        }
-    }
-}
