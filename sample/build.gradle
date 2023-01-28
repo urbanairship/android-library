@@ -1,7 +1,5 @@
-//apply plugin: 'com.android.application'
-
 plugins {
-    id 'com.android.library'
+    id 'com.android.application'
     id 'maven-publish'
 }
 
@@ -128,14 +126,4 @@ dependencies {
 def googleServicesFile = rootProject.file('sample/google-services.json')
 if (googleServicesFile.exists()) {
     apply plugin: 'com.google.gms.google-services'  // Google Play services Gradle plugin
-}
-
-afterEvaluate {
-    publishing {
-        publications {
-            release(MavenPublication) {
-                from components.release
-            }
-        }
-    }
 }
