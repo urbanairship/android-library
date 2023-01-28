@@ -61,3 +61,13 @@ dependencies {
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$rootProject.kotlinxCorutinesTest"
     testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.mockitoKotlinVersion"
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}

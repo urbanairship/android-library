@@ -21,3 +21,13 @@ dependencies {
 android {
     namespace 'com.urbanairship.aaid'
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}

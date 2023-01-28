@@ -124,3 +124,13 @@ def googleServicesFile = rootProject.file('sample/google-services.json')
 if (googleServicesFile.exists()) {
     apply plugin: 'com.google.gms.google-services'  // Google Play services Gradle plugin
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}

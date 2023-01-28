@@ -76,3 +76,13 @@ dependencies {
     implementation "androidx.vectordrawable:vectordrawable:$rootProject.androidxVectorDrawableVersion"
     implementation "androidx.preference:preference-ktx:$rootProject.androidxPreferenceVersion"
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}

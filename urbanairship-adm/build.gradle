@@ -21,3 +21,13 @@ dependencies {
 android {
     namespace 'com.urbanairship.push.adm'
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}

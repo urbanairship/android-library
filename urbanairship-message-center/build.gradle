@@ -38,3 +38,13 @@ dependencies {
 android {
     namespace 'com.urbanairship.messagecenter'
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}

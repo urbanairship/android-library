@@ -34,3 +34,13 @@ dependencies {
     implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
     annotationProcessor "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}

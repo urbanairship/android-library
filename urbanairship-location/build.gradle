@@ -30,3 +30,13 @@ dependencies {
 android {
     namespace 'com.urbanairship.location'
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}

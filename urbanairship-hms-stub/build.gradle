@@ -22,3 +22,13 @@ android {
 dependencies {
     api "androidx.annotation:annotation:$rootProject.androidxAnnotationVersion"
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}

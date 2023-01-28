@@ -18,16 +18,16 @@ import org.gradle.plugins.signing.SigningPlugin
 class AirshipPublishPlugin : Plugin<Project> {
 
     override fun apply(target: Project): Unit = target.run {
-        if (this == rootProject) {
-            // Set up NexusPublishPlugin for the root project
-            configureNexusPublish()
-        } else {
-            // Set up MavenPublishPlugin and SigningPlugin for module sub-projects
-            pluginManager.withPlugin("android-library") {
-                configureMavenPublish()
-                configureSigning()
-            }
-        }
+//        if (this == rootProject) {
+//            // Set up NexusPublishPlugin for the root project
+//            configureNexusPublish()
+//        } else {
+//            // Set up MavenPublishPlugin and SigningPlugin for module sub-projects
+//            pluginManager.withPlugin("android-library") {
+//                configureMavenPublish()
+//                configureSigning()
+//            }
+//        }
     }
 
     private fun Project.configureNexusPublish() {
@@ -73,7 +73,7 @@ class AirshipPublishPlugin : Plugin<Project> {
                     artifactId = project.name
                     version = project.version.toString()
 
-//                    artifact("$buildDir/outputs/aar/${project.name}-release.aar")
+                    artifact("$buildDir/outputs/aar/${project.name}-release.aar")
                     artifact(sourcesJar.get())
 
                     pom {

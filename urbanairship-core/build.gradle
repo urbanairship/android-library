@@ -57,3 +57,13 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
     androidTestImplementation "androidx.room:room-testing:$rootProject.androidxRoomVersion"
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}

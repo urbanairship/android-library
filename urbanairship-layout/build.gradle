@@ -61,3 +61,13 @@ dependencies {
     testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+            }
+        }
+    }
+}
