@@ -1,4 +1,9 @@
-apply plugin: 'com.android.application'
+//apply plugin: 'com.android.application'
+
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+}
 
 android {
     compileSdkVersion rootProject.sampleCompileSdkVersion
