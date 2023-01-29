@@ -124,7 +124,7 @@ afterEvaluate {
     publishing {
         publications {
             // Creates a Maven publication called "release".
-            Release(MavenPublication) {
+            Production(MavenPublication) {
                 artifact("$buildDir/outputs/aar/${project.name}-release.aar")
                 from components.release
                 groupId = 'com.urbanairship.android'
