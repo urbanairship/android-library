@@ -20,7 +20,7 @@ class AirshipPublishPlugin : Plugin<Project> {
     override fun apply(target: Project): Unit = target.run {
         if (this == rootProject) {
             // Set up NexusPublishPlugin for the root project
-            configureNexusPublish()
+             configureNexusPublish()
         } else {
             // Set up MavenPublishPlugin and SigningPlugin for module sub-projects
             pluginManager.withPlugin("android-library") {

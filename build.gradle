@@ -96,6 +96,7 @@ plugins {
     id 'airship-dokka'
     id 'airship-publish'
     id 'com.diffplug.spotless' version "$spotlessPluginVersion"
+    id 'maven-publish'
 }
 
 task packageDocs() {

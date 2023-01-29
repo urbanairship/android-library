@@ -67,3 +67,17 @@ dependencies {
     implementation "androidx.vectordrawable:vectordrawable:$rootProject.androidxVectorDrawableVersion"
     implementation "androidx.preference:preference-ktx:$rootProject.androidxPreferenceVersion"
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            Production(MavenPublication) {
+                from components.release
+                groupId = 'com.urbanairship.android'
+                artifactId = project.name
+                version = project.version.toString()
+            }
+        }
+    }
+}

@@ -52,3 +52,17 @@ dependencies {
     testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            Production(MavenPublication) {
+                from components.release
+                groupId = 'com.urbanairship.android'
+                artifactId = project.name
+                version = project.version.toString()
+            }
+        }
+    }
+}

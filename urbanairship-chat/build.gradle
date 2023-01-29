@@ -52,3 +52,17 @@ dependencies {
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$rootProject.kotlinxCorutinesTest"
     testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.mockitoKotlinVersion"
 }
+
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            Production(MavenPublication) {
+                from components.release
+                groupId = 'com.urbanairship.android'
+                artifactId = project.name
+                version = project.version.toString()
+            }
+        }
+    }
+}
