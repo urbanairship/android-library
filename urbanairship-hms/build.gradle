@@ -24,7 +24,7 @@ afterEvaluate {
     publishing {
         publications {
             // Creates a Maven publication called "release".
-            Production(MavenPublication) {
+            Release(MavenPublication) {
                 from components.release
                 groupId = 'com.urbanairship.android'
                 artifactId = project.name
