@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
-import com.urbanairship.debug.BR
 import com.urbanairship.debug.databinding.UaItemEventBinding
 import com.urbanairship.debug.event.persistence.EventEntity
 
@@ -20,7 +19,7 @@ internal class EventAdapter(private val callback: ((event: EventEntity) -> Unit)
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         getItem(position)?.apply {
             with(holder.binding) {
-                setVariable(BR.viewModel, EventItem(this@apply))
+               // setVariable(BR.viewModel, EventItem(this@apply))
                 root.setOnClickListener {
                     this@EventAdapter.callback(this@apply)
                 }

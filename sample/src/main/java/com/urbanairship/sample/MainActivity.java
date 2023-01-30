@@ -39,7 +39,6 @@ public class MainActivity extends AppCompatActivity {
         add(R.id.homeFragment);
         add(R.id.inboxFragment);
         add(R.id.settingsFragment);
-        add(R.id.debugFragment);
     }};
 
     private final InboxListener inboxListener = this::showMessageCenterIndicator;

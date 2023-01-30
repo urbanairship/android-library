@@ -69,10 +69,6 @@ dependencies {
     // Airship FCM
     implementation project(':urbanairship-fcm')
 
-    // Airship Debug: Normally this is a debug only dependency but we
-    // embed the view in sample app
-    implementation project(':urbanairship-debug')
-
     // Airship Advertising ID tracking
     implementation project(':urbanairship-ads-identifier')
 

@@ -3,12 +3,7 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
-        maven { url "https://jitpack.io" }
-    }
-
-    plugins {
-        id 'com.android.library'
-        id 'maven-publish'
+        maven {url "https://jitpack.io"}
     }
 }
 
@@ -27,7 +22,6 @@ include ':urbanairship-accengage',
         ':urbanairship-automation',
         ':urbanairship-chat',
         ':urbanairship-core',
-        ':urbanairship-debug',
         ':urbanairship-fcm',
         ':urbanairship-hms',
         ':urbanairship-hms-stub',
