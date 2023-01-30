@@ -24,7 +24,7 @@ class AirshipPublishPlugin : Plugin<Project> {
         } else {
             // Set up MavenPublishPlugin and SigningPlugin for module sub-projects
             pluginManager.withPlugin("android-library") {
-                configureMavenPublish()
+//                configureMavenPublish()
                 configureSigning()
             }
         }

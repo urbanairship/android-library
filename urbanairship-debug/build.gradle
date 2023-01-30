@@ -1,7 +1,6 @@
 plugins {
     id 'airship-module'
     id 'kotlin-android'
-    id 'kotlin-kapt'
 }
 
 description = "Airship Android Debug Library"
@@ -43,7 +42,7 @@ dependencies {
 
     // Room
     implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
-    kapt "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
+//    kapt "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
 
     // Navigation
     implementation "androidx.navigation:navigation-fragment-ktx:$rootProject.androidxNavigationVersion"
@@ -68,16 +67,56 @@ dependencies {
     implementation "androidx.preference:preference-ktx:$rootProject.androidxPreferenceVersion"
 }
 
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
 afterEvaluate {
     publishing {
         publications {
             // Creates a Maven publication called "release".
             Production(MavenPublication) {
-                artifact("$buildDir/outputs/aar/${project.name}-release.aar")
-                from components.release
+//                from components.release
                 groupId = 'com.urbanairship.android'
                 artifactId = project.name
                 version = project.version.toString()
+
+                artifact("$buildDir/outputs/aar/${project.name}-release.aar")
+                artifact(sourcesJar)
+
+                pom {
+                    name.set(project.name)
+                    description.set(project.description)
+                    url.set("https://github.com/urbanairship/android-library")
+
+                    developers {
+                        developer { name.set("Airship") }
+                    }
+
+                    licenses {
+                        license {
+                            name.set("The Apache Software License, Version 2.0")
+                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                            distribution.set("repo")
+                        }
+                    }
+
+                    scm {
+                        connection.set("https://github.com/urbanairship/android-library.git")
+                        url.set("https://github.com/urbanairship/android-library")
+                    }
+                }
+
+                pom.withXml {
+                    def dependencies = asNode().appendNode("dependencies")
+                    configurations["implementation"].allDependencies.forEach {
+                        def dep = dependencies.appendNode("dependency")
+                        dep.appendNode("groupId", it.group)
+                        dep.appendNode("artifactId", it.name)
+                        dep.appendNode("version", it.version)
+                    }
+                }
             }
         }
     }
