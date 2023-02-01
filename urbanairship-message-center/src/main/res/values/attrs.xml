@@ -14,6 +14,9 @@
         <!-- Message title text appearance -->
         <attr name="messageCenterItemTitleTextAppearance" format="reference" />
 
+        <!-- Message subtitle text appearance -->
+        <attr name="messageCenterItemSubtitleTextAppearance" format="reference" />
+
         <!-- Message date text appearance -->
         <attr name="messageCenterItemDateTextAppearance" format="reference" />
 

@@ -46,13 +46,25 @@
     <!-- Item Title -->
     <style name="Widget.UrbanAirship.MessageCenter.Item.Title" parent="Base.Widget.UrbanAirship.MessageCenter.Item.Title" />
 
-    <style name="Base.Widget.UrbanAirship.MessageCenter.Item.Title" parent="android:TextAppearance.Medium">
+    <style name="Base.Widget.UrbanAirship.MessageCenter.Item.Title" parent="android:TextAppearance.Large">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:ellipsize">end</item>
         <item name="android:focusable">false</item>
         <item name="android:focusableInTouchMode">false</item>
-        <item name="android:maxLines">2</item>
+        <item name="android:maxLines">10</item>
+    </style>
+
+    <!-- Item Subtitle -->
+    <style name="Widget.UrbanAirship.MessageCenter.Item.Subtitle" parent="Base.Widget.UrbanAirship.MessageCenter.Item.Subtitle" />
+
+    <style name="Base.Widget.UrbanAirship.MessageCenter.Item.Subtitle" parent="android:TextAppearance.Medium">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:focusable">false</item>
+        <item name="android:focusableInTouchMode">false</item>
+        <item name="android:maxLines">10</item>
     </style>
 
     <!-- Item Date -->

@@ -5,13 +5,26 @@
 
     <CheckBox
         android:id="@+id/checkbox"
-        style="@style/Widget.UrbanAirship.MessageCenter.Item.CheckBox" />
+        style="@style/Widget.UrbanAirship.MessageCenter.Item.CheckBox"
+        android:layout_width="wrap_content"
+        android:visibility="gone" />
+    <View
+        android:id="@+id/unreadIndicator"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="8dp"
+        android:background="@drawable/round"
+        android:backgroundTint="#F7618B"
+        />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_marginVertical="12dp"
+        android:layout_marginLeft="16dp">
 
         <TextView
             android:id="@+id/title"
@@ -19,8 +32,15 @@
             tools:text="title" />
 
         <TextView
+            android:id="@+id/subtitle"
+            style="@style/Base.Widget.UrbanAirship.MessageCenter.Item.Subtitle"
+            android:layout_marginTop="6dp"
+            tools:text="subtitle"/>
+
+        <TextView
             android:id="@+id/date"
             style="@style/Widget.UrbanAirship.MessageCenter.Item.Date"
+            android:layout_marginTop="6dp"
             tools:text="1/8/16" />
 
     </LinearLayout>

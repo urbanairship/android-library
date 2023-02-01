@@ -22,6 +22,7 @@ import com.urbanairship.util.ViewUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
@@ -37,9 +38,11 @@ public class MessageItemView extends FrameLayout {
 
     private View contentView;
     private TextView titleView;
+    private TextView subtitleView;
     private TextView dateView;
     private ImageView iconView;
     private CheckBox checkBox;
+    private View unreadIndicator;
 
     private final List<Integer> accessibilityActionIds = new ArrayList<>();
 
@@ -83,6 +86,7 @@ public class MessageItemView extends FrameLayout {
         int contentLayout = R.layout.ua_item_mc_content;
         int dateTextAppearance;
         int titleTextAppearance;
+        int subtitleTextAppearance;
 
         TypedArray attributes = context.getTheme().obtainStyledAttributes(attrs, R.styleable.MessageCenter, defStyleAttr, defStyleRes);
 
@@ -94,6 +98,7 @@ public class MessageItemView extends FrameLayout {
 
         titleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemTitleTextAppearance, 0);
 
+        subtitleTextAppearance = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemSubtitleTextAppearance, 0);
         int background = attributes.getResourceId(R.styleable.MessageCenter_messageCenterItemBackground, 0);
         if (background != 0) {
             setBackgroundResource(background);
@@ -106,8 +111,13 @@ public class MessageItemView extends FrameLayout {
         titleView = contentView.findViewById(R.id.title);
         ViewUtils.applyTextStyle(context, titleView, titleTextAppearance);
 
+        subtitleView = contentView.findViewById(R.id.subtitle);
+        ViewUtils.applyTextStyle(context, subtitleView, subtitleTextAppearance);
+
         dateView = contentView.findViewById(R.id.date);
         ViewUtils.applyTextStyle(context, dateView, dateTextAppearance);
+
+        unreadIndicator = contentView.findViewById(R.id.unreadIndicator);
 
         iconView = contentView.findViewById(R.id.image);
         if (iconView != null) {
@@ -138,12 +148,21 @@ public class MessageItemView extends FrameLayout {
     void updateMessage(@NonNull Message message, @DrawableRes int placeholder, boolean isSelected) {
         dateView.setText(DateFormat.getDateFormat(getContext()).format(message.getSentDate()));
 
+        titleView.setText(message.getTitle());
+
+        subtitleView.setVisibility(GONE);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            Optional<String> subtitle = Optional.ofNullable(message.getExtrasMap().get("com.urbanairship.listing.field1"));
+            if (subtitle != null) {
+                subtitleView.setText(subtitle.get());
+                subtitleView.setVisibility(VISIBLE);
+            }
+        }
+
         if (message.isRead()) {
-            titleView.setText(message.getTitle());
+            unreadIndicator.setVisibility(GONE);
         } else {
-            SpannableString text = new SpannableString(message.getTitle());
-            text.setSpan(new StyleSpan(Typeface.BOLD), 0, text.length(), 0);
-            titleView.setText(text, TextView.BufferType.SPANNABLE);
+            unreadIndicator.setVisibility(VISIBLE);
         }
 
         if (checkBox != null) {

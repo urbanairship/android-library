@@ -160,7 +160,7 @@ public class MessageCenterFragment extends Fragment {
             LinearLayout layoutContainer = view.findViewById(R.id.container);
             TypedArray attributes = getActivity().getTheme().obtainStyledAttributes(null, R.styleable.MessageCenter, R.attr.messageCenterStyle, R.style.MessageCenter);
             if (attributes.hasValue(R.styleable.MessageCenter_messageCenterDividerColor)) {
-                int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, Color.BLACK);
+                int color = attributes.getColor(R.styleable.MessageCenter_messageCenterDividerColor, Color.TRANSPARENT);
                 DrawableCompat.setTint(layoutContainer.getDividerDrawable(), color);
                 DrawableCompat.setTintMode(layoutContainer.getDividerDrawable(), PorterDuff.Mode.SRC);
             }
