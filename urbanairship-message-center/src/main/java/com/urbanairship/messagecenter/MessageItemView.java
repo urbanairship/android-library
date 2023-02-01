@@ -152,8 +152,8 @@ public class MessageItemView extends FrameLayout {
 
         subtitleView.setVisibility(GONE);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            Optional<String> subtitle = Optional.ofNullable(message.getExtrasMap().get("com.urbanairship.listing.field1"));
-            if (subtitle != null) {
+            Optional<String> subtitle = Optional.ofNullable(message.getExtrasMap().get("com.urbanairship.listing.field1")).map(Object::toString);
+            if (subtitle.isPresent()) {
                 subtitleView.setText(subtitle.get());
                 subtitleView.setVisibility(VISIBLE);
             }
