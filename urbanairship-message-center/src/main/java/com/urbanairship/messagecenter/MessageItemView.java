@@ -160,7 +160,7 @@ public class MessageItemView extends FrameLayout {
         }
 
         if (message.isRead()) {
-            unreadIndicator.setVisibility(GONE);
+            unreadIndicator.setVisibility(INVISIBLE);
         } else {
             unreadIndicator.setVisibility(VISIBLE);
         }

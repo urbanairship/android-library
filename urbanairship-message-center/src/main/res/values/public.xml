@@ -18,6 +18,7 @@
     <public name="Widget.UrbanAirship.MessageCenter.Item.Title" type="style" />
     <public name="Widget.UrbanAirship.MessageCenter.Item.Date" type="style" />
     <public name="MessageCenter.Item.Title.TextAppearance" type="style" />
+    <public name="MessageCenter.Item.Subtitle.TextAppearance" type="style" />
     <public name="MessageCenter.Item.Date.TextAppearance" type="style" />
     <public name="MessageCenter.EmptyMessage.TextAppearance" type="style" />
     <public name="MessageCenter.MessageNotSelected.TextAppearance" type="style" />

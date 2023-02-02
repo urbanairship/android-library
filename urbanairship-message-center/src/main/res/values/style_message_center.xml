@@ -83,6 +83,8 @@
     <!-- Message Center Style-->
     <style name="MessageCenter.Item.Title.TextAppearance" parent="@android:style/TextAppearance.Medium" />
 
+    <style name="MessageCenter.Item.Subtitle.TextAppearance" parent="@android:style/TextAppearance.Medium" />
+
     <style name="MessageCenter.Item.Date.TextAppearance" parent="@android:style/TextAppearance.Small" />
 
     <style name="MessageCenter.EmptyMessage.TextAppearance" parent="@android:style/TextAppearance.Small" />
@@ -98,6 +100,9 @@
 
         <item name="messageCenterItemTitleTextAppearance">
             @style/MessageCenter.Item.Title.TextAppearance
+        </item>
+        <item name="messageCenterItemSubtitleTextAppearance">
+            @style/MessageCenter.Item.Subtitle.TextAppearance
         </item>
         <item name="messageCenterItemDateTextAppearance">
             @style/MessageCenter.Item.Date.TextAppearance
