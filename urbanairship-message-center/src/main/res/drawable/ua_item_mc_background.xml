@@ -3,19 +3,19 @@
 
     <item android:state_selected="true">
         <shape>
-            <solid android:color="#33F7618B" />
+            <solid android:color="#99F7618B" />
         </shape>
     </item>
 
     <item android:state_activated="true">
         <shape>
-            <solid android:color="#1A000000" />
+            <solid android:color="#80F7618B" />
         </shape>
     </item>
 
     <item app:ua_state_highlighted="true">
         <shape>
-            <solid android:alpha="0.2" android:color="@android:color/holo_blue_dark" />
+            <solid android:alpha="0.2" android:color="#F7618B" />
         </shape>
     </item>
 

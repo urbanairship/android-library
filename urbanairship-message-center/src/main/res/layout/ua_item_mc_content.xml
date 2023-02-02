@@ -13,7 +13,7 @@
         android:layout_width="12dp"
         android:layout_height="12dp"
         android:layout_marginTop="16dp"
-        android:layout_marginLeft="4dp"
+        android:layout_marginLeft="6dp"
         android:background="@drawable/round"
         android:backgroundTint="#F7618B"
         />
@@ -24,7 +24,7 @@
         android:layout_gravity="center_vertical"
         android:orientation="vertical"
         android:layout_marginVertical="12dp"
-        android:layout_marginLeft="16dp">
+        android:layout_marginLeft="18dp">
 
         <TextView
             android:id="@+id/title"
