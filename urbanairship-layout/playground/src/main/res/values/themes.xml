@@ -11,7 +11,9 @@
         <item name="colorOnSecondary">@color/secondaryTextColor</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">@color/transparent</item>
-        <item name="android:background">@color/transparent</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:actionBarDivider">@android:color/transparent</item>
+        <item name="android:divider">@android:color/transparent</item>
         <!-- Customize your theme here. -->
     </style>
 </resources>
