@@ -175,6 +175,21 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
+    protected void themeActionBar() {
+        if (delegate != null) {
+            if (delegate.getSupportActionBar() != null) {
+                delegate.getSupportActionBar().setBackgroundDrawable(null);
+                delegate.getSupportActionBar().setElevation(0);
+                delegate.getSupportActionBar().setSplitBackgroundDrawable(null);
+
+            }
+        } else if (getActionBar() != null) {
+            getActionBar().setBackgroundDrawable(null);
+            getActionBar().setElevation(0);
+            getActionBar().setSplitBackgroundDrawable(null);
+        }
+    }
+
     /**
      * Checks if AppCompat support library is both installed and available for the activity.
      *

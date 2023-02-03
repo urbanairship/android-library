@@ -33,6 +33,7 @@ public class MessageCenterActivity extends ThemedActivity {
         }
 
         setDisplayHomeAsUpEnabled(true);
+        themeActionBar();
 
         if (savedInstanceState != null) {
             messageCenterFragment = (MessageCenterFragment) getSupportFragmentManager().findFragmentByTag("MESSAGE_CENTER_FRAGMENT");
