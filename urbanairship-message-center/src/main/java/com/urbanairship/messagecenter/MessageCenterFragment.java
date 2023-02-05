@@ -218,7 +218,7 @@ public class MessageCenterFragment extends Fragment {
                 });
 
                 absListView.setMultiChoiceModeListener(new DefaultMultiChoiceModeListener(messageListFragment));
-                absListView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+                absListView.setChoiceMode(AbsListView.CHOICE_MODE_NONE);
 
                 // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
                 absListView.setSaveEnabled(false);
