@@ -1,26 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    style="@style/UrbanAirship.PreferenceCenter.Item.Alert"
+    style="@style/UrbanAirship.PreferenceCenter.Item.AlertContent"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-
-    <ImageView
-        android:id="@+id/ua_pref_icon"
-        style="@style/UrbanAirship.PreferenceCenter.Item.AlertIcon"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_gravity="end|center_vertical"
-        android:scaleType="centerInside"
-        tools:background="@color/ua_preference_center_divider_color"
-        android:visibility="gone"
-        tools:visibility="visible" />
-
-    <LinearLayout
-        style="@style/UrbanAirship.PreferenceCenter.Item.AlertContent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginHorizontal="16dp">
 
         <TextView
             android:id="@+id/ua_pref_title"
@@ -44,5 +29,4 @@
             android:visibility="gone"
             tools:text="Enable"
             tools:visibility="visible" />
-    </LinearLayout>
 </LinearLayout>

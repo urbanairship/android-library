@@ -305,8 +305,8 @@ internal sealed class PrefCenterItem(val type: Int) {
 
         class ViewHolder(itemView: View) : CommonViewHolder<DescriptionItem>(itemView) {
             override fun bind(item: DescriptionItem) {
-                titleView.setTextOrHide(item.title)
-                descriptionView.setTextOrHide(item.description)
+                titleView.visibility = View.GONE
+                descriptionView.visibility = View.GONE
             }
         }
     }
@@ -698,13 +698,11 @@ internal sealed class PrefCenterItem(val type: Int) {
             itemView: View,
             private val onClick: (actions: ActionsMap) -> Unit
         ) : CommonViewHolder<AlertItem>(itemView) {
-            private val iconView: ImageView = itemView.findViewById(R.id.ua_pref_icon)
             private val buttonView: Button = itemView.findViewById(R.id.ua_pref_button)
 
             override fun bind(item: AlertItem) {
                 titleView.setTextOrHide(item.title)
                 descriptionView.setTextOrHide(item.description)
-                iconView.loadImageOrHide(item.icon)
 
                 item.button?.let { button ->
                     buttonView.run {

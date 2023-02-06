@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="ua_preference_center_label">Preference Center</string>
+    <string name="ua_preference_center_label">Inbox Preferences</string>
     <string name="ua_preference_center_empty">Unable to load preferences. Please try again later.</string>
     <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
     <string name="ua_preference_center_item_error">Update failed. Please try again later.</string>
