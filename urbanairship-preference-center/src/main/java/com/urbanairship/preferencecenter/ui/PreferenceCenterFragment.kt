@@ -139,7 +139,6 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
         with(views) {
             list.adapter = adapter
             list.layoutManager = LinearLayoutManager(requireContext())
-            list.addItemDecoration(SectionDividerDecoration(requireContext(), list::isAnimating))
             list.setHasFixedSize(true)
         }
 
