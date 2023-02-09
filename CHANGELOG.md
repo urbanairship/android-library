@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.8.1 February 9, 2022
+Patch release to prevent prompting for user notifications until after onAirshipReady is called.
+
+### Changes
+- Prevent user notifications prompt before onAirshipReady.
+
 ## Version 16.8.0 November 2, 2022
 Minor release that adds support for custom Airship domains.
 

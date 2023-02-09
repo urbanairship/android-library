@@ -506,6 +506,7 @@ public class PushManagerTest extends BaseTestCase {
     @Test
     public void testForegroundChecksPermission() {
         pushManager.init();
+        pushManager.onAirshipReady(UAirship.shared());
         this.notificationStatus = PermissionStatus.NOT_DETERMINED;
         pushManager.setUserNotificationsEnabled(true);
         clearInvocations(mockPermissionManager);
@@ -527,6 +528,8 @@ public class PushManagerTest extends BaseTestCase {
 
     @Test
     public void testPrivacyManagerEnablesNotifications() {
+        pushManager.onAirshipReady(UAirship.shared());
+
         this.notificationStatus = PermissionStatus.NOT_DETERMINED;
 
         pushManager.init();
@@ -559,6 +562,8 @@ public class PushManagerTest extends BaseTestCase {
         this.notificationStatus = PermissionStatus.DENIED;
 
         pushManager.init();
+        pushManager.onAirshipReady(UAirship.shared());
+
         privacyManager.enable(PrivacyManager.FEATURE_PUSH);
         activityMonitor.foreground();
         pushManager.setUserNotificationsEnabled(true);
@@ -595,6 +600,22 @@ public class PushManagerTest extends BaseTestCase {
 
         pushManager.setUserNotificationsEnabled(true);
         verify(mockAirshipChannel).updateRegistration();
+    }
+
+    @Test
+    public void testCheckPermissionAirshipReady() {
+        this.notificationStatus = PermissionStatus.DENIED;
+        pushManager.init();
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+        activityMonitor.foreground();
+        pushManager.setUserNotificationsEnabled(true);
+        clearInvocations(mockPermissionManager);
+
+        verify(mockPermissionManager, times(0)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+
+        pushManager.onAirshipReady(UAirship.shared());
+
+        verify(mockPermissionManager, times(1)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
     }
 
 }

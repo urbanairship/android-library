@@ -38,6 +38,7 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
 import com.urbanairship.permission.PermissionDelegate;
+import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.notifications.AirshipNotificationProvider;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -247,6 +248,8 @@ public class PushManager extends AirshipComponent {
 
     private volatile boolean shouldDispatchUpdateTokenJob = true;
 
+    private volatile boolean isAirshipReady = false;
+
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
      * can be accessed from {@link com.urbanairship.UAirship#getPushManager()}.
@@ -335,6 +338,16 @@ public class PushManager extends AirshipComponent {
                 activityMonitor
         );
 
+        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, delegate);
+        updateManagerEnablement();
+    }
+
+    @Override
+    protected void onAirshipReady(@NonNull UAirship airship) {
+        super.onAirshipReady(airship);
+        isAirshipReady = true;
+
+        privacyManager.addListener(this::checkPermission);
         activityMonitor.addApplicationListener(new SimpleApplicationListener() {
             @Override
             public void onForeground(long time) {
@@ -342,8 +355,7 @@ public class PushManager extends AirshipComponent {
             }
         });
 
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, delegate);
-        updateManagerEnablement();
+        checkPermission();
     }
 
     private void checkPermission() {
@@ -351,12 +363,20 @@ public class PushManager extends AirshipComponent {
     }
 
     private void checkPermission(@Nullable Runnable onCheckComplete) {
-        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)) {
+        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH) || !isComponentEnabled()) {
             return;
         }
 
         permissionsManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS, status -> {
-            if (preferenceDataStore.getBoolean(REQUEST_PERMISSION_KEY, true) && activityMonitor.isAppForegrounded() && getUserNotificationsEnabled()) {
+            if (status == PermissionStatus.GRANTED) {
+                preferenceDataStore.put(REQUEST_PERMISSION_KEY, false);
+                if (onCheckComplete != null) {
+                    onCheckComplete.run();
+                }
+                return;
+            }
+
+            if (shouldRequestNotificationPermission()) {
                 permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS, requestResult -> {
                     if (onCheckComplete != null) {
                         onCheckComplete.run();
@@ -369,6 +389,14 @@ public class PushManager extends AirshipComponent {
                 }
             }
         });
+    }
+
+    private boolean shouldRequestNotificationPermission() {
+        return privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)
+                && isComponentEnabled()
+                && activityMonitor.isAppForegrounded()
+                && isAirshipReady
+                && getUserNotificationsEnabled();
     }
 
     private void updateManagerEnablement() {
@@ -389,8 +417,6 @@ public class PushManager extends AirshipComponent {
             if (shouldDispatchUpdateTokenJob) {
                 dispatchUpdateJob();
             }
-
-            checkPermission();
         } else {
             if (isPushManagerEnabled != null && !shouldDispatchUpdateTokenJob) {
                 return;
@@ -476,6 +502,9 @@ public class PushManager extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void onComponentEnableChange(boolean isEnabled) {
         updateManagerEnablement();
+        if (isEnabled) {
+            checkPermission();
+        }
     }
 
     /**
@@ -1024,7 +1053,6 @@ public class PushManager extends AirshipComponent {
 
     /**
      * Clear the push token.
-     *
      */
     private void clearPushToken() {
         preferenceDataStore.remove(PUSH_TOKEN_KEY);
