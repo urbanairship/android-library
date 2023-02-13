@@ -83,6 +83,12 @@ internal sealed class State {
                 )
             }
 
+        fun copyWithPageIds(pageIds: List<String>) =
+            copy(
+                pages = pageIds,
+                completed = pageIds.size <= 1
+            )
+
         fun reportingContext(): PagerData =
             PagerData(identifier, pageIndex, pages.getOrElse(pageIndex) { "NULL!" }, pages.size, completed)
     }
