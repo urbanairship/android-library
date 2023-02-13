@@ -21,9 +21,9 @@
     </plurals>
     <!-- Message item content descriptions. Used on the Inbox (message list) screen. -->
     <!-- Prepended to the content description for messages that are currently selected. -->
-    <string name="ua_mc_description_state_selected">sélectionné</string>
+    <string name="ua_mc_description_state_selected">Sélectionné</string>
     <!-- Prepended to the content description for messages that are currently unread. -->
-    <string name="ua_mc_description_state_unread">Non lu,</string>
+    <string name="ua_mc_description_state_unread">Non lu</string>
     <!-- Content description for message items in the message list. Dates will be formatted using
     the DateFormat.LONG format in the current locale. -->
     <string name="ua_mc_description_title_and_date">
@@ -31,7 +31,7 @@
     <xliff:g example="May 1st, 2021" id="sent_date">%2$s</xliff:g></string>
     <!-- Message item actions. Displayed in TalkBack Actions menu when screen reader is active. -->
     <!-- Action that selects the focused message. -->
-    <string name="ua_mc_action_select">Sélectionnez le message</string>
+    <string name="ua_mc_action_select">Sélectionner le message</string>
     <!-- Action that unselects the focused message. -->
     <string name="ua_mc_action_unselect">Désélectionner le message</string>
     <!-- Custom message item tap action. Will be spoken as "Tap to read message" in EN-US. -->

@@ -4,12 +4,12 @@
     <!-- Examples: Would you like to fill out a survey? [Yes] [No], 20% off Mens shoes [Shop now] -->
     <string name="ua_notification_button_yes">Oui</string>
     <string name="ua_notification_button_no">Non</string>
-    <string name="ua_notification_button_shop_now">Faites vos courses dès maintenant</string>
+    <string name="ua_notification_button_shop_now">Acheter maintenant</string>
     <string name="ua_notification_button_buy_now">Acheter maintenant</string>
     <string name="ua_notification_button_follow">Suivre</string>
-    <string name="ua_notification_button_unfollow">Cesser de suivre</string>
-    <string name="ua_notification_button_opt_in">À option d\'adhésion</string>
-    <string name="ua_notification_button_opt_out">À option de retrait</string>
+    <string name="ua_notification_button_unfollow">Ne plus suivre</string>
+    <string name="ua_notification_button_opt_in">S\'abonner</string>
+    <string name="ua_notification_button_opt_out">Se désabonner</string>
     <string name="ua_notification_button_remind">Me le rappeler plus tard</string>
     <string name="ua_notification_button_share">Partager</string>
     <string name="ua_notification_button_accept">Accepter</string>
@@ -31,8 +31,8 @@
     <!--Share dialog title. The share dialog is used to share a message to a variety of social media and/or messaging apps.-->
     <string name="ua_share_dialog_title">Partager</string>
     <!-- Channel Capture -->
-    <string name="ua_channel_notification_ticker">Canal de dirigeable</string>
-    <string name="ua_channel_copy_toast">Canal copié dans le presse-papiers !</string>
+    <string name="ua_channel_notification_ticker">Airship Channel ID</string>
+    <string name="ua_channel_copy_toast">Channel ID copié dans le presse-papiers !</string>
     <!-- Message Center -->
     <string name="ua_message_center_title">Centre de messagerie</string>
     <string name="ua_empty_message_list">Aucun message</string>
@@ -58,28 +58,28 @@
     <string name="ua_refresh">Rafraîchir</string>
     <string name="ua_open">Ouvrir</string>
     <!-- Rate App Action -->
-    <string name="ua_rate_app_action_default_rate_positive_button">Taux</string>
+    <string name="ua_rate_app_action_default_rate_positive_button">Evaluer</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Non merci</string>
-    <string name="ua_rate_app_action_default_title">Vous aimez <xliff:g example="this App" id="app_name">%1$2s</xliff:g>?</string>
-    <string name="ua_rate_app_action_default_body">Appuyez sur <xliff:g example="Rate" id="ok_button_title">%1$2s</xliff:g> pour l\'évaluer sur l\'App Store.</string>
+    <string name="ua_rate_app_action_default_title">Vous aimez <xliff:g example="cette app" id="app_name">%1$2s</xliff:g>?</string>
+    <string name="ua_rate_app_action_default_body">Appuyez sur <xliff:g example="Evaluer" id="ok_button_title">%1$2s</xliff:g> pour l\'évaluer sur le Play Store.</string>
     <string name="ua_rate_app_action_generic_display_name">Cette application</string>
     <!-- Channels -->
-    <string name="ua_default_channel_name">Avis</string>
-    <string name="ua_default_channel_description">Mises à jour générales de l\'application</string>
-    <string name="ua_channel_id">Identifiant de la chaîne</string>
-    <string name="ua_service_channel_name">Avis de service</string>
+    <string name="ua_default_channel_name">Notifications</string>
+    <string name="ua_default_channel_description">Notifications générales de l\'application</string>
+    <string name="ua_channel_id">Channel ID</string>
+    <string name="ua_service_channel_name">Notifications de service</string>
     <string name="ua_service_channel_description">Messages de service</string>
-    <string name="ua_service_channel_id">ID de canal de service</string>
-    <string name="ua_news_channel_name">Avis de nouvelles</string>
+    <string name="ua_service_channel_id">Identifiant du Channel de notifications de service</string>
+    <string name="ua_news_channel_name">Notifications d\'actualité</string>
     <string name="ua_news_channel_description">Messages d\'actualité</string>
-    <string name="ua_news_channel_id">Identifiant de la chaîne d\'actualités</string>
+    <string name="ua_news_channel_id">Identifiant du Channel de notifications d\'actualités</string>
     <string name="ua_urgent_channel_name">Notifications urgentes</string>
     <string name="ua_urgent_channel_description">Messages urgents</string>
-    <string name="ua_urgent_channel_id">ID de canal urgent</string>
+    <string name="ua_urgent_channel_id">Identifiant du Channel urgent</string>
     <string name="ua_low_priority_channel_name">Notifications de faible priorité</string>
     <string name="ua_low_priority_channel_description">Messages de faible priorité</string>
-    <string name="ua_low_priority_channel_id">ID de canal de faible priorité</string>
+    <string name="ua_low_priority_channel_id">Identifiant du Channel de faible priorité</string>
     <string name="ua_min_priority_channel_name">Notifications de priorité minimale</string>
     <string name="ua_min_priority_channel_description">Messages de priorité minimale</string>
-    <string name="ua_min_priority_channel_id">ID de canal minimal</string>
+    <string name="ua_min_priority_channel_id">Identifiant du Channel minimal</string>
 </resources>
