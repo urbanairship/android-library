@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.playground
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import android.os.Handler
@@ -17,15 +18,16 @@ import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.actions.PermissionResultReceiver
 import com.urbanairship.actions.PromptPermissionAction
-import com.urbanairship.android.layout.BasePayload
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.ThomasListener
+import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.iam.InAppActionUtils
 import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
@@ -98,6 +100,14 @@ class MainActivity : AppCompatActivity() {
             displayLayout(binding.layoutSpinnerText.text.toString())
             v.postDelayed({ v.isEnabled = true }, 150)
         }
+
+        binding.startAndroidActivity.setOnClickListener {
+            startActivity(Intent(this, OtherAndroidActivity::class.java))
+        }
+
+        binding.startAppcompatActivity.setOnClickListener {
+            startActivity(Intent(this, OtherAppCompatActivity::class.java))
+        }
     }
 
     private fun displayLayout(fileName: String) {
@@ -108,8 +118,11 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Not a valid JSON object", Toast.LENGTH_LONG).show()
                 return
             }
-            val payload = BasePayload.fromJson(jsonMap)
-            Thomas.prepareDisplay(payload).setListener(thomasListener).display(this)
+            val payload = LayoutInfo(jsonMap)
+            Thomas.prepareDisplay(payload)
+                .setInAppActivityMonitor(GlobalActivityMonitor.shared(applicationContext))
+                .setListener(thomasListener)
+                .display(this)
         } catch (e: Exception) {
             Logger.error(e)
             Toast.makeText(this, "Error trying to display layout", Toast.LENGTH_LONG).show()

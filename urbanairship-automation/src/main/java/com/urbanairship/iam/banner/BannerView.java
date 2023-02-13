@@ -18,15 +18,6 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.urbanairship.automation.R;
-import com.urbanairship.iam.ButtonInfo;
-import com.urbanairship.iam.assets.Assets;
-import com.urbanairship.iam.view.BackgroundDrawableBuilder;
-import com.urbanairship.iam.view.BorderRadius;
-import com.urbanairship.iam.view.InAppButtonLayout;
-import com.urbanairship.iam.view.InAppViewUtils;
-import com.urbanairship.iam.view.MediaView;
-
 import androidx.annotation.AnimatorRes;
 import androidx.annotation.CallSuper;
 import androidx.annotation.LayoutRes;
@@ -40,6 +31,16 @@ import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.customview.widget.ViewDragHelper;
+
+import com.urbanairship.android.layout.util.Timer;
+import com.urbanairship.automation.R;
+import com.urbanairship.iam.ButtonInfo;
+import com.urbanairship.iam.assets.Assets;
+import com.urbanairship.iam.view.BackgroundDrawableBuilder;
+import com.urbanairship.iam.view.BorderRadius;
+import com.urbanairship.iam.view.InAppButtonLayout;
+import com.urbanairship.iam.view.InAppViewUtils;
+import com.urbanairship.iam.view.MediaView;
 
 /**
  * Banner view.

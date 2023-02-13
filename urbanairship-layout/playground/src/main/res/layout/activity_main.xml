@@ -12,30 +12,39 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/layoutSpinner"
-            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense.ExposedDropdownMenu"
+        <androidx.constraintlayout.helper.widget.Flow
+            android:id="@+id/flow"
+            android:orientation="vertical"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="24dp"
             android:layout_marginEnd="24dp"
             android:layout_marginBottom="24dp"
-            android:hint="@string/layout_picker_label"
-            app:layout_constraintBottom_toTopOf="@id/showModal"
+            app:constraint_referenced_ids="layoutSpinner,showModal"
+            app:flow_verticalGap="24dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_chainStyle="packed">
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/layoutSpinner"
+            style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.Dense.ExposedDropdownMenu"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="@string/layout_picker_label">
 
             <AutoCompleteTextView
                 android:id="@+id/layoutSpinnerText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="none"
-                />
+                tools:ignore="LabelFor" />
 
         </com.google.android.material.textfield.TextInputLayout>
+
         <Button
             android:id="@+id/showModal"
             style="@style/Widget.MaterialComponents.Button"
@@ -48,11 +57,57 @@
             android:ellipsize="end"
             android:gravity="center"
             android:lines="1"
-            android:text="@string/render_button_label"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:text="@string/render_button_label" />
+
+        <LinearLayout
+            android:id="@+id/activity_buttons"
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingBottom="16dp"
+            android:gravity="center"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/layoutSpinner" />
+            app:layout_constraintTop_toBottomOf="@id/flow"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="1">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Banner Test Activities" />
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/start_android_activity"
+                    style="@style/Widget.MaterialComponents.Button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="?listPreferredItemHeight"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="16dp"
+                    android:ellipsize="end"
+                    android:lines="1"
+                    android:text="Android" />
+
+                <Button
+                    android:id="@+id/start_appcompat_activity"
+                    style="@style/Widget.MaterialComponents.Button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="?listPreferredItemHeight"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="16dp"
+                    android:ellipsize="end"
+                    android:lines="1"
+                    android:text="AppCompat" />
+            </LinearLayout>
+        </LinearLayout>
+
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,24 +6,24 @@ description = "Airship Android SDK Message Center module"
 
 dependencies {
     api project(':urbanairship-core')
-    implementation "androidx.swiperefreshlayout:swiperefreshlayout:$rootProject.androidxSwipeRefreshLayoutVersion"
-    implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
-    annotationProcessor "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
+    implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.androidx.room.runtime)
+    annotationProcessor(libs.androidx.room.compiler)
 
     // Tests
     testImplementation project(':urbanairship-test')
-    testImplementation "junit:junit:$rootProject.junitVersion"
-    testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
-    testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
-    testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
-    testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+    testImplementation(libs.junit)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.robolectric.core)
+    testImplementation(libs.androidx.test.ext.junit)
 
     // Instrumentation Test
-    androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
-    androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
-    androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
-    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
-    androidTestImplementation "androidx.room:room-testing:$rootProject.androidxRoomVersion"
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.room.testing)
 }
 
 android {

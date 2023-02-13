@@ -1092,6 +1092,7 @@ view:
                                         default:
                                           hex: "#FFFFFF"
                                       label:
+                                        type: label
                                         text: "NEXT"
                                         text_appearance:
                                           font_size: 14
@@ -2055,6 +2056,7 @@ view:
                                         default:
                                           hex: "#FFFFFF"
                                       label:
+                                        type: label
                                         text: "NEXT"
                                         text_appearance:
                                           font_size: 14
@@ -2311,6 +2313,7 @@ view:
                                         default:
                                           hex: "#FFFFFF"
                                       label:
+                                        type: label
                                         text: "SUBMIT"
                                         text_appearance:
                                           font_size: 14

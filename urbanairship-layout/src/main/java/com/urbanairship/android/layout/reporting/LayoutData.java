@@ -2,7 +2,6 @@
 
 package com.urbanairship.android.layout.reporting;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
@@ -62,16 +61,6 @@ public class LayoutData {
     @Nullable
     public String getButtonIdentifier() {
         return buttonIdentifier;
-    }
-
-    @NonNull
-    public LayoutData withFormInfo(@NonNull FormInfo formInfo) {
-        return new LayoutData(formInfo, pagerData, buttonIdentifier);
-    }
-
-    @NonNull
-    public LayoutData withPagerData(@NonNull PagerData data) {
-        return new LayoutData(formInfo, data, buttonIdentifier);
     }
 
     @Override

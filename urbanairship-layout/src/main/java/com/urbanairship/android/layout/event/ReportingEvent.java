@@ -5,7 +5,6 @@ package com.urbanairship.android.layout.event;
 import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.android.layout.reporting.FormInfo;
-import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.json.JsonValue;
 
@@ -16,7 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public abstract class ReportingEvent extends Event {
+public abstract class ReportingEvent {
 
     public enum ReportType {
         PAGE_VIEW,
@@ -32,13 +31,7 @@ public abstract class ReportingEvent extends Event {
     private final ReportType reportType;
 
     protected ReportingEvent(@NonNull ReportType reportType) {
-        super(EventType.REPORTING_EVENT);
         this.reportType = reportType;
-    }
-
-    @NonNull
-    public ReportType getReportType() {
-        return reportType;
     }
 
     /**

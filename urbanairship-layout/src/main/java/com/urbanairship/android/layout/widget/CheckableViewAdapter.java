@@ -20,6 +20,10 @@ public abstract class CheckableViewAdapter<V extends View> {
 
     public abstract void setChecked(boolean isChecked);
 
+    public abstract void setEnabled(boolean isEnabled);
+
+    public abstract boolean isChecked();
+
     public void setContentDescription(@NonNull String contentDescription) {
         view.setContentDescription(contentDescription);
     }
@@ -42,6 +46,16 @@ public abstract class CheckableViewAdapter<V extends View> {
         public void setChecked(boolean isChecked) {
             view.setChecked(isChecked);
         }
+
+        @Override
+        public void setEnabled(boolean isEnabled) {
+            view.setEnabled(isEnabled);
+        }
+
+        @Override
+        public boolean isChecked() {
+            return view.isChecked();
+        }
     }
 
     public static class Switch extends CheckableViewAdapter<SwitchCompat> {
@@ -57,6 +71,16 @@ public abstract class CheckableViewAdapter<V extends View> {
         @Override
         public void setChecked(boolean isChecked) {
             view.setChecked(isChecked);
+        }
+
+        @Override
+        public void setEnabled(boolean isEnabled) {
+            view.setEnabled(isEnabled);
+        }
+
+        @Override
+        public boolean isChecked() {
+            return view.isChecked();
         }
     }
 

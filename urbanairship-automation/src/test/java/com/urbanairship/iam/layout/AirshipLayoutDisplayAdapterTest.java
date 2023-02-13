@@ -6,11 +6,11 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestActivity;
 import com.urbanairship.TestApplication;
-import com.urbanairship.android.layout.BasePayload;
 import com.urbanairship.android.layout.ThomasListener;
 import com.urbanairship.android.layout.display.DisplayArgs;
 import com.urbanairship.android.layout.display.DisplayException;
 import com.urbanairship.android.layout.display.DisplayRequest;
+import com.urbanairship.android.layout.info.LayoutInfo;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
@@ -33,7 +33,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
@@ -45,7 +44,6 @@ import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
-import androidx.core.util.Supplier;
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -381,7 +379,7 @@ import static org.mockito.Mockito.when;
         LayoutData layoutData = mock(LayoutData.class);
         ThomasListener listener = prepareListenerTest();
 
-        Collection<FormData<?>> children = Collections.singleton(new FormData.Score("score_id",1));
+        Collection<FormData<?>> children = Collections.singleton(new FormData.Score("score_id", 1, true, null, null));
         FormData.BaseForm formData = new FormData.Nps("form_id", "response type", "score_id", children);
 
         listener.onFormResult(formData, layoutData);
@@ -450,12 +448,12 @@ import static org.mockito.Mockito.when;
         DisplayException exception;
 
         @Override
-        public DisplayRequest prepareDisplay(@NonNull BasePayload basePayload) throws DisplayException {
+        public DisplayRequest prepareDisplay(@NonNull LayoutInfo layoutInfo) throws DisplayException {
             if (exception != null) {
                 throw exception;
             }
 
-            return new DisplayRequest(basePayload, (context, args) -> {
+            return new DisplayRequest(layoutInfo, (context, args) -> {
                 this.displayArgs = args;
             });
         }

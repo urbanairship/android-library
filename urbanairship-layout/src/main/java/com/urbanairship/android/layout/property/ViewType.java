@@ -30,12 +30,18 @@ public enum ViewType {
     RADIO_INPUT("radio_input"),
     TEXT_INPUT("text_input"),
     SCORE("score"),
+    STATE_CONTROLLER("state_controller"),
     UNKNOWN("");
 
     /** View types that provide values for forms (possibly via an intermediate controller). */
     private static final List<ViewType> FORM_INPUTS = Arrays.asList(
         CHECKBOX_CONTROLLER, CHECKBOX, RADIO_INPUT_CONTROLLER, RADIO_INPUT,
         TOGGLE, TEXT_INPUT, SCORE, FORM_CONTROLLER, NPS_FORM_CONTROLLER
+    );
+
+    private static final List<ViewType> CONTROLLERS = Arrays.asList(
+            CHECKBOX_CONTROLLER, FORM_CONTROLLER, NPS_FORM_CONTROLLER, PAGER_CONTROLLER,
+            RADIO_INPUT_CONTROLLER, STATE_CONTROLLER
     );
 
     @NonNull
@@ -67,6 +73,10 @@ public enum ViewType {
 
     public boolean isFormInput() {
         return FORM_INPUTS.contains(this);
+    }
+
+    public boolean isController() {
+        return CONTROLLERS.contains(this);
     }
 
     @NonNull

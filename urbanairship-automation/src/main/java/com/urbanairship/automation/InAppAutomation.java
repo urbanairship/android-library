@@ -6,6 +6,13 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Looper;
 
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.Logger;
@@ -44,13 +51,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
 
 /**
  * In-app automation.
@@ -572,7 +572,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         RetryingExecutor.Operation[] operations = new RetryingExecutor.Operation[] { frequencyChecks, audienceChecks, prepareSchedule };
 
         if (remoteDataSubscriber.isRemoteSchedule(schedule)) {
-            remoteDataSubscriber.attemptRefresh(() -> {
+            remoteDataSubscriber.attemptRefresh(false, () -> {
                 if (isScheduleInvalid(schedule)) {
                     callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
                 } else {
@@ -655,7 +655,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         // Error
         switch (response.getStatus()) {
             case 409:
-                callback.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                remoteDataSubscriber.attemptRefresh(true, () -> {
+                    callback.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                });
                 return RetryingExecutor.finishedResult();
             case 429:
                 if (location != null) {

@@ -1,5 +1,6 @@
 plugins {
     id 'airship-module'
+    id 'kotlin-android'
 }
 
 description = "Airship Layout Rendering Library"
@@ -9,12 +10,12 @@ airshipModule {
 }
 
 android {
-    compileSdkVersion 31
+    compileSdk rootProject.compileSdkVersion
 
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
-        targetSdkVersion 31
+        targetSdk rootProject.targetSdkVersion
     }
 
     testOptions {
@@ -28,27 +29,41 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+        freeCompilerArgs = ["-Xexplicit-api=strict"]
+    }
+
     namespace 'com.urbanairship.android.layout'
 }
 
 dependencies {
     api project(':urbanairship-core')
 
+    // Kotlin
+    implementation(libs.kotlinx.coroutines.android)
+
     // AndroidX
-    implementation "androidx.core:core:$rootProject.androidxCoreVersion"
-    implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
-    implementation "androidx.recyclerview:recyclerview:$rootProject.androidxRecyclerViewVersion"
-    implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
-    implementation "androidx.lifecycle:lifecycle-common:$rootProject.androidxLifeCycleVersion"
+    implementation(libs.androidx.core)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.lifecycle.common.java8)
+    implementation(libs.androidx.lifecycle.runtimektx)
+    implementation(libs.androidx.lifecycle.viewmodelktx)
 
     // Material
-    implementation "com.google.android.material:material:$rootProject.materialVersion"
+    implementation(libs.google.material)
 
     // Unit Tests
-    testImplementation "junit:junit:$rootProject.junitVersion"
-    testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
-    testImplementation "androidx.test:runner:$rootProject.androidxTestCoreVersion"
-    testImplementation "androidx.test:rules:$rootProject.androidxTestCoreVersion"
-    testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
-    testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
+    testImplementation project(':urbanairship-test')
+    testImplementation(libs.junit)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.runner)
+    testImplementation(libs.androidx.test.rules)
+    testImplementation(libs.mockk)
+    testImplementation(libs.robolectric.core)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
 }

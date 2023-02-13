@@ -5,6 +5,9 @@ package com.urbanairship.automation;
 import android.content.Context;
 import android.os.Looper;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.urbanairship.AirshipLoopers;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
@@ -37,9 +40,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Subscriber for {@link com.urbanairship.remotedata.RemoteData}.
@@ -658,8 +658,8 @@ class InAppRemoteDataObserver {
         return false;
     }
 
-    public void attemptRefresh(@NonNull Runnable onComplete) {
-        remoteData.refresh().addResultCallback(result -> {
+    public void attemptRefresh(boolean force, @NonNull Runnable onComplete) {
+        remoteData.refresh(force).addResultCallback(result -> {
             if (result == null || !result) {
                 Logger.debug("Failed to refresh remote-data.");
             }

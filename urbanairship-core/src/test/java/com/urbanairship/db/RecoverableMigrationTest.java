@@ -3,8 +3,12 @@ package com.urbanairship.db;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 
+import com.urbanairship.ShadowAirshipExecutorsPaused;
+import com.urbanairship.shadow.ShadowNotificationManagerExtension;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.annotation.Config;
 
 import androidx.annotation.NonNull;
 import androidx.sqlite.db.SupportSQLiteDatabase;
@@ -17,6 +21,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@Config(sdk = 28)
 @RunWith(AndroidJUnit4.class)
 public class RecoverableMigrationTest {
     // Valid, but garbage SQL commands, used to signal what happened in the test migration.

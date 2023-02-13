@@ -9,11 +9,11 @@ dependencies {
     implementation project(':urbanairship-automation')
 
     // Tests
-    testImplementation "junit:junit:$rootProject.junitVersion"
-    testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
-    testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
-    testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
-    testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
+    testImplementation(libs.junit)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.robolectric.core)
+    testImplementation(libs.androidx.test.ext.junit)
 }
 
 android {

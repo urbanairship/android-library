@@ -23,7 +23,7 @@ internal class ChatViewModel @JvmOverloads constructor(
         private val application: Application,
         private val messageDraft: String?
     ) : ViewModelProvider.Factory {
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ChatViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
                 return ChatViewModel(application, messageDraft) as T

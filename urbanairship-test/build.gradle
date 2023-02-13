@@ -6,22 +6,22 @@ group = "com.urbanairship.android"
 description = "Airship Android SDK Test Utils library, for internal use only"
 
 android {
-    compileSdkVersion rootProject.compileSdkVersion
+    compileSdk rootProject.compileSdkVersion
 
     defaultConfig {
-        minSdkVersion rootProject.minSdkVersion
-        targetSdkVersion rootProject.targetSdkVersion
+        minSdk rootProject.minSdkVersion
+        targetSdk rootProject.targetSdkVersion
     }
     namespace 'com.urbanairship.test'
 }
 
 dependencies {
     api project(':urbanairship-core')
-    implementation "junit:junit:$rootProject.junitVersion"
-    implementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
-    implementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
-    implementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
-    implementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
-    implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
-    annotationProcessor "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
+    implementation(libs.junit)
+    implementation(libs.androidx.test.core)
+    implementation(libs.mockito.core)
+    implementation(libs.androidx.test.ext.junit)
+    implementation(libs.robolectric.core)
+    implementation(libs.androidx.room.runtime)
+    annotationProcessor(libs.androidx.room.compiler)
 }

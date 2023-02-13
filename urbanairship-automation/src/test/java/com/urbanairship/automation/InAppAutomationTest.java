@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
@@ -564,6 +565,12 @@ public class InAppAutomationTest {
                 .thenReturn(new Response.Builder<DeferredScheduleClient.Result>(409)
                         .build());
 
+        doAnswer((Answer) invocation -> {
+            Runnable runnable = invocation.getArgument(1);
+            runnable.run();
+            return null;
+        }).when(mockObserver).attemptRefresh(anyBoolean(), any());
+
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
 
@@ -762,10 +769,10 @@ public class InAppAutomationTest {
         when(mockObserver.isScheduleValid(schedule)).thenReturn(false);
 
         doAnswer((Answer) invocation -> {
-            Runnable runnable = invocation.getArgument(0);
+            Runnable runnable = invocation.getArgument(1);
             runnable.run();
             return null;
-        }).when(mockObserver).attemptRefresh(any());
+        }).when(mockObserver).attemptRefresh(anyBoolean(), any());
 
 
         // Prepare the schedule

@@ -5,14 +5,18 @@ package com.urbanairship.iam.banner;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
-import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.CallSuper;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
 
 import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
 import com.urbanairship.app.ActivityListener;
-import com.urbanairship.app.FilteredActivityListener;
 import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.automation.R;
 import com.urbanairship.iam.ButtonInfo;
@@ -29,12 +33,6 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import androidx.annotation.CallSuper;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.view.ViewCompat;
 
 /**
  * Banner display adapter.
