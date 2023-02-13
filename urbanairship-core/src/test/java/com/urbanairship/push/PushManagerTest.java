@@ -618,4 +618,29 @@ public class PushManagerTest extends BaseTestCase {
         verify(mockPermissionManager, times(1)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
     }
 
+    @Test
+    public void testPromptNotificationPermissionOncePerEnable() {
+        this.notificationStatus = PermissionStatus.DENIED;
+        pushManager.init();
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+        activityMonitor.foreground();
+        pushManager.onAirshipReady(UAirship.shared());
+
+        verify(mockPermissionManager, times(0)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+
+        pushManager.setUserNotificationsEnabled(true);
+
+        verify(mockPermissionManager, times(1)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+
+        activityMonitor.background();
+        activityMonitor.foreground();
+
+        verify(mockPermissionManager, times(1)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+
+        pushManager.setUserNotificationsEnabled(false);
+        pushManager.setUserNotificationsEnabled(true);
+
+        verify(mockPermissionManager, times(2)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+    }
+
 }
