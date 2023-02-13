@@ -30,7 +30,7 @@ internal class PagerView(
 
     private val modelListener = object : PagerModel.Listener {
         override fun scrollTo(position: Int) {
-            if (position != NO_POSITION && position != view.displayedItemPosition) {
+            if (position != NO_POSITION) {
                 view.scrollTo(position)
             }
         }
