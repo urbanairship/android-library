@@ -396,7 +396,8 @@ public class PushManager extends AirshipComponent {
                 && isComponentEnabled()
                 && activityMonitor.isAppForegrounded()
                 && isAirshipReady
-                && getUserNotificationsEnabled();
+                && getUserNotificationsEnabled()
+                && preferenceDataStore.getBoolean(REQUEST_PERMISSION_KEY, true);
     }
 
     private void updateManagerEnablement() {
