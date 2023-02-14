@@ -2,8 +2,10 @@
 
 package com.urbanairship.push;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
+import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,12 +19,14 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
+import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.PushProviders;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.app.SimpleApplicationListener;
@@ -44,6 +48,7 @@ import com.urbanairship.push.notifications.AirshipNotificationProvider;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationChannelRegistry;
 import com.urbanairship.push.notifications.NotificationProvider;
+import com.urbanairship.reactive.Function;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -249,6 +254,7 @@ public class PushManager extends AirshipComponent {
     private volatile boolean shouldDispatchUpdateTokenJob = true;
 
     private volatile boolean isAirshipReady = false;
+    private volatile Predicate<PushMessage> foregroundDisplayPredicate = null;
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
@@ -716,6 +722,26 @@ public class PushManager extends AirshipComponent {
     @Deprecated
     public void setQuietTimeEnabled(boolean enabled) {
         preferenceDataStore.put(QUIET_TIME_ENABLED, enabled);
+
+    }
+
+    /**
+     * Sets a predicate that determines if a notification should be presented in the foreground or not.
+     *
+     * @param foregroundDisplayPredicate The display predicate.
+     */
+    public void setForegroundNotificationDisplayPredicate(@Nullable Predicate<PushMessage> foregroundDisplayPredicate) {
+        this.foregroundDisplayPredicate = foregroundDisplayPredicate;
+    }
+
+    /**
+     * Gets the foreground notification display predicate.
+     *
+     * @return The predicate.
+     */
+    @Nullable
+    public Predicate<PushMessage> getForegroundNotificationDisplayPredicate() {
+        return this.foregroundDisplayPredicate;
     }
 
     /**

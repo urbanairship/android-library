@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.Predicate;
 import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestPushProvider;
@@ -300,6 +301,39 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         pushRunnable.run();
 
         verify(pushManager).onPushReceived(message, true);
+    }
+
+    @Test
+    public void testForegroundDisplayPredicate() {
+        when(pushManager.isComponentEnabled()).thenReturn(true);
+        when(pushManager.isPushEnabled()).thenReturn(true);
+        when(pushManager.isOptIn()).thenReturn(true);
+        when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
+        when(pushManager.getForegroundNotificationDisplayPredicate()).thenReturn(new Predicate<PushMessage>() {
+            @Override
+            public boolean apply(PushMessage object) {
+                return false;
+            }
+        });
+
+        activityMonitor.foreground();
+
+        notificationProvider.notification = createNotification();
+        notificationProvider.tag = "testNotificationTag";
+        message = new PushMessage(pushBundle);
+
+        pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
+                .setProviderClass(testPushProvider.getClass().toString())
+                .setMessage(message)
+                .setNotificationManager(notificationManager)
+                .setLongRunning(true)
+                .setJobDispatcher(jobDispatcher)
+                .setActivityMonitor(activityMonitor)
+                .build();
+
+        pushRunnable.run();
+
+        verify(pushManager).onPushReceived(message, false);
     }
 
 
