@@ -430,6 +430,13 @@ public class AirshipConfigOptions {
     @Nullable
     public final String initialConfigUrl;
 
+    /**
+     * Flag indicating whether or not the SDK will automatically prompt for notification permission
+     * when enabling notifications with {@link com.urbanairship.push.PushManager#setUserNotificationsEnabled(boolean)}.
+     */
+    @Nullable
+    public final boolean isPromptForPermissionOnUserNotificationsEnabled;
+
     private AirshipConfigOptions(@NonNull Builder builder) {
         if (builder.inProduction) {
             this.appKey = firstOrEmpty(builder.productionAppKey, builder.appKey);
@@ -484,6 +491,7 @@ public class AirshipConfigOptions {
         this.requireInitialRemoteConfigEnabled = builder.requireInitialRemoteConfigEnabled;
         this.fcmFirebaseAppName = builder.fcmFirebaseAppName;
         this.initialConfigUrl = builder.initialConfigUrl;
+        this.isPromptForPermissionOnUserNotificationsEnabled = builder.isPromptForPermissionOnUserNotificationsEnabled;
     }
 
     /**
@@ -646,6 +654,8 @@ public class AirshipConfigOptions {
         private static final String FIELD_ENABLED_FEATURES = "enabledFeatures";
         private static final String FIELD_INITIAL_CONFIG_URL = "initialConfigUrl";
 
+        private static final String FIELD_IS_PROMPT_FOR_PERMISSION_ON_USER_NOTIFICATIONS_ENABLED = "isPromptForPermissionOnUserNotificationsEnabled";
+
         private String appKey;
         private String appSecret;
         private String productionAppKey;
@@ -690,6 +700,8 @@ public class AirshipConfigOptions {
         private String fcmFirebaseAppName;
 
         private String initialConfigUrl;
+
+        private boolean isPromptForPermissionOnUserNotificationsEnabled = true;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -994,6 +1006,10 @@ public class AirshipConfigOptions {
 
                         case FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED:
                             this.setRequireInitialRemoteConfigEnabled(configParser.getBoolean(name, false));
+                            break;
+
+                        case FIELD_IS_PROMPT_FOR_PERMISSION_ON_USER_NOTIFICATIONS_ENABLED:
+                            this.setIsPromptForPermissionOnUserNotificationsEnabled(configParser.getBoolean(name, true));
                             break;
 
                         case FIELD_ENABLED_FEATURES:
@@ -1606,6 +1622,7 @@ public class AirshipConfigOptions {
             this.fcmFirebaseAppName = fcmFirebaseAppName;
             return this;
         }
+
         /**
          * Sets the flag to require initial remote-config for device URLs.
          *
@@ -1615,6 +1632,19 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setRequireInitialRemoteConfigEnabled(boolean requireInitialRemoteConfigEnabled) {
             this.requireInitialRemoteConfigEnabled = requireInitialRemoteConfigEnabled;
+            return this;
+        }
+
+        /**
+         * Sets if when enabling {@link com.urbanairship.push.PushManager#setUserNotificationsEnabled(boolean)}
+         * if the SDK should prompt for permission on Android 13+ devices. Enabled by default.
+         *
+         * @param enabled {@code true} to prompt for notifications when user notifications are enabled, otherwise {@code false}.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setIsPromptForPermissionOnUserNotificationsEnabled(boolean enabled) {
+            this.isPromptForPermissionOnUserNotificationsEnabled = enabled;
             return this;
         }
 

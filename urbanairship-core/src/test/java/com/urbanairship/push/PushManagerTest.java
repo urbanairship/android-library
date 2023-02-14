@@ -5,6 +5,7 @@ package com.urbanairship.push;
 import android.content.Context;
 import android.os.Bundle;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
@@ -90,7 +91,6 @@ public class PushManagerTest extends BaseTestCase {
         pushManager = new PushManager(TestApplication.getApplication(), preferenceDataStore, runtimeConfig,
                 privacyManager, pushProvidersSupplier, mockAirshipChannel, mockAnalytics, mockPermissionManager,
                 mockDispatcher, mockNotificationManager, activityMonitor);
-
 
         doAnswer(invocation -> {
             Consumer<PermissionStatus> statusConsumer = invocation.getArgument(1);
@@ -641,6 +641,23 @@ public class PushManagerTest extends BaseTestCase {
         pushManager.setUserNotificationsEnabled(true);
 
         verify(mockPermissionManager, times(2)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+    }
+
+    @Test
+    public void testPromptNotificationPermissionDisabled() {
+        this.runtimeConfig.setConfigOptions(AirshipConfigOptions.newBuilder()
+                                                                .setAppKey("appKey")
+                                                                .setAppSecret("appSecret")
+                                                                .setIsPromptForPermissionOnUserNotificationsEnabled(false)
+                                                                .build());
+
+        this.notificationStatus = PermissionStatus.DENIED;
+        pushManager.init();
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+        activityMonitor.foreground();
+        pushManager.onAirshipReady(UAirship.shared());
+        pushManager.setUserNotificationsEnabled(true);
+        verify(mockPermissionManager, times(0)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
     }
 
 }
