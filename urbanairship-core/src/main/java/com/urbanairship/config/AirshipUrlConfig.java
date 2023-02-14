@@ -110,6 +110,14 @@ public class AirshipUrlConfig {
     }
 
     /**
+     * Checks if the deviceUrl is configured or not.
+     * @return {@code true} if configured, otherwise {@code false}.
+     */
+    public boolean isDeviceUrlAvailable() {
+        return deviceUrl != null;
+    }
+
+    /**
      * Returns a new chat socket URL builder.
      *
      * @return A URL builder.

@@ -112,6 +112,8 @@ public class AirshipChannelTests extends BaseTestCase {
                 runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar, mockSubscriptionListRegistrar,
                 subscriptionListCache, testActivityMonitor);
+
+        when(mockClient.isUrlConfigured()).thenReturn(true);
     }
 
     @Test
@@ -1341,6 +1343,15 @@ public class AirshipChannelTests extends BaseTestCase {
             onChannelUpdatedCalled = true;
         }
 
+    }
+
+    @Test
+    public void testDispatchUpdateBeforeUrlConfigured()  {
+        when(mockClient.isUrlConfigured()).thenReturn(false);
+        airshipChannel.init();
+        testActivityMonitor.foreground();
+
+        verify(mockDispatcher, times(0)).dispatch(any());
     }
 
 }

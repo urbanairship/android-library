@@ -48,7 +48,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
 
 /**
  * Airship channel access.
@@ -1019,7 +1018,7 @@ public class AirshipChannel extends AirshipComponent {
      * @param conflictStrategy The conflict strategy.
      */
     private void dispatchUpdateJob(boolean forceFullUpdate, @JobInfo.ConflictStrategy int conflictStrategy) {
-        if (!isRegistrationAllowed()) {
+        if (!isRegistrationAllowed() || !channelApiClient.isUrlConfigured()) {
             return;
         }
 

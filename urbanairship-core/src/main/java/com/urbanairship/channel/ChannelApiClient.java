@@ -110,4 +110,7 @@ class ChannelApiClient {
         return builder.build();
     }
 
+    boolean isUrlConfigured() {
+        return runtimeConfig.getUrlConfig().isDeviceUrlAvailable();
+    }
 }
