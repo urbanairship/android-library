@@ -41,6 +41,22 @@ import androidx.core.app.NotificationCompat;
 public class AirshipConfigOptions {
 
     /**
+     * Config exceptions when trying to load properties from a resource.
+     */
+    public static class ConfigException extends Exception {
+
+        /**
+         * Default constructor.
+         *
+         * @param message The message.
+         * @param throwable The cause.
+         */
+        public ConfigException(@NonNull String message, @Nullable Throwable throwable) {
+            super(message, throwable);
+        }
+    }
+
+    /**
      * Maps to the feature {@link PrivacyManager#FEATURE_IN_APP_AUTOMATION} when used in the properties or xml config.
      */
     @NonNull
@@ -717,6 +733,19 @@ public class AirshipConfigOptions {
         }
 
         /**
+         * Same as {@link #applyDefaultProperties(Context)}, but throws an exception instead of
+         * logging an error.
+         *
+         * @param context The application context
+         * @return The config option builder.
+         * @throws ConfigException
+         */
+        @NonNull
+        public Builder tryApplyDefaultProperties(@NonNull Context context) throws ConfigException {
+            return tryApplyProperties(context, DEFAULT_PROPERTIES_FILENAME);
+        }
+
+        /**
          * Apply the options from a given properties file. The properties file should
          * be available in the assets directory. The properties file can define any of the
          * public {@link AirshipConfigOptions} fields. Example:
@@ -749,10 +778,30 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder applyProperties(@NonNull Context context, @NonNull String propertiesFile) {
             try {
+                tryApplyProperties(context, propertiesFile);
+            } catch (Exception e) {
+                Logger.error(e);
+            }
+
+            return this;
+        }
+
+        /**
+         * Same as {@link #applyProperties(Context, String)}, but throws an exception instead of
+         * logging an error.
+         *
+         * @param context The application context.
+         * @param propertiesFile The name of the properties file in the assets directory.
+         * @return The config option builder.
+         * @throws ConfigException
+         */
+        @NonNull
+        public Builder tryApplyProperties(@NonNull Context context, @NonNull String propertiesFile) throws ConfigException {
+            try {
                 ConfigParser configParser = PropertiesConfigParser.fromAssets(context, propertiesFile);
                 applyConfigParser(context, configParser);
             } catch (Exception e) {
-                Logger.error(e, "AirshipConfigOptions - Unable to apply config.");
+                throw new ConfigException("Unable to apply config from file " + propertiesFile, e);
             }
 
             return this;
@@ -771,9 +820,29 @@ public class AirshipConfigOptions {
                 ConfigParser configParser = PropertiesConfigParser.fromProperties(context, properties);
                 applyConfigParser(context, configParser);
             } catch (Exception e) {
-                Logger.error(e, "AirshipConfigOptions - Unable to apply config.");
+                Logger.error(e);
             }
 
+            return this;
+        }
+
+        /**
+         * The same as {@link #applyProperties(Context, Properties)}, but throws an exception
+         * instead of logging an error.
+         *
+         * @param context The application context.
+         * @param properties The properties
+         * @return The config option builder.
+         * @throws ConfigException
+         */
+        @NonNull
+        public Builder tryApplyProperties(@NonNull Context context, @NonNull Properties properties) throws ConfigException {
+            try {
+                ConfigParser configParser = PropertiesConfigParser.fromProperties(context, properties);
+                applyConfigParser(context, configParser);
+            } catch (Exception e) {
+                throw new ConfigException("Unable to apply config.", e);
+            }
             return this;
         }
 
@@ -802,12 +871,31 @@ public class AirshipConfigOptions {
          */
         @NonNull
         public Builder applyConfig(@NonNull Context context, @XmlRes int xmlResourceId) {
+            try {
+                tryApplyConfig(context, xmlResourceId);
+            } catch (Exception e) {
+                Logger.error(e);
+            }
+
+            return this;
+        }
+
+        /**
+         * The same as {@link #applyConfig(Context, int)}, but throws an exception instead of
+         * logging an error.
+         *
+         * @param context The application context.
+         * @param xmlResourceId The xml resource ID.
+         * @return The config option builder.
+         */
+        @NonNull
+        public Builder tryApplyConfig(@NonNull Context context, @XmlRes int xmlResourceId) throws Exception {
             XmlConfigParser configParser = null;
             try {
                 configParser = XmlConfigParser.parseElement(context, xmlResourceId, CONFIG_ELEMENT);
                 applyConfigParser(context, configParser);
             } catch (Exception e) {
-                Logger.error(e, "AirshipConfigOptions - Unable to apply config.");
+                throw new ConfigException("Unable to apply config from xml.", e);
             } finally {
                 if (configParser != null) {
                     configParser.close();
@@ -1267,6 +1355,7 @@ public class AirshipConfigOptions {
         /**
          * The Airship URL used to pull the initial config. This should only be set
          * if you are using custom domains that forward to Airship.
+         *
          * @param initialConfigUrl
          * @return
          */
