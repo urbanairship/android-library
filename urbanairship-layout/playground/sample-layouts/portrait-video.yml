@@ -81,12 +81,12 @@ view:
                                           width: 100%
                                         view:
                                           type: media
-                                          video_width: 1080
-                                          video_height: 1920
-                                          video_controls: true
-                                          video_autoplay: true
-                                          video_muted: true
-                                          video_loop: true
+                                          video :
+                                            aspect_ratio: 0.77
+                                            video_controls: true
+                                            video_autoplay: true
+                                            video_muted: true
+                                            video_loop: true
                                           media_fit: center_inside
                                           url: https://hangar-dl.urbanairship.com/binary/public/Hx7SIqHqQDmFj6aruaAFcQ/611c0ad9-73b6-4a66-8010-8d1ea1be961a
                                           #url: https://dsqqu7oxq6o1v.cloudfront.net/preview-992269-Avy3e9Poxf-high.mp4

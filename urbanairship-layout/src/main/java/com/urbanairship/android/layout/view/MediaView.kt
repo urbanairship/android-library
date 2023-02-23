@@ -5,6 +5,8 @@ import android.R
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.res.TypedArray
+import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -36,7 +38,6 @@ import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.js.UrlAllowList
 import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
-import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
@@ -163,35 +164,6 @@ internal class MediaView(
      */
     @SuppressLint("SetJavaScriptEnabled")
     private fun configureWebView(model: MediaModel) {
-        // Default to a 16:9 aspect ratio
-        val width = if (model.videoWidth != 0) model.videoWidth else 16
-        val height = if (model.videoHeight != 0) model.videoHeight else 9
-
-        // Adjust view bounds if the WebView is displaying a video.
-        // SVG images also fall back to loading in a WebView, where we don't want this behavior.
-        if (model.mediaType == MediaType.VIDEO) {
-            viewTreeObserver.addOnGlobalLayoutListener {
-                val params = layoutParams
-                // Check if we can grow the image horizontally to fit the width
-                if (params.height == WRAP_CONTENT) {
-                    val scale = getWidth().toFloat() / width.toFloat()
-                    params.height = (scale * height).roundToInt()
-                } else {
-                    val imageRatio = width.toFloat() / height.toFloat()
-                    val viewRatio = getWidth().toFloat() / getHeight()
-                    if (imageRatio >= viewRatio) {
-                        // Image is wider than the view
-                        params.height = (getWidth() / imageRatio).roundToInt()
-                    } else {
-                        // View is wider than the image
-                        val w = (getHeight() * imageRatio).roundToInt()
-                        params.width = if (w > 0) w else MATCH_PARENT
-                    }
-                }
-                layoutParams = params
-            }
-        }
-
         viewEnvironment.activityMonitor().addActivityListener(filteredActivityListener)
 
         val wv = TouchAwareWebView(context)
@@ -199,8 +171,11 @@ internal class MediaView(
 
         wv.webChromeClient = viewEnvironment.webChromeClientFactory().create()
 
-        val frameLayout = FrameLayout(context).apply {
+        val frameLayout = FixedAspectRatioFrameLayout(context).apply {
             layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
+            model.video?.aspectRatio?.let {
+                aspectRatio = it.toFloat()
+            }
         }
         val webViewLayoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
             gravity = Gravity.CENTER
@@ -236,10 +211,10 @@ internal class MediaView(
                     MediaType.VIDEO ->
                         weakWebView.loadData(
                             String.format(VIDEO_HTML_FORMAT,
-                                if (model.videoControls) "controls" else "",
-                                if (model.videoAutoplay) "autoplay" else "",
-                                if (model.videoMuted) "muted" else "",
-                                if (model.videoLoop) "loop" else "",
+                                model.video?.let { if (it.videoControls) "controls" else "" },
+                                model.video?.let { if (it.videoAutoplay) "autoplay" else "" },
+                                model.video?.let { if (it.videoMuted) "muted" else "" },
+                                model.video?.let { if (it.videoLoop) "loop" else "" },
                                 model.url),
                             "text/html",
                             "UTF-8"
@@ -303,6 +278,47 @@ internal class MediaView(
 
         companion object {
             private const val START_RETRY_DELAY: Long = 1000
+        }
+    }
+
+    class FixedAspectRatioFrameLayout(context: Context) : FrameLayout(context) {
+
+        // Default to a 16:9 aspect ratio
+        var aspectRatio = 1.77f
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            val widthMode = MeasureSpec.getMode(widthMeasureSpec)
+            val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+            val receivedWidth = MeasureSpec.getSize(widthMeasureSpec)
+            val receivedHeight = MeasureSpec.getSize(heightMeasureSpec)
+            val measuredWidth: Int
+            val measuredHeight: Int
+            val widthDynamic: Boolean = if (heightMode == MeasureSpec.EXACTLY) {
+                if (widthMode == MeasureSpec.EXACTLY) {
+                    receivedWidth == 0
+                } else {
+                    true
+                }
+            } else if (widthMode == MeasureSpec.EXACTLY) {
+                false
+            } else {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+                return
+            }
+
+            if (widthDynamic) {
+                // Width is dynamic.
+                val w = (receivedHeight * aspectRatio).toInt()
+                measuredWidth = MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY)
+                measuredHeight = heightMeasureSpec
+            } else {
+                // Height is dynamic.
+                measuredWidth = widthMeasureSpec
+                val h = (receivedWidth / aspectRatio).toInt()
+                measuredHeight = MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY)
+            }
+
+            super.onMeasure(measuredWidth, measuredHeight)
         }
     }
 

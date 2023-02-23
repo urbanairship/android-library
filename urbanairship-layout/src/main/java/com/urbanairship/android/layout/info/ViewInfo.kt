@@ -22,6 +22,7 @@ import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.property.TextInputTextAppearance
 import com.urbanairship.android.layout.property.ToggleStyle
+import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.ViewType.CHECKBOX
 import com.urbanairship.android.layout.property.ViewType.CHECKBOX_CONTROLLER
@@ -285,12 +286,7 @@ internal class MediaInfo(
     val url: String = json.requireField("url")
     val mediaType: MediaType = MediaType.from(json.requireField("media_type"))
     val scaleType: ScaleType = MediaFit.asScaleType(json.requireField("media_fit"))
-    val videoWidth: Int = json.optionalField<Int>("video_width") ?: 0
-    val videoHeight: Int = json.optionalField<Int>("video_height") ?: 0
-    val videoControls: Boolean = json.optionalField<Boolean>("video_controls") ?: true
-    val videoAutoplay: Boolean = json.optionalField<Boolean>("video_autoplay") ?: false
-    val videoMuted: Boolean = json.optionalField<Boolean>("video_muted") ?: false
-    val videoLoop: Boolean = json.optionalField<Boolean>("video_loop") ?: false
+    val video: Video? = json.optionalField<JsonMap>("video")?.let { Video.fromJson(it) }
 }
 
 internal class LabelInfo(
