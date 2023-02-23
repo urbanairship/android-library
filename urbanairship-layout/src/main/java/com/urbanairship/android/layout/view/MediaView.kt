@@ -5,8 +5,6 @@ import android.R
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.content.res.TypedArray
-import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -211,10 +209,10 @@ internal class MediaView(
                     MediaType.VIDEO ->
                         weakWebView.loadData(
                             String.format(VIDEO_HTML_FORMAT,
-                                model.video?.let { if (it.videoControls) "controls" else "" },
-                                model.video?.let { if (it.videoAutoplay) "autoplay" else "" },
-                                model.video?.let { if (it.videoMuted) "muted" else "" },
-                                model.video?.let { if (it.videoLoop) "loop" else "" },
+                                model.video?.let { if (it.showControls) "controls" else "" },
+                                model.video?.let { if (it.autoplay) "autoplay" else "" },
+                                model.video?.let { if (it.muted) "muted" else "" },
+                                model.video?.let { if (it.loop) "loop" else "" },
                                 model.url),
                             "text/html",
                             "UTF-8"

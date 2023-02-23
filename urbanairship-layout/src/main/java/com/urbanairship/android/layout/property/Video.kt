@@ -5,20 +5,21 @@ import com.urbanairship.json.JsonMap
 
 internal class Video(
     val aspectRatio: Double?,
-    val videoControls: Boolean,
-    val videoAutoplay: Boolean,
-    val videoMuted: Boolean,
-    val videoLoop: Boolean) {
+    val showControls: Boolean,
+    val autoplay: Boolean,
+    val muted: Boolean,
+    val loop: Boolean
+) {
 
     companion object {
         fun fromJson(json: JsonMap): Video {
             val aspectRatio: Double? = json.optionalField<Double>("aspect_ratio")
-            val videoControls: Boolean = json.optionalField<Boolean>("video_controls") ?: true
-            val videoAutoplay: Boolean = json.optionalField<Boolean>("video_autoplay") ?: false
-            val videoMuted: Boolean = json.optionalField<Boolean>("video_muted") ?: false
-            val videoLoop: Boolean = json.optionalField<Boolean>("video_loop") ?: false
+            val showControls: Boolean = json.optionalField<Boolean>("show_controls") ?: true
+            val autoplay: Boolean = json.optionalField<Boolean>("autoplay") ?: false
+            val muted: Boolean = json.optionalField<Boolean>("muted") ?: false
+            val loop: Boolean = json.optionalField<Boolean>("loop") ?: false
 
-            return Video(aspectRatio, videoControls, videoAutoplay, videoMuted, videoLoop)
+            return Video(aspectRatio, showControls, autoplay, muted, loop)
         }
     }
 }
