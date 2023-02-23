@@ -89,6 +89,14 @@ internal class CheckboxController(
                 }
             }
         }
+
+        modelScope.launch {
+            formState.changes.collect { form ->
+                checkboxState.update { state ->
+                    state.copy(isEnabled = form.isEnabled)
+                }
+            }
+        }
     }
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =

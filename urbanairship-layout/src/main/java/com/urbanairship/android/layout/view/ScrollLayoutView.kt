@@ -40,6 +40,9 @@ internal class ScrollLayoutView(
             override fun setVisibility(visible: Boolean) {
                 this@ScrollLayoutView.isGone = visible
             }
+            override fun setEnabled(enabled: Boolean) {
+                this@ScrollLayoutView.isEnabled = enabled
+            }
         }
 
         // Pass along any calls to apply insets to the view.

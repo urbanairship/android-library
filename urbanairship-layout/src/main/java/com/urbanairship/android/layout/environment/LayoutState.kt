@@ -144,13 +144,15 @@ internal sealed class State {
         val identifier: String,
         val minSelection: Int,
         val maxSelection: Int,
-        val selectedItems: Set<JsonValue> = emptySet()
+        val selectedItems: Set<JsonValue> = emptySet(),
+        val isEnabled: Boolean = true,
     ) : State()
 
     data class Radio(
         val identifier: String,
         val selectedItem: JsonValue? = null,
-        val attributeValue: AttributeValue? = null
+        val attributeValue: AttributeValue? = null,
+        val isEnabled: Boolean = true,
     ) : State()
 
     data class Layout(

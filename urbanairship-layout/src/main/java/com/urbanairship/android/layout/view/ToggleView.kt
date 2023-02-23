@@ -21,8 +21,10 @@ internal class ToggleView(
 
     init {
         model.listener = object : CheckableModel.Listener {
-            override fun onSetChecked(isChecked: Boolean) = Unit
-            override fun onSetEnabled(isEnabled: Boolean) = setEnabled(isEnabled)
+            override fun setChecked(checked: Boolean) = Unit
+            override fun setEnabled(enabled: Boolean) {
+                this@ToggleView.isEnabled = enabled
+            }
             override fun setVisibility(visible: Boolean) {
                 this@ToggleView.isGone = visible
             }

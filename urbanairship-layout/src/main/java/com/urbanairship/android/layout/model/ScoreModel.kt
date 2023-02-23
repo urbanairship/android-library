@@ -80,6 +80,21 @@ internal class ScoreModel(
         fun onSetSelectedScore(value: Int?)
     }
 
+    init {
+        // Set the initial empty score value
+        formState.update { state ->
+            state.copyWithFormInput(
+                FormData.Score(
+                    identifier = identifier,
+                    value = null,
+                    isValid = !isRequired,
+                    attributeName = attributeName,
+                    attributeValue = AttributeValue.NULL
+                )
+            )
+        }
+    }
+
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
         ScoreView(context, this).apply {
             id = viewId
@@ -116,6 +131,12 @@ internal class ScoreModel(
                 // Merge score item clicks with any clicks on the score view, outside the items.
                 merge(view.taps(), view.debouncedClicks())
                     .collect { handleViewEvent(EventHandler.Type.TAP) }
+            }
+        }
+
+        viewScope.launch {
+            formState.changes.collect { state ->
+                listener?.setEnabled(state.isEnabled)
             }
         }
     }

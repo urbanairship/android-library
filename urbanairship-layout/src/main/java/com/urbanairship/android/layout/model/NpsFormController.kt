@@ -26,6 +26,7 @@ internal class NpsFormController(
     identifier: String,
     responseType: String?,
     submitBehavior: FormBehaviorType?,
+    formEnabled: List<EnableBehaviorType>? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -33,12 +34,14 @@ internal class NpsFormController(
     enableBehaviors: List<EnableBehaviorType>? = null,
     formState: SharedState<State.Form>,
     parentFormState: SharedState<State.Form>?,
+    pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment
 ) : BaseFormController<View>(
     ViewType.NPS_FORM_CONTROLLER,
     identifier = identifier,
     responseType = responseType,
     submitBehavior = submitBehavior,
+    formEnabled = formEnabled,
     backgroundColor = backgroundColor,
     border = border,
     visibility = visibility,
@@ -46,6 +49,7 @@ internal class NpsFormController(
     enableBehaviors = enableBehaviors,
     formState = formState,
     parentFormState = parentFormState,
+    pagerState = pagerState,
     environment = environment
 ) {
     constructor(
@@ -53,6 +57,7 @@ internal class NpsFormController(
         view: AnyModel,
         formState: SharedState<State.Form>,
         parentFormState: SharedState<State.Form>?,
+        pagerState: SharedState<State.Pager>?,
         env: ModelEnvironment
     ) : this(
         view = view,
@@ -60,6 +65,7 @@ internal class NpsFormController(
         identifier = info.identifier,
         responseType = info.responseType,
         submitBehavior = info.submitBehavior,
+        formEnabled = info.formEnabled,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,
@@ -67,6 +73,7 @@ internal class NpsFormController(
         enableBehaviors = info.enableBehaviors,
         formState = formState,
         parentFormState = parentFormState,
+        pagerState = pagerState,
         environment = env
     )
 

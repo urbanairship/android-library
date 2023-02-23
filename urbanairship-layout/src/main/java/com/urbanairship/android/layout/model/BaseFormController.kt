@@ -14,6 +14,8 @@ import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.property.hasFormBehaviors
+import com.urbanairship.android.layout.property.hasPagerBehaviors
 import com.urbanairship.android.layout.reporting.FormData
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
@@ -31,6 +33,7 @@ internal abstract class BaseFormController<T : View>(
     val identifier: String,
     val responseType: String?,
     submitBehavior: FormBehaviorType?,
+    private val formEnabled: List<EnableBehaviorType>?,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo?,
@@ -38,6 +41,7 @@ internal abstract class BaseFormController<T : View>(
     enableBehaviors: List<EnableBehaviorType>?,
     private val formState: SharedState<State.Form>,
     private val parentFormState: SharedState<State.Form>?,
+    private val pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
 ) : BaseModel<T, BaseModel.Listener>(
     viewType = viewType,
@@ -59,15 +63,52 @@ internal abstract class BaseFormController<T : View>(
         } else {
             initParentForm()
         }
+
+        formEnabled?.let { behaviors ->
+            if (behaviors.hasPagerBehaviors) {
+                checkNotNull(pagerState) {
+                    "Pager state is required for Forms with pager enable behaviors!"
+                }
+                modelScope.launch {
+                    pagerState.changes.collect { state ->
+                        handlePagerScroll(state)
+                    }
+                }
+            }
+
+            if (behaviors.hasFormBehaviors) {
+                modelScope.launch {
+                    formState.changes.collect { state ->
+                        handleFormUpdate(state)
+                    }
+                }
+            }
+        }
     }
 
     private fun initChildForm() {
         checkNotNull(parentFormState) { "Child form requires parent form state!" }
 
+        // Update the parent form with the child form's data whenever it changes.
         modelScope.launch {
             formState.changes.collect { childState ->
                 parentFormState.update { parentState ->
                     parentState.copyWithFormInput(buildFormData(childState))
+                }
+            }
+        }
+
+        // Inherit the parent form's enabled and submitted states whenever they change.
+        modelScope.launch {
+            parentFormState.changes.collect { parentState ->
+                if (formState.value.isSubmitted != parentState.isSubmitted) {
+                    formState.update { state ->
+                        state.copy(isSubmitted = true)
+                    }
+                } else if (formState.value.isEnabled != parentState.isEnabled) {
+                    formState.update { state ->
+                        state.copy(isEnabled = parentState.isEnabled)
+                    }
                 }
             }
         }
@@ -113,6 +154,48 @@ internal abstract class BaseFormController<T : View>(
                     }
                 }
             }
+        }
+    }
+
+    private fun handleFormUpdate(state: State.Form) {
+        val behaviors = formEnabled ?: return
+
+        val hasFormValidationBehavior = behaviors.contains(EnableBehaviorType.FORM_VALIDATION)
+        val hasFormSubmitBehavior = behaviors.contains(EnableBehaviorType.FORM_SUBMISSION)
+        val isValid = !hasFormValidationBehavior || state.isValid
+
+        val isEnabled = when {
+            hasFormSubmitBehavior && hasFormValidationBehavior ->
+                !state.isSubmitted && isValid
+            hasFormSubmitBehavior ->
+                !state.isSubmitted
+            hasFormValidationBehavior ->
+                isValid
+            else ->
+                state.isEnabled
+        }
+
+        val isParentEnabled = parentFormState?.value?.isEnabled ?: true
+
+        formState.update { state ->
+             state.copy(isEnabled = isEnabled && isParentEnabled)
+        }
+    }
+
+    private fun handlePagerScroll(state: State.Pager) {
+        val behaviors = formEnabled ?: return
+
+        val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
+        val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
+        val isEnabled =
+            (hasPagerNextBehavior && hasPagerPrevBehavior && (state.hasNext || state.hasPrevious)) ||
+                (hasPagerNextBehavior && state.hasNext) ||
+                (hasPagerPrevBehavior && state.hasPrevious)
+
+        val isParentEnabled = parentFormState?.value?.isEnabled ?: true
+
+        formState.update { state ->
+             state.copy(isEnabled = isEnabled && isParentEnabled)
         }
     }
 }

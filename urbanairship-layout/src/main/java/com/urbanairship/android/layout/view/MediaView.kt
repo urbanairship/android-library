@@ -83,6 +83,9 @@ internal class MediaView(
             override fun setVisibility(visible: Boolean) {
                 this@MediaView.isGone = visible
             }
+            override fun setEnabled(enabled: Boolean) {
+                this@MediaView.isEnabled = enabled
+            }
         }
     }
 

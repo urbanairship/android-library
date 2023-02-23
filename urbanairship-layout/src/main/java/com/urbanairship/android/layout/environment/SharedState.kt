@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.update
 internal class SharedState<T>(initialValue: T) {
     private val stateFlow = MutableStateFlow(initialValue)
     val changes: StateFlow<T> = stateFlow.asStateFlow()
-    val value: T? = stateFlow.value
+    val value: T = stateFlow.value
 
     fun update(block: (T) -> T) = stateFlow.update { state ->
         block(state)

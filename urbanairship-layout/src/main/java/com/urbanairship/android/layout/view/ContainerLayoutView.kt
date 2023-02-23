@@ -49,6 +49,10 @@ internal class ContainerLayoutView(
             override fun setVisibility(visible: Boolean) {
                 this@ContainerLayoutView.isGone = visible
             }
+
+            override fun setEnabled(enabled: Boolean) {
+                this@ContainerLayoutView.isEnabled = enabled
+            }
         }
     }
 

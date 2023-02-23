@@ -117,5 +117,9 @@ internal class ToggleModel(
                     .collect { handleViewEvent(Type.TAP) }
             }
         }
+
+        viewScope.launch {
+            formState.changes.collect { state -> setEnabled(state.isEnabled) }
+        }
     }
 }

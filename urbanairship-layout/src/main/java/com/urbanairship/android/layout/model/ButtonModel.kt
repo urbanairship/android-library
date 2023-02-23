@@ -16,6 +16,11 @@ import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.property.hasCancel
+import com.urbanairship.android.layout.property.hasCancelOrDismiss
+import com.urbanairship.android.layout.property.hasFormSubmit
+import com.urbanairship.android.layout.property.hasPagerNext
+import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.json.JsonValue
@@ -49,47 +54,10 @@ internal abstract class ButtonModel<T>(
     abstract val reportingDescription: String
 
     interface Listener : BaseModel.Listener {
-        fun setEnabled(isEnabled: Boolean)
+        fun dismissSoftKeyboard()
     }
 
     override var listener: Listener? = null
-        set(listener) {
-            field = listener
-            listener?.setEnabled(isEnabled())
-        }
-
-    private var isEnabled = true
-
-    init {
-        val hasPagerEnableBehaviors = enableBehaviors.orEmpty().any {
-            it == EnableBehaviorType.PAGER_NEXT || it == EnableBehaviorType.PAGER_PREVIOUS
-        }
-        val hasFormEnableBehaviors = enableBehaviors.orEmpty().any {
-            it == EnableBehaviorType.FORM_VALIDATION || it == EnableBehaviorType.FORM_SUBMISSION
-        }
-
-        if (hasPagerEnableBehaviors) {
-            checkNotNull(pagerState) {
-                "Pager state is required for Buttons with pager enable behaviors!"
-            }
-            modelScope.launch {
-                pagerState.changes.collect { state ->
-                    handlePagerScroll(state.hasNext, state.hasPrevious)
-                }
-            }
-        }
-
-        if (hasFormEnableBehaviors) {
-            checkNotNull(formState) {
-                "Form state is required for Buttons with form enable behaviors!"
-            }
-            modelScope.launch {
-                formState.changes.collect { state ->
-                    handleFormUpdate(state)
-                }
-            }
-        }
-    }
 
     @CallSuper
     override fun onViewAttached(view: T) {
@@ -116,43 +84,66 @@ internal abstract class ButtonModel<T>(
     }
 
     private suspend fun evaluateClickBehaviors() {
-        // If we have a FORM_SUBMIT behavior, handle it first.
         if (clickBehaviors.hasFormSubmit) {
-            val submitEvent = LayoutEvent.SubmitForm(
-                buttonIdentifier = identifier,
-                onSubmitted = {
-                    // If there's also a CANCEL or DISMISS, pass along a block
-                    // so we can handle it after the FORM_SUBMIT has completed.
-                    if (clickBehaviors.hasCancelOrDismiss) {
-                      handleDismiss(clickBehaviors.hasCancel)
-                    }
-                }
-            )
-            modelScope.launch {
-                environment.eventHandler.broadcast(submitEvent)
-            }
+            // If we have a FORM_SUBMIT behavior, handle it first and then
+            // handle the rest of the behaviors after submitting.
+            handleSubmit()
         } else if (clickBehaviors.hasCancelOrDismiss) {
             // If there's only a CANCEL or DISMISS, and no FORM_SUBMIT, handle
-            // immediately.
+            // immediately. We don't need to handle pager behaviors, as the layout
+            // will be dismissed.
             handleDismiss(clickBehaviors.hasCancel)
+        } else {
+            // No FORM_SUBMIT, CANCEL, or DISMISS, so we only need to
+            // handle pager behaviors.
+            if (clickBehaviors.hasPagerNext) {
+                handlePagerNext()
+            }
+            if (clickBehaviors.hasPagerPrevious) {
+                handlePagerPrevious()
+            }
         }
+    }
 
-        if (clickBehaviors.hasPagerNext) {
-            checkNotNull(pagerState) {
-                "Pager state is required for Buttons with pager click behaviors!"
+    private fun handleSubmit() {
+        // Dismiss the keyboard, if it's open.
+        listener?.dismissSoftKeyboard()
+
+        val submitEvent = LayoutEvent.SubmitForm(
+            buttonIdentifier = identifier,
+            onSubmitted = {
+                // After submitting, handle the rest of the behaviors.
+                if (clickBehaviors.hasCancelOrDismiss) {
+                    handleDismiss(clickBehaviors.hasCancel)
+                }
+                if (clickBehaviors.hasPagerNext) {
+                    handlePagerNext()
+                }
+                if (clickBehaviors.hasPagerPrevious) {
+                    handlePagerPrevious()
+                }
             }
-            pagerState.update { state ->
-                state.copyWithPageIndex(min(state.pageIndex + 1, state.pages.size - 1))
-            }
+        )
+        modelScope.launch {
+            environment.eventHandler.broadcast(submitEvent)
         }
+    }
 
-        if (clickBehaviors.hasPagerPrevious) {
-            checkNotNull(pagerState) {
-                "Pager state is required for Buttons with pager click behaviors!"
-            }
-            pagerState.update { state ->
-                state.copyWithPageIndex(max(state.pageIndex - 1, 0))
-            }
+    private fun handlePagerNext() {
+        checkNotNull(pagerState) {
+            "Pager state is required for Buttons with pager click behaviors!"
+        }
+        pagerState.update { state ->
+            state.copyWithPageIndex(min(state.pageIndex + 1, state.pages.size - 1))
+        }
+    }
+
+    private fun handlePagerPrevious() {
+        checkNotNull(pagerState) {
+            "Pager state is required for Buttons with pager click behaviors!"
+        }
+        pagerState.update { state ->
+            state.copyWithPageIndex(max(state.pageIndex - 1, 0))
         }
     }
 
@@ -170,56 +161,4 @@ internal abstract class ButtonModel<T>(
             environment.eventHandler.broadcast(LayoutEvent.Finish)
         }
     }
-
-    private fun isEnabled(): Boolean {
-        return enableBehaviors.isNullOrEmpty() || isEnabled
-    }
-
-    private fun handleFormUpdate(state: State.Form) {
-        val behaviors = enableBehaviors.orEmpty()
-        val hasFormValidationBehavior = behaviors.contains(EnableBehaviorType.FORM_VALIDATION)
-        val hasFormSubmitBehavior = behaviors.contains(EnableBehaviorType.FORM_SUBMISSION)
-
-        val isValid = !hasFormValidationBehavior || state.isValid
-        val isSubmitted = !hasFormSubmitBehavior || state.isSubmitted
-        val enabled = isValid && isSubmitted
-
-        isEnabled = enabled
-        listener?.setEnabled(enabled)
-    }
-
-    private fun handlePagerScroll(hasNext: Boolean, hasPrevious: Boolean) {
-        val behaviors = enableBehaviors.orEmpty()
-        val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
-        val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
-
-        if (hasPagerNextBehavior) {
-            isEnabled = hasNext
-            listener?.setEnabled(hasNext)
-        }
-        if (hasPagerPrevBehavior) {
-            isEnabled = hasPrevious
-            listener?.setEnabled(hasPrevious)
-        }
-    }
 }
-
-// Click behavior helper extensions
-
-private val List<ButtonClickBehaviorType>.hasFormSubmit: Boolean
-    get() = contains(ButtonClickBehaviorType.FORM_SUBMIT)
-
-private val List<ButtonClickBehaviorType>.hasDismiss: Boolean
-    get() = contains(ButtonClickBehaviorType.DISMISS)
-
-private val List<ButtonClickBehaviorType>.hasCancel: Boolean
-    get() = contains(ButtonClickBehaviorType.CANCEL)
-
-private val List<ButtonClickBehaviorType>.hasCancelOrDismiss: Boolean
-    get() = hasCancel || hasDismiss
-
-private val List<ButtonClickBehaviorType>.hasPagerNext: Boolean
-    get() = contains(ButtonClickBehaviorType.PAGER_NEXT)
-
-private val List<ButtonClickBehaviorType>.hasPagerPrevious: Boolean
-    get() = contains(ButtonClickBehaviorType.PAGER_PREVIOUS)

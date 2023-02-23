@@ -34,13 +34,12 @@ internal abstract class CheckableModel<T : View>(
 ) {
 
     interface Listener : BaseModel.Listener {
-        fun onSetChecked(isChecked: Boolean)
-        fun onSetEnabled(isEnabled: Boolean)
+        fun setChecked(checked: Boolean)
     }
 
     val checkableViewId = View.generateViewId()
 
-    fun setChecked(isChecked: Boolean) = listener?.onSetChecked(isChecked)
+    fun setChecked(isChecked: Boolean) = listener?.setChecked(isChecked)
 
-    fun setEnabled(isEnabled: Boolean) = listener?.onSetEnabled(isEnabled)
+    fun setEnabled(isEnabled: Boolean) = listener?.setEnabled(isEnabled)
 }

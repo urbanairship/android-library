@@ -17,8 +17,10 @@ internal class CheckboxView(
 ) : CheckableView<CheckboxModel>(context, model) {
     init {
         model.listener = object : CheckableModel.Listener {
-            override fun onSetChecked(isChecked: Boolean) = setCheckedInternal(isChecked)
-            override fun onSetEnabled(isEnabled: Boolean) = setEnabled(isEnabled)
+            override fun setChecked(checked: Boolean) = setCheckedInternal(checked)
+            override fun setEnabled(enabled: Boolean) {
+                this@CheckboxView.isEnabled = enabled
+            }
             override fun setVisibility(visible: Boolean) {
                 this@CheckboxView.isGone = visible
             }

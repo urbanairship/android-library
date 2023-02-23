@@ -21,6 +21,8 @@ import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.property.hasFormBehaviors
+import com.urbanairship.android.layout.property.hasPagerBehaviors
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.LayoutData
@@ -58,6 +60,7 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
 
     internal interface Listener {
         fun setVisibility(visible: Boolean)
+        fun setEnabled(enabled: Boolean)
     }
 
     internal open var listener: L? = null
@@ -94,6 +97,22 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
                 layoutState.layout?.changes?.collect {
                     val isVisible = checkVisibility(it)
                     listener?.setVisibility(isVisible)
+                }
+            }
+        }
+
+        if (enableBehaviors != null) {
+            if (enableBehaviors.hasPagerBehaviors) {
+                checkNotNull(layoutState.pager) { "Pager state is required for pager behaviors" }
+                modelScope.launch {
+                    layoutState.pager.changes.collect { handlePagerUpdate(it) }
+                }
+            }
+
+            if (enableBehaviors.hasFormBehaviors) {
+                checkNotNull(layoutState.form) { "Form state is required for form behaviors" }
+                modelScope.launch {
+                    layoutState.form.changes.collect { handleFormUpdate(it) }
                 }
             }
         }
@@ -140,6 +159,33 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
             } else {
                 !visibility.default
             }
+    }
+
+    private fun handleFormUpdate(state: State.Form) {
+        val behaviors = enableBehaviors ?: return
+        val hasFormValidationBehavior = behaviors.contains(EnableBehaviorType.FORM_VALIDATION)
+        val hasFormSubmitBehavior = behaviors.contains(EnableBehaviorType.FORM_SUBMISSION)
+        val isValid = !hasFormValidationBehavior || state.isValid
+
+        val isEnabled = when {
+            hasFormSubmitBehavior && hasFormValidationBehavior -> !state.isSubmitted && isValid
+            hasFormSubmitBehavior -> !state.isSubmitted
+            hasFormValidationBehavior -> isValid
+            else -> true
+        }
+
+        listener?.setEnabled(isEnabled)
+    }
+
+    private fun handlePagerUpdate(state: State.Pager) {
+        val behaviors = enableBehaviors ?: return
+        val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
+        val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
+
+        val isEnabled = (hasPagerNextBehavior && state.hasNext) ||
+                (hasPagerPrevBehavior && state.hasPrevious)
+
+        listener?.setEnabled(isEnabled)
     }
 
     fun handleViewEvent(type: EventHandler.Type, value: Any? = null) {
