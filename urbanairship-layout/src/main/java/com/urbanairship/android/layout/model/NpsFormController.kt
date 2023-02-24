@@ -81,5 +81,5 @@ internal class NpsFormController(
         view.createView(context, viewEnvironment)
 
     override fun buildFormData(state: State.Form) =
-        FormData.Nps(identifier, npsIdentifier, responseType, state.data.values)
+        FormData.Nps(identifier, npsIdentifier, responseType, state.data.values.toSet())
 }

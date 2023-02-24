@@ -79,5 +79,5 @@ internal class FormController(
         view.createView(context, viewEnvironment)
 
     override fun buildFormData(state: State.Form) =
-        FormData.Form(identifier, responseType, state.data.values)
+        FormData.Form(identifier, responseType, state.data.values.toSet())
 }

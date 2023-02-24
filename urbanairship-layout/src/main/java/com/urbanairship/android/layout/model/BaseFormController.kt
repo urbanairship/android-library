@@ -17,9 +17,9 @@ import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasFormBehaviors
 import com.urbanairship.android.layout.property.hasPagerBehaviors
 import com.urbanairship.android.layout.reporting.FormData
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.filterNot
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -101,14 +101,15 @@ internal abstract class BaseFormController<T : View>(
         // Inherit the parent form's enabled and submitted states whenever they change.
         modelScope.launch {
             parentFormState.changes.collect { parentState ->
-                if (formState.value.isSubmitted != parentState.isSubmitted) {
-                    formState.update { state ->
-                        state.copy(isSubmitted = true)
+                formState.update { childState ->
+                    var updated = childState
+                    if (parentState.isSubmitted) {
+                        updated = updated.copy(isSubmitted = true)
                     }
-                } else if (formState.value.isEnabled != parentState.isEnabled) {
-                    formState.update { state ->
-                        state.copy(isEnabled = parentState.isEnabled)
+                    if (!parentState.isEnabled) {
+                        updated = updated.copy(isEnabled = false)
                     }
+                    updated
                 }
             }
         }
@@ -118,25 +119,28 @@ internal abstract class BaseFormController<T : View>(
         modelScope.launch {
             environment.layoutEvents
                 .filterIsInstance<LayoutEvent.SubmitForm>()
-                .combine(formState.changes, ::Pair)
-                .filterNot { (_, form) -> form.isSubmitted }
+                // We want to combine the submit event with the latest form state, but don't want
+                // to receive updates from the form state changes flow, so we're using a map here
+                // instead of a combine.
+                .map { it to formState.value }
+                .distinctUntilChanged()
                 .collect { (event, form) ->
-                    formState.update { state ->
-                        val submitted = state.copy(isSubmitted = true)
-                        val result = submitted.formResult()
-                        report(
-                            result,
-                            layoutState.reportingContext(
-                                formContext = form.reportingContext(),
-                                buttonId = event.buttonIdentifier
+                    if (!form.isSubmitted) {
+                        formState.update { state ->
+                            val submitted = state.copy(isSubmitted = true)
+                            val result = submitted.formResult()
+                            report(
+                                result,
+                                layoutState.reportingContext(
+                                    formContext = form.reportingContext(),
+                                    buttonId = event.buttonIdentifier
+                                )
                             )
-                        )
-                        updateAttributes(result.attributes)
-
-                        // Mark the form state as submitted.
-                        submitted
+                            updateAttributes(result.attributes)
+                            // Mark the form state as submitted.
+                            submitted
+                        }
                     }
-
                     event.onSubmitted.invoke()
                 }
         }
@@ -160,11 +164,12 @@ internal abstract class BaseFormController<T : View>(
     private fun handleFormUpdate(state: State.Form) {
         val behaviors = formEnabled ?: return
 
+        val isParentEnabled = parentFormState?.value?.isEnabled ?: true
         val hasFormValidationBehavior = behaviors.contains(EnableBehaviorType.FORM_VALIDATION)
         val hasFormSubmitBehavior = behaviors.contains(EnableBehaviorType.FORM_SUBMISSION)
         val isValid = !hasFormValidationBehavior || state.isValid
 
-        val isEnabled = when {
+        val isEnabled = isParentEnabled && when {
             hasFormSubmitBehavior && hasFormValidationBehavior ->
                 !state.isSubmitted && isValid
             hasFormSubmitBehavior ->
@@ -175,27 +180,25 @@ internal abstract class BaseFormController<T : View>(
                 state.isEnabled
         }
 
-        val isParentEnabled = parentFormState?.value?.isEnabled ?: true
-
-        formState.update { state ->
-             state.copy(isEnabled = isEnabled && isParentEnabled)
+        formState.update {
+            it.copy(isEnabled = isEnabled)
         }
     }
 
     private fun handlePagerScroll(state: State.Pager) {
         val behaviors = formEnabled ?: return
 
+        val isParentEnabled = parentFormState?.value?.isEnabled ?: true
         val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
         val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
-        val isEnabled =
+
+        val isEnabled = isParentEnabled &&
             (hasPagerNextBehavior && hasPagerPrevBehavior && (state.hasNext || state.hasPrevious)) ||
-                (hasPagerNextBehavior && state.hasNext) ||
-                (hasPagerPrevBehavior && state.hasPrevious)
+                    (hasPagerNextBehavior && state.hasNext) ||
+                    (hasPagerPrevBehavior && state.hasPrevious)
 
-        val isParentEnabled = parentFormState?.value?.isEnabled ?: true
-
-        formState.update { state ->
-             state.copy(isEnabled = isEnabled && isParentEnabled)
+        formState.update {
+            it.copy(isEnabled = isEnabled)
         }
     }
 }
