@@ -5,7 +5,6 @@ package com.urbanairship.android.layout.widget;
 import android.content.Context;
 import android.view.View;
 
-import com.urbanairship.Logger;
 import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.PagerModel;
 import com.urbanairship.android.layout.view.PagerView;
@@ -84,6 +83,8 @@ public class PagerRecyclerView extends RecyclerView {
     }
 
     public void scrollTo(int position) {
+        // Set the internal scroll flag to prevent page swipe events from being reported.
+        // The flag will be cleared when the smooth scroll animation is completed.
         isInternalScroll = true;
         smoothScrollToPosition(position);
     }
@@ -109,7 +110,11 @@ public class PagerRecyclerView extends RecyclerView {
                 }
             }
             previousPosition = position;
-            isInternalScroll = false;
+
+            // If the scroll state is idle, scrolling has stopped and we can reset the internal scroll flag.
+            if (state == RecyclerView.SCROLL_STATE_IDLE) {
+                isInternalScroll = false;
+            }
         }
     };
 
