@@ -73,6 +73,7 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
 
         view.addOnAttachStateChangeListener(object : OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(v: View) {
+                setupViewListeners(view)
                 onViewAttached(view)
             }
 
@@ -82,24 +83,6 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
                 viewJob.cancelChildren()
             }
         })
-
-        // Apply tap handler for any models that don't implement their own click handling.
-        if (eventHandlers.hasTapHandler() && view !is TappableView && view !is CheckableView<*>) {
-            viewScope.launch {
-                view.debouncedClicks()
-                    .collect { handleViewEvent(EventHandler.Type.TAP) }
-            }
-        }
-
-        // Listen to layout state changes in order to determine visibility
-        if (visibility != null) {
-            viewScope.launch {
-                layoutState.layout?.changes?.collect {
-                    val isVisible = checkVisibility(it)
-                    listener?.setVisibility(isVisible)
-                }
-            }
-        }
 
         if (enableBehaviors != null) {
             if (enableBehaviors.hasPagerBehaviors) {
@@ -118,6 +101,26 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
         }
 
         return view
+    }
+
+    private fun setupViewListeners(view: T) {
+        // Apply tap handler for any models that don't implement their own click handling.
+        if (eventHandlers.hasTapHandler() && view !is TappableView && view !is CheckableView<*>) {
+            viewScope.launch {
+                view.debouncedClicks()
+                    .collect { handleViewEvent(EventHandler.Type.TAP) }
+            }
+        }
+
+        // Listen to layout state changes in order to determine visibility
+        if (visibility != null) {
+            viewScope.launch {
+                layoutState.layout?.changes?.collect {
+                    val isVisible = checkVisibility(it)
+                    listener?.setVisibility(isVisible)
+                }
+            }
+        }
     }
 
     protected abstract fun onCreateView(context: Context, viewEnvironment: ViewEnvironment): T
