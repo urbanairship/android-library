@@ -41,7 +41,7 @@ class DeviceInfoFragment : androidx.fragment.app.Fragment() {
             true
         }
 
-        //Add a back button if the fragment is opened from Goat settings
+        // Add a back button if the fragment is opened from Goat settings
         if (activity?.intent?.extras?.getBoolean("fromGoat") == true) {
             var toolbar: Toolbar?
             view.let { view ->
