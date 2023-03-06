@@ -41,6 +41,9 @@ internal class LinearLayoutView(
             override fun setVisibility(visible: Boolean) {
                 isGone = visible
             }
+            override fun setEnabled(enabled: Boolean) {
+                isEnabled = enabled
+            }
         }
 
         layoutTransition = LayoutTransition().apply {

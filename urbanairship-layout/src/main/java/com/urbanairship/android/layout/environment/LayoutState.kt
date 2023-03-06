@@ -57,6 +57,8 @@ internal sealed class FormType(
 ) {
     object Form : FormType("form")
     data class Nps(val scoreId: String) : FormType("nps")
+
+    override fun toString(): String = value
 }
 
 internal sealed class State {
@@ -82,6 +84,12 @@ internal sealed class State {
                     completed = completed || (index == pages.size - 1)
                 )
             }
+
+        fun copyWithPageIds(pageIds: List<String>) =
+            copy(
+                pages = pageIds,
+                completed = pageIds.size <= 1
+            )
 
         fun reportingContext(): PagerData =
             PagerData(identifier, pageIndex, pages.getOrElse(pageIndex) { "NULL!" }, pages.size, completed)
@@ -116,9 +124,9 @@ internal sealed class State {
         private fun formData(): FormData.BaseForm =
             when (formType) {
                 is FormType.Form ->
-                    FormData.Form(identifier, responseType = null, data.values)
+                    FormData.Form(identifier, formResponseType, data.values.toSet())
                 is FormType.Nps ->
-                    FormData.Nps(identifier, formType.scoreId, responseType = null, data.values)
+                    FormData.Nps(identifier, formType.scoreId, formResponseType, data.values.toSet())
             }
 
         private fun attributes(): Map<AttributeName, AttributeValue> {
@@ -138,13 +146,15 @@ internal sealed class State {
         val identifier: String,
         val minSelection: Int,
         val maxSelection: Int,
-        val selectedItems: Set<JsonValue> = emptySet()
+        val selectedItems: Set<JsonValue> = emptySet(),
+        val isEnabled: Boolean = true,
     ) : State()
 
     data class Radio(
         val identifier: String,
         val selectedItem: JsonValue? = null,
-        val attributeValue: AttributeValue? = null
+        val attributeValue: AttributeValue? = null,
+        val isEnabled: Boolean = true,
     ) : State()
 
     data class Layout(

@@ -17,19 +17,21 @@ kotlin = '1.7.10'
 kotlinx-coroutines = '1.6.4'
 
 # Androidx
-androidx-annotation = '1.4.0'
-androidx-appcompat = '1.4.2'
+androidx-annotation = '1.5.0'
+androidx-appcompat = '1.6.1'
 androidx-concurrentfutures = '1.1.0'
 androidx-constraintlayout = '2.1.4'
-androidx-core = '1.8.0'
+androidx-core = '1.9.0'
 androidx-customview = '1.1.0'
-androidx-fragment = '1.5.1'
+androidx-fragment = '1.5.5'
 androidx-lifecycle = '2.5.1'
-androidx-navigation = '2.5.1'
+androidx-navigation = '2.5.3'
+
 androidx-paging = '2.1.2'
+
 androidx-preference = '1.2.0'
 androidx-recyclerview = "1.2.1"
-androidx-room = '2.4.3'
+androidx-room = '2.5.0'
 androidx-startup = '1.1.1'
 androidx-swiperefreshlayout = '1.1.0'
 androidx-test-core = '1.4.0'
@@ -39,8 +41,8 @@ androidx-test-rules = '1.4.0'
 androidx-test-runner = '1.4.0'
 androidx-test-truth = '1.4.0'
 androidx-vectordrawable = '1.1.0'
-androidx-webkit = '1.4.0'
-androidx-work = '2.7.1'
+androidx-webkit = '1.6.0'
+androidx-work = '2.8.0'
 
 # Material
 google-material = '1.6.1'
@@ -52,7 +54,7 @@ playservices-instantapps = '18.0.1'
 playservices-location = '20.0.0'
 
 # Firebase
-firebase-messaging = '23.0.6'
+firebase-messaging = '23.1.1'
 
 # OkHttp (for WebSocket support in airship-chat)
 okhttp = '4.10.0'
@@ -65,7 +67,7 @@ google-truth = '1.1.3'
 junit = '4.13.2'
 mockito = '4.6.1'
 mockito-kotlin = '4.0.0'
-robolectric = '4.8.2'
+robolectric = '4.9.2'
 turbine = '0.10.0'
 mockk = '1.12.5'
 

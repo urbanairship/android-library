@@ -5,6 +5,7 @@ package com.urbanairship.iam.html;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -160,10 +161,14 @@ public class HtmlActivity extends InAppMessageActivity {
             }
         });
 
-        content.setBackgroundColor(displayContent.getBackgroundColor());
+        int backgroundColor = displayContent.getBackgroundColor();
+        content.setBackgroundColor(backgroundColor);
+        webView.setBackgroundColor(backgroundColor);
 
-        if (borderRadius > 0) {
-            content.setClipPathBorderRadius(borderRadius);
+        if (Color.alpha(backgroundColor) == 255) {
+            if (borderRadius > 0) {
+                content.setClipPathBorderRadius(borderRadius);
+            }
         }
     }
 

@@ -223,11 +223,40 @@ public class FormControllerTest {
         childChanges.ensureAllEventsConsumed()
     }
 
+    @Test
+    public fun testChildFormInheritsParentFormEnabledState(): TestResult = runTest {
+        val parentChanges = parentFormState.changes.testIn(testScope)
+        val childChanges = childFormState.changes.testIn(testScope)
+
+        // Sanity check initial state.
+        assertTrue(parentChanges.awaitItem().data.isEmpty())
+        assertTrue(childChanges.awaitItem().data.isEmpty())
+        assertTrue(childFormState.value.isEnabled)
+
+        initChildFormController()
+
+        parentFormState.update { form ->
+            form.copy(isEnabled = false)
+        }
+
+        // Skip child form init event and the parent form state update above.
+        parentChanges.skipItems(2)
+
+        // Verify that the child state was updated appropriately.
+        childChanges.awaitItem().run {
+            assertFalse(isEnabled)
+        }
+
+        parentChanges.ensureAllEventsConsumed()
+        childChanges.ensureAllEventsConsumed()
+    }
+
     private fun initParentFormController() {
         formController = FormController(
             view = mockView,
             formState = parentFormState,
             parentFormState = null,
+            pagerState = null,
             identifier = PARENT_FORM_ID,
             responseType = "form",
             submitBehavior = FormBehaviorType.SUBMIT_EVENT,
@@ -241,6 +270,7 @@ public class FormControllerTest {
             view = mockView,
             formState = childFormState,
             parentFormState = parentFormState,
+            pagerState = null,
             identifier = CHILD_FORM_ID,
             responseType = "form",
             submitBehavior = null,

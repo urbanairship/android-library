@@ -243,7 +243,7 @@ internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemI
     val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
     val direction: Direction = Direction.from(json.requireField("direction"))
     val items = json.requireField<JsonList>("items").map { LinearLayoutItemInfo(it.requireMap()) }
-        .also { if (randomizeChildren) it.shuffled() }
+        .let { if (randomizeChildren) it.shuffled() else it }
 
     override val children: List<LinearLayoutItemInfo> = items
 }

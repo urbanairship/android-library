@@ -39,6 +39,10 @@ internal class PagerIndicatorView(
             override fun setVisibility(visible: Boolean) {
                 this@PagerIndicatorView.isGone = visible
             }
+
+            override fun setEnabled(enabled: Boolean) {
+                this@PagerIndicatorView.isEnabled = enabled
+            }
         }
     }
 

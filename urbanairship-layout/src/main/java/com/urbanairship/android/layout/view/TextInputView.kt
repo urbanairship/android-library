@@ -56,6 +56,10 @@ internal class TextInputView(
             override fun setVisibility(visible: Boolean) {
                 this@TextInputView.isGone = visible
             }
+
+            override fun setEnabled(enabled: Boolean) {
+                this@TextInputView.isEnabled = enabled
+            }
         }
 
         setOnTouchListener(touchListener)

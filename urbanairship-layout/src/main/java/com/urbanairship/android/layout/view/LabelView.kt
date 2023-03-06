@@ -23,6 +23,10 @@ internal class LabelView(
             override fun setVisibility(visible: Boolean) {
                 this@LabelView.isGone = visible
             }
+
+            override fun setEnabled(enabled: Boolean) {
+                this@LabelView.isEnabled = enabled
+            }
         }
     }
 }

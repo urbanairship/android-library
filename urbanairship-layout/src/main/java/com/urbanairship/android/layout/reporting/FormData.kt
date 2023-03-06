@@ -8,12 +8,13 @@ import com.urbanairship.json.JsonValue
 
 public sealed class FormData<T>(
     internal val type: Type,
-    public val identifier: String,
-    public val value: T?,
-    public val isValid: Boolean,
-    public val attributeName: AttributeName? = null,
-    public val attributeValue: AttributeValue? = null,
 ) {
+    public abstract val identifier: String
+    public abstract val value: T?
+    public abstract val isValid: Boolean
+    public abstract val attributeName: AttributeName?
+    public abstract val attributeValue: AttributeValue?
+
     public enum class Type(private val value: String) : JsonSerializable {
         FORM("form"),
         NPS_FORM("nps"),
@@ -37,69 +38,62 @@ public sealed class FormData<T>(
             if (it != JsonValue.NULL) it else null
         }
 
-    public class Toggle(
-        identifier: String,
-        value: Boolean?,
-        isValid: Boolean,
-        attributeName: AttributeName? = null,
-        attributeValue: AttributeValue? = null,
-    ) : FormData<Boolean>(
-        Type.TOGGLE, identifier, value, isValid, attributeName, attributeValue
-    )
+    public data class Toggle(
+        override val identifier: String,
+        override val value: Boolean?,
+        override val isValid: Boolean,
+        override val attributeName: AttributeName? = null,
+        override val attributeValue: AttributeValue? = null,
+    ) : FormData<Boolean>(Type.TOGGLE)
 
-    public class CheckboxController(
-        identifier: String,
-        value: Set<JsonValue>?,
-        isValid: Boolean,
-        attributeName: AttributeName? = null,
-        attributeValue: AttributeValue? = null,
-    ) : FormData<Set<JsonValue>>(
-        Type.MULTIPLE_CHOICE, identifier, value, isValid, attributeName, attributeValue
-    )
+    public data class CheckboxController(
+        override val identifier: String,
+        override val value: Set<JsonValue>?,
+        override val isValid: Boolean,
+        override val attributeName: AttributeName? = null,
+        override val attributeValue: AttributeValue? = null,
+    ) : FormData<Set<JsonValue>>(Type.MULTIPLE_CHOICE)
 
-    public class RadioInputController(
-        identifier: String,
-        value: JsonValue?,
-        isValid: Boolean,
-        attributeName: AttributeName? = null,
-        attributeValue: AttributeValue? = null,
+    public data class RadioInputController(
+        override val identifier: String,
+        override val value: JsonValue?,
+        override val isValid: Boolean,
+        override val attributeName: AttributeName? = null,
+        override val attributeValue: AttributeValue? = null,
     ) : FormData<JsonValue>(
-        Type.SINGLE_CHOICE, identifier, value, isValid, attributeName, attributeValue
+        Type.SINGLE_CHOICE,
     )
 
-    public class TextInput(
-        identifier: String,
-        value: String?,
-        isValid: Boolean,
-        attributeName: AttributeName? = null,
-        attributeValue: AttributeValue? = null,
-    ) : FormData<String>(Type.TEXT, identifier, value, isValid, attributeName, attributeValue)
+    public data class TextInput(
+        override val identifier: String,
+        override val value: String?,
+        override val isValid: Boolean,
+        override val attributeName: AttributeName? = null,
+        override val attributeValue: AttributeValue? = null,
+    ) : FormData<String>(Type.TEXT)
 
-    public class Score(
-        identifier: String,
-        value: Int?,
-        isValid: Boolean,
-        attributeName: AttributeName? = null,
-        attributeValue: AttributeValue? = null,
-    ) : FormData<Int>(Type.SCORE, identifier, value, isValid, attributeName, attributeValue)
+    public data class Score(
+        override val identifier: String,
+        override val value: Int?,
+        override val isValid: Boolean,
+        override val attributeName: AttributeName? = null,
+        override val attributeValue: AttributeValue? = null,
+    ) : FormData<Int>(Type.SCORE)
 
     public sealed class BaseForm(
         type: Type,
-        identifier: String,
-        protected val responseType: String?,
-        internal val children: Collection<FormData<*>>,
-        isValid: Boolean = children.all { it.isValid }
-    ) : FormData<Collection<FormData<*>>>(
-        type,
-        identifier,
-        children,
-        isValid
-    ), JsonSerializable {
+        override val identifier: String,
+        override val value: Set<FormData<*>>,
+        override val isValid: Boolean = value.all { it.isValid },
+        override val attributeName: AttributeName? = null,
+        override val attributeValue: AttributeValue? = null,
+    ) : FormData<Set<FormData<*>>>(type), JsonSerializable {
+        protected abstract val responseType: String?
 
         protected val childrenJson: JsonSerializable
             get() {
                 val builder: JsonMap.Builder = JsonMap.newBuilder()
-                for (child in value.orEmpty()) {
+                for (child in value) {
                     builder.putOpt(child.identifier, child.formData)
                 }
                 return builder.build()
@@ -109,11 +103,11 @@ public sealed class FormData<T>(
             jsonMapOf(identifier to formData).toJsonValue()
     }
 
-    public class Form(
-        identifier: String,
-        responseType: String?,
-        children: Collection<FormData<*>>
-    ) : BaseForm(Type.FORM, identifier, responseType, children) {
+    public data class Form(
+        override val identifier: String,
+        override val responseType: String?,
+        val children: Set<FormData<*>>,
+    ) : BaseForm(Type.FORM, identifier, children) {
 
         override val formData: JsonMap
             get() = jsonMapOf(
@@ -123,12 +117,12 @@ public sealed class FormData<T>(
             )
     }
 
-    public class Nps(
-        identifier: String,
+    public data class Nps(
+        override val identifier: String,
         private val scoreId: String,
-        responseType: String?,
-        children: Collection<FormData<*>>
-    ) : BaseForm(Type.NPS_FORM, identifier, responseType, children) {
+        override val responseType: String?,
+        val children: Set<FormData<*>>,
+    ) : BaseForm(Type.NPS_FORM, identifier, children) {
         override val formData: JsonMap
             get() = jsonMapOf(
                 KEY_TYPE to type,

@@ -111,6 +111,25 @@ public class RadioInputControllerTest {
         }
     }
 
+    @Test
+    public fun testControllerInheritsFormEnableState(): TestResult = runTest {
+        initRadioInputController()
+
+        radioState.changes.test {
+            // Verify that the controller is enabled by default.
+            assertTrue(awaitItem().isEnabled)
+
+            formState.update {
+                it.copy(isEnabled = false)
+            }
+
+            // Verify that the controller is disabled when the form is disabled.
+            assertFalse(awaitItem().isEnabled)
+
+            ensureAllEventsConsumed()
+        }
+    }
+
     private fun initRadioInputController(
         isRequired: Boolean = false,
         attributeName: AttributeName? = null

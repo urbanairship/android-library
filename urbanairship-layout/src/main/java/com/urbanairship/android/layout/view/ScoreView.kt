@@ -39,6 +39,7 @@ internal class ScoreView(
 
     private val scoreToViewIds = SparseIntArray()
     private var selectedScore: Int? = null
+    private var isEnabled = true
 
     init {
         LayoutUtils.applyBorderAndBackground(this, model)
@@ -54,6 +55,10 @@ internal class ScoreView(
         model.listener = object : ScoreModel.Listener {
             override fun onSetSelectedScore(value: Int?) {
                 value?.let { setSelectedScore(it) }
+            }
+
+            override fun setEnabled(enabled: Boolean) {
+                updateEnabledState(enabled)
             }
 
             override fun setVisibility(visible: Boolean) {
@@ -112,7 +117,7 @@ internal class ScoreView(
     }
 
     private fun onScoreClick(view: View, score: Int) {
-        if (score == selectedScore) return
+        if (!isEnabled || score == selectedScore) return
         selectedScore = score
 
         // Uncheck other items in the view
@@ -125,6 +130,14 @@ internal class ScoreView(
         scoreSelectedListener?.onScoreSelected(score)
         // Emit click for tap handling
         clicksChannel.trySend(Unit)
+    }
+
+    private fun updateEnabledState(enabled: Boolean) {
+        isEnabled = enabled
+
+        for (i in 0 until childCount) {
+            getChildAt(i).isEnabled = enabled
+        }
     }
 
     override fun taps(): Flow<Unit> = clicksChannel.receiveAsFlow()

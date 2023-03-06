@@ -76,7 +76,7 @@ internal class PagerModel(
     init {
         // Update pager state with our page identifiers
         pagerState.update { state ->
-            state.copy(pages = items.map { it.identifier })
+            state.copyWithPageIds(pageIds = items.map { it.identifier })
         }
     }
 

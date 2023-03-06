@@ -86,6 +86,12 @@ internal class RadioInputController(
                 }
             }
         }
+
+        modelScope.launch {
+            formState.changes.collect { form ->
+                radioState.update { it.copy(isEnabled = form.isEnabled) }
+            }
+        }
     }
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =

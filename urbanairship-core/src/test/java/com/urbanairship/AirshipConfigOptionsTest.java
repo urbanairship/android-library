@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.UUID;
 
 import androidx.core.app.NotificationCompat;
 
@@ -90,6 +91,13 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
 
         assertEquals(0, production.notificationAccentColor);
         assertEquals(0, production.notificationIcon);
+    }
+
+    @Test(expected = AirshipConfigOptions.ConfigException.class)
+    public void testThrowsInvalidConfigFile() throws IOException, AirshipConfigOptions.ConfigException {
+        AirshipConfigOptions development = new AirshipConfigOptions.Builder()
+                .tryApplyProperties(getApplication(), UUID.randomUUID().toString())
+                .build();
     }
 
     @Test

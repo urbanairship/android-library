@@ -16,6 +16,7 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.urbanairship.Autopilot;
 import com.urbanairship.Logger;
+import com.urbanairship.Predicate;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -153,25 +154,32 @@ class IncomingPushRunnable implements Runnable {
     private void postProcessPush(final UAirship airship) {
         if (!airship.getPushManager().isOptIn()) {
             Logger.info("User notifications opted out. Unable to display notification for message: %s", message);
-            airship.getPushManager().onPushReceived(message, false);
-            airship.getAnalytics().addEvent(new PushArrivedEvent(message));
+            postProcessPushFinished(airship, message, false);
             return;
         }
 
-        if (!message.isForegroundDisplayable() && activityMonitor.isAppForegrounded()) {
-            Logger.info("Notification unable to be displayed in the foreground: %s", message);
-            airship.getPushManager().onPushReceived(message, false);
-            airship.getAnalytics().addEvent(new PushArrivedEvent(message));
-            return;
+        if (activityMonitor.isAppForegrounded()) {
+            if (!message.isForegroundDisplayable()) {
+                Logger.info("Push message flagged as not able to be displayed in the foreground: %s", message);
+                postProcessPushFinished(airship, message, false);
+                return;
+            }
+
+            Predicate<PushMessage> displayForegroundPredicate = airship.getPushManager().getForegroundNotificationDisplayPredicate();
+            if (displayForegroundPredicate != null && !displayForegroundPredicate.apply(message)) {
+                Logger.info("Foreground notification display predicate prevented the display of message: %s", message);
+                postProcessPushFinished(airship, message, false);
+                return;
+            }
         }
+
 
 
         final NotificationProvider provider = getNotificationProvider(airship);
 
         if (provider == null) {
             Logger.error("NotificationProvider is null. Unable to display notification for message: %s", message);
-            airship.getPushManager().onPushReceived(message, false);
-            airship.getAnalytics().addEvent(new PushArrivedEvent(message));
+            postProcessPushFinished(airship, message, false);
             return;
         }
 
@@ -180,8 +188,7 @@ class IncomingPushRunnable implements Runnable {
             arguments = provider.onCreateNotificationArguments(context, message);
         } catch (Exception e) {
             Logger.error(e, "Failed to generate notification arguments for message. Skipping.");
-            airship.getPushManager().onPushReceived(message, false);
-            airship.getAnalytics().addEvent(new PushArrivedEvent(message));
+            postProcessPushFinished(airship, message, false);
             return;
         }
 
@@ -225,8 +232,7 @@ class IncomingPushRunnable implements Runnable {
                 // Post the notification
                 boolean posted = postNotification(notification, arguments);
 
-                airship.getAnalytics().addEvent(new PushArrivedEvent(message, notificationChannel));
-                airship.getPushManager().onPushReceived(message, posted);
+                postProcessPushFinished(airship, message, posted);
 
                 if (posted) {
                     airship.getPushManager().onNotificationPosted(message, arguments.getNotificationId(), arguments.getNotificationTag());
@@ -235,8 +241,7 @@ class IncomingPushRunnable implements Runnable {
                 break;
 
             case NotificationResult.CANCEL:
-                airship.getAnalytics().addEvent(new PushArrivedEvent(message));
-                airship.getPushManager().onPushReceived(message, false);
+                postProcessPushFinished(airship, message, false);
                 break;
 
             case NotificationResult.RETRY:
@@ -244,6 +249,11 @@ class IncomingPushRunnable implements Runnable {
                 reschedulePush(message);
                 break;
         }
+    }
+
+    private void postProcessPushFinished(@NonNull UAirship airship, @NonNull PushMessage message, boolean notificationPosted) {
+        airship.getAnalytics().addEvent(new PushArrivedEvent(message));
+        airship.getPushManager().onPushReceived(message, notificationPosted);
     }
 
     @Nullable

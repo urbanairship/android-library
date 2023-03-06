@@ -37,24 +37,24 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
 
-      - name: Setup GCP
-        uses: google-github-actions/setup-gcloud@daadedc81d5f9d3c06d2c92f49202a3cc2b919ba # v0.2.1
-        with:
-          version: '351.0.0'
-          service_account_email: ${{ secrets.GCP_SA_EMAIL }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
+      # - name: Setup GCP
+      #   uses: google-github-actions/setup-gcloud@v1
+      #   with:
+      #     service_account_email: ${{ secrets.GCP_SA_EMAIL }}
+      #     service_account_key: ${{ secrets.GCP_SA_KEY }}
 
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
 
       - name: Build
-        run: ./gradlew assembleRelease packageDocs --stacktrace
+        # run: ./gradlew assembleRelease packageDocs --stacktrace
+        run: ./gradlew assembleRelease --stacktrace
 
-      - name: Upload docs
-        run: |
-          VERSION=${{ steps.get_version.outputs.VERSION }}
-          gsutil cp build/docs/$VERSION.tar.gz gs://ua-web-ci-prod-docs-transfer/libraries/android/$VERSION.tar.gz
-          gsutil cp build/docs/$VERSION-kdoc.tar.gz gs://ua-web-ci-prod-docs-transfer/libraries/android-kotlin/$VERSION.tar.gz
+      # - name: Upload docs
+      #   run: |
+      #     VERSION=${{ steps.get_version.outputs.VERSION }}
+      #     gsutil cp build/docs/$VERSION.tar.gz gs://ua-web-ci-prod-docs-transfer/libraries/android/$VERSION.tar.gz
+      #     gsutil cp build/docs/$VERSION-kdoc.tar.gz gs://ua-web-ci-prod-docs-transfer/libraries/android-kotlin/$VERSION.tar.gz
 
       - name: Github Release
         uses: actions/create-release@v1.0.1

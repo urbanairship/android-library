@@ -2,6 +2,23 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.9.0 March 1, 2023
+
+Minor release that adds `ForegroundNotificationDisplayPredicate` on `PushManager`, a new `isPromptForPermissionOnUserNotificationsEnabled` config flag, and other improvements/fixes.
+
+### Changes
+- Added a new `ForegroundNotificationDisplayPredicate` on `PushManager`, to allow apps to control whether notifications will be posted for pushes received in while the app is in the foreground.
+- Added a new optional `isPromptForPermissionOnUserNotificationsEnabled` config flag (default: `true`), to control whether the SDK will automatically prompt for notification permission when calling `PushManager.setUserNotificationsEnabled(true)`.
+- Improved French localized strings.
+- Fixed vertical alignment for button text with icons in In-App Messages.
+- Fixed an Android 13 notification permission prompt regression in v16.8.1.
+
+## Version 16.8.1 February 9, 2023
+Patch release to prevent prompting for user notifications until after onAirshipReady is called.
+
+### Changes
+- Prevent user notifications prompt before onAirshipReady.
+
 ## Version 16.8.0 November 2, 2022
 Minor release that adds support for custom Airship domains.
 

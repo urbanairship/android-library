@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import org.intellij.lang.annotations.Language
 
 /**
  * Media view.
@@ -81,6 +82,9 @@ internal class MediaView(
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
                 this@MediaView.isGone = visible
+            }
+            override fun setEnabled(enabled: Boolean) {
+                this@MediaView.isEnabled = enabled
             }
         }
     }
@@ -135,7 +139,7 @@ internal class MediaView(
                 .setImageLoadedCallback { success ->
                     if (success) {
                         isLoaded = true
-                    } else if (visibility == View.GONE) {
+                    } else {
                         // Listen for visibility changes and load images for default GONE views
                         // once they are made visible (and have a measured size).
                         visibilityChangeListener = object : BaseView.VisibilityChangeListener {
@@ -222,7 +226,9 @@ internal class MediaView(
                         "text/html",
                         "UTF-8"
                     )
-                    else -> weakWebView.loadUrl(model.url)
+                    MediaType.YOUTUBE -> weakWebView.loadData(
+                        String.format(YOUTUBE_HTML_FORMAT, model.url,), "text/html", "UTF-8"
+                    )
                 }
             }
         }
@@ -321,11 +327,29 @@ internal class MediaView(
     }
 
     companion object {
-        private const val VIDEO_HTML_FORMAT = "<body style=\"margin:0\">" +
-                "<video playsinline %s %s %s %s height=\"100%%\" width=\"100%%\" src=\"%s\"></video>" +
-                "</body>"
-        private const val IMAGE_HTML_FORMAT = "<body style=\"margin:0\">" +
-                "<img height=\"100%%\" width=\"100%%\" src=\"%s\"/>" +
-                "</body>"
+        @Language("HTML")
+        private val VIDEO_HTML_FORMAT = """
+            <body style="margin:0">
+                <video playsinline %s %s %s %s height="100%%" width="100%%" src="%s">
+            </video></body>
+            """.trimIndent()
+
+        @Language("HTML")
+        private val IMAGE_HTML_FORMAT = """
+            <body style="margin:0">
+                <img height="100%%" width="100%%" src="%s"/>
+            </body>
+            """.trimIndent()
+
+        /**
+         * @see <a href="https://developers.google.com/youtube/player_parameters#Manual_IFrame_Embeds">YouTube IFrame Player API docs.</a>
+         */
+        @Language("HTML")
+        private val YOUTUBE_HTML_FORMAT = """
+            <body style="margin:0">
+                <iframe height="100%%" width="100%%" frameborder="0"
+                    src="%s?playsinline=1&modestbranding=1"/>
+            </body>
+            """.trimIndent()
     }
 }

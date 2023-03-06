@@ -78,6 +78,7 @@ internal class RadioInputModel(
         viewScope.launch {
             radioState.changes.collect { state ->
                 setChecked(isChecked = state.selectedItem == reportingValue)
+                setEnabled(isEnabled = state.isEnabled)
             }
         }
 

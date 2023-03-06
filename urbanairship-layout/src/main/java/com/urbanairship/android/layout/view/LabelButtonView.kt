@@ -34,13 +34,16 @@ internal class LabelButtonView(
         model.contentDescription.ifNotEmpty { contentDescription = it }
 
         model.listener = object : ButtonModel.Listener {
-            override fun setEnabled(isEnabled: Boolean) {
-                this@LabelButtonView.isEnabled = isEnabled
+            override fun setEnabled(enabled: Boolean) {
+                this@LabelButtonView.isEnabled = enabled
             }
 
             override fun setVisibility(visible: Boolean) {
                 this@LabelButtonView.isGone = visible
             }
+
+            override fun dismissSoftKeyboard() =
+                LayoutUtils.dismissSoftKeyboard(this@LabelButtonView)
         }
     }
 

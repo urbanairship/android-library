@@ -81,6 +81,12 @@ internal class TextInputModel(
                 )
             )
         }
+
+        modelScope.launch {
+            formState.changes.collect { state ->
+                listener?.setEnabled(state.isEnabled)
+            }
+        }
     }
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =

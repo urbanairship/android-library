@@ -30,13 +30,17 @@ internal class PagerView(
 
     private val modelListener = object : PagerModel.Listener {
         override fun scrollTo(position: Int) {
-            if (position != NO_POSITION && position != view.displayedItemPosition) {
+            if (position != NO_POSITION) {
                 view.scrollTo(position)
             }
         }
 
         override fun setVisibility(visible: Boolean) {
             this@PagerView.isGone = visible
+        }
+
+        override fun setEnabled(enabled: Boolean) {
+            this@PagerView.isEnabled = enabled
         }
     }
 
