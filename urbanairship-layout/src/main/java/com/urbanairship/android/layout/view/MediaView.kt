@@ -173,12 +173,22 @@ internal class MediaView(
 
         wv.webChromeClient = viewEnvironment.webChromeClientFactory().create()
 
-        val frameLayout = FixedAspectRatioFrameLayout(context).apply {
-            layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
-            model.video?.aspectRatio?.let {
-                aspectRatio = it.toFloat()
+        val frameLayout = when (model.mediaType) {
+            // Adjust the aspect ratio of the WebView if the media is video or youtube.
+            MediaType.VIDEO,
+            MediaType.YOUTUBE -> FixedAspectRatioFrameLayout(context).apply {
+                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                model.video?.aspectRatio?.let {
+                    aspectRatio = it.toFloat()
+                }
+            }
+            // SVG images fall back to loading in a WebView, where we don't want to adjust the
+            // aspect ratio.
+            MediaType.IMAGE -> FrameLayout(context).apply {
+                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
             }
         }
+
         val webViewLayoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
             gravity = Gravity.CENTER
         }
@@ -227,7 +237,23 @@ internal class MediaView(
                         "UTF-8"
                     )
                     MediaType.YOUTUBE -> weakWebView.loadData(
-                        String.format(YOUTUBE_HTML_FORMAT, model.url,), "text/html", "UTF-8"
+                        String.format(YOUTUBE_HTML_FORMAT,
+                            model.url,
+                            model.video?.let { if (it.showControls) "1" else "0" } ?: "1",
+                            model.video?.let { if (it.autoplay) "1" else "0" } ?: "0",
+                            model.video?.let { video ->
+                                // The YT IFrame API has limited support for looping and requires
+                                // the VIDEO_ID to be passed as the playlist parameter.
+                                val videoId = YOUTUBE_ID_RE.find(model.url)?.groupValues?.get(1)
+                                if (video.loop && videoId != null) {
+                                    "&playlist=$videoId&loop=1"
+                                } else {
+                                    null
+                                }
+                            } ?: "",
+                        ),
+                        "text/html",
+                        "UTF-8"
                     )
                 }
             }
@@ -348,8 +374,10 @@ internal class MediaView(
         private val YOUTUBE_HTML_FORMAT = """
             <body style="margin:0">
                 <iframe height="100%%" width="100%%" frameborder="0"
-                    src="%s?playsinline=1&modestbranding=1"/>
+                    src="%s?playsinline=1&modestbranding=1&controls=%s&autoplay=%s%s"/>
             </body>
             """.trimIndent()
+
+        private val YOUTUBE_ID_RE = Regex("""embed/([a-zA-Z0-9_-]+).*""")
     }
 }
