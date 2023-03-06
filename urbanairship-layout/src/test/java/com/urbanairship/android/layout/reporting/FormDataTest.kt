@@ -5,9 +5,9 @@ import com.urbanairship.android.layout.reporting.FormData.Score
 import com.urbanairship.android.layout.reporting.FormData.TextInput
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
-import kotlinx.coroutines.NonCancellable.children
 import org.intellij.lang.annotations.Language
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -17,26 +17,79 @@ public class FormDataTest {
 
     @Test
     @Throws(JsonException::class)
-    public fun testData() {
-        val children = listOf(
+    public fun testSerialization() {
+        assertEquals(JsonValue.parseString(expectedFormJson), form.toJsonValue())
+    }
+
+    @Test
+    public fun testEqualsAndHashCode() {
+        val radioInputControllerDataCopy = radioInputControllerData.copy()
+        val checkboxControllerDataCopy = checkboxControllerData.copy()
+        val textInputDataCopy = textInputData.copy()
+        val toggleDataCopy = toggleData.copy()
+        val scoreDataCopy = scoreData.copy()
+        val npsFormDataCopy = npsFormData.copy()
+        val formDataCopy = formData.copy()
+        val formCopy = form.copy()
+
+        assertNotSame(radioInputControllerData, radioInputControllerDataCopy)
+        assertEquals(radioInputControllerData, radioInputControllerDataCopy)
+        assertEquals(radioInputControllerData.hashCode(), radioInputControllerDataCopy.hashCode())
+
+        assertNotSame(checkboxControllerData, checkboxControllerDataCopy)
+        assertEquals(checkboxControllerData, checkboxControllerDataCopy)
+        assertEquals(checkboxControllerData.hashCode(), checkboxControllerDataCopy.hashCode())
+
+        assertNotSame(textInputData, textInputDataCopy)
+        assertEquals(textInputData, textInputDataCopy)
+        assertEquals(textInputData.hashCode(), textInputDataCopy.hashCode())
+
+        assertNotSame(toggleData, toggleDataCopy)
+        assertEquals(toggleData, toggleDataCopy)
+        assertEquals(toggleData.hashCode(), toggleDataCopy.hashCode())
+
+        assertNotSame(scoreData, scoreDataCopy)
+        assertEquals(scoreData, scoreDataCopy)
+        assertEquals(scoreData.hashCode(), scoreDataCopy.hashCode())
+
+        assertNotSame(npsFormData, npsFormDataCopy)
+        assertEquals(npsFormData, npsFormDataCopy)
+        assertEquals(npsFormData.hashCode(), npsFormDataCopy.hashCode())
+
+        assertNotSame(formData, formDataCopy)
+        assertEquals(formData, formDataCopy)
+        assertEquals(formData.hashCode(), formDataCopy.hashCode())
+
+        assertNotSame(form, formCopy)
+        assertEquals(form, formCopy)
+        assertEquals(form.hashCode(), formCopy.hashCode())
+    }
+
+    public companion object {
+        private val radioInputControllerData: FormData.RadioInputController =
             FormData.RadioInputController(
                 identifier = "single choice",
                 value = JsonValue.wrap("single choice value"),
                 isValid = true
-            ),
+            )
 
+        private val checkboxControllerData: FormData.CheckboxController =
             FormData.CheckboxController(
                 identifier = "multiple choice",
                 value = setOf(JsonValue.wrap("multiple choice value")),
                 isValid = true
-            ),
+            )
 
-            TextInput(identifier = "text input", value = "text input value", isValid = true),
+        private val textInputData: TextInput =
+            TextInput(identifier = "text input", value = "text input value", isValid = true)
 
-            FormData.Toggle(identifier = "toggle input", value = true, isValid = true),
+        private val toggleData: FormData.Toggle =
+            FormData.Toggle(identifier = "toggle input", value = true, isValid = true)
 
-            Score(identifier = "score", value = 5, isValid = true),
+        private val scoreData: Score =
+            Score(identifier = "score", value = 5, isValid = true)
 
+        private val npsFormData: FormData.Nps =
             FormData.Nps(
                 identifier = "child nps",
                 responseType = "child nps response type",
@@ -44,8 +97,9 @@ public class FormDataTest {
                 children = setOf(
                     Score(identifier = "child score", value = 7, isValid = true)
                 )
-            ),
+            )
 
+        private val formData: FormData.Form =
             FormData.Form(
                 identifier = "child form",
                 responseType = "child form response type",
@@ -53,16 +107,25 @@ public class FormDataTest {
                     TextInput(identifier = "child text", value = "child text input", isValid = true)
                 )
             )
+
+        private val children: Set<FormData<*>> = setOf(
+            radioInputControllerData,
+            checkboxControllerData,
+            textInputData,
+            toggleData,
+            scoreData,
+            npsFormData,
+            formData
         )
 
-        val form = FormData.Form(
+        private val form: FormData.Form = FormData.Form(
             identifier = "parent form",
             responseType = "parent form response type",
             children = children
         )
 
         @Language("json")
-        val expected = """{
+        private val expectedFormJson: String = """{
            "parent form":{
               "response_type":"parent form response type",
               "type":"form",
@@ -113,7 +176,5 @@ public class FormDataTest {
               }
            }
         }""".trimIndent()
-
-        Assert.assertEquals(JsonValue.parseString(expected), form.toJsonValue())
     }
 }

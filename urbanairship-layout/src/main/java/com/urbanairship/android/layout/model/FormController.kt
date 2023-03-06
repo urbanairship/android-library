@@ -24,9 +24,11 @@ internal class FormController(
     override val view: AnyModel,
     formState: SharedState<State.Form>,
     parentFormState: SharedState<State.Form>?,
+    pagerState: SharedState<State.Pager>?,
     identifier: String,
     responseType: String?,
     submitBehavior: FormBehaviorType?,
+    formEnabled: List<EnableBehaviorType>? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -37,9 +39,11 @@ internal class FormController(
     viewType = ViewType.FORM_CONTROLLER,
     formState = formState,
     parentFormState = parentFormState,
+    pagerState = pagerState,
     identifier = identifier,
     responseType = responseType,
     submitBehavior = submitBehavior,
+    formEnabled = formEnabled,
     backgroundColor = backgroundColor,
     border = border,
     visibility = visibility,
@@ -52,14 +56,17 @@ internal class FormController(
         view: AnyModel,
         formState: SharedState<State.Form>,
         parentFormState: SharedState<State.Form>?,
+        pagerState: SharedState<State.Pager>?,
         env: ModelEnvironment
     ) : this(
         view = view,
         formState = formState,
         parentFormState = parentFormState,
+        pagerState = pagerState,
         identifier = info.identifier,
         responseType = info.responseType,
         submitBehavior = info.submitBehavior,
+        formEnabled = info.formEnabled,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,
@@ -72,5 +79,5 @@ internal class FormController(
         view.createView(context, viewEnvironment)
 
     override fun buildFormData(state: State.Form) =
-        FormData.Form(identifier, responseType, state.data.values)
+        FormData.Form(identifier, responseType, state.data.values.toSet())
 }

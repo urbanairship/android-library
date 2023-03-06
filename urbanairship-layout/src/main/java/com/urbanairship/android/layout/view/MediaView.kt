@@ -9,6 +9,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.view.ViewTreeObserver
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -41,6 +42,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import org.intellij.lang.annotations.Language
 
 /**
  * Media view.
@@ -82,6 +84,9 @@ internal class MediaView(
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
                 this@MediaView.isGone = visible
+            }
+            override fun setEnabled(enabled: Boolean) {
+                this@MediaView.isEnabled = enabled
             }
         }
     }
@@ -136,7 +141,7 @@ internal class MediaView(
                 .setImageLoadedCallback { success ->
                     if (success) {
                         isLoaded = true
-                    } else if (visibility == View.GONE) {
+                    } else {
                         // Listen for visibility changes and load images for default GONE views
                         // once they are made visible (and have a measured size).
                         visibilityChangeListener = object : BaseView.VisibilityChangeListener {
@@ -167,29 +172,35 @@ internal class MediaView(
         val width = 16
         val height = 9
 
-        // Adjust view bounds if the WebView is displaying a video.
+        // Adjust view bounds if the WebView is displaying video or youtube media.
         // SVG images also fall back to loading in a WebView, where we don't want this behavior.
-        if (model.mediaType == MediaType.VIDEO) {
-            viewTreeObserver.addOnGlobalLayoutListener {
-                val params = layoutParams
-                // Check if we can grow the image horizontally to fit the width
-                if (params.height == WRAP_CONTENT) {
-                    val scale = getWidth().toFloat() / width.toFloat()
-                    params.height = (scale * height).roundToInt()
-                } else {
-                    val imageRatio = width.toFloat() / height.toFloat()
-                    val viewRatio = getWidth().toFloat() / getHeight()
-                    if (imageRatio >= viewRatio) {
-                        // Image is wider than the view
-                        params.height = (getWidth() / imageRatio).roundToInt()
-                    } else {
-                        // View is wider than the image
-                        val w = (getHeight() * imageRatio).roundToInt()
-                        params.width = if (w > 0) w else MATCH_PARENT
+        if (model.mediaType == MediaType.VIDEO || model.mediaType == MediaType.YOUTUBE) {
+            viewTreeObserver.addOnGlobalLayoutListener(
+                object : ViewTreeObserver.OnGlobalLayoutListener {
+                    override fun onGlobalLayout() {
+                        val params = layoutParams
+                        // Check if we can grow the image horizontally to fit the width
+                        if (params.height == WRAP_CONTENT) {
+                            val scale = getWidth().toFloat() / width.toFloat()
+                            params.height = (scale * height).roundToInt()
+                        } else {
+
+                            val imageRatio = width.toFloat() / height.toFloat()
+                            val viewRatio = getWidth().toFloat() / getHeight()
+                            if (imageRatio >= viewRatio) {
+                                // Image is wider than the view
+                                params.height = (getWidth() / imageRatio).roundToInt()
+                            } else {
+                                // View is wider than the image
+                                val w = (getHeight() * imageRatio).roundToInt()
+                                params.width = if (w > 0) w else MATCH_PARENT
+                            }
+                        }
+                        layoutParams = params
+                        viewTreeObserver.removeOnGlobalLayoutListener(this)
                     }
                 }
-                layoutParams = params
-            }
+            )
         }
 
         viewEnvironment.activityMonitor().addActivityListener(filteredActivityListener)
@@ -239,7 +250,9 @@ internal class MediaView(
                     MediaType.IMAGE -> weakWebView.loadData(
                         String.format(IMAGE_HTML_FORMAT, model.url), "text/html", "UTF-8"
                     )
-                    else -> weakWebView.loadUrl(model.url)
+                    MediaType.YOUTUBE -> weakWebView.loadData(
+                        String.format(YOUTUBE_HTML_FORMAT, model.url), "text/html", "UTF-8"
+                    )
                 }
             }
         }
@@ -297,11 +310,29 @@ internal class MediaView(
     }
 
     companion object {
-        private const val VIDEO_HTML_FORMAT = "<body style=\"margin:0\">" +
-                "<video playsinline controls height=\"100%%\" width=\"100%%\" src=\"%s\"></video>" +
-                "</body>"
-        private const val IMAGE_HTML_FORMAT = "<body style=\"margin:0\">" +
-                "<img height=\"100%%\" width=\"100%%\" src=\"%s\"/>" +
-                "</body>"
+        @Language("HTML")
+        private val VIDEO_HTML_FORMAT = """
+            <body style="margin:0">
+                <video playsinline controls height="100%%" width="100%%" src="%s">
+            </video></body>
+            """.trimIndent()
+
+        @Language("HTML")
+        private val IMAGE_HTML_FORMAT = """
+            <body style="margin:0">
+                <img height="100%%" width="100%%" src="%s"/>
+            </body>
+            """.trimIndent()
+
+        /**
+         * @see <a href="https://developers.google.com/youtube/player_parameters#Manual_IFrame_Embeds">YouTube IFrame Player API docs.</a>
+         */
+        @Language("HTML")
+        private val YOUTUBE_HTML_FORMAT = """
+            <body style="margin:0">
+                <iframe height="100%%" width="100%%" frameborder="0"
+                    src="%s?playsinline=1&modestbranding=1"/>
+            </body>
+            """.trimIndent()
     }
 }

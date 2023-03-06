@@ -77,7 +77,7 @@ internal class CheckboxModel(
             checkboxState.changes.collect { state ->
                 val isChecked = state.selectedItems.contains(reportingValue)
                 setChecked(isChecked = isChecked)
-                setEnabled(isEnabled = state.selectedItems.size < state.maxSelection || isChecked)
+                setEnabled(isEnabled = state.isEnabled && (state.selectedItems.size < state.maxSelection || isChecked))
             }
         }
 

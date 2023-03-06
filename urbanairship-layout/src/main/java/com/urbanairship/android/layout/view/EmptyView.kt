@@ -27,6 +27,10 @@ internal class EmptyView(
             override fun setVisibility(visible: Boolean) {
                 this@EmptyView.isGone = visible
             }
+
+            override fun setEnabled(enabled: Boolean) {
+                this@EmptyView.isEnabled = enabled
+            }
         }
     }
 }

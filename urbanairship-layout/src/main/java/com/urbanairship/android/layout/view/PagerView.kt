@@ -38,6 +38,10 @@ internal class PagerView(
         override fun setVisibility(visible: Boolean) {
             this@PagerView.isGone = visible
         }
+
+        override fun setEnabled(enabled: Boolean) {
+            this@PagerView.isEnabled = enabled
+        }
     }
 
     init {

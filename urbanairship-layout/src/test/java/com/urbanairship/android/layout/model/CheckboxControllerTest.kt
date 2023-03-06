@@ -100,6 +100,25 @@ public class CheckboxControllerTest {
         }
     }
 
+    @Test
+    public fun testControllerInheritsFormEnableState(): TestResult = runTest {
+        initCheckboxController()
+
+        checkboxState.changes.test {
+            // Verify that the controller is enabled by default.
+            assertTrue(awaitItem().isEnabled)
+
+            formState.update {
+                it.copy(isEnabled = false)
+            }
+
+            // Verify that the controller is disabled when the form is disabled.
+            assertFalse(awaitItem().isEnabled)
+
+            ensureAllEventsConsumed()
+        }
+    }
+
     private fun initCheckboxController(
         isRequired: Boolean = false,
         minSelection: Int = if (isRequired) 1 else 0,

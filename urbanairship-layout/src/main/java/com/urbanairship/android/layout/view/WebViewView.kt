@@ -80,6 +80,10 @@ internal class WebViewView(
             override fun setVisibility(visible: Boolean) {
                 this@WebViewView.isGone = visible
             }
+
+            override fun setEnabled(enabled: Boolean) {
+                this@WebViewView.isEnabled = enabled
+            }
         }
     }
 

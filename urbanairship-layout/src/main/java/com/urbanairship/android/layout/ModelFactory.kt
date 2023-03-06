@@ -79,6 +79,7 @@ internal class ThomasModelFactory : ModelFactory {
 
     private lateinit var rootTag: Tag
 
+    @Throws(ModelFactoryException::class)
     override fun create(info: ViewInfo, environment: ModelEnvironment): AnyModel {
         rootTag = generateTag(info)
         process(info)
@@ -158,6 +159,7 @@ internal class ThomasModelFactory : ModelFactory {
         }
     }
 
+    @Throws(ModelFactoryException::class)
     private fun build(environment: ModelEnvironment): AnyModel {
         // Map of tags to built controller nodes
         val controllers = processedControllers.mapValues { it.value.build() }
@@ -290,6 +292,7 @@ internal class ThomasModelFactory : ModelFactory {
         }
     }
 
+    @Throws(ModelFactoryException::class)
     private fun model(
         node: LayoutNode,
         children: List<Pair<AnyModel, ItemInfo>>,
@@ -336,6 +339,8 @@ internal class ThomasModelFactory : ModelFactory {
                 formState = environment.layoutState.form
                     ?: throw ModelFactoryException("Required form state was null for FormController!"),
                 parentFormState = environment.layoutState.parentForm,
+                // pagerState can be null, depending on the layout.
+                pagerState = environment.layoutState.pager,
                 env = environment
             )
             is NpsFormControllerInfo -> NpsFormController(
@@ -344,6 +349,8 @@ internal class ThomasModelFactory : ModelFactory {
                 formState = environment.layoutState.form
                     ?: throw ModelFactoryException("Required form state was null for NpsFormController!"),
                 parentFormState = environment.layoutState.parentForm,
+                // pagerState can be null, depending on the layout.
+                pagerState = environment.layoutState.pager,
                 env = environment
             )
             is PagerControllerInfo -> PagerController(

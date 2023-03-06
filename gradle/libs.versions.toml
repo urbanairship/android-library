@@ -1,7 +1,7 @@
 [versions]
 
 # Gradle plugins
-androidGradlePlugin = '7.4.1'
+androidGradlePlugin = '7.3.0'
 googleServicesPlugin = '4.3.13'
 spotlessPlugin = '6.4.2'
 nexusPublishPlugin = '1.1.0'

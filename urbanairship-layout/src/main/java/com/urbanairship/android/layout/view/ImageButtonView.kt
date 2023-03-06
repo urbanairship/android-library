@@ -84,13 +84,16 @@ internal class ImageButtonView(
         }
 
         model.listener = object : ButtonModel.Listener {
-            override fun setEnabled(isEnabled: Boolean) {
-                this@ImageButtonView.isEnabled = isEnabled
+            override fun setEnabled(enabled: Boolean) {
+                this@ImageButtonView.isEnabled = enabled
             }
 
             override fun setVisibility(visible: Boolean) {
                 this@ImageButtonView.isGone = visible
             }
+
+            override fun dismissSoftKeyboard() =
+                LayoutUtils.dismissSoftKeyboard(this@ImageButtonView)
         }
     }
 

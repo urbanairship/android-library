@@ -38,8 +38,8 @@ import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
 
 import androidx.annotation.NonNull;
@@ -379,7 +379,7 @@ import static org.mockito.Mockito.when;
         LayoutData layoutData = mock(LayoutData.class);
         ThomasListener listener = prepareListenerTest();
 
-        Collection<FormData<?>> children = Collections.singleton(new FormData.Score("score_id", 1, true, null, null));
+        Set<FormData<?>> children = Collections.singleton(new FormData.Score("score_id", 1, true, null, null));
         FormData.BaseForm formData = new FormData.Nps("form_id", "response type", "score_id", children);
 
         listener.onFormResult(formData, layoutData);
