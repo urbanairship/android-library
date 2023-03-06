@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.MediaType
+import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.view.MediaView
@@ -22,6 +23,7 @@ internal class MediaModel(
     val mediaType: MediaType,
     val scaleType: ImageView.ScaleType,
     val contentDescription: String? = null,
+    val video: Video?,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -42,6 +44,7 @@ internal class MediaModel(
         mediaType = info.mediaType,
         scaleType = info.scaleType,
         contentDescription = info.contentDescription,
+        video = info.video,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,

@@ -9,7 +9,6 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-import android.view.ViewTreeObserver
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -37,7 +36,6 @@ import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.js.UrlAllowList
 import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
-import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
@@ -168,41 +166,6 @@ internal class MediaView(
      */
     @SuppressLint("SetJavaScriptEnabled")
     private fun configureWebView(model: MediaModel) {
-        // Default to a 16:9 aspect ratio
-        val width = 16
-        val height = 9
-
-        // Adjust view bounds if the WebView is displaying video or youtube media.
-        // SVG images also fall back to loading in a WebView, where we don't want this behavior.
-        if (model.mediaType == MediaType.VIDEO || model.mediaType == MediaType.YOUTUBE) {
-            viewTreeObserver.addOnGlobalLayoutListener(
-                object : ViewTreeObserver.OnGlobalLayoutListener {
-                    override fun onGlobalLayout() {
-                        val params = layoutParams
-                        // Check if we can grow the image horizontally to fit the width
-                        if (params.height == WRAP_CONTENT) {
-                            val scale = getWidth().toFloat() / width.toFloat()
-                            params.height = (scale * height).roundToInt()
-                        } else {
-
-                            val imageRatio = width.toFloat() / height.toFloat()
-                            val viewRatio = getWidth().toFloat() / getHeight()
-                            if (imageRatio >= viewRatio) {
-                                // Image is wider than the view
-                                params.height = (getWidth() / imageRatio).roundToInt()
-                            } else {
-                                // View is wider than the image
-                                val w = (getHeight() * imageRatio).roundToInt()
-                                params.width = if (w > 0) w else MATCH_PARENT
-                            }
-                        }
-                        layoutParams = params
-                        viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    }
-                }
-            )
-        }
-
         viewEnvironment.activityMonitor().addActivityListener(filteredActivityListener)
 
         val wv = TouchAwareWebView(context)
@@ -210,9 +173,22 @@ internal class MediaView(
 
         wv.webChromeClient = viewEnvironment.webChromeClientFactory().create()
 
-        val frameLayout = FrameLayout(context).apply {
-            layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
+        val frameLayout = when (model.mediaType) {
+            // Adjust the aspect ratio of the WebView if the media is video or youtube.
+            MediaType.VIDEO,
+            MediaType.YOUTUBE -> FixedAspectRatioFrameLayout(context).apply {
+                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                model.video?.aspectRatio?.let {
+                    aspectRatio = it.toFloat()
+                }
+            }
+            // SVG images fall back to loading in a WebView, where we don't want to adjust the
+            // aspect ratio.
+            MediaType.IMAGE -> FrameLayout(context).apply {
+                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
+            }
         }
+
         val webViewLayoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
             gravity = Gravity.CENTER
         }
@@ -244,14 +220,40 @@ internal class MediaView(
         val load = Runnable {
             webViewWeakReference.get()?.let { weakWebView ->
                 when (model.mediaType) {
-                    MediaType.VIDEO -> weakWebView.loadData(
-                        String.format(VIDEO_HTML_FORMAT, model.url), "text/html", "UTF-8"
-                    )
+                    MediaType.VIDEO ->
+                        weakWebView.loadData(
+                            String.format(VIDEO_HTML_FORMAT,
+                                model.video?.let { if (it.showControls) "controls" else "" },
+                                model.video?.let { if (it.autoplay) "autoplay" else "" },
+                                model.video?.let { if (it.muted) "muted" else "" },
+                                model.video?.let { if (it.loop) "loop" else "" },
+                                model.url),
+                            "text/html",
+                            "UTF-8"
+                        )
                     MediaType.IMAGE -> weakWebView.loadData(
-                        String.format(IMAGE_HTML_FORMAT, model.url), "text/html", "UTF-8"
+                        String.format(IMAGE_HTML_FORMAT, model.url),
+                        "text/html",
+                        "UTF-8"
                     )
                     MediaType.YOUTUBE -> weakWebView.loadData(
-                        String.format(YOUTUBE_HTML_FORMAT, model.url), "text/html", "UTF-8"
+                        String.format(YOUTUBE_HTML_FORMAT,
+                            model.url,
+                            model.video?.let { if (it.showControls) "1" else "0" } ?: "1",
+                            model.video?.let { if (it.autoplay) "1" else "0" } ?: "0",
+                            model.video?.let { video ->
+                                // The YT IFrame API has limited support for looping and requires
+                                // the VIDEO_ID to be passed as the playlist parameter.
+                                val videoId = YOUTUBE_ID_RE.find(model.url)?.groupValues?.get(1)
+                                if (video.loop && videoId != null) {
+                                    "&playlist=$videoId&loop=1"
+                                } else {
+                                    null
+                                }
+                            } ?: "",
+                        ),
+                        "text/html",
+                        "UTF-8"
                     )
                 }
             }
@@ -309,11 +311,52 @@ internal class MediaView(
         }
     }
 
+    class FixedAspectRatioFrameLayout(context: Context) : FrameLayout(context) {
+
+        // Default to a 16:9 aspect ratio
+        var aspectRatio = 1.77f
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            val widthMode = MeasureSpec.getMode(widthMeasureSpec)
+            val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+            val receivedWidth = MeasureSpec.getSize(widthMeasureSpec)
+            val receivedHeight = MeasureSpec.getSize(heightMeasureSpec)
+            val measuredWidth: Int
+            val measuredHeight: Int
+            val widthDynamic: Boolean = if (heightMode == MeasureSpec.EXACTLY) {
+                if (widthMode == MeasureSpec.EXACTLY) {
+                    receivedWidth == 0
+                } else {
+                    true
+                }
+            } else if (widthMode == MeasureSpec.EXACTLY) {
+                false
+            } else {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+                return
+            }
+
+            if (widthDynamic) {
+                // Width is dynamic.
+                val w = (receivedHeight * aspectRatio).toInt()
+                measuredWidth = MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY)
+                measuredHeight = heightMeasureSpec
+            } else {
+                // Height is dynamic.
+                measuredWidth = widthMeasureSpec
+                val h = (receivedWidth / aspectRatio).toInt()
+                measuredHeight = MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY)
+            }
+
+            super.onMeasure(measuredWidth, measuredHeight)
+        }
+    }
+
     companion object {
         @Language("HTML")
         private val VIDEO_HTML_FORMAT = """
             <body style="margin:0">
-                <video playsinline controls height="100%%" width="100%%" src="%s">
+                <video playsinline %s %s %s %s height="100%%" width="100%%" src="%s">
             </video></body>
             """.trimIndent()
 
@@ -331,8 +374,10 @@ internal class MediaView(
         private val YOUTUBE_HTML_FORMAT = """
             <body style="margin:0">
                 <iframe height="100%%" width="100%%" frameborder="0"
-                    src="%s?playsinline=1&modestbranding=1"/>
+                    src="%s?playsinline=1&modestbranding=1&controls=%s&autoplay=%s%s"/>
             </body>
             """.trimIndent()
+
+        private val YOUTUBE_ID_RE = Regex("""embed/([a-zA-Z0-9_-]+).*""")
     }
 }
