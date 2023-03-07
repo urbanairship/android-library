@@ -23,7 +23,7 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
     }
-    
+
     namespace 'com.urbanairship.debug'
 }
 
@@ -31,7 +31,6 @@ dependencies {
     api project(':urbanairship-core')
     implementation project(':urbanairship-ads-identifier')
     implementation project(':urbanairship-automation')
-    implementation project(':urbanairship-location')
     implementation project(':urbanairship-message-center')
     implementation project(':urbanairship-preference-center')
     implementation project(':urbanairship-preference')

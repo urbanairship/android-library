@@ -49,14 +49,13 @@ public class PrivacyManager {
          * Called when the set of enabled features changes.
          */
         void onEnabledFeaturesChanged();
-
     }
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef(flag = true,
-            value = { FEATURE_NONE, FEATURE_IN_APP_AUTOMATION, FEATURE_MESSAGE_CENTER, FEATURE_PUSH,
-                    FEATURE_CHAT, FEATURE_ANALYTICS, FEATURE_TAGS_AND_ATTRIBUTES, FEATURE_CONTACTS,
-                    FEATURE_LOCATION, FEATURE_ALL })
+    @IntDef(flag = true, value = {
+            FEATURE_NONE, FEATURE_IN_APP_AUTOMATION, FEATURE_MESSAGE_CENTER, FEATURE_PUSH,
+            FEATURE_ANALYTICS, FEATURE_TAGS_AND_ATTRIBUTES, FEATURE_CONTACTS, FEATURE_ALL
+    })
     public @interface Feature {}
 
     /**
@@ -87,14 +86,6 @@ public class PrivacyManager {
      * - Push tokens
      */
     public final static int FEATURE_PUSH = 1 << 2;
-
-    /**
-     * Enables Airship Chat (with AirshipChat module).
-     *
-     * In addition to the default data collection, Airship Chat will collect:
-     * - User messages
-     */
-    public final static int FEATURE_CHAT = 1 << 3;
 
     /**
      * Enables analytics.
@@ -132,18 +123,6 @@ public class PrivacyManager {
     public final static int FEATURE_CONTACTS = 1 << 6;
 
     /**
-     * Enables location (with Location module).
-     *
-     * Enabling location still requires requesting permissions, and either requesting a single location
-     * or enabling continuous location updates.
-     *
-     * In addition to the default data collection, location will collect:
-     * - Location permissions
-     * - Collect location for the app (Airship no longer supports uploading location as events)
-     */
-    public final static int FEATURE_LOCATION = 1 << 7;
-
-    /**
      * Helper flag that can be used to set enabled features to none.
      */
     public final static int FEATURE_NONE = 0;
@@ -152,9 +131,9 @@ public class PrivacyManager {
      * Helper flag that is all features.
      */
     public final static int FEATURE_ALL = FEATURE_IN_APP_AUTOMATION | FEATURE_ANALYTICS | FEATURE_MESSAGE_CENTER | FEATURE_PUSH
-            | FEATURE_CHAT | FEATURE_ANALYTICS | FEATURE_TAGS_AND_ATTRIBUTES | FEATURE_CONTACTS | FEATURE_LOCATION;
+             | FEATURE_ANALYTICS | FEATURE_TAGS_AND_ATTRIBUTES | FEATURE_CONTACTS;
 
-    private final String ENABLED_FEATURES_KEY = "com.urbanairship.PrivacyManager.enabledFeatures";
+    private final static String ENABLED_FEATURES_KEY = "com.urbanairship.PrivacyManager.enabledFeatures";
 
     // legacy keys for migration
     @VisibleForTesting
@@ -170,9 +149,6 @@ public class PrivacyManager {
     @NonNull
     static final String PUSH_ENABLED_KEY = "com.urbanairship.push.PUSH_ENABLED";
     @VisibleForTesting
-    @NonNull
-    static final String CHAT_ENABLED_KEY = "com.urbanairship.chat.CHAT";
-    @VisibleForTesting
     static final String IAA_ENABLED_KEY = "com.urbanairship.iam.enabled";
 
     private final Object lock = new Object();
@@ -184,7 +160,7 @@ public class PrivacyManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public PrivacyManager(@NonNull PreferenceDataStore dataStore, @Feature int defaultEnabledFeatures) {
         this.dataStore = dataStore;
-        this.currentValue = dataStore.getInt(ENABLED_FEATURES_KEY, defaultEnabledFeatures);
+        this.currentValue = loadEnabledFeatures(dataStore, defaultEnabledFeatures);
     }
 
     /**
@@ -275,7 +251,7 @@ public class PrivacyManager {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public boolean isAnyFeatureEnabled() {
-        return getEnabledFeatures() != FEATURE_NONE;
+        return (getEnabledFeatures() & FEATURE_ALL) != FEATURE_NONE;
     }
 
     /**
@@ -331,13 +307,6 @@ public class PrivacyManager {
             this.dataStore.remove(PUSH_ENABLED_KEY);
         }
 
-        if (this.dataStore.isSet(CHAT_ENABLED_KEY)) {
-            if (!this.dataStore.getBoolean(CHAT_ENABLED_KEY, true)) {
-                this.disable(FEATURE_CHAT);
-            }
-            this.dataStore.remove(CHAT_ENABLED_KEY);
-        }
-
         if (this.dataStore.isSet(IAA_ENABLED_KEY)) {
             if (!this.dataStore.getBoolean(IAA_ENABLED_KEY, true)) {
                 this.disable(FEATURE_IN_APP_AUTOMATION);
@@ -368,4 +337,16 @@ public class PrivacyManager {
         return result;
     }
 
+    /**
+     * Helper method to load the enabled features from the data store, excluding any deprecated
+     * features that may have previously been enabled.
+     */
+    private static int loadEnabledFeatures(
+            @NonNull PreferenceDataStore dataStore,
+            @Feature int defaultEnabledFeatures
+    ) {
+        int loadedFeatures = dataStore.getInt(ENABLED_FEATURES_KEY, defaultEnabledFeatures);
+        // Remove deprecated features from the enabled features, if any are set.
+        return loadedFeatures & FEATURE_ALL;
+    }
 }

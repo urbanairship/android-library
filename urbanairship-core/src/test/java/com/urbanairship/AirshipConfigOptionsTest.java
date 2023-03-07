@@ -211,11 +211,11 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
     @Test
     public void testEnabledFeaturesMigration() {
         AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder()
-                                                                 .setEnabledFeatures(PrivacyManager.FEATURE_CHAT)
+                                                                 .setEnabledFeatures(PrivacyManager.FEATURE_PUSH)
                                                                  .setDataCollectionOptInEnabled(true)
                                                                  .build();
 
-        assertEquals(PrivacyManager.FEATURE_CHAT, configOptions.enabledFeatures);
+        assertEquals(PrivacyManager.FEATURE_PUSH, configOptions.enabledFeatures);
 
         configOptions = AirshipConfigOptions.newBuilder()
                                             .setDataCollectionOptInEnabled(true)

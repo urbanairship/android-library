@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
     implementation(libs.playservices.instantapps)
+    implementation(libs.playservices.location)
 
     // Airship ADM
     implementation project(':urbanairship-adm')
@@ -67,16 +68,8 @@ dependencies {
     // Airship Automation (In-App)
     implementation project(':urbanairship-automation')
 
-    // Airship location
-    implementation project(':urbanairship-location')
-    // Allows Airship location services to use Fused Location
-    implementation(libs.playservices.location) // com.google.android.gms:play-services-location
-
     // Airship Debug: Normally this is a debug only dependency but we embed the view in sample app
     implementation project(':urbanairship-debug')
-
-    // Airship Chat
-    implementation project(':urbanairship-chat')
 
     // Testing-only dependencies
 

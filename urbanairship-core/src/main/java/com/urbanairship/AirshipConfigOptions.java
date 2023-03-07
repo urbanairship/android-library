@@ -87,22 +87,10 @@ public class AirshipConfigOptions {
     public static final String FEATURE_PUSH = "push";
 
     /**
-     * Maps to the feature {@link PrivacyManager#FEATURE_CHAT} when used in the properties or xml config.
-     */
-    @NonNull
-    public static final String FEATURE_CHAT = "chat";
-
-    /**
      * Maps to the feature {@link PrivacyManager#FEATURE_CONTACTS} when used in the properties or xml config.
      */
     @NonNull
     public static final String FEATURE_CONTACTS = "contacts";
-
-    /**
-     * Maps to the feature {@link PrivacyManager#FEATURE_LOCATION} when used in the properties or xml config.
-     */
-    @NonNull
-    public static final String FEATURE_LOCATION = "location";
 
     /**
      * Maps to the feature {@link PrivacyManager#FEATURE_NONE} when used in the properties or xml config.
@@ -226,24 +214,6 @@ public class AirshipConfigOptions {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public final String walletUrl;
-
-    /**
-     * The chat url.
-     *
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @NonNull
-    public final String chatUrl;
-
-    /**
-     * The chat socket URL.
-     *
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @NonNull
-    public final String chatSocketUrl;
 
     /**
      * Optional app store link when using the rate app action. If not set,
@@ -379,7 +349,6 @@ public class AirshipConfigOptions {
      * - {@link #FEATURE_IN_APP_AUTOMATION}
      * - {@link #FEATURE_CONTACTS}
      * - {@link #FEATURE_ANALYTICS}
-     * - {@link #FEATURE_CHAT}
      * - {@link #FEATURE_PUSH}
      */
     @PrivacyManager.Feature
@@ -450,7 +419,6 @@ public class AirshipConfigOptions {
      * Flag indicating whether or not the SDK will automatically prompt for notification permission
      * when enabling notifications with {@link com.urbanairship.push.PushManager#setUserNotificationsEnabled(boolean)}.
      */
-    @Nullable
     public final boolean isPromptForPermissionOnUserNotificationsEnabled;
 
     private AirshipConfigOptions(@NonNull Builder builder) {
@@ -470,8 +438,6 @@ public class AirshipConfigOptions {
                 this.analyticsUrl = firstOrEmpty(builder.analyticsUrl, EU_ANALYTICS_URL);
                 this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, EU_REMOTE_DATA_URL);
                 this.walletUrl = firstOrEmpty(builder.walletUrl, EU_WALLET_URL);
-                this.chatUrl = firstOrEmpty(builder.chatUrl);
-                this.chatSocketUrl = firstOrEmpty(builder.chatSocketUrl);
                 break;
 
             case SITE_US:
@@ -480,8 +446,6 @@ public class AirshipConfigOptions {
                 this.analyticsUrl = firstOrEmpty(builder.analyticsUrl, US_ANALYTICS_URL);
                 this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, US_REMOTE_DATA_URL);
                 this.walletUrl = firstOrEmpty(builder.walletUrl, US_WALLET_URL);
-                this.chatUrl = firstOrEmpty(builder.chatUrl);
-                this.chatSocketUrl = firstOrEmpty(builder.chatSocketUrl);
                 break;
         }
 
@@ -635,8 +599,6 @@ public class AirshipConfigOptions {
         private static final String FIELD_ANALYTICS_URL = "analyticsUrl";
         private static final String FIELD_LEGACY_REMOTE_DATA_URL = "remoteDataURL";
         private static final String FIELD_REMOTE_DATA_URL = "remoteDataUrl";
-        private static final String FIELD_CHAT_URL = "chatUrl";
-        private static final String FIELD_CHAT_SOCKET_URL = "chatSocketUrl";
         private static final String FIELD_GCM_SENDER = "gcmSender";
         private static final String FIELD_ALLOWED_TRANSPORTS = "allowedTransports";
         private static final String FIELD_URL_ALLOW_LIST = "urlAllowList";
@@ -681,8 +643,6 @@ public class AirshipConfigOptions {
         private String deviceUrl;
         private String analyticsUrl;
         private String remoteDataUrl;
-        private String chatSocketUrl;
-        private String chatUrl;
         private List<String> allowedTransports = new ArrayList<>(Arrays.asList(ADM_TRANSPORT, FCM_TRANSPORT, HMS_TRANSPORT));
         private List<String> urlAllowList = new ArrayList<>();
         private List<String> urlAllowListScopeJavaScriptInterface = new ArrayList<>();
@@ -961,14 +921,6 @@ public class AirshipConfigOptions {
                             this.setInitialConfigUrl(configParser.getString(name, null));
                             break;
 
-                        case FIELD_CHAT_URL:
-                            this.setChatUrl(configParser.getString(name, chatUrl));
-                            break;
-
-                        case FIELD_CHAT_SOCKET_URL:
-                            this.setChatSocketUrl(configParser.getString(name, chatSocketUrl));
-                            break;
-
                         case FIELD_GCM_SENDER:
                             throw new IllegalArgumentException("gcmSender no longer supported. Please use " +
                                     "fcmSender or remove it to allow the Airship SDK to pull from the google-services.json.");
@@ -1149,9 +1101,6 @@ public class AirshipConfigOptions {
                     case FEATURE_ANALYTICS:
                         enabledFeatures |= PrivacyManager.FEATURE_ANALYTICS;
                         break;
-                    case FEATURE_CHAT:
-                        enabledFeatures |= PrivacyManager.FEATURE_CHAT;
-                        break;
                     case FEATURE_CONTACTS:
                         enabledFeatures |= PrivacyManager.FEATURE_CONTACTS;
                         break;
@@ -1163,9 +1112,6 @@ public class AirshipConfigOptions {
                         break;
                     case FEATURE_TAGS_AND_ATTRIBUTES:
                         enabledFeatures |= PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES;
-                        break;
-                    case FEATURE_LOCATION:
-                        enabledFeatures |= PrivacyManager.FEATURE_LOCATION;
                         break;
                     case FEATURE_ALL:
                         enabledFeatures |= PrivacyManager.FEATURE_ALL;
@@ -1572,30 +1518,6 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setWalletUrl(@NonNull String walletUrl) {
             this.walletUrl = walletUrl;
-            return this;
-        }
-
-        /**
-         * Set the chat URL.
-         *
-         * @param chatUrl The chat URL.
-         * @return The config options builder.
-         */
-        @NonNull
-        public Builder setChatUrl(@NonNull String chatUrl) {
-            this.chatUrl = chatUrl;
-            return this;
-        }
-
-        /**
-         * Set the chat socket URL.
-         *
-         * @param chatSocketUrl The chat socket URL.
-         * @return The config options builder.
-         */
-        @NonNull
-        public Builder setChatSocketUrl(@NonNull String chatSocketUrl) {
-            this.chatSocketUrl = chatSocketUrl;
             return this;
         }
 

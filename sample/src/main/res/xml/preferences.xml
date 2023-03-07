@@ -37,20 +37,6 @@
             app:iconSpaceReserved="false"
             app:title="@string/analytics_ad_id_preference_title" />
 
-        <com.urbanairship.preference.LocationUpdatesEnabledPreference
-            app:dependency="data_enabled"
-            app:key="location_preference"
-            app:persistent="false"
-            app:iconSpaceReserved="false"
-            app:title="@string/location_preference_title" />
-
-        <com.urbanairship.preference.LocationBackgroundUpdatesAllowedPreference
-            app:dependency="location_preference"
-            app:key="background_location_preference"
-            app:persistent="false"
-            app:iconSpaceReserved="false"
-            app:title="@string/background_location_preference_title" />
-
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory

@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 /**
  * Preference that can be used to embed a data collection preference in a settings screen.
  */
+@Deprecated
 public class DataCollectionEnabledPreference extends UACheckBoxPreference {
     public DataCollectionEnabledPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);

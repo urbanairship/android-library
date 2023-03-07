@@ -255,7 +255,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         updatePayloads();
 
-        privacyManager.disable(PrivacyManager.FEATURE_LOCATION);
+        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS);
         verifyNoMoreInteractions(mockDispatcher);
     }
 
@@ -268,7 +268,7 @@ public class RemoteDataTest extends BaseTestCase {
         verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
 
 
-        privacyManager.disable(PrivacyManager.FEATURE_LOCATION);
+        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS);
         verify(mockDispatcher, times(2)).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
     }
 

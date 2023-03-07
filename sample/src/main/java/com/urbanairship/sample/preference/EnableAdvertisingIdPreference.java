@@ -12,6 +12,7 @@ import com.urbanairship.preference.UACheckBoxPreference;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+@Deprecated
 public class EnableAdvertisingIdPreference extends UACheckBoxPreference {
 
     public EnableAdvertisingIdPreference(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr, int defStyleRes) {

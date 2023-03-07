@@ -38,8 +38,6 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertEquals(configOptions.remoteDataUrl, urlConfig.remoteDataUrl().build().toString());
         assertEquals(configOptions.analyticsUrl, urlConfig.analyticsUrl().build().toString());
         assertEquals(configOptions.walletUrl, urlConfig.walletUrl().build().toString());
-        assertTrue(configOptions.chatUrl.isEmpty());
-        assertTrue(configOptions.chatSocketUrl.isEmpty());
     }
 
     @Test
@@ -80,8 +78,6 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertEquals("http://remote", urlConfig.remoteDataUrl().build().toString());
         assertEquals("http://analytics", urlConfig.analyticsUrl().build().toString());
         assertEquals("http://wallet", urlConfig.walletUrl().build().toString());
-        assertEquals("http://chat", urlConfig.chatUrl().build().toString());
-        assertEquals("wss://chat", urlConfig.chatSocketUrl().build().toString());
 
     }
 
@@ -132,8 +128,6 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertNull(provider.getConfig().deviceUrl().build());
         assertNull(provider.getConfig().analyticsUrl().build());
         assertNull(provider.getConfig().walletUrl().build());
-        assertNull(provider.getConfig().chatUrl().build());
-        assertNull(provider.getConfig().chatSocketUrl().build());
         assertEquals(configOptions.remoteDataUrl, provider.getConfig().remoteDataUrl().build().toString());
 
         RemoteAirshipConfig remoteConfig = new RemoteAirshipConfig("http://remote",
@@ -145,8 +139,6 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertEquals("http://remote", provider.getConfig().remoteDataUrl().build().toString());
         assertEquals("http://analytics", provider.getConfig().analyticsUrl().build().toString());
         assertEquals("http://wallet", provider.getConfig().walletUrl().build().toString());
-        assertEquals("http://chat", provider.getConfig().chatUrl().build().toString());
-        assertEquals("wss://chat", provider.getConfig().chatSocketUrl().build().toString());
     }
 
     @Test
@@ -177,8 +169,6 @@ public class RemoteAirshipUrlConfigProviderTest extends BaseTestCase {
         assertEquals("http://remote", urlConfig.remoteDataUrl().build().toString());
         assertEquals("http://analytics", urlConfig.analyticsUrl().build().toString());
         assertEquals("http://wallet", urlConfig.walletUrl().build().toString());
-        assertEquals("http://chat", provider.getConfig().chatUrl().build().toString());
-        assertEquals("wss://chat", provider.getConfig().chatSocketUrl().build().toString());
     }
 
 }

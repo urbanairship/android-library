@@ -31,7 +31,13 @@ import androidx.annotation.RestrictTo;
  * Helper class that auto tracks the android advertising Id. The ID will
  * automatically be set on {@link Analytics} by editing the associated identifiers
  * using {@link Analytics#editAssociatedIdentifiers()}.
+ *
+ * @deprecated The ads-identifier module will be removed in a future SDK release. Replace with
+ *  direct usage of {@link Analytics#editAssociatedIdentifiers()} and
+ *  {@link AssociatedIdentifiers.Editor#setAdvertisingId(String, boolean)}.
+ *
  */
+@Deprecated
 public class AdvertisingIdTracker extends AirshipComponent {
 
     private final Executor EXECUTOR = AirshipExecutors.newSerialExecutor();

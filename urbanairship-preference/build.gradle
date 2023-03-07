@@ -4,6 +4,10 @@ plugins {
 
 description = "Airship Android SDK preference extension."
 
+airshipModule {
+    published = false
+}
+
 dependencies {
     api project(':urbanairship-core')
     api(libs.androidx.preference)

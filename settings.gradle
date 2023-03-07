@@ -14,11 +14,9 @@ dependencyResolutionManagement {
     }
 }
 
-include ':urbanairship-accengage',
-        ':urbanairship-adm',
+include ':urbanairship-adm',
         ':urbanairship-ads-identifier',
         ':urbanairship-automation',
-        ':urbanairship-chat',
         ':urbanairship-core',
         ':urbanairship-debug',
         ':urbanairship-fcm',
@@ -26,7 +24,6 @@ include ':urbanairship-accengage',
         ':urbanairship-hms-stub',
         ':urbanairship-layout',
         ':urbanairship-layout:playground',
-        ':urbanairship-location',
         ':urbanairship-message-center',
         ':urbanairship-preference',
         ':urbanairship-preference-center',
