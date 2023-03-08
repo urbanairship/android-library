@@ -66,7 +66,7 @@ open class DebugFragment : androidx.fragment.app.Fragment() {
         }
 
         // Add a back button if the fragment is opened from Goat settings
-        if (activity?.intent?.extras?.getBoolean("fromGoat") == true) {
+        if (activity?.intent?.extras?.getBoolean("includeBackButton") == true) {
             var toolbar: Toolbar?
             view.let { view ->
                 toolbar = view.findViewById(R.id.toolbar)
