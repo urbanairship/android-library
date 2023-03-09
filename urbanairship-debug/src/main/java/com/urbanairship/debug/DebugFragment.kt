@@ -6,10 +6,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.widget.Toolbar
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
 import com.urbanairship.debug.databinding.UaFragmentDebugBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
 import kotlinx.coroutines.Dispatchers
@@ -56,6 +59,26 @@ open class DebugFragment : androidx.fragment.app.Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupToolbarWithNavController(R.id.toolbar)
+
+        val fallbackListener = AppBarConfiguration.OnNavigateUpListener {
+            activity?.finish()
+            true
+        }
+
+        // Add a back button if the fragment is opened from Goat settings
+        if (activity?.intent?.extras?.getBoolean("includeBackButton") == true) {
+            var toolbar: Toolbar?
+            view.let { view ->
+                toolbar = view.findViewById(R.id.toolbar)
+                val appBarConfiguration = AppBarConfiguration.Builder(emptySet())
+                    .setFallbackOnNavigateUpListener(fallbackListener)
+                    .build()
+                toolbar?.let {
+                    NavigationUI.setupWithNavController(it, Navigation.findNavController(view), appBarConfiguration)
+                }
+            }
+        } else {
+            setupToolbarWithNavController(R.id.toolbar)
+        }
     }
 }
