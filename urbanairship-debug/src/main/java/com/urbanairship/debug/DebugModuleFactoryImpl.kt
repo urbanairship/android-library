@@ -20,7 +20,9 @@ class DebugModuleFactoryImpl : DebugModuleFactory {
         return Module.singleComponent(DebugManager(context, dataStore), 0)
     }
 
-    override fun getAirshipVersion() = BuildConfig.AIRSHIP_VERSION
+    override val airshipVersion: String
+        get() = com.urbanairship.BuildConfig.AIRSHIP_VERSION
 
-    override fun getPackageVersion() = BuildConfig.SDK_VERSION
+    override val packageVersion: String
+        get() = com.urbanairship.BuildConfig.SDK_VERSION
 }

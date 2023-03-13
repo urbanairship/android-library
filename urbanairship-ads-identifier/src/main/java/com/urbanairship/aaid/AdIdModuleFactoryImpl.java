@@ -42,5 +42,4 @@ public class AdIdModuleFactoryImpl implements AdIdModuleFactory {
         return BuildConfig.SDK_VERSION;
     }
 
-
 }

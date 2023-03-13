@@ -1,5 +1,6 @@
 plugins {
     id 'airship-module'
+    id 'kotlin-android'
 }
 
 description = "Airship Android Core SDK"
@@ -11,6 +12,18 @@ android {
     sourceSets {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+        freeCompilerArgs = ["-Xexplicit-api=strict"]
+    }
+
     namespace 'com.urbanairship'
 }
 

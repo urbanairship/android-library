@@ -1,9 +1,7 @@
 /* Copyright Airship and Contributors */
+package com.urbanairship
 
-package com.urbanairship;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo
 
 /**
  * Airship package info.
@@ -11,22 +9,19 @@ import androidx.annotation.RestrictTo;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface AirshipVersionInfo {
+internal interface AirshipVersionInfo {
 
     /**
      * The Airship semantic version.
      *
      * @return The version string.
      */
-    @NonNull
-    String getAirshipVersion();
+    val airshipVersion: String
 
     /**
      * The full package version with format - "!SDK-VERSION-STRING!:<GROUP>:<ARTIFACT_ID>[:<VERSION_QUALIFIER>]:[VERSION]
      *
      * @return The package version.
-     */
-    @NonNull
-    String getPackageVersion();
-
+    </VERSION_QUALIFIER></ARTIFACT_ID></GROUP> */
+    val packageVersion: String
 }

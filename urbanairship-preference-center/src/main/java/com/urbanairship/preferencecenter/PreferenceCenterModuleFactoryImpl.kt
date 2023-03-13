@@ -27,7 +27,9 @@ class PreferenceCenterModuleFactoryImpl : PreferenceCenterModuleFactory {
         return Module.singleComponent(preferenceCenter, R.xml.ua_preference_center_actions)
     }
 
-    override fun getAirshipVersion(): String = BuildConfig.AIRSHIP_VERSION
+    override val airshipVersion: String
+        get() = BuildConfig.AIRSHIP_VERSION
 
-    override fun getPackageVersion(): String = BuildConfig.SDK_VERSION
+    override val packageVersion: String
+        get() = BuildConfig.SDK_VERSION
 }
