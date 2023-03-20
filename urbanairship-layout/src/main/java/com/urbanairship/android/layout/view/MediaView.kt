@@ -223,10 +223,10 @@ internal class MediaView(
                     MediaType.VIDEO ->
                         weakWebView.loadData(
                             String.format(VIDEO_HTML_FORMAT,
-                                model.video?.let { if (it.showControls) "controls" else "" },
-                                model.video?.let { if (it.autoplay) "autoplay" else "" },
-                                model.video?.let { if (it.muted) "muted" else "" },
-                                model.video?.let { if (it.loop) "loop" else "" },
+                                model.video?.let { if (it.showControls) "controls" else "" } ?: "controls",
+                                model.video?.let { if (it.autoplay) "autoplay" else "" } ?: "",
+                                model.video?.let { if (it.muted) "muted" else "" } ?: "",
+                                model.video?.let { if (it.loop) "loop" else "" } ?: "",
                                 model.url),
                             "text/html",
                             "UTF-8"
