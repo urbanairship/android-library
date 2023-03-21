@@ -12,6 +12,7 @@ Minor release that adds `ForegroundNotificationDisplayPredicate` on `PushManager
 - Improved French localized strings.
 - Fixed vertical alignment for button text with icons in In-App Messages.
 - Fixed an Android 13 notification permission prompt regression in v16.8.1.
+- Added support for transparent webview's for HTML In-App Automations.
 
 ## Version 16.8.1 February 9, 2023
 Patch release to prevent prompting for user notifications until after onAirshipReady is called.
