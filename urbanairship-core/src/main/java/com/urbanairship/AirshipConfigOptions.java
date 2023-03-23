@@ -1356,11 +1356,10 @@ public class AirshipConfigOptions {
          * The Airship URL used to pull the initial config. This should only be set
          * if you are using custom domains that forward to Airship.
          *
-         * @param initialConfigUrl
-         * @return
+         * @param initialConfigUrl The initial config URL.
+         * @return The config options builder.
          */
         @NonNull
-        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder setInitialConfigUrl(@Nullable String initialConfigUrl) {
             this.initialConfigUrl = initialConfigUrl;
             return this;
