@@ -563,6 +563,17 @@ public class Contact extends AirshipComponent {
             return;
         }
 
+        ContactOperation next = null;
+        for (ContactOperation operation : getOperations()) {
+            if (!shouldSkipOperation(operation, true)) {
+                next = operation;
+            }
+        }
+
+        if (next == null) {
+            return;
+        }
+
         JobInfo.Builder builder = JobInfo.newBuilder()
                                          .setAction(ACTION_UPDATE_CONTACT)
                                          .setNetworkAccessRequired(true)
@@ -570,19 +581,12 @@ public class Contact extends AirshipComponent {
                                          .setConflictStrategy(conflictStrategy)
                                          .addRateLimit(UPDATE_RATE_LIMIT);
 
-        synchronized (operationLock) {
-            ContactOperation operation = prepareNextOperation();
-            if (operation == null) {
-                return;
-            }
-
-            switch (operation.getType()) {
-                case ContactOperation.OPERATION_IDENTIFY:
-                case ContactOperation.OPERATION_RESET:
-                case ContactOperation.OPERATION_RESOLVE:
-                    builder.addRateLimit(IDENTITY_RATE_LIMIT);
-                    break;
-            }
+        switch (next.getType()) {
+            case ContactOperation.OPERATION_IDENTIFY:
+            case ContactOperation.OPERATION_RESET:
+            case ContactOperation.OPERATION_RESOLVE:
+                builder.addRateLimit(IDENTITY_RATE_LIMIT);
+                break;
         }
 
         jobDispatcher.dispatch(builder.build());
@@ -669,20 +673,20 @@ public class Contact extends AirshipComponent {
                             }
 
                             if (nextNext.getType().equals(ContactOperation.OPERATION_UPDATE)) {
-                                ContactOperation.UpdatePayload firstPayload = nextNext.coercePayload();
                                 ContactOperation.UpdatePayload nextPayload = next.coercePayload();
+                                ContactOperation.UpdatePayload nextNextPayload = nextNext.coercePayload();
 
                                 List<TagGroupsMutation> combinedTags = new ArrayList<>();
-                                combinedTags.addAll(firstPayload.getTagGroupMutations());
                                 combinedTags.addAll(nextPayload.getTagGroupMutations());
+                                combinedTags.addAll(nextNextPayload.getTagGroupMutations());
 
                                 List<AttributeMutation> combinedAttributes = new ArrayList<>();
-                                combinedAttributes.addAll(firstPayload.getAttributeMutations());
                                 combinedAttributes.addAll(nextPayload.getAttributeMutations());
+                                combinedAttributes.addAll(nextNextPayload.getAttributeMutations());
 
                                 List<ScopedSubscriptionListMutation> combinedSubscriptionLists = new ArrayList<>();
-                                combinedSubscriptionLists.addAll(firstPayload.getSubscriptionListMutations());
                                 combinedSubscriptionLists.addAll(nextPayload.getSubscriptionListMutations());
+                                combinedSubscriptionLists.addAll(nextNextPayload.getSubscriptionListMutations());
 
                                 operations.remove(0);
                                 next = ContactOperation.update(combinedTags, combinedAttributes, combinedSubscriptionLists);
