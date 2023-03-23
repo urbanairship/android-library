@@ -480,14 +480,27 @@ public class ButtonInfo implements JsonSerializable {
          * Builds the button info.
          *
          * @return The button info.
-         * @throws IllegalArgumentException If the label is missing, ID is missing, or if the ID length
-         * is greater than the  {@link #MAX_ID_LENGTH}.
+         * @throws IllegalArgumentException If the ButtonInfo fails to pass validation checks.
          */
         @NonNull
         public ButtonInfo build() {
+            return build(true);
+        }
+
+        /**
+         * Builds the button info.
+         *
+         * @param enforceMaxIdLength {@code true} to enforce the max ID length, otherwise {@code false}.
+         * @return The button info.
+         * @throws IllegalArgumentException If the ButtonInfo fails to pass validation checks.
+         */
+        @NonNull
+        public ButtonInfo build(Boolean enforceMaxIdLength) {
             Checks.checkArgument(borderRadius >= 0, "Border radius must be >= 0");
             Checks.checkArgument(!UAStringUtil.isEmpty(id), "Missing ID.");
-            Checks.checkArgument(id.length() <= MAX_ID_LENGTH, "Id exceeds max ID length: " + MAX_ID_LENGTH);
+            if (enforceMaxIdLength) {
+                Checks.checkArgument(id.length() <= MAX_ID_LENGTH, "Id exceeds max ID length: " + MAX_ID_LENGTH);
+            }
             Checks.checkArgument(label != null, "Missing label.");
             return new ButtonInfo(this);
         }

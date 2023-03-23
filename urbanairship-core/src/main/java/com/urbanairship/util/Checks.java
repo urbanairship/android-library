@@ -13,10 +13,11 @@ import androidx.annotation.RestrictTo;
 public class Checks {
 
     /**
-     * Checks if a object is not null.
+     * Checks if an object is not null.
      *
      * @param value The object to check.
      * @param message The exception message if the value is null.
+     * @throws IllegalArgumentException if the value is null.
      */
     public static void checkNotNull(@Nullable Object value, @NonNull String message) {
         if (value == null) {
@@ -29,6 +30,7 @@ public class Checks {
      *
      * @param expression The expression to test.
      * @param message The exception message if the expression is false.
+     * @throws IllegalArgumentException if the expression evaluates to false.
      */
     public static void checkArgument(boolean expression, @NonNull String message) {
         if (!expression) {
