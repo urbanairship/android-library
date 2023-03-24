@@ -2,6 +2,15 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.9.1 March 24, 2023
+
+Patch release that fixing Contact update merging order, improves Scene/Survey accessibility and reporting.
+
+### Changes
+- Fixed Contact update merge order, resolving a Preference Center bug that could lead to unexpected subscription states in some circumstances.
+- Improved Scene/Survey accessibility and fixed a reporting bug related to form display events.
+- Removed library group restriction annotation on `AirshipConfigOptions.Builder.setInitialConfigUrl`.
+
 ## Version 16.9.0 March 1, 2023
 
 Minor release that adds `ForegroundNotificationDisplayPredicate` on `PushManager`, a new `isPromptForPermissionOnUserNotificationsEnabled` config flag, and other improvements/fixes.
@@ -12,7 +21,7 @@ Minor release that adds `ForegroundNotificationDisplayPredicate` on `PushManager
 - Improved French localized strings.
 - Fixed vertical alignment for button text with icons in In-App Messages.
 - Fixed an Android 13 notification permission prompt regression in v16.8.1.
-- Added support for transparent webview's for HTML In-App Automations.
+- Added support for transparent WebView backgrounds in HTML In-App Automations.
 
 ## Version 16.8.1 February 9, 2023
 Patch release to prevent prompting for user notifications until after onAirshipReady is called.
