@@ -69,6 +69,7 @@ public class FormControllerTest {
         every { layoutEvents } returns testEventHandler.layoutEvents
         every { modelScope } returns testScope
     }
+
     private val mockView: AnyModel = mockk(relaxed = true)
 
     private val parentFormState = spyk(SharedState(State.Form(
@@ -77,6 +78,10 @@ public class FormControllerTest {
 
     private val childFormState = spyk(SharedState(State.Form(
         identifier = CHILD_FORM_ID, formType = FormType.Form, formResponseType = "form")
+    ))
+
+    private val pagerState = spyk(SharedState(State.Pager(
+        identifier = PAGER_ID, pages = PAGER_PAGE_IDS)
     ))
 
     private lateinit var formController: FormController
@@ -100,11 +105,41 @@ public class FormControllerTest {
     }
 
     @Test
-    public fun testParentFormReportsDisplay(): TestResult = runTest {
+    public fun testParentFormReportsDisplayWithoutPager(): TestResult = runTest {
         parentFormState.changes.test {
             assertFalse(awaitItem().isDisplayReported)
 
             initParentFormController()
+
+            parentFormState.update { state ->
+                state.copyWithDisplayState(identifier = "input-id", isDisplayed = true)
+            }
+
+            assertFalse(awaitItem().isDisplayReported)
+
+            assertTrue(awaitItem().isDisplayReported)
+
+            verify { mockReporter.report(any<ReportingEvent.FormDisplay>(), any()) }
+
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    public fun testParentFormReportsDisplayWithPager(): TestResult = runTest {
+        parentFormState.changes.test {
+            assertFalse(awaitItem().isDisplayReported)
+
+            initParentFormController(pagerState = pagerState)
+
+            parentFormState.update { state ->
+                state.copyWithDisplayState(identifier = "input-id", isDisplayed = true)
+            }
+
+            awaitItem().let { item ->
+                assertFalse(item.isDisplayReported)
+                assertFalse(item.displayedInputs.isEmpty())
+            }
 
             assertTrue(awaitItem().isDisplayReported)
 
@@ -117,8 +152,6 @@ public class FormControllerTest {
     @Test
     public fun testParentFormSubmit(): TestResult = runTest {
         parentFormState.changes.test {
-            skipItems(1)
-
             // Init controller and verify initial state
             initParentFormController()
             assertTrue(awaitItem().data.isEmpty())
@@ -135,11 +168,13 @@ public class FormControllerTest {
                     )
                 )
             }
+
             assertFalse(awaitItem().data.isEmpty())
 
             // Emit FORM_SUBMIT event
             val event = spyk(LayoutEvent.SubmitForm(BUTTON_ID))
             testEventHandler.broadcast(event)
+
             // Verify state was updated
             assertTrue(awaitItem().isSubmitted)
 
@@ -162,9 +197,9 @@ public class FormControllerTest {
     @Test
     public fun testChildFormDoesNotReportDisplay(): TestResult = runTest {
         childFormState.changes.test {
-            assertFalse(awaitItem().isDisplayReported)
-
             initChildFormController()
+
+            assertFalse(awaitItem().isDisplayReported)
 
             verify(exactly = 0) { mockReporter.report(any<ReportingEvent.FormDisplay>(), any()) }
 
@@ -200,12 +235,31 @@ public class FormControllerTest {
             )
         }
 
+        // Verify that we don't have any displayed inputs yet.
+        assertTrue(childChanges.awaitItem().displayedInputs.isEmpty())
+
+        // Mark a child form input as displayed.
+        childFormState.update { form ->
+            form.copyWithDisplayState(
+                identifier = TEXT_INPUT_ID,
+                isDisplayed = true
+            )
+        }
+
         // Verify that the child state was updated appropriately.
         childChanges.awaitItem().run {
+            // Form input data
             assertTrue(data.containsKey(TEXT_INPUT_ID))
             val inputData = requireNotNull(inputData<FormData.TextInput>(TEXT_INPUT_ID))
             assertEquals(TEXT_INPUT_ID, inputData.identifier)
             assertEquals(TEXT_INPUT_VALUE, inputData.value)
+            // Displayed state
+            assertFalse(displayedInputs.isEmpty())
+        }
+
+        // Verify that the child displayed state updated the parent displayed state.
+        parentChanges.awaitItem().run {
+            assertFalse(displayedInputs.isEmpty())
         }
 
         // Verify that the child form input change caused an update to the parent form state.
@@ -234,13 +288,12 @@ public class FormControllerTest {
         assertTrue(childFormState.value.isEnabled)
 
         initChildFormController()
-
         parentFormState.update { form ->
             form.copy(isEnabled = false)
         }
 
-        // Skip child form init event and the parent form state update above.
-        parentChanges.skipItems(2)
+        // Skip child form init event, displayedInputs change, and the parent form state update above.
+        parentChanges.skipItems(3)
 
         // Verify that the child state was updated appropriately.
         childChanges.awaitItem().run {
@@ -251,30 +304,38 @@ public class FormControllerTest {
         childChanges.ensureAllEventsConsumed()
     }
 
-    private fun initParentFormController() {
+    private fun initParentFormController(
+        pagerState: SharedState<State.Pager>? = null,
+        properties: ModelProperties = DEFAULT_PROPERTIES
+    ) {
         formController = FormController(
             view = mockView,
             formState = parentFormState,
             parentFormState = null,
-            pagerState = null,
+            pagerState = pagerState,
             identifier = PARENT_FORM_ID,
             responseType = "form",
             submitBehavior = FormBehaviorType.SUBMIT_EVENT,
-            environment = mockEnv
+            environment = mockEnv,
+            properties = properties
         )
         testScope.runCurrent()
     }
 
-    private fun initChildFormController() {
+    private fun initChildFormController(
+        pagerState: SharedState<State.Pager>? = null,
+        properties: ModelProperties = DEFAULT_PROPERTIES
+    ) {
         formController = FormController(
             view = mockView,
             formState = childFormState,
             parentFormState = parentFormState,
-            pagerState = null,
+            pagerState = pagerState,
             identifier = CHILD_FORM_ID,
             responseType = "form",
             submitBehavior = null,
-            environment = mockEnv
+            environment = mockEnv,
+            properties = properties
         )
         testScope.runCurrent()
     }
@@ -286,9 +347,13 @@ public class FormControllerTest {
         private const val TEXT_INPUT_VALUE = "no comment."
         private const val BUTTON_ID = "button-identifier"
         private const val CHANNEL_ID = "channel-identifier"
+        private const val PAGER_ID = "pager-identifier"
+        private val PAGER_PAGE_IDS = listOf("pg-1", "pg-2", "pg-3")
 
         private val ATTR_NAME = AttributeName(CHANNEL_ID, null)
         private val ATTR_VALUE = jsonMapOf("foo" to "bar").toJsonValue()
         private val ATTRIBUTES = mapOf(ATTR_NAME to ATTR_VALUE)
+
+        private val DEFAULT_PROPERTIES = ModelProperties(pagerPageId = null)
     }
 }

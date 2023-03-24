@@ -22,7 +22,8 @@ internal class ScrollLayoutModel(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<ScrollLayoutView, BaseModel.Listener>(
     viewType = ViewType.SCROLL_LAYOUT,
     backgroundColor = backgroundColor,
@@ -30,12 +31,14 @@ internal class ScrollLayoutModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
     constructor(
         info: ScrollLayoutInfo,
         view: AnyModel,
-        env: ModelEnvironment
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         view = view,
         direction = info.direction,
@@ -44,7 +47,8 @@ internal class ScrollLayoutModel(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =

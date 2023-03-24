@@ -39,6 +39,7 @@ public class CheckboxControllerTest {
         every { modelScope } returns testScope
         every { layoutState } returns LayoutState.EMPTY
     }
+
     private val mockView: AnyModel = mockk(relaxed = true)
 
     private val formState = spyk(SharedState(
@@ -140,7 +141,8 @@ public class CheckboxControllerTest {
             maxSelection = maxSelection,
             formState = formState,
             checkboxState = checkboxState,
-            environment = mockEnv
+            environment = mockEnv,
+            properties = ModelProperties(pagerPageId = null)
         )
 
         testScope.runCurrent()

@@ -23,7 +23,8 @@ internal class LabelModel(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<LabelView, BaseModel.Listener>(
     viewType = ViewType.LABEL,
     backgroundColor = backgroundColor,
@@ -31,9 +32,10 @@ internal class LabelModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
-    constructor(info: LabelInfo, env: ModelEnvironment) : this(
+    constructor(info: LabelInfo, env: ModelEnvironment, props: ModelProperties) : this(
         text = info.text,
         textAppearance = info.textAppearance,
         contentDescription = info.contentDescription,
@@ -42,7 +44,8 @@ internal class LabelModel(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =

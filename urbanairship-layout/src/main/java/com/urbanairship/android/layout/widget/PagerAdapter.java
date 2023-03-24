@@ -87,13 +87,12 @@ public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> 
 
         private ViewHolder(@NonNull ViewGroup container) {
             super(container);
-            container.setLayoutParams(new RecyclerView.LayoutParams(MATCH_PARENT, MATCH_PARENT));
             this.container = container;
         }
 
         public void bind(@NonNull BaseModel<?, ?> item, @NonNull ViewEnvironment viewEnvironment) {
             View view = item.createView(itemView.getContext(), viewEnvironment);
-            container.addView(view, new RecyclerView.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+            container.addView(view, MATCH_PARENT, MATCH_PARENT);
 
             // Register a listener, so we can request insets when the view is attached.
             LayoutUtils.doOnAttachToWindow(itemView, () ->

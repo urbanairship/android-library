@@ -34,7 +34,8 @@ internal class FormController(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseFormController<View>(
     viewType = ViewType.FORM_CONTROLLER,
     formState = formState,
@@ -49,7 +50,8 @@ internal class FormController(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
     constructor(
         info: FormControllerInfo,
@@ -57,7 +59,8 @@ internal class FormController(
         formState: SharedState<State.Form>,
         parentFormState: SharedState<State.Form>?,
         pagerState: SharedState<State.Pager>?,
-        env: ModelEnvironment
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         view = view,
         formState = formState,
@@ -72,7 +75,8 @@ internal class FormController(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =

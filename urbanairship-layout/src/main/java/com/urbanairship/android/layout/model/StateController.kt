@@ -19,7 +19,8 @@ internal class StateController(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<View, BaseModel.Listener>(
     viewType = ViewType.STATE_CONTROLLER,
     backgroundColor = backgroundColor,
@@ -27,16 +28,24 @@ internal class StateController(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
-    constructor(info: StateControllerInfo, view: AnyModel, env: ModelEnvironment) : this(
+    constructor(
+        info: StateControllerInfo,
+        view: AnyModel,
+        env: ModelEnvironment,
+        props: ModelProperties
+
+    ) : this(
         view = view,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =

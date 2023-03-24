@@ -35,7 +35,8 @@ internal class NpsFormController(
     formState: SharedState<State.Form>,
     parentFormState: SharedState<State.Form>?,
     pagerState: SharedState<State.Pager>?,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseFormController<View>(
     ViewType.NPS_FORM_CONTROLLER,
     identifier = identifier,
@@ -50,7 +51,8 @@ internal class NpsFormController(
     formState = formState,
     parentFormState = parentFormState,
     pagerState = pagerState,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
     constructor(
         info: NpsFormControllerInfo,
@@ -58,7 +60,8 @@ internal class NpsFormController(
         formState: SharedState<State.Form>,
         parentFormState: SharedState<State.Form>?,
         pagerState: SharedState<State.Pager>?,
-        env: ModelEnvironment
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         view = view,
         npsIdentifier = info.npsIdentifier,
@@ -74,7 +77,8 @@ internal class NpsFormController(
         formState = formState,
         parentFormState = parentFormState,
         pagerState = pagerState,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =

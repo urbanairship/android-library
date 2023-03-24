@@ -22,7 +22,8 @@ internal abstract class CheckableModel<T : View>(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<T, CheckableModel.Listener>(
     viewType = viewType,
     backgroundColor = backgroundColor,
@@ -30,7 +31,8 @@ internal abstract class CheckableModel<T : View>(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
 
     interface Listener : BaseModel.Listener {

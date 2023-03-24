@@ -36,7 +36,9 @@ internal class CheckboxModel(
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     private val checkboxState: SharedState<State.Checkbox>,
-    environment: ModelEnvironment
+    private val formState: SharedState<State.Form>,
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : CheckableModel<CheckboxView>(
     viewType = ViewType.CHECKBOX,
     style = toggleStyle,
@@ -47,12 +49,15 @@ internal class CheckboxModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
     constructor(
         info: CheckboxInfo,
         checkboxState: SharedState<State.Checkbox>,
-        env: ModelEnvironment
+        formState: SharedState<State.Form>,
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         toggleStyle = info.style,
         reportingValue = info.reportingValue,
@@ -63,13 +68,25 @@ internal class CheckboxModel(
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
         checkboxState = checkboxState,
-        environment = env
+        formState = formState,
+        environment = env,
+        properties = props
     )
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
         CheckboxView(context, this).apply {
             id = viewId
         }
+
+    override fun onViewCreated(view: CheckboxView) {
+        super.onViewCreated(view)
+
+        onFormInputDisplayed { isDisplayed ->
+            formState.update { state ->
+                state.copyWithDisplayState(checkboxState.value.identifier, isDisplayed)
+            }
+        }
+    }
 
     override fun onViewAttached(view: CheckboxView) {
         // Update checked state whenever the selection state changes.

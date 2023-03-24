@@ -21,7 +21,8 @@ internal class ContainerLayoutModel(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<ContainerLayoutView, BaseModel.Listener>(
     viewType = ViewType.CONTAINER,
     backgroundColor = backgroundColor,
@@ -29,17 +30,24 @@ internal class ContainerLayoutModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
 
-    constructor(info: ContainerLayoutInfo, items: List<Item>, env: ModelEnvironment) : this(
+    constructor(
+        info: ContainerLayoutInfo,
+        items: List<Item>,
+        env: ModelEnvironment,
+        props: ModelProperties
+    ) : this(
         items = items,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     data class Item(

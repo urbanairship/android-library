@@ -38,7 +38,8 @@ internal class CheckboxController(
     enableBehaviors: List<EnableBehaviorType>? = null,
     private val formState: SharedState<State.Form>,
     private val checkboxState: SharedState<State.Checkbox>,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<View, BaseModel.Listener>(
     viewType = ViewType.CHECKBOX_CONTROLLER,
     backgroundColor = backgroundColor,
@@ -46,14 +47,16 @@ internal class CheckboxController(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
     constructor(
         info: CheckboxControllerInfo,
         view: AnyModel,
         formState: SharedState<State.Form>,
         checkboxState: SharedState<State.Checkbox>,
-        env: ModelEnvironment
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         view = view,
         identifier = info.identifier,
@@ -68,7 +71,8 @@ internal class CheckboxController(
         enableBehaviors = info.enableBehaviors,
         formState = formState,
         checkboxState = checkboxState,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     init {

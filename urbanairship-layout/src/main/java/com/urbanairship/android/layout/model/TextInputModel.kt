@@ -36,7 +36,8 @@ internal class TextInputModel(
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     private val formState: SharedState<State.Form>,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<TextInputView, TextInputModel.Listener>(
     viewType = ViewType.TEXT_INPUT,
     backgroundColor = backgroundColor,
@@ -44,13 +45,15 @@ internal class TextInputModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
 
     constructor(
         info: TextInputInfo,
         formState: SharedState<State.Form>,
-        env: ModelEnvironment
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         inputType = info.inputType,
         textAppearance = info.textAppearance,
@@ -64,7 +67,8 @@ internal class TextInputModel(
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
         formState = formState,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     interface Listener : BaseModel.Listener {
@@ -98,6 +102,16 @@ internal class TextInputModel(
                 input.value?.let { listener?.restoreValue(it) }
             }
         }
+
+    override fun onViewCreated(view: TextInputView) {
+        super.onViewCreated(view)
+
+        onFormInputDisplayed { isDisplayed ->
+            formState.update { state ->
+                state.copyWithDisplayState(identifier, isDisplayed)
+            }
+        }
+    }
 
     override fun onViewAttached(view: TextInputView) {
         // Listen to text changes

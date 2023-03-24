@@ -66,7 +66,8 @@ public class PagerControllerTest {
             view = mockView,
             identifier = PAGER_ID,
             pagerState = pagerState,
-            environment = mockEnv
+            environment = mockEnv,
+            properties = ModelProperties(pagerPageId = null)
         )
         testScope.runCurrent()
     }

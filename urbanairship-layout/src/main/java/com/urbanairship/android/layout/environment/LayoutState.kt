@@ -8,6 +8,7 @@ import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.json.JsonValue
+import kotlin.collections.set
 
 internal class LayoutState(
     val pager: SharedState<State.Pager>?,
@@ -101,6 +102,11 @@ internal sealed class State {
         val formResponseType: String?,
         val data: Map<String, FormData<*>> = emptyMap(),
         val inputValidity: Map<String, Boolean> = emptyMap(),
+        /**
+         * Input identifiers that are displayed in the current pager page.
+         * If the form is not in a pager, this will contain all input identifiers.
+         */
+        val displayedInputs: Set<String> = emptySet(),
         val isVisible: Boolean = false,
         val isSubmitted: Boolean = false,
         val isEnabled: Boolean = true,
@@ -112,12 +118,25 @@ internal sealed class State {
         fun copyWithFormInput(value: FormData<*>): Form {
             return copy(
                 data = data + (value.identifier to value),
-                inputValidity = inputValidity + (value.identifier to value.isValid)
+                inputValidity = inputValidity + (value.identifier to value.isValid),
+            )
+        }
+
+        fun copyWithDisplayState(identifier: String, isDisplayed: Boolean?): Form {
+            return copy(
+                displayedInputs = isDisplayed?.let {
+                    if (isDisplayed) {
+                        displayedInputs + identifier
+                    } else {
+                        displayedInputs - identifier
+                    }
+                } ?: displayedInputs
             )
         }
 
         fun formResult(): ReportingEvent.FormResult =
             ReportingEvent.FormResult(formData(), reportingContext(), attributes())
+
         fun reportingContext(): FormInfo =
             FormInfo(identifier, formType.value, formResponseType, isSubmitted)
 

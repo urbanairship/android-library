@@ -25,7 +25,8 @@ internal class WebViewModel(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<WebViewView, BaseModel.Listener>(
     viewType = ViewType.WEB_VIEW,
     backgroundColor = backgroundColor,
@@ -33,16 +34,18 @@ internal class WebViewModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
-    constructor(info: WebViewInfo, env: ModelEnvironment) : this(
+    constructor(info: WebViewInfo, env: ModelEnvironment, props: ModelProperties) : this(
         url = info.url,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     var savedState: Bundle? = null

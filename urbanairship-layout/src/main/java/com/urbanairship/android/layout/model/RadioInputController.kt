@@ -33,7 +33,8 @@ internal class RadioInputController(
     enableBehaviors: List<EnableBehaviorType>? = null,
     private val formState: SharedState<State.Form>,
     private val radioState: SharedState<State.Radio>,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<View, BaseModel.Listener>(
     viewType = ViewType.RADIO_INPUT_CONTROLLER,
     backgroundColor = backgroundColor,
@@ -41,14 +42,16 @@ internal class RadioInputController(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
     constructor(
         info: RadioInputControllerInfo,
         view: AnyModel,
         formState: SharedState<State.Form>,
         radioState: SharedState<State.Radio>,
-        env: ModelEnvironment
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         view = view,
         identifier = info.identifier,
@@ -62,7 +65,8 @@ internal class RadioInputController(
         enableBehaviors = info.enableBehaviors,
         formState = formState,
         radioState = radioState,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     init {

@@ -11,7 +11,6 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
-import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Actions
 import com.urbanairship.android.layout.property.AttributeValue
@@ -39,6 +38,10 @@ import kotlinx.coroutines.launch
 
 internal typealias AnyModel = BaseModel<*, *>
 
+internal data class ModelProperties(
+    val pagerPageId: String?
+)
+
 internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
     val viewType: ViewType,
     val backgroundColor: Color? = null,
@@ -46,18 +49,9 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
     val visibility: VisibilityInfo? = null,
     val eventHandlers: List<EventHandler>? = null,
     val enableBehaviors: List<EnableBehaviorType>? = null,
-    protected val environment: ModelEnvironment
+    protected val environment: ModelEnvironment,
+    protected val properties: ModelProperties,
 ) {
-    constructor(info: ViewInfo, environment: ModelEnvironment) : this(
-        viewType = info.type,
-        backgroundColor = info.backgroundColor,
-        border = info.border,
-        visibility = info.visibility,
-        eventHandlers = info.eventHandlers,
-        enableBehaviors = info.enableBehaviors,
-        environment
-    )
-
     internal interface Listener {
         fun setVisibility(visible: Boolean)
         fun setEnabled(enabled: Boolean)
@@ -78,6 +72,8 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
             }
 
             override fun onViewDetachedFromWindow(v: View) {
+                onViewDetached(view)
+
                 // Stop child jobs for the view scope, but leave the scope itself running so that
                 // we can handle re-attaches.
                 viewJob.cancelChildren()
@@ -88,19 +84,45 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
             if (enableBehaviors.hasPagerBehaviors) {
                 checkNotNull(layoutState.pager) { "Pager state is required for pager behaviors" }
                 modelScope.launch {
-                    layoutState.pager.changes.collect { handlePagerUpdate(it) }
+                    layoutState.pager.changes.collect { handlePagerBehaviors(it) }
                 }
             }
 
             if (enableBehaviors.hasFormBehaviors) {
                 checkNotNull(layoutState.form) { "Form state is required for form behaviors" }
                 modelScope.launch {
-                    layoutState.form.changes.collect { handleFormUpdate(it) }
+                    layoutState.form.changes.collect { handleFormBehaviors(it) }
                 }
             }
         }
 
         return view
+    }
+
+    /**
+     * Helper for form input models that allows them to listen for when they are displayed
+     * in the current Pager page.
+     *
+     * If this model is not in a Pager, the block will always be called with `isDisplayed = true`.
+     *
+     * This method is a no-op for models that are not form inputs or form input controllers.
+     */
+    protected fun onFormInputDisplayed(block: suspend (isDisplayed: Boolean) -> Unit) {
+        if (!viewType.isFormInput) return
+
+        modelScope.launch {
+            var isDisplayed = false
+
+            layoutState.pager?.changes?.collect { state ->
+                val currentPageId = state.pages[state.pageIndex]
+                val wasDisplayed = isDisplayed
+                isDisplayed = currentPageId == properties.pagerPageId
+                if (wasDisplayed != isDisplayed) {
+                    block(isDisplayed)
+                }
+                // If we don't have pager state, the model is always considered to be "displayed".
+            } ?: block(true)
+        }
     }
 
     private fun setupViewListeners(view: T) {
@@ -129,6 +151,9 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     internal open fun onViewAttached(view: T) = Unit
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    internal open fun onViewDetached(view: T) = Unit
 
     protected val modelScope = environment.modelScope
 
@@ -164,7 +189,7 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
             }
     }
 
-    private fun handleFormUpdate(state: State.Form) {
+    private fun handleFormBehaviors(state: State.Form) {
         val behaviors = enableBehaviors ?: return
         val hasFormValidationBehavior = behaviors.contains(EnableBehaviorType.FORM_VALIDATION)
         val hasFormSubmitBehavior = behaviors.contains(EnableBehaviorType.FORM_SUBMISSION)
@@ -180,7 +205,7 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
         listener?.setEnabled(isEnabled)
     }
 
-    private fun handlePagerUpdate(state: State.Pager) {
+    private fun handlePagerBehaviors(state: State.Pager) {
         val behaviors = enableBehaviors ?: return
         val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
         val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)

@@ -25,7 +25,8 @@ internal class PagerIndicatorModel(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<PagerIndicatorView, PagerIndicatorModel.Listener>(
     viewType = ViewType.PAGER_INDICATOR,
     backgroundColor = backgroundColor,
@@ -33,9 +34,10 @@ internal class PagerIndicatorModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
-    constructor(info: PagerIndicatorInfo, env: ModelEnvironment) : this(
+    constructor(info: PagerIndicatorInfo, env: ModelEnvironment, props: ModelProperties) : this(
         bindings = info.bindings,
         indicatorSpacing = info.indicatorSpacing,
         backgroundColor = info.backgroundColor,
@@ -43,7 +45,8 @@ internal class PagerIndicatorModel(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     interface Listener : BaseModel.Listener {
