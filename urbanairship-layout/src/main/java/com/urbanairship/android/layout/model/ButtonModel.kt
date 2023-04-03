@@ -41,7 +41,8 @@ internal abstract class ButtonModel<T>(
     enableBehaviors: List<EnableBehaviorType>? = null,
     private val formState: SharedState<State.Form>?,
     private val pagerState: SharedState<State.Pager>?,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<T, ButtonModel.Listener>(
     viewType = viewType,
     backgroundColor = backgroundColor,
@@ -49,7 +50,8 @@ internal abstract class ButtonModel<T>(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) where T : View, T : TappableView {
     abstract val reportingDescription: String
 

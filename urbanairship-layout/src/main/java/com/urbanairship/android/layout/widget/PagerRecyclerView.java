@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.widget;
 
 import android.content.Context;
 import android.view.View;
+import android.view.ViewGroup;
 
 import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.PagerModel;
@@ -19,6 +20,8 @@ import androidx.recyclerview.widget.OrientationHelper;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.RecyclerView.Adapter.StateRestorationPolicy;
+
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PagerRecyclerView extends RecyclerView {
@@ -57,8 +60,6 @@ public class PagerRecyclerView extends RecyclerView {
                 getContext(), HORIZONTAL);
         }
 
-        // Disable prefetch so we won't get display events from items that aren't yet visible.
-        //layoutManager.setItemPrefetchEnabled(false);
         setLayoutManager(layoutManager);
 
         addOnScrollListener(recyclerScrollListener);
@@ -121,6 +122,15 @@ public class PagerRecyclerView extends RecyclerView {
     private static class ThomasLinearLayoutManager extends LinearLayoutManager {
         public ThomasLinearLayoutManager(Context context, int orientation) {
             super(context, orientation, false);
+            // Disable prefetch so that we won't get display events from items that aren't yet visible.
+            // TODO: revisit this now that we have a better way for models to determine if they
+            //   are displayed in the current pager page.
+            setItemPrefetchEnabled(false);
+        }
+
+        @Override
+        public LayoutParams generateDefaultLayoutParams() {
+            return new RecyclerView.LayoutParams(MATCH_PARENT, MATCH_PARENT);
         }
     }
 

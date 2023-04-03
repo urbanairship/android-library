@@ -122,7 +122,12 @@ internal class MediaView(
             layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
             adjustViewBounds = true
             scaleType = model.scaleType
-            model.contentDescription.ifNotEmpty { contentDescription = it }
+
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+            model.contentDescription.ifNotEmpty {
+                contentDescription = it
+                importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+            }
         }
         imageView = iv
         addView(iv)

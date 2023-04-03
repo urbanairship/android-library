@@ -29,7 +29,8 @@ internal class PagerController(
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     private val pagerState: SharedState<State.Pager>,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<View, BaseModel.Listener>(
     viewType = ViewType.PAGER_CONTROLLER,
     backgroundColor = backgroundColor,
@@ -37,13 +38,15 @@ internal class PagerController(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
     constructor(
         info: PagerControllerInfo,
         view: AnyModel,
         pagerState: SharedState<State.Pager>,
-        env: ModelEnvironment
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         view = view,
         identifier = info.identifier,
@@ -53,7 +56,8 @@ internal class PagerController(
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
         pagerState = pagerState,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     init {

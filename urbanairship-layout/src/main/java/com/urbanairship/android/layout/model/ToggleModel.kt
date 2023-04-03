@@ -43,7 +43,8 @@ internal class ToggleModel(
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     private val formState: SharedState<State.Form>,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : CheckableModel<ToggleView>(
     viewType = ViewType.TOGGLE,
     style = toggleStyle,
@@ -54,13 +55,15 @@ internal class ToggleModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
 
     constructor(
         info: ToggleInfo,
         formState: SharedState<State.Form>,
-        env: ModelEnvironment
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         identifier = info.identifier,
         toggleStyle = info.style,
@@ -74,13 +77,24 @@ internal class ToggleModel(
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
         formState = formState,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
         ToggleView(context, this).apply {
             id = viewId
         }
+
+    override fun onViewCreated(view: ToggleView) {
+        super.onViewCreated(view)
+
+        onFormInputDisplayed { isDisplayed ->
+            formState.update { state ->
+                state.copyWithDisplayState(identifier, isDisplayed)
+            }
+        }
+    }
 
     override fun onViewAttached(view: ToggleView) {
         // Share the checkedChanges flow from the view. Since we're starting eagerly, we use a replay

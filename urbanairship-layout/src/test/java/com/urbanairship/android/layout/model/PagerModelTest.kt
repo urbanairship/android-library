@@ -57,7 +57,8 @@ public class PagerModelTest {
             items = ITEMS,
             isSwipeDisabled = false,
             pagerState = pagerState,
-            environment = mockEnv
+            environment = mockEnv,
+            properties = ModelProperties(pagerPageId = null)
         )).apply {
             listener = mockViewListener
         }

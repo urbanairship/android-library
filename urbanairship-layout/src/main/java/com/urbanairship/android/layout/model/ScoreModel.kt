@@ -46,7 +46,8 @@ internal class ScoreModel(
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     private val formState: SharedState<State.Form>,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<ScoreView, ScoreModel.Listener>(
     viewType = ViewType.SCORE,
     backgroundColor = backgroundColor,
@@ -54,13 +55,15 @@ internal class ScoreModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
 
     constructor(
         info: ScoreInfo,
         formState: SharedState<State.Form>,
-        env: ModelEnvironment
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         style = info.style,
         identifier = info.identifier,
@@ -73,7 +76,8 @@ internal class ScoreModel(
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
         formState = formState,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     interface Listener : BaseModel.Listener {
@@ -104,6 +108,16 @@ internal class ScoreModel(
                 setSelectedScore(it)
             }
         }
+
+    override fun onViewCreated(view: ScoreView) {
+        super.onViewCreated(view)
+
+        onFormInputDisplayed { isDisplayed ->
+            formState.update { state ->
+                state.copyWithDisplayState(identifier, isDisplayed)
+            }
+        }
+    }
 
     override fun onViewAttached(view: ScoreView) {
         viewScope.launch {

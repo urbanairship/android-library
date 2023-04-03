@@ -25,7 +25,8 @@ internal class EmptyModel(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<EmptyView, BaseModel.Listener>(
     viewType = ViewType.EMPTY_VIEW,
     backgroundColor = backgroundColor,
@@ -33,15 +34,17 @@ internal class EmptyModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
-    constructor(info: EmptyInfo, env: ModelEnvironment) : this(
+    constructor(info: EmptyInfo, env: ModelEnvironment, props: ModelProperties) : this(
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =

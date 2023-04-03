@@ -29,7 +29,8 @@ internal class PagerModel(
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     private val pagerState: SharedState<State.Pager>,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<PagerView, PagerModel.Listener>(
     viewType = ViewType.PAGER,
     backgroundColor = backgroundColor,
@@ -37,13 +38,15 @@ internal class PagerModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
     constructor(
         info: PagerInfo,
         items: List<Item>,
         pagerState: SharedState<State.Pager>,
-        env: ModelEnvironment
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         items = items,
         isSwipeDisabled = info.isSwipeDisabled,
@@ -53,7 +56,8 @@ internal class PagerModel(
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
         pagerState = pagerState,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     class Item(

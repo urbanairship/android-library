@@ -31,7 +31,8 @@ internal class ImageButtonModel(
     enableBehaviors: List<EnableBehaviorType>? = null,
     formState: SharedState<State.Form>?,
     pagerState: SharedState<State.Pager>?,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : ButtonModel<ImageButtonView>(
     viewType = ViewType.IMAGE_BUTTON,
     identifier = identifier,
@@ -45,13 +46,15 @@ internal class ImageButtonModel(
     enableBehaviors = enableBehaviors,
     formState = formState,
     pagerState = pagerState,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
     constructor(
         info: ImageButtonInfo,
         formState: SharedState<State.Form>?,
         pagerState: SharedState<State.Pager>?,
-        env: ModelEnvironment
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         identifier = info.identifier,
         image = info.image,
@@ -65,7 +68,8 @@ internal class ImageButtonModel(
         enableBehaviors = info.enableBehaviors,
         formState = formState,
         pagerState = pagerState,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     override val reportingDescription: String = contentDescription ?: identifier

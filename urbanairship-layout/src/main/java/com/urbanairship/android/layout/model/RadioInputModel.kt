@@ -37,7 +37,9 @@ internal class RadioInputModel(
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
     private val radioState: SharedState<State.Radio>,
-    environment: ModelEnvironment
+    private val formState: SharedState<State.Form>,
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : CheckableModel<RadioInputView>(
     viewType = ViewType.RADIO_INPUT,
     style = toggleStyle,
@@ -48,12 +50,15 @@ internal class RadioInputModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
     constructor(
         info: RadioInputInfo,
         radioState: SharedState<State.Radio>,
-        env: ModelEnvironment
+        formState: SharedState<State.Form>,
+        env: ModelEnvironment,
+        props: ModelProperties
     ) : this(
         toggleStyle = info.style,
         reportingValue = info.reportingValue,
@@ -65,13 +70,25 @@ internal class RadioInputModel(
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
         radioState = radioState,
-        environment = env
+        formState = formState,
+        environment = env,
+        properties = props
     )
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
         RadioInputView(context, this).apply {
             id = viewId
         }
+
+    override fun onViewCreated(view: RadioInputView) {
+        super.onViewCreated(view)
+
+        onFormInputDisplayed { isDisplayed ->
+            formState.update { state ->
+                state.copyWithDisplayState(radioState.value.identifier, isDisplayed)
+            }
+        }
+    }
 
     override fun onViewAttached(view: RadioInputView) {
         // Update checked state whenever the selected radio state changes.

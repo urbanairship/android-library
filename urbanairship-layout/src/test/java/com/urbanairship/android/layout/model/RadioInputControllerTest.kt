@@ -141,7 +141,8 @@ public class RadioInputControllerTest {
             attributeName = attributeName,
             formState = formState,
             radioState = radioState,
-            environment = mockEnv
+            environment = mockEnv,
+            properties = ModelProperties(pagerPageId = null)
         )
     }
 

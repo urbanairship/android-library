@@ -23,7 +23,8 @@ internal class LinearLayoutModel(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<LinearLayoutView, BaseModel.Listener>(
     viewType = ViewType.LINEAR_LAYOUT,
     backgroundColor = backgroundColor,
@@ -31,9 +32,15 @@ internal class LinearLayoutModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
-    constructor(info: LinearLayoutInfo, items: List<Item>, env: ModelEnvironment) : this(
+    constructor(
+        info: LinearLayoutInfo,
+        items: List<Item>,
+        env: ModelEnvironment,
+        props: ModelProperties
+    ) : this(
         items = items,
         direction = info.direction,
         backgroundColor = info.backgroundColor,
@@ -41,7 +48,8 @@ internal class LinearLayoutModel(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     data class Item(

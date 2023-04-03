@@ -29,7 +29,8 @@ internal class MediaModel(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
-    environment: ModelEnvironment
+    environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<MediaView, BaseModel.Listener>(
     viewType = ViewType.MEDIA,
     backgroundColor = backgroundColor,
@@ -37,9 +38,10 @@ internal class MediaModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
-    constructor(info: MediaInfo, env: ModelEnvironment) : this(
+    constructor(info: MediaInfo, env: ModelEnvironment, props: ModelProperties) : this(
         url = info.url,
         mediaType = info.mediaType,
         scaleType = info.scaleType,
@@ -50,7 +52,8 @@ internal class MediaModel(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
-        environment = env
+        environment = env,
+        properties = props
     )
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =

@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import android.view.View
+import com.urbanairship.Logger
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
@@ -17,6 +18,7 @@ import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasFormBehaviors
 import com.urbanairship.android.layout.property.hasPagerBehaviors
 import com.urbanairship.android.layout.reporting.FormData
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
@@ -43,6 +45,7 @@ internal abstract class BaseFormController<T : View>(
     private val parentFormState: SharedState<State.Form>?,
     private val pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
+    properties: ModelProperties
 ) : BaseModel<T, BaseModel.Listener>(
     viewType = viewType,
     backgroundColor = backgroundColor,
@@ -50,7 +53,8 @@ internal abstract class BaseFormController<T : View>(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
-    environment = environment
+    environment = environment,
+    properties = properties
 ) {
     abstract val view: AnyModel
     abstract fun buildFormData(state: State.Form): FormData.BaseForm
@@ -113,6 +117,13 @@ internal abstract class BaseFormController<T : View>(
                 }
             }
         }
+
+        // Update the parent form with the child form's display state, whenever it changes.
+        onFormInputDisplayed { isDisplayed ->
+            parentFormState.update { state ->
+                state.copyWithDisplayState(identifier, isDisplayed)
+            }
+        }
     }
 
     private fun initParentForm() {
@@ -130,8 +141,8 @@ internal abstract class BaseFormController<T : View>(
                             val submitted = state.copy(isSubmitted = true)
                             val result = submitted.formResult()
                             report(
-                                result,
-                                layoutState.reportingContext(
+                                event = result,
+                                state = layoutState.reportingContext(
                                     formContext = form.reportingContext(),
                                     buttonId = event.buttonIdentifier
                                 )
@@ -147,15 +158,23 @@ internal abstract class BaseFormController<T : View>(
 
         modelScope.launch {
             formState.changes.collect { form ->
-                if (!form.isDisplayReported) {
+                // Bail out if we've already reported the form display.
+                if (form.isDisplayReported) return@collect
+
+                // Report if any inputs are displayed, otherwise wait for a future state change.
+                if (form.displayedInputs.isNotEmpty()) {
                     val formContext = form.reportingContext()
                     report(
-                        ReportingEvent.FormDisplay(formContext),
-                        layoutState.reportingContext(formContext)
+                        event = ReportingEvent.FormDisplay(formContext),
+                        state = layoutState.reportingContext(formContext)
                     )
                     formState.update { state ->
                         state.copy(isDisplayReported = true)
                     }
+                    // Now that we've reported, we can stop collecting form state changes.
+                    cancel("Successfully reported form display.")
+                } else {
+                    Logger.verbose("Skipped form display reporting! No inputs are currently displayed.")
                 }
             }
         }

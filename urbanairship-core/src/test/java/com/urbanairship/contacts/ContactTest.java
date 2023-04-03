@@ -497,6 +497,49 @@ public class ContactTest extends BaseTestCase {
     }
 
     @Test
+    public void testCollapseUpdates() throws RequestException {
+        List<ScopedSubscriptionListMutation> expectedSubscriptions =  Arrays.asList(
+                ScopedSubscriptionListMutation.newUnsubscribeMutation("some list", Scope.APP, testClock.currentTimeMillis),
+                ScopedSubscriptionListMutation.newSubscribeMutation("some list", Scope.APP, testClock.currentTimeMillis)
+        );
+
+        List<AttributeMutation> expectedAttributes =  Arrays.asList(
+                AttributeMutation.newRemoveAttributeMutation("some attribute", testClock.currentTimeMillis),
+                AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrap("some value"), testClock.currentTimeMillis)
+        );
+
+        List<TagGroupsMutation> expectedTags =  Arrays.asList(
+                TagGroupsMutation.newAddTagsMutation("some group", Collections.singleton("some tag")),
+                TagGroupsMutation.newRemoveTagsMutation("some group", Collections.singleton("some tag"))
+        );
+
+        contact.editSubscriptionLists().unsubscribe("some list", Scope.APP).apply();
+        contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply();
+
+        contact.editAttributes().removeAttribute("some attribute").apply();
+        contact.editAttributes().setAttribute("some attribute", "some value").apply();
+
+        contact.editTagGroups().addTag("some group", "some tag").apply();
+        contact.editTagGroups().removeTag("some group", "some tag").apply();
+
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
+        // Set up a 200 response
+        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).resolve(fakeChannelId);
+
+        Response<Void> updateResponse = new Response.Builder<Void>(200).build();
+        when(mockContactApiClient.update(any(), anyList(), anyList(), anyList())).thenReturn(updateResponse);
+
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).update(fakeContactId, expectedTags, expectedAttributes, expectedSubscriptions);
+    }
+
+
+    @Test
     public void testEditAttributesSucceed() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
