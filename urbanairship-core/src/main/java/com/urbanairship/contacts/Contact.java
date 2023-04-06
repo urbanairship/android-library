@@ -101,6 +101,9 @@ public class Contact extends AirshipComponent {
     private final ActivityMonitor activityMonitor;
     private final Executor executor;
     private final Clock clock;
+    // Note: when clearing either the subscription list cache or local history,
+    // the other one should most likely be cleared as well, unless there's a good
+    // reason to keep cached subscription list data around.
     private final CachedValue<Map<String, Set<Scope>>> subscriptionListCache;
     private final List<CachedValue<ScopedSubscriptionListMutation>> subscriptionListLocalHistory;
     private final Object operationLock = new Object();
@@ -205,8 +208,7 @@ public class Contact extends AirshipComponent {
 
     private void checkPrivacyManager() {
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES) || !privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
-            this.subscriptionListCache.invalidate();
-            subscriptionListLocalHistory.clear();
+            clearSubscriptionsListCacheAndLocalHistory();
         }
 
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
@@ -884,7 +886,7 @@ public class Contact extends AirshipComponent {
                 onConflict(contactIdentity.getNamedUserId());
             }
 
-            subscriptionListCache.invalidate();
+            clearSubscriptionsListCacheAndLocalHistory();
             setLastContactIdentity(contactIdentity);
             setAnonContactData(null);
             airshipChannel.updateRegistration();
@@ -1280,4 +1282,8 @@ public class Contact extends AirshipComponent {
         }
     }
 
+    private void clearSubscriptionsListCacheAndLocalHistory() {
+        subscriptionListCache.invalidate();
+        subscriptionListLocalHistory.clear();
+    }
 }
