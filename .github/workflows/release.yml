@@ -21,13 +21,15 @@ jobs:
 
       - name: Get the release notes
         id: get_release_notes
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
         run: |
-          VERSION=${{ steps.get_version.outputs.VERSION }}
-          NOTES="$(awk "/## Version $VERSION/{flag=1;next}/## Version/{flag=0}flag" CHANGELOG.md)"
-          NOTES="${NOTES//'%'/'%25'}"
-          NOTES="${NOTES//$'\n'/'%0A'}"
-          NOTES="${NOTES//$'\r'/'%0D'}"
-          echo "NOTES=${NOTES}" >> $GITHUB_OUTPUT
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "NOTES<<${delimiter}"
+            awk "/## Version $VERSION/{flag=1;next}/## Version/{flag=0}flag" CHANGELOG.md
+            echo ${delimiter}
+          } >> $GITHUB_OUTPUT
 
       - name: Set up JDK 11
         uses: actions/setup-java@v3
