@@ -96,7 +96,7 @@ class AirshipDoclavaPlugin : Plugin<Project> {
             }
 
             archiveFileName.set("${rootProject.property("airshipVersion")}.tar.gz")
-            destinationDirectory.set(File("build/docs"))
+            destinationDirectory.set(File("build/docs/pkg/java"))
             archiveExtension.set("tar.gz")
             compression = Compression.GZIP
         }

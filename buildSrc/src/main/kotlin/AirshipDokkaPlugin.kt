@@ -56,8 +56,8 @@ class AirshipDokkaPlugin : Plugin<Project> {
                 from("build/docs/kdoc")
             }
 
-            archiveFileName.set("${rootProject.property("airshipVersion")}-kdoc.tar.gz")
-            destinationDirectory.set(file("build/docs"))
+            archiveFileName.set("${rootProject.property("airshipVersion")}.tar.gz")
+            destinationDirectory.set(file("build/docs/pkg/kotlin"))
             archiveExtension.set("tar.gz")
             compression = Compression.GZIP
         }

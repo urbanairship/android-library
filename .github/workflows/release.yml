@@ -91,8 +91,7 @@ jobs:
           name: packaged-docs-${{ steps.get_version.outputs.VERSION }}
           retention-days: 1
           path: |
-            build/docs/${{ steps.get_version.outputs.VERSION }}.tar.gz
-            build/docs/${{ steps.get_version.outputs.VERSION }}-kdoc.tar.gz
+            build/docs/pkg
           # The publish-docs workflow will build the docs if we
           # somehow fail to upload them in this step.
           if-no-files-found: warn

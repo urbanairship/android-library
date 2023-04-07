@@ -31,7 +31,7 @@ jobs:
         continue-on-error: true
         with:
           name: packaged-docs-${{ inputs.version }}
-          path: build/docs
+          path: build/docs/pkg
 
       # Fallback to building if artifacts were not previously uploaded for the given version.
       # NOTE: All the steps below this point will be skipped if the download step succeeds.
@@ -71,8 +71,7 @@ jobs:
           name: packaged-docs-${{ inputs.version }}
           retention-days: 1
           path: |
-            build/docs/${{ inputs.version }}.tar.gz
-            build/docs/${{ inputs.version }}-kdoc.tar.gz
+            build/docs/pkg
 
   upload-docs:
     if: github.repository == 'urbanairship/android-library'
@@ -84,7 +83,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: packaged-docs-${{ inputs.version }}
-          path: build/docs
+          path: build/docs/pkg
 
       - name: Setup GCP Auth
         uses: google-github-actions/auth@v1
@@ -94,11 +93,11 @@ jobs:
       - name: Upload Java docs
         uses: google-github-actions/upload-cloud-storage@v1
         with:
-          path: build/docs/${{ inputs.version }}.tar.gz
-          destination: ua-web-ci-prod-docs-transfer/libraries/android/${{ inputs.version }}.tar.gz
+          path: build/docs/pkg/java/${{ inputs.version }}.tar.gz
+          destination: ua-web-ci-prod-docs-transfer/libraries/android
 
       - name: Upload Kotlin docs
         uses: google-github-actions/upload-cloud-storage@v1
         with:
-          path: build/docs/${{ inputs.version }}-kdoc.tar.gz
-          destination: ua-web-ci-prod-docs-transfer/libraries/android-kotlin/${{ inputs.version }}.tar.gz
+          path: build/docs/pkg/kotlin/${{ inputs.version }}.tar.gz
+          destination: ua-web-ci-prod-docs-transfer/libraries/android-kotlin
