@@ -23,6 +23,7 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.MediaModel
 import com.urbanairship.android.layout.property.MediaType
+import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.debouncedClicks
@@ -182,7 +183,9 @@ internal class MediaView(
             // Adjust the aspect ratio of the WebView if the media is video or youtube.
             MediaType.VIDEO,
             MediaType.YOUTUBE -> FixedAspectRatioFrameLayout(context).apply {
-                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
+                    gravity = Gravity.CENTER
+                }
                 model.video?.aspectRatio?.let {
                     aspectRatio = it.toFloat()
                 }
@@ -190,7 +193,9 @@ internal class MediaView(
             // SVG images fall back to loading in a WebView, where we don't want to adjust the
             // aspect ratio.
             MediaType.IMAGE -> FrameLayout(context).apply {
-                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
+                    gravity = Gravity.CENTER
+                }
             }
         }
 
@@ -225,41 +230,47 @@ internal class MediaView(
         val load = Runnable {
             webViewWeakReference.get()?.let { weakWebView ->
                 when (model.mediaType) {
-                    MediaType.VIDEO ->
-                        weakWebView.loadData(
-                            String.format(VIDEO_HTML_FORMAT,
-                                model.video?.let { if (it.showControls) "controls" else "" } ?: "controls",
-                                model.video?.let { if (it.autoplay) "autoplay" else "" } ?: "",
-                                model.video?.let { if (it.muted) "muted" else "" } ?: "",
-                                model.video?.let { if (it.loop) "loop" else "" } ?: "",
-                                model.url),
-                            "text/html",
-                            "UTF-8"
-                        )
+                    MediaType.VIDEO -> {
+                        val video = model.video ?: Video.defaultVideo()
+                        weakWebView.loadData(String.format(VIDEO_HTML_FORMAT,
+                            if (video.showControls) "controls" else "",
+                            if (video.autoplay) "autoplay" else "",
+                            if (video.muted) "muted" else "",
+                            if (video.loop) "loop" else "",
+                            model.url), "text/html", "UTF-8")
+                    }
                     MediaType.IMAGE -> weakWebView.loadData(
                         String.format(IMAGE_HTML_FORMAT, model.url),
                         "text/html",
                         "UTF-8"
                     )
-                    MediaType.YOUTUBE -> weakWebView.loadData(
-                        String.format(YOUTUBE_HTML_FORMAT,
-                            model.url,
-                            model.video?.let { if (it.showControls) "1" else "0" } ?: "1",
-                            model.video?.let { if (it.autoplay) "1" else "0" } ?: "0",
-                            model.video?.let { video ->
-                                // The YT IFrame API has limited support for looping and requires
-                                // the VIDEO_ID to be passed as the playlist parameter.
-                                val videoId = YOUTUBE_ID_RE.find(model.url)?.groupValues?.get(1)
-                                if (video.loop && videoId != null) {
-                                    "&playlist=$videoId&loop=1"
-                                } else {
-                                    null
-                                }
-                            } ?: "",
-                        ),
-                        "text/html",
-                        "UTF-8"
-                    )
+                    MediaType.YOUTUBE -> {
+                        val video = model.video ?: Video.defaultVideo()
+                        val videoId = YOUTUBE_ID_RE.find(model.url)?.groupValues?.get(1)
+                        videoId?.let {
+                            weakWebView.loadData(
+                                String.format(YOUTUBE_HTML_FORMAT,
+                                    it,
+                                    if (video.showControls) "1" else "0",
+                                    if (video.autoplay) "1" else "0",
+                                    if (video.muted) "1" else "0",
+                                    if (video.loop) {
+                                        // The YT IFrame API has limited support for looping and requires
+                                        // the VIDEO_ID to be passed as the playlist parameter.
+                                        "1, \'playlist\': \'$it\'"
+                                    } else {
+                                        "0"
+                                    },
+                                    // Sets the onPlayerReady function to autoplay the video
+                                    if (video.autoplay) YOUTUBE_AUTO_PLAYING_JS_CODE else ""
+                                ),
+                                "text/html",
+                                "UTF-8"
+                            )
+                        } ?: model.url.let {
+                            weakWebView.loadUrl(it)
+                        }
+                    }
                 }
             }
         }
@@ -361,8 +372,11 @@ internal class MediaView(
         @Language("HTML")
         private val VIDEO_HTML_FORMAT = """
             <body style="margin:0">
-                <video playsinline %s %s %s %s height="100%%" width="100%%" src="%s">
-            </video></body>
+                <video id="video" playsinline %s %s %s %s height="100%%" width="100%%" src="%s"></video>
+                <script>
+                    let videoElement = document.getElementById("video");
+                </script>
+            </body>
             """.trimIndent()
 
         @Language("HTML")
@@ -378,10 +392,59 @@ internal class MediaView(
         @Language("HTML")
         private val YOUTUBE_HTML_FORMAT = """
             <body style="margin:0">
-                <iframe height="100%%" width="100%%" frameborder="0"
-                    src="%s?playsinline=1&modestbranding=1&controls=%s&autoplay=%s%s"/>
+                <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
+                <div id="player"></div>
+
+                <script>
+                  // 2. This code loads the IFrame Player API code asynchronously.
+                  var tag = document.createElement('script');
+
+                  tag.src = "https://www.youtube.com/iframe_api";
+                  var firstScriptTag = document.getElementsByTagName('script')[0];
+                  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+                  // 3. This function creates an <iframe> (and YouTube player)
+                  //    after the API code downloads.
+                  var player;
+                  function onYouTubeIframeAPIReady() {
+                    player = new YT.Player('player', {
+                      height: '100%%',
+                      width: '100%%',
+                      videoId: '%s',
+                      playerVars: {
+                        'playsinline': 1,
+                        'modestbranding': 1,
+                        'controls': %s,
+                        'autoplay': %s,
+                        'mute': %s,
+                        'loop': %s
+                      },
+                      events: {
+                        'onReady': onPlayerReady
+                      }
+                    });
+                  }
+
+                  // 4. The API will call this function when the video player is ready.
+                  function onPlayerReady(event) {
+                    %s
+                  }
+                </script>
             </body>
             """.trimIndent()
+
+        @Language("HTML")
+        private val YOUTUBE_AUTO_PLAYING_JS_CODE = """
+            event.target.playVideo();
+
+            document.addEventListener("visibilitychange", () => {
+              if (document.visibilityState === "visible") {
+                event.target.playVideo();
+              } else {
+                event.target.pauseVideo();
+              }
+            });
+        """.trimIndent()
 
         private val YOUTUBE_ID_RE = Regex("""embed/([a-zA-Z0-9_-]+).*""")
     }

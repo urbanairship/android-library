@@ -21,5 +21,14 @@ internal class Video(
 
             return Video(aspectRatio, showControls, autoplay, muted, loop)
         }
+
+        fun defaultVideo(): Video {
+            val showControls = true
+            val autoplay = false
+            val muted = false
+            val loop = false
+
+            return Video(null, showControls, autoplay, muted, loop)
+        }
     }
 }
