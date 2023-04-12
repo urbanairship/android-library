@@ -4,16 +4,7 @@ import android.util.Base64
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.UAirship
-import com.urbanairship.json.JsonValue
-import com.urbanairship.util.ConnectionUtils
 import com.urbanairship.util.PlatformUtils
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.HttpURLConnection
-import java.net.MalformedURLException
-import java.net.URL
-import java.util.zip.GZIPOutputStream
 
 /**
  * Parses a response.
@@ -22,18 +13,35 @@ import java.util.zip.GZIPOutputStream
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class DefaultRequestSession(
-    private val configOptions: AirshipConfigOptions,
-    platform: Int,
-) : RequestSession {
+public class DefaultRequestSession : RequestSession {
+
+    private val configOptions: AirshipConfigOptions
+    private val httpClient: HttpClient
+    private val platform: Int
+
+    public constructor(configOptions: AirshipConfigOptions, platform: Int) : this(
+        configOptions, platform, DefaultHttpClient()
+    )
+
+    internal constructor(
+        configOptions: AirshipConfigOptions,
+        platform: Int,
+        httpClient: HttpClient
+    ) {
+        this.configOptions = configOptions
+        this.platform = platform
+        this.httpClient = httpClient
+
+        this.defaultHeaders = mapOf(
+            "X-UA-App-Key" to configOptions.appKey,
+            "User-Agent" to "(UrbanAirshipLib-${PlatformUtils.asString(platform)}/${UAirship.getVersion()}; $configOptions.appKey)"
+        )
+    }
 
     public override var channelAuthTokenProvider: AuthTokenProvider? = null
     public override var contactAuthTokenProvider: AuthTokenProvider? = null
 
-    private val defaultHeaders: Map<String, String> = mapOf(
-        "X-UA-App-Key" to configOptions.appKey,
-        "User-Agent" to "(UrbanAirshipLib-${PlatformUtils.asString(platform)}/${UAirship.getVersion()}; $configOptions.appKey)"
-    )
+    private val defaultHeaders: Map<String, String>
 
     @Throws(RequestException::class)
     public override fun execute(request: Request): Response<Unit> {
@@ -63,121 +71,72 @@ public class DefaultRequestSession(
         request: Request,
         parser: ResponseParser<T>
     ): RequestResult<T> {
-        val url: URL = try {
-            URL(requireNotNull(request.url).toString())
-        } catch (e: MalformedURLException) {
-            throw RequestException("Failed to build URL", e)
+        if (request.url == null) {
+            throw RequestException("Missing URL")
         }
 
-        val auth = request.auth?.let {
-            resolveAuth(it)
-        }
+        val headers = mutableMapOf<String, String>()
+        headers += defaultHeaders
+        headers += request.headers
 
-        var conn: HttpURLConnection? = null
-        val response = try {
-            conn = ConnectionUtils.openSecureConnection(
-                UAirship.getApplicationContext(), url
-            ) as HttpURLConnection
-
-            conn.requestMethod = request.method
-            conn.connectTimeout = NETWORK_TIMEOUT_MS
-            conn.doInput = true
-            conn.useCaches = false
-            conn.allowUserInteraction = false
-            conn.instanceFollowRedirects = request.followRedirects
-
-            defaultHeaders.forEach { entry ->
-                conn.setRequestProperty(entry.key, entry.value)
-            }
-
-            request.headers.forEach { entry ->
-                conn.setRequestProperty(entry.key, entry.value)
+        try {
+            val auth = request.auth?.let {
+                resolveAuth(it)
             }
 
             auth?.let {
-                conn.setRequestProperty("Authorization", auth)
+                headers["Authorization"] = "${auth.prefix} ${auth.token}"
             }
 
-            request.body?.let { body ->
-                conn.doOutput = true
-                conn.setRequestProperty("Content-Type", body.contentType)
-
-                if (body.compress) {
-                    conn.setRequestProperty("Content-Encoding", "gzip")
-                }
-
-                conn.outputStream.use { out -> out.write(body.content, gzip = body.compress) }
-            }
-
-            val responseBody: String? = try {
-                conn.inputStream.readFully()
-            } catch (ex: IOException) {
-                conn.errorStream.readFully()
-            }
-
-            val responseHeaders = mapHeaders(conn.headerFields)
-            val parsedResult = parser.parseResponse(
-                conn.responseCode,
-                responseHeaders,
-                responseBody
+            val response = httpClient.execute(
+                request.url, request.method, headers, request.body, request.followRedirects, parser
             )
 
-            Response(
-                conn.responseCode,
-                parsedResult,
-                responseBody,
-                responseHeaders,
-            )
+            return if (response.status == 401 && auth != null && auth.isAuthToken) {
+                expireAuth(request.auth, auth.token)
+                RequestResult(true, response)
+            } else {
+                RequestResult(false, response)
+            }
         } catch (e: Exception) {
-            throw RequestException("Request failed URL: $url method: $request", e)
-        } finally {
-            conn?.disconnect()
-        }
-
-        return if (response.status == 401 && auth != null && request.auth.isAuthTokenAuth) {
-            expireAuth(request.auth, auth)
-            RequestResult(true, response)
-        } else {
-            RequestResult(false, response)
+            throw RequestException("Request failed: $request", e)
         }
     }
 
-    private fun resolveAuth(auth: RequestAuth): String {
+    private fun resolveAuth(auth: RequestAuth): ResolvedAuth {
         return when (auth) {
             is RequestAuth.BasicAppAuth -> {
                 val credentials = configOptions.appKey + ":" + configOptions.appSecret
-                "Basic ${Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)}"
+                ResolvedAuth(
+                    prefix = "Basic", token = Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
+                )
             }
 
             is RequestAuth.BasicAuth -> {
                 val credentials = auth.user + ":" + auth.password
-                "Basic ${Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)}"
+                ResolvedAuth(
+                    prefix = "Basic", token = Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
+                )
             }
 
             is RequestAuth.BearerToken -> {
-                "Bearer ${auth.token}"
+                ResolvedAuth(
+                    prefix = "Bearer", token = auth.token
+                )
             }
 
             is RequestAuth.ChannelTokenAuth -> {
                 val token = requireNotNull(channelAuthTokenProvider).fetchToken(auth.channelId)
-                "Bearer $token"
+                ResolvedAuth(
+                    prefix = "Bearer", token = token, isAuthToken = true
+                )
             }
 
             is RequestAuth.ContactTokenAuth -> {
-                val token = requireNotNull(channelAuthTokenProvider).fetchToken(auth.contactId)
-                "Bearer $token"
-            }
-        }
-    }
-
-    private fun mapHeaders(headers: Map<String, List<String>>): Map<String, String> {
-        return headers.mapValues { (_, value) ->
-            if (value.isEmpty()) {
-                ""
-            } else if (value.size > 1) {
-                JsonValue.wrapOpt(value).toString()
-            } else {
-                value.first()
+                val token = requireNotNull(contactAuthTokenProvider).fetchToken(auth.contactId)
+                ResolvedAuth(
+                    prefix = "Bearer", token = token, isAuthToken = true
+                )
             }
         }
     }
@@ -185,34 +144,16 @@ public class DefaultRequestSession(
     private fun expireAuth(auth: RequestAuth, token: String) {
         when (auth) {
             is RequestAuth.ChannelTokenAuth -> channelAuthTokenProvider?.expireToken(token)
-            is RequestAuth.ContactTokenAuth -> channelAuthTokenProvider?.expireToken(token)
+            is RequestAuth.ContactTokenAuth -> contactAuthTokenProvider?.expireToken(token)
             else -> {}
         }
     }
 
-    private companion object {
-        private const val NETWORK_TIMEOUT_MS = 60000
-    }
-
     private data class RequestResult<T>(val shouldRetry: Boolean, val response: Response<T>)
-}
 
-private fun InputStream.readFully(): String {
-    return bufferedReader().useLines { lines ->
-        lines.fold(StringBuilder()) { builder, line ->
-            builder.append(line).append('\n')
-        }.toString()
-    }
-}
-
-private fun OutputStream.write(content: String, gzip: Boolean = false) {
-    if (gzip) {
-        GZIPOutputStream(this).use { gos ->
-            gos.writer().use {
-                it.write(content)
-            }
-        }
-    } else {
-        writer().use { it.write(content) }
-    }
+    private data class ResolvedAuth(
+        val prefix: String,
+        val token: String,
+        val isAuthToken: Boolean = false
+    )
 }

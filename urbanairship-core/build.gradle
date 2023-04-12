@@ -19,6 +19,7 @@ android {
     }
 
 
+
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
         freeCompilerArgs = ["-Xexplicit-api=strict"]
@@ -51,6 +52,7 @@ dependencies {
     testImplementation(libs.mockito.core)
     testImplementation(libs.robolectric.core)
     testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.mockk)
 
     // Instrumentation Test
     androidTestImplementation(libs.androidx.test.core)
