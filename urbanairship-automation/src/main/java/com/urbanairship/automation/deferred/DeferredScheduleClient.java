@@ -12,16 +12,19 @@ import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestAuth;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.RequestSession;
 import com.urbanairship.http.Response;
-import com.urbanairship.http.ResponseParser;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,7 +44,7 @@ public class DeferredScheduleClient {
 
     private final AirshipRuntimeConfig runtimeConfig;
     private final AuthManager authManager;
-    private final RequestFactory requestFactory;
+    private final RequestSession session;
 
     private static final String PLATFORM_KEY = "platform";
     private static final String CHANNEL_ID_KEY = "channel_id";
@@ -69,22 +72,17 @@ public class DeferredScheduleClient {
      * @param authManager The auth manager.
      */
     public DeferredScheduleClient(@NonNull AirshipRuntimeConfig runtimeConfig, @NonNull AuthManager authManager) {
-        this(runtimeConfig, authManager, RequestFactory.DEFAULT_REQUEST_FACTORY, new Supplier<StateOverrides>() {
-            @Override
-            public StateOverrides get() {
-                return StateOverrides.defaultOverrides();
-            }
-        });
+        this(runtimeConfig, runtimeConfig.getRequestSession(), authManager, StateOverrides::defaultOverrides);
     }
 
     @VisibleForTesting
     DeferredScheduleClient(@NonNull AirshipRuntimeConfig runtimeConfig,
+                           @NonNull RequestSession session,
                            @NonNull AuthManager authManager,
-                           @NonNull RequestFactory requestFactory,
                            @NonNull Supplier<StateOverrides> stateOverridesSupplier) {
         this.runtimeConfig = runtimeConfig;
         this.authManager = authManager;
-        this.requestFactory = requestFactory;
+        this.session = session;
         this.stateOverridesSupplier = stateOverridesSupplier;
     }
 
@@ -139,23 +137,24 @@ public class DeferredScheduleClient {
     }
 
     private Response<Result> performRequest(@NonNull Uri url, @NonNull String token, @NonNull JsonMap requestBody) throws RequestException {
-        return requestFactory.createRequest()
-                             .setOperation("POST", url)
-                             .setAirshipUserAgent(runtimeConfig)
-                             .setHeader("Authorization", "Bearer " + token)
-                             .setAirshipJsonAcceptsHeader()
-                             .setRequestBody(requestBody)
-                             .execute(new ResponseParser<Result>() {
-                                 @Override
-                                 public Result parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
-                                     if (UAHttpStatusUtil.inSuccessRange(status)) {
-                                         return parseResponseBody(responseBody);
-                                     } else {
-                                         return null;
-                                     }
-                                 }
-                             });
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
 
+        Request request = new Request(
+                url,
+                "POST",
+                new RequestAuth.BearerToken(token),
+                new RequestBody.Json(requestBody),
+                headers
+        );
+
+        return session.execute(request, (status, responseHeaders, responseBody) -> {
+            if (UAHttpStatusUtil.inSuccessRange(status)) {
+                return parseResponseBody(responseBody);
+            } else {
+                return null;
+            }
+        });
     }
 
     private Result parseResponseBody(String responseBody) throws JsonException {

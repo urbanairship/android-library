@@ -4,36 +4,24 @@ package com.urbanairship.contacts;
 
 import android.net.Uri;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
 import com.urbanairship.Logger;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestAuth;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.RequestSession;
 import com.urbanairship.http.Response;
-import com.urbanairship.http.ResponseParser;
-import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.util.Checks;
 import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.PlatformUtils;
 import com.urbanairship.util.UAHttpStatusUtil;
-import com.urbanairship.util.UAStringUtil;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,14 +30,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+
 /**
  * A high level abstraction for performing Contact API requests.
  */
 class ContactApiClient {
-
-    private final AirshipRuntimeConfig runtimeConfig;
-    private final RequestFactory requestFactory;
-
     private static final String RESOLVE_PATH = "api/contacts/resolve/";
     private static final String IDENTIFY_PATH = "api/contacts/identify/";
     private static final String RESET_PATH = "api/contacts/reset/";
@@ -94,21 +82,17 @@ class ContactApiClient {
     private static final String TRANSACTIONAL_OPTED_IN_KEY = "transactional_opted_in";
     private static final String PROPERTIES_KEY = "properties";
 
-    public enum EmailType {
-        COMMERCIAL_OPTED_IN,
-        COMMERCIAL_OPTED_OUT,
-        TRANSACTIONAL_OPTED_IN,
-        TRANSACTIONAL_OPTED_OUT
-    }
+    private final AirshipRuntimeConfig runtimeConfig;
+    private final RequestSession session;
 
     ContactApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
-        this(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY);
+        this(runtimeConfig, runtimeConfig.getRequestSession());
     }
 
     @VisibleForTesting
-    ContactApiClient(@NonNull AirshipRuntimeConfig runtimeConfig, @NonNull RequestFactory requestFactory) {
+    ContactApiClient(@NonNull AirshipRuntimeConfig runtimeConfig, @NonNull RequestSession session) {
         this.runtimeConfig = runtimeConfig;
-        this.requestFactory = requestFactory;
+        this.session = session;
     }
 
     @NonNull
@@ -125,21 +109,25 @@ class ContactApiClient {
                                  .put(DEVICE_TYPE, deviceType)
                                  .build();
 
-        return requestFactory.createRequest()
-                             .setOperation("POST", url)
-                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                             .setRequestBody(payload)
-                             .setAirshipJsonAcceptsHeader()
-                             .setAirshipUserAgent(runtimeConfig)
-                             .execute((status, headers, responseBody) -> {
-                                 if (UAHttpStatusUtil.inSuccessRange(status)) {
-                                     String contactId = JsonValue.parseString(responseBody).optMap().opt(CONTACT_ID).getString();
-                                     Checks.checkNotNull(contactId, "Missing contact ID");
-                                     boolean isAnonymous = JsonValue.parseString(responseBody).optMap().opt(IS_ANONYMOUS).getBoolean(false);
-                                     return new ContactIdentity(contactId, isAnonymous, null);
-                                 }
-                                 return null;
-                             });
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
+
+        Request request = new Request(
+                url,
+                "POST",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                new RequestBody.Json(payload),
+                headers
+        );
+
+        return session.execute(request, (status, responseHeaders, responseBody) -> {
+            if (UAHttpStatusUtil.inSuccessRange(status)) {
+                String contactId = JsonValue.parseString(responseBody).optMap().opt(CONTACT_ID).requireString();
+                boolean isAnonymous = JsonValue.parseString(responseBody).optMap().opt(IS_ANONYMOUS).getBoolean(false);
+                return new ContactIdentity(contactId, isAnonymous, null);
+            }
+            return null;
+        });
     }
 
     @NonNull
@@ -162,19 +150,24 @@ class ContactApiClient {
 
         JsonMap payload = builder.build();
 
-        return requestFactory.createRequest()
-                             .setOperation("POST", url)
-                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                             .setRequestBody(payload)
-                             .setAirshipJsonAcceptsHeader()
-                             .setAirshipUserAgent(runtimeConfig)
-                             .execute((status, headers, responseBody) -> {
-                                 if (UAHttpStatusUtil.inSuccessRange(status)) {
-                                     String contactId1 = JsonValue.parseString(responseBody).optMap().opt(CONTACT_ID).getString();
-                                     return new ContactIdentity(contactId1, false, namedUserId);
-                                 }
-                                 return null;
-                             });
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
+
+        Request request = new Request(
+                url,
+                "POST",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                new RequestBody.Json(payload),
+                headers
+        );
+
+        return session.execute(request, (status, responseHeaders, responseBody) -> {
+            if (UAHttpStatusUtil.inSuccessRange(status)) {
+                String parsedContactID = JsonValue.parseString(responseBody).optMap().opt(CONTACT_ID).requireString();
+                return new ContactIdentity(parsedContactID, false, namedUserId);
+            }
+            return null;
+        });
     }
 
     @NonNull
@@ -277,20 +270,26 @@ class ContactApiClient {
                                  .put(ASSOCIATE_KEY, JsonValue.wrapOpt(Collections.singleton(channelMap)))
                                  .build();
 
-        return requestFactory.createRequest()
-                             .setOperation("POST", url)
-                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                             .setRequestBody(payload)
-                             .setAirshipJsonAcceptsHeader()
-                             .setAirshipUserAgent(runtimeConfig)
-                             .execute((status, headers, responseBody) -> {
-                                 Logger.verbose("Update contact response status: %s body: %s", status, responseBody);
-                                 if (status == 200) {
-                                     return new AssociatedChannel(channelId, channelType);
-                                 } else {
-                                     return null;
-                                 }
-                             });
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
+
+        Request request = new Request(
+                url,
+                "POST",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                new RequestBody.Json(payload),
+                headers
+        );
+
+        return session.execute(request, (status, responseHeaders, responseBody) -> {
+            Logger.verbose("Update contact response status: %s body: %s", status, responseBody);
+            if (status == 200) {
+                return new AssociatedChannel(channelId, channelType);
+            } else {
+                return null;
+            }
+        });
     }
 
     @NonNull
@@ -307,19 +306,24 @@ class ContactApiClient {
                                  .put(DEVICE_TYPE, deviceType)
                                  .build();
 
-        return requestFactory.createRequest()
-                             .setOperation("POST", url)
-                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                             .setRequestBody(payload)
-                             .setAirshipJsonAcceptsHeader()
-                             .setAirshipUserAgent(runtimeConfig)
-                             .execute((status, headers, responseBody) -> {
-                                 if (UAHttpStatusUtil.inSuccessRange(status)) {
-                                     String contactId = JsonValue.parseString(responseBody).optMap().opt(CONTACT_ID).getString();
-                                     return new ContactIdentity(contactId, true, null);
-                                 }
-                                 return null;
-                             });
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
+
+        Request request = new Request(
+                url,
+                "POST",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                new RequestBody.Json(payload),
+                headers
+        );
+
+        return session.execute(request, (status, responseHeaders, responseBody) -> {
+            if (UAHttpStatusUtil.inSuccessRange(status)) {
+                String contactId = JsonValue.parseString(responseBody).optMap().opt(CONTACT_ID).requireString();
+                return new ContactIdentity(contactId, true, null);
+            }
+            return null;
+        });
     }
 
     @NonNull
@@ -355,40 +359,51 @@ class ContactApiClient {
             builder.putOpt(SUBSCRIPTION_LISTS, ScopedSubscriptionListMutation.collapseMutations(subscriptionListMutations));
         }
 
-        return requestFactory.createRequest()
-                             .setOperation("POST", url)
-                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                             .setRequestBody(builder.build())
-                             .setAirshipJsonAcceptsHeader()
-                             .setAirshipUserAgent(runtimeConfig)
-                             .execute((status, headers, responseBody) -> {
-                                 Logger.verbose("Update contact response status: %s body: %s", status, responseBody);
-                                 return null;
-                             });
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
+
+        Request request = new Request(
+                url,
+                "POST",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                new RequestBody.Json(builder.build()),
+                headers
+        );
+
+        return session.execute(request, (status, responseHeaders, responseBody) -> {
+            Logger.verbose("Update contact response status: %s body: %s", status, responseBody);
+            return null;
+        });
     }
 
     private Response<AssociatedChannel> registerAndAssociate(@NonNull String contactID,
                                                              @Nullable Uri url,
                                                              @NonNull JsonSerializable payload,
                                                              @NonNull ChannelType channelType) throws RequestException {
-        Response<String> channelResponse = requestFactory.createRequest()
-                                                         .setOperation("POST", url)
-                                                         .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                                                         .setRequestBody(payload)
-                                                         .setAirshipJsonAcceptsHeader()
-                                                         .setAirshipUserAgent(runtimeConfig)
-                                                         .execute((status, headers, responseBody) -> {
-                                                             if (UAHttpStatusUtil.inSuccessRange(status)) {
-                                                                 return JsonValue.parseString(responseBody).optMap().opt(CHANNEL_ID).requireString();
-                                                             } else {
-                                                                 return null;
-                                                             }
-                                                         });
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
+
+        Request request = new Request(
+                url,
+                "POST",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                new RequestBody.Json(payload),
+                headers
+        );
+
+        Response<String> channelResponse = session.execute(request, (status, responseHeaders, responseBody) -> {
+            if (UAHttpStatusUtil.inSuccessRange(status)) {
+                return JsonValue.parseString(responseBody).optMap().opt(CHANNEL_ID).requireString();
+            } else {
+                return null;
+            }
+        });
 
         if (channelResponse.isSuccessful()) {
             return associatedChannel(contactID, channelResponse.getResult(), channelType);
         } else {
-            return new Response.Builder<AssociatedChannel>(channelResponse.getStatus()).build();
+            return channelResponse.map(result -> null);
         }
     }
 
@@ -405,35 +420,40 @@ class ContactApiClient {
                                .appendEncodedPath(SUBSCRIPTION_LIST_PATH + identifier)
                                .build();
 
-        return requestFactory.createRequest()
-                             .setOperation("GET", uri)
-                             .setAirshipUserAgent(runtimeConfig)
-                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                             .setAirshipJsonAcceptsHeader()
-                             .execute((ResponseParser<Map<String, Set<Scope>>>) (status, headers, responseBody) -> {
-                                 Logger.verbose("Fetch contact subscription list status: %s body: %s", status, responseBody);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
 
-                                 if (!UAHttpStatusUtil.inSuccessRange(status)) {
-                                     return null;
-                                 }
+        Request request = new Request(
+                uri,
+                "GET",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                null,
+                headers
+        );
 
-                                 JsonValue json = JsonValue.parseString(responseBody);
-                                 Map<String, Set<Scope>> subscriptionLists = new HashMap<>();
+        return session.execute(request, (status, responseHeaders, responseBody) -> {
+            Logger.verbose("Fetch contact subscription list status: %s body: %s", status, responseBody);
 
-                                 for (JsonValue entryJson : json.requireMap().opt(SUBSCRIPTION_LISTS_KEY).optList()) {
-                                     Scope scope = Scope.fromJson(entryJson.optMap().opt(SCOPE_KEY));
-                                     for (JsonValue listIdJson : entryJson.optMap().opt(LIST_IDS_KEY).optList()) {
-                                         String listId = listIdJson.requireString();
-                                         Set<Scope> scopes = subscriptionLists.get(listId);
-                                         if (scopes == null) {
-                                             scopes = new HashSet<>();
-                                             subscriptionLists.put(listId, scopes);
-                                         }
-                                         scopes.add(scope);
-                                     }
-                                 }
-                                 return subscriptionLists;
-                             });
+            if (!UAHttpStatusUtil.inSuccessRange(status)) {
+                return null;
+            }
+
+            JsonValue json = JsonValue.parseString(responseBody);
+            Map<String, Set<Scope>> subscriptionLists = new HashMap<>();
+
+            for (JsonValue entryJson : json.requireMap().opt(SUBSCRIPTION_LISTS_KEY).optList()) {
+                Scope scope = Scope.fromJson(entryJson.optMap().opt(SCOPE_KEY));
+                for (JsonValue listIdJson : entryJson.optMap().opt(LIST_IDS_KEY).optList()) {
+                    String listId = listIdJson.requireString();
+                    Set<Scope> scopes = subscriptionLists.get(listId);
+                    if (scopes == null) {
+                        scopes = new HashSet<>();
+                        subscriptionLists.put(listId, scopes);
+                    }
+                    scopes.add(scope);
+                }
+            }
+            return subscriptionLists;
+        });
     }
-
 }

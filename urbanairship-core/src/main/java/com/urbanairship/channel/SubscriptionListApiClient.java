@@ -5,10 +5,12 @@ import android.net.Uri;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestAuth;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.RequestSession;
 import com.urbanairship.http.Response;
-import com.urbanairship.http.ResponseParser;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -16,6 +18,7 @@ import com.urbanairship.util.UAHttpStatusUtil;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +26,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 /**
@@ -43,7 +45,7 @@ public class SubscriptionListApiClient {
     private static final String LIST_IDS_KEY = "list_ids";
 
     private final AirshipRuntimeConfig runtimeConfig;
-    private final RequestFactory requestFactory;
+    private final RequestSession session;
     private final Callable<String> audienceKey;
     private final String listPath;
     private final String updatePath;
@@ -51,32 +53,29 @@ public class SubscriptionListApiClient {
     @VisibleForTesting
     SubscriptionListApiClient(
             @NonNull AirshipRuntimeConfig runtimeConfig,
-            @NonNull RequestFactory requestFactory,
+            @NonNull RequestSession session,
             @NonNull Callable<String> audienceKey,
             @NonNull String listPath,
             @NonNull String updatePath
     ) {
         this.runtimeConfig = runtimeConfig;
-        this.requestFactory = requestFactory;
+        this.session = session;
         this.audienceKey = audienceKey;
         this.listPath = listPath;
         this.updatePath = updatePath;
     }
 
     public static SubscriptionListApiClient channelClient(final AirshipRuntimeConfig runtimeConfig) {
-        return new SubscriptionListApiClient(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY,
-                new Callable<String>() {
-                    @Override
-                    public String call() {
-                        switch (runtimeConfig.getPlatform()) {
-                            case UAirship.AMAZON_PLATFORM:
-                                return AMAZON_CHANNEL_KEY;
-                            case UAirship.ANDROID_PLATFORM:
-                                return ANDROID_CHANNEL_KEY;
-                            case UAirship.UNKNOWN_PLATFORM:
-                            default:
-                                throw new IllegalStateException("Invalid platform");
-                        }
+        return new SubscriptionListApiClient(runtimeConfig, runtimeConfig.getRequestSession(),
+                () -> {
+                    switch (runtimeConfig.getPlatform()) {
+                        case UAirship.AMAZON_PLATFORM:
+                            return AMAZON_CHANNEL_KEY;
+                        case UAirship.ANDROID_PLATFORM:
+                            return ANDROID_CHANNEL_KEY;
+                        case UAirship.UNKNOWN_PLATFORM:
+                        default:
+                            throw new IllegalStateException("Invalid platform");
                     }
                 },
                 CHANNEL_SUBSCRIPTIONS_LIST_PATH,
@@ -115,13 +114,18 @@ public class SubscriptionListApiClient {
 
         Logger.verbose("Updating subscription lists for ID: %s with payload: %s", identifier, payload);
 
-        return requestFactory.createRequest()
-                .setOperation("POST", uri)
-                .setAirshipUserAgent(runtimeConfig)
-                .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                .setRequestBody(payload)
-                .setAirshipJsonAcceptsHeader()
-                .execute();
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
+
+        Request request = new Request(
+                uri,
+                "POST",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                new RequestBody.Json(payload),
+                headers
+        );
+
+        return session.execute(request, (status, responseHeaders, responseBody) -> null);
     }
 
     /**
@@ -137,29 +141,32 @@ public class SubscriptionListApiClient {
                                .appendEncodedPath(getListPath(identifier))
                                .build();
 
-        return requestFactory.createRequest()
-                .setOperation("GET", uri)
-                .setAirshipUserAgent(runtimeConfig)
-                .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                .setAirshipJsonAcceptsHeader()
-                .execute(new ResponseParser<Set<String>>() {
-                    @Override
-                    public Set<String> parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
-                        if (!UAHttpStatusUtil.inSuccessRange(status)) {
-                            return null;
-                        }
-                        JsonValue json = JsonValue.parseString(responseBody);
-                        Set<String> listIds = new HashSet<>();
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
 
-                        for (JsonValue idJson : json.optMap().opt(LIST_IDS_KEY).optList()) {
-                            String id = idJson.getString();
-                            if (!UAStringUtil.isEmpty(id)) {
-                                listIds.add(id);
-                            }
-                        }
-                        return listIds;
-                    }
-                });
+        Request request = new Request(
+                uri,
+                "GET",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                null,
+                headers
+        );
+
+        return session.execute(request, (status, responseHeaders, responseBody) -> {
+            if (!UAHttpStatusUtil.inSuccessRange(status)) {
+                return null;
+            }
+            JsonValue json = JsonValue.parseString(responseBody);
+            Set<String> listIds = new HashSet<>();
+
+            for (JsonValue idJson : json.optMap().opt(LIST_IDS_KEY).optList()) {
+                String id = idJson.getString();
+                if (!UAStringUtil.isEmpty(id)) {
+                    listIds.add(id);
+                }
+            }
+            return listIds;
+        });
     }
 
     @VisibleForTesting
@@ -180,4 +187,5 @@ public class SubscriptionListApiClient {
             throw new RequestException("Audience exception", e);
         }
     }
+
 }

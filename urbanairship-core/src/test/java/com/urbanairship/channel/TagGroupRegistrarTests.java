@@ -116,8 +116,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
 
     @Test
     public void testClearTagsDuringUpload() throws RequestException {
-        final Response<Void> response = new Response.Builder<Void>(200)
-                .build();
+        final Response<Void> response = new Response<>(200, null);
 
         TestListener listener = new TestListener();
         registrar.addTagGroupListener(listener);
@@ -141,8 +140,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
     }
 
     private void verifyRequest(int status, boolean expectedResult) throws RequestException {
-        final Response<Void> response = new Response.Builder<Void>(status)
-                .build();
+        final Response<Void> response = new Response<>(status, null);
 
         registrar.setId("identifier", true);
 

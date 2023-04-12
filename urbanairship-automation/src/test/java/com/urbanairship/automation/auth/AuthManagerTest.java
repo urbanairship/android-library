@@ -39,9 +39,7 @@ public class AuthManagerTest {
         when(mockChannel.getId()).thenReturn("channel id");
 
         when(mockClient.getToken("channel id"))
-                .thenReturn(new Response.Builder<AuthToken>(200)
-                        .setResult(new AuthToken("channel id", "some token", 100))
-                        .build());
+                .thenReturn(new Response<>(200, new AuthToken("channel id", "some token", 100)));
 
         assertEquals("some token", authManager.getToken());
     }
@@ -51,8 +49,7 @@ public class AuthManagerTest {
         when(mockChannel.getId()).thenReturn("channel id");
 
         when(mockClient.getToken("channel id"))
-                .thenReturn(new Response.Builder<AuthToken>(400)
-                        .build());
+                .thenReturn(new Response<AuthToken>(400, null));
 
         authManager.getToken();
     }
@@ -63,12 +60,8 @@ public class AuthManagerTest {
         when(mockChannel.getId()).thenReturn("channel id");
 
         when(mockClient.getToken("channel id"))
-                .thenReturn(new Response.Builder<AuthToken>(200)
-                        .setResult(new AuthToken("channel id", "some token", 100))
-                        .build())
-                .thenReturn(new Response.Builder<AuthToken>(200)
-                        .setResult(new AuthToken("channel id", "some other token", 200))
-                        .build());
+                .thenReturn(new Response<>(200, new AuthToken("channel id", "some token", 100)))
+                .thenReturn(new Response<>(200, new AuthToken("channel id", "some other token", 200)));
 
         assertEquals("some token", authManager.getToken());
 
@@ -84,17 +77,13 @@ public class AuthManagerTest {
         clock.currentTimeMillis = 0;
         when(mockChannel.getId()).thenReturn("channel id");
         when(mockClient.getToken("channel id"))
-                .thenReturn(new Response.Builder<AuthToken>(200)
-                        .setResult(new AuthToken("channel id", "some token", 100))
-                        .build());
+                .thenReturn(new Response<>(200, new AuthToken("channel id", "some token", 100)));
 
         assertEquals("some token", authManager.getToken());
 
         when(mockChannel.getId()).thenReturn("other channel id");
         when(mockClient.getToken("other channel id"))
-                .thenReturn(new Response.Builder<AuthToken>(200)
-                        .setResult(new AuthToken("other channel id", "some other token", 100))
-                        .build());
+                .thenReturn(new Response<>(200, new AuthToken("other channel id", "some other token", 100)));
 
         assertEquals("some other token", authManager.getToken());
     }
@@ -105,12 +94,8 @@ public class AuthManagerTest {
         when(mockChannel.getId()).thenReturn("channel id");
 
         when(mockClient.getToken("channel id"))
-                .thenReturn(new Response.Builder<AuthToken>(200)
-                        .setResult(new AuthToken("channel id", "some token", 100))
-                        .build())
-                .thenReturn(new Response.Builder<AuthToken>(200)
-                        .setResult(new AuthToken("channel id", "some other token", 200))
-                        .build());
+                .thenReturn(new Response<>(200, new AuthToken("channel id", "some token", 100)))
+                .thenReturn(new Response<>(200, new AuthToken("channel id", "some other token", 200)));
 
         assertEquals("some token", authManager.getToken());
         authManager.tokenExpired("some token");

@@ -26,6 +26,7 @@ import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
 import com.urbanairship.contacts.Contact;
+import com.urbanairship.http.DefaultRequestSession;
 import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
 import com.urbanairship.js.UrlAllowList;
@@ -710,8 +711,10 @@ public class UAirship {
         Supplier<PushProviders> pushProviders = PushProviders.lazyLoader(application, airshipConfigOptions);
 
         DeferredPlatformProvider platformProvider = new DeferredPlatformProvider(getApplicationContext(), preferenceDataStore, privacyManager, pushProviders);
+        DefaultRequestSession requestSession = new DefaultRequestSession(airshipConfigOptions, platformProvider.getPlatform());
+
         RemoteAirshipUrlConfigProvider remoteAirshipUrlConfigProvider = new RemoteAirshipUrlConfigProvider(airshipConfigOptions, preferenceDataStore);
-        this.runtimeConfig = new AirshipRuntimeConfig(platformProvider, airshipConfigOptions, remoteAirshipUrlConfigProvider);
+        this.runtimeConfig = new AirshipRuntimeConfig(platformProvider, airshipConfigOptions, remoteAirshipUrlConfigProvider, requestSession);
         remoteAirshipUrlConfigProvider.addUrlConfigListener(new AirshipUrlConfig.Listener() {
             @Override
             public void onUrlConfigUpdated() {

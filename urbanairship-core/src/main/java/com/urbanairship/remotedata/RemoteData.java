@@ -513,8 +513,7 @@ public class RemoteData extends AirshipComponent {
         Response<RemoteDataApiClient.Result> response;
         try {
             response = apiClient.fetchRemoteDataPayloads(lastModified, locale, getRandomValue(), (headers, url, payloads) -> {
-                List<String> lmValues = headers.get("Last-Modified");
-                String lm = (lmValues != null && !lmValues.isEmpty()) ? lmValues.get(0) : null;
+                String lm = headers.get("Last-Modified");
                 return RemoteDataPayload.parsePayloads(payloads, createMetadata(url, lm));
             });
         } catch (RequestException e) {
@@ -531,7 +530,7 @@ public class RemoteData extends AirshipComponent {
         }
 
         if (response.isSuccessful()) {
-            String lm = response.getResponseHeader("Last-Modified");
+            String lm = response.getHeaders().get("Last-Modified");
             JsonMap metadata = createMetadata(response.getResult().url, lm);
             Set<RemoteDataPayload> remoteDataPayloads = response.getResult().payloads;
             if (saveNewPayloads(remoteDataPayloads)) {

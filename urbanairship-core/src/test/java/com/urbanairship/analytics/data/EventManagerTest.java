@@ -141,9 +141,7 @@ public class EventManagerTest extends BaseTestCase {
 
         // Return the response
         when(mockClient.sendEvents(eventPayloads, headers))
-                .thenReturn(new Response.Builder<EventResponse>(HttpURLConnection.HTTP_OK)
-                        .setResult(eventResponse)
-                        .build());
+                .thenReturn(new Response<>(HttpURLConnection.HTTP_OK, eventResponse));
 
         // Start the upload process
         assertTrue(eventManager.uploadEvents(headers));
@@ -208,9 +206,8 @@ public class EventManagerTest extends BaseTestCase {
         EventResponse eventResponse = mock(EventResponse.class);
 
         when(mockClient.sendEvents(eventPayloads, headers))
-                .thenReturn(new Response.Builder<EventResponse>(HttpURLConnection.HTTP_BAD_REQUEST)
-                        .setResult(eventResponse)
-                        .build());
+                .thenReturn(new Response<>(HttpURLConnection.HTTP_BAD_REQUEST, eventResponse));
+
 
         assertFalse(eventManager.uploadEvents(headers));
 

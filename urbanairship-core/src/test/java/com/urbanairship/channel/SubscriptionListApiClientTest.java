@@ -2,11 +2,11 @@ package com.urbanairship.channel;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestAirshipRuntimeConfig;
-import com.urbanairship.TestRequest;
+import com.urbanairship.TestRequestSession;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipUrlConfig;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -14,7 +14,6 @@ import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,12 +23,11 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
 
 public class SubscriptionListApiClientTest extends BaseTestCase {
 
-    private TestRequest testRequest;
-    private RequestFactory requestFactory;
+    private TestRequestSession requestSession = new TestRequestSession();
+
     private List<SubscriptionListMutation> mutations;
     private TestAirshipRuntimeConfig runtimeConfig;
 
@@ -40,20 +38,15 @@ public class SubscriptionListApiClientTest extends BaseTestCase {
                                                    .setDeviceUrl("https://test.urbanairship.com")
                                                    .build());
 
-        testRequest = new TestRequest();
-
-        requestFactory = Mockito.mock(RequestFactory.class);
-        when(requestFactory.createRequest()).thenReturn(testRequest);
-
         mutations = new ArrayList<>();
         mutations.add(SubscriptionListMutation.newSubscribeMutation("listId", 0L));
     }
 
     @Test
     public void testUpdateSubscriptions() throws RequestException, JsonException {
-        testRequest.responseStatus = 202;
+        requestSession.addResponse(202);
 
-        SubscriptionListApiClient client = new SubscriptionListApiClient(runtimeConfig, requestFactory, new Callable<String>() {
+        SubscriptionListApiClient client = new SubscriptionListApiClient(runtimeConfig, requestSession, new Callable<String>() {
             @Override
             public String call() {
                 return "audience-key";
@@ -62,9 +55,8 @@ public class SubscriptionListApiClientTest extends BaseTestCase {
 
         Response<Void> response = client.updateSubscriptionLists("identifier", mutations);
 
-        assertEquals(testRequest.responseBody, response.getResponseBody());
-        assertEquals("https://test.urbanairship.com/api/channels/subscription_lists", testRequest.getUrl().toString());
-        assertEquals("POST", testRequest.getRequestMethod());
+        assertEquals("https://test.urbanairship.com/api/channels/subscription_lists", requestSession.getLastRequest().getUrl().toString());
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
         assertEquals(202, response.getStatus());
 
         JsonMap expectedBody = JsonMap.newBuilder()
@@ -73,20 +65,21 @@ public class SubscriptionListApiClientTest extends BaseTestCase {
                                                               .build())
                                       .put("subscription_lists", JsonValue.wrap(mutations))
                                       .build();
-        JsonValue requestBody = JsonValue.parseString(testRequest.getRequestBody());
-        assertEquals(expectedBody.toJsonValue(), requestBody);
+        RequestBody requestBody = requestSession.getLastRequest().getBody();
+        assertEquals(new RequestBody.Json(expectedBody), requestBody);
     }
 
     @Test
     public void testGetSubscriptionLists() throws RequestException, JsonException {
-        testRequest.responseStatus = 200;
-        testRequest.responseBody = JsonMap.newBuilder()
-                .put("ok", "true")
-                .put("list_ids", JsonValue.wrap(Arrays.asList("one", "two", "three")))
-                .build()
-                .toString();
+        requestSession.addResponse(200,
+                JsonMap.newBuilder()
+                       .put("ok", "true")
+                       .put("list_ids", JsonValue.wrap(Arrays.asList("one", "two", "three")))
+                       .build()
+                       .toString()
+        );
 
-        SubscriptionListApiClient client = new SubscriptionListApiClient(runtimeConfig, requestFactory, new Callable<String>() {
+        SubscriptionListApiClient client = new SubscriptionListApiClient(runtimeConfig, requestSession, new Callable<String>() {
             @Override
             public String call() {
                 return "audience-key";
@@ -95,9 +88,8 @@ public class SubscriptionListApiClientTest extends BaseTestCase {
 
         Response<Set<String>> response = client.getSubscriptionLists("identifier");
 
-        assertEquals(testRequest.responseBody, response.getResponseBody());
-        assertEquals("https://test.urbanairship.com/api/subscription_lists/channels/identifier", testRequest.getUrl().toString());
-        assertEquals("GET", testRequest.getRequestMethod());
+        assertEquals("https://test.urbanairship.com/api/subscription_lists/channels/identifier", requestSession.getLastRequest().getUrl().toString());
+        assertEquals("GET", requestSession.getLastRequest().getMethod());
         assertEquals(200, response.getStatus());
 
         Set<String> expected = new HashSet<String>(3) {{

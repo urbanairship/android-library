@@ -1322,10 +1322,7 @@ public class AirshipChannelTests extends BaseTestCase {
     }
 
     private static <T> Response<T> createResponse(T result, int status) {
-        return new Response.Builder<T>(status)
-                .setResponseBody("test")
-                .setResult(result)
-                .build();
+        return new Response<T>(status, result, "test");
     }
 
     private static class TestListener implements AirshipChannelListener {

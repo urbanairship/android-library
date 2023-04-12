@@ -105,7 +105,7 @@ public class SubscriptionListRegistrarTest extends BaseTestCase {
     }
 
     private void verifyRequest(int status, boolean expectedResult) throws RequestException {
-        final Response<Void> response = new Response.Builder<Void>(status).build();
+        final Response<Void> response = new Response<>(status, null);
 
         SubscriptionListListener listener = mock(SubscriptionListListener.class);
         registrar.addSubscriptionListListener(listener);

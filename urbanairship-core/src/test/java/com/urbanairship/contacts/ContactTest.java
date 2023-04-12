@@ -136,7 +136,10 @@ public class ContactTest extends BaseTestCase {
     public void testExtendChannelRegistration() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
         // Set up a 200 response
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> response = new Response<>(
+                200,
+                new ContactIdentity(fakeContactId, true, null)
+        );
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(response);
 
         contact.resolve();
@@ -162,7 +165,10 @@ public class ContactTest extends BaseTestCase {
         contact.init();
 
         // Set up a 200 response
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> response = new Response<>(
+                200,
+                new ContactIdentity(fakeContactId, true, null)
+        );
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(response);
 
         contact.resolve();
@@ -208,7 +214,7 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 200 response
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> response = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(response);
 
         contact.resolve();
@@ -224,7 +230,7 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 500 response
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(500).build();
+        Response<ContactIdentity> response = new Response<>(500, null);
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(response);
 
         contact.resolve();
@@ -238,7 +244,7 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 403 response
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(403).build();
+        Response<ContactIdentity> response = new Response<>(403, null);
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(response);
 
         contact.resolve();
@@ -252,7 +258,7 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 200 response
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> response = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.reset(fakeChannelId)).thenReturn(response);
 
         contact.reset();
@@ -267,7 +273,7 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 500 response
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(500).build();
+        Response<ContactIdentity> response = new Response<>(500, null);
         when(mockContactApiClient.reset(fakeChannelId)).thenReturn(response);
 
         contact.reset();
@@ -281,7 +287,7 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 403 response
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(403).build();
+        Response<ContactIdentity> response = new Response<>(403, null);
         when(mockContactApiClient.reset(fakeChannelId)).thenReturn(response);
 
         contact.reset();
@@ -295,7 +301,7 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 200 response
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, false, fakeNamedUserId)).build();
+        Response<ContactIdentity> response = new Response<>(200, new ContactIdentity(fakeContactId, false, fakeNamedUserId));
         when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, null)).thenReturn(response);
 
         assertNull(contact.getLastContactIdentity());
@@ -317,7 +323,8 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 200 response
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, false, fakeNamedUserId)).build();
+
+        Response<ContactIdentity> response = new Response<>(200, new ContactIdentity(fakeContactId, false, fakeNamedUserId));
         when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, null)).thenReturn(response);
         contact.identify(fakeNamedUserId);
 
@@ -339,11 +346,11 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
         final String resetContactId = "some other fake id";
 
-        Response<ContactIdentity> identifyResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, false, fakeNamedUserId)).build();
+        Response<ContactIdentity> identifyResponse = new Response<>(200, new ContactIdentity(fakeContactId, false, fakeNamedUserId));
         when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, null)).thenReturn(identifyResponse);
         when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, resetContactId)).thenReturn(identifyResponse);
 
-        Response<ContactIdentity> resetResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity("some other fake id", true, null)).build();
+        Response<ContactIdentity> resetResponse = new Response<>(200, new ContactIdentity("some other fake id", true, null));
         when(mockContactApiClient.reset(fakeChannelId)).thenReturn(resetResponse);
 
         contact.identify(fakeNamedUserId);
@@ -372,14 +379,14 @@ public class ContactTest extends BaseTestCase {
         final String resetContactId = "some other fake id";
 
         // Set up a 200 response
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
-        Response<Void> updateResponse = new Response.Builder<Void>(200).build();
+        Response<Void> updateResponse =new Response<>(200, null);
         when(mockContactApiClient.update(eq(fakeContactId), anyList(), anyList(), anyList())).thenReturn(updateResponse);
         when(mockContactApiClient.update(eq(resetContactId), anyList(), anyList(), anyList())).thenReturn(updateResponse);
 
-        Response<ContactIdentity> resetResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(resetContactId, true, null)).build();
+        Response<ContactIdentity> resetResponse = new Response<>(200, new ContactIdentity(resetContactId, true, null));
         when(mockContactApiClient.reset(fakeChannelId)).thenReturn(resetResponse);
 
         contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply();
@@ -412,7 +419,7 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 500 response
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>((500)).build();
+        Response<ContactIdentity> response = new Response<>(500, null);
         when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, null)).thenReturn(response);
 
         contact.identify(fakeNamedUserId);
@@ -426,7 +433,7 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 403 response
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>((403)).build();
+        Response<ContactIdentity> response = new Response<>(403, null);
         when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, null)).thenReturn(response);
 
         contact.identify(fakeNamedUserId);
@@ -447,10 +454,10 @@ public class ContactTest extends BaseTestCase {
         tagGroupsMutations = TagGroupsMutation.collapseMutations(tagGroupsMutations);
 
         // Set up a 200 response
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
-        Response<Void> updateResponse = new Response.Builder<Void>(200).build();
+        Response<Void> updateResponse =new Response<>(200, null);
         when(mockContactApiClient.update(fakeContactId, tagGroupsMutations, Collections.emptyList(), Collections.emptyList())).thenReturn(updateResponse);
 
         tagGroupsEditor.apply();
@@ -477,10 +484,10 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 200 response
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
-        Response<Void> updateResponse = new Response.Builder<Void>(200).build();
+        Response<Void> updateResponse =new Response<>(200, null);
         when(mockContactApiClient.update(fakeContactId, Collections.emptyList(), Collections.emptyList(), pending)).thenReturn(updateResponse);
 
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
@@ -525,13 +532,13 @@ public class ContactTest extends BaseTestCase {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         // Set up a 200 response
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        Response<Void> updateResponse = new Response.Builder<Void>(200).build();
+        Response<Void> updateResponse =new Response<>(200, null);
         when(mockContactApiClient.update(any(), anyList(), anyList(), anyList())).thenReturn(updateResponse);
 
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
@@ -551,10 +558,10 @@ public class ContactTest extends BaseTestCase {
         attributeMutations = AttributeMutation.collapseMutations(attributeMutations);
 
         // Set up a 200 response
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
-        Response<Void> updateResponse = new Response.Builder<Void>(200).build();
+        Response<Void> updateResponse =new Response<>(200, null);
         when(mockContactApiClient.update(fakeContactId, Collections.emptyList(), attributeMutations, Collections.emptyList())).thenReturn(updateResponse);
 
         attributeEditor.apply();
@@ -590,13 +597,13 @@ public class ContactTest extends BaseTestCase {
         contact.setContactConflictListener(conflictListener);
 
         // Set up responses
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity("some_contact_id", true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity("some_contact_id", true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
-        Response<Void> updateResponse = new Response.Builder<Void>(200).build();
+        Response<Void> updateResponse =new Response<>(200, null);
         when(mockContactApiClient.update("some_contact_id", tagGroupsMutations, attributeMutations, subscriptionListMutations)).thenReturn(updateResponse);
 
-        Response<ContactIdentity> response = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity("some_other_contact_id", false, fakeNamedUserId)).build();
+        Response<ContactIdentity> response = new Response<>(200, new ContactIdentity("some_other_contact_id", false, fakeNamedUserId));
         when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, "some_contact_id")).thenReturn(response);
 
         contact.identify(fakeNamedUserId);
@@ -638,10 +645,10 @@ public class ContactTest extends BaseTestCase {
         List<AttributeMutation> expectedAttributes = Collections.singletonList(AttributeMutation.newSetAttributeMutation("cool", JsonValue.wrap("story"), testClock.currentTimeMillis));
 
         // Set up a 200 response
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
-        Response<Void> updateResponse = new Response.Builder<Void>(200).build();
+        Response<Void> updateResponse =new Response<>(200, null);
         when(mockContactApiClient.update(fakeContactId, expectedTags, expectedAttributes, Collections.emptyList())).thenReturn(updateResponse);
 
         // Resolve
@@ -802,7 +809,7 @@ public class ContactTest extends BaseTestCase {
     @Test
     public void testGetSubscriptionListsFromCache() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         // Resolve contact
@@ -830,7 +837,7 @@ public class ContactTest extends BaseTestCase {
     @Test
     public void testGetSubscriptionListsFromCacheWithLocalHistory() throws RequestException, JsonException, ExecutionException, InterruptedException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         // Resolve contact
@@ -872,18 +879,16 @@ public class ContactTest extends BaseTestCase {
     @Test
     public void testGetSubscriptionListsNamedContact() throws RequestException, ExecutionException, InterruptedException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, false, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, false, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         // Always return empty list from server
-        when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(200)
-                .setResult(new HashMap<>())
-                .build()
-        );
+        when(mockContactApiClient.getSubscriptionLists(fakeContactId))
+                .thenReturn(new Response<>(200, new HashMap<>()));
 
         // Updates
         when(mockContactApiClient.update(eq(fakeContactId), anyList(), anyList(), anyList()))
-                .thenReturn(new Response.Builder<Void>(200).build());
+                .thenReturn(new Response<>(200, null));
 
         // Resolve contact
         contact.resolve();
@@ -913,7 +918,7 @@ public class ContactTest extends BaseTestCase {
     @Test
     public void testGetSubscriptionListsFromNetworkWithLocalHistory() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         // Resolve contact
@@ -925,10 +930,8 @@ public class ContactTest extends BaseTestCase {
             put("buzz", new HashSet<>(Collections.singleton(Scope.SMS)));
         }};
 
-        when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(200)
-                .setResult(networkSubscriptions)
-                .build()
-        );
+        when(mockContactApiClient.getSubscriptionLists(fakeContactId))
+                .thenReturn(new Response<>(200, networkSubscriptions));
 
         CachedValue<ScopedSubscriptionListMutation> localMutation1 = new CachedValue<>(testClock);
         localMutation1.set(ScopedSubscriptionListMutation.newSubscribeMutation("local", Scope.APP, 1000), 100);
@@ -958,7 +961,7 @@ public class ContactTest extends BaseTestCase {
     @Test
     public void testGetSubscriptionListsFromNetworkIfCacheExpired() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         // Resolve contact
@@ -975,10 +978,8 @@ public class ContactTest extends BaseTestCase {
             put("buzz", Collections.singleton(Scope.SMS));
         }};
 
-        when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(200)
-                .setResult(networkSubscriptions)
-                .build()
-        );
+        when(mockContactApiClient.getSubscriptionLists(fakeContactId))
+                .thenReturn(new Response<>(200, networkSubscriptions));
 
         // Prime the cache
         testClock.currentTimeMillis = 100;
@@ -1002,7 +1003,7 @@ public class ContactTest extends BaseTestCase {
     @Test
     public void testGetSubscriptionListsFromNetworkIfCacheEmpty() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         // Resolve contact
@@ -1014,10 +1015,8 @@ public class ContactTest extends BaseTestCase {
             put("buzz", Collections.singleton(Scope.SMS));
         }};
 
-        when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(200)
-                .setResult(networkSubscriptions)
-                .build()
-        );
+        when(mockContactApiClient.getSubscriptionLists(fakeContactId))
+                .thenReturn(new Response<>(200, networkSubscriptions));
 
         PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
         result.addResultCallback(result1 -> {
@@ -1033,7 +1032,7 @@ public class ContactTest extends BaseTestCase {
     @Test
     public void testGetSubscriptionListsIncludesPending() throws RequestException, ExecutionException, InterruptedException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         // Resolve contact
@@ -1050,10 +1049,8 @@ public class ContactTest extends BaseTestCase {
             put("bar", new HashSet<>(Collections.singleton(Scope.APP)));
         }};
 
-        when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(200)
-                .setResult(networkSubscriptions)
-                .build()
-        );
+        when(mockContactApiClient.getSubscriptionLists(fakeContactId))
+                .thenReturn(new Response<>(200, networkSubscriptions));
 
         Map<String, Set<Scope>> expectedSubscriptions = new HashMap<String, Set<Scope>>() {{
             put("foo", Collections.singleton(Scope.SMS));
@@ -1077,7 +1074,7 @@ public class ContactTest extends BaseTestCase {
     @Test
     public void testGetSubscriptionPendingReset() throws RequestException, ExecutionException, InterruptedException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, false, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, false, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         // Resolve contact
@@ -1094,7 +1091,7 @@ public class ContactTest extends BaseTestCase {
     @Test
     public void testGetSubscriptionPendingIdentify() throws RequestException, ExecutionException, InterruptedException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, "some user id")).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, "some user id"));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         // Resolve contact
@@ -1122,16 +1119,15 @@ public class ContactTest extends BaseTestCase {
     @Test
     public void testGetSubscriptionErrorResult() throws RequestException, ExecutionException, InterruptedException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         // Resolve contact
         contact.resolve();
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
-        when(mockContactApiClient.getSubscriptionLists(fakeContactId)).thenReturn(new Response.Builder<Map<String, Set<Scope>>>(400)
-                .build()
-        );
+        when(mockContactApiClient.getSubscriptionLists(fakeContactId))
+                .thenReturn(new Response<>(200, null));
 
         PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
         result.addResultCallback(result1 -> {
@@ -1146,13 +1142,13 @@ public class ContactTest extends BaseTestCase {
     public void testRegisterEmail() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         JsonMap properties = JsonMap.newBuilder().put("place", "paris").build();
         EmailRegistrationOptions options = EmailRegistrationOptions.commercialOptions(new Date(), new Date(), properties);
 
-        Response<AssociatedChannel> registerResponse = new Response.Builder<AssociatedChannel>(200).setResult(new AssociatedChannel("email-channel-id", ChannelType.EMAIL)).build();
+        Response<AssociatedChannel> registerResponse = new Response<>(200, new AssociatedChannel("email-channel-id", ChannelType.EMAIL));
         when(mockContactApiClient.registerEmail(eq(fakeContactId), eq("ua@airship.com"), any(EmailRegistrationOptions.class))).thenReturn(registerResponse);
 
         contact.registerEmail("ua@airship.com", options);
@@ -1170,13 +1166,13 @@ public class ContactTest extends BaseTestCase {
     public void testRegisterEmailFailed() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         JsonMap properties = JsonMap.newBuilder().put("place", "paris").build();
         EmailRegistrationOptions options = EmailRegistrationOptions.commercialOptions(new Date(), new Date(), properties);
 
-        Response<AssociatedChannel> registerResponse = new Response.Builder<AssociatedChannel>(500).build();
+        Response<AssociatedChannel> registerResponse = new Response<>(500, null);
         when(mockContactApiClient.registerEmail(eq(fakeContactId), eq("ua@airship.com"), Mockito.any(EmailRegistrationOptions.class))).thenReturn(registerResponse);
 
         contact.registerEmail("ua@airship.com", options);
@@ -1192,12 +1188,12 @@ public class ContactTest extends BaseTestCase {
     public void testRegisterSms() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         SmsRegistrationOptions options = SmsRegistrationOptions.options("12345");
 
-        Response<AssociatedChannel> registerResponse = new Response.Builder<AssociatedChannel>(200).setResult(new AssociatedChannel("sms-channel-id", ChannelType.SMS)).build();
+        Response<AssociatedChannel> registerResponse = new Response<>(200, new AssociatedChannel("sms-channel-id", ChannelType.SMS));
         when(mockContactApiClient.registerSms(eq(fakeContactId), eq("12345678"), any(SmsRegistrationOptions.class))).thenReturn(registerResponse);
 
         contact.registerSms("12345678", options);
@@ -1215,12 +1211,12 @@ public class ContactTest extends BaseTestCase {
     public void testRegisterSmsFailed() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         SmsRegistrationOptions options = SmsRegistrationOptions.options("12345");
 
-        Response<AssociatedChannel> registerResponse = new Response.Builder<AssociatedChannel>(500).build();
+        Response<AssociatedChannel> registerResponse = new Response<>(500, null);
         when(mockContactApiClient.registerSms(eq(fakeContactId), eq("12345678"), Mockito.any(SmsRegistrationOptions.class))).thenReturn(registerResponse);
 
         contact.registerSms("12345678", options);
@@ -1236,12 +1232,12 @@ public class ContactTest extends BaseTestCase {
     public void testRegisterOpen() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         OpenChannelRegistrationOptions options = OpenChannelRegistrationOptions.options("platform-name", Collections.singletonMap("number", "1"));
 
-        Response<AssociatedChannel> registerResponse = new Response.Builder<AssociatedChannel>(200).setResult(new AssociatedChannel("open-channel-id", ChannelType.OPEN)).build();
+        Response<AssociatedChannel> registerResponse = new Response<>(200, new AssociatedChannel("open-channel-id", ChannelType.OPEN));
         when(mockContactApiClient.registerOpenChannel(eq(fakeContactId), eq("open-channel-address"), any(OpenChannelRegistrationOptions.class))).thenReturn(registerResponse);
 
         contact.registerOpenChannel("open-channel-address", options);
@@ -1259,12 +1255,12 @@ public class ContactTest extends BaseTestCase {
     public void testRegisterOpenFailed() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
         OpenChannelRegistrationOptions options = OpenChannelRegistrationOptions.options("platform-name", Collections.singletonMap("number", "1"));
 
-        Response<AssociatedChannel> registerResponse = new Response.Builder<AssociatedChannel>(500).build();
+        Response<AssociatedChannel> registerResponse = new Response<>(500, null);
         when(mockContactApiClient.registerOpenChannel(eq(fakeContactId), eq("open-channel-address"), Mockito.any(OpenChannelRegistrationOptions.class))).thenReturn(registerResponse);
 
         contact.registerOpenChannel("open-channel-address", options);
@@ -1280,10 +1276,10 @@ public class ContactTest extends BaseTestCase {
     public void testAssociateChannel() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
-        Response<AssociatedChannel> associatedResponse = new Response.Builder<AssociatedChannel>(200).setResult(new AssociatedChannel("new-fake-channel-id", ChannelType.EMAIL)).build();
+        Response<AssociatedChannel> associatedResponse = new Response<>(200, new AssociatedChannel("new-fake-channel-id", ChannelType.EMAIL));
         when(mockContactApiClient.associatedChannel(fakeContactId, "new-fake-channel-id", ChannelType.EMAIL)).thenReturn(associatedResponse);
 
         contact.associateChannel("new-fake-channel-id", ChannelType.EMAIL);
@@ -1301,10 +1297,10 @@ public class ContactTest extends BaseTestCase {
     public void testAssociateChannelFailed() throws RequestException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
-        Response<ContactIdentity> resolveResponse = new Response.Builder<ContactIdentity>(200).setResult(new ContactIdentity(fakeContactId, true, null)).build();
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
-        Response<AssociatedChannel> associatedResponse = new Response.Builder<AssociatedChannel>(500).build();
+        Response<AssociatedChannel> associatedResponse = new Response<>(500, null);
         when(mockContactApiClient.associatedChannel(fakeContactId, "new-fake-channel-id", ChannelType.EMAIL)).thenReturn(associatedResponse);
 
         contact.associateChannel("new-fake-channel-id", ChannelType.EMAIL);

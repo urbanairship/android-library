@@ -4,17 +4,16 @@ package com.urbanairship.analytics.data;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestAirshipRuntimeConfig;
-import com.urbanairship.TestRequest;
+import com.urbanairship.TestRequestSession;
 import com.urbanairship.config.AirshipUrlConfig;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,16 +23,13 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.when;
 
 public class EventApiClientTest extends BaseTestCase {
 
     private List<JsonValue> events;
     private EventApiClient client;
-    private TestRequest testRequest;
+    private TestRequestSession requestSession = new TestRequestSession();
     private TestAirshipRuntimeConfig runtimeConfig;
-    private RequestFactory mockRequestFactory;
-
     private JsonValue validEvent;
     private JsonValue invalidEvent;
 
@@ -50,11 +46,7 @@ public class EventApiClientTest extends BaseTestCase {
         events = new ArrayList<>();
         events.add(validEvent);
 
-        testRequest = new TestRequest();
-        mockRequestFactory = Mockito.mock(RequestFactory.class);
-        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
-
-        client = new EventApiClient(runtimeConfig, mockRequestFactory);
+        client = new EventApiClient(runtimeConfig, requestSession);
     }
 
     /**
@@ -62,19 +54,15 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testSendEventsSucceed() throws RequestException, JsonException {
-        testRequest.responseBody = "";
-        testRequest.responseStatus = 200;
-        testRequest.responseLastModifiedTime = 0;
+        requestSession.addResponse(200, "");
 
         Response<EventResponse> response = client.sendEvents(events, Collections.<String, String>emptyMap());
 
         assertEquals(200, response.getStatus());
-        assertEquals("", response.getResponseBody());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("http://example.com/warp9/", testRequest.getUrl().toString());
-        assertEquals(JsonValue.wrapOpt(events), JsonValue.parseString(testRequest.getRequestBody()));
-        assertEquals(0, response.getLastModifiedTime());
-        assertNull(response.getResponseHeaders());
+        assertEquals("", response.getBody());
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
+        assertEquals("http://example.com/warp9/", requestSession.getLastRequest().getUrl().toString());
+        assertEquals(new RequestBody.GzippedJson(JsonValue.wrapOpt(events)), requestSession.getLastRequest().getBody());
     }
 
     /**
@@ -91,21 +79,15 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testSendEmptyEvents() throws RequestException {
-        testRequest.responseBody = "";
-        testRequest.responseStatus = 200;
-        testRequest.responseLastModifiedTime = 0;
-
+        requestSession.addResponse(200, "");
         events = new ArrayList<>();
 
         Response<EventResponse> response = client.sendEvents(events, Collections.<String, String>emptyMap());
 
         assertEquals(200, response.getStatus());
-        assertEquals("", response.getResponseBody());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("http://example.com/warp9/", testRequest.getUrl().toString());
-        assertEquals(0, response.getLastModifiedTime());
-        assertNull(response.getResponseHeaders());
-
+        assertEquals("", response.getBody());
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
+        assertEquals("http://example.com/warp9/", requestSession.getLastRequest().getUrl().toString());
     }
 
     /**
@@ -113,22 +95,19 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testRequestHeaders() throws RequestException {
-        testRequest.responseBody = "";
-        testRequest.responseStatus = 200;
-        testRequest.responseLastModifiedTime = 0;
+        requestSession.addResponse(200, "");
 
         Map<String, String> headers = new HashMap<>();
         headers.put("foo", "bar");
 
         Response<EventResponse> response = client.sendEvents(events, headers);
 
-        Map<String, String> requestHeaders = testRequest.getRequestHeaders();
+        Map<String, String> requestHeaders = requestSession.getLastRequest().getHeaders();
 
         assertEquals(200, response.getStatus());
-        assertEquals("", response.getResponseBody());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("http://example.com/warp9/", testRequest.getUrl().toString());
-        assertEquals(0, response.getLastModifiedTime());
+        assertEquals("", response.getBody());
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
+        assertEquals("http://example.com/warp9/", requestSession.getLastRequest().getUrl().toString());
         assertEquals("bar", requestHeaders.get("foo"));
     }
 
@@ -137,18 +116,15 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test
     public void testWrongJson() throws RequestException {
-        testRequest.responseBody = "";
-        testRequest.responseStatus = 200;
-        testRequest.responseLastModifiedTime = 0;
+        requestSession.addResponse(200, "");
 
         events = new ArrayList<>();
         events.add(invalidEvent);
         Response<EventResponse> response = client.sendEvents(events, Collections.<String, String>emptyMap());
         assertEquals(200, response.getStatus());
-        assertEquals("", response.getResponseBody());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("http://example.com/warp9/", testRequest.getUrl().toString());
-        assertEquals(0, response.getLastModifiedTime());
+        assertEquals("", response.getBody());
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
+        assertEquals("http://example.com/warp9/", requestSession.getLastRequest().getUrl().toString());
     }
 
 }

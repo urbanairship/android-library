@@ -95,9 +95,7 @@ public class AttributeRegistrarTest extends BaseTestCase {
     }
 
     private void verifyRequest(int status, boolean expectedResult) throws RequestException {
-        final Response<Void> response = new Response.Builder<Void>(status)
-                .build();
-
+        final Response<Void> response = new Response<>(status, null);
         AttributeListener mockListener = mock(AttributeListener.class);
         registrar.addAttributeListener(mockListener);
 

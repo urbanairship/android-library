@@ -1241,7 +1241,7 @@ public class Contact extends AirshipComponent {
         if (response.isSuccessful()) {
             return response.getResult();
         } else {
-            Logger.error("Failed to fetch contact subscription lists! error: %d message: %s", response.getStatus(), response.getResponseBody());
+            Logger.error("Failed to fetch contact subscription lists! error: %d message: %s", response.getStatus(), response.getBody());
             return null;
         }
     }

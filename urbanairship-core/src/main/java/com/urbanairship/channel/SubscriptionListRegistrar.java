@@ -87,7 +87,7 @@ public class SubscriptionListRegistrar {
 
             if (response.isClientError()) {
                 Logger.error("Dropping subscription list update %s due to error: %d message: %s",
-                        mutations, response.getStatus(), response.getResponseBody());
+                        mutations, response.getStatus(), response.getBody());
             } else {
                 for (SubscriptionListListener listener : listeners) {
                     listener.onSubscriptionListMutationUploaded(uploadIdentifier, mutations);
@@ -126,7 +126,7 @@ public class SubscriptionListRegistrar {
             return response.getResult();
         } else {
             Logger.error("Failed to fetch channel subscription lists! error: %d message: %s",
-                    response.getStatus(), response.getResponseBody());
+                    response.getStatus(), response.getBody());
             return null;
         }
     }

@@ -52,7 +52,7 @@ class InboxJobHandler {
      */
     static final String EXTRA_FORCEFULLY = "EXTRA_FORCEFULLY";
 
-    static final String LAST_MESSAGE_REFRESH_TIME = "com.urbanairship.user.LAST_MESSAGE_REFRESH_TIME";
+    static final String LAST_MESSAGE_REFRESH_TIME = "com.urbanairship.messages.LAST_MESSAGE_REFRESH_TIME";
 
     private static final String LAST_UPDATE_TIME = "com.urbanairship.user.LAST_UPDATE_TIME";
     private static final long USER_UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000; //24H
@@ -192,7 +192,8 @@ class InboxJobHandler {
         Logger.verbose("Fetching inbox messages.");
 
         try {
-            Response<JsonList> response = inboxApiClient.fetchMessages(user, channelId, dataStore.getLong(LAST_MESSAGE_REFRESH_TIME, 0));
+            Response<JsonList> response = inboxApiClient.fetchMessages(
+                    user, channelId, dataStore.getString(LAST_MESSAGE_REFRESH_TIME, null));
 
             Logger.verbose("Fetch inbox messages response: %s", response);
 
@@ -201,7 +202,7 @@ class InboxJobHandler {
                 JsonList result = response.getResult();
                 Logger.info("InboxJobHandler - Received %s inbox messages.", response.getResult().size());
                 updateInbox(response.getResult());
-                dataStore.put(LAST_MESSAGE_REFRESH_TIME, response.getLastModifiedTime());
+                dataStore.put(LAST_MESSAGE_REFRESH_TIME, response.getHeaders().get("Last-Modified"));
                 return true;
             }
 

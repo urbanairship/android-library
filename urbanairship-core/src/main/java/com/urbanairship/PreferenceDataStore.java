@@ -37,8 +37,9 @@ public final class PreferenceDataStore {
             "com.urbanairship.nameduser.CHANGE_TOKEN_KEY",
             "com.urbanairship.nameduser.LAST_UPDATED_TOKEN_KEY",
             "com.urbanairship.iam.tags.TAG_PREFER_LOCAL_DATA_TIME",
-            "com.urbanairship.chat.CHAT"
-    };
+            "com.urbanairship.chat.CHAT",
+            "com.urbanairship.user.LAST_MESSAGE_REFRESH_TIME"
+};
 
     Executor executor = AirshipExecutors.newSerialExecutor();
     private final Map<String, Preference> preferences = new HashMap<>();

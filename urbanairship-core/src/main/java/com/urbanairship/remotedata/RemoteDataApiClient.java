@@ -5,19 +5,15 @@ package com.urbanairship.remotedata;
 import android.net.Uri;
 import android.os.Build;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-
 import com.urbanairship.PushProviders;
 import com.urbanairship.UAirship;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.UrlBuilder;
 import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestAuth;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.RequestSession;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -26,11 +22,17 @@ import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * API client for fetching remote data.
@@ -58,7 +60,7 @@ public class RemoteDataApiClient {
     private static final String ANDROID = "android";
 
     private final AirshipRuntimeConfig runtimeConfig;
-    private final RequestFactory requestFactory;
+    private final RequestSession session;
     private final Supplier<PushProviders> pushProviders;
 
     public static class Result {
@@ -75,7 +77,7 @@ public class RemoteDataApiClient {
     }
 
     public interface PayloadParser {
-        Set<RemoteDataPayload> parse(Map<String, List<String>> headers, Uri url, JsonList payloads);
+        Set<RemoteDataPayload> parse(Map<String, String> headers, Uri url, JsonList payloads);
     }
 
     /**
@@ -84,23 +86,17 @@ public class RemoteDataApiClient {
      * @param runtimeConfig The runtime config.
      */
     RemoteDataApiClient(@NonNull AirshipRuntimeConfig runtimeConfig, Supplier<PushProviders> pushProviders) {
-        this(runtimeConfig, pushProviders, RequestFactory.DEFAULT_REQUEST_FACTORY);
+        this(runtimeConfig, runtimeConfig.getRequestSession(), pushProviders);
     }
 
-    /**
-     * RemoteDataApiClient constructor.
-     *
-     * @param runtimeConfig The runtime config.
-     * @param pushProviders The push providers.
-     * @param requestFactory A RequestFactory.
-     */
     @VisibleForTesting
     RemoteDataApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
-                        @NonNull Supplier<PushProviders> pushProviders,
-                        @NonNull RequestFactory requestFactory) {
+                        @NonNull RequestSession session,
+                        @NonNull Supplier<PushProviders> pushProviders) {
         this.runtimeConfig = runtimeConfig;
+        this.session = session;
         this.pushProviders = pushProviders;
-        this.requestFactory = requestFactory;
+
     }
 
     /**
@@ -115,24 +111,26 @@ public class RemoteDataApiClient {
     Response<Result> fetchRemoteDataPayloads(@Nullable String lastModified, @NonNull final Locale locale, int randomValue, @NonNull final PayloadParser payloadParser) throws RequestException {
         final Uri url = getRemoteDataUrl(locale, randomValue);
 
-        Request request = requestFactory.createRequest()
-                                        .setOperation("GET", url)
-                                        .setAirshipUserAgent(runtimeConfig)
-                                        .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret);
-
+        Map<String, String> headers = new HashMap<>();
         if (lastModified != null) {
-            request.setHeader("If-Modified-Since", lastModified);
+            headers.put("If-Modified-Since", lastModified);
         }
 
-        return request.execute((status, headers, responseBody) -> {
-            if (status == 200) {
-                JsonList payloads = JsonValue.parseString(responseBody).optMap().opt("payloads").getList();
-                if (payloads == null) {
-                    throw new JsonException("Response does not contain payloads");
-                }
+        Request request = new Request(
+                url,
+                "GET",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                null,
+                headers
+        );
 
-                headers = headers == null ? Collections.emptyMap() : headers;
-                return new Result(url, payloadParser.parse(headers, url, payloads));
+
+
+
+        return session.execute(request, (status, responseHeaders, responseBody) -> {
+            if (status == 200) {
+                JsonList payloads = JsonValue.parseString(responseBody).optMap().opt("payloads").requireList();
+                return new Result(url, payloadParser.parse(responseHeaders, url, payloads));
             } else {
                 return null;
             }

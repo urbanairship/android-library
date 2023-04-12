@@ -6,27 +6,22 @@ import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
-import com.urbanairship.TestRequest;
-import com.urbanairship.http.RequestFactory;
+import com.urbanairship.TestRequestSession;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 
 import androidx.annotation.NonNull;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
 
 @Config(
         sdk = 28,
@@ -34,6 +29,8 @@ import static org.mockito.Mockito.when;
 )
 @LooperMode(LooperMode.Mode.LEGACY)
 public class PassRequestTest extends BaseTestCase {
+
+    private TestRequestSession requestSession = new TestRequestSession();
 
     @Test
     public void testDefaultUrl() {
@@ -85,12 +82,8 @@ public class PassRequestTest extends BaseTestCase {
                 "   \"status\":\"not_been_installed\"\n" +
                 "}";
 
-        final TestRequest testRequest = new TestRequest();
-        testRequest.responseBody = responseJson;
-        testRequest.responseStatus = HttpURLConnection.HTTP_OK;
 
-        RequestFactory requestFactory = Mockito.mock(RequestFactory.class);
-        when(requestFactory.createRequest()).thenReturn(testRequest);
+        requestSession.addResponse(HttpURLConnection.HTTP_OK, responseJson);
 
         Field field = Field.newBuilder()
                            .setName("Text")
@@ -130,20 +123,16 @@ public class PassRequestTest extends BaseTestCase {
             }
         };
 
-        PassRequest passRequest = new PassRequest(passRequestBuilder, requestFactory, executor);
+        PassRequest passRequest = new PassRequest(passRequestBuilder, requestSession, executor);
         passRequest.execute(callback, null);
         latch.await();
 
-        assertEquals(JsonValue.parseString(testRequest.getRequestBody()), JsonValue.parseString(requestJson));
+        assertEquals(requestSession.getLastRequest().getBody(), new RequestBody.Json(JsonValue.parseString(requestJson)));
     }
 
     @Test
     public void testExecuteFail() throws Exception {
-        TestRequest testRequest = new TestRequest();
-        testRequest.responseStatus = HttpURLConnection.HTTP_BAD_REQUEST;
-
-        RequestFactory requestFactory = Mockito.mock(RequestFactory.class);
-        when(requestFactory.createRequest()).thenReturn(testRequest);
+        requestSession.addResponse(HttpURLConnection.HTTP_BAD_REQUEST, null);
         PassRequest.Builder passRequestBuilder = PassRequest.newBuilder()
                                                             .setAuth("test_user_name", "test_api_key")
                                                             .setTemplateId("test_template_id");
@@ -155,7 +144,7 @@ public class PassRequestTest extends BaseTestCase {
             }
         };
 
-        PassRequest passRequest = new PassRequest(passRequestBuilder, requestFactory, executor);
+        PassRequest passRequest = new PassRequest(passRequestBuilder, requestSession, executor);
 
         final CountDownLatch latch = new CountDownLatch(1);
         Callback callback = new Callback() {
@@ -174,61 +163,4 @@ public class PassRequestTest extends BaseTestCase {
         passRequest.execute(callback, null);
         latch.await();
     }
-
-    @Test
-    public void testCallbackCancel() {
-        String responseJson = "{\n" +
-                "   \"createdAt\":\"2016-06-09T18:07:42Z\",\n" +
-                "   \"publicUrl\":{\n" +
-                "      \"path\":\"https:\\/\\/goo.gl\\/app\\/pay?link=https:\\/\\/www.android.com\\/payapp\\/savetoandroidpay\\/555\",\n" +
-                "      \"type\":\"Single\"\n" +
-                "   },\n" +
-                "   \"id\":\"5\",\n" +
-                "   \"status\":\"not_been_installed\"\n" +
-                "}";
-
-        final TestRequest testRequest = new TestRequest();
-        testRequest.responseStatus = HttpURLConnection.HTTP_OK;
-        testRequest.responseBody = responseJson;
-
-        RequestFactory requestFactory = Mockito.mock(RequestFactory.class);
-        when(requestFactory.createRequest()).thenReturn(testRequest);
-
-        PassRequest.Builder passRequestBuilder = PassRequest.newBuilder()
-                                                            .setAuth("test_user_name", "test_api_key")
-                                                            .setTemplateId("test_template_id");
-
-        Executor executor = new Executor() {
-            @Override
-            public void execute(Runnable command) {
-                command.run();
-            }
-        };
-
-        final PassRequest passRequest = new PassRequest(passRequestBuilder, requestFactory, executor);
-
-        Callback callback = new Callback() {
-            @Override
-            public void onResult(@NonNull Pass pass) {
-                throw new RuntimeException();
-            }
-
-            @Override
-            public void onError(int errorCode) {
-                throw new RuntimeException();
-            }
-        };
-
-        Answer answer = new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) {
-                passRequest.cancel();
-                return testRequest;
-            }
-        };
-
-        when(requestFactory.createRequest()).thenAnswer(answer);
-        passRequest.execute(callback, null);
-    }
-
 }

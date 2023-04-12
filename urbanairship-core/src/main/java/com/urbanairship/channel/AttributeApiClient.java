@@ -4,18 +4,23 @@ package com.urbanairship.channel;
 
 import android.net.Uri;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
 import com.urbanairship.Logger;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestAuth;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.RequestSession;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonMap;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import static com.urbanairship.UAirship.AMAZON_PLATFORM;
 
@@ -23,7 +28,6 @@ import static com.urbanairship.UAirship.AMAZON_PLATFORM;
  * A high level abstraction for performing attribute requests.
  */
 class AttributeApiClient {
-
     private static final String CHANNEL_API_PATH = "api/channels/";
     private static final String NAMED_USER_API_PATH = "api/named_users/";
     private static final String CONTACT_API_PATH = "api/contacts/";
@@ -38,7 +42,7 @@ class AttributeApiClient {
     private static final String ATTRIBUTE_PLATFORM_AMAZON = "amazon";
 
     private final AirshipRuntimeConfig runtimeConfig;
-    private final RequestFactory requestFactory;
+    private final RequestSession session;
     private final UrlFactory urlFactory;
 
     @VisibleForTesting
@@ -97,26 +101,23 @@ class AttributeApiClient {
 
     @VisibleForTesting
     AttributeApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
-                       @NonNull RequestFactory requestFactory,
+                       @NonNull RequestSession requestSession,
                        @NonNull UrlFactory urlFactory) {
         this.runtimeConfig = runtimeConfig;
-        this.requestFactory = requestFactory;
+        this.session = requestSession;
         this.urlFactory = urlFactory;
     }
 
     public static AttributeApiClient namedUserClient(AirshipRuntimeConfig runtimeConfig) {
-        return new AttributeApiClient(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY,
-                NAMED_USER_URL_FACTORY);
+        return new AttributeApiClient(runtimeConfig, runtimeConfig.getRequestSession(), NAMED_USER_URL_FACTORY);
     }
 
     public static AttributeApiClient channelClient(AirshipRuntimeConfig runtimeConfig) {
-        return new AttributeApiClient(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY,
-                CHANNEL_URL_FACTORY);
+        return new AttributeApiClient(runtimeConfig, runtimeConfig.getRequestSession(), CHANNEL_URL_FACTORY);
     }
 
     public static AttributeApiClient contactClient(AirshipRuntimeConfig runtimeConfig) {
-        return new AttributeApiClient(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY,
-                CONTACT_URL_FACTORY);
+        return new AttributeApiClient(runtimeConfig, runtimeConfig.getRequestSession(), CONTACT_URL_FACTORY);
     }
 
     /**
@@ -136,13 +137,20 @@ class AttributeApiClient {
 
         Logger.verbose("Updating attributes for Id:%s with payload: %s", identifier, attributePayload);
 
-        return requestFactory.createRequest()
-                             .setOperation("POST", url)
-                             .setAirshipUserAgent(runtimeConfig)
-                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                             .setRequestBody(attributePayload)
-                             .setAirshipJsonAcceptsHeader()
-                             .execute();
+
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
+
+        Request request = new Request(
+                url,
+                "POST",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                new RequestBody.Json(attributePayload),
+                headers
+        );
+
+        return session.execute(request, (status, headers1, responseBody) -> null);
     }
 
 }

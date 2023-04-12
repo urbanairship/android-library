@@ -24,9 +24,9 @@ class EventResponse {
     static final int MAX_BATCH_INTERVAL_MS = 7 * 24 * 3600 * 1000;  // 7 days
 
     @NonNull
-    private final Map<String, List<String>> headers;
+    private final Map<String, String> headers;
 
-    public EventResponse(@NonNull Map<String, List<String>> headers) {
+    public EventResponse(@NonNull Map<String, String> headers) {
         this.headers = headers;
     }
 
@@ -36,9 +36,9 @@ class EventResponse {
      * @return The maximum total size as an Integer
      */
     int getMaxTotalSize() {
-        List<String> headerList = headers.get("X-UA-Max-Total");
-        if (headerList != null && headerList.size() > 0) {
-            return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)) * 1024,
+        String maxTotalSize = headers.get("X-UA-Max-Total");
+        if (maxTotalSize != null) {
+            return UAMathUtil.constrain(Integer.parseInt(maxTotalSize) * 1024,
                     MIN_TOTAL_DB_SIZE_BYTES,
                     MAX_TOTAL_DB_SIZE_BYTES);
         }
@@ -51,9 +51,9 @@ class EventResponse {
      * @return The maximum batch size as an Integer.
      */
     int getMaxBatchSize() {
-        List<String> headerList = headers.get("X-UA-Max-Batch");
-        if (headerList != null && headerList.size() > 0) {
-            return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)) * 1024,
+        String maxBatchSize = headers.get("X-UA-Max-Batch");
+        if (maxBatchSize != null) {
+            return UAMathUtil.constrain(Integer.parseInt(maxBatchSize) * 1024,
                     MIN_BATCH_SIZE_BYTES,
                     MAX_BATCH_SIZE_BYTES);
         }
@@ -66,9 +66,9 @@ class EventResponse {
      * @return The minimum batch interval as an Integer.
      */
     int getMinBatchInterval() {
-        List<String> headerList = headers.get("X-UA-Min-Batch-Interval");
-        if (headerList != null && headerList.size() > 0) {
-            return UAMathUtil.constrain(Integer.parseInt(headerList.get(0)),
+        String minBatchInterval = headers.get("X-UA-Min-Batch-Interval");
+        if (minBatchInterval != null) {
+            return UAMathUtil.constrain(Integer.parseInt(minBatchInterval),
                     MIN_BATCH_INTERVAL_MS,
                     MAX_BATCH_INTERVAL_MS);
         }

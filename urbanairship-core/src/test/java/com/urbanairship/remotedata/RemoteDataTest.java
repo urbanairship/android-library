@@ -267,7 +267,6 @@ public class RemoteDataTest extends BaseTestCase {
         activityMonitor.foreground();
         verify(mockDispatcher, times(1)).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
 
-
         privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS);
         verify(mockDispatcher, times(2)).dispatch(Mockito.argThat(jobInfo -> jobInfo.getAction().equals(RemoteData.ACTION_REFRESH) && jobInfo.getConflictStrategy() == JobInfo.KEEP));
     }
@@ -435,13 +434,15 @@ public class RemoteDataTest extends BaseTestCase {
         Locale locale = Locale.forLanguageTag("en-US");
         localeManager.setLocaleOverride(locale);
 
-        Map<String, List<String>> headers = new HashMap<>();
-        headers.put("Last-Modified", Collections.singletonList("lastModifiedResponse"));
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Last-Modified", "lastModifiedResponse");
 
-        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
-                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
-                .setResponseHeaders(headers)
-                .build();
+        Response<RemoteDataApiClient.Result> response = new Response<>(200,
+                new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)),
+                null,
+                headers
+        );
+
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), eq(locale), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
@@ -469,13 +470,14 @@ public class RemoteDataTest extends BaseTestCase {
 
         localeManager.setLocaleOverride(locale);
 
-        Map<String, List<String>> headers = new HashMap<>();
-        headers.put("Last-Modified", Collections.singletonList("lastModifiedResponse"));
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Last-Modified", "lastModifiedResponse");
 
-        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
-                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.COM"), asSet(payload)))
-                .setResponseHeaders(headers)
-                .build();
+        Response<RemoteDataApiClient.Result> response = new Response<>(200,
+                new RemoteDataApiClient.Result(Uri.parse("https://airship.COM"), asSet(payload)),
+                null,
+                headers
+        );
 
         when(mockClient.fetchRemoteDataPayloads(eq((String) null), eq(locale), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
@@ -493,7 +495,6 @@ public class RemoteDataTest extends BaseTestCase {
         runLooperTasks();
     }
 
-
     /**
      * Test parsing remote-data responses.
      */
@@ -501,8 +502,7 @@ public class RemoteDataTest extends BaseTestCase {
     public void testParseRemoteDataResponse() throws RequestException {
         ArgumentCaptor<RemoteDataApiClient.PayloadParser> parserArgumentCaptor = ArgumentCaptor.forClass(RemoteDataApiClient.PayloadParser.class);
 
-        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(304)
-                .build();
+        Response<RemoteDataApiClient.Result> response = new Response<>(304, null);
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
@@ -523,8 +523,8 @@ public class RemoteDataTest extends BaseTestCase {
         JsonList payloads = new JsonList(Collections.singletonList(payload));
         Uri url = Uri.parse("http://some-url.com");
 
-        Map<String, List<String>> headers = new HashMap<>();
-        headers.put("Last-Modified", Collections.singletonList("2017-01-01T12:00:00"));
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Last-Modified", "2017-01-01T12:00:00");
 
         Set<RemoteDataPayload> parsed = parser.parse(headers, url, payloads);
 
@@ -540,9 +540,9 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testRefreshRemoteData200() throws RequestException {
-        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
-                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
-                .build();
+        Response<RemoteDataApiClient.Result> response = new Response<>(200,
+                new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload))
+        );
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
@@ -567,9 +567,9 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testRefreshRemoteData304() throws RequestException {
-        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(304)
-                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
-                .build();
+        Response<RemoteDataApiClient.Result> response = new Response<>(304,
+                new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload))
+        );
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
@@ -583,9 +583,10 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testRefreshRemoteDataServerError() throws RequestException {
-        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(500)
-                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
-                .build();
+        Response<RemoteDataApiClient.Result> response = new Response<>(
+                500,
+                new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload))
+        );
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
@@ -599,9 +600,9 @@ public class RemoteDataTest extends BaseTestCase {
      */
     @Test
     public void testRefreshRemoteDataClientError() throws RequestException {
-        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(400)
-                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
-                .build();
+        Response<RemoteDataApiClient.Result> response = new Response<>(400,
+                new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload))
+        );
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
@@ -621,9 +622,9 @@ public class RemoteDataTest extends BaseTestCase {
 
         assertFalse(pendingResult.isDone());
 
-        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
-                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
-                .build();
+        Response<RemoteDataApiClient.Result> response = new Response<>(200,
+                new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload))
+        );
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
@@ -652,9 +653,9 @@ public class RemoteDataTest extends BaseTestCase {
 
         assertFalse(pendingResult.isDone());
 
-        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
-                .setResult(new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload)))
-                .build();
+        Response<RemoteDataApiClient.Result> response = new Response<>(200,
+                new RemoteDataApiClient.Result(Uri.parse("https://airship.com"), asSet(payload))
+        );
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
@@ -674,8 +675,7 @@ public class RemoteDataTest extends BaseTestCase {
 
         assertFalse(pendingResult.isDone());
 
-        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(400)
-                .build();
+        Response<RemoteDataApiClient.Result> response = new Response<>(400, null);
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 
@@ -698,9 +698,9 @@ public class RemoteDataTest extends BaseTestCase {
     }
 
     private void updatePayloads(RemoteDataPayload... payloads) throws RequestException {
-        Response<RemoteDataApiClient.Result> response = new Response.Builder<RemoteDataApiClient.Result>(200)
-                .setResult(new RemoteDataApiClient.Result(mockClient.getRemoteDataUrl(localeManager.getLocale(), 555), asSet(payloads)))
-                .build();
+        Response<RemoteDataApiClient.Result> response = new Response<>(200,
+                new RemoteDataApiClient.Result(mockClient.getRemoteDataUrl(localeManager.getLocale(), 555), asSet(payloads))
+        );
 
         when(mockClient.fetchRemoteDataPayloads(nullable(String.class), any(Locale.class), anyInt(), any(RemoteDataApiClient.PayloadParser.class))).thenReturn(response);
 

@@ -7,14 +7,16 @@ import android.net.Uri;
 import com.urbanairship.Logger;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.UrlBuilder;
+import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestAuth;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.RequestSession;
 import com.urbanairship.http.Response;
-import com.urbanairship.http.ResponseParser;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
@@ -33,7 +35,7 @@ class ChannelApiClient {
      */
     private static final String CHANNEL_ID_KEY = "channel_id";
 
-    private final RequestFactory requestFactory;
+    private final RequestSession session;
     private final AirshipRuntimeConfig runtimeConfig;
 
     /**
@@ -42,14 +44,14 @@ class ChannelApiClient {
      * @param runtimeConfig Airship runtime config.
      */
     ChannelApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
-        this(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY);
+        this(runtimeConfig, runtimeConfig.getRequestSession());
     }
 
     @VisibleForTesting
     ChannelApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
-                     @NonNull RequestFactory requestFactory) {
+                     @NonNull RequestSession session) {
         this.runtimeConfig = runtimeConfig;
-        this.requestFactory = requestFactory;
+        this.session = session;
     }
 
     /**
@@ -61,21 +63,24 @@ class ChannelApiClient {
     @NonNull
     Response<String> createChannelWithPayload(@NonNull ChannelRegistrationPayload channelPayload) throws RequestException {
         Logger.verbose("Creating channel with payload: %s", channelPayload);
-        return requestFactory.createRequest()
-                             .setOperation("POST", getDeviceUrl(null))
-                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                             .setRequestBody(channelPayload)
-                             .setAirshipJsonAcceptsHeader()
-                             .setAirshipUserAgent(runtimeConfig)
-                             .execute(new ResponseParser<String>() {
-                                 @Override
-                                 public String parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
-                                     if (UAHttpStatusUtil.inSuccessRange(status)) {
-                                         return JsonValue.parseString(responseBody).optMap().opt(CHANNEL_ID_KEY).getString();
-                                     }
-                                     return null;
-                                 }
-                             });
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
+
+        Request request = new Request(
+                getDeviceUrl(null),
+                "POST",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                new RequestBody.Json(channelPayload),
+                headers
+        );
+
+        return session.execute(request, (status, responseHeaders, responseBody) -> {
+            if (UAHttpStatusUtil.inSuccessRange(status)) {
+                return JsonValue.parseString(responseBody).optMap().opt(CHANNEL_ID_KEY).getString();
+            }
+            return null;
+        });
     }
 
     /**
@@ -88,13 +93,18 @@ class ChannelApiClient {
     Response<Void> updateChannelWithPayload(@NonNull String channelId, @NonNull ChannelRegistrationPayload channelPayload) throws RequestException {
         Logger.verbose("Updating channel with payload: %s", channelPayload);
 
-        return requestFactory.createRequest()
-                             .setOperation("PUT", getDeviceUrl(channelId))
-                             .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                             .setRequestBody(channelPayload)
-                             .setAirshipJsonAcceptsHeader()
-                             .setAirshipUserAgent(runtimeConfig)
-                             .execute();
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
+
+        Request request = new Request(
+                getDeviceUrl(channelId),
+                "PUT",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                new RequestBody.Json(channelPayload),
+                headers
+        );
+
+        return session.execute(request, (status, headers1, responseBody) -> null);
     }
 
     @Nullable

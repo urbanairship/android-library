@@ -11,13 +11,18 @@ import androidx.annotation.VisibleForTesting;
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestAuth;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.RequestSession;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 /**
@@ -37,56 +42,43 @@ class TagGroupApiClient {
     private static final String AUDIENCE_KEY = "audience";
 
     private final AirshipRuntimeConfig runtimeConfig;
-    private final RequestFactory requestFactory;
+    private final RequestSession session;
     private Callable<String> audienceKey;
     private final String path;
 
     @VisibleForTesting
     TagGroupApiClient(@NonNull AirshipRuntimeConfig runtimeConfig,
-                      @NonNull RequestFactory requestFactory,
+                      @NonNull RequestSession session,
                       @NonNull Callable<String> audienceKey,
                       @NonNull String path) {
         this.runtimeConfig = runtimeConfig;
-        this.requestFactory = requestFactory;
+        this.session = session;
         this.audienceKey = audienceKey;
         this.path = path;
     }
 
     public static TagGroupApiClient namedUserClient(AirshipRuntimeConfig runtimeConfig) {
-        return new TagGroupApiClient(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY,
-                new Callable<String>() {
-                    @Override
-                    public String call() throws Exception {
-                        return NAMED_USER_ID_KEY;
-                    }
-                }, NAMED_USER_TAG_GROUP_PATH);
+        return new TagGroupApiClient(runtimeConfig, runtimeConfig.getRequestSession(),
+                () -> NAMED_USER_ID_KEY, NAMED_USER_TAG_GROUP_PATH);
     }
 
     public static TagGroupApiClient channelClient(final AirshipRuntimeConfig runtimeConfig) {
-        return new TagGroupApiClient(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY,
-                new Callable<String>() {
-                    @Override
-                    public String call() throws Exception {
-                        switch (runtimeConfig.getPlatform()) {
-                            case UAirship.AMAZON_PLATFORM:
-                                return AMAZON_CHANNEL_KEY;
-                            case UAirship.ANDROID_PLATFORM:
-                                return ANDROID_CHANNEL_KEY;
-                            default:
-                                throw new IllegalStateException("Invalid platform");
-                        }
+        return new TagGroupApiClient(runtimeConfig, runtimeConfig.getRequestSession(),
+                () -> {
+                    switch (runtimeConfig.getPlatform()) {
+                        case UAirship.AMAZON_PLATFORM:
+                            return AMAZON_CHANNEL_KEY;
+                        case UAirship.ANDROID_PLATFORM:
+                            return ANDROID_CHANNEL_KEY;
+                        default:
+                            throw new IllegalStateException("Invalid platform");
                     }
                 }, CHANNEL_TAGS_PATH);
     }
 
     public static TagGroupApiClient contactClient(AirshipRuntimeConfig runtimeConfig) {
-        return new TagGroupApiClient(runtimeConfig, RequestFactory.DEFAULT_REQUEST_FACTORY,
-                new Callable<String>() {
-                    @Override
-                    public String call() throws Exception {
-                        return CONTACT_ID_KEY;
-                    }
-                }, CONTACT_TAG_GROUP_PATH);
+        return new TagGroupApiClient(runtimeConfig, runtimeConfig.getRequestSession(),
+                () -> CONTACT_ID_KEY, CONTACT_TAG_GROUP_PATH);
     }
 
     /**
@@ -112,16 +104,20 @@ class TagGroupApiClient {
                                  .build();
 
         Logger.verbose("Updating tag groups with path: %s, payload: %s", path, payload);
-        Response<Void> response = requestFactory.createRequest()
-                                                .setOperation("POST", url)
-                                                .setCredentials(runtimeConfig.getConfigOptions().appKey, runtimeConfig.getConfigOptions().appSecret)
-                                                .setRequestBody(payload)
-                                                .setAirshipJsonAcceptsHeader()
-                                                .setAirshipUserAgent(runtimeConfig)
-                                                .execute();
 
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
+
+        Request request = new Request(
+                url,
+                "POST",
+                RequestAuth.BasicAppAuth.INSTANCE,
+                new RequestBody.Json(payload),
+                headers
+        );
+
+        Response<Void> response = session.execute(request, (status, headers1, responseBody) -> null);
         logTagGroupResponseIssues(response);
-
         return response;
     }
 
@@ -144,12 +140,12 @@ class TagGroupApiClient {
      *
      * @param response The tag group response.
      */
-    private void logTagGroupResponseIssues(@Nullable Response response) {
-        if (response == null || response.getResponseBody() == null) {
+    private void logTagGroupResponseIssues(@Nullable Response<Void> response) {
+        if (response == null || response.getBody() == null) {
             return;
         }
 
-        String responseBody = response.getResponseBody();
+        String responseBody = response.getBody();
 
         JsonValue responseJson;
         try {

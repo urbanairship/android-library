@@ -4,16 +4,13 @@ package com.urbanairship.channel;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestAirshipRuntimeConfig;
-import com.urbanairship.TestRequest;
+import com.urbanairship.TestRequestSession;
 import com.urbanairship.config.AirshipUrlConfig;
-import com.urbanairship.http.Request;
-import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.Response;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import androidx.annotation.NonNull;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -22,24 +19,16 @@ public class ChannelApiClientTest extends BaseTestCase {
 
     private ChannelRegistrationPayload payload = new ChannelRegistrationPayload.Builder().build();
     private ChannelApiClient client;
-    private TestRequest testRequest;
+    private TestRequestSession requestSession = new TestRequestSession();
 
     @Before
     public void setUp() {
-        testRequest = new TestRequest();
-
         TestAirshipRuntimeConfig runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder()
                                                    .setDeviceUrl("https://example.com")
                                                    .build());
 
-        client = new ChannelApiClient(runtimeConfig, new RequestFactory() {
-            @NonNull
-            @Override
-            public Request createRequest() {
-                return testRequest;
-            }
-        });
+        client = new ChannelApiClient(runtimeConfig, requestSession);
     }
 
     /**
@@ -47,14 +36,13 @@ public class ChannelApiClientTest extends BaseTestCase {
      */
     @Test
     public void testCreateChannelSucceedsRequest() throws Exception {
-        testRequest.responseBody = "{ \"ok\": true, \"channel_id\": \"someChannelId\"}";
-        testRequest.responseStatus = 200;
+        requestSession.addResponse(200, "{ \"ok\": true, \"channel_id\": \"someChannelId\"}");
 
         Response<String> response = client.createChannelWithPayload(payload);
 
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/channels/", testRequest.getUrl().toString());
-        assertEquals(testRequest.getRequestBody(), payload.toJsonValue().toString());
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
+        assertEquals("https://example.com/api/channels/", requestSession.getLastRequest().getUrl().toString());
+        assertEquals(requestSession.getLastRequest().getBody(), new RequestBody.Json(payload));
         assertEquals("someChannelId", response.getResult());
         assertEquals(200, response.getStatus());
     }
@@ -64,13 +52,13 @@ public class ChannelApiClientTest extends BaseTestCase {
      */
     @Test
     public void testCreateChannelFailsRequest() throws Exception {
-        testRequest.responseStatus = 501;
+        requestSession.addResponse(501);
 
         Response<String> response = client.createChannelWithPayload(payload);
 
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/channels/", testRequest.getUrl().toString());
-        assertEquals(testRequest.getRequestBody(), payload.toJsonValue().toString());
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
+        assertEquals("https://example.com/api/channels/", requestSession.getLastRequest().getUrl().toString());
+        assertEquals(requestSession.getLastRequest().getBody(), new RequestBody.Json(payload));
         assertNull(response.getResult());
         assertEquals(501, response.getStatus());
     }
@@ -80,13 +68,13 @@ public class ChannelApiClientTest extends BaseTestCase {
      */
     @Test
     public void testUpdateChannelSucceedsRequest() throws Exception {
-        testRequest.responseStatus = 200;
+        requestSession.addResponse(200);
 
         Response<Void> response = client.updateChannelWithPayload("someChannelId", payload);
 
-        assertEquals("PUT", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/channels/someChannelId", testRequest.getUrl().toString());
-        assertEquals(testRequest.getRequestBody(), payload.toJsonValue().toString());
+        assertEquals("PUT", requestSession.getLastRequest().getMethod());
+        assertEquals("https://example.com/api/channels/someChannelId", requestSession.getLastRequest().getUrl().toString());
+        assertEquals(requestSession.getLastRequest().getBody(), new RequestBody.Json(payload));
         assertEquals(200, response.getStatus());
     }
 
@@ -95,14 +83,14 @@ public class ChannelApiClientTest extends BaseTestCase {
      */
     @Test
     public void testUpdateChannelFailsRequest() throws Exception {
-        testRequest.responseStatus = 501;
+        requestSession.addResponse(501);
 
         String channelId = "someChannelId";
         Response<Void> response = client.updateChannelWithPayload(channelId, payload);
 
-        assertEquals("PUT", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/channels/someChannelId", testRequest.getUrl().toString());
-        assertEquals(testRequest.getRequestBody(), payload.toJsonValue().toString());
+        assertEquals("PUT", requestSession.getLastRequest().getMethod());
+        assertEquals("https://example.com/api/channels/someChannelId", requestSession.getLastRequest().getUrl().toString());
+        assertEquals(requestSession.getLastRequest().getBody(), new RequestBody.Json(payload));
         assertEquals(501, response.getStatus());
     }
 
