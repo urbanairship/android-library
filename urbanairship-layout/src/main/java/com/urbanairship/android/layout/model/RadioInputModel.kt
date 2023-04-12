@@ -17,6 +17,7 @@ import com.urbanairship.android.layout.property.EventHandler.Type
 import com.urbanairship.android.layout.property.ToggleStyle
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasTapHandler
+import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.android.layout.util.checkedChanges
 import com.urbanairship.android.layout.view.RadioInputView
 import com.urbanairship.json.JsonValue
@@ -85,7 +86,9 @@ internal class RadioInputModel(
 
         onFormInputDisplayed { isDisplayed ->
             formState.update { state ->
-                state.copyWithDisplayState(radioState.value.identifier, isDisplayed)
+                @OptIn(DelicateLayoutApi::class)
+                val identifier = radioState.value.identifier
+                state.copyWithDisplayState(identifier, isDisplayed)
             }
         }
     }

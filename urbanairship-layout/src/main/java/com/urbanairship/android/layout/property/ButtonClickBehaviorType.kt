@@ -12,6 +12,10 @@ internal enum class ButtonClickBehaviorType(
     FORM_SUBMIT("form_submit"),
     PAGER_NEXT("pager_next"),
     PAGER_PREVIOUS("pager_previous"),
+    /** Advances to the next page if there is one, otherwise dismisses the in-app. */
+    PAGER_NEXT_OR_DISMISS("pager_next_or_dismiss"),
+    /** Advances to the next page if there is one, otherwise loop back to 1st page. */
+    PAGER_NEXT_OR_FIRST("pager_next_or_first"),
     DISMISS("dismiss"),
     CANCEL("cancel");
 
@@ -38,6 +42,18 @@ internal enum class ButtonClickBehaviorType(
     }
 }
 
+private val storyNavigationBehaviors = listOf(
+    ButtonClickBehaviorType.CANCEL,
+    ButtonClickBehaviorType.DISMISS,
+    ButtonClickBehaviorType.PAGER_NEXT,
+    ButtonClickBehaviorType.PAGER_PREVIOUS,
+    ButtonClickBehaviorType.PAGER_NEXT_OR_DISMISS,
+    ButtonClickBehaviorType.PAGER_NEXT_OR_FIRST
+)
+
+internal val List<ButtonClickBehaviorType>.hasStoryNavigationBehavior: Boolean
+    get() = any { storyNavigationBehaviors.contains(it) }
+
 internal val List<ButtonClickBehaviorType>.hasFormSubmit: Boolean
     get() = contains(ButtonClickBehaviorType.FORM_SUBMIT)
 
@@ -50,8 +66,17 @@ internal val List<ButtonClickBehaviorType>.hasCancel: Boolean
 internal val List<ButtonClickBehaviorType>.hasCancelOrDismiss: Boolean
     get() = hasCancel || hasDismiss
 
+private val pagerNextBehaviors = listOf(
+    ButtonClickBehaviorType.PAGER_NEXT,
+    ButtonClickBehaviorType.PAGER_NEXT_OR_DISMISS,
+    ButtonClickBehaviorType.PAGER_NEXT_OR_FIRST
+)
+
 internal val List<ButtonClickBehaviorType>.hasPagerNext: Boolean
-    get() = contains(ButtonClickBehaviorType.PAGER_NEXT)
+    get() = any { pagerNextBehaviors.contains(it) }
 
 internal val List<ButtonClickBehaviorType>.hasPagerPrevious: Boolean
     get() = contains(ButtonClickBehaviorType.PAGER_PREVIOUS)
+
+internal fun List<ButtonClickBehaviorType>.firstPagerNextOrNull(): ButtonClickBehaviorType? =
+    firstOrNull { pagerNextBehaviors.contains(it) }

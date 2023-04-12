@@ -15,6 +15,7 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ToggleStyle
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasTapHandler
+import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.android.layout.util.checkedChanges
 import com.urbanairship.android.layout.view.CheckboxView
 import com.urbanairship.json.JsonValue
@@ -83,7 +84,9 @@ internal class CheckboxModel(
 
         onFormInputDisplayed { isDisplayed ->
             formState.update { state ->
-                state.copyWithDisplayState(checkboxState.value.identifier, isDisplayed)
+                @OptIn(DelicateLayoutApi::class)
+                val identifier = checkboxState.value.identifier
+                state.copyWithDisplayState(identifier, isDisplayed)
             }
         }
     }

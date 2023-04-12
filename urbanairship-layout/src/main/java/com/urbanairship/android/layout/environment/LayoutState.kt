@@ -63,6 +63,9 @@ internal sealed class FormType(
 }
 
 internal sealed class State {
+    // TODO(stories): Add support for tracking pager and page progress for the
+    //   Story Indicator model/view. We may want to split that out into a separate
+    //   state flow to avoid a ton of extra updates to pager state?
     data class Pager(
         val identifier: String,
         val pageIndex: Int = 0,

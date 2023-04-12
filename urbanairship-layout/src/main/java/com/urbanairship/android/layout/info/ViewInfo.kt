@@ -4,6 +4,7 @@ import android.widget.ImageView.ScaleType
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.AttributeValue
+import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.Color
@@ -16,9 +17,12 @@ import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
+import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.ScoreStyle
 import com.urbanairship.android.layout.property.Size
+import com.urbanairship.android.layout.property.StoryIndicatorSource
+import com.urbanairship.android.layout.property.StoryIndicatorStyle
 import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.property.TextInputTextAppearance
 import com.urbanairship.android.layout.property.ToggleStyle
@@ -43,6 +47,7 @@ import com.urbanairship.android.layout.property.ViewType.RADIO_INPUT_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.SCORE
 import com.urbanairship.android.layout.property.ViewType.SCROLL_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.STATE_CONTROLLER
+import com.urbanairship.android.layout.property.ViewType.STORY_INDICATOR
 import com.urbanairship.android.layout.property.ViewType.TEXT_INPUT
 import com.urbanairship.android.layout.property.ViewType.TOGGLE
 import com.urbanairship.android.layout.property.ViewType.UNKNOWN
@@ -76,6 +81,7 @@ public sealed class ViewInfo : View {
                 PAGER_CONTROLLER -> PagerControllerInfo(json)
                 PAGER -> PagerInfo(json)
                 PAGER_INDICATOR -> PagerIndicatorInfo(json)
+                STORY_INDICATOR -> StoryIndicatorInfo(json)
                 FORM_CONTROLLER -> FormControllerInfo(json)
                 NPS_FORM_CONTROLLER -> NpsFormControllerInfo(json)
                 CHECKBOX_CONTROLLER -> CheckboxControllerInfo(json)
@@ -347,6 +353,7 @@ internal class WebViewInfo(json: JsonMap) : ViewInfo(), View by view(json) {
 internal class PagerInfo(json: JsonMap) : ViewGroupInfo<PagerItemInfo>(), View by view(json) {
     val items = json.requireField<JsonList>("items").map { PagerItemInfo(it.requireMap()) }
     val isSwipeDisabled = json.optionalField("disable_swipe") ?: false
+    val gestures = json.optionalField<JsonList>("gestures")?.let { PagerGesture.fromList(it) }
 
     override val children: List<PagerItemInfo> = items
 }
@@ -354,8 +361,10 @@ internal class PagerInfo(json: JsonMap) : ViewGroupInfo<PagerItemInfo>(), View b
 internal class PagerItemInfo(
     json: JsonMap
 ) : ItemInfo(viewInfoFromJson(json.requireField("view"))), Identifiable by identifiable(json) {
-    val actions: Map<String, JsonValue>? =
+    val displayActions: Map<String, JsonValue>? =
         json.optionalField<JsonMap>("display_actions")?.map
+    val automatedActions = json.optionalField<JsonList>("automated_actions")
+        ?.let { AutomatedAction.fromList(it) }
 }
 
 internal class PagerIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json) {
@@ -373,6 +382,11 @@ internal class PagerIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json
         val icon: Image.Icon? =
             json.optionalField<JsonMap>("icon")?.let { Image.Icon.fromJson(it) }
     }
+}
+
+internal class StoryIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json) {
+    val source: StoryIndicatorSource = StoryIndicatorSource.from(json.requireField("source"))
+    val style = StoryIndicatorStyle.from(json.requireField("style"))
 }
 
 internal class StateControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), View by view(json) {

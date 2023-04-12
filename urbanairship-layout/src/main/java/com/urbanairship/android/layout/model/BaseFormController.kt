@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasFormBehaviors
 import com.urbanairship.android.layout.property.hasPagerBehaviors
 import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.util.DelicateLayoutApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
@@ -133,7 +134,10 @@ internal abstract class BaseFormController<T : View>(
                 // We want to combine the submit event with the latest form state, but don't want
                 // to receive updates from the form state changes flow, so we're using a map here
                 // instead of a combine.
-                .map { it to formState.value }
+                .map {
+                    @OptIn(DelicateLayoutApi::class)
+                    it to formState.value
+                }
                 .distinctUntilChanged()
                 .collect { (event, form) ->
                     if (!form.isSubmitted) {
@@ -180,6 +184,7 @@ internal abstract class BaseFormController<T : View>(
         }
     }
 
+    @OptIn(DelicateLayoutApi::class)
     private fun handleFormUpdate(state: State.Form) {
         val behaviors = formEnabled ?: return
 
@@ -207,6 +212,7 @@ internal abstract class BaseFormController<T : View>(
     private fun handlePagerScroll(state: State.Pager) {
         val behaviors = formEnabled ?: return
 
+        @OptIn(DelicateLayoutApi::class)
         val isParentEnabled = parentFormState?.value?.isEnabled ?: true
         val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
         val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)

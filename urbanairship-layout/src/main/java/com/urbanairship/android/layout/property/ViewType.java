@@ -21,6 +21,7 @@ public enum ViewType {
     PAGER_CONTROLLER("pager_controller"),
     PAGER("pager"),
     PAGER_INDICATOR("pager_indicator"),
+    STORY_INDICATOR("story_indicator"),
     FORM_CONTROLLER("form_controller"),
     NPS_FORM_CONTROLLER("nps_form_controller"),
     CHECKBOX_CONTROLLER("checkbox_controller"),

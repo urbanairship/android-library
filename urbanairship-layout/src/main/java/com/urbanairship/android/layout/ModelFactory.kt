@@ -29,6 +29,7 @@ import com.urbanairship.android.layout.info.RadioInputInfo
 import com.urbanairship.android.layout.info.ScoreInfo
 import com.urbanairship.android.layout.info.ScrollLayoutInfo
 import com.urbanairship.android.layout.info.StateControllerInfo
+import com.urbanairship.android.layout.info.StoryIndicatorInfo
 import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.info.ToggleInfo
 import com.urbanairship.android.layout.info.ViewGroupInfo
@@ -55,6 +56,7 @@ import com.urbanairship.android.layout.model.RadioInputModel
 import com.urbanairship.android.layout.model.ScoreModel
 import com.urbanairship.android.layout.model.ScrollLayoutModel
 import com.urbanairship.android.layout.model.StateController
+import com.urbanairship.android.layout.model.StoryIndicatorModel
 import com.urbanairship.android.layout.model.TextInputModel
 import com.urbanairship.android.layout.model.ToggleModel
 import com.urbanairship.android.layout.model.WebViewModel
@@ -340,7 +342,12 @@ internal class ThomasModelFactory : ModelFactory {
                 info = info,
                 items = children.map { (model, itemInfo) ->
                     (itemInfo as? PagerItemInfo)?.let {
-                        PagerModel.Item(model, itemInfo.identifier, itemInfo.actions)
+                        PagerModel.Item(
+                            view = model,
+                            identifier = itemInfo.identifier,
+                            displayActions = itemInfo.displayActions,
+                            automatedActions = itemInfo.automatedActions
+                        )
                     } ?: throw ModelFactoryException("PagerItemInfo expected")
                 },
                 pagerState = environment.layoutState.pager
@@ -432,6 +439,11 @@ internal class ThomasModelFactory : ModelFactory {
             props = properties
         )
         is PagerIndicatorInfo -> PagerIndicatorModel(
+            info = info,
+            env = environment,
+            props = properties
+        )
+        is StoryIndicatorInfo -> StoryIndicatorModel(
             info = info,
             env = environment,
             props = properties

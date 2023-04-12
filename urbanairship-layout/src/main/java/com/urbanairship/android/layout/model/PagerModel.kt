@@ -10,11 +10,14 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
+import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
+import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.property.earliestNavigationAction
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
@@ -23,6 +26,7 @@ import kotlinx.coroutines.launch
 internal class PagerModel(
     val items: List<Item>,
     val isSwipeDisabled: Boolean = false,
+    val gestures: List<PagerGesture>? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -50,6 +54,7 @@ internal class PagerModel(
     ) : this(
         items = items,
         isSwipeDisabled = info.isSwipeDisabled,
+        gestures = info.gestures,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,
@@ -63,7 +68,8 @@ internal class PagerModel(
     class Item(
         val view: AnyModel,
         val identifier: String,
-        val actions: Map<String, JsonValue>?
+        val displayActions: Map<String, JsonValue>?,
+        val automatedActions: List<AutomatedAction>?
     )
 
     interface Listener : BaseModel.Listener {
@@ -96,6 +102,8 @@ internal class PagerModel(
             }
         }
 
+        // TODO(stories): Set up gestures on the view and collect them here.
+
         viewScope.launch {
             view.pagerScrolls().collect { (position, isInternalScroll) ->
                 pagerState.update { state ->
@@ -106,9 +114,24 @@ internal class PagerModel(
                     reportPageSwipe(pagerState.changes.value)
                 }
 
+                // TODO(stories): We could merge these into automatedActions, with 0 delay?
                 // Run any actions for the current page.
-                items[position].actions?.let { actions ->
+                items[position].displayActions?.let { actions ->
                     runActions(actions)
+                }
+
+                // Run any automated for the current page.
+                items[position].automatedActions?.let { actions ->
+                    // The delay of the earliest navigation action determines the duration of
+                    // the page display, and can be used to determine the progress value for the
+                    // currently displayed page.
+                    actions.earliestNavigationAction?.let { action ->
+                        // TODO(stories): Set timer for action.delay
+                    }
+
+                    // TODO(stories): Run any other automated actions.
+                    //  If delay is zero, we can run immediately, otherwise schedule the action to
+                    //  run after the delay, via the timer.
                 }
             }
         }

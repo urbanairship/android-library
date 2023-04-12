@@ -16,12 +16,14 @@ import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.property.firstPagerNextOrNull
 import com.urbanairship.android.layout.property.hasCancel
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
 import com.urbanairship.android.layout.property.hasFormSubmit
 import com.urbanairship.android.layout.property.hasPagerNext
 import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
+import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.json.JsonValue
 import java.lang.Integer.max
@@ -99,7 +101,7 @@ internal abstract class ButtonModel<T>(
             // No FORM_SUBMIT, CANCEL, or DISMISS, so we only need to
             // handle pager behaviors.
             if (clickBehaviors.hasPagerNext) {
-                handlePagerNext()
+                handlePagerNext(fallback = clickBehaviors.pagerNextFallback)
             }
             if (clickBehaviors.hasPagerPrevious) {
                 handlePagerPrevious()
@@ -119,7 +121,7 @@ internal abstract class ButtonModel<T>(
                     handleDismiss(clickBehaviors.hasCancel)
                 }
                 if (clickBehaviors.hasPagerNext) {
-                    handlePagerNext()
+                    handlePagerNext(fallback = clickBehaviors.pagerNextFallback)
                 }
                 if (clickBehaviors.hasPagerPrevious) {
                     handlePagerPrevious()
@@ -131,12 +133,29 @@ internal abstract class ButtonModel<T>(
         }
     }
 
-    private fun handlePagerNext() {
+    private suspend fun handlePagerNext(fallback: PagerNextFallback) {
         checkNotNull(pagerState) {
             "Pager state is required for Buttons with pager click behaviors!"
         }
-        pagerState.update { state ->
-            state.copyWithPageIndex(min(state.pageIndex + 1, state.pages.size - 1))
+
+        fun pagerNext() {
+            pagerState.update { state ->
+                state.copyWithPageIndex(min(state.pageIndex + 1, state.pages.size - 1))
+            }
+        }
+
+        @OptIn(DelicateLayoutApi::class)
+        val hasNext = pagerState.value.hasNext
+
+        when {
+            !hasNext && fallback == PagerNextFallback.FIRST ->
+                pagerState.update { state ->
+                    state.copyWithPageIndex(0)
+                }
+            !hasNext && fallback == PagerNextFallback.DISMISS ->
+                handleDismiss(isCancel = false)
+            else ->
+                pagerNext()
         }
     }
 
@@ -164,3 +183,18 @@ internal abstract class ButtonModel<T>(
         }
     }
 }
+
+private enum class PagerNextFallback {
+    NONE,
+    DISMISS,
+    FIRST
+}
+
+private val List<ButtonClickBehaviorType>.pagerNextFallback: PagerNextFallback
+    get() = firstPagerNextOrNull()?.let {
+        when (it) {
+            ButtonClickBehaviorType.PAGER_NEXT_OR_DISMISS -> PagerNextFallback.DISMISS
+            ButtonClickBehaviorType.PAGER_NEXT_OR_FIRST -> PagerNextFallback.FIRST
+            else -> PagerNextFallback.NONE
+        }
+    } ?: PagerNextFallback.NONE
