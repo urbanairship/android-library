@@ -1,29 +1,9 @@
 package com.urbanairship.automation;
 
-import static com.urbanairship.automation.tags.TestUtils.tagSet;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-
 import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
-
-import androidx.annotation.NonNull;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.urbanairship.AirshipLoopers;
 import com.urbanairship.PendingResult;
@@ -33,7 +13,6 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.automation.actions.Actions;
-import com.urbanairship.automation.auth.AuthException;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.deferred.DeferredScheduleClient;
 import com.urbanairship.automation.limits.FrequencyChecker;
@@ -71,6 +50,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
+import static com.urbanairship.automation.tags.TestUtils.tagSet;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link InAppAutomation}.
@@ -270,7 +269,7 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testDeferredSchedules() throws AuthException, RequestException {
+    public void testDeferredSchedules() throws RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
         CustomEvent event = CustomEvent.newBuilder("some event").build();
         TriggerContext triggerContext = new TriggerContext(Triggers.newCustomEventTriggerBuilder().build(), event.toJsonValue());
@@ -319,7 +318,7 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredScheduleMissedAudience() throws AuthException, RequestException {
+    public void testPrepareDeferredScheduleMissedAudience() throws RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
         CustomEvent event = CustomEvent.newBuilder("some event").build();
@@ -402,7 +401,7 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredScheduleNoMessage() throws AuthException, RequestException {
+    public void testPrepareDeferredScheduleNoMessage() throws RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true);
@@ -444,7 +443,7 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredScheduleFailedResponse() throws AuthException, RequestException {
+    public void testPrepareDeferredScheduleFailedResponse() throws RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true);
@@ -468,7 +467,7 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredScheduleNoResponse() throws AuthException, RequestException {
+    public void testPrepareDeferredScheduleNoResponse() throws RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
@@ -489,7 +488,7 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredScheduleNoResponseNoRetry() throws AuthException, RequestException {
+    public void testPrepareDeferredScheduleNoResponseNoRetry() throws RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
@@ -502,27 +501,6 @@ public class InAppAutomationTest {
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
-        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
-    }
-
-    @Test
-    public void testPrepareDeferredScheduleAuthException() throws AuthException, RequestException {
-        when(mockChannel.getId()).thenReturn("some channel");
-
-        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
-        Schedule<Deferred> schedule = Schedule.newBuilder(deferredScheduleData)
-                                              .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
-                                              .build();
-
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
-                .thenThrow(new AuthException("neat"))
-                .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
-
-        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        driver.onPrepareSchedule(schedule, null, callback);
-        verifyNoInteractions(callback);
-
-        runLooperTasks();
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
     }
 
@@ -541,7 +519,7 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredSchedule409StatusCode() throws AuthException, RequestException, InterruptedException {
+    public void testPrepareDeferredSchedule409StatusCode() throws RequestException, InterruptedException {
         when(mockChannel.getId()).thenReturn("some channel");
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
@@ -568,7 +546,7 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredSchedule429StatusCode() throws AuthException, RequestException {
+    public void testPrepareDeferredSchedule429StatusCode() throws RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
@@ -599,7 +577,7 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredSchedule429StatusCodeNoLocationNoRetryTime() throws AuthException, RequestException {
+    public void testPrepareDeferredSchedule429StatusCodeNoLocationNoRetryTime() throws RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
@@ -621,7 +599,7 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredSchedule307StatusCode() throws AuthException, RequestException {
+    public void testPrepareDeferredSchedule307StatusCode() throws RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
@@ -652,7 +630,7 @@ public class InAppAutomationTest {
     }
 
     @Test
-    public void testPrepareDeferredSchedule307StatusCodeNoLocationNoRetryTime() throws AuthException, RequestException {
+    public void testPrepareDeferredSchedule307StatusCodeNoLocationNoRetryTime() throws RequestException {
         when(mockChannel.getId()).thenReturn("some channel");
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);

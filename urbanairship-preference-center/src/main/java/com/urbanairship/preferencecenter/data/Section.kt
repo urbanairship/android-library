@@ -2,8 +2,8 @@ package com.urbanairship.preferencecenter.data
 
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
-import com.urbanairship.preferencecenter.util.requireField
-import com.urbanairship.preferencecenter.util.toJsonList
+import com.urbanairship.json.requireField
+import com.urbanairship.json.toJsonList
 
 /**
  * Preference sections.

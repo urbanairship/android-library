@@ -4,10 +4,10 @@ import com.urbanairship.contacts.Scope
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
-import com.urbanairship.preferencecenter.util.jsonMapOf
-import com.urbanairship.preferencecenter.util.optionalField
-import com.urbanairship.preferencecenter.util.requireField
-import com.urbanairship.preferencecenter.util.toJsonList
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalField
+import com.urbanairship.json.requireField
+import com.urbanairship.json.toJsonList
 
 /**
  * Preference items.

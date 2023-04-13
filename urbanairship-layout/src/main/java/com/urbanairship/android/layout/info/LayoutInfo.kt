@@ -2,8 +2,8 @@ package com.urbanairship.android.layout.info
 
 import com.urbanairship.android.layout.BasePresentation
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
-import com.urbanairship.android.layout.util.requireField
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.requireField
 
 public data class LayoutInfo(
     public val version: Int,

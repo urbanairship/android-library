@@ -55,13 +55,13 @@ import com.urbanairship.android.layout.property.ViewType.WEB_VIEW
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.AttributeName.attributeNameFromJson
 import com.urbanairship.android.layout.shape.Shape
-import com.urbanairship.android.layout.util.optionalField
-import com.urbanairship.android.layout.util.requireField
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.optionalField
+import com.urbanairship.json.requireField
 
 public sealed class ViewInfo : View {
 

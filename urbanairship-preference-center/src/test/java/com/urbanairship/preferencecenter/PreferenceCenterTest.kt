@@ -8,13 +8,13 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.jsonListOf
+import com.urbanairship.json.jsonMapOf
 import com.urbanairship.preferencecenter.PreferenceCenter.Companion.KEY_PREFERENCE_FORMS
 import com.urbanairship.preferencecenter.PreferenceCenter.Companion.PAYLOAD_TYPE
 import com.urbanairship.preferencecenter.data.CommonDisplay
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.PreferenceCenterPayload
-import com.urbanairship.preferencecenter.util.jsonListOf
-import com.urbanairship.preferencecenter.util.jsonMapOf
 import com.urbanairship.reactive.Observable
 import com.urbanairship.reactive.Subject
 import com.urbanairship.remotedata.RemoteData

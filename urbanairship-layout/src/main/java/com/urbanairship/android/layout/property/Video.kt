@@ -1,7 +1,7 @@
 package com.urbanairship.android.layout.property
 
-import com.urbanairship.android.layout.util.optionalField
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.optionalField
 
 internal class Video(
     val aspectRatio: Double?,

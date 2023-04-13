@@ -7,15 +7,8 @@ import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
-import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
@@ -25,7 +18,7 @@ import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.config.AirshipRuntimeConfig;
-import com.urbanairship.contacts.ScopedSubscriptionListMutation;
+import com.urbanairship.http.AuthTokenProvider;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
@@ -48,6 +41,12 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * Airship channel access.
@@ -113,6 +112,12 @@ public class AirshipChannel extends AirshipComponent {
     @NonNull
     private final CachedValue<Set<String>> subscriptionListCache;
 
+    /**
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public final AuthTokenProvider authTokenProvider;
 
     private final AirshipRuntimeConfig runtimeConfig;
     private final ActivityMonitor activityMonitor;
@@ -195,6 +200,7 @@ public class AirshipChannel extends AirshipComponent {
         this.clock = clock;
         this.subscriptionListCache = subscriptionListCache;
         this.activityMonitor = activityMonitor;
+        this.authTokenProvider = new ChannelAuthTokenProvider(runtimeConfig, this::getId);
     }
 
     /**

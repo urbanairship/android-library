@@ -26,10 +26,10 @@ import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.debouncedClicks
-import com.urbanairship.android.layout.util.toJsonMap
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.toJsonMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

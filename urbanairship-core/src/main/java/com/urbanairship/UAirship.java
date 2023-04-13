@@ -725,6 +725,7 @@ public class UAirship {
         });
 
         this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, localeManager);
+        requestSession.setChannelAuthTokenProvider(this.channel.authTokenProvider);
 
         if (channel.getId() == null && "huawei".equalsIgnoreCase(Build.MANUFACTURER)) {
             remoteAirshipUrlConfigProvider.disableFallbackUrls();

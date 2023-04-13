@@ -10,12 +10,9 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.automation.Triggers;
-import com.urbanairship.automation.auth.AuthException;
-import com.urbanairship.automation.auth.AuthManager;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.TagGroupsMutation;
-import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestAuth;
 import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
@@ -34,7 +31,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static com.urbanairship.automation.tags.TestUtils.tagSet;
@@ -53,7 +49,6 @@ public class DeferredScheduleClientTest {
     private static List<AttributeMutation> EMPTY_ATTRIBUTES = Collections.emptyList();
 
     private DeferredScheduleClient client;
-    private AuthManager mockAuthManager;
     private Supplier<StateOverrides> mockSupplier;
     private TestRequestSession requestSession = new TestRequestSession();
     private TestAirshipRuntimeConfig runtimeConfig;
@@ -62,35 +57,27 @@ public class DeferredScheduleClientTest {
     public void setup() {
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
 
-        mockAuthManager = mock(AuthManager.class);
         mockSupplier = mock(Supplier.class);
         client = new DeferredScheduleClient(
                 runtimeConfig,
                 requestSession,
-                mockAuthManager,
                 mockSupplier
         );
 
         when(mockSupplier.get()).thenReturn(null);
     }
 
-    @Test(expected = AuthException.class)
-    public void testAuthManagerExceptions() throws AuthException, RequestException {
-        when(mockAuthManager.getToken()).thenThrow(new AuthException("neat"));
-        client.performRequest(Uri.parse("https://airship.com"), "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
-    }
 
     @Test
-    public void testAndroidRequest() throws AuthException, RequestException {
+    public void testAndroidRequest() throws RequestException {
         requestSession.addResponse(400);
         runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM);
-        when(mockAuthManager.getToken()).thenReturn("some_token");
 
         Uri url = Uri.parse("https://airship.com");
         client.performRequest(url, "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
         assertEquals(url, requestSession.getLastRequest().getUrl());
         assertEquals("POST", requestSession.getLastRequest().getMethod());
-        assertEquals(new RequestAuth.BearerToken("some_token"), requestSession.getLastRequest().getAuth());
+        assertEquals(new RequestAuth.ChannelTokenAuth("channel"), requestSession.getLastRequest().getAuth());
 
         JsonMap expected = JsonMap.newBuilder()
                                   .put("platform", "android")
@@ -101,16 +88,15 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testAmazonRequest() throws AuthException, RequestException {
+    public void testAmazonRequest() throws RequestException {
         requestSession.addResponse(400);
         runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
-        when(mockAuthManager.getToken()).thenReturn("some_token");
 
         Uri url = Uri.parse("https://airship.com");
         client.performRequest(url, "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
         assertEquals(url, requestSession.getLastRequest().getUrl());
         assertEquals("POST", requestSession.getLastRequest().getMethod());
-        assertEquals(new RequestAuth.BearerToken("some_token"), requestSession.getLastRequest().getAuth());
+        assertEquals(new RequestAuth.ChannelTokenAuth("channel"), requestSession.getLastRequest().getAuth());
 
         JsonMap expected = JsonMap.newBuilder()
                                   .put("platform", "amazon")
@@ -121,9 +107,8 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testTriggeringContext() throws AuthException, RequestException {
+    public void testTriggeringContext() throws RequestException {
         requestSession.addResponse(400);
-        when(mockAuthManager.getToken()).thenReturn("some token");
 
         CustomEvent event = CustomEvent.newBuilder("some event").build();
         TriggerContext triggerContext = new TriggerContext(Triggers.newCustomEventTriggerBuilder().build(), event.toJsonValue());
@@ -143,9 +128,8 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testTagOverrides() throws AuthException, RequestException {
+    public void testTagOverrides() throws RequestException {
         requestSession.addResponse(400);
-        when(mockAuthManager.getToken()).thenReturn("some token");
 
         List<TagGroupsMutation> tagOverrides = new ArrayList<>();
         tagOverrides.add(TagGroupsMutation.newRemoveTagsMutation("foo", tagSet("one", "two")));
@@ -163,9 +147,8 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testAttributeOverrides() throws AuthException, RequestException {
+    public void testAttributeOverrides() throws RequestException {
         requestSession.addResponse(400);
-        when(mockAuthManager.getToken()).thenReturn("some token");
 
         List<AttributeMutation> attributeOverrides = new ArrayList<>();
         attributeOverrides.add(AttributeMutation.newRemoveAttributeMutation("foo", 100));
@@ -183,9 +166,8 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testStateOverrides() throws AuthException, RequestException {
+    public void testStateOverrides() throws RequestException {
         requestSession.addResponse(400);
-        when(mockAuthManager.getToken()).thenReturn("some token");
 
         when(mockSupplier.get()).thenReturn(new StateOverrides("1", "1.0.0", true, new Locale("en", "US")));
 
@@ -210,9 +192,7 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testMissedResponse() throws AuthException, RequestException {
-        when(mockAuthManager.getToken()).thenReturn("some_token");
-
+    public void testMissedResponse() throws RequestException {
         requestSession.addResponse(200,
                 JsonMap.newBuilder()
                        .put("type", "in_app_message")
@@ -229,9 +209,7 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testNoMessage() throws AuthException, RequestException {
-        when(mockAuthManager.getToken()).thenReturn("some_token");
-
+    public void testNoMessage() throws RequestException {
         requestSession.addResponse(200,
                 JsonMap.newBuilder()
                        .put("audience_match", true)
@@ -247,9 +225,7 @@ public class DeferredScheduleClientTest {
     }
 
     @Test
-    public void testMessage() throws AuthException, RequestException {
-        when(mockAuthManager.getToken()).thenReturn("some_token");
-
+    public void testMessage() throws RequestException {
         requestSession.addResponse(200,
                 JsonMap.newBuilder()
                        .put("audience_match", true)
@@ -273,21 +249,4 @@ public class DeferredScheduleClientTest {
         assertTrue(response.getResult().isAudienceMatch());
         assertEquals(expected, response.getResult().getMessage());
     }
-
-    @Test
-    public void testExpiredToken() throws AuthException, RequestException {
-        when(mockAuthManager.getToken())
-                .thenReturn("expired")
-                .thenReturn("some_other_token");
-
-        requestSession.addResponse(401, null);
-        requestSession.addResponse(400, null);
-
-        client.performRequest(Uri.parse("https://airship.com"), "channel", null, EMPTY_TAGS, EMPTY_ATTRIBUTES);
-
-        assertEquals(new RequestAuth.BearerToken("some_other_token"), requestSession.getLastRequest().getAuth());
-
-        verify(mockAuthManager).tokenExpired("expired");
-    }
-
 }

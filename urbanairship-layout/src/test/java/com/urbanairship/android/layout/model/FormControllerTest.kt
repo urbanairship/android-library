@@ -19,7 +19,7 @@ import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.FormData
-import com.urbanairship.android.layout.util.jsonMapOf
+import com.urbanairship.json.jsonMapOf
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk

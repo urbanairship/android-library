@@ -1,9 +1,9 @@
 package com.urbanairship.android.layout.property
 
-import com.urbanairship.android.layout.util.requireField
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.requireField
 
 internal data class EventHandler(
     val type: Type,

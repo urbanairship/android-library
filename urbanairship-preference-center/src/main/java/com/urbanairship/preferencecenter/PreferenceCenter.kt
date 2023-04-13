@@ -16,10 +16,10 @@ import com.urbanairship.PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES
 import com.urbanairship.UAirship
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.requireField
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.PreferenceCenterPayload
 import com.urbanairship.preferencecenter.ui.PreferenceCenterActivity
-import com.urbanairship.preferencecenter.util.requireField
 import com.urbanairship.reactive.Observable
 import com.urbanairship.reactive.Schedulers
 import com.urbanairship.reactive.Subscriber

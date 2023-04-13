@@ -1,9 +1,9 @@
 package com.urbanairship.android.layout.property
 
-import com.urbanairship.android.layout.util.requireField
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.requireField
 
 internal sealed class StateAction(val type: Type) {
 

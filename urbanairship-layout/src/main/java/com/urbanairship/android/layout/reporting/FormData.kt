@@ -1,10 +1,10 @@
 package com.urbanairship.android.layout.reporting
 
 import com.urbanairship.android.layout.property.AttributeValue
-import com.urbanairship.android.layout.util.jsonMapOf
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 
 public sealed class FormData<T>(
     internal val type: Type,

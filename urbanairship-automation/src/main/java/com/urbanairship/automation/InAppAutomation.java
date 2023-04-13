@@ -22,8 +22,6 @@ import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.actions.Actions;
-import com.urbanairship.automation.auth.AuthException;
-import com.urbanairship.automation.auth.AuthManager;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.deferred.DeferredScheduleClient;
 import com.urbanairship.automation.limits.FrequencyChecker;
@@ -177,7 +175,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         this.retryingExecutor = RetryingExecutor.newSerialExecutor(Looper.getMainLooper());
 
-        this.deferredScheduleClient = new DeferredScheduleClient(runtimeConfig, new AuthManager(runtimeConfig, airshipChannel));
+        this.deferredScheduleClient = new DeferredScheduleClient(runtimeConfig);
         this.actionScheduleDelegate = new ActionsScheduleDelegate();
         this.inAppMessageScheduleDelegate = new InAppMessageScheduleDelegate(inAppMessageManager);
         this.frequencyLimitManager = new FrequencyLimitManager(context, runtimeConfig);
@@ -622,9 +620,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                 callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
                 return RetryingExecutor.cancelResult();
             }
-        } catch (AuthException e) {
-            Logger.debug(e, "Failed to resolve deferred schedule: %s", schedule.getId());
-            return RetryingExecutor.retryResult();
         }
 
         DeferredScheduleClient.Result apiResult = response.getResult();
@@ -654,6 +649,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         // Error
         switch (response.getStatus()) {
+            case 401:
+                return RetryingExecutor.retryResult();
+
             case 409:
                 remoteDataSubscriber.attemptRefresh(true, () -> {
                     callback.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);

@@ -2,9 +2,9 @@ package com.urbanairship.android.layout.property
 
 import androidx.annotation.Dimension
 import com.urbanairship.android.layout.property.StoryIndicatorStyleType.LINEAR_PROGRESS
-import com.urbanairship.android.layout.util.optionalField
-import com.urbanairship.android.layout.util.requireField
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.optionalField
+import com.urbanairship.json.requireField
 
 internal sealed class StoryIndicatorStyle(val type: StoryIndicatorStyleType) {
     class LinearProgress(
