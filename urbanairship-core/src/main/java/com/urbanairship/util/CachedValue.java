@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.util;
 
 import androidx.annotation.NonNull;
@@ -48,6 +50,4 @@ public class CachedValue<T> {
             return value;
         }
     }
-
-
 }
