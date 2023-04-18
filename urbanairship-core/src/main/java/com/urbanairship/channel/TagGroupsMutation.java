@@ -31,9 +31,9 @@ public class TagGroupsMutation implements JsonSerializable {
     private static final String REMOVE_KEY = "remove";
     private static final String SET_KEY = "set";
 
-    private final Map<String, Set<String>> addTags;
-    private final Map<String, Set<String>> removeTags;
-    private final Map<String, Set<String>> setTags;
+    public final Map<String, Set<String>> addTags;
+    public final Map<String, Set<String>> removeTags;
+    public final Map<String, Set<String>> setTags;
 
     /**
      * Default constructor.

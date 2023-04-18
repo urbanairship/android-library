@@ -13,7 +13,8 @@ import com.urbanairship.json.JsonValue;
 /**
  * Model object for Contact identity.
  */
-class ContactIdentity implements JsonSerializable {
+// TODO make this internal
+public class ContactIdentity implements JsonSerializable {
 
     private static final String CONTACT_ID_KEY = "contact_id";
     private static final String IS_ANONYMOUS_KEY = "is_anonymous";

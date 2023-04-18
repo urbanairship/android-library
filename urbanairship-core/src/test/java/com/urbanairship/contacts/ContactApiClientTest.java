@@ -349,7 +349,7 @@ public class ContactApiClientTest extends BaseTestCase {
                                   .put("subscription_lists", JsonValue.wrap(subscriptionListMutations))
                                   .build();
 
-        Response<Void> response = client.update(fakeContactId, tagGroupsMutations, attributeMutations, subscriptionListMutations);
+        Response<?> response = client.update(fakeContactId, tagGroupsMutations, attributeMutations, subscriptionListMutations);
 
         assertEquals(200, response.getStatus());
         assertEquals("POST", requestSession.getLastRequest().getMethod());
@@ -390,7 +390,7 @@ public class ContactApiClientTest extends BaseTestCase {
     @Test(expected = RequestException.class)
     public void testNullUrlUpdate() throws RequestException {
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
-        client.update(fakeContactId, null, null, null);
+        client.update(fakeContactId, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
     }
 
     @Test

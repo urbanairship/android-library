@@ -11,6 +11,8 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.audience.AudienceOverrides;
+import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.contacts.Contact;
@@ -112,12 +114,12 @@ public class Modules {
                                     @NonNull PushManager pushManager,
                                     @NonNull Analytics analytics,
                                     @NonNull RemoteData remoteData,
-                                    @NonNull Contact contact) {
+                                    @NonNull AudienceOverridesProvider audienceOverridesProvider) {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager, airshipChannel, pushManager,
-                        analytics, remoteData, contact);
+                        analytics, remoteData, audienceOverridesProvider);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Automation module");

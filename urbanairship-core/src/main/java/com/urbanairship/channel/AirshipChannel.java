@@ -17,7 +17,11 @@ import com.urbanairship.UAirship;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.app.SimpleApplicationListener;
+import com.urbanairship.audience.AudienceOverrides;
+import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.contacts.Scope;
+import com.urbanairship.contacts.ScopedSubscriptionListMutation;
 import com.urbanairship.http.AuthTokenProvider;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
@@ -38,6 +42,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -121,6 +126,7 @@ public class AirshipChannel extends AirshipComponent {
 
     private final AirshipRuntimeConfig runtimeConfig;
     private final ActivityMonitor activityMonitor;
+    private final AudienceOverridesProvider audienceOverridesProvider;
 
     private boolean channelTagRegistrationEnabled = true;
     private boolean channelCreationDelayEnabled;
@@ -160,7 +166,8 @@ public class AirshipChannel extends AirshipComponent {
                           @NonNull PreferenceDataStore dataStore,
                           @NonNull AirshipRuntimeConfig runtimeConfig,
                           @NonNull PrivacyManager privacyManager,
-                          @NonNull LocaleManager localeManager) {
+                          @NonNull LocaleManager localeManager,
+                          @NonNull AudienceOverridesProvider audienceOverridesProvider) {
 
         this(context, dataStore, runtimeConfig, privacyManager, localeManager,
                 JobDispatcher.shared(context), Clock.DEFAULT_CLOCK,
@@ -168,7 +175,7 @@ public class AirshipChannel extends AirshipComponent {
                 new AttributeRegistrar(AttributeApiClient.channelClient(runtimeConfig), new PendingAttributeMutationStore(dataStore, ATTRIBUTE_DATASTORE_KEY)),
                 new TagGroupRegistrar(TagGroupApiClient.channelClient(runtimeConfig), new PendingTagGroupMutationStore(dataStore, TAG_GROUP_DATASTORE_KEY)),
                 new SubscriptionListRegistrar(SubscriptionListApiClient.channelClient(runtimeConfig), new PendingSubscriptionListMutationStore(dataStore, SUBSCRIPTION_LISTS_DATASTORE_KEY)),
-                new CachedValue<>(), GlobalActivityMonitor.shared(context));
+                new CachedValue<>(), GlobalActivityMonitor.shared(context), audienceOverridesProvider);
 
     }
 
@@ -185,7 +192,8 @@ public class AirshipChannel extends AirshipComponent {
                    @NonNull TagGroupRegistrar tagGroupRegistrar,
                    @NonNull SubscriptionListRegistrar subscriptionListRegistrar,
                    @NonNull CachedValue<Set<String>> subscriptionListCache,
-                   @NonNull ActivityMonitor activityMonitor) {
+                   @NonNull ActivityMonitor activityMonitor,
+                   @NonNull AudienceOverridesProvider audienceOverridesProvider) {
 
         super(context, dataStore);
 
@@ -201,6 +209,7 @@ public class AirshipChannel extends AirshipComponent {
         this.subscriptionListCache = subscriptionListCache;
         this.activityMonitor = activityMonitor;
         this.authTokenProvider = new ChannelAuthTokenProvider(runtimeConfig, this::getId);
+        this.audienceOverridesProvider = audienceOverridesProvider;
     }
 
     /**
@@ -230,7 +239,6 @@ public class AirshipChannel extends AirshipComponent {
                 tagGroupRegistrar.clearPendingMutations();
                 attributeRegistrar.clearPendingMutations();
                 subscriptionListRegistrar.clearPendingMutations();
-                subscriptionListRegistrar.clearLocalHistory();
                 subscriptionListCache.invalidate();
             }
 
@@ -243,6 +251,33 @@ public class AirshipChannel extends AirshipComponent {
                 dispatchUpdateJob();
             }
         });
+
+        tagGroupRegistrar.addTagGroupListener((identifier, mutations) -> {
+            audienceOverridesProvider.recordChannelUpdate(identifier, mutations, null, null);
+        });
+
+        attributeRegistrar.addAttributeListener((AttributeListener) (identifier, mutations) -> {
+                    audienceOverridesProvider.recordChannelUpdate(identifier, null, mutations, null);
+        });
+
+        subscriptionListRegistrar.addSubscriptionListListener((identifier, mutations) -> {
+            audienceOverridesProvider.recordChannelUpdate(identifier, null, null, mutations);
+        });
+
+
+        audienceOverridesProvider.setPendingChannelOverridesDelegate(this::getPendingAudienceOverrides);
+    }
+
+    private AudienceOverrides.Channel getPendingAudienceOverrides(@NonNull String channelId) {
+        if (!channelId.equals(getId())) {
+            new AudienceOverrides.Channel();
+        }
+
+        return new AudienceOverrides.Channel(
+                tagGroupRegistrar.getPendingMutations(),
+                attributeRegistrar.getPendingMutations(),
+                subscriptionListRegistrar.getPendingMutations()
+        );
     }
 
     /**
@@ -393,50 +428,6 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
-     * Adds a tag group listener.
-     *
-     * @param listener The listener.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void addTagGroupListener(@NonNull TagGroupListener listener) {
-        this.tagGroupRegistrar.addTagGroupListener(listener);
-    }
-
-    /**
-     * Adds an attribute listener.
-     *
-     * @param listener The listener.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void addAttributeListener(@NonNull AttributeListener listener) {
-        this.attributeRegistrar.addAttributeListener(listener);
-    }
-
-    /**
-     * Adds a subscription list listener.
-     *
-     * @param listener The listener.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void addSubscriptionListListener(@NonNull SubscriptionListListener listener) {
-        this.subscriptionListRegistrar.addSubscriptionListListener(listener);
-    }
-
-    /**
-     * Removes a subscription list listener.
-     *
-     * @param listener The listener.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void removeSubscriptionListListener(@NonNull SubscriptionListListener listener) {
-        this.subscriptionListRegistrar.removeSubscriptionListListener(listener);
-    }
-
-    /**
      * Edits channel Tags.
      *
      * @return A {@link TagEditor}
@@ -577,20 +568,20 @@ public class AirshipChannel extends AirshipComponent {
     }
 
     /**
-     * Returns the current set of subscription lists for this channel, optionally applying pending
-     * subscription list changes that will be applied during the next channel update.
+     * Returns the current set of subscription lists for this channel.
      * <p>
      * An empty set indicates that this channel is not subscribed to any lists.
      *
-     * @param includePendingUpdates `true` to apply pending updates to the returned set, `false` to return the set without pending updates.
      * @return A {@link PendingResult} of the current set of subscription lists.
      */
     @NonNull
-    public PendingResult<Set<String>> getSubscriptionLists(boolean includePendingUpdates) {
+    public PendingResult<Set<String>> getSubscriptionLists() {
         final PendingResult<Set<String>> result = new PendingResult<>();
 
-        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+        String channelId = getId();
+        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES) || channelId == null) {
             result.setResult(Collections.emptySet());
+            return result;
         }
 
         defaultExecutor.execute(() -> {
@@ -598,20 +589,14 @@ public class AirshipChannel extends AirshipComponent {
             Set<String> subscriptions = subscriptionListCache.get();
             if (subscriptions == null) {
                 // Fallback to fetching
-                subscriptions = subscriptionListRegistrar.fetchChannelSubscriptionLists();
+                subscriptions = subscriptionListRegistrar.fetchChannelSubscriptionLists(channelId);
                 if (subscriptions != null) {
                     subscriptionListCache.set(new HashSet<>(subscriptions), SUBSCRIPTION_CACHE_LIFETIME_MS);
                 }
             }
 
             if (subscriptions != null) {
-                subscriptionListRegistrar.applyLocalChanges(subscriptions);
-
-                if (includePendingUpdates) {
-                    for (SubscriptionListMutation pending : getPendingSubscriptionListUpdates()) {
-                        pending.apply(subscriptions);
-                    }
-                }
+                applySubscriptionListOverrides(channelId, subscriptions);
             }
 
             result.setResult(subscriptions);
@@ -744,42 +729,6 @@ public class AirshipChannel extends AirshipComponent {
      */
     public void setChannelTagRegistrationEnabled(boolean enabled) {
         channelTagRegistrationEnabled = enabled;
-    }
-
-    /**
-     * Gets any pending tag updates.
-     *
-     * @return The list of pending tag updates.
-     * @hide
-     */
-    @NonNull
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public List<TagGroupsMutation> getPendingTagUpdates() {
-        return tagGroupRegistrar.getPendingMutations();
-    }
-
-    /**
-     * Gets any pending attribute updates.
-     *
-     * @return The list of pending attribute updates.
-     * @hide
-     */
-    @NonNull
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public List<AttributeMutation> getPendingAttributeUpdates() {
-        return attributeRegistrar.getPendingMutations();
-    }
-
-    /**
-     * Gets any pending subscription list updates.
-     *
-     * @return The list of pending subscription list updates.
-     * @hide
-     */
-    @NonNull
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public List<SubscriptionListMutation> getPendingSubscriptionListUpdates() {
-        return subscriptionListRegistrar.getPendingMutations();
     }
 
     /**
@@ -1041,14 +990,6 @@ public class AirshipChannel extends AirshipComponent {
         jobDispatcher.dispatch(jobInfo);
     }
 
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void processContactSubscriptionListMutations(@NonNull List<SubscriptionListMutation> mutations) {
-        this.subscriptionListRegistrar.cacheInLocalHistory(mutations);
-    }
-
     private boolean isRegistrationAllowed() {
         if (!isComponentEnabled()) {
             return false;
@@ -1060,4 +1001,18 @@ public class AirshipChannel extends AirshipComponent {
 
         return true;
     }
+
+    @WorkerThread
+    private void applySubscriptionListOverrides(@NonNull String channelId, @NonNull Set<String> subscriptions) {
+        AudienceOverrides.Channel contactOverrides = audienceOverridesProvider.channelOverridesSync(channelId);
+
+        if (contactOverrides.getSubscriptions() == null) {
+            return;
+        }
+
+        for (SubscriptionListMutation mutation : contactOverrides.getSubscriptions()) {
+            mutation.apply(subscriptions);
+        }
+    }
+
 }

@@ -88,11 +88,11 @@ public class DeferredScheduleClient {
      * @param attributeOverrides Attribute overrides.
      * @return The deferred response.
      */
-    public Response<Result> performRequest(@NonNull Uri url,
+    public Response<Result> performRequest(@Nullable Uri url,
                                            @NonNull String channelId,
                                            @Nullable TriggerContext triggerContext,
-                                           @NonNull List<TagGroupsMutation> tagOverrides,
-                                           @NonNull List<AttributeMutation> attributeOverrides) throws RequestException {
+                                           @Nullable List<TagGroupsMutation> tagOverrides,
+                                           @Nullable List<AttributeMutation> attributeOverrides) throws RequestException {
         JsonMap.Builder requestBodyBuilder = JsonMap.newBuilder()
                                                     .put(PLATFORM_KEY, runtimeConfig.getPlatform() == UAirship.AMAZON_PLATFORM ? PLATFORM_AMAZON : PLATFORM_ANDROID)
                                                     .put(CHANNEL_ID_KEY, channelId);
@@ -105,11 +105,11 @@ public class DeferredScheduleClient {
                                                        .build());
         }
 
-        if (!tagOverrides.isEmpty()) {
+        if (tagOverrides != null && !tagOverrides.isEmpty()) {
             requestBodyBuilder.put(TAG_OVERRIDES_KEY, JsonValue.wrapOpt(tagOverrides));
         }
 
-        if (!attributeOverrides.isEmpty()) {
+        if (attributeOverrides != null && !attributeOverrides.isEmpty()) {
             requestBodyBuilder.put(ATTRIBUTE_OVERRIDES_KEY, JsonValue.wrapOpt(attributeOverrides));
         }
 

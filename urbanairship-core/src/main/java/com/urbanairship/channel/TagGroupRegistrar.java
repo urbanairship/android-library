@@ -72,7 +72,7 @@ class TagGroupRegistrar {
                 Logger.error("Dropping tag group update %s due to error: %s message: %s", mutation, response.getStatus(), response.getBody());
             } else {
                 for (TagGroupListener listener : tagGroupListeners) {
-                    listener.onTagGroupsMutationUploaded(Collections.singletonList(mutation));
+                    listener.onTagGroupsMutationUploaded(identifier, Collections.singletonList(mutation));
                 }
             }
 

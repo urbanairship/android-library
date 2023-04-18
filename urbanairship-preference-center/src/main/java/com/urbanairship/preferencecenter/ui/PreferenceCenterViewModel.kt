@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.urbanairship.Logger
 import com.urbanairship.UAirship
 import com.urbanairship.actions.ActionRunRequestFactory
+import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.contacts.Contact
 import com.urbanairship.contacts.Scope
@@ -18,7 +19,6 @@ import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.data.evaluate
-import com.urbanairship.preferencecenter.testing.OpenForTesting
 import com.urbanairship.preferencecenter.util.execute
 import com.urbanairship.preferencecenter.util.scanConcat
 import kotlin.coroutines.resume
@@ -319,7 +319,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
 
     private suspend fun getChannelSubscriptions(): Set<String> =
         suspendCancellableCoroutine { continuation ->
-            channel.getSubscriptionLists(/* includePendingUpdates = */ true).addResultCallback { subscriptions ->
+            channel.subscriptionLists.addResultCallback { subscriptions ->
                 if (subscriptions != null) {
                     continuation.resume(subscriptions)
                 } else {
@@ -330,7 +330,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
 
     private suspend fun getContactSubscriptions(): Map<String, Set<Scope>> =
         suspendCancellableCoroutine { continuation ->
-            contact.getSubscriptionLists(/* includePendingUpdates = */ true).addResultCallback { subscriptions ->
+            contact.subscriptionLists.addResultCallback { subscriptions ->
                 if (subscriptions != null) {
                     continuation.resume(subscriptions)
                 } else {

@@ -22,11 +22,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class SubscriptionListRegistrar {
 
-    /**
-     * Max age for the channel subscription listing cache.
-     */
-    private static final long LOCAL_HISTORY_CACHE_LIFETIME_MS = 10 * 60 * 1000; // 10M
-
     private final List<SubscriptionListListener> listeners = new CopyOnWriteArrayList<>();
     private final Object lock = new Object();
     private final SubscriptionListApiClient apiClient;
@@ -88,17 +83,17 @@ public class SubscriptionListRegistrar {
             if (response.isClientError()) {
                 Logger.error("Dropping subscription list update %s due to error: %d message: %s",
                         mutations, response.getStatus(), response.getBody());
-            } else {
-                for (SubscriptionListListener listener : listeners) {
-                    listener.onSubscriptionListMutationUploaded(uploadIdentifier, mutations);
-                }
+
             }
 
             synchronized (lock) {
                 if (mutations.equals(mutationStore.peek()) && uploadIdentifier.equals(identifier)) {
                     mutationStore.pop();
-                    if (response.isSuccessful()) {
-                        cacheInLocalHistory(mutations);
+                }
+
+                if (response.isSuccessful()) {
+                    for (SubscriptionListListener listener : listeners) {
+                        listener.onSubscriptionListMutationUploaded(uploadIdentifier, mutations);
                     }
                 }
             }
@@ -106,15 +101,10 @@ public class SubscriptionListRegistrar {
     }
 
     @Nullable
-    Set<String> fetchChannelSubscriptionLists() {
-        String fetchIdentifier;
-        synchronized (lock) {
-            fetchIdentifier = identifier;
-        }
-
+    Set<String> fetchChannelSubscriptionLists(@NonNull String channelId) {
         Response<Set<String>> response;
         try {
-            response = apiClient.getSubscriptionLists(fetchIdentifier);
+            response = apiClient.getSubscriptionLists(channelId);
         } catch (RequestException e) {
             Logger.error(e, "Failed to fetch channel subscription lists!");
             return null;
@@ -143,31 +133,6 @@ public class SubscriptionListRegistrar {
         return combined;
     }
 
-    void clearLocalHistory() {
-        localHistory.clear();
-    }
-
-    void cacheInLocalHistory(@NonNull List<SubscriptionListMutation> mutations) {
-        synchronized (lock) {
-            for (SubscriptionListMutation mutation : mutations) {
-                CachedValue<SubscriptionListMutation> cache = new CachedValue<>();
-                cache.set(mutation, LOCAL_HISTORY_CACHE_LIFETIME_MS);
-                localHistory.add(cache);
-            }
-        }
-    }
-
-    void applyLocalChanges(@NonNull Set<String> subscriptions) {
-        for (CachedValue<SubscriptionListMutation> localHistoryCachedMutation : localHistory) {
-            SubscriptionListMutation mutation = localHistoryCachedMutation.get();
-            if (mutation != null) {
-                mutation.apply(subscriptions);
-            } else {
-                // Remove from local history cache when it expired
-                localHistory.remove(localHistoryCachedMutation);
-            }
-        }
-    }
 
     void addSubscriptionListListener(@NonNull SubscriptionListListener listener) {
         listeners.add(listener);

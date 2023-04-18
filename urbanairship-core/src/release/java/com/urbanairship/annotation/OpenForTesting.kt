@@ -1,5 +1,6 @@
-package com.urbanairship.preferencecenter.testing
+
+package com.urbanairship.annotation
 
 /** No-op version of `@OpenForTesting` that does nothing in release builds. */
 @Target(AnnotationTarget.CLASS)
-annotation class OpenForTesting
+public annotation class OpenForTesting

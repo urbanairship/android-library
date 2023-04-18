@@ -9,11 +9,11 @@ public fun jsonMapOf(vararg fields: Pair<String, *>): JsonMap =
 
 public fun jsonListOf(vararg values: Any): JsonList = JsonList(values.map(JsonValue::wrap))
 
-public fun List<JsonMap>.toJsonList(): JsonList =
+public fun <T> List<T>.toJsonList(): JsonList where T : JsonSerializable =
     JsonList(this.map { it.toJsonValue() })
 
-public fun Map<String, JsonValue?>.toJsonMap(): JsonMap =
-    JsonMap(this)
+public fun <T> Map<String, T?>.toJsonMap(): JsonMap where T : JsonSerializable =
+    JsonMap(this.mapValues { it.value?.toJsonValue() ?: JsonValue.NULL })
 
 /**
  * Gets the field with the given [key] from the [JsonMap], ensuring it is non-null.

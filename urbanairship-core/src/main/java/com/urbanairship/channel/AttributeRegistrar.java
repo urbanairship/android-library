@@ -72,7 +72,7 @@ class AttributeRegistrar {
             Logger.error("Dropping attributes %s due to error: %s message: %s", mutations, response.getStatus(), response.getBody());
         } else {
             for (AttributeListener listener : attributeListeners) {
-                listener.onAttributeMutationsUploaded(mutations);
+                listener.onAttributeMutationsUploaded(identifier, mutations);
             }
         }
 

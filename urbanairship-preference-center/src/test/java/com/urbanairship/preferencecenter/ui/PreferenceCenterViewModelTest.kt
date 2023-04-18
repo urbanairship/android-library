@@ -285,8 +285,8 @@ class PreferenceCenterViewModelTest {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
                 assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
 
-                verify(channel).getSubscriptionLists(true)
-                verify(contact).getSubscriptionLists(true)
+                verify(channel).getSubscriptionLists()
+                verify(contact).getSubscriptionLists()
 
                 cancel()
             }
@@ -305,8 +305,8 @@ class PreferenceCenterViewModelTest {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
                 assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
 
-                verify(channel, never()).getSubscriptionLists(any())
-                verify(contact).getSubscriptionLists(true)
+                verify(channel, never()).getSubscriptionLists()
+                verify(contact).getSubscriptionLists()
 
                 cancel()
             }
@@ -325,8 +325,8 @@ class PreferenceCenterViewModelTest {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
                 assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
 
-                verify(channel).getSubscriptionLists(true)
-                verify(contact, never()).getSubscriptionLists(any())
+                verify(channel).getSubscriptionLists()
+                verify(contact, never()).getSubscriptionLists()
 
                 cancel()
             }
@@ -364,7 +364,7 @@ class PreferenceCenterViewModelTest {
             }
 
             inOrder(channel, editor) {
-                verify(channel).getSubscriptionLists(true)
+                verify(channel).getSubscriptionLists()
                 verify(channel).editSubscriptionLists()
                 verify(editor).mutate(item.subscriptionId, true)
                 verify(editor).apply()
@@ -405,7 +405,7 @@ class PreferenceCenterViewModelTest {
             }
 
             inOrder(channel, editor) {
-                verify(channel).getSubscriptionLists(true)
+                verify(channel).getSubscriptionLists()
                 verify(channel).editSubscriptionLists()
                 verify(editor).mutate(item.subscriptionId, false)
                 verify(editor).apply()
@@ -451,13 +451,13 @@ class PreferenceCenterViewModelTest {
             }
 
             inOrder(channel, contact, editor) {
-                verify(contact).getSubscriptionLists(true)
+                verify(contact).getSubscriptionLists()
                 verify(contact).editSubscriptionLists()
                 verify(editor).mutate(item.subscriptionId, item.scopes, true)
                 verify(editor).apply()
 
                 Mockito.verifyNoMoreInteractions(channel, contact, editor)
-                verify(channel, never()).getSubscriptionLists(any())
+                verify(channel, never()).getSubscriptionLists()
                 verify(channel, never()).editSubscriptionLists()
             }
         }
@@ -508,13 +508,13 @@ class PreferenceCenterViewModelTest {
             }
 
             inOrder(channel, contact, editor) {
-                verify(contact).getSubscriptionLists(true)
+                verify(contact).getSubscriptionLists()
                 verify(contact).editSubscriptionLists()
                 verify(editor).mutate(item.subscriptionId, item.scopes, false)
                 verify(editor).apply()
 
                 verify(channel, never()).editSubscriptionLists()
-                verify(channel, never()).getSubscriptionLists(any())
+                verify(channel, never()).getSubscriptionLists()
 
                 Mockito.verifyNoMoreInteractions(channel, contact, editor)
             }
@@ -558,13 +558,13 @@ class PreferenceCenterViewModelTest {
             }
 
             inOrder(channel, contact, editor) {
-                verify(contact).getSubscriptionLists(true)
+                verify(contact).getSubscriptionLists()
                 verify(contact).editSubscriptionLists()
                 verify(editor).mutate(item.subscriptionId, component.scopes, true)
                 verify(editor).apply()
 
                 Mockito.verifyNoMoreInteractions(channel, contact, editor)
-                verify(channel, never()).getSubscriptionLists(any())
+                verify(channel, never()).getSubscriptionLists()
                 verify(channel, never()).editSubscriptionLists()
             }
         }
@@ -619,12 +619,12 @@ class PreferenceCenterViewModelTest {
             }
 
             inOrder(channel, contact, editor) {
-                verify(contact).getSubscriptionLists(true)
+                verify(contact).getSubscriptionLists()
                 verify(contact).editSubscriptionLists()
                 verify(editor).mutate(item.subscriptionId, unsubscribeScopes, false)
                 verify(editor).apply()
 
-                verify(channel, never()).getSubscriptionLists(any())
+                verify(channel, never()).getSubscriptionLists()
                 verify(channel, never()).editSubscriptionLists()
 
                 Mockito.verifyNoMoreInteractions(channel, contact, editor)
@@ -763,14 +763,14 @@ class PreferenceCenterViewModelTest {
             mock {}
         } else {
             mock<AirshipChannel> {
-                on { getSubscriptionLists(true) } doReturn pendingResultOf(channelSubscriptions)
+                on { getSubscriptionLists() } doReturn pendingResultOf(channelSubscriptions)
             }.also(mockChannel::invoke)
         }
         contact = if (mockContact == null) {
             mock {}
         } else {
             mock<Contact> {
-                on { getSubscriptionLists(true) } doReturn pendingResultOf(contactSubscriptions)
+                on { getSubscriptionLists() } doReturn pendingResultOf(contactSubscriptions)
             }.also(mockContact::invoke)
         }
         conditionMonitor = if (mockConditionStateMonitor == null) {

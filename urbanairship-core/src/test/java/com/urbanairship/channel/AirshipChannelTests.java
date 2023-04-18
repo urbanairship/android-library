@@ -41,6 +41,7 @@ import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestClock;
 import com.urbanairship.UAirship;
 import com.urbanairship.app.ActivityMonitor;
+import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
@@ -95,6 +96,8 @@ public class AirshipChannelTests extends BaseTestCase {
                                                              .setAction("ACTION_UPDATE_CHANNEL")
                                                              .build();
 
+    private final AudienceOverridesProvider audienceOverridesProvider = new AudienceOverridesProvider();
+
     @Before
     public void setUp() {
         mockDispatcher = mock(JobDispatcher.class);
@@ -111,7 +114,7 @@ public class AirshipChannelTests extends BaseTestCase {
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar, mockSubscriptionListRegistrar,
-                subscriptionListCache, testActivityMonitor);
+                subscriptionListCache, testActivityMonitor, audienceOverridesProvider);
 
         when(mockClient.isUrlConfigured()).thenReturn(true);
     }
@@ -1033,7 +1036,9 @@ public class AirshipChannelTests extends BaseTestCase {
      * Tests that subscription lists are returned from the in-memory cache when available.
      */
     @Test
-    public void testGetSubscriptionListsFromCache() {
+    public void testGetSubscriptionListsFromCache() throws RequestException {
+        testCreateChannel();
+
         Set<String> subscriptions = new HashSet<String>() {{
             add("foo");
             add("bar");
@@ -1043,21 +1048,23 @@ public class AirshipChannelTests extends BaseTestCase {
 
         subscriptionListCache.set(subscriptions, 100);
 
-        PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists(false);
+        PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists();
         shadowMainLooper().idle();
 
         result.addResultCallback(result1 -> {
             assertEquals(subscriptions, result1);
         });
 
-        verify(mockSubscriptionListRegistrar, never()).fetchChannelSubscriptionLists();
+        verify(mockSubscriptionListRegistrar, never()).fetchChannelSubscriptionLists(airshipChannel.getId());
     }
 
     /**
      * Tests that subscription lists are fetched from the network when the cache is expired.
      */
     @Test
-    public void testGetSubscriptionListsFromNetworkIfCacheExpired() {
+    public void testGetSubscriptionListsFromNetworkIfCacheExpired() throws RequestException {
+        testCreateChannel();
+
         final Set<String> cachedSubscriptions = new HashSet<String>() {{
             add("foo");
             add("bar");
@@ -1069,7 +1076,7 @@ public class AirshipChannelTests extends BaseTestCase {
             add("buzz");
         }};
 
-        when(mockSubscriptionListRegistrar.fetchChannelSubscriptionLists()).thenReturn(networkSubscriptions);
+        when(mockSubscriptionListRegistrar.fetchChannelSubscriptionLists(airshipChannel.getId())).thenReturn(networkSubscriptions);
 
         // Prime the cache
         clock.currentTimeMillis = 100;
@@ -1079,7 +1086,7 @@ public class AirshipChannelTests extends BaseTestCase {
         clock.currentTimeMillis += 10;
         assertNull(subscriptionListCache.get());
 
-        PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists(false);
+        PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists();
         result.addResultCallback(new ResultCallback<Set<String>>() {
             @Override
             public void onResult(@Nullable Set<String> result) {
@@ -1088,7 +1095,7 @@ public class AirshipChannelTests extends BaseTestCase {
                 // Verify that the cache was updated
                 assertEquals(networkSubscriptions, subscriptionListCache.get());
 
-                verify(mockSubscriptionListRegistrar).fetchChannelSubscriptionLists();
+                verify(mockSubscriptionListRegistrar).fetchChannelSubscriptionLists(airshipChannel.getId());
             }
         });
 
@@ -1099,7 +1106,9 @@ public class AirshipChannelTests extends BaseTestCase {
      * Tests that subscription lists are fetched from the network when the cache is empty.
      */
     @Test
-    public void testGetSubscriptionListsFromNetworkIfCacheEmpty() {
+    public void testGetSubscriptionListsFromNetworkIfCacheEmpty() throws RequestException {
+        testCreateChannel();
+
         final Set<String> cachedSubscriptions = new HashSet<String>() {{
             add("foo");
             add("bar");
@@ -1111,12 +1120,12 @@ public class AirshipChannelTests extends BaseTestCase {
             add("buzz");
         }};
 
-        when(mockSubscriptionListRegistrar.fetchChannelSubscriptionLists()).thenReturn(networkSubscriptions);
+        when(mockSubscriptionListRegistrar.fetchChannelSubscriptionLists(airshipChannel.getId())).thenReturn(networkSubscriptions);
 
         // Ensure the cache is empty
         assertNull(subscriptionListCache.get());
 
-        PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists(false);
+        PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists();
         result.addResultCallback(new ResultCallback<Set<String>>() {
             @Override
             public void onResult(@Nullable Set<String> result) {
@@ -1125,7 +1134,7 @@ public class AirshipChannelTests extends BaseTestCase {
                 // Verify that the cache was updated
                 assertEquals(networkSubscriptions, subscriptionListCache.get());
 
-                verify(mockSubscriptionListRegistrar).fetchChannelSubscriptionLists();
+                verify(mockSubscriptionListRegistrar).fetchChannelSubscriptionLists(airshipChannel.getId());
             }
         });
 
@@ -1137,7 +1146,9 @@ public class AirshipChannelTests extends BaseTestCase {
      * getSubscriptionLists(true).
      */
     @Test
-    public void testGetSubscriptionListsIncludesPending() {
+    public void testGetSubscriptionListsIncludesPending() throws RequestException {
+        testCreateChannel();
+
         final Set<String> initialSubscriptions = new HashSet<String>() {{
             add("foo");
             add("bar");
@@ -1153,10 +1164,10 @@ public class AirshipChannelTests extends BaseTestCase {
             add(SubscriptionListMutation.newUnsubscribeMutation("bar", 0L));
         }};
 
-        when(mockSubscriptionListRegistrar.fetchChannelSubscriptionLists()).thenReturn(initialSubscriptions);
+        when(mockSubscriptionListRegistrar.fetchChannelSubscriptionLists(any())).thenReturn(initialSubscriptions);
         when(mockSubscriptionListRegistrar.getPendingMutations()).thenReturn(pendingMutations);
 
-        PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists(true);
+        PendingResult<Set<String>> result = airshipChannel.getSubscriptionLists();
         result.addResultCallback(new ResultCallback<Set<String>>() {
             @Override
             public void onResult(@Nullable Set<String> subscriptions) {
@@ -1165,7 +1176,7 @@ public class AirshipChannelTests extends BaseTestCase {
                 // Verify that pending updates weren't stored in the cache after being applied.
                 assertEquals(initialSubscriptions, subscriptionListCache.get());
 
-                verify(mockSubscriptionListRegistrar).fetchChannelSubscriptionLists();
+                verify(mockSubscriptionListRegistrar).fetchChannelSubscriptionLists(airshipChannel.getId());
                 verify(mockSubscriptionListRegistrar).getPendingMutations();
             }
         });
@@ -1189,7 +1200,7 @@ public class AirshipChannelTests extends BaseTestCase {
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar, mockSubscriptionListRegistrar,
-                subscriptionListCache, testActivityMonitor);
+                subscriptionListCache, testActivityMonitor, audienceOverridesProvider);
 
         airshipChannel.init();
         assertFalse(airshipChannel.isChannelCreationDelayEnabled());
@@ -1205,7 +1216,7 @@ public class AirshipChannelTests extends BaseTestCase {
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar, mockSubscriptionListRegistrar,
-                subscriptionListCache, testActivityMonitor);
+                subscriptionListCache, testActivityMonitor, audienceOverridesProvider);
 
         airshipChannel.init();
         assertTrue(airshipChannel.isChannelCreationDelayEnabled());
@@ -1228,7 +1239,7 @@ public class AirshipChannelTests extends BaseTestCase {
         airshipChannel = new AirshipChannel(getApplication(), dataStore,
                 runtimeConfig, privacyManager, localeManager, mockDispatcher, clock,
                 mockClient, mockAttributeRegistrar, mockTagGroupRegistrar, mockSubscriptionListRegistrar,
-                subscriptionListCache, testActivityMonitor);
+                subscriptionListCache, testActivityMonitor, audienceOverridesProvider);
 
         airshipChannel.init();
 
@@ -1307,18 +1318,6 @@ public class AirshipChannelTests extends BaseTestCase {
                         jobInfo.getConflictStrategy() == JobInfo.REPLACE;
             }
         }));
-    }
-
-    @Test
-    public void testProcessContactSubscriptionListChanges() {
-        List<SubscriptionListMutation> updates = new ArrayList<SubscriptionListMutation>() {{
-            add(SubscriptionListMutation.newSubscribeMutation("app 1", 100));
-            add(SubscriptionListMutation.newUnsubscribeMutation("app 2", 100));
-        }};
-
-        airshipChannel.processContactSubscriptionListMutations(updates);
-
-        verify(mockSubscriptionListRegistrar).cacheInLocalHistory(updates);
     }
 
     private static <T> Response<T> createResponse(T result, int status) {

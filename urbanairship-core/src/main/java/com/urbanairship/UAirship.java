@@ -19,6 +19,8 @@ import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.audience.AudienceOverrides;
+import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
@@ -710,21 +712,19 @@ public class UAirship {
 
         Supplier<PushProviders> pushProviders = PushProviders.lazyLoader(application, airshipConfigOptions);
 
+        AudienceOverridesProvider audienceOverridesProvider = new AudienceOverridesProvider();
         DeferredPlatformProvider platformProvider = new DeferredPlatformProvider(getApplicationContext(), preferenceDataStore, privacyManager, pushProviders);
         DefaultRequestSession requestSession = new DefaultRequestSession(airshipConfigOptions, platformProvider.getPlatform());
 
         RemoteAirshipUrlConfigProvider remoteAirshipUrlConfigProvider = new RemoteAirshipUrlConfigProvider(airshipConfigOptions, preferenceDataStore);
         this.runtimeConfig = new AirshipRuntimeConfig(platformProvider, airshipConfigOptions, remoteAirshipUrlConfigProvider, requestSession);
-        remoteAirshipUrlConfigProvider.addUrlConfigListener(new AirshipUrlConfig.Listener() {
-            @Override
-            public void onUrlConfigUpdated() {
-                for (AirshipComponent component : components) {
-                    component.onUrlConfigUpdated();
-                }
+        remoteAirshipUrlConfigProvider.addUrlConfigListener(() -> {
+            for (AirshipComponent component : components) {
+                component.onUrlConfigUpdated();
             }
         });
 
-        this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, localeManager);
+        this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, localeManager, audienceOverridesProvider);
         requestSession.setChannelAuthTokenProvider(this.channel.authTokenProvider);
 
         if (channel.getId() == null && "huawei".equalsIgnoreCase(Build.MANUFACTURER)) {
@@ -758,7 +758,7 @@ public class UAirship {
         this.remoteConfigManager.addRemoteAirshipConfigListener(remoteAirshipUrlConfigProvider);
         components.add(this.remoteConfigManager);
 
-        this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel);
+        this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel, audienceOverridesProvider);
         components.add(this.contact);
 
         //noinspection deprecation
@@ -785,7 +785,7 @@ public class UAirship {
 
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
-                privacyManager, channel, pushManager, analytics, remoteData, contact);
+                privacyManager, channel, pushManager, analytics, remoteData, audienceOverridesProvider);
         processModule(automationModule);
 
         // Ad Id

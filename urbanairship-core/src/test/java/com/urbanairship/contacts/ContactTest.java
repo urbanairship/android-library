@@ -13,13 +13,14 @@ import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestClock;
 import com.urbanairship.UAirship;
+import com.urbanairship.audience.AudienceOverrides;
+import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.channel.AttributeEditor;
 import com.urbanairship.channel.AttributeListener;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.ChannelRegistrationPayload;
-import com.urbanairship.channel.SubscriptionListMutation;
 import com.urbanairship.channel.TagGroupListener;
 import com.urbanairship.channel.TagGroupsEditor;
 import com.urbanairship.channel.TagGroupsMutation;
@@ -38,7 +39,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
@@ -52,7 +52,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
 import static junit.framework.Assert.assertNotNull;
@@ -85,13 +84,11 @@ public class ContactTest extends BaseTestCase {
     private final ContactApiClient mockContactApiClient = mock(ContactApiClient.class);
     private final TestClock testClock = new TestClock();
     private final TestActivityMonitor testActivityMonitor = new TestActivityMonitor();
-    private final ContactChangeListener changeListener = mock(ContactChangeListener.class);
     private final TagGroupListener tagGroupListener = mock(TagGroupListener.class);
     private final AttributeListener attributeListener = mock(AttributeListener.class);
     private final CachedValue<Map<String, Set<Scope>>> subscriptionCache = new CachedValue<>(testClock);
-    private final List<CachedValue<ScopedSubscriptionListMutation>> subscriptionListLocalHistory = new CopyOnWriteArrayList<>();
-
     private final JobInfo updateJob = JobInfo.newBuilder().setAction(Contact.ACTION_UPDATE_CONTACT).build();
+    private final AudienceOverridesProvider audienceOverridesProvider = new AudienceOverridesProvider();
 
     private Contact contact;
     private PrivacyManager privacyManager;
@@ -104,11 +101,8 @@ public class ContactTest extends BaseTestCase {
         privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
 
         contact = new Contact(context, dataStore, mockDispatcher, privacyManager, mockChannel,
-                mockContactApiClient, testActivityMonitor, testClock, subscriptionCache, subscriptionListLocalHistory,
-                command -> command.run());
-        contact.addContactChangeListener(changeListener);
-        contact.addTagGroupListener(tagGroupListener);
-        contact.addAttributeListener(attributeListener);
+                mockContactApiClient, testActivityMonitor, testClock, subscriptionCache,
+                audienceOverridesProvider, command -> command.run());
     }
 
     @After
@@ -221,8 +215,6 @@ public class ContactTest extends BaseTestCase {
 
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
-
-        verify(changeListener).onContactChanged();
     }
 
     @Test
@@ -265,7 +257,6 @@ public class ContactTest extends BaseTestCase {
 
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).reset(fakeChannelId);
-        verify(changeListener).onContactChanged();
     }
 
     @Test
@@ -314,8 +305,6 @@ public class ContactTest extends BaseTestCase {
         assertEquals(fakeNamedUserId, contact.getLastContactIdentity().getNamedUserId());
 
         verify(mockChannel).updateRegistration();
-
-        verify(changeListener).onContactChanged();
     }
 
     @Test
@@ -374,6 +363,7 @@ public class ContactTest extends BaseTestCase {
 
     @Test
     public void testUpdateDoesntSkipReset() throws RequestException {
+        contact.init();
         when(mockChannel.getId()).thenReturn(fakeChannelId);
 
         final String resetContactId = "some other fake id";
@@ -382,7 +372,7 @@ public class ContactTest extends BaseTestCase {
         Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
-        Response<Void> updateResponse =new Response<>(200, null);
+        Response<Void> updateResponse = new Response<>(200, null);
         when(mockContactApiClient.update(eq(fakeContactId), anyList(), anyList(), anyList())).thenReturn(updateResponse);
         when(mockContactApiClient.update(eq(resetContactId), anyList(), anyList(), anyList())).thenReturn(updateResponse);
 
@@ -390,15 +380,16 @@ public class ContactTest extends BaseTestCase {
         when(mockContactApiClient.reset(fakeChannelId)).thenReturn(resetResponse);
 
         contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply();
-        List<ScopedSubscriptionListMutation> pending = contact.getPendingSubscriptionListUpdates();
-
-        contact.reset();
-        contact.reset();
-        contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply();
 
         // Resolve
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient, times(1)).resolve(fakeChannelId);
+
+        List<ScopedSubscriptionListMutation> pending = contact.getPendingAudienceOverrides(fakeContactId).getSubscriptions();
+
+        contact.reset();
+        contact.reset();
+        contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply();
 
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient, times(1)).update(fakeContactId, Collections.emptyList(), Collections.emptyList(), pending);
@@ -457,7 +448,7 @@ public class ContactTest extends BaseTestCase {
         Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
-        Response<Void> updateResponse =new Response<>(200, null);
+        Response<Void> updateResponse = new Response<>(200, null);
         when(mockContactApiClient.update(fakeContactId, tagGroupsMutations, Collections.emptyList(), Collections.emptyList())).thenReturn(updateResponse);
 
         tagGroupsEditor.apply();
@@ -471,54 +462,53 @@ public class ContactTest extends BaseTestCase {
 
     @Test
     public void testEditSubscriptionLists() throws RequestException, JsonException {
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+
         ScopedSubscriptionListMutation expectedMutation = ScopedSubscriptionListMutation.newSubscribeMutation("some list", Scope.APP, testClock.currentTimeMillis);
-
-        assertEquals(0, subscriptionListLocalHistory.size());
-
         contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply();
 
-        List<ScopedSubscriptionListMutation> pending = contact.getPendingSubscriptionListUpdates();
+        // Resolve so we can query the pending items
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).resolve(fakeChannelId);
+
+        List<ScopedSubscriptionListMutation> pending = contact.getPendingAudienceOverrides(fakeContactId).getSubscriptions();
         assertEquals(1, pending.size());
         assertEquals(expectedMutation, pending.get(0));
 
-        when(mockChannel.getId()).thenReturn(fakeChannelId);
-
         // Set up a 200 response
-        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
-        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
-
-        Response<Void> updateResponse =new Response<>(200, null);
+        Response<Void> updateResponse = new Response<>(200, null);
         when(mockContactApiClient.update(fakeContactId, Collections.emptyList(), Collections.emptyList(), pending)).thenReturn(updateResponse);
-
-        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
-        verify(mockContactApiClient).resolve(fakeChannelId);
 
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).update(fakeContactId, Collections.emptyList(), Collections.emptyList(), pending);
 
-        assertTrue(contact.getPendingSubscriptionListUpdates().isEmpty());
+        assertTrue(contact.getPendingAudienceOverrides(fakeContactId).getSubscriptions().isEmpty());
 
         // Verify that the local history was updated
-        assertEquals(1, subscriptionListLocalHistory.size());
-        assertEquals(expectedMutation, subscriptionListLocalHistory.get(0).get());
+        assertEquals(Collections.singletonList(expectedMutation), audienceOverridesProvider.contactOverridesSync(fakeContactId).getSubscriptions());
     }
 
     @Test
     public void testCollapseUpdates() throws RequestException {
-        List<ScopedSubscriptionListMutation> expectedSubscriptions =  Arrays.asList(
+        List<ScopedSubscriptionListMutation> expectedSubscriptions = Arrays.asList(
                 ScopedSubscriptionListMutation.newUnsubscribeMutation("some list", Scope.APP, testClock.currentTimeMillis),
                 ScopedSubscriptionListMutation.newSubscribeMutation("some list", Scope.APP, testClock.currentTimeMillis)
         );
+        expectedSubscriptions = ScopedSubscriptionListMutation.collapseMutations(expectedSubscriptions);
 
-        List<AttributeMutation> expectedAttributes =  Arrays.asList(
+        List<AttributeMutation> expectedAttributes = Arrays.asList(
                 AttributeMutation.newRemoveAttributeMutation("some attribute", testClock.currentTimeMillis),
                 AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrap("some value"), testClock.currentTimeMillis)
         );
+        expectedAttributes = AttributeMutation.collapseMutations(expectedAttributes);
 
-        List<TagGroupsMutation> expectedTags =  Arrays.asList(
+        List<TagGroupsMutation> expectedTags = Arrays.asList(
                 TagGroupsMutation.newAddTagsMutation("some group", Collections.singleton("some tag")),
                 TagGroupsMutation.newRemoveTagsMutation("some group", Collections.singleton("some tag"))
         );
+        expectedTags = TagGroupsMutation.collapseMutations(expectedTags);
 
         contact.editSubscriptionLists().unsubscribe("some list", Scope.APP).apply();
         contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply();
@@ -538,13 +528,12 @@ public class ContactTest extends BaseTestCase {
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).resolve(fakeChannelId);
 
-        Response<Void> updateResponse =new Response<>(200, null);
+        Response<Void> updateResponse = new Response<>(200, null);
         when(mockContactApiClient.update(any(), anyList(), anyList(), anyList())).thenReturn(updateResponse);
 
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).update(fakeContactId, expectedTags, expectedAttributes, expectedSubscriptions);
     }
-
 
     @Test
     public void testEditAttributesSucceed() throws RequestException {
@@ -561,7 +550,7 @@ public class ContactTest extends BaseTestCase {
         Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
-        Response<Void> updateResponse =new Response<>(200, null);
+        Response<Void> updateResponse = new Response<>(200, null);
         when(mockContactApiClient.update(fakeContactId, Collections.emptyList(), attributeMutations, Collections.emptyList())).thenReturn(updateResponse);
 
         attributeEditor.apply();
@@ -589,10 +578,6 @@ public class ContactTest extends BaseTestCase {
                .subscribe("some list", Scope.SMS)
                .apply();
 
-        List<TagGroupsMutation> tagGroupsMutations = contact.getPendingTagUpdates();
-        List<AttributeMutation> attributeMutations = contact.getPendingAttributeUpdates();
-        List<ScopedSubscriptionListMutation> subscriptionListMutations = contact.getPendingSubscriptionListUpdates();
-
         ContactConflictListener conflictListener = mock(ContactConflictListener.class);
         contact.setContactConflictListener(conflictListener);
 
@@ -600,8 +585,8 @@ public class ContactTest extends BaseTestCase {
         Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity("some_contact_id", true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
 
-        Response<Void> updateResponse =new Response<>(200, null);
-        when(mockContactApiClient.update("some_contact_id", tagGroupsMutations, attributeMutations, subscriptionListMutations)).thenReturn(updateResponse);
+        Response<Void> updateResponse = new Response<>(200, null);
+        when(mockContactApiClient.update(eq("some_contact_id"), anyList(), anyList(), anyList())).thenReturn(updateResponse);
 
         Response<ContactIdentity> response = new Response<>(200, new ContactIdentity("some_other_contact_id", false, fakeNamedUserId));
         when(mockContactApiClient.identify(fakeNamedUserId, fakeChannelId, "some_contact_id")).thenReturn(response);
@@ -614,7 +599,7 @@ public class ContactTest extends BaseTestCase {
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
         verify(mockContactApiClient).resolve(fakeChannelId);
-        verify(mockContactApiClient).update("some_contact_id", tagGroupsMutations, attributeMutations, subscriptionListMutations);
+        verify(mockContactApiClient).update(eq("some_contact_id"), anyList(), anyList(), anyList());
         verify(mockContactApiClient).identify(fakeNamedUserId, fakeChannelId, "some_contact_id");
 
         ArgumentCaptor<ContactData> argument = ArgumentCaptor.forClass(ContactData.class);
@@ -629,45 +614,7 @@ public class ContactTest extends BaseTestCase {
     }
 
     @Test
-    public void testAudienceListeners() throws RequestException {
-        testClock.currentTimeMillis = 0;
-        when(mockChannel.getId()).thenReturn(fakeChannelId);
-
-        contact.editTagGroups()
-               .setTag("group", "tag")
-               .apply();
-
-        contact.editAttributes()
-               .setAttribute("cool", "story")
-               .apply();
-
-        List<TagGroupsMutation> expectedTags = Collections.singletonList(TagGroupsMutation.newSetTagsMutation("group", Collections.singleton("tag")));
-        List<AttributeMutation> expectedAttributes = Collections.singletonList(AttributeMutation.newSetAttributeMutation("cool", JsonValue.wrap("story"), testClock.currentTimeMillis));
-
-        // Set up a 200 response
-        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
-        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
-
-        Response<Void> updateResponse =new Response<>(200, null);
-        when(mockContactApiClient.update(fakeContactId, expectedTags, expectedAttributes, Collections.emptyList())).thenReturn(updateResponse);
-
-        // Resolve
-        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
-        verify(mockContactApiClient).resolve(fakeChannelId);
-
-        // Update
-        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
-        verify(mockContactApiClient).update(anyString(), ArgumentMatchers.anyList(), ArgumentMatchers.anyList(), ArgumentMatchers.anyList());
-
-        verify(tagGroupListener).onTagGroupsMutationUploaded(expectedTags);
-        verify(attributeListener).onAttributeMutationsUploaded(expectedAttributes);
-
-        assertTrue(contact.getPendingTagUpdates().isEmpty());
-        assertTrue(contact.getPendingAttributeUpdates().isEmpty());
-    }
-
-    @Test
-    public void testGetPendingTagUpdates() {
+    public void testGetPendingTagUpdates() throws RequestException {
         contact.editTagGroups()
                .setTag("group", "tag")
                .apply();
@@ -676,15 +623,21 @@ public class ContactTest extends BaseTestCase {
                .addTag("some-other-group", "some-tag")
                .apply();
 
+        // Resolve so we can query pending
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+
         List<TagGroupsMutation> expected = new ArrayList<>();
         expected.add(TagGroupsMutation.newSetTagsMutation("group", Collections.singleton("tag")));
         expected.add(TagGroupsMutation.newAddTagsMutation("some-other-group", Collections.singleton("some-tag")));
 
-        assertEquals(expected, contact.getPendingTagUpdates());
+        assertEquals(expected, contact.getPendingAudienceOverrides(fakeContactId).getTags());
     }
 
     @Test
-    public void testGetPendingAttributes() {
+    public void testGetPendingAttributes() throws RequestException {
         testClock.currentTimeMillis = 100;
         contact.editAttributes()
                .setAttribute("cool", "story")
@@ -695,16 +648,22 @@ public class ContactTest extends BaseTestCase {
                .setAttribute("something", "neat")
                .apply();
 
+        // Resolve so we can query pending
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+
         List<AttributeMutation> expected = new ArrayList<>();
         expected.add(AttributeMutation.newSetAttributeMutation("cool", JsonValue.wrap("story"), 100));
         expected.add(AttributeMutation.newRemoveAttributeMutation("some-attribute", 100));
         expected.add(AttributeMutation.newSetAttributeMutation("something", JsonValue.wrap("neat"), 100));
 
-        assertEquals(expected, contact.getPendingAttributeUpdates());
+        assertEquals(expected, contact.getPendingAudienceOverrides(fakeContactId).getAttributes());
     }
 
     @Test
-    public void testGetPendingSubscriptionLists() {
+    public void testGetPendingSubscriptionLists() throws RequestException {
         testClock.currentTimeMillis = 100;
 
         contact.editSubscriptionLists()
@@ -716,17 +675,23 @@ public class ContactTest extends BaseTestCase {
                .subscribe("something", Scope.EMAIL)
                .apply();
 
+        // Resolve so we can query pending
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+
         List<ScopedSubscriptionListMutation> expected = Arrays.asList(
                 ScopedSubscriptionListMutation.newSubscribeMutation("cool", Scope.SMS, 100L),
                 ScopedSubscriptionListMutation.newUnsubscribeMutation("cool", Scope.APP, 100L),
                 ScopedSubscriptionListMutation.newSubscribeMutation("something", Scope.EMAIL, 100L)
         );
 
-        assertEquals(expected, contact.getPendingSubscriptionListUpdates());
+        assertEquals(expected, contact.getPendingAudienceOverrides(fakeContactId).getSubscriptions());
     }
 
     @Test
-    public void testMigrate() {
+    public void testMigrate() throws RequestException {
         PreferenceDataStore dataStore = TestApplication.getApplication().preferenceDataStore;
         dataStore.put(Contact.LEGACY_NAMED_USER_ID_KEY, "some-named-user");
 
@@ -745,9 +710,15 @@ public class ContactTest extends BaseTestCase {
 
         contact.init();
 
+        // Identify so we can query pending
+        Response<ContactIdentity> identityResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, "some-named-user"));
+        when(mockContactApiClient.identify("some-named-user", fakeChannelId, null)).thenReturn(identityResponse);
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+
         assertEquals("some-named-user", contact.getNamedUserId());
-        assertEquals(pendingAttributes, contact.getPendingAttributeUpdates());
-        assertEquals(pendingTags, contact.getPendingTagUpdates());
+        assertEquals(pendingAttributes, contact.getPendingAudienceOverrides(fakeContactId).getAttributes());
+        assertEquals(pendingTags, contact.getPendingAudienceOverrides(fakeContactId).getTags());
 
         assertFalse(dataStore.isSet(Contact.LEGACY_NAMED_USER_ID_KEY));
         assertFalse(dataStore.isSet(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY));
@@ -755,7 +726,7 @@ public class ContactTest extends BaseTestCase {
     }
 
     @Test
-    public void testMigrateAttributesAndTagsDisabled() {
+    public void testMigrateAttributesAndTagsDisabled() throws RequestException {
         PreferenceDataStore dataStore = TestApplication.getApplication().preferenceDataStore;
         privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES);
 
@@ -772,34 +743,15 @@ public class ContactTest extends BaseTestCase {
         contact.init();
 
         assertEquals("some-named-user", contact.getNamedUserId());
-        assertTrue(contact.getPendingAttributeUpdates().isEmpty());
-        assertTrue(contact.getPendingTagUpdates().isEmpty());
 
-        assertFalse(dataStore.isSet(Contact.LEGACY_NAMED_USER_ID_KEY));
-        assertFalse(dataStore.isSet(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY));
-        assertFalse(dataStore.isSet(Contact.LEGACY_ATTRIBUTE_MUTATION_STORE_KEY));
-    }
+        // Identify so we can query pending
+        Response<ContactIdentity> identityResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, "some-named-user"));
+        when(mockContactApiClient.identify("some-named-user", fakeChannelId, null)).thenReturn(identityResponse);
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
-    @Test
-    public void testMigrateContactDisabled() {
-        PreferenceDataStore dataStore = TestApplication.getApplication().preferenceDataStore;
-        privacyManager.disable(PrivacyManager.FEATURE_CONTACTS);
-
-        dataStore.put(Contact.LEGACY_NAMED_USER_ID_KEY, "some-named-user");
-
-        List<TagGroupsMutation> pendingTags = new ArrayList<>();
-        pendingTags.add(TagGroupsMutation.newSetTagsMutation("group", Collections.singleton("tag")));
-        dataStore.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrapOpt(pendingTags));
-
-        List<AttributeMutation> pendingAttributes = new ArrayList<>();
-        pendingAttributes.add(AttributeMutation.newSetAttributeMutation("cool", JsonValue.wrap("story"), 100));
-        dataStore.put(Contact.LEGACY_ATTRIBUTE_MUTATION_STORE_KEY, JsonValue.wrapOpt(pendingAttributes));
-
-        contact.init();
-
-        assertNull(contact.getNamedUserId());
-        assertTrue(contact.getPendingAttributeUpdates().isEmpty());
-        assertTrue(contact.getPendingTagUpdates().isEmpty());
+        assertTrue(contact.getPendingAudienceOverrides(fakeContactId).getAttributes().isEmpty());
+        assertTrue(contact.getPendingAudienceOverrides(fakeContactId).getSubscriptions().isEmpty());
 
         assertFalse(dataStore.isSet(Contact.LEGACY_NAMED_USER_ID_KEY));
         assertFalse(dataStore.isSet(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY));
@@ -825,7 +777,7 @@ public class ContactTest extends BaseTestCase {
 
         subscriptionCache.set(subscriptions, 100);
 
-        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists();
 
         result.addResultCallback(result1 -> {
             assertEquals(subscriptions, result1);
@@ -835,52 +787,12 @@ public class ContactTest extends BaseTestCase {
     }
 
     @Test
-    public void testGetSubscriptionListsFromCacheWithLocalHistory() throws RequestException, JsonException, ExecutionException, InterruptedException {
-        when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
-        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
-
-        // Resolve contact
-        contact.resolve();
-
-        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
-
-        Map<String, Set<Scope>> cachedSubscriptions = new HashMap<String, Set<Scope>>() {{
-            put("foo", new HashSet<>(Collections.singleton(Scope.APP)));
-            put("bar", new HashSet<>(Collections.singleton(Scope.SMS)));
-        }};
-
-        assertNull(subscriptionCache.get());
-
-        subscriptionCache.set(cachedSubscriptions, 100);
-
-        CachedValue<ScopedSubscriptionListMutation> localMutation1 = new CachedValue<>(testClock);
-        localMutation1.set(ScopedSubscriptionListMutation.newSubscribeMutation("local", Scope.APP, 1000), 100);
-        CachedValue<ScopedSubscriptionListMutation> localMutation2 = new CachedValue<>(testClock);
-        localMutation2.set(ScopedSubscriptionListMutation.newUnsubscribeMutation("foo", Scope.APP, 1000), 100);
-
-        assertEquals(0, subscriptionListLocalHistory.size());
-
-        subscriptionListLocalHistory.addAll(Arrays.asList(localMutation1, localMutation2));
-
-        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
-
-        Map<String, Set<Scope>> expectedSubscriptions = new HashMap<String, Set<Scope>>() {{
-            put("bar", new HashSet<>(Collections.singleton(Scope.SMS)));
-            put("local", new HashSet<>(Collections.singleton(Scope.APP)));
-        }};
-
-        // Result should be available immediately when returning from the cache.
-        assertEquals(expectedSubscriptions, result.get());
-
-        verify(mockContactApiClient, never()).getSubscriptionLists(anyString());
-    }
-
-    @Test
     public void testGetSubscriptionListsNamedContact() throws RequestException, ExecutionException, InterruptedException {
         when(mockChannel.getId()).thenReturn(fakeChannelId);
         Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, false, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+
+        contact.init();
 
         // Always return empty list from server
         when(mockContactApiClient.getSubscriptionLists(fakeContactId))
@@ -904,58 +816,13 @@ public class ContactTest extends BaseTestCase {
             put("foo", Collections.singleton(Scope.APP));
         }};
 
-        assertTrue(contact.getSubscriptionLists(false).get().isEmpty());
-        assertEquals(expected, contact.getSubscriptionLists(true).get());
+        assertEquals(expected, contact.getSubscriptionLists().get());
 
         // Send updates
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
 
         // Check local history is applied
-        assertEquals(expected, contact.getSubscriptionLists(true).get());
-        assertEquals(expected, contact.getSubscriptionLists(false).get());
-    }
-
-    @Test
-    public void testGetSubscriptionListsFromNetworkWithLocalHistory() throws RequestException {
-        when(mockChannel.getId()).thenReturn(fakeChannelId);
-        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
-        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
-
-        // Resolve contact
-        contact.resolve();
-        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
-
-        Map<String, Set<Scope>> networkSubscriptions = new HashMap<String, Set<Scope>>() {{
-            put("foo", new HashSet<>(Collections.singleton(Scope.SMS)));
-            put("buzz", new HashSet<>(Collections.singleton(Scope.SMS)));
-        }};
-
-        when(mockContactApiClient.getSubscriptionLists(fakeContactId))
-                .thenReturn(new Response<>(200, networkSubscriptions));
-
-        CachedValue<ScopedSubscriptionListMutation> localMutation1 = new CachedValue<>(testClock);
-        localMutation1.set(ScopedSubscriptionListMutation.newSubscribeMutation("local", Scope.APP, 1000), 100);
-        CachedValue<ScopedSubscriptionListMutation> localMutation2 = new CachedValue<>(testClock);
-        localMutation2.set(ScopedSubscriptionListMutation.newUnsubscribeMutation("foo", Scope.SMS, 1000), 100);
-
-        assertEquals(0, subscriptionListLocalHistory.size());
-
-        subscriptionListLocalHistory.addAll(Arrays.asList(localMutation1, localMutation2));
-
-        Map<String, Set<Scope>> expectedSubscriptions = new HashMap<String, Set<Scope>>() {{
-            put("buzz", new HashSet<>(Collections.singleton(Scope.SMS)));
-            put("local", new HashSet<>(Collections.singleton(Scope.APP)));
-        }};
-
-        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
-        result.addResultCallback(result1 -> {
-            assertEquals(expectedSubscriptions, result1);
-
-            // Verify that the cache was updated
-            assertEquals(networkSubscriptions, subscriptionCache.get());
-        });
-
-        verify(mockContactApiClient).getSubscriptionLists(fakeContactId);
+        assertEquals(expected, contact.getSubscriptionLists().get());
     }
 
     @Test
@@ -989,7 +856,7 @@ public class ContactTest extends BaseTestCase {
         testClock.currentTimeMillis += 10;
         assertNull(subscriptionCache.get());
 
-        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists();
         result.addResultCallback(result1 -> {
             assertEquals(networkSubscriptions, result1);
 
@@ -1018,7 +885,7 @@ public class ContactTest extends BaseTestCase {
         when(mockContactApiClient.getSubscriptionLists(fakeContactId))
                 .thenReturn(new Response<>(200, networkSubscriptions));
 
-        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists();
         result.addResultCallback(result1 -> {
             assertEquals(networkSubscriptions, result1);
 
@@ -1031,6 +898,8 @@ public class ContactTest extends BaseTestCase {
 
     @Test
     public void testGetSubscriptionListsIncludesPending() throws RequestException, ExecutionException, InterruptedException {
+        contact.init();
+
         when(mockChannel.getId()).thenReturn(fakeChannelId);
         Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
         when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
@@ -1057,7 +926,7 @@ public class ContactTest extends BaseTestCase {
             put("fizz", Collections.singleton(Scope.SMS));
         }};
 
-        Map<String, Set<Scope>> result = contact.getSubscriptionLists(true).get();
+        Map<String, Set<Scope>> result = contact.getSubscriptionLists().get();
         assertEquals(expectedSubscriptions, result);
 
         assertEquals(networkSubscriptions, subscriptionCache.get());
@@ -1066,7 +935,7 @@ public class ContactTest extends BaseTestCase {
 
     @Test
     public void testGetSubscriptionNoContact() throws RequestException, ExecutionException, InterruptedException {
-        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists();
         assertNull(result.get());
         verify(mockContactApiClient, never()).getSubscriptionLists(anyString());
     }
@@ -1083,7 +952,7 @@ public class ContactTest extends BaseTestCase {
 
         contact.reset();
 
-        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists();
         assertNull(result.get());
         verify(mockContactApiClient, never()).getSubscriptionLists(anyString());
     }
@@ -1105,15 +974,15 @@ public class ContactTest extends BaseTestCase {
         subscriptionCache.set(subscriptions, 100);
 
         // Verify we have results
-        assertEquals(subscriptions, contact.getSubscriptionLists(false).get());
+        assertEquals(subscriptions, contact.getSubscriptionLists().get());
 
         // Identify same named user, still have results
         contact.identify("some user id");
-        assertEquals(subscriptions, contact.getSubscriptionLists(false).get());
+        assertEquals(subscriptions, contact.getSubscriptionLists().get());
 
         // Different named user, results should be null
         contact.identify("some other user id");
-        assertNull(contact.getSubscriptionLists(false).get());
+        assertNull(contact.getSubscriptionLists().get());
     }
 
     @Test
@@ -1129,7 +998,7 @@ public class ContactTest extends BaseTestCase {
         when(mockContactApiClient.getSubscriptionLists(fakeContactId))
                 .thenReturn(new Response<>(200, null));
 
-        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists(false);
+        PendingResult<Map<String, Set<Scope>>> result = contact.getSubscriptionLists();
         result.addResultCallback(result1 -> {
             assertNull(result1);
             assertNull(subscriptionCache.get());
@@ -1158,8 +1027,6 @@ public class ContactTest extends BaseTestCase {
 
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).registerEmail(eq(fakeContactId), eq("ua@airship.com"), any(EmailRegistrationOptions.class));
-
-        verify(changeListener).onContactChanged();
     }
 
     @Test
@@ -1203,8 +1070,6 @@ public class ContactTest extends BaseTestCase {
 
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).registerSms(eq(fakeContactId), eq("12345678"), any(SmsRegistrationOptions.class));
-
-        verify(changeListener).onContactChanged();
     }
 
     @Test
@@ -1247,8 +1112,6 @@ public class ContactTest extends BaseTestCase {
 
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).registerOpenChannel(eq(fakeContactId), eq("open-channel-address"), any(OpenChannelRegistrationOptions.class));
-
-        verify(changeListener).onContactChanged();
     }
 
     @Test
@@ -1289,8 +1152,6 @@ public class ContactTest extends BaseTestCase {
 
         assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).associatedChannel(fakeContactId, "new-fake-channel-id", ChannelType.EMAIL);
-
-        verify(changeListener).onContactChanged();
     }
 
     @Test
@@ -1310,25 +1171,41 @@ public class ContactTest extends BaseTestCase {
 
         assertEquals(JobResult.RETRY, contact.onPerformJob(UAirship.shared(), updateJob));
         verify(mockContactApiClient).associatedChannel(fakeContactId, "new-fake-channel-id", ChannelType.EMAIL);
-
-        verify(changeListener).onContactChanged();
     }
 
     @Test
-    public void testForwardAppScopeSubscriptionsToChannel() throws RequestException {
+    public void testOverrides() throws RequestException {
+        contact.init();
         contact.editSubscriptionLists()
                .subscribe("app 1", Scope.APP)
-               .subscribe("web 1", Scope.WEB)
-               .unsubscribe("web 2", Scope.WEB)
-               .unsubscribe("app 2", Scope.APP)
                .apply();
 
-        List<SubscriptionListMutation> expected = new ArrayList<SubscriptionListMutation>() {{
-            add(SubscriptionListMutation.newSubscribeMutation("app 1", testClock.currentTimeMillis));
-            add(SubscriptionListMutation.newUnsubscribeMutation("app 2", testClock.currentTimeMillis));
-        }};
+        contact.editAttributes().setAttribute("neat", "story").apply();
+        contact.editTagGroups().addTag("foo", "bar").apply();
 
-        verify(mockChannel).processContactSubscriptionListMutations(expected);
+        // Resolve so we can query the pending items
+        Response<ContactIdentity> resolveResponse = new Response<>(200, new ContactIdentity(fakeContactId, true, null));
+        when(mockContactApiClient.resolve(fakeChannelId)).thenReturn(resolveResponse);
+        when(mockChannel.getId()).thenReturn(fakeChannelId);
+        assertEquals(JobResult.SUCCESS, contact.onPerformJob(UAirship.shared(), updateJob));
+        verify(mockContactApiClient).resolve(fakeChannelId);
+
+
+        AudienceOverrides.Contact audienceOverrides = audienceOverridesProvider.contactOverridesSync(fakeContactId);
+
+        AudienceOverrides.Contact expected = new AudienceOverrides.Contact(
+                Collections.singletonList(
+                        TagGroupsMutation.newAddTagsMutation("foo", Collections.singleton("bar"))
+                ),
+                Collections.singletonList(
+                        AttributeMutation.newSetAttributeMutation("neat", JsonValue.wrap("story"), testClock.currentTimeMillis)
+                ),
+                Collections.singletonList(
+                        ScopedSubscriptionListMutation.newSubscribeMutation("app 1", Scope.APP, testClock.currentTimeMillis)
+                )
+        );
+
+        assertEquals(expected, audienceOverrides);
     }
 
 }

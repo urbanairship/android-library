@@ -15,7 +15,8 @@ public interface TagGroupListener {
     /**
      * Called when a tag group is uploaded.
      *
+     * @param identifier The channel Id
      * @param tagGroupsMutation The tag groups mutation.
      */
-    void onTagGroupsMutationUploaded(@NonNull List<TagGroupsMutation> tagGroupsMutation);
+    void onTagGroupsMutationUploaded(@NonNull String identifier, @NonNull List<TagGroupsMutation> tagGroupsMutation);
 }

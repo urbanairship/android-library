@@ -12,13 +12,14 @@ import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.audience.AudienceOverrides;
+import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.deferred.DeferredScheduleClient;
 import com.urbanairship.automation.limits.FrequencyChecker;
 import com.urbanairship.automation.limits.FrequencyConstraint;
 import com.urbanairship.automation.limits.FrequencyLimitManager;
-import com.urbanairship.automation.tags.AudienceManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.TagGroupsMutation;
@@ -83,16 +84,13 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 public class InAppAutomationTest {
 
-    private static List<TagGroupsMutation> EMPTY_TAG_OVERRIDES = Collections.emptyList();
-    private static List<AttributeMutation> EMPTY_ATTRIBUTE_OVERRIDES = Collections.emptyList();
-
     private InAppAutomation inAppAutomation;
     private AutomationEngine.ScheduleListener scheduleListener;
 
     private AutomationDriver driver;
     private AutomationEngine mockEngine;
 
-    private AudienceManager mockAudienceManager;
+    private AudienceOverridesProvider audienceOverridesProvider = new AudienceOverridesProvider();
     private InAppRemoteDataObserver mockObserver;
     private InAppMessageManager mockIamManager;
     private AirshipChannel mockChannel;
@@ -106,7 +104,6 @@ public class InAppAutomationTest {
 
     @Before
     public void setup() {
-        mockAudienceManager = mock(AudienceManager.class);
         mockChannel = mock(AirshipChannel.class);
         mockIamManager = mock(InAppMessageManager.class);
         mockObserver = mock(InAppRemoteDataObserver.class);
@@ -142,8 +139,8 @@ public class InAppAutomationTest {
         privacyManager = new PrivacyManager(TestApplication.getApplication().preferenceDataStore, PrivacyManager.FEATURE_ALL);
 
         inAppAutomation = new InAppAutomation(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
-                privacyManager, mockEngine, mockChannel, mockAudienceManager, mockObserver, mockIamManager, executor, mockDeferredScheduleClient,
-                mockActionsScheduleDelegate, mockMessageScheduleDelegate, mockFrequencyLimitManager);
+                privacyManager, mockEngine, mockChannel, mockObserver, mockIamManager, executor, mockDeferredScheduleClient,
+                mockActionsScheduleDelegate, mockMessageScheduleDelegate, mockFrequencyLimitManager, audienceOverridesProvider);
 
         inAppAutomation.init();
         inAppAutomation.onAirshipReady(UAirship.shared());
@@ -286,12 +283,12 @@ public class InAppAutomationTest {
         List<TagGroupsMutation> tagOverrides = new ArrayList<>();
         tagOverrides.add(TagGroupsMutation.newRemoveTagsMutation("foo", tagSet("one", "two")));
         tagOverrides.add(TagGroupsMutation.newSetTagsMutation("bar", tagSet("a")));
-        when(mockAudienceManager.getTagOverrides()).thenReturn(tagOverrides);
 
         List<AttributeMutation> attributeOverrides = new ArrayList<>();
         attributeOverrides.add(AttributeMutation.newRemoveAttributeMutation("foo", 100));
         attributeOverrides.add(AttributeMutation.newRemoveAttributeMutation("bar", 100));
-        when(mockAudienceManager.getAttributeOverrides()).thenReturn(attributeOverrides);
+
+        audienceOverridesProvider.recordChannelUpdate("some channel", tagOverrides, attributeOverrides, null);
 
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", triggerContext, tagOverrides, attributeOverrides))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, message)));
@@ -332,7 +329,7 @@ public class InAppAutomationTest {
                                                                                  .build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", triggerContext, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", triggerContext, null, null))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(false, null)));
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -412,7 +409,7 @@ public class InAppAutomationTest {
                                                                                  .build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -451,7 +448,7 @@ public class InAppAutomationTest {
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(400, null));
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -459,7 +456,7 @@ public class InAppAutomationTest {
 
         verifyNoInteractions(callback);
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
         runLooperTasks();
 
@@ -475,7 +472,7 @@ public class InAppAutomationTest {
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenThrow(new RequestException("neat"))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
 
@@ -496,7 +493,7 @@ public class InAppAutomationTest {
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenThrow(new RequestException("neat"));
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -527,7 +524,7 @@ public class InAppAutomationTest {
                 .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                 .build();
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(409, null));
 
         doAnswer((Answer) invocation -> {
@@ -559,7 +556,7 @@ public class InAppAutomationTest {
             put("Retry-After", "60");
         }};
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(429, null, null, headers));
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -567,7 +564,7 @@ public class InAppAutomationTest {
 
         verifyNoInteractions(callback);
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://fakeLocation.com"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://fakeLocation.com"), "some channel", null, null, null))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
 
         runLooperTasks();
@@ -585,7 +582,7 @@ public class InAppAutomationTest {
                 .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                 .build();
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(429, null))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
 
@@ -612,10 +609,10 @@ public class InAppAutomationTest {
             put("Retry-After", "60");
         }};
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(307, null, null, headers));
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://fakeLocation.com"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://fakeLocation.com"), "some channel", null, null, null))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -638,7 +635,7 @@ public class InAppAutomationTest {
                 .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                 .build();
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, EMPTY_TAG_OVERRIDES, EMPTY_ATTRIBUTE_OVERRIDES))
+        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(307, null))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
 

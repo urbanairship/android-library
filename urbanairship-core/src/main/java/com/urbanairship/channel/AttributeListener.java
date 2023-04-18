@@ -17,5 +17,5 @@ public interface AttributeListener {
      *
      * @param attributes The attributes.
      */
-    void onAttributeMutationsUploaded(@NonNull List<AttributeMutation> attributes);
+    void onAttributeMutationsUploaded(@NonNull String identifier, @NonNull List<AttributeMutation> attributes);
 }

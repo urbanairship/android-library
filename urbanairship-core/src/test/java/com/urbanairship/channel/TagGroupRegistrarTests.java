@@ -165,7 +165,7 @@ public class TagGroupRegistrarTests extends BaseTestCase {
         List<TagGroupsMutation> mutations = new ArrayList<>();
 
         @Override
-        public void onTagGroupsMutationUploaded(@NonNull List<TagGroupsMutation> mutations) {
+        public void onTagGroupsMutationUploaded(@NonNull String identifier, @NonNull List<TagGroupsMutation> mutations) {
             this.mutations.addAll(mutations);
         }
     }

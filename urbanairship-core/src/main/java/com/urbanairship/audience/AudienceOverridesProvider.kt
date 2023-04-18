@@ -3,6 +3,7 @@
 package com.urbanairship.audience
 
 import androidx.annotation.RestrictTo
+import androidx.annotation.WorkerThread
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.SubscriptionListMutation
 import com.urbanairship.channel.TagGroupsMutation
@@ -10,6 +11,7 @@ import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListMutation
 import com.urbanairship.util.CachedList
 import com.urbanairship.util.Clock
+import kotlinx.coroutines.runBlocking
 
 /**
  * Tracks and provides audience overrides.
@@ -22,13 +24,19 @@ public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
         internal const val EXPIRY_MS: Long = 600000 // 10 minutes
     }
 
-    internal var stableContactIdDelegate: (suspend () -> String)? = null
-    internal var pendingChannelOverridesDelegate: ((String) -> AudienceOverrides.Channel)? = null
-    internal var pendingContactOverridesDelegate: ((String) -> AudienceOverrides.Contact)? = null
+    public var stableContactIdDelegate: (suspend () -> String)? = null
+    public var pendingChannelOverridesDelegate: ((String) -> AudienceOverrides.Channel)? = null
+    public var pendingContactOverridesDelegate: ((String) -> AudienceOverrides.Contact)? = null
 
     private val updates = CachedList<Record<*>>(clock)
 
-    internal fun recordContactUpdate(
+    public fun setSyncStableContactIdDelegate(delegate: () -> String) {
+        stableContactIdDelegate = {
+            delegate()
+        }
+    }
+
+    public fun recordContactUpdate(
         contactId: String,
         tags: List<TagGroupsMutation>? = null,
         attributes: List<AttributeMutation>? = null,
@@ -38,7 +46,7 @@ public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
         updates.append(Record(contactId, overrides), EXPIRY_MS)
     }
 
-    internal fun recordChannelUpdate(
+    public fun recordChannelUpdate(
         channelId: String,
         tags: List<TagGroupsMutation>? = null,
         attributes: List<AttributeMutation>? = null,
@@ -55,6 +63,13 @@ public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
             } else {
                 null
             }
+        }
+    }
+
+    @WorkerThread
+    public fun contactOverridesSync(contactId: String): AudienceOverrides.Contact {
+        return runBlocking {
+            contactOverrides(contactId)
         }
     }
 
@@ -84,6 +99,14 @@ public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
             tags.ifEmpty { null },
             attributes.ifEmpty { null },
             subscriptions.ifEmpty { null })
+    }
+
+    @JvmOverloads
+    @WorkerThread
+    public fun channelOverridesSync(channelId: String, contactId: String? = null): AudienceOverrides.Channel {
+        return runBlocking {
+             channelOverrides(channelId)
+        }
     }
 
     public suspend fun channelOverrides(channelId: String, contactId: String? = null): AudienceOverrides.Channel {

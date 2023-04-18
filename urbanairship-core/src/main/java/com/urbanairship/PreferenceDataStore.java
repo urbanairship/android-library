@@ -274,6 +274,17 @@ public final class PreferenceDataStore {
         }
     }
 
+    @Nullable
+    public JsonValue optJsonValue(@NonNull String key) {
+        try {
+            return JsonValue.parseString(getPreference(key).get());
+        } catch (JsonException e) {
+            // Should never happen
+            Logger.debug(e, "Unable to parse preference value: %s", key);
+            return null;
+        }
+    }
+
     /**
      * Delete a key/value pair.
      *
