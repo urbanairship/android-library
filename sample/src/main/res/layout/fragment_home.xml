@@ -56,6 +56,28 @@
                 app:layout_constraintVertical_bias="0.302"
                 tools:text="a61635e7-60c5-47e7-b9fb-870754e70a86" />
 
+            <Button
+                android:id="@+id/PopupMessageCenter"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="?colorAccent"
+                android:layout_width="wrap_content"
+                android:layout_height="51dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:lines="1"
+                android:text="Popup Message Center"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Button"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.495"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.502" />
+
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

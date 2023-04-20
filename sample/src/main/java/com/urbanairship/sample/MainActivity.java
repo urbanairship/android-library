@@ -1,6 +1,9 @@
 package com.urbanairship.sample;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.Bundle;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -12,6 +15,7 @@ import com.urbanairship.messagecenter.MessageCenter;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
@@ -144,5 +148,23 @@ public class MainActivity extends AppCompatActivity {
                                         });
 
         messageCenterSnackbar.show();
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        Locale locale = Locale.FRANCE;
+        Context context = SetContextLocale(base, locale);
+        super.attachBaseContext(context);
+    }
+
+    public static Context SetContextLocale(Context context, Locale locale)
+    {
+        Locale.setDefault(locale);
+
+        Resources res = context.getResources();
+        Configuration config = new Configuration(res.getConfiguration());
+        config.setLocale(locale);
+        context = context.createConfigurationContext(config);
+        return context;
     }
 }

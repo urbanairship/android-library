@@ -36,7 +36,8 @@ public class SampleAutopilot extends Autopilot {
             airship.getPushManager().setUserNotificationsEnabled(true);
         }
 
-        MessageCenter.shared().setOnShowMessageCenterListener(messageId -> {
+        //disabled - we use the inbuilt popup version (which is what we're having trouble converting), not an embedded inbox
+        /*MessageCenter.shared().setOnShowMessageCenterListener(messageId -> {
             // Use an implicit navigation deep link for now as explicit deep links are broken
             // with multi navigation host fragments
             Uri uri;
@@ -52,7 +53,7 @@ public class SampleAutopilot extends Autopilot {
 
             UAirship.getApplicationContext().startActivity(intent);
             return true;
-        });
+        });*/
 
         AirshipListener airshipListener = new AirshipListener();
         airship.getPushManager().addPushListener(airshipListener);
