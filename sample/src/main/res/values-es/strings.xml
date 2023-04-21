@@ -1,0 +1,46 @@
+<!-- Note:
+    These translations were machine translated without
+    verification and are for demonstration purposes only. -->
+<resources>
+    <string name="app_name">Sample</string>
+    <string name="inbox">Bandeja de entrada</string>
+    <string name="home">Hogar</string>
+    <string name="settings">Ajustes</string>
+    <string name="debug">Depurar</string>
+    <string name="message">Mensaje</string>
+
+    <string name="delete">Borrar</string>
+    <string name="ok">OK</string>
+
+    <string name="user_preference_category_title">Ajustes de usuario</string>
+    <string name="locale_preference_category_title">Configuración regional</string>
+
+    <string name="airship_preference_category_title">Configuración del Airship</string>
+    <string name="data_collection_enabled_setting">Habilitar la recopilación de datos</string>
+    <string name="push_preference_title">Permite empujar</string>
+    <string name="location_preference_title">Habilitar actualizaciones de ubicación</string>
+    <string name="background_location_preference_title">Permitir ubicación de fondo</string>
+    <string name="analytics_preference_title">Enviar datos de uso</string>
+    <string name="analytics_ad_id_preference_title">Rastrear ID de publicidad</string>
+    <string name="set_named_user_preference_title">Usuario designado</string>
+    <string name="add_tags_preference_title">Etiquetas</string>
+    <string name="channel_id_preference_title">Canal ID</string>
+    <string name="duplicate_tag_warning">La etiqueta ya existe</string>
+    <string name="channel_id">Channel</string>
+    <string name="button_preferences">preferencias</string>
+    <string name="toast_channel_clipboard">Canal copiado al portapapeles</string>
+    <string name="current_tags">Etiquetas actuales</string>
+    <string name="current_locale">Configuración regional actual</string>
+    <string name="default_locale">Configuración regional predeterminada</string>
+    <string name="locale_override">Anulación de configuración regional</string>
+
+    <!-- Message Center Indicator -->
+    <string name="view">Vista</string>
+
+    <plurals name="mc_indicator_text">
+        <item quantity="one">%d mensaje no leído</item>
+        <item quantity="many">%d mensajes no leídos</item>
+        <item quantity="other">%d mensajes no leídos</item>
+    </plurals>
+
+</resources>

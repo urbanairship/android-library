@@ -16,7 +16,6 @@
             app:iconSpaceReserved="false"
             app:title="@string/data_collection_enabled_setting" />
 
-
         <com.urbanairship.preference.PushEnablePreference
             app:dependency="data_enabled"
             app:key="push_preference"
@@ -69,6 +68,24 @@
             app:iconSpaceReserved="false"
             app:persistent="false"
             app:title="@string/add_tags_preference_title" />
+
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        app:title="@string/locale_preference_category_title"
+        app:iconSpaceReserved="false">
+
+        <com.urbanairship.debug.deviceinfo.preferences.LocalePreference
+            app:key="current_locale"
+            app:persistent="false"
+            app:title="@string/ua_current_locale_settings_title" />
+
+        <androidx.preference.ListPreference
+            app:key="locale_override"
+            app:persistent="false"
+            app:title="@string/locale_override"
+            app:entryValues="@array/locale_codes"
+            app:entries="@array/locale_labels" />
 
     </androidx.preference.PreferenceCategory>
 

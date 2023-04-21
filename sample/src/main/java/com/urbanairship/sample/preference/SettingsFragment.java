@@ -7,16 +7,27 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.sample.R;
+
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.os.LocaleListCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
+import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Settings fragment.
@@ -57,6 +68,13 @@ public class SettingsFragment extends Fragment {
         }
 
         @Override
+        public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+
+            setupLocaleOverridePreference();
+        }
+
+        @Override
         public boolean onPreferenceTreeClick(Preference preference) {
             View view = getView();
             if (view != null && TAGS_KEY.equals(preference.getKey())) {
@@ -64,6 +82,22 @@ public class SettingsFragment extends Fragment {
             }
 
             return super.onPreferenceTreeClick(preference);
+        }
+
+        private void setupLocaleOverridePreference() {
+            ListPreference localeOverride = requireNonNull(findPreference("locale_override"));
+
+            localeOverride.setOnPreferenceChangeListener((preference, newValue) -> {
+                if (newValue == "default") {
+                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList());
+                    UAirship.shared().setLocaleOverride(Locale.forLanguageTag((String) newValue));
+                } else {
+                    LocaleListCompat override = LocaleListCompat.forLanguageTags((String) newValue);
+                    AppCompatDelegate.setApplicationLocales(override);
+                    UAirship.shared().setLocaleOverride(Locale.forLanguageTag((String) newValue));
+                }
+                return true;
+            });
         }
 
     }

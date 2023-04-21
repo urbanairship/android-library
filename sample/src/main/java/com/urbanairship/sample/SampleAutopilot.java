@@ -36,23 +36,24 @@ public class SampleAutopilot extends Autopilot {
             airship.getPushManager().setUserNotificationsEnabled(true);
         }
 
-        MessageCenter.shared().setOnShowMessageCenterListener(messageId -> {
-            // Use an implicit navigation deep link for now as explicit deep links are broken
-            // with multi navigation host fragments
-            Uri uri;
-            if (messageId != null) {
-                uri = Uri.parse("vnd.urbanairship.sample://deepLink/inbox/message/" + messageId);
-            } else {
-                uri = Uri.parse("vnd.urbanairship.sample://deepLink/inbox");
-            }
-
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri)
-                    .setPackage(UAirship.getPackageName())
-                    .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            UAirship.getApplicationContext().startActivity(intent);
-            return true;
-        });
+        // Commented out to use the default Message Center UI provided by the SDK.
+//        MessageCenter.shared().setOnShowMessageCenterListener(messageId -> {
+//            // Use an implicit navigation deep link for now as explicit deep links are broken
+//            // with multi navigation host fragments
+//            Uri uri;
+//            if (messageId != null) {
+//                uri = Uri.parse("vnd.urbanairship.sample://deepLink/inbox/message/" + messageId);
+//            } else {
+//                uri = Uri.parse("vnd.urbanairship.sample://deepLink/inbox");
+//            }
+//
+//            Intent intent = new Intent(Intent.ACTION_VIEW, uri)
+//                    .setPackage(UAirship.getPackageName())
+//                    .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//
+//            UAirship.getApplicationContext().startActivity(intent);
+//            return true;
+//        });
 
         AirshipListener airshipListener = new AirshipListener();
         airship.getPushManager().addPushListener(airshipListener);

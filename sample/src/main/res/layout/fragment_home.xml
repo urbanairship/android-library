@@ -56,6 +56,18 @@
                 app:layout_constraintVertical_bias="0.302"
                 tools:text="a61635e7-60c5-47e7-b9fb-870754e70a86" />
 
+            <Button
+                android:id="@+id/open_mc"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                tools:ignore="HardcodedText"
+                android:text="Show Message Center"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/channelId" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

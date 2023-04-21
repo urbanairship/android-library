@@ -8,8 +8,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ClipboardAction;
+import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.sample.R;
 import com.urbanairship.sample.databinding.FragmentHomeBinding;
 
@@ -41,6 +43,10 @@ public class HomeFragment extends Fragment {
                                      .show();
                             });
         });
+
+        binding.openMc.setOnClickListener(v ->
+            MessageCenter.shared().showMessageCenter()
+        );
 
         return binding.getRoot();
     }

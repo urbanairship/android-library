@@ -11,6 +11,7 @@
     <string name="ok">OK</string>
 
     <string name="user_preference_category_title">User Settings</string>
+    <string name="locale_preference_category_title">Locale Settings</string>
 
     <string name="airship_preference_category_title">Airship Settings</string>
     <string name="data_collection_enabled_setting">Enable Data Collection</string>
@@ -27,6 +28,9 @@
     <string name="button_preferences">Preferences</string>
     <string name="toast_channel_clipboard">Channel copied to clipboard</string>
     <string name="current_tags">Current Tags</string>
+    <string name="current_locale">Current Locale</string>
+    <string name="default_locale">Default Locale</string>
+    <string name="locale_override">Locale Override</string>
 
     <!-- Message Center Indicator -->
     <string name="view">View</string>

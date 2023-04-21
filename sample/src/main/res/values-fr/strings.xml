@@ -1,0 +1,46 @@
+<!-- Note:
+    These translations were machine translated without
+    verification and are for demonstration purposes only. -->
+<resources>
+    <string name="app_name">Sample</string>
+    <string name="inbox">Boîte de réception</string>
+    <string name="home">Maison</string>
+    <string name="settings">Paramètres</string>
+    <string name="debug">Déboguer</string>
+    <string name="message">Message</string>
+
+
+    <string name="delete">Supprimer</string>
+    <string name="ok">OK</string>
+
+    <string name="user_preference_category_title">Paramètres utilisateur</string>
+    <string name="locale_preference_category_title">Paramètres régionaux</string>
+
+    <string name="airship_preference_category_title">Paramètres du Airship</string>
+    <string name="data_collection_enabled_setting">Activer la collecte de données</string>
+    <string name="push_preference_title">Activer la poussée</string>
+    <string name="location_preference_title">Activer les mises à jour de localisation</string>
+    <string name="background_location_preference_title">Autoriser l\'emplacement en arrière-plan</string>
+    <string name="analytics_preference_title">Envoyer les données d\'utilisation</string>
+    <string name="analytics_ad_id_preference_title">Suivre l\'identifiant publicitaire</string>
+    <string name="set_named_user_preference_title">Utilisateur nommé</string>
+    <string name="add_tags_preference_title">Mots clés</string>
+    <string name="channel_id_preference_title">Identifiant de la chaine</string>
+    <string name="duplicate_tag_warning">La balise existe déjà</string>
+    <string name="channel_id">Channel</string>
+    <string name="button_preferences">Préférences</string>
+    <string name="toast_channel_clipboard">Chaîne copiée dans le presse-papiers</string>
+    <string name="current_tags">Balises actuelles</string>
+    <string name="current_locale">Paramètres régionaux actuels</string>
+    <string name="default_locale">Paramètres régionaux par défaut</string>
+    <string name="locale_override">Remplacement des paramètres régionaux</string>
+
+    <!-- Message Center Indicator -->
+    <string name="view">Voir</string>
+
+    <plurals name="mc_indicator_text">
+        <item quantity="one">%d message non lu</item>
+        <item quantity="other">%d messages non lus</item>
+    </plurals>
+
+</resources>

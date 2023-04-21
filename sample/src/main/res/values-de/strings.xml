@@ -1,0 +1,46 @@
+<!-- Note:
+    These translations were machine translated without
+    verification and are for demonstration purposes only. -->
+<resources>
+    <string name="app_name">Sample</string>
+    <string name="inbox">Posteingang</string>
+    <string name="home">Heim</string>
+    <string name="settings">Einstellungen</string>
+    <string name="debug">Debuggen</string>
+    <string name="message">Nachricht</string>
+
+
+    <string name="delete">Löschen</string>
+    <string name="ok">OK</string>
+
+    <string name="user_preference_category_title">Benutzereinstellungen</string>
+    <string name="locale_preference_category_title">Gebietsschema-Einstellungen</string>
+
+    <string name="airship_preference_category_title">Airship-Einstellungen</string>
+    <string name="data_collection_enabled_setting">Datenerfassung aktivieren</string>
+    <string name="push_preference_title">Push einschalten</string>
+    <string name="location_preference_title">Aktivieren Sie Standortaktualisierungen</string>
+    <string name="background_location_preference_title">Hintergrundspeicherort zulassen</string>
+    <string name="analytics_preference_title">Nutzungsdaten senden</string>
+    <string name="analytics_ad_id_preference_title">Werbe-ID verfolgen</string>
+    <string name="set_named_user_preference_title">Benannter Benutzer</string>
+    <string name="add_tags_preference_title">Stichworte</string>
+    <string name="channel_id_preference_title">Kanal ID</string>
+    <string name="duplicate_tag_warning">Tag existiert bereits</string>
+    <string name="channel_id">Channel</string>
+    <string name="button_preferences">Einstellungen</string>
+    <string name="toast_channel_clipboard">Kanal in die Zwischenablage kopiert</string>
+    <string name="current_tags">Aktuelle Tags</string>
+    <string name="current_locale">Aktuelles Gebietsschema</string>
+    <string name="default_locale">Standardgebietsschema</string>
+    <string name="locale_override">Gebietsschema überschreiben</string>
+
+    <!-- Message Center Indicator -->
+    <string name="view">Sicht</string>
+
+    <plurals name="mc_indicator_text">
+        <item quantity="one">%d ungelesene Nachricht</item>
+        <item quantity="other">%d ungelesene Nachrichten</item>
+    </plurals>
+
+</resources>

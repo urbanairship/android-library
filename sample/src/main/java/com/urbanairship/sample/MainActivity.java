@@ -1,10 +1,13 @@
 package com.urbanairship.sample;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
+import com.urbanairship.Logger;
+import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.messagecenter.InboxListener;
 import com.urbanairship.messagecenter.Message;
@@ -12,12 +15,15 @@ import com.urbanairship.messagecenter.MessageCenter;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
+import androidx.core.os.LocaleListCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -34,6 +40,11 @@ public class MainActivity extends AppCompatActivity {
      * Remember the sent date of the last received [RichPushMessage].
      */
     private static final String LAST_MESSAGE_SENT_DATE = "LAST_MC_SENT_DATE";
+
+    /**
+     * Preference key for storing whether per-app language setting migration has been completed.
+     */
+    private static final String KEY_MIGRATED_PER_APP_LANGUAGE = "KEY_MIGRATED_PER_APP_LANGUAGE";
 
     private static final Set<Integer> TOP_LEVEL_DESTINATIONS = new HashSet<Integer>() {{
         add(R.id.homeFragment);
@@ -67,6 +78,21 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             messageCenterLastSentDate = savedInstanceState.getLong(LAST_MESSAGE_SENT_DATE);
         }
+
+        SharedPreferences prefs = getSharedPreferences("com.urbanairship.sample", MODE_PRIVATE);
+        if (!prefs.getBoolean(KEY_MIGRATED_PER_APP_LANGUAGE, false)) {
+            prefs.edit().putBoolean(KEY_MIGRATED_PER_APP_LANGUAGE, true).apply();
+
+            // TODO: replace with your own logic to migrate per-app language settings.
+            Locale userPreferredLocale = Locale.getDefault();
+
+            // Migrate the per-app language setting to the new AndroidX implementation.
+            // See: https://developer.android.com/guide/topics/resources/app-languages#androidx-impl
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.create(userPreferredLocale));
+        }
+
+        LocaleListCompat locales = AppCompatDelegate.getApplicationLocales();
+        UAirship.shared().setLocaleOverride(Locale.forLanguageTag(locales.toLanguageTags()));
     }
 
     @Override

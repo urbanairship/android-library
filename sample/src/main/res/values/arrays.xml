@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="locale_labels">
+        <item>System Default (no override)</item>
+        <item>English</item>
+        <item>French</item>
+        <item>Spanish</item>
+        <item>German</item>
+    </string-array>
+
+    <string-array name="locale_codes">
+        <item>default</item>
+        <item>en</item>
+        <item>fr</item>
+        <item>es</item>
+        <item>de</item>
+    </string-array>
+</resources>
