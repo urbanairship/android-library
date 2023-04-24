@@ -7,8 +7,6 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 
-import androidx.annotation.Nullable;
-
 public class LoggerTest extends BaseTestCase {
 
     /**
@@ -21,26 +19,22 @@ public class LoggerTest extends BaseTestCase {
         final Throwable error = new IllegalArgumentException("Oh no");
         final ArrayList<String> called = new ArrayList<>();
 
-        LoggerListener myListener = new LoggerListener() {
-            @Override
-            public void onLog(int priority, @Nullable Throwable throwable, @Nullable String message) {
+        LogHandler myLogger = (tag, logLevel, throwable, message) -> {
+            Assert.assertEquals(logLevel, Log.ERROR);
+            Assert.assertEquals(error, throwable);
+            Assert.assertEquals(errorMessage, message.invoke());
 
-                Assert.assertEquals(priority, Log.ERROR);
-                Assert.assertEquals(error, throwable);
-                Assert.assertEquals(errorMessage, message);
-
-                called.add(message);
-            }
+            called.add(message.invoke());
         };
 
-        Logger.addListener(myListener);
+        Logger.setLogHandler(myLogger);
 
         Logger.error(error, errorMessage);
 
         Assert.assertEquals(called.size(), 1);
         Assert.assertEquals(called.get(0), errorMessage);
 
-        Logger.removeListener(myListener);
+        Logger.setLogHandler(new DefaultLogHandler());
     }
 
     @Test
@@ -51,22 +45,19 @@ public class LoggerTest extends BaseTestCase {
         final String prefixedMessage = String.format("%s - %s", getClass().getSimpleName(), rawMessage);
         final ArrayList<String> called = new ArrayList<>();
 
-        LoggerListener listener = new LoggerListener() {
-            @Override
-            public void onLog(int priority, @Nullable Throwable throwable, @Nullable String message) {
-                Assert.assertNull(throwable);
+        LogHandler myLogger = (tag, logLevel, throwable, message) -> {
+            Assert.assertNull(throwable);
 
-                if (priority == Log.DEBUG || priority == Log.VERBOSE) {
-                    Assert.assertEquals(prefixedMessage, message);
-                } else {
-                    Assert.assertEquals(rawMessage, message);
-                }
-
-                called.add(message);
+            if (logLevel == Log.DEBUG || logLevel == Log.VERBOSE) {
+                Assert.assertEquals(prefixedMessage, message.invoke());
+            } else {
+                Assert.assertEquals(rawMessage, message.invoke());
             }
+
+            called.add(message.invoke());
         };
 
-        Logger.addListener(listener);
+        Logger.setLogHandler(myLogger);
 
         // Make sure we properly add the prefix to the raw message
         Logger.verbose(rawMessage);
@@ -91,6 +82,6 @@ public class LoggerTest extends BaseTestCase {
         Assert.assertEquals(5, called.size());
         Assert.assertEquals(rawMessage, called.get(4));
 
-        Logger.removeListener(listener);
+        Logger.setLogHandler(new DefaultLogHandler());
     }
 }
