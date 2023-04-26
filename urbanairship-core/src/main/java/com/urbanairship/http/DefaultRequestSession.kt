@@ -5,6 +5,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.UAirship
 import com.urbanairship.util.PlatformUtils
+import kotlinx.coroutines.runBlocking
 
 /**
  * Parses a response.
@@ -34,7 +35,7 @@ public class DefaultRequestSession : RequestSession {
 
         this.defaultHeaders = mapOf(
             "X-UA-App-Key" to configOptions.appKey,
-            "User-Agent" to "(UrbanAirshipLib-${PlatformUtils.asString(platform)}/${UAirship.getVersion()}; $configOptions.appKey)"
+            "User-Agent" to "(UrbanAirshipLib-${PlatformUtils.asString(platform)}/${UAirship.getVersion()}; ${configOptions.appKey})"
         )
     }
 
@@ -108,14 +109,16 @@ public class DefaultRequestSession : RequestSession {
             is RequestAuth.BasicAppAuth -> {
                 val credentials = configOptions.appKey + ":" + configOptions.appSecret
                 ResolvedAuth(
-                    prefix = "Basic", token = Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
+                    prefix = "Basic",
+                    token = Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
                 )
             }
 
             is RequestAuth.BasicAuth -> {
                 val credentials = auth.user + ":" + auth.password
                 ResolvedAuth(
-                    prefix = "Basic", token = Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
+                    prefix = "Basic",
+                    token = Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
                 )
             }
 
@@ -126,14 +129,14 @@ public class DefaultRequestSession : RequestSession {
             }
 
             is RequestAuth.ChannelTokenAuth -> {
-                val token = requireNotNull(channelAuthTokenProvider).fetchToken(auth.channelId)
+                val token = getToken(auth.channelId, requireNotNull(channelAuthTokenProvider))
                 ResolvedAuth(
                     prefix = "Bearer", token = token, isAuthToken = true
                 )
             }
 
             is RequestAuth.ContactTokenAuth -> {
-                val token = requireNotNull(contactAuthTokenProvider).fetchToken(auth.contactId)
+                val token = getToken(auth.contactId, requireNotNull(contactAuthTokenProvider))
                 ResolvedAuth(
                     prefix = "Bearer", token = token, isAuthToken = true
                 )
@@ -143,10 +146,23 @@ public class DefaultRequestSession : RequestSession {
 
     private fun expireAuth(auth: RequestAuth, token: String) {
         when (auth) {
-            is RequestAuth.ChannelTokenAuth -> channelAuthTokenProvider?.expireToken(token)
-            is RequestAuth.ContactTokenAuth -> contactAuthTokenProvider?.expireToken(token)
+            is RequestAuth.ChannelTokenAuth -> runBlocking {
+                channelAuthTokenProvider?.expireToken(token)
+            }
+            is RequestAuth.ContactTokenAuth -> runBlocking {
+                contactAuthTokenProvider?.expireToken(token)
+            }
             else -> {}
         }
+    }
+
+    private fun getToken(identifier: String, provider: AuthTokenProvider): String {
+        val result = runBlocking {
+            val result = provider.fetchToken(identifier)
+            result
+        }
+
+        return result.getOrThrow()
     }
 
     private data class RequestResult<T>(val shouldRetry: Boolean, val response: Response<T>)

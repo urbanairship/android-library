@@ -1,6 +1,12 @@
 package com.urbanairship.http
 
+import androidx.annotation.RestrictTo
+
+/**
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface AuthTokenProvider {
-    public fun fetchToken(identifier: String): String
-    public fun expireToken(token: String)
+    public suspend fun fetchToken(identifier: String): Result<String>
+    public suspend fun expireToken(token: String)
 }

@@ -5,6 +5,8 @@ import android.util.Base64
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.UAirship
 import com.urbanairship.util.PlatformUtils
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.just
@@ -12,6 +14,8 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -37,7 +41,7 @@ public class DefaultRequestSessionTest {
 
     private val expectedDefaultHeaders = mapOf(
         "X-UA-App-Key" to appConfig.appKey,
-        "User-Agent" to "(UrbanAirshipLib-${PlatformUtils.asString(platform)}/${UAirship.getVersion()}; $appConfig.appKey)"
+        "User-Agent" to "(UrbanAirshipLib-${PlatformUtils.asString(platform)}/${UAirship.getVersion()}; ${appConfig.appKey})"
     )
 
     private val requestSession = DefaultRequestSession(
@@ -161,7 +165,7 @@ public class DefaultRequestSessionTest {
     }
 
     @Test
-    public fun testChannelAuthToken() {
+    public fun testChannelAuthToken(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.ChannelTokenAuth("some channel ID"),
@@ -169,8 +173,10 @@ public class DefaultRequestSessionTest {
             headers = mapOf("foo" to "bar")
         )
 
+        coEvery {
+            mockAuthProvider.fetchToken("some channel ID")
+        } returns Result.success("some auth token")
         requestSession.channelAuthTokenProvider = mockAuthProvider
-        every { mockAuthProvider.fetchToken("some channel ID") } returns "some auth token"
 
         val expectedHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
         expectedHeaders["Authorization"] = "Bearer some auth token"
@@ -214,7 +220,9 @@ public class DefaultRequestSessionTest {
         )
 
         requestSession.channelAuthTokenProvider = mockAuthProvider
-        every { mockAuthProvider.fetchToken("some channel ID") } throws IllegalArgumentException("neat")
+        coEvery { mockAuthProvider.fetchToken("some channel ID") } returns Result.failure(
+            IllegalArgumentException("neat")
+        )
 
         every<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
@@ -233,19 +241,20 @@ public class DefaultRequestSessionTest {
         )
 
         requestSession.channelAuthTokenProvider = mockAuthProvider
-        every { mockAuthProvider.fetchToken("some channel ID") } returnsMany listOf("first", "second")
-        every { mockAuthProvider.expireToken("first") } just runs
+        coEvery { mockAuthProvider.fetchToken("some channel ID") } returnsMany listOf(
+            Result.success("first"), Result.success("second")
+        )
+
+        coEvery { mockAuthProvider.expireToken("first") } just runs
 
         every<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returnsMany listOf(
-            Response(401, "neat", "neat", emptyMap()),
-            Response(200, "neat", "neat", emptyMap())
+            Response(401, "neat", "neat", emptyMap()), Response(200, "neat", "neat", emptyMap())
         )
 
         assertEquals(
-            Response(200, "neat", "neat", emptyMap()),
-            requestSession.execute(request, testParser)
+            Response(200, "neat", "neat", emptyMap()), requestSession.execute(request, testParser)
         )
 
         val firstRequestHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
@@ -263,12 +272,12 @@ public class DefaultRequestSessionTest {
             )
         }
 
-        verify {
+        coVerify {
             mockAuthProvider.fetchToken("some channel ID")
             mockAuthProvider.fetchToken("some channel ID")
         }
 
-        verify { mockAuthProvider.expireToken("first") }
+        coVerify { mockAuthProvider.expireToken("first") }
 
         confirmVerified(mockClient)
         confirmVerified(mockAuthProvider)
@@ -284,7 +293,7 @@ public class DefaultRequestSessionTest {
         )
 
         requestSession.contactAuthTokenProvider = mockAuthProvider
-        every { mockAuthProvider.fetchToken("some contact ID") } returns "some auth token"
+        coEvery { mockAuthProvider.fetchToken("some contact ID") } returns Result.success("some auth token")
 
         val expectedHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
         expectedHeaders["Authorization"] = "Bearer some auth token"
@@ -328,7 +337,7 @@ public class DefaultRequestSessionTest {
         )
 
         requestSession.contactAuthTokenProvider = mockAuthProvider
-        every { mockAuthProvider.fetchToken("some contact ID") } throws IllegalArgumentException("neat")
+        coEvery { mockAuthProvider.fetchToken("some contact ID") } throws IllegalArgumentException("neat")
 
         every<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
@@ -347,19 +356,19 @@ public class DefaultRequestSessionTest {
         )
 
         requestSession.contactAuthTokenProvider = mockAuthProvider
-        every { mockAuthProvider.fetchToken("some contact ID") } returnsMany listOf("first", "second")
-        every { mockAuthProvider.expireToken("first") } just runs
+        coEvery { mockAuthProvider.fetchToken("some contact ID") } returnsMany listOf(
+            Result.success("first"), Result.success("second")
+        )
+        coEvery { mockAuthProvider.expireToken("first") } just runs
 
         every<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returnsMany listOf(
-            Response(401, "neat", "neat", emptyMap()),
-            Response(200, "neat", "neat", emptyMap())
+            Response(401, "neat", "neat", emptyMap()), Response(200, "neat", "neat", emptyMap())
         )
 
         assertEquals(
-            Response(200, "neat", "neat", emptyMap()),
-            requestSession.execute(request, testParser)
+            Response(200, "neat", "neat", emptyMap()), requestSession.execute(request, testParser)
         )
 
         val firstRequestHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
@@ -377,12 +386,12 @@ public class DefaultRequestSessionTest {
             )
         }
 
-        verify {
+        coVerify {
             mockAuthProvider.fetchToken("some contact ID")
             mockAuthProvider.fetchToken("some contact ID")
         }
 
-        verify { mockAuthProvider.expireToken("first") }
+        coVerify { mockAuthProvider.expireToken("first") }
 
         confirmVerified(mockClient)
         confirmVerified(mockAuthProvider)

@@ -19,13 +19,11 @@ import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
-import com.urbanairship.audience.AudienceOverrides;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
-import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
 import com.urbanairship.contacts.Contact;
 import com.urbanairship.http.DefaultRequestSession;
@@ -718,11 +716,6 @@ public class UAirship {
 
         RemoteAirshipUrlConfigProvider remoteAirshipUrlConfigProvider = new RemoteAirshipUrlConfigProvider(airshipConfigOptions, preferenceDataStore);
         this.runtimeConfig = new AirshipRuntimeConfig(platformProvider, airshipConfigOptions, remoteAirshipUrlConfigProvider, requestSession);
-        remoteAirshipUrlConfigProvider.addUrlConfigListener(() -> {
-            for (AirshipComponent component : components) {
-                component.onUrlConfigUpdated();
-            }
-        });
 
         this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, localeManager, audienceOverridesProvider);
         requestSession.setChannelAuthTokenProvider(this.channel.authTokenProvider);
@@ -758,8 +751,9 @@ public class UAirship {
         this.remoteConfigManager.addRemoteAirshipConfigListener(remoteAirshipUrlConfigProvider);
         components.add(this.remoteConfigManager);
 
-        this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel, audienceOverridesProvider);
+        this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, audienceOverridesProvider);
         components.add(this.contact);
+        requestSession.setContactAuthTokenProvider(this.contact.getAuthTokenProvider());
 
         //noinspection deprecation
         this.namedUser = new NamedUser(application, preferenceDataStore, contact);
@@ -799,6 +793,12 @@ public class UAirship {
         // Preference Center
         Module preferenceCenter = Modules.preferenceCenter(application, preferenceDataStore, privacyManager, remoteData);
         processModule(preferenceCenter);
+
+        remoteAirshipUrlConfigProvider.addUrlConfigListener(() -> {
+            for (AirshipComponent component : components) {
+                component.onUrlConfigUpdated();
+            }
+        });
 
         for (AirshipComponent component : components) {
             component.init();

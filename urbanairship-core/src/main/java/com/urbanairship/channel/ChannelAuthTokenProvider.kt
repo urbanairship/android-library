@@ -6,76 +6,67 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.AuthToken
 import com.urbanairship.http.AuthTokenProvider
 import com.urbanairship.http.RequestException
+import com.urbanairship.util.CachedValue
 import com.urbanairship.util.Clock
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
+import com.urbanairship.util.SerialQueue
 
 /**
- * Auth manager.
+ * Channel Auth provider.
  *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class ChannelAuthTokenProvider : AuthTokenProvider {
+internal class ChannelAuthTokenProvider(
+    private val apiClient: ChannelAuthApiClient,
+    private val clock: Clock = Clock.DEFAULT_CLOCK,
+    private val channelIDProvider: () -> String
+) : AuthTokenProvider {
 
-    private val apiClient: ChannelAuthApiClient
-    private val channelIDProvider: () -> String?
-
-    private val lock = ReentrantLock()
-    private val clock: Clock
-    private var cachedAuth: AuthToken? = null
+    private var cachedAuth = CachedValue<AuthToken>(clock)
+    private var queue = SerialQueue()
 
     constructor(runtimeConfig: AirshipRuntimeConfig, channelIDProvider: () -> String) : this(
-        ChannelAuthApiClient(runtimeConfig),
-        Clock.DEFAULT_CLOCK,
-        channelIDProvider
+        apiClient = ChannelAuthApiClient(runtimeConfig),
+        channelIDProvider = channelIDProvider
     )
 
-    constructor(apiClient: ChannelAuthApiClient, clock: Clock, channelIDProvider: () -> String) {
-        this.apiClient = apiClient
-        this.channelIDProvider = channelIDProvider
-        this.clock = clock
-    }
-
     private fun getCachedToken(channelId: String): String? {
-        val token = cachedAuth ?: return null
+        val token = cachedAuth.get() ?: return null
 
         if (channelId != token.identifier) {
             return null
         }
 
-        if (clock.currentTimeMillis() > token.expirationTimeMS - 30000) {
+        if (clock.currentTimeMillis() > token.expirationDateMillis - 30000) {
             return null
         }
 
         return token.token
     }
 
-    override fun fetchToken(identifier: String): String {
-        lock.withLock {
-            val channelId: String = requireNotNull(this.channelIDProvider())
-            require(channelId == identifier)
+    override suspend fun fetchToken(identifier: String): Result<String> = queue.run {
+        val channelId: String = this.channelIDProvider()
+        if (channelId != identifier) {
+            return@run Result.failure(RequestException("Channel mismatch."))
+        }
 
-            val cached = getCachedToken(identifier)
-            if (cached != null) {
-                return cached
-            }
+        val cached = getCachedToken(identifier)
+        if (cached != null) {
+            return@run Result.success(cached)
+        }
 
-            val authResponse = apiClient.getToken(channelId)
-            if (authResponse.isSuccessful && authResponse.result != null) {
-                this.cachedAuth = authResponse.result
-                return authResponse.result.token
-            }
-
-            throw RequestException("Failed to fetch token: ${authResponse.status}")
+        val authResponse = apiClient.getToken(channelId)
+        return@run if (authResponse.isSuccessful && authResponse.value != null) {
+            this.cachedAuth.set(authResponse.value, authResponse.value.expirationDateMillis)
+            Result.success(authResponse.value.token)
+        } else {
+            Result.failure(RequestException("Failed to fetch token: ${authResponse.status}"))
         }
     }
 
-    override fun expireToken(token: String) {
-        lock.withLock {
-            if (cachedAuth?.token == token) {
-                cachedAuth = null
-            }
+    override suspend fun expireToken(token: String) {
+        cachedAuth.expireIf {
+            token == it.token
         }
     }
 }

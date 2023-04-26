@@ -69,7 +69,7 @@ mockito = '4.6.1'
 mockito-kotlin = '4.0.0'
 robolectric = '4.9.2'
 turbine = '0.10.0'
-mockk = '1.12.5'
+mockk = '1.13.5'
 
 # Doc Dependencies
 doclava = '1.0.6'

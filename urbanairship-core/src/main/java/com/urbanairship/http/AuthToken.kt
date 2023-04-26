@@ -9,5 +9,5 @@ import androidx.annotation.RestrictTo
 public data class AuthToken(
     val identifier: String,
     val token: String,
-    val expirationTimeMS: Long
+    val expirationDateMillis: Long
 )

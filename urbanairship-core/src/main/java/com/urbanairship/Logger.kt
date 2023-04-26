@@ -2,6 +2,7 @@
 package com.urbanairship
 
 import android.util.Log
+import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
 import java.util.Locale
 
@@ -10,6 +11,7 @@ import java.util.Locale
  * This class serves to consolidate the tag and log level in a
  * single location.
  */
+@Keep
 public object Logger {
 
     /** List of classes to ignore when prepending names to debug and verbose log messages.  */

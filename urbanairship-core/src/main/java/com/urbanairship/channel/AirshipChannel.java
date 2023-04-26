@@ -20,8 +20,6 @@ import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.audience.AudienceOverrides;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.config.AirshipRuntimeConfig;
-import com.urbanairship.contacts.Scope;
-import com.urbanairship.contacts.ScopedSubscriptionListMutation;
 import com.urbanairship.http.AuthTokenProvider;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
@@ -42,7 +40,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -239,7 +236,7 @@ public class AirshipChannel extends AirshipComponent {
                 tagGroupRegistrar.clearPendingMutations();
                 attributeRegistrar.clearPendingMutations();
                 subscriptionListRegistrar.clearPendingMutations();
-                subscriptionListCache.invalidate();
+                subscriptionListCache.expire();
             }
 
             updateRegistration();
@@ -591,7 +588,7 @@ public class AirshipChannel extends AirshipComponent {
                 // Fallback to fetching
                 subscriptions = subscriptionListRegistrar.fetchChannelSubscriptionLists(channelId);
                 if (subscriptions != null) {
-                    subscriptionListCache.set(new HashSet<>(subscriptions), SUBSCRIPTION_CACHE_LIFETIME_MS);
+                    subscriptionListCache.set(new HashSet<>(subscriptions), clock.currentTimeMillis() + SUBSCRIPTION_CACHE_LIFETIME_MS);
                 }
             }
 

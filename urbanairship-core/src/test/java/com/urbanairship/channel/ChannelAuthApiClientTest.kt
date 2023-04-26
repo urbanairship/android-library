@@ -9,34 +9,50 @@ import com.urbanairship.TestRequestSession
 import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
-import com.urbanairship.http.RequestException
+import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class ChannelAuthApiClientTest {
     private val config = TestAirshipRuntimeConfig.newTestConfig()
     private val requestSession = TestRequestSession()
     private var clock = TestClock()
+    private val testDispatcher = StandardTestDispatcher()
 
     private var nonce = "noncesense"
 
-    private var client = ChannelAuthApiClient(config, requestSession, clock) {
+    private var client = ChannelAuthApiClient(config, requestSession.toSuspendingRequestSession(), clock) {
         nonce
     }
 
     @Before
     public fun setup() {
+        Dispatchers.setMain(testDispatcher)
         clock.currentTimeMillis = 100
         config.urlConfig = AirshipUrlConfig.newBuilder().setDeviceUrl("https://example.com").build()
     }
 
+    @After
+    public fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
     @Test
-    public fun test200Response() {
+    public fun test200Response(): TestResult = runTest {
         requestSession.addResponse(
             200,
             jsonMapOf(
@@ -46,14 +62,14 @@ public class ChannelAuthApiClientTest {
         )
         val response = client.getToken("some channel")
 
-        val result = requireNotNull(response.result)
+        val result = requireNotNull(response.value)
         assertEquals(result.identifier, "some channel")
         assertEquals(result.token, "some token")
-        assertEquals(result.expirationTimeMS, 400)
+        assertEquals(result.expirationDateMillis, 400)
     }
 
     @Test
-    public fun testRequest() {
+    public fun testRequest(): TestResult = runTest {
         requestSession.addResponse(
             200,
             jsonMapOf(
@@ -80,16 +96,16 @@ public class ChannelAuthApiClientTest {
         assertEquals(expectedRequest, requestSession.lastRequest)
     }
 
-    @Test(expected = RequestException::class)
-    public fun testInvalidResponse() {
+    @Test
+    public fun testInvalidResponse(): TestResult = runTest {
         client.getToken("some channel")
     }
 
     @Test
-    public fun testFailed() {
+    public fun testFailed(): TestResult = runTest {
         requestSession.addResponse(404, "{}")
         val response = client.getToken("some channel")
         assertEquals(404, response.status)
-        assertEquals(null, response.result)
+        assertEquals(null, response.value)
     }
 }

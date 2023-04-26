@@ -7,8 +7,9 @@ import com.urbanairship.http.AuthToken
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestException
-import com.urbanairship.http.RequestSession
-import com.urbanairship.http.Response
+import com.urbanairship.http.RequestResult
+import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
@@ -18,12 +19,11 @@ import java.util.UUID
 
 internal class ChannelAuthApiClient(
     private val runtimeConfig: AirshipRuntimeConfig,
-    private val requestSession: RequestSession = runtimeConfig.requestSession,
+    private val requestSession: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession(),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val nonceTokenFactory: () -> String = { UUID.randomUUID().toString() }
 ) {
-    @Throws(RequestException::class)
-    fun getToken(channelId: String): Response<AuthToken?> {
+    suspend fun getToken(channelId: String): RequestResult<AuthToken> {
         val url: Uri? = runtimeConfig.urlConfig
             .deviceUrl()
             .appendEncodedPath("api/auth/device")
@@ -65,7 +65,7 @@ internal class ChannelAuthApiClient(
                     AuthToken(
                         identifier = channelId,
                         token = map.require("token").requireString(),
-                        expirationTimeMS = requestTime + map.require("expires_in").getLong(0)
+                        expirationDateMillis = requestTime + map.require("expires_in").getLong(0)
                     )
                 }
             } else {

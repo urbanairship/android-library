@@ -1,11 +1,24 @@
 package com.urbanairship.json
 
+import com.urbanairship.Logger
+
 public fun jsonMapOf(vararg fields: Pair<String, *>): JsonMap =
     JsonMap.newBuilder().apply {
         for ((k, v) in fields) {
             put(k, JsonValue.wrap(v))
         }
     }.build()
+
+public inline fun <T, R> R.tryParse(logError: Boolean = false, parser: (R) -> T): T? where R : JsonSerializable {
+    return try {
+        parser(this)
+    } catch (e: JsonException) {
+        if (logError) {
+            Logger.error("Failed to parse json", e)
+        }
+        null
+    }
+}
 
 public fun jsonListOf(vararg values: Any): JsonList = JsonList(values.map(JsonValue::wrap))
 

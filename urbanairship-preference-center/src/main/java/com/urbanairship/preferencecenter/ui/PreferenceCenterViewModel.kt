@@ -328,16 +328,9 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             }
         }
 
-    private suspend fun getContactSubscriptions(): Map<String, Set<Scope>> =
-        suspendCancellableCoroutine { continuation ->
-            contact.subscriptionLists.addResultCallback { subscriptions ->
-                if (subscriptions != null) {
-                    continuation.resume(subscriptions)
-                } else {
-                    continuation.resumeWithException(IllegalStateException("Null subscription listing for contact id: ${contact.namedUserId}"))
-                }
-            }
-        }
+    private suspend fun getContactSubscriptions(): Map<String, Set<Scope>> {
+        return contact.fetchSubscriptionLists().getOrThrow()
+    }
 }
 
 /**
