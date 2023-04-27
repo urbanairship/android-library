@@ -3,7 +3,7 @@
 package com.urbanairship.contacts
 
 import androidx.annotation.OpenForTesting
-import com.urbanairship.AirshipExecutors
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
@@ -31,7 +31,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -50,7 +49,7 @@ internal class ContactManager(
     private val localeManager: LocaleManager,
     audienceOverridesProvider: AudienceOverridesProvider,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
-    private val dispatcher: CoroutineDispatcher = AirshipExecutors.newSerialExecutor().asCoroutineDispatcher(),
+    private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) : AuthTokenProvider {
 
     private val identifyOperationQueue = SerialQueue()

@@ -8,7 +8,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipComponentGroups
-import com.urbanairship.AirshipExecutors
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.Logger
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
@@ -39,7 +39,6 @@ import com.urbanairship.util.SerialQueue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -94,7 +93,7 @@ public class Contact internal constructor(
             localeManager,
             audienceOverridesProvider
         ),
-        AirshipExecutors.newSerialExecutor().asCoroutineDispatcher(),
+        AirshipDispatchers.newSerialDispatcher(),
     )
     /**
      * @hide

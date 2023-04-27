@@ -3,9 +3,8 @@
 package com.urbanairship.http
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.AirshipExecutors
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.util.UAHttpStatusUtil
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 /**
@@ -13,8 +12,6 @@ import kotlinx.coroutines.withContext
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class SuspendingRequestSession(private val requestSession: RequestSession) {
-
-    private val dispatcher = AirshipExecutors.threadPoolExecutor().asCoroutineDispatcher()
 
     public suspend fun execute(request: Request): RequestResult<Unit> {
         return execute(request) { _, _, _ -> }
@@ -24,7 +21,7 @@ public class SuspendingRequestSession(private val requestSession: RequestSession
         request: Request,
         parser: ResponseParser<T?>
     ): RequestResult<T> {
-        return withContext(dispatcher) {
+        return withContext(AirshipDispatchers.IO) {
             try {
                 val response = requestSession.execute(request, parser)
                 RequestResult(
