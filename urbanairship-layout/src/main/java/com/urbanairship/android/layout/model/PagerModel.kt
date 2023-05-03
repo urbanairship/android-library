@@ -136,12 +136,6 @@ internal class PagerModel(
                     reportPageSwipe(pagerState.changes.value)
                 }
 
-                // TODO(stories): We could merge these into automatedActions, with 0 delay?
-                // Run any actions for the current page.
-                items[position].displayActions?.let { actions ->
-                    runActions(actions)
-                }
-
                 // Run any automated for the current page.
                 items[position].automatedActions?.let { actions ->
                     // The delay of the earliest navigation action determines the duration of
