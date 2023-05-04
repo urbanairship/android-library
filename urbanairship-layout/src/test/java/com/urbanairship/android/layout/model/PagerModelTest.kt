@@ -20,8 +20,10 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -34,6 +36,8 @@ import org.robolectric.RobolectricTestRunner
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 public class PagerModelTest {
+    private val testDispatcher = StandardTestDispatcher()
+    private val testScope = TestScope(testDispatcher)
 
     private val scrollsFlow = MutableSharedFlow<PagerScrollEvent>()
 
@@ -42,7 +46,7 @@ public class PagerModelTest {
     private val mockEnv: ModelEnvironment = mockk(relaxed = true) {
         every { reporter } returns mockReporter
         every { actionsRunner } returns mockActionsRunner
-        every { modelScope } returns TestScope()
+        every { modelScope } returns testScope
     }
     private val mockView: PagerView = mockk(relaxed = true)
     private val mockViewListener: PagerModel.Listener = mockk(relaxed = true)
@@ -66,6 +70,8 @@ public class PagerModelTest {
 
         mockkStatic(PagerView::pagerScrolls)
         every { mockView.pagerScrolls() } returns scrollsFlow
+
+        testScope.runCurrent()
     }
 
     @Test
@@ -82,7 +88,10 @@ public class PagerModelTest {
         // Verify that the correct number of page items is available via the model
         assertEquals(3, pagerModel.items.size)
 
+        // Verify that the model notified the view to scroll to the first page
         verify { mockViewListener.scrollTo(0) }
+        // Verify that actions were run for the initial page display
+        verify(exactly = 1) { mockActionsRunner.run(any(), any()) }
     }
 
     @Test
@@ -106,10 +115,9 @@ public class PagerModelTest {
             assertTrue(updatedState.hasNext)
             assertTrue(updatedState.hasPrevious)
 
-            verify {
-                mockReporter.report(any(), any())
-                mockActionsRunner.run(any(), any())
-            }
+            // Verify that we reported an event and ran actions
+            verify { mockReporter.report(any(), any()) }
+            verify(exactly = 1) { mockActionsRunner.run(any(), any()) }
 
             ensureAllEventsConsumed()
         }
@@ -136,7 +144,7 @@ public class PagerModelTest {
             assertTrue(updatedState.hasNext)
             assertTrue(updatedState.hasPrevious)
 
-            // Verify that we didn't report an event, but ran any actions for the given page.
+            // Verify that we didn't report an event, but did run actions.
             verify(exactly = 0) { mockReporter.report(any(), any()) }
             verify(exactly = 1) { mockActionsRunner.run(any(), any()) }
 
@@ -149,14 +157,20 @@ public class PagerModelTest {
         pagerModel.onViewAttached(mockView)
 
         verify { mockViewListener.scrollTo(0) }
+        // Verify actions were run for the initial page display
+        verify(exactly = 1) { mockActionsRunner.run(any(), any()) }
 
         pagerState.update { it.copyWithPageIndex(1) }
+        // Run the pending state update task, so the model can process it.
+        testScope.runCurrent()
 
         val state = pagerState.changes.first()
         // Sanity check
         assertEquals(1, state.pageIndex)
 
         verify { mockViewListener.scrollTo(1) }
+        // Verify actions were also run on display of the next page
+        verify(exactly = 2) { mockActionsRunner.run(any(), any()) }
     }
 
     @Test

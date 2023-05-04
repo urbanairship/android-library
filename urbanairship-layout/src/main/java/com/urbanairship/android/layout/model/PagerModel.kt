@@ -21,6 +21,8 @@ import com.urbanairship.android.layout.property.earliestNavigationAction
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 internal class PagerModel(
@@ -88,6 +90,25 @@ internal class PagerModel(
         pagerState.update { state ->
             state.copyWithPageIds(pageIds = items.map { it.identifier })
         }
+
+        // Listen for page changes (or the initial page display)
+        // and run any actions for the current page.
+        modelScope.launch {
+
+            pagerState.changes
+                .map { it.pageIndex to it.lastPageIndex }
+                .filter { (pageIndex, lastPageIndex) ->
+                    // If current and last are both 0, we're initializing the pager.
+                    // Otherwise, we only want to act on changes to the pageIndex.
+                    pageIndex == 0 && lastPageIndex == 0 || pageIndex != lastPageIndex
+                }
+                .collect { (pageIndex, _) ->
+                    // Run any actions for the current page.
+                    items[pageIndex].displayActions?.let { actions ->
+                        runActions(actions)
+                    }
+                }
+        }
     }
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
@@ -96,14 +117,15 @@ internal class PagerModel(
         }
 
     override fun onViewAttached(view: PagerView) {
+        // Collect page index changes from state and tell the view to scroll to the current page.
         viewScope.launch {
             pagerState.changes.collect {
                 listener?.scrollTo(it.pageIndex)
             }
         }
 
-        // TODO(stories): Set up gestures on the view and collect them here.
-
+        // Collect pager scrolls, update pager state, and report
+        // the page swipe if it was triggered by the user.
         viewScope.launch {
             view.pagerScrolls().collect { (position, isInternalScroll) ->
                 pagerState.update { state ->
@@ -112,12 +134,6 @@ internal class PagerModel(
 
                 if (!isInternalScroll) {
                     reportPageSwipe(pagerState.changes.value)
-                }
-
-                // TODO(stories): We could merge these into automatedActions, with 0 delay?
-                // Run any actions for the current page.
-                items[position].displayActions?.let { actions ->
-                    runActions(actions)
                 }
 
                 // Run any automated for the current page.
