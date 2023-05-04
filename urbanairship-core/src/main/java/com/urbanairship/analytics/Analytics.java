@@ -256,9 +256,6 @@ public class Analytics extends AirshipComponent {
             public void onChannelCreated(@NonNull String channelId) {
                 uploadEvents();
             }
-
-            @Override
-            public void onChannelUpdated(@NonNull String channelId) {}
         });
 
         privacyManager.addListener(new PrivacyManager.Listener() {

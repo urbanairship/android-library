@@ -114,7 +114,7 @@ public class MessageCenter extends AirshipComponent {
                          @NonNull AirshipChannel channel,
                          @NonNull PushManager pushManager,
                          @NonNull AirshipConfigOptions configOptions) {
-        this(context, dataStore, privacyManager, new Inbox(context, dataStore, channel, configOptions), pushManager);
+        this(context, dataStore, privacyManager, new Inbox(context, dataStore, channel, configOptions, privacyManager), pushManager);
     }
 
     /**

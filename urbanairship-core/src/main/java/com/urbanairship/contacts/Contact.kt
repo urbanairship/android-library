@@ -20,7 +20,6 @@ import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.channel.AirshipChannel
-import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.ChannelRegistrationPayload
@@ -147,15 +146,11 @@ public class Contact internal constructor(
             }
         }
 
-        airshipChannel.addChannelListener(object : AirshipChannelListener {
-            override fun onChannelCreated(channelId: String) {
-                if (privacyManager.isContactsEnabled) {
-                    contactManager.addOperation(ContactOperation.Resolve)
-                }
+        airshipChannel.addChannelListener {
+            if (privacyManager.isContactsEnabled) {
+                contactManager.addOperation(ContactOperation.Resolve)
             }
-
-            override fun onChannelUpdated(channelId: String) {}
-        })
+        }
 
         scope.launch {
             contactManager.contactIdUpdates
@@ -167,11 +162,9 @@ public class Contact internal constructor(
                 }
         }
 
-        // notify channel on id change
         airshipChannel.addChannelRegistrationPayloadExtender { builder: ChannelRegistrationPayload.Builder ->
-            val lastContactIdentity = contactManager.lastContactId
-            if (lastContactIdentity != null) {
-                builder.setContactId(lastContactIdentity)
+            if (privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+                builder.setContactId(contactManager.lastContactId)
             }
             builder
         }
@@ -441,6 +434,23 @@ public class Contact internal constructor(
      * @return A [PendingResult] of the current set of subscription lists.
      */
     public fun fetchSubscriptionListsPendingResult(): PendingResult<Map<String, Set<Scope>>?> {
+        val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
+        scope.launch {
+            pendingResult.result = fetchSubscriptionLists().getOrNull()
+        }
+        return pendingResult
+    }
+
+    /**
+     * Returns the current set of subscription lists for the current contact.
+     *
+     *
+     * An empty set indicates that this contact is not subscribed to any lists.
+     *
+     * @return A [PendingResult] of the current set of subscription lists.
+     */
+    @Deprecated("Use fetchSubscriptionListsPendingResult() instead")
+    public fun getSubscriptionLists(): PendingResult<Map<String, Set<Scope>>?> {
         val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
         scope.launch {
             pendingResult.result = fetchSubscriptionLists().getOrNull()

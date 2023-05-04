@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onSubscription
 
+// TODO need a better way for getting opt-in updates
 internal class ConditionStateMonitor(
     private val channel: AirshipChannel = UAirship.shared().channel,
     private val pushManager: PushManager = UAirship.shared().pushManager
@@ -38,8 +39,5 @@ internal class ConditionStateMonitor(
         }
     }
 
-    private val channelListener = object : AirshipChannelListener {
-        override fun onChannelUpdated(channelId: String) = checkState()
-        override fun onChannelCreated(channelId: String) = checkState()
-    }
+    private val channelListener = AirshipChannelListener { checkState() }
 }

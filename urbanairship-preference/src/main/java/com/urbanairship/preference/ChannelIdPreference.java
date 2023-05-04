@@ -26,8 +26,6 @@ public class ChannelIdPreference extends Preference {
         @Override
         public void onChannelCreated(@NonNull String channelId) { notifyChangedMainThread(); }
 
-        @Override
-        public void onChannelUpdated(@NonNull String channelId) { notifyChangedMainThread(); }
     };
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)

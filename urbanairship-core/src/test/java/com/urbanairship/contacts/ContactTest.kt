@@ -9,8 +9,8 @@ import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestClock
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
+import com.urbanairship.base.Extender
 import com.urbanairship.channel.AirshipChannel
-import com.urbanairship.channel.AirshipChannel.ChannelRegistrationPayloadExtender
 import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.ChannelRegistrationPayload
@@ -113,7 +113,7 @@ public class ContactTest {
 
     @Test
     public fun testExtendChannelRegistration(): TestResult = runTest {
-        val extenders = mutableListOf<ChannelRegistrationPayloadExtender>()
+        val extenders = mutableListOf<Extender<ChannelRegistrationPayload.Builder>>()
         every {
             mockChannel.addChannelRegistrationPayloadExtender(capture(extenders))
         } just runs

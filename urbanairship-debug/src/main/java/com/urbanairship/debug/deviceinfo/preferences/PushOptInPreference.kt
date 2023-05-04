@@ -11,11 +11,11 @@ import com.urbanairship.UAirship
 import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.debug.R
 
-class PushOptInPreference : Preference {
+// TODO need a better way for getting opt-in updates
 
-    private val channelListener = object : AirshipChannelListener {
-        override fun onChannelUpdated(channelId: String) = postUpdate()
-        override fun onChannelCreated(channelId: String) = postUpdate()
+class PushOptInPreference : Preference {
+    private val channelListener = AirshipChannelListener {
+        postUpdate()
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)

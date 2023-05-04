@@ -285,7 +285,7 @@ class PreferenceCenterViewModelTest {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
                 assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
 
-                verify(channel).getSubscriptionLists()
+                verify(channel).fetchSubscriptionLists()
                 verify(contact).fetchSubscriptionLists()
 
                 cancel()
@@ -305,7 +305,7 @@ class PreferenceCenterViewModelTest {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
                 assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
 
-                verify(channel, never()).getSubscriptionLists()
+                verify(channel, never()).fetchSubscriptionLists()
                 verify(contact).fetchSubscriptionLists()
 
                 cancel()
@@ -325,7 +325,7 @@ class PreferenceCenterViewModelTest {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
                 assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
 
-                verify(channel).getSubscriptionLists()
+                verify(channel).fetchSubscriptionLists()
                 verify(contact, never()).fetchSubscriptionLists()
 
                 cancel()
@@ -364,7 +364,7 @@ class PreferenceCenterViewModelTest {
             }
 
             inOrder(channel, editor) {
-                verify(channel).getSubscriptionLists()
+                verify(channel).fetchSubscriptionLists()
                 verify(channel).editSubscriptionLists()
                 verify(editor).mutate(item.subscriptionId, true)
                 verify(editor).apply()
@@ -405,7 +405,7 @@ class PreferenceCenterViewModelTest {
             }
 
             inOrder(channel, editor) {
-                verify(channel).getSubscriptionLists()
+                verify(channel).fetchSubscriptionLists()
                 verify(channel).editSubscriptionLists()
                 verify(editor).mutate(item.subscriptionId, false)
                 verify(editor).apply()
@@ -457,7 +457,7 @@ class PreferenceCenterViewModelTest {
                 verify(editor).apply()
 
                 Mockito.verifyNoMoreInteractions(channel, contact, editor)
-                verify(channel, never()).getSubscriptionLists()
+                verify(channel, never()).fetchSubscriptionLists()
                 verify(channel, never()).editSubscriptionLists()
             }
         }
@@ -514,7 +514,7 @@ class PreferenceCenterViewModelTest {
                 verify(editor).apply()
 
                 verify(channel, never()).editSubscriptionLists()
-                verify(channel, never()).getSubscriptionLists()
+                verify(channel, never()).fetchSubscriptionLists()
 
                 Mockito.verifyNoMoreInteractions(channel, contact, editor)
             }
@@ -564,7 +564,7 @@ class PreferenceCenterViewModelTest {
                 verify(editor).apply()
 
                 Mockito.verifyNoMoreInteractions(channel, contact, editor)
-                verify(channel, never()).getSubscriptionLists()
+                verify(channel, never()).fetchSubscriptionLists()
                 verify(channel, never()).editSubscriptionLists()
             }
         }
@@ -624,7 +624,7 @@ class PreferenceCenterViewModelTest {
                 verify(editor).mutate(item.subscriptionId, unsubscribeScopes, false)
                 verify(editor).apply()
 
-                verify(channel, never()).getSubscriptionLists()
+                verify(channel, never()).fetchSubscriptionLists()
                 verify(channel, never()).editSubscriptionLists()
 
                 Mockito.verifyNoMoreInteractions(channel, contact, editor)
@@ -763,7 +763,7 @@ class PreferenceCenterViewModelTest {
             mock {}
         } else {
             mock<AirshipChannel> {
-                on { getSubscriptionLists() } doReturn pendingResultOf(channelSubscriptions)
+                onBlocking { fetchSubscriptionLists() } doReturn Result.success(channelSubscriptions)
             }.also(mockChannel::invoke)
         }
         contact = if (mockContact == null) {

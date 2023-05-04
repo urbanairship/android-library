@@ -426,6 +426,6 @@ private fun RequestResult<*>.log(message: () -> String) {
     when {
         this.exception != null -> Logger.log(Log.ERROR, this.exception, message)
         this.isClientError -> Logger.log(Log.ERROR, null, message)
-        else -> Logger.log(Log.ERROR, null, message)
+        else -> Logger.log(Log.DEBUG, null, message)
     }
 }

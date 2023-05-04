@@ -16,16 +16,16 @@ import com.urbanairship.util.SerialQueue
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal class ChannelAuthTokenProvider(
+public class ChannelAuthTokenProvider internal constructor(
     private val apiClient: ChannelAuthApiClient,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
-    private val channelIDProvider: () -> String
+    private val channelIDProvider: () -> String?
 ) : AuthTokenProvider {
 
     private var cachedAuth = CachedValue<AuthToken>(clock)
     private var queue = SerialQueue()
 
-    constructor(runtimeConfig: AirshipRuntimeConfig, channelIDProvider: () -> String) : this(
+    internal constructor(runtimeConfig: AirshipRuntimeConfig, channelIDProvider: () -> String?) : this(
         apiClient = ChannelAuthApiClient(runtimeConfig),
         channelIDProvider = channelIDProvider
     )
@@ -45,8 +45,8 @@ internal class ChannelAuthTokenProvider(
     }
 
     override suspend fun fetchToken(identifier: String): Result<String> = queue.run {
-        val channelId: String = this.channelIDProvider()
-        if (channelId != identifier) {
+        val channelId: String? = this.channelIDProvider()
+        if (channelId == null || identifier != channelId) {
             return@run Result.failure(RequestException("Channel mismatch."))
         }
 

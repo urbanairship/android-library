@@ -22,7 +22,6 @@ import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.NamedUser;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
 import com.urbanairship.contacts.Contact;
@@ -146,7 +145,6 @@ public class UAirship {
     RemoteData remoteData;
     RemoteConfigManager remoteConfigManager;
     ChannelCapture channelCapture;
-    NamedUser namedUser;
     ImageLoader imageLoader;
     AccengageNotificationHandler accengageNotificationHandler;
     AirshipRuntimeConfig runtimeConfig;
@@ -718,7 +716,7 @@ public class UAirship {
         this.runtimeConfig = new AirshipRuntimeConfig(platformProvider, airshipConfigOptions, remoteAirshipUrlConfigProvider, requestSession);
 
         this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, localeManager, audienceOverridesProvider);
-        requestSession.setChannelAuthTokenProvider(this.channel.authTokenProvider);
+        requestSession.setChannelAuthTokenProvider(this.channel.getAuthTokenProvider());
 
         if (channel.getId() == null && "huawei".equalsIgnoreCase(Build.MANUFACTURER)) {
             remoteAirshipUrlConfigProvider.disableFallbackUrls();
@@ -754,10 +752,6 @@ public class UAirship {
         this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, audienceOverridesProvider);
         components.add(this.contact);
         requestSession.setContactAuthTokenProvider(this.contact.getAuthTokenProvider());
-
-        //noinspection deprecation
-        this.namedUser = new NamedUser(application, preferenceDataStore, contact);
-        components.add(this.namedUser);
 
         // Debug
         Module debugModule = Modules.debug(application, preferenceDataStore);
@@ -832,18 +826,6 @@ public class UAirship {
     @NonNull
     public AirshipConfigOptions getAirshipConfigOptions() {
         return airshipConfigOptions;
-    }
-
-    /**
-     * Returns the {@link com.urbanairship.channel.NamedUser} instance.
-     *
-     * @return The {@link com.urbanairship.channel.NamedUser} instance.
-     * @deprecated Use {@link Contact} instead.
-     */
-    @NonNull
-    @Deprecated
-    public NamedUser getNamedUser() {
-        return namedUser;
     }
 
     /**

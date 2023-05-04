@@ -72,22 +72,6 @@ class ConditionStateMonitorTest {
     }
 
     @Test
-    fun testChannelUpdatedStateChange() = testDispatcher.runBlockingTest {
-        whenever(mockPushManager.isOptIn).thenReturn(false)
-
-        conditionStateMonitor.states.test {
-            assertThat(awaitItem()).isEqualTo(Condition.State(isOptedIn = false))
-
-            whenever(mockPushManager.isOptIn).thenReturn(true)
-
-            withChannelListener {
-                onChannelUpdated("updated-channel-id")
-            }
-            assertThat(awaitItem()).isEqualTo(Condition.State(isOptedIn = true))
-        }
-    }
-
-    @Test
     fun testCurrentState() {
         whenever(mockPushManager.isOptIn).thenReturn(false)
         assertThat(conditionStateMonitor.currentState)

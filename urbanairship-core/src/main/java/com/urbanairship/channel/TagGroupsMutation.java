@@ -303,6 +303,15 @@ public class TagGroupsMutation implements JsonSerializable {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "TagGroupsMutation{" +
+                "addTags=" + addTags +
+                ", removeTags=" + removeTags +
+                ", setTags=" + setTags +
+                '}';
+    }
+
     public void apply(@NonNull Map<String, Set<String>> tagGroups) {
         // Add tags
         if (addTags != null) {

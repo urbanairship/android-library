@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
+import kotlin.jvm.functions.Function1;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
@@ -19,12 +20,13 @@ import com.urbanairship.CancelableOperation;
 import com.urbanairship.Logger;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.base.Extender;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.AirshipChannel.ChannelRegistrationPayloadExtender;
 import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.job.JobDispatcher;
@@ -85,7 +87,7 @@ public class Inbox {
     private final JobDispatcher jobDispatcher;
     private final ApplicationListener applicationListener;
     private final AirshipChannelListener channelListener;
-    private final ChannelRegistrationPayloadExtender channelRegistrationPayloadExtender;
+    private final Extender<ChannelRegistrationPayload.Builder> channelRegistrationPayloadExtender;
     private final User.Listener userListener;
     private final ActivityMonitor activityMonitor;
     private final AirshipChannel airshipChannel;
@@ -108,11 +110,12 @@ public class Inbox {
      * @hide
      */
     public Inbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
-                 @NonNull AirshipChannel airshipChannel, @NonNull AirshipConfigOptions configOptions) {
+                 @NonNull AirshipChannel airshipChannel, @NonNull AirshipConfigOptions configOptions,
+                 @NonNull PrivacyManager privacyManager) {
         this(context, dataStore, JobDispatcher.shared(context), new User(dataStore, airshipChannel),
                 MessageDatabase.createDatabase(context, configOptions).getDao(),
                 AirshipExecutors.newSerialExecutor(),
-                GlobalActivityMonitor.shared(context), airshipChannel);
+                GlobalActivityMonitor.shared(context), airshipChannel, privacyManager);
     }
 
     /**
@@ -121,7 +124,8 @@ public class Inbox {
     @VisibleForTesting
     Inbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull final JobDispatcher jobDispatcher,
           @NonNull User user, @NonNull MessageDao messageDao, @NonNull Executor executor,
-          @NonNull ActivityMonitor activityMonitor, @NonNull AirshipChannel airshipChannel) {
+          @NonNull ActivityMonitor activityMonitor, @NonNull AirshipChannel airshipChannel,
+          @NonNull PrivacyManager privacyManager) {
         this.context = context.getApplicationContext();
         this.dataStore = dataStore;
         this.user = user;
@@ -152,31 +156,23 @@ public class Inbox {
                 jobDispatcher.dispatch(jobInfo);
             }
         };
-        this.channelListener = new AirshipChannelListener() {
-            @Override
-            public void onChannelCreated(@NonNull String channelId) {
-                dispatchUpdateUserJob(true);
-            }
 
-            @Override
-            public void onChannelUpdated(@NonNull String channelId) {
-            }
-        };
-        this.channelRegistrationPayloadExtender = new ChannelRegistrationPayloadExtender() {
-            @NonNull
-            @Override
-            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
+        this.channelListener = channelId -> dispatchUpdateUserJob(true);
+
+        this.channelRegistrationPayloadExtender = builder -> {
+            if (privacyManager.isEnabled(PrivacyManager.FEATURE_MESSAGE_CENTER)) {
                 return builder.setUserId(getUser().getId());
+            } else {
+                return builder;
             }
         };
-        this.userListener = new User.Listener() {
-            @Override
-            public void onUserUpdated(boolean success) {
-                if (success) {
-                    fetchMessages();
-                }
+
+        this.userListener = success -> {
+            if (success) {
+                fetchMessages();
             }
         };
+
         this.activityMonitor = activityMonitor;
     }
 
