@@ -2,15 +2,14 @@
 
 package com.urbanairship.contacts
 
-import android.util.Log
 import com.urbanairship.Logger
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
-import com.urbanairship.http.RequestException
 import com.urbanairship.http.RequestResult
 import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.log
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.UAHttpStatusUtil
@@ -27,7 +26,6 @@ internal class SubscriptionListApiClient constructor(
      * @return The response.
      * @throws RequestException
      */
-    @Throws(RequestException::class)
     suspend fun getSubscriptionLists(contactId: String): RequestResult<Map<String, Set<Scope>>> {
         val url = runtimeConfig.urlConfig.deviceUrl()
             .appendEncodedPath(SUBSCRIPTION_LIST_PATH + contactId).build()
@@ -82,13 +80,5 @@ internal class SubscriptionListApiClient constructor(
         private const val SUBSCRIPTION_LISTS_KEY = "subscription_lists"
         private const val SCOPE_KEY = "scope"
         private const val LIST_IDS_KEY = "list_ids"
-    }
-}
-
-private fun RequestResult<*>.log(message: () -> String) {
-    when {
-        this.exception != null -> Logger.log(Log.ERROR, this.exception, message)
-        this.isClientError -> Logger.log(Log.ERROR, null, message)
-        else -> Logger.log(Log.ERROR, null, message)
     }
 }

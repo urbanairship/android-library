@@ -38,7 +38,7 @@ import com.urbanairship.util.SerialQueue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.mapNotNull
@@ -108,7 +108,7 @@ public class Contact internal constructor(
      * Named user Id updates.
      */
     @JvmSynthetic
-    public val namedUserIdUpdates: Flow<String?> = contactManager.currentNamedUserIdUpdates
+    public val namedUserIdFlow: StateFlow<String?> = contactManager.currentNamedUserIdUpdates
 
     /**
      * Contact conflict listener.
@@ -208,7 +208,7 @@ public class Contact internal constructor(
                 }
             }
         }
-        // TODO when to call generateDefaultId()
+
         preferenceDataStore.remove(LEGACY_TAG_GROUP_MUTATIONS_KEY)
         preferenceDataStore.remove(LEGACY_ATTRIBUTE_MUTATION_STORE_KEY)
         preferenceDataStore.remove(LEGACY_NAMED_USER_ID_KEY)

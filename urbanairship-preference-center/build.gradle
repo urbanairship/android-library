@@ -91,6 +91,7 @@ dependencies {
     testImplementation(libs.google.truth)
     testImplementation(libs.androidx.test.ext.truth)
     testImplementation(libs.turbine)
+    testImplementation(libs.mockk)
 
     // Instrumentation Tests
     androidTestImplementation(libs.androidx.test.core)

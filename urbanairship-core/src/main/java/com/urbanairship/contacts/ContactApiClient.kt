@@ -2,7 +2,6 @@
 package com.urbanairship.contacts
 
 import android.net.Uri
-import android.util.Log
 import com.urbanairship.Logger
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.channel.AttributeMutation
@@ -14,6 +13,7 @@ import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestException
 import com.urbanairship.http.RequestResult
 import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.log
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
@@ -196,7 +196,7 @@ internal class ContactApiClient constructor(
 
         Logger.d { "Associating channel $channelId type $channelType request: $request" }
 
-        return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
+        return session.execute(request) { status: Int, _: Map<String, String>, _: String? ->
             if (status == 200) {
                 AssociatedChannel(channelId, channelType)
             } else {
@@ -420,12 +420,4 @@ private fun List<TagGroupsMutation>.tagsPayload(): JsonMap? {
         "remove" to remove.ifEmpty { null },
         "set" to set.ifEmpty { null }
     )
-}
-
-private fun RequestResult<*>.log(message: () -> String) {
-    when {
-        this.exception != null -> Logger.log(Log.ERROR, this.exception, message)
-        this.isClientError -> Logger.log(Log.ERROR, null, message)
-        else -> Logger.log(Log.DEBUG, null, message)
-    }
 }

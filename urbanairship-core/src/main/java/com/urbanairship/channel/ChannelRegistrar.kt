@@ -19,6 +19,7 @@ import com.urbanairship.util.Clock
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 internal class ChannelRegistrar(
     private val dataStore: PreferenceDataStore,
@@ -37,7 +38,7 @@ internal class ChannelRegistrar(
     )
 
     private val _channelIdFlow: MutableStateFlow<String?> = MutableStateFlow(this.channelId)
-    val channelIdFlow: StateFlow<String?> = _channelIdFlow
+    val channelIdFlow: StateFlow<String?> = _channelIdFlow.asStateFlow()
 
     internal var channelId: String?
         get() = dataStore.getString(CHANNEL_ID_KEY, null)

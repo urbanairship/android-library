@@ -39,7 +39,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import androidx.arch.core.util.Function;
 import androidx.core.util.Consumer;
 
 import static junit.framework.Assert.assertEquals;
@@ -141,25 +140,6 @@ public class PushManagerTest extends BaseTestCase {
         assertNull(pushManager.getPushToken());
     }
 
-    /**
-     * Test enabling push.
-     */
-    @Test
-    public void testPushEnabled() {
-        privacyManager.disable(PrivacyManager.FEATURE_PUSH);
-        pushManager.setPushEnabled(true);
-        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH));
-    }
-
-    /**
-     * Test disabling push
-     */
-    @Test
-    public void testPushDisabled() {
-        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
-        pushManager.setPushEnabled(false);
-        assertFalse(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH));
-    }
 
     /**
      * Test on registering for a push token.
@@ -290,37 +270,6 @@ public class PushManagerTest extends BaseTestCase {
 
         Extender<ChannelRegistrationPayload.Builder> extender = argument.getValue();
         assertNotNull(extender);
-
-        ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder();
-
-        ChannelRegistrationPayload payload = extender.extend(builder).build();
-
-        ChannelRegistrationPayload expected = new ChannelRegistrationPayload.Builder()
-                .setBackgroundEnabled(false)
-                .setOptIn(false)
-                .build();
-
-        assertEquals(expected, payload);
-    }
-
-    /**
-     * Test channel registration extender when token registration is disabled.
-     */
-    @Test
-    public void testChannelRegistrationDisabledTokenRegistration() throws PushProvider.RegistrationException {
-        ArgumentCaptor<Extender<ChannelRegistrationPayload.Builder>> argument = ArgumentCaptor.forClass(Extender.class);
-        pushManager.init();
-        verify(mockAirshipChannel).addChannelRegistrationPayloadExtender(argument.capture());
-
-        Extender<ChannelRegistrationPayload.Builder> extender = argument.getValue();
-        assertNotNull(extender);
-
-        when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
-        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
-        pushManager.performPushRegistration(true);
-        pushManager.setUserNotificationsEnabled(true);
-        pushManager.setPushEnabled(true);
-        pushManager.setPushTokenRegistrationEnabled(false);
 
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder();
 
@@ -661,4 +610,67 @@ public class PushManagerTest extends BaseTestCase {
         verify(mockPermissionManager, times(0)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
     }
 
+    @Test
+    public void testPushStatus() throws PushProvider.RegistrationException {
+        pushManager.init();
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+        pushManager.onAirshipReady(UAirship.shared());
+        pushManager.setUserNotificationsEnabled(true);
+
+        when(mockNotificationManager.areNotificationsEnabled()).thenReturn(true);
+        when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
+        pushManager.performPushRegistration(true);
+
+        assertEquals(
+                new PushNotificationStatus(true, true, true, true),
+                pushManager.getPushNotificationStatus()
+        );
+    }
+
+    @Test
+    public void testPushStatusNoToken() {
+        pushManager.init();
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+        pushManager.onAirshipReady(UAirship.shared());
+        pushManager.setUserNotificationsEnabled(true);
+        when(mockNotificationManager.areNotificationsEnabled()).thenReturn(true);
+
+        assertEquals(
+                new PushNotificationStatus(true, true, true, false),
+                pushManager.getPushNotificationStatus()
+        );
+    }
+
+    @Test
+    public void testPushStatusChanges() {
+        pushManager.init();
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+        pushManager.onAirshipReady(UAirship.shared());
+        pushManager.setUserNotificationsEnabled(true);
+        when(mockNotificationManager.areNotificationsEnabled()).thenReturn(true);
+
+        PushNotificationStatus expected = new PushNotificationStatus(true, true, true, false);
+        assertEquals(expected, pushManager.getPushNotificationStatus());
+
+        when(mockNotificationManager.areNotificationsEnabled()).thenReturn(false);
+        assertEquals(
+                new PushNotificationStatus(true, false, true, false),
+                pushManager.getPushNotificationStatus()
+        );
+
+        when(mockNotificationManager.areNotificationsEnabled()).thenReturn(true);
+        pushManager.setUserNotificationsEnabled(false);
+        assertEquals(
+                new PushNotificationStatus(false, true, true, false),
+                pushManager.getPushNotificationStatus()
+        );
+
+        pushManager.setUserNotificationsEnabled(true);
+        privacyManager.disable(PrivacyManager.FEATURE_PUSH);
+        assertEquals(
+                new PushNotificationStatus(true, true, false, false),
+                pushManager.getPushNotificationStatus()
+        );
+    }
 }

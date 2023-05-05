@@ -35,6 +35,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
@@ -58,10 +60,10 @@ internal class ContactManager(
     private var lastIdentifyTimeMs: Long = 0
 
     private val _contactIdUpdates: MutableStateFlow<ContactIdUpdate?> = MutableStateFlow(null)
-    val contactIdUpdates: Flow<ContactIdUpdate?> = _contactIdUpdates
+    val contactIdUpdates: Flow<ContactIdUpdate?> = _contactIdUpdates.asStateFlow()
 
     private val _currentNamedUserIdUpdates: MutableStateFlow<String?> = MutableStateFlow(null)
-    val currentNamedUserIdUpdates: Flow<String?> = _currentNamedUserIdUpdates
+    val currentNamedUserIdUpdates: StateFlow<String?> = _currentNamedUserIdUpdates.asStateFlow()
 
     val conflictEvents: Channel<ConflictEvent> = Channel(Channel.UNLIMITED)
 
@@ -233,6 +235,7 @@ internal class ContactManager(
                 this.lastContactIdentity = ContactIdentity(
                     contactId = UUID.randomUUID().toString(), isAnonymous = true, namedUserId = null
                 )
+                addOperation(ContactOperation.Resolve)
             }
         }
 
@@ -270,6 +273,7 @@ internal class ContactManager(
             }
 
             clearSkippableOperations()
+            yieldContactUpdates()
             val nextOperationGroup = prepareNextOperationGroup() ?: return@withContext true
 
             return@withContext if (performOperation(nextOperationGroup.merged)) {
@@ -303,12 +307,16 @@ internal class ContactManager(
             return
         }
 
-        val next = this.operations.firstOrNull { !isSkippable(it.operation) }?.operation ?: return
+        val operations = this.operations
+        if (operations.isEmpty()) {
+            return
+        }
 
         val builder = JobInfo.newBuilder().setAction(Contact.ACTION_UPDATE_CONTACT)
             .setNetworkAccessRequired(true).setAirshipComponent(Contact::class.java)
             .setConflictStrategy(conflictStrategy).addRateLimit(UPDATE_RATE_LIMIT)
 
+        val next = operations.firstOrNull { !isSkippable(it.operation) }?.operation
         if (next is ContactOperation.Reset || next is ContactOperation.Resolve || next is ContactOperation.Reset) {
             builder.addRateLimit(IDENTITY_RATE_LIMIT)
         }

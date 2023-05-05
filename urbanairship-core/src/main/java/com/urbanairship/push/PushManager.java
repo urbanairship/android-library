@@ -2,18 +2,8 @@
 
 package com.urbanairship.push;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
-import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-import androidx.annotation.XmlRes;
-import androidx.core.util.ObjectsCompat;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
@@ -26,7 +16,6 @@ import com.urbanairship.PushProviders;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.app.SimpleApplicationListener;
@@ -48,7 +37,6 @@ import com.urbanairship.push.notifications.AirshipNotificationProvider;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 import com.urbanairship.push.notifications.NotificationChannelRegistry;
 import com.urbanairship.push.notifications.NotificationProvider;
-import com.urbanairship.reactive.Function;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -60,6 +48,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.annotation.XmlRes;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -240,7 +236,6 @@ public class PushManager extends AirshipComponent {
 
     private NotificationListener notificationListener;
     private final List<PushTokenListener> pushTokenListeners = new CopyOnWriteArrayList<>();
-
     private final List<PushListener> pushListeners = new CopyOnWriteArrayList<>();
     private final List<PushListener> internalPushListeners = new CopyOnWriteArrayList<>();
     private final List<InternalNotificationListener> internalNotificationListeners = new CopyOnWriteArrayList<>();
@@ -255,6 +250,8 @@ public class PushManager extends AirshipComponent {
 
     private volatile boolean isAirshipReady = false;
     private volatile Predicate<PushMessage> foregroundDisplayPredicate = null;
+
+    final PushNotificationStatusObserver statusObserver;
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
@@ -308,6 +305,8 @@ public class PushManager extends AirshipComponent {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             this.actionGroupMap.putAll(ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides));
         }
+
+        this.statusObserver = new PushNotificationStatusObserver(getPushNotificationStatus());
     }
 
     @Override
@@ -315,19 +314,24 @@ public class PushManager extends AirshipComponent {
         super.init();
         airshipChannel.addChannelRegistrationPayloadExtender(this::extendChannelRegistrationPayload);
         analytics.addHeaderDelegate(this::createAnalyticsHeaders);
-        privacyManager.addListener(this::updateManagerEnablement);
+        privacyManager.addListener(() -> {
+            updateManagerEnablement();
+            updateStatusObserver();
+        });
 
         permissionsManager.addAirshipEnabler(permission -> {
             if (permission == Permission.DISPLAY_NOTIFICATIONS) {
                 privacyManager.enable(PrivacyManager.FEATURE_PUSH);
                 preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true);
                 airshipChannel.updateRegistration();
+                updateStatusObserver();
             }
         });
 
         permissionsManager.addOnPermissionStatusChangedListener((permission, status) -> {
             if (permission == Permission.DISPLAY_NOTIFICATIONS) {
                 airshipChannel.updateRegistration();
+                updateStatusObserver();
             }
         });
 
@@ -555,35 +559,11 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Enables or disables push notifications.
-     * <p>
-     * This setting is persisted between application starts, so there is no need to call this
-     * repeatedly. It is only necessary to call this when a user preference has changed.
-     *
-     * @param enabled A boolean indicating whether push is enabled.
-     * @deprecated Enable/disable by enabling {@link PrivacyManager#FEATURE_PUSH} in {@link PrivacyManager}.
-     * This will call through to the privacy manager.
+     * @hide
      */
-    @Deprecated
-    public void setPushEnabled(boolean enabled) {
-        if (enabled) {
-            privacyManager.enable(PrivacyManager.FEATURE_PUSH);
-        } else {
-            privacyManager.disable(PrivacyManager.FEATURE_PUSH);
-        }
-    }
-
-    /**
-     * Determines whether push is enabled.
-     *
-     * @return <code>true</code> if push is enabled, <code>false</code> otherwise.
-     * This defaults to true, and must be explicitly set by the app.
-     * @deprecated Enable/disable by enabling {@link PrivacyManager#FEATURE_PUSH} in {@link PrivacyManager}.
-     * This will call through to the privacy manager.
-     */
-    @Deprecated
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public boolean isPushEnabled() {
-        return privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH);
+        return privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH) && isComponentEnabled();
     }
 
     /**
@@ -606,7 +586,7 @@ public class PushManager extends AirshipComponent {
             } else {
                 airshipChannel.updateRegistration();
             }
-
+            updateStatusObserver();
         }
     }
 
@@ -838,36 +818,6 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
-     * Determines whether the push token is sent during channel registration.
-     * If {@code false}, the app will not be able to receive push notifications.
-     *
-     * @return {@code true} if the push token is sent during channel registration,
-     * {@code false} otherwise.
-     * @deprecated Check if {@link PrivacyManager#FEATURE_PUSH} is enabled in the {@link PrivacyManager}.
-     */
-    @Deprecated
-    public boolean isPushTokenRegistrationEnabled() {
-        return privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH);
-    }
-
-    /**
-     * Sets whether the push token is sent during channel registration.
-     * If {@code false}, the app will not be able to receive push notifications.
-     *
-     * @param enabled A boolean indicating whether the push token is sent during
-     * channel registration.
-     * @deprecated Enable/disable {@link PrivacyManager#FEATURE_PUSH} in the {@link PrivacyManager}.
-     */
-    @Deprecated
-    public void setPushTokenRegistrationEnabled(boolean enabled) {
-        if (enabled) {
-            privacyManager.enable(PrivacyManager.FEATURE_PUSH);
-        } else {
-            privacyManager.disable(PrivacyManager.FEATURE_PUSH);
-        }
-    }
-
-    /**
      * Returns the send metadata of the last received push.
      *
      * @return The send metadata from the last received push, or null if not found.
@@ -923,6 +873,24 @@ public class PushManager extends AirshipComponent {
     public void removePushListener(@NonNull PushListener listener) {
         pushListeners.remove(listener);
         internalPushListeners.remove(listener);
+    }
+
+    /**
+     * Adds an Airship push notification status listener.
+     *
+     * @param listener The listener.
+     */
+    public void addNotificationStatusListener(@NonNull PushNotificationStatusListener listener) {
+        statusObserver.getChangeListeners().add(listener);
+    }
+
+    /**
+     * Removes an Airship push notification status listener.
+     *
+     * @param listener The listener.
+     */
+    public void removeNotificationStatusListener(@NonNull PushNotificationStatusListener listener) {
+        statusObserver.getChangeListeners().remove(listener);
     }
 
     /**
@@ -1085,6 +1053,7 @@ public class PushManager extends AirshipComponent {
     private void clearPushToken() {
         preferenceDataStore.remove(PUSH_TOKEN_KEY);
         preferenceDataStore.remove(PUSH_DELIVERY_TYPE);
+        updateStatusObserver();
     }
 
     /**
@@ -1185,6 +1154,7 @@ public class PushManager extends AirshipComponent {
 
             preferenceDataStore.put(PUSH_DELIVERY_TYPE, provider.getDeliveryType());
             preferenceDataStore.put(PUSH_TOKEN_KEY, token);
+            updateStatusObserver();
 
             for (PushTokenListener listener : pushTokenListeners) {
                 listener.onPushTokenUpdated(token);
@@ -1228,4 +1198,21 @@ public class PushManager extends AirshipComponent {
         }
     }
 
+    /**
+     * Returns the current Airship push notification status.
+     * @return A status object.
+     */
+    @NonNull
+    public PushNotificationStatus getPushNotificationStatus() {
+        return new PushNotificationStatus(
+                getUserNotificationsEnabled(),
+                notificationManager.areNotificationsEnabled(),
+                privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH),
+                !UAStringUtil.isEmpty(getPushToken())
+        );
+    }
+
+    private void updateStatusObserver() {
+        this.statusObserver.update(getPushNotificationStatus());
+    }
 }

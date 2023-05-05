@@ -119,6 +119,23 @@ public class ContactManagerTest {
     }
 
     @Test
+    public fun testGenerateDefaultIdEnqueuesJob(): TestResult = runTest {
+        contactManager.generateDefaultContactIdIfNotSet()
+        verify(exactly = 1) { mockJobDispatcher.dispatch(any()) }
+
+        contactManager.generateDefaultContactIdIfNotSet()
+        verify(exactly = 1) { mockJobDispatcher.dispatch(any()) }
+    }
+
+    @Test
+    public fun testAddOperationEnqueuesJobIfSkippable(): TestResult = runTest {
+        contactManager.generateDefaultContactIdIfNotSet()
+        verify(exactly = 1) { mockJobDispatcher.dispatch(any()) }
+        contactManager.addOperation(ContactOperation.Reset)
+        verify(exactly = 2) { mockJobDispatcher.dispatch(any()) }
+    }
+
+    @Test
     public fun testJobRateLimits(): TestResult = runTest {
         verify {
             mockJobDispatcher.setRateLimit(

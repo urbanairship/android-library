@@ -18,7 +18,6 @@ public data class Request @JvmOverloads constructor(
     val headers: Map<String, String> = emptyMap(),
     val followRedirects: Boolean = true
 ) {
-    @JvmOverloads
     public constructor(url: Uri?, method: String, followRedirects: Boolean) : this(
         url = url,
         auth = null,

@@ -2,7 +2,6 @@
 
 package com.urbanairship.channel
 
-import android.util.Log
 import com.urbanairship.Logger
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -10,6 +9,7 @@ import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestResult
 import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.log
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
@@ -51,13 +51,5 @@ internal class SubscriptionListApiClient constructor(
         }.also { result ->
             result.log { "Fetching contact subscription lists for $channelId finished with result: $result" }
         }
-    }
-}
-
-private fun RequestResult<*>.log(message: () -> String) {
-    when {
-        this.exception != null -> Logger.log(Log.ERROR, this.exception, message)
-        this.isClientError -> Logger.log(Log.ERROR, null, message)
-        else -> Logger.log(Log.ERROR, null, message)
     }
 }

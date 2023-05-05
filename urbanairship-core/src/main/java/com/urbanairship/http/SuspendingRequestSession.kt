@@ -2,8 +2,11 @@
 
 package com.urbanairship.http
 
+import android.util.Log
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
+import com.urbanairship.Logger
+import com.urbanairship.json.JsonException
 import com.urbanairship.util.UAHttpStatusUtil
 import kotlinx.coroutines.withContext
 
@@ -92,4 +95,22 @@ public data class RequestResult<T>(
 
     public val isTooManyRequestsError: Boolean
         get() = status != null && status == 429
+}
+
+/**
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public fun RequestResult<*>.log(message: () -> String) {
+    when {
+        this.exception != null -> {
+            when (this.exception) {
+                is JsonException -> Logger.log(Log.ERROR, this.exception, message)
+                is RequestException -> Logger.log(Log.DEBUG, this.exception, message)
+                else -> Logger.log(Log.WARN, this.exception, message)
+            }
+        }
+        this.isClientError -> Logger.log(Log.ERROR, null, message)
+        else -> Logger.log(Log.VERBOSE, null, message)
+    }
 }

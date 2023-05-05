@@ -8,13 +8,12 @@ import android.os.Looper
 import android.util.AttributeSet
 import androidx.preference.Preference
 import com.urbanairship.UAirship
-import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.debug.R
+import com.urbanairship.push.PushNotificationStatusListener
 
 class NotificationOptInPreference : Preference {
-// TODO need a better way for getting opt-in updates
 
-    private val channelListener = AirshipChannelListener {
+    private val listener = PushNotificationStatusListener {
         postUpdate()
     }
 
@@ -31,12 +30,12 @@ class NotificationOptInPreference : Preference {
 
     override fun onAttached() {
         super.onAttached()
-        UAirship.shared().channel.addChannelListener(channelListener)
+        UAirship.shared().pushManager.addNotificationStatusListener(listener)
     }
 
     override fun onDetached() {
         super.onDetached()
-        UAirship.shared().channel.removeChannelListener(channelListener)
+        UAirship.shared().pushManager.removeNotificationStatusListener(listener)
     }
 
     private fun postUpdate() {

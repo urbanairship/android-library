@@ -105,7 +105,7 @@ public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
     @WorkerThread
     public fun channelOverridesSync(channelId: String, contactId: String? = null): AudienceOverrides.Channel {
         return runBlocking {
-             channelOverrides(channelId)
+             channelOverrides(channelId, contactId)
         }
     }
 

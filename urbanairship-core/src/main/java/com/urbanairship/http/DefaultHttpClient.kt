@@ -21,7 +21,7 @@ internal class DefaultHttpClient : HttpClient {
         followRedirects: Boolean,
         parser: ResponseParser<T>
     ): Response<T> {
-        val url: URL = try {
+        val actualUrl: URL = try {
             URL(url.toString())
         } catch (e: MalformedURLException) {
             throw RequestException("Failed to build URL", e)
@@ -31,7 +31,7 @@ internal class DefaultHttpClient : HttpClient {
 
         return try {
             conn = ConnectionUtils.openSecureConnection(
-                UAirship.getApplicationContext(), url
+                UAirship.getApplicationContext(), actualUrl
             ) as HttpURLConnection
 
             conn.apply {
@@ -48,15 +48,15 @@ internal class DefaultHttpClient : HttpClient {
                 conn.setRequestProperty(entry.key, entry.value)
             }
 
-            body?.let { body ->
+            body?.let { requestBody ->
                 conn.doOutput = true
-                conn.setRequestProperty("Content-Type", body.contentType)
+                conn.setRequestProperty("Content-Type", requestBody.contentType)
 
-                if (body.compress) {
+                if (requestBody.compress) {
                     conn.setRequestProperty("Content-Encoding", "gzip")
                 }
 
-                conn.outputStream.use { out -> out.write(body.content, gzip = body.compress) }
+                conn.outputStream.use { out -> out.write(requestBody.content, gzip = requestBody.compress) }
             }
 
             val responseBody: String? = try {

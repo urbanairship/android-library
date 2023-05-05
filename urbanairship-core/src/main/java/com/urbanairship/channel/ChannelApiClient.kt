@@ -2,7 +2,6 @@
 package com.urbanairship.channel
 
 import android.net.Uri
-import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Logger
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -11,6 +10,7 @@ import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestResult
 import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.log
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.requireField
@@ -88,14 +88,6 @@ internal class ChannelApiClient @VisibleForTesting constructor(
          * Response body key for the channel ID.
          */
         private const val CHANNEL_ID_KEY = "channel_id"
-    }
-}
-
-private fun RequestResult<*>.log(message: () -> String) {
-    when {
-        this.exception != null -> Logger.log(Log.ERROR, this.exception, message)
-        this.isClientError -> Logger.log(Log.ERROR, null, message)
-        else -> Logger.log(Log.VERBOSE, null, message)
     }
 }
 
