@@ -14,9 +14,9 @@ public class PushNotificationStatus(
     public val isUserNotificationsEnabled: Boolean,
 
     /**
-     * If the permission to display a notification is granted.
+     * If notifications are allowed at the system level for the application.
      */
-    public val isDisplayNotificationsPermissionGranted: Boolean,
+    public val areNotificationsAllowed: Boolean,
 
     /**
      * If the [PrivacyManager#FEATURE_PUSH] is enabled.
@@ -30,12 +30,12 @@ public class PushNotificationStatus(
 ) {
 
     /**
-     * Checks if [isUserNotificationsEnabled], [isDisplayNotificationsPermissionGranted], and [isPushPrivacyFeatureEnabled]
+     * Checks if [isUserNotificationsEnabled], [areNotificationsAllowed], and [isPushPrivacyFeatureEnabled]
      * is enabled.
      */
     public val isUserOptedIn: Boolean
     get() {
-        return isUserNotificationsEnabled && isDisplayNotificationsPermissionGranted && isPushPrivacyFeatureEnabled
+        return isUserNotificationsEnabled && areNotificationsAllowed && isPushPrivacyFeatureEnabled
     }
 
     /**
@@ -49,7 +49,7 @@ public class PushNotificationStatus(
     override fun hashCode(): Int {
         return ObjectsCompat.hash(
             isUserNotificationsEnabled,
-            isDisplayNotificationsPermissionGranted,
+            areNotificationsAllowed,
             isPushPrivacyFeatureEnabled,
             isPushTokenRegistered
         )
@@ -62,7 +62,7 @@ public class PushNotificationStatus(
         other as PushNotificationStatus
 
         if (isUserNotificationsEnabled != other.isUserNotificationsEnabled) return false
-        if (isDisplayNotificationsPermissionGranted != other.isDisplayNotificationsPermissionGranted) return false
+        if (areNotificationsAllowed != other.areNotificationsAllowed) return false
         if (isPushPrivacyFeatureEnabled != other.isPushPrivacyFeatureEnabled) return false
         if (isPushTokenRegistered != other.isPushTokenRegistered) return false
 
@@ -71,7 +71,7 @@ public class PushNotificationStatus(
 
     override fun toString(): String {
         return "PushNotificationStatus(isUserNotificationsEnabled=$isUserNotificationsEnabled, " +
-                "isPushPermissionGranted=$isDisplayNotificationsPermissionGranted, " +
+                "isPushPermissionGranted=$areNotificationsAllowed, " +
                 "isPushPrivacyFeatureEnabled=$isPushPrivacyFeatureEnabled, " +
                 "isPushTokenRegistered=$isPushTokenRegistered)"
     }

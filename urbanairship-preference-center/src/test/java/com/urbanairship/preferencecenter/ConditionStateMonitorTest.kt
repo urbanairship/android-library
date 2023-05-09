@@ -29,7 +29,7 @@ class ConditionStateMonitorTest {
 
     private val stateFlow = MutableStateFlow(PushNotificationStatus(
         isUserNotificationsEnabled = true,
-        isDisplayNotificationsPermissionGranted = true,
+        areNotificationsAllowed = true,
         isPushPrivacyFeatureEnabled = true,
         isPushTokenRegistered = true
     ))
@@ -65,31 +65,31 @@ class ConditionStateMonitorTest {
         every { mockPushManager.pushNotificationStatus } returnsMany listOf(
             PushNotificationStatus(
                 isUserNotificationsEnabled = true,
-                isDisplayNotificationsPermissionGranted = true,
+                areNotificationsAllowed = true,
                 isPushPrivacyFeatureEnabled = true,
                 isPushTokenRegistered = true
             ),
             PushNotificationStatus(
                 isUserNotificationsEnabled = true,
-                isDisplayNotificationsPermissionGranted = true,
+                areNotificationsAllowed = true,
                 isPushPrivacyFeatureEnabled = true,
                 isPushTokenRegistered = false
             ),
             PushNotificationStatus(
                 isUserNotificationsEnabled = true,
-                isDisplayNotificationsPermissionGranted = true,
+                areNotificationsAllowed = true,
                 isPushPrivacyFeatureEnabled = false,
                 isPushTokenRegistered = true
             ),
             PushNotificationStatus(
                 isUserNotificationsEnabled = true,
-                isDisplayNotificationsPermissionGranted = false,
+                areNotificationsAllowed = false,
                 isPushPrivacyFeatureEnabled = true,
                 isPushTokenRegistered = true
             ),
             PushNotificationStatus(
                 isUserNotificationsEnabled = false,
-                isDisplayNotificationsPermissionGranted = true,
+                areNotificationsAllowed = true,
                 isPushPrivacyFeatureEnabled = true,
                 isPushTokenRegistered = true
             )
@@ -109,7 +109,7 @@ class ConditionStateMonitorTest {
 
             stateFlow.tryEmit(PushNotificationStatus(
                 isUserNotificationsEnabled = true,
-                isDisplayNotificationsPermissionGranted = true,
+                areNotificationsAllowed = true,
                 isPushPrivacyFeatureEnabled = false,
                 isPushTokenRegistered = true
             ))

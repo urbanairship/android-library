@@ -31,6 +31,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -294,6 +295,25 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
+    fun handleNamedUserIdChange() = runBlocking {
+        val namedUserIdFlow = MutableStateFlow("")
+        viewModel(namedUserIdFlow = namedUserIdFlow).run {
+            states.test {
+                handle(Action.Refresh)
+                assertThat(awaitItem()).isEqualTo(State.Loading)
+                assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
+
+                namedUserIdFlow.emit("some other user")
+
+                assertThat(awaitItem()).isEqualTo(State.Loading)
+                assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
+
+                cancel()
+            }
+        }
+    }
+
+    @Test
     fun handlesRefreshActionWithoutChannelSubscriptions() = runBlocking {
         val config = spy(CHANNEL_SUBSCRIPTION_CONFIG)
         whenever(config.hasChannelSubscriptions).doReturn(false)
@@ -451,6 +471,8 @@ class PreferenceCenterViewModelTest {
             }
 
             inOrder(channel, contact, editor) {
+                verify(contact).namedUserIdFlow
+
                 verify(contact).fetchSubscriptionLists()
                 verify(contact).editSubscriptionLists()
                 verify(editor).mutate(item.subscriptionId, item.scopes, true)
@@ -508,8 +530,11 @@ class PreferenceCenterViewModelTest {
             }
 
             inOrder(channel, contact, editor) {
+                verify(contact).namedUserIdFlow
+
                 verify(contact).fetchSubscriptionLists()
                 verify(contact).editSubscriptionLists()
+
                 verify(editor).mutate(item.subscriptionId, item.scopes, false)
                 verify(editor).apply()
 
@@ -558,6 +583,8 @@ class PreferenceCenterViewModelTest {
             }
 
             inOrder(channel, contact, editor) {
+                verify(contact).namedUserIdFlow
+
                 verify(contact).fetchSubscriptionLists()
                 verify(contact).editSubscriptionLists()
                 verify(editor).mutate(item.subscriptionId, component.scopes, true)
@@ -600,6 +627,8 @@ class PreferenceCenterViewModelTest {
             val item = CONTACT_SUBSCRIPTION_GROUP_ITEM_4
 
             states.test {
+                verify(contact).namedUserIdFlow
+
                 assertThat(awaitItem()).isEqualTo(State.Loading)
 
                 handle(Action.Refresh)
@@ -750,7 +779,8 @@ class PreferenceCenterViewModelTest {
         mockChannel: (AirshipChannel.() -> Unit)? = {},
         mockContact: (Contact.() -> Unit)? = {},
         mockConditionStateMonitor: (ConditionStateMonitor.() -> Unit)? = {},
-        conditionState: Condition.State = Condition.State(isOptedIn = true)
+        conditionState: Condition.State = Condition.State(isOptedIn = true),
+        namedUserIdFlow: StateFlow<String?> = MutableStateFlow(null)
     ): PreferenceCenterViewModel {
         preferenceCenter = if (mockPreferenceCenter == null) {
             mock {}
@@ -771,6 +801,7 @@ class PreferenceCenterViewModelTest {
         } else {
             mock<Contact> {
                 onBlocking { fetchSubscriptionLists() } doReturn Result.success(contactSubscriptions)
+                on { this.namedUserIdFlow } doReturn namedUserIdFlow
             }.also(mockContact::invoke)
         }
         conditionMonitor = if (mockConditionStateMonitor == null) {

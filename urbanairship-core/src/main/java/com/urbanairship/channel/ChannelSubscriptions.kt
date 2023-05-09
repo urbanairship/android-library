@@ -23,7 +23,7 @@ internal class ChannelSubscriptions(
 
     suspend fun fetchSubscriptionLists(channelId: String): Result<Set<String>> {
         val result = resolveSubscriptionLists(channelId)
-        val subscriptions = result.getOrNull()
+        val subscriptions = result.getOrNull()?.toMutableSet()
 
         if (result.isFailure || subscriptions == null) {
             return result

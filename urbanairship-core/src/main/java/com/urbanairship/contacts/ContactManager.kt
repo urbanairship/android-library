@@ -49,7 +49,7 @@ internal class ContactManager(
     private val jobDispatcher: JobDispatcher,
     private val contactApiClient: ContactApiClient,
     private val localeManager: LocaleManager,
-    audienceOverridesProvider: AudienceOverridesProvider,
+    private val audienceOverridesProvider: AudienceOverridesProvider,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) : AuthTokenProvider {
@@ -535,6 +535,12 @@ internal class ContactManager(
         )
 
         if (response.isSuccessful) {
+            audienceOverridesProvider.recordContactUpdate(
+                contactId,
+                operation.tags,
+                operation.attributes,
+                operation.subscriptions
+            )
             contactUpdated(contactId, operation)
         }
 

@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapConcat
@@ -87,6 +88,14 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                         }
                 }
             }
+        }
+
+        viewModelScope.launch {
+            contact.namedUserIdFlow
+                .drop(1)
+                .collect {
+                    actions.emit(Action.Refresh)
+                }
         }
 
         viewModelScope.launch {
@@ -167,9 +176,8 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 else -> state
             }
             is Change.ShowError -> State.Error(error = change.error)
-            is Change.ShowLoading -> when (state) {
-                is State.Content -> state
-                else -> State.Loading
+            is Change.ShowLoading -> {
+                State.Loading
             }
         }.let { flowOf(it) }
 

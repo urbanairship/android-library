@@ -186,7 +186,10 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     }
 
     private fun render(state: State): Unit = when (state) {
-        is State.Loading -> views.showLoading()
+        is State.Loading -> {
+            views.showLoading()
+            adapter.submit(emptyList(), emptySet(), emptyMap())
+        }
         is State.Error -> views.showError()
         is State.Content -> {
             onDisplayListener?.let {
@@ -194,7 +197,6 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
                     showHeaderItem(state.title, state.subtitle)
                 }
             } ?: showHeaderItem(state.title, state.subtitle)
-
             adapter.submit(state.listItems, state.channelSubscriptions, state.contactSubscriptions)
 
             views.showContent()

@@ -17,19 +17,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    sourceSets {
-        // Android Studio isn't a fan of shared srcDirs, so we'll only set up headless
-        // instrumentation testing if running from CLI/CI to prevent "Duplicate content root"
-        // warnings. When running via Android Studio, we'll only add sharedTest to the
-        // androidTest sourceSets so instrumentation can still be run normally.
-        if (!System.getProperties().containsKey('idea.active')) {
-            testDebug.java.srcDirs += 'src/sharedTestDebug/java'
-            androidTestDebug.java.srcDirs += 'src/sharedTestDebug/java'
-        } else {
-            androidTestDebug.java.srcDirs += 'src/sharedTestDebug/java'
-        }
-    }
-
     testOptions {
         unitTests.includeAndroidResources = true
     }
@@ -44,7 +31,7 @@ android {
 tasks.withType(KotlinCompile).configureEach {
     it.kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
-        freeCompilerArgs += [ "-Xopt-in=kotlin.RequiresOptIn" ]
+        freeCompilerArgs += [ "-opt-in=kotlin.RequiresOptIn" ]
     }
 }
 
@@ -85,7 +72,10 @@ dependencies {
     testImplementation(libs.robolectric.core)
     testImplementation(libs.androidx.test.ext.junit)
     testImplementation(libs.androidx.test.espresso.core)
-    testImplementation(libs.androidx.test.espresso.contrib)
+    androidTestImplementation(libs.androidx.test.espresso.contrib) {
+        // https://github.com/android/android-test/issues/861
+        exclude group: 'org.checkerframework', module: 'checker'
+    }
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.google.truth)
@@ -101,7 +91,10 @@ dependencies {
     androidTestImplementation(libs.kotlinx.coroutines.test)
 
     androidTestImplementation(libs.androidx.test.espresso.core)
-    androidTestImplementation(libs.androidx.test.espresso.contrib)
+    androidTestImplementation(libs.androidx.test.espresso.contrib) {
+        // https://github.com/android/android-test/issues/861
+        exclude group: 'org.checkerframework', module: 'checker'
+    }
     androidTestImplementation(libs.androidx.test.espresso.intents)
 
     androidTestImplementation(libs.androidx.test.ext.junit)

@@ -19,7 +19,10 @@ import com.urbanairship.locale.LocaleManager
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
+import io.mockk.slot
 import io.mockk.verify
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -58,7 +61,11 @@ public class ContactManagerTest {
     }
 
     private val testClock = TestClock()
-    private val audienceOverridesProvider = AudienceOverridesProvider(testClock)
+
+    private val audienceOverrideSlot = slot<(String) -> AudienceOverrides.Contact>()
+    private val mockAudienceOverridesProvider = mockk<AudienceOverridesProvider>(relaxed = true) {
+        every { this@mockk.pendingContactOverridesDelegate = capture(audienceOverrideSlot) } just runs
+    }
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
 
@@ -68,7 +75,7 @@ public class ContactManagerTest {
         mockJobDispatcher,
         mockApiClient,
         mockLocaleManager,
-        audienceOverridesProvider,
+        mockAudienceOverridesProvider,
         testClock,
         testDispatcher
     ).also {
@@ -510,6 +517,15 @@ public class ContactManagerTest {
                 ScopedSubscriptionListMutation.collapseMutations(subscriptions)
             )
         }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                TagGroupsMutation.collapseMutations(tags),
+                AttributeMutation.collapseMutations(attributes),
+                ScopedSubscriptionListMutation.collapseMutations(subscriptions)
+            )
+        }
     }
 
     @Test
@@ -867,7 +883,7 @@ public class ContactManagerTest {
         assertEquals(
             AudienceOverrides.Contact(
                 tags = tags, attributes = attributes, subscriptions = subscriptions
-            ), audienceOverridesProvider.contactOverrides(anonIdentityResult.contactId)
+            ), audienceOverrideSlot.captured(anonIdentityResult.contactId)
         )
     }
 
