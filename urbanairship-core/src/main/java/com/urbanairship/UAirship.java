@@ -25,6 +25,7 @@ import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
 import com.urbanairship.contacts.Contact;
+import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.http.DefaultRequestSession;
 import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
@@ -152,6 +153,7 @@ public class UAirship {
     PrivacyManager privacyManager;
     Contact contact;
     PermissionsManager permissionsManager;
+    ExperimentManager experimentManager;
 
     /**
      * Constructs an instance of UAirship.
@@ -752,6 +754,10 @@ public class UAirship {
         this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, audienceOverridesProvider);
         components.add(this.contact);
         requestSession.setContactAuthTokenProvider(this.contact.getAuthTokenProvider());
+
+        // Experiments
+        this.experimentManager = new ExperimentManager(application, preferenceDataStore, remoteData);
+        components.add(this.experimentManager);
 
         // Debug
         Module debugModule = Modules.debug(application, preferenceDataStore);
