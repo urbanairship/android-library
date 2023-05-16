@@ -53,6 +53,7 @@ dependencies {
     testImplementation(libs.androidx.test.ext.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockito.kotlin)
 
     // Instrumentation Test
     androidTestImplementation(libs.androidx.test.core)
@@ -61,6 +62,10 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.room.testing)
     testImplementation(libs.turbine)
+}
+
+tasks.withType(Test).configureEach {
+    forkEvery = 100
 }
 
 allOpen {

@@ -67,3 +67,15 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
         else -> throw JsonException("Invalid type '${T::class.java.simpleName}' for field '$key'")
     }
 }
+
+/**
+ * Gets the field with the given [key] from the [JsonMap] and convert it using [builder] function,
+ * or `null` if not defined.
+ */
+internal inline fun <reified T> JsonMap.optionalFieldConverted(key: String, builder: (String) -> T?): T? {
+    val result = optionalField<String>(key)?.let(builder)
+    if (result == null) {
+        Logger.e { "Failed to parse ${T::class.simpleName} from $key" }
+    }
+    return result
+}
