@@ -5,6 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
+import com.urbanairship.TestRequestSession
 import com.urbanairship.UAirship.ANDROID_PLATFORM
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -24,6 +25,7 @@ public class LiveUpdateManagerTest {
     private val config: AirshipRuntimeConfig = mockk {
         every { configOptions } returns mockk()
         every { platform } returns ANDROID_PLATFORM
+        every { requestSession } returns TestRequestSession()
     }
     private val pushManager: PushManager = mockk(relaxed = true)
     private val channel: AirshipChannel = mockk {

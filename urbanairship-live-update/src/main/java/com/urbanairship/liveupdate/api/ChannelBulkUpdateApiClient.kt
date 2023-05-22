@@ -11,9 +11,13 @@ import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.SubscriptionListMutation
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.http.Request
+import com.urbanairship.http.RequestAuth
+import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestException
-import com.urbanairship.http.RequestFactory
-import com.urbanairship.http.Response
+import com.urbanairship.http.RequestResult
+import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
@@ -22,37 +26,38 @@ import com.urbanairship.liveupdate.util.jsonMapOf
 import com.urbanairship.liveupdate.util.requireField
 import com.urbanairship.liveupdate.util.toJsonList
 import com.urbanairship.util.Clock
-import com.urbanairship.util.UAHttpStatusUtil
 
 /** API client for the channel bulk update endpoint. */
 internal class ChannelBulkUpdateApiClient(
     private val config: AirshipRuntimeConfig,
-    private val requestFactory: RequestFactory = RequestFactory.DEFAULT_REQUEST_FACTORY
+    private val session: SuspendingRequestSession = config.requestSession.toSuspendingRequestSession()
 ) {
     /** Bulk update channel subscription lists, tags, and attributes. */
     @Throws(RequestException::class)
-    fun update(
+    suspend fun update(
         channelId: String,
         tags: List<TagGroupsMutation>? = null,
         attributes: List<AttributeMutation>? = null,
         subscriptions: List<SubscriptionListMutation>? = null,
         liveUpdates: List<LiveUpdateMutation>? = null,
-    ): Response<Unit> {
+    ): RequestResult<Unit> {
         val payload =
             ChannelBulkUpdateRequest(channelId, tags, attributes, subscriptions, liveUpdates)
         Logger.verbose("Bulk updating channel ($channelId) with payload: ${payload.toJsonValue()}")
 
-        return requestFactory.createRequest()
-            .setOperation("PUT", bulkUpdateUrl(channelId))
-            .setCredentials(config.configOptions.appKey, config.configOptions.appSecret)
-            .setRequestBody(payload)
-            .setAirshipJsonAcceptsHeader()
-            .setAirshipUserAgent(config)
-            .execute { status, _, _ ->
-                if (!UAHttpStatusUtil.inSuccessRange(status)) {
-                    throw RequestException("Unexpected response status: $status")
-                }
-            }
+        val request = Request(
+            url = bulkUpdateUrl(channelId),
+            method = "PUT",
+            auth = RequestAuth.BasicAppAuth,
+            body = RequestBody.Json(payload),
+            headers = mapOf(
+                "Accept" to "application/vnd.urbanairship+json; version=3;"
+            )
+        )
+
+        return session.execute(request).also { response ->
+            Logger.v { "Bulk finished with response $response" }
+        }
     }
 
     private fun bulkUpdateUrl(channelId: String): Uri? {

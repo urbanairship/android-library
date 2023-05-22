@@ -21,6 +21,9 @@ import com.urbanairship.push.PushManager
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class LiveUpdateModuleFactoryImpl : LiveUpdateModuleFactory {
 
+    override val airshipVersion: String = BuildConfig.AIRSHIP_VERSION
+    override val packageVersion: String = BuildConfig.SDK_VERSION
+
     override fun build(
         context: Context,
         dataStore: PreferenceDataStore,
@@ -39,8 +42,4 @@ public class LiveUpdateModuleFactoryImpl : LiveUpdateModuleFactory {
         )
         return Module.singleComponent(manager, 0)
     }
-
-    override fun getAirshipVersion(): String = BuildConfig.AIRSHIP_VERSION
-
-    override fun getPackageVersion(): String = BuildConfig.SDK_VERSION
 }

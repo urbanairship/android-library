@@ -2,52 +2,69 @@
 
 package com.urbanairship.liveupdate.api
 
-import com.urbanairship.BaseTestCase
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.TestRequest
+import com.urbanairship.TestRequestSession
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.SubscriptionListMutation.newSubscribeMutation
 import com.urbanairship.channel.SubscriptionListMutation.newUnsubscribeMutation
 import com.urbanairship.channel.TagGroupsMutation.newAddTagsMutation
 import com.urbanairship.channel.TagGroupsMutation.newSetTagsMutation
 import com.urbanairship.config.AirshipUrlConfig
-import com.urbanairship.http.RequestFactory
+import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.intellij.lang.annotations.Language
+import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 
-public class ChannelBulkUpdateApiClientTest : BaseTestCase() {
+@OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(AndroidJUnit4::class)
+public class ChannelBulkUpdateApiClientTest {
 
-    private lateinit var client: ChannelBulkUpdateApiClient
-    private lateinit var testRequest: TestRequest
+    private val config = TestAirshipRuntimeConfig.newTestConfig()
+    private val requestSession = TestRequestSession()
+    private val testDispatcher = StandardTestDispatcher()
+
+    private val client: ChannelBulkUpdateApiClient =
+        ChannelBulkUpdateApiClient(config, requestSession.toSuspendingRequestSession())
 
     @Before
     public fun setup() {
-        testRequest = TestRequest()
-        val config = TestAirshipRuntimeConfig.newTestConfig().apply {
-            urlConfig = AirshipUrlConfig.newBuilder()
-                .setDeviceUrl("https://example.com")
-                .build()
-        }
-        client = ChannelBulkUpdateApiClient(config, object : RequestFactory() {
-            override fun createRequest(): TestRequest = testRequest
-        })
+        Dispatchers.setMain(testDispatcher)
+        config.urlConfig = AirshipUrlConfig.newBuilder().setDeviceUrl("https://example.com").build()
+    }
+
+    @After
+    public fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
-    public fun testBulkUpdateRequestSuccess() {
-        testRequest.responseStatus = 200
+    public fun testBulkUpdateRequestSuccess(): TestResult = runTest {
+        requestSession.addResponse(200)
 
         val payload = ChannelBulkUpdateRequest(channelId = CHANNEL_ID)
 
         val response = client.update(CHANNEL_ID)
 
-        assertEquals("PUT", testRequest.requestMethod)
-        assertEquals("https://example.com/api/channels/sdk/batch/$CHANNEL_ID?platform=android", testRequest.url.toString())
-        assertEquals(payload.toJsonValue().toString(), testRequest.requestBody)
+        assertNull(response.exception)
         assertEquals(200, response.status)
+
+        val request = requestSession.lastRequest
+        assertEquals("PUT", request.method)
+        assertEquals("https://example.com/api/channels/sdk/batch/$CHANNEL_ID?platform=android", request.url.toString())
+        assertEquals(payload.toJsonValue().toString(), request.body?.content)
     }
 
     @Test
@@ -73,10 +90,10 @@ public class ChannelBulkUpdateApiClientTest : BaseTestCase() {
     }
 
     private companion object {
-        val CHANNEL_ID = "channelId"
+        private const val CHANNEL_ID = "channelId"
 
         @Language("JSON")
-        val EXPECTED_BATCH_UPDATE_JSON = """
+        private val EXPECTED_BATCH_UPDATE_JSON = """
             {
               "attributes": [
                 {

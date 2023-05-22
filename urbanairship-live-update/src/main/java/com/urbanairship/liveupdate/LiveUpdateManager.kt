@@ -23,6 +23,7 @@ import com.urbanairship.liveupdate.data.LiveUpdateDatabase
 import com.urbanairship.liveupdate.notification.LiveUpdatePayload
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
+import kotlinx.coroutines.runBlocking
 
 /**
  * Airship Live Updates.
@@ -167,12 +168,14 @@ internal constructor(
             ACTION_UPDATE_CHANNEL ->
                 channel.id?.let { channelId ->
                     try {
-                        val update = LiveUpdateMutation.fromJson(jobInfo.extras)
-                        val resp = bulkUpdateClient.update(channelId, liveUpdates = listOf(update))
-                        if (resp.isSuccessful) {
-                            JobResult.SUCCESS
-                        } else {
-                            JobResult.RETRY
+                        runBlocking {
+                            val update = LiveUpdateMutation.fromJson(jobInfo.extras)
+                            val resp =
+                                bulkUpdateClient.update(channelId, liveUpdates = listOf(update))
+                            when {
+                                resp.isSuccessful -> JobResult.SUCCESS
+                                else -> JobResult.RETRY
+                            }
                         }
                     } catch (e: Throwable) {
                         Logger.error(e, "Failed to batch update channel for live update.")
