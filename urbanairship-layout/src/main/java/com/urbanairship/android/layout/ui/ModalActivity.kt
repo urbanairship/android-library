@@ -28,6 +28,7 @@ import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.property.Orientation
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.android.layout.util.FullScreenAdjustResizeWorkaround.Companion.applyAdjustResizeWorkaround
 import com.urbanairship.android.layout.util.parcelableExtra
 import com.urbanairship.android.layout.view.ModalView
 import kotlinx.coroutines.flow.Flow
@@ -115,6 +116,13 @@ public class ModalActivity : AppCompatActivity() {
             }
 
             setContentView(view)
+
+            if (placement.shouldIgnoreSafeArea()) {
+                // Apply workaround for adjustResize not working with fullscreen activities,
+                // so that the keyboard does not cover the modal when we're ignoring safe areas.
+                // ref: https://issuetracker.google.com/issues/36911528
+                applyAdjustResizeWorkaround()
+            }
         } catch (e: LoadException) {
             Logger.error(e, "Failed to load model!")
             finish()

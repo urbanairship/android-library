@@ -10,10 +10,15 @@ import android.net.Uri;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Autopilot;
 import com.urbanairship.UAirship;
+import com.urbanairship.liveupdate.LiveUpdateManager;
 import com.urbanairship.messagecenter.MessageCenter;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationChannelCompat;
+import androidx.core.app.NotificationManagerCompat;
+
+import static androidx.core.app.NotificationManagerCompat.IMPORTANCE_HIGH;
 
 /**
  * Autopilot that enables user notifications on first run.
@@ -35,6 +40,20 @@ public class SampleAutopilot extends Autopilot {
             // Enable user notifications on first run
             airship.getPushManager().setUserNotificationsEnabled(true);
         }
+
+        // Create notification channel for Live Updates.
+        NotificationChannelCompat sportsChannel =
+                new NotificationChannelCompat.Builder("sports", IMPORTANCE_HIGH)
+                        .setDescription("Live sports updates!")
+                        .setName("Sports!")
+                        .setVibrationEnabled(false)
+                        .build();
+
+        Context context = UAirship.getApplicationContext();
+        NotificationManagerCompat.from(context).createNotificationChannel(sportsChannel);
+
+        // Register handlers for Live Updates.
+        LiveUpdateManager.shared().register("sports", new SampleLiveUpdate());
 
         MessageCenter.shared().setOnShowMessageCenterListener(messageId -> {
             // Use an implicit navigation deep link for now as explicit deep links are broken

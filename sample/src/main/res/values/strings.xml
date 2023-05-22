@@ -36,4 +36,9 @@
         <item quantity="other">%d unread messages</item>
     </plurals>
 
+    <!-- Live Updates Notifications -->
+    <string name="live_update_team_foxes">Foxes</string>
+    <string name="live_update_team_tigers">Tigers</string>
+    <string name="live_update_vs">VS</string>
+
 </resources>
