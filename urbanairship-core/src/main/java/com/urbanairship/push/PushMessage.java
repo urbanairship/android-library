@@ -77,6 +77,12 @@ public class PushMessage implements Parcelable, JsonSerializable {
     public static final String EXTRA_ACTIONS = "com.urbanairship.actions";
 
     /**
+     * The Live Update payload.
+     */
+    @NonNull
+    public static final String EXTRA_LIVE_UPDATE = "com.urbanairship.live_update";
+
+    /**
      * The extra key for the payload of Airship actions to be run when an
      * interactive notification action button is opened.
      */
@@ -690,6 +696,16 @@ public class PushMessage implements Parcelable, JsonSerializable {
         }
 
         return defaultIcon;
+    }
+
+    /**
+     * Gets the Live Update payload, if present.
+     *
+     * @return The Live Update payload or {@code null}, if not present.
+     */
+    @Nullable
+    public String getLiveUpdatePayload() {
+        return data.get(EXTRA_LIVE_UPDATE);
     }
 
     /**

@@ -20,6 +20,7 @@ import com.urbanairship.modules.accengage.AccengageModuleFactory;
 import com.urbanairship.modules.automation.AutomationModuleFactory;
 import com.urbanairship.modules.chat.ChatModuleFactory;
 import com.urbanairship.modules.debug.DebugModuleFactory;
+import com.urbanairship.modules.liveupdate.LiveUpdateModuleFactory;
 import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.modules.location.LocationModuleFactory;
 import com.urbanairship.modules.messagecenter.MessageCenterModuleFactory;
@@ -47,6 +48,7 @@ public class Modules {
     private static final String DEBUG_MODULE_FACTORY = "com.urbanairship.debug.DebugModuleFactoryImpl";
     private static final String AD_ID_FACTORY = "com.urbanairship.aaid.AdIdModuleFactoryImpl";
     private static final String CHAT_FACTORY = "com.urbanairship.chat.ChatModuleFactoryImpl";
+    private static final String LIVE_UPDATE_FACTORY = "com.urbanairship.liveupdate.LiveUpdateModuleFactoryImpl";
     private static final String PREFERENCE_CENTER_FACTORY = "com.urbanairship.preferencecenter.PreferenceCenterModuleFactoryImpl";
 
     @Nullable
@@ -187,6 +189,25 @@ public class Modules {
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to build Preference Center module");
+        }
+        return null;
+    }
+
+    @Nullable
+    public static Module liveUpdateManager(@NonNull Context context,
+                                           @NonNull PreferenceDataStore dataStore,
+                                           @NonNull AirshipRuntimeConfig config,
+                                           @NonNull PrivacyManager privacyManager,
+                                           @NonNull AirshipChannel airshipChannel,
+                                           @NonNull PushManager pushManager) {
+        try {
+            LiveUpdateModuleFactory moduleFactory =
+                    createFactory(LIVE_UPDATE_FACTORY, LiveUpdateModuleFactory.class);
+            if (moduleFactory != null) {
+                return moduleFactory.build(context, dataStore, config, privacyManager, airshipChannel, pushManager);
+            }
+        } catch (Exception e) {
+            Logger.error(e, "Failed to build Live Update module");
         }
         return null;
     }

@@ -67,6 +67,9 @@ dependencies {
     // Airship Automation (In-App)
     implementation project(':urbanairship-automation')
 
+    // Airship Live Updates
+    implementation project(':urbanairship-live-update')
+
     // Airship location
     implementation project(':urbanairship-location')
     // Allows Airship location services to use Fused Location
