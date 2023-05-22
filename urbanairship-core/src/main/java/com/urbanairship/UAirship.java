@@ -794,6 +794,10 @@ public class UAirship {
         Module preferenceCenter = Modules.preferenceCenter(application, preferenceDataStore, privacyManager, remoteData);
         processModule(preferenceCenter);
 
+        // Live Updates
+        Module liveUpdateManager = Modules.liveUpdateManager(application, preferenceDataStore, runtimeConfig, privacyManager, channel, pushManager);
+        processModule(liveUpdateManager);
+
         remoteAirshipUrlConfigProvider.addUrlConfigListener(() -> {
             for (AirshipComponent component : components) {
                 component.onUrlConfigUpdated();

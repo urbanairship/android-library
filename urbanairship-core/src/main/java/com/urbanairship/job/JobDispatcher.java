@@ -160,8 +160,12 @@ public class JobDispatcher {
 
         jobRunner.run(jobInfo, (result) -> {
             Logger.verbose("Job finished. Job info: %s, result: %s", jobInfo, result);
-            if (result == JobResult.RETRY && runAttempt >= RESCHEDULE_RETRY_COUNT) {
-                Logger.verbose("Job retry limit reached. Rescheduling for a later time. Job info: %s, work Id: %s", jobInfo);
+            boolean shouldRetry = result == JobResult.RETRY;
+            boolean shouldReschedule = runAttempt >= RESCHEDULE_RETRY_COUNT;
+            // Workaround for APPEND jobs, which we don't want to reschedule like other jobs.
+            boolean isAppend = jobInfo.getConflictStrategy() == JobInfo.APPEND;
+            if (shouldRetry && shouldReschedule && !isAppend) {
+                Logger.verbose("Job retry limit reached. Rescheduling for a later time. Job info: %s", jobInfo);
                 dispatch(jobInfo, RESCHEDULE_RETRY_DELAY_MS);
                 callback.accept(JobResult.FAILURE);
             } else {

@@ -68,6 +68,9 @@ dependencies {
     // Airship Automation (In-App)
     implementation project(':urbanairship-automation')
 
+    // Airship Live Updates
+    implementation project(':urbanairship-live-update')
+
     // Airship Debug: Normally this is a debug only dependency but we embed the view in sample app
     implementation project(':urbanairship-debug')
 

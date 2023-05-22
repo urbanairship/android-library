@@ -120,6 +120,7 @@ androidx-preferencektx = { module = "androidx.preference:preference-ktx", versio
 androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "androidx-recyclerview" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "androidx-room" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "androidx-room" }
 androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "androidx-room" }
 androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "androidx-startup" }
 androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "androidx-swiperefreshlayout" }
