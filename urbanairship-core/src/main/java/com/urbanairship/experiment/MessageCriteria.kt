@@ -6,7 +6,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
 
 internal data class MessageCriteria(
-    val predicate: JsonPredicate
+    val messageTypePredicate: JsonPredicate?
 ) {
 
     companion object {
@@ -22,7 +22,7 @@ internal data class MessageCriteria(
         internal fun fromJson(json: JsonMap): MessageCriteria? {
             try {
                 return MessageCriteria(
-                    predicate = JsonPredicate.parse(json.require(KEY_PREDICATE))
+                    messageTypePredicate = JsonPredicate.parse(json.require(KEY_PREDICATE))
                 )
             } catch (ex: JsonException) {
                 Logger.e { "failed to parse MessageCriteria from json $json" }

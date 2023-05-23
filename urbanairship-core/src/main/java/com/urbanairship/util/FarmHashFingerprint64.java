@@ -16,14 +16,14 @@ import static java.lang.Long.rotateRight;
  *
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-final class FarmHashFingerprint64 {
+public final class FarmHashFingerprint64 {
 
     // Some primes between 2^63 and 2^64 for various uses.
     private static final long K0 = 0xc3a5c85c97cb3127L;
     private static final long K1 = 0xb492b66fbe98f273L;
     private static final long K2 = 0x9ae16a3b2f90404fL;
 
-    static long fingerprint(@NonNull String string) {
+    public static long fingerprint(@NonNull String string) {
         byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
         return fingerprint(bytes, 0, bytes.length);
     }

@@ -28,12 +28,12 @@ internal enum class HashAlgorithm(val jsonValue: String) {
     }
 }
 
-internal class AudienceHash(
+internal data class AudienceHash(
     val prefix: String,
-    val identifiersDomain: HashIdentifiers,
+    val property: HashIdentifiers,
     val algorithm: HashAlgorithm,
     val seed: Long?,
-    var numberOfHashBuckets: Int?,
+    val numberOfHashBuckets: Int,
     val overrides: JsonMap?,
 ) {
 
@@ -61,10 +61,10 @@ internal class AudienceHash(
 
                 return AudienceHash(
                     prefix = json.requireField(KEY_PREFIX),
-                    identifiersDomain = domain,
+                    property = domain,
                     algorithm = algorithm,
                     seed = json.optionalField(KEY_SEED),
-                    numberOfHashBuckets = json.optionalField(KEY_HASH_BUCKETS),
+                    numberOfHashBuckets = json.requireField(KEY_HASH_BUCKETS),
                     overrides = json.optionalField(KEY_OVERRIDES)
                 )
             } catch (ex: JsonException) {

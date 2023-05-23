@@ -37,10 +37,18 @@ public class ExperimentManagerTest {
     }
 
     private lateinit var subject: ExperimentManager
+    private var channelId: String? = "default-channel-id"
+    private var contactId: String = "default-contact-id"
 
     @Before
     public fun setUp() {
-        subject = ExperimentManager(context, dataStore, remoteData)
+        subject = ExperimentManager(
+            context = context,
+            dataStore = dataStore,
+            remoteData = remoteData,
+            channelIdFetcher = { channelId },
+            stableContactIdFetcher = { contactId }
+        )
     }
 
     @Test
@@ -61,7 +69,7 @@ public class ExperimentManagerTest {
         val parsed = experiment!!
         assertEquals("fake-id", parsed.id)
         assertEquals("farm_hash", parsed.audienceSelector.hash.algorithm.jsonValue)
-        assertEquals("contact", parsed.audienceSelector.hash.identifiersDomain.jsonValue)
+        assertEquals("contact", parsed.audienceSelector.hash.property.jsonValue)
         assertEquals(123L, parsed.lastUpdated)
         assertEquals("Holdout", parsed.type.jsonValue)
         assertEquals("Static", parsed.resolutionType.jsonValue)
@@ -84,7 +92,7 @@ public class ExperimentManagerTest {
         val validExperiment = subject.getExperimentWithId("fake-id")
         assertNotNull(validExperiment)
         assertEquals("fake-id", validExperiment!!.id)
-        assertEquals("channel", validExperiment!!.audienceSelector.hash.identifiersDomain.jsonValue)
+        assertEquals("channel", validExperiment!!.audienceSelector.hash.property.jsonValue)
 
         assertNull(subject.getExperimentWithId("fake-id-2"))
     }
@@ -134,10 +142,136 @@ public class ExperimentManagerTest {
         assertNull(subject.getExperimentWithId("fake-id"))
     }
 
+    @Test
+    public fun testHoldoutGroupEvaluationWorks(): TestResult = runTest {
+        channelId = "channel-id"
+        contactId = "some-contact-id"
+
+        val experimentJson = generateExperimentsPayload(
+            id = "fake-id",
+            hashIdentifier = "channel")
+            .build()
+        val data = RemoteDataPayload.newBuilder()
+            .setType(PAYLOAD_TYPE)
+            .setTimeStamp(1L)
+            .setMetadata(jsonMapOf())
+            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson)))
+            .build()
+
+        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+
+        val result = subject.evaluateGlobalHoldouts(MessageInfo(""))
+        assertNotNull(result)
+        assertEquals("fake-id", result!!.experimentId)
+        assertEquals(contactId, result.contactId)
+        assertEquals(channelId, result.channelId)
+        assert(result.reportingMetadata.equals(experimentJson.require("reporting_metadata")))
+    }
+
+    @Test
+    public fun testHoldoutGroupEvaluationRespectHashBuckets(): TestResult = runTest {
+        channelId = "channel-id"
+        contactId = "some-contact-id"
+        val activeContactId = "active-contact-id"
+
+        val unmatchedJson = generateExperimentsPayload(
+            id = "unmatched",
+            bucketMax = 1239).build()
+        val matchedJson = generateExperimentsPayload("matched", bucketMin = 1239).build()
+        val data = RemoteDataPayload.newBuilder()
+            .setType(PAYLOAD_TYPE)
+            .setTimeStamp(1L)
+            .setMetadata(jsonMapOf())
+            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson)))
+            .build()
+
+        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+
+        val result = subject.evaluateGlobalHoldouts(MessageInfo(""), activeContactId)
+        assertNotNull(result)
+        assertEquals("matched", result!!.experimentId)
+        assertEquals(activeContactId, result.contactId)
+    }
+
+    @Test
+    public fun testHoldoutGroupEvaluationPicksFirstMatchingExperiment(): TestResult = runTest {
+        val firstJson = generateExperimentsPayload(id = "first").build()
+        val secondJson = generateExperimentsPayload("second").build()
+        val data = RemoteDataPayload.newBuilder()
+            .setType(PAYLOAD_TYPE)
+            .setTimeStamp(1L)
+            .setMetadata(jsonMapOf())
+            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(firstJson, secondJson)))
+            .build()
+
+        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+
+        val result = subject.evaluateGlobalHoldouts(MessageInfo(""))
+        assertNotNull(result)
+        assertEquals("first", result!!.experimentId)
+    }
+
+    @Test
+    public fun testHoldoutEvaluationRespectsMessageExclusion(): TestResult = runTest {
+        val unmatchedJson = generateExperimentsPayload(id = "unmatched").build()
+        val matchedJson = generateExperimentsPayload(
+            id = "matched",
+            messageTypeToExclude = "none")
+            .build()
+        val data = RemoteDataPayload.newBuilder()
+            .setType(PAYLOAD_TYPE)
+            .setTimeStamp(1L)
+            .setMetadata(jsonMapOf())
+            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson)))
+            .build()
+
+        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+
+        val result = subject.evaluateGlobalHoldouts(MessageInfo("Transactional"))
+        assertNotNull(result)
+        assertEquals("matched", result!!.experimentId)
+    }
+
+    @Test
+    public fun testHoldoutEvaluationRespectOverridesForHash(): TestResult = runTest {
+        val unmatchedJson = generateExperimentsPayload(
+            id = "unmatched",
+            bucketMax = 2337,
+            hashOverrides = JsonMap
+                .newBuilder()
+                .put(contactId, "overriden")
+                .build()
+        )
+            .build()
+
+        val matchedJson = generateExperimentsPayload(
+            id = "matched",
+            bucketMax = 2337,
+        )
+            .build()
+
+        val data = RemoteDataPayload.newBuilder()
+            .setType(PAYLOAD_TYPE)
+            .setTimeStamp(1L)
+            .setMetadata(jsonMapOf())
+            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson)))
+            .build()
+
+        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+
+        val result = subject.evaluateGlobalHoldouts(MessageInfo(""))
+        assertNotNull(result)
+        assertEquals("matched", result!!.experimentId)
+    }
+
     private fun generateExperimentsPayload(
         id: String,
         hashIdentifier: String = "contact",
-        hashAlgorithm: String = "farm_hash"
+        hashAlgorithm: String = "farm_hash",
+        hashOverrides: JsonMap? = null,
+        bucketMin: Int = 0,
+        bucketMax: Int = 16384,
+        messageTypeToExclude: String = "Transactional"
     ): JsonMap.Builder {
         return JsonMap.newBuilder()
             .put("id", id)
@@ -158,9 +292,10 @@ public class ExperimentManagerTest {
                             .newBuilder()
                             .put("audience_hash", generateAudienceHash(
                                 identifier = hashIdentifier,
-                                algorithm = hashAlgorithm
+                                algorithm = hashAlgorithm,
+                                overrides = hashOverrides
                             ))
-                            .put("audience_subset", generateBucket())
+                            .put("audience_subset", generateBucket(bucketMin, bucketMax))
                             .build()
                             .toJsonValue()
                     }
@@ -178,7 +313,7 @@ public class ExperimentManagerTest {
                                     .put("value") {
                                         JsonMap
                                             .newBuilder()
-                                            .put("equals", "Transactional")
+                                            .put("equals", messageTypeToExclude)
                                             .build()
                                             .toJsonValue()
                                     }
@@ -191,28 +326,25 @@ public class ExperimentManagerTest {
                 )
                 .toJsonValue()
             }
-            .put("evaluation_options") {
-                JsonMap
-                    .newBuilder()
-                    .put("disallow_stale_value", true)
-                    .put("disallow_stale_contact", true)
-                    .put("ttl", 22)
-                    .build()
-                    .toJsonValue()
-            }
     }
 
-    private fun generateAudienceHash(identifier: String, algorithm: String): JsonValue {
-        return JsonMap.newBuilder()
+    private fun generateAudienceHash(identifier: String, algorithm: String, overrides: JsonMap?): JsonValue {
+        val result = JsonMap.newBuilder()
             .put("hash_prefix", "e66a2371-fecf-41de-9238-cb6c28a86cec:")
             .put("num_hash_buckets", 16384)
             .put("hash_identifier", identifier)
             .put("hash_algorithm", algorithm)
+
+        if (overrides != null) {
+            result.put("hash_identifier_overrides", overrides.toJsonValue())
+        }
+
+        return result
             .build()
             .toJsonValue()
     }
 
-    private fun generateBucket(min: Int = 0, max: Int = 16384): JsonValue {
+    private fun generateBucket(min: Int, max: Int): JsonValue {
         return JsonMap.newBuilder()
             .put("min_hash_bucket", min)
             .put("max_hash_bucket", max)

@@ -6,8 +6,8 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.optionalField
 
 internal class BucketSubset(
-    val min: Int?,
-    val max: Int?
+    val min: Long,
+    val max: Long
 ) {
 
     companion object {
@@ -24,13 +24,17 @@ internal class BucketSubset(
         internal fun fromJson(json: JsonMap): BucketSubset? {
             try {
                 return BucketSubset(
-                    min = json.optionalField(KEY_BUCKET_MIN),
-                    max = json.optionalField(KEY_BUCKET_MAX)
+                    min = json.optionalField(KEY_BUCKET_MIN) ?: 0,
+                    max = json.optionalField(KEY_BUCKET_MAX) ?: Long.MAX_VALUE
                 )
             } catch (ex: JsonException) {
                 Logger.e { "failed to parse ExperimentBucket from json $json" }
                 return null
             }
         }
+    }
+
+    fun contains(value: Long): Boolean {
+        return value in min until max
     }
 }

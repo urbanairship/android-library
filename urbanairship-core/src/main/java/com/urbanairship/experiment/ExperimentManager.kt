@@ -10,12 +10,14 @@ import com.urbanairship.Logger
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
-import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonValue
+import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.reactive.Observable
 import com.urbanairship.reactive.Subscriber
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
+import com.urbanairship.util.FarmHashFingerprint64
 import java.lang.Exception
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -28,7 +30,9 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 public class ExperimentManager internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
-    private val remoteData: RemoteData
+    private val remoteData: RemoteData,
+    private val channelIdFetcher: () -> String?,
+    private val stableContactIdFetcher: suspend () -> String
 ) : AirshipComponent(context, dataStore) {
 
     public companion object {
@@ -45,23 +49,73 @@ public class ExperimentManager internal constructor(
      * @param id The ID of the Experiment.
      */
     internal suspend fun getExperimentWithId(id: String): Experiment? {
-        return getExperimentWith {
-            it.requireField<String>(Experiment.KEY_ID) == id
+        return getExperiments()
+            .find { it.id == id }
+    }
+
+    /**
+     * Checks if the channel and/or contact is part of a global holdout or not.
+     * @param contactId The contact ID. If not provided, the stable contact ID will be used.
+     * @return The experiments result. If no experiment matches, null is returned.
+     */
+    internal suspend fun evaluateGlobalHoldouts(messageInfo: MessageInfo, contactId: String? = null): ExperimentResult? {
+        val channelId = channelIdFetcher() ?: return null
+        val evaluationContactId = contactId ?: stableContactIdFetcher()
+
+        val properties = mapOf(
+            HashIdentifiers.CONTACT.jsonValue to evaluationContactId,
+            HashIdentifiers.CHANNEL.jsonValue to channelId
+        )
+
+        var result: ExperimentResult? = null
+
+        for (experiment in getExperiments()) {
+            val isResolved = getResolutionFunction(experiment)
+                .invoke(experiment, messageInfo, properties)
+
+            if (isResolved) {
+                result = ExperimentResult(
+                    channelId = channelId,
+                    contactId = evaluationContactId,
+                    experimentId = experiment.id,
+                    reportingMetadata = experiment.reportingMetadata
+                )
+                break
+            }
+        }
+
+        return result
+    }
+
+    private fun getResolutionFunction(experiment: Experiment): ResolutionFunction {
+        return when (experiment.resolutionType) {
+            ResolutionType.STATIC -> this::resolveStatic
         }
     }
 
-    private suspend fun getExperimentWith(predicate: (JsonMap) -> Boolean): Experiment? {
+    private fun resolveStatic(
+        experiment: Experiment,
+        messageInfo: MessageInfo,
+        properties: Map<String, String?>
+    ): Boolean {
+        if (experiment.exclusions.any { it.evaluate(messageInfo) }) {
+            return false
+        }
+
+        return experiment.audienceSelector.isMatching(properties)
+    }
+
+    private suspend fun getExperiments(): List<Experiment> {
         try {
             return remoteData
                 .singlePayloadForType(PAYLOAD_TYPE)
                 .data
                 .requireField<JsonList>(PAYLOAD_TYPE)
                 .map { it.optMap() }
-                .find(predicate)
-                ?.let(Experiment::fromJson)
+                .mapNotNull(Experiment::fromJson)
         } catch (ex: JsonException) {
-            Logger.e(ex, { "Failed to parse experiments from remoteData payload" })
-            return null
+            Logger.e(ex) { "Failed to parse experiments from remoteData payload" }
+            return emptyList()
         }
     }
 }
@@ -80,3 +134,34 @@ internal suspend fun RemoteData.singlePayloadForType(type: String): RemoteDataPa
         }
     }
 }
+
+// Experiments filtering by message type
+internal fun MessageCriteria.evaluate(info: MessageInfo): Boolean {
+    return messageTypePredicate?.apply(JsonValue.wrap(info.messageType)) ?: false
+}
+
+// Calculate hash and define if it's withing the experiment bucket
+internal fun AudienceSelector.isMatching(properties: Map<String, String?>): Boolean {
+    return hash
+        .generate(properties)
+        ?.let { bucket.contains(it) }
+        ?: false
+}
+
+internal fun AudienceHash.generate(properties: Map<String, String?>): Long? {
+    if (!properties.containsKey(property.jsonValue)) {
+        Logger.e { "can't find device property ${property.jsonValue}" }
+    }
+
+    val key = properties[property.jsonValue] ?: return null
+    val value = overrides?.optionalField<String>(key) ?: key
+
+    val hashFunction: HashFunction = when (algorithm) {
+        HashAlgorithm.FARM -> FarmHashFingerprint64::fingerprint
+    }
+
+    return hashFunction.invoke("$prefix$value") % numberOfHashBuckets
+}
+
+private typealias HashFunction = (String) -> Long
+private typealias ResolutionFunction = (Experiment, MessageInfo, Map<String, String?>) -> Boolean

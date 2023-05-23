@@ -458,6 +458,12 @@ public class Contact internal constructor(
         return pendingResult
     }
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public suspend fun getStableContactId(): String = contactManager.stableContactId()
+
     private suspend fun fetchContactSubscriptionList(contactId: String): Result<Map<String, Set<Scope>>> {
         return subscriptionFetchQueue.run {
             val cached = subscriptionListCache.get()

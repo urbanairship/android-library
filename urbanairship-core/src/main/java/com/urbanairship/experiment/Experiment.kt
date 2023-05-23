@@ -1,5 +1,6 @@
 package com.urbanairship.experiment
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.Logger
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
@@ -26,6 +27,21 @@ internal enum class ResolutionType(val jsonValue: String) {
     }
 }
 
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class ExperimentResult(
+    public val channelId: String,
+    public val contactId: String?,
+    public val experimentId: String,
+    public val reportingMetadata: JsonMap
+)
+
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class MessageInfo(
+    public val messageType: String
+)
+
 internal data class Experiment(
     val id: String,
     val type: ExperimentType,
@@ -34,7 +50,6 @@ internal data class Experiment(
     val reportingMetadata: JsonMap,
     val audienceSelector: AudienceSelector,
     val exclusions: List<MessageCriteria>,
-    val evaluationOptions: EvaluationOptions?
 ) {
     companion object {
         internal const val KEY_ID = "id"
@@ -86,8 +101,7 @@ internal data class Experiment(
                     lastUpdated = json.requireField(KEY_LAST_UPDATED),
                     reportingMetadata = json.require(KEY_REPORTING_METADATA).optMap(),
                     audienceSelector = audience,
-                    exclusions = exclusions,
-                    evaluationOptions = options
+                    exclusions = exclusions
                 )
             } catch (ex: JsonException) {
                 Logger.e { "failed to parse Experiment from json $json" }

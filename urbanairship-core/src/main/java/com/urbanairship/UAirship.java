@@ -756,7 +756,8 @@ public class UAirship {
         requestSession.setContactAuthTokenProvider(this.contact.getAuthTokenProvider());
 
         // Experiments
-        this.experimentManager = new ExperimentManager(application, preferenceDataStore, remoteData);
+        this.experimentManager = new ExperimentManager(application, preferenceDataStore, remoteData,
+                channel::getId, contact::getStableContactId);
         components.add(this.experimentManager);
 
         // Debug
