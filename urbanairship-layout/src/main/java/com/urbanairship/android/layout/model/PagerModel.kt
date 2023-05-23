@@ -3,21 +3,38 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import android.view.View
+import com.urbanairship.Logger
+import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.gestures.PagerGestureEvent
+import com.urbanairship.android.layout.gestures.PagerGestureEvent.Hold
 import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
+import com.urbanairship.android.layout.property.GestureLocation
 import com.urbanairship.android.layout.property.PagerGesture
+import com.urbanairship.android.layout.property.PagerGestureBehavior
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.earliestNavigationAction
+import com.urbanairship.android.layout.property.firstPagerNextOrNull
+import com.urbanairship.android.layout.property.hasCancel
+import com.urbanairship.android.layout.property.hasCancelOrDismiss
+import com.urbanairship.android.layout.property.hasPagerNext
+import com.urbanairship.android.layout.property.hasPagerPause
+import com.urbanairship.android.layout.property.hasPagerPrevious
+import com.urbanairship.android.layout.property.hasPagerResume
+import com.urbanairship.android.layout.util.DelicateLayoutApi
+import com.urbanairship.android.layout.util.Timer
+import com.urbanairship.android.layout.util.pagerGestures
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
@@ -28,7 +45,7 @@ import kotlinx.coroutines.launch
 internal class PagerModel(
     val items: List<Item>,
     val isSwipeDisabled: Boolean = false,
-    val gestures: List<PagerGesture>? = null,
+    private val gestures: List<PagerGesture>? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -85,6 +102,8 @@ internal class PagerModel(
 
     private val pageViewIds = mutableMapOf<Int, Int>()
 
+    private val automatedActionsTimers: MutableList<Timer> = ArrayList()
+
     init {
         // Update pager state with our page identifiers
         pagerState.update { state ->
@@ -102,10 +121,16 @@ internal class PagerModel(
                     // Otherwise, we only want to act on changes to the pageIndex.
                     pageIndex == 0 && lastPageIndex == 0 || pageIndex != lastPageIndex
                 }
-                .collect { (pageIndex, _) ->
-                    // Run any actions for the current page.
-                    items[pageIndex].displayActions?.let { actions ->
-                        runActions(actions)
+                .collect { (pageIndex, previousIndex) ->
+                    // Clear any automated actions scheduled for the previous page.
+                    if (pageIndex != previousIndex) {
+                        clearAutomatedActions()
+                        Logger.verbose("cleared automated actions for page: $previousIndex")
+                    }
+
+                    // Handle any actions defined for the current page.
+                    items[pageIndex].run {
+                        handlePageActions(displayActions, automatedActions)
                     }
                 }
         }
@@ -117,6 +142,10 @@ internal class PagerModel(
         }
 
     override fun onViewAttached(view: PagerView) {
+        // TODO(stories): need to fix scrolling to previous when laying out in RTL.
+        //   Scrolling back from the last page skips to the first page in a 3-page pager,
+        //   only when RTL :(
+
         // Collect page index changes from state and tell the view to scroll to the current page.
         viewScope.launch {
             pagerState.changes.collect {
@@ -135,22 +164,27 @@ internal class PagerModel(
                 if (!isInternalScroll) {
                     reportPageSwipe(pagerState.changes.value)
                 }
-
-                // Run any automated for the current page.
-                items[position].automatedActions?.let { actions ->
-                    // The delay of the earliest navigation action determines the duration of
-                    // the page display, and can be used to determine the progress value for the
-                    // currently displayed page.
-                    actions.earliestNavigationAction?.let { action ->
-                        // TODO(stories): Set timer for action.delay
-                    }
-
-                    // TODO(stories): Run any other automated actions.
-                    //  If delay is zero, we can run immediately, otherwise schedule the action to
-                    //  run after the delay, via the timer.
-                }
             }
         }
+
+        // If we have gestures defined, collect events from the view and handle them.
+        if (gestures != null) {
+            Logger.verbose("${gestures.size} gestures defined.")
+            viewScope.launch {
+                view.pagerGestures().collect {
+                    handleGesture(it)
+                }
+            }
+        } else {
+            Logger.verbose("No gestures defined.")
+        }
+    }
+
+    override fun onViewDetached(view: PagerView) {
+        super.onViewDetached(view)
+
+        clearAutomatedActions()
+        Logger.verbose("cleared all automated actions for pager.")
     }
 
     /** Returns a stable viewId for the pager item view at the given adapter `position`.  */
@@ -169,4 +203,182 @@ internal class PagerModel(
             ), layoutState.reportingContext(pagerContext = pagerContext)
         )
     }
+
+    private suspend fun handlePageActions(
+        displayActions: Map<String, JsonValue>?,
+        automatedActions: List<AutomatedAction>?
+    ) {
+        // Run any display actions for the current page.
+        displayActions?.let { actions ->
+            runActions(actions)
+        }
+
+        // Run any automated for the current page.
+        automatedActions?.let { actions ->
+            // The delay of the earliest navigation action determines the duration of
+            // the page display, and can be used to determine the progress value for the
+            // currently displayed page.
+            actions.earliestNavigationAction?.let { action ->
+                scheduleAutomatedAction(action)
+            }
+
+            // Run the other automated actions
+            actions.filter { it != actions.earliestNavigationAction }.forEach { action ->
+                if (action.delay == 0) {
+                    //  If delay is zero run immediately
+                    action.behaviors?.let { evaluateClickBehaviors(it) }
+                    action.actions?.let { runActions(it) }
+                } else {
+                    // otherwise schedule the action
+                    scheduleAutomatedAction(action)
+                }
+            }
+        }
+    }
+
+    private suspend fun scheduleAutomatedAction(action: AutomatedAction) {
+        val timer = object : Timer(action.delay.toLong() * 1000L) {
+            override fun onFinish() {
+                action.behaviors?.let {
+                    modelScope.launch {
+                        evaluateClickBehaviors(it)
+                    }
+                }
+                automatedActionsTimers.remove(this)
+            }
+        }
+        timer.start()
+        automatedActionsTimers.add(timer)
+    }
+
+    private suspend fun handleGesture(event: PagerGestureEvent) {
+        Logger.verbose("handleGesture: $event")
+
+        val triggeredGestures: List<PagerGestureBehavior> = when (event) {
+            is PagerGestureEvent.Tap -> gestures.orEmpty()
+                .filterIsInstance<PagerGesture.Tap>()
+                .filter { it.location == event.location || it.location == GestureLocation.ANY }
+                .map { it.behavior }
+
+            is PagerGestureEvent.Swipe -> gestures.orEmpty()
+                .filterIsInstance<PagerGesture.Swipe>()
+                .filter { it.direction == event.direction }
+                .map { it.behavior }
+
+            is Hold -> gestures.orEmpty()
+                .filterIsInstance<PagerGesture.Hold>()
+                .map {
+                    when (event.action) {
+                        Hold.Action.PRESS -> it.pressBehavior
+                        Hold.Action.RELEASE -> it.releaseBehavior
+                    }
+                }
+        }
+
+        triggeredGestures.forEach { gesture ->
+            gesture.actions?.let { runActions(it) }
+            gesture.behaviors?.let { evaluateClickBehaviors(it) }
+        }
+
+        // TODO: Handle the gesture reporting
+    }
+
+    private suspend fun evaluateClickBehaviors(behaviors: List<ButtonClickBehaviorType>) {
+        if (behaviors.hasCancelOrDismiss) {
+            // If there's only a CANCEL or DISMISS, and no FORM_SUBMIT, handle
+            // immediately. We don't need to handle pager behaviors, as the layout
+            // will be dismissed.
+            handleDismiss(behaviors.hasCancel)
+        } else {
+            // No FORM_SUBMIT, CANCEL, or DISMISS, so we only need to
+            // handle pager behaviors.
+            if (behaviors.hasPagerNext) {
+                handlePagerNext(fallback = behaviors.pagerNextFallback)
+            }
+            if (behaviors.hasPagerPrevious) {
+                handlePagerPrevious()
+            }
+            if (behaviors.hasPagerPause) {
+                pauseStory()
+            }
+            if (behaviors.hasPagerResume) {
+                resumeStory()
+            }
+        }
+    }
+
+    private suspend fun handlePagerNext(fallback: PagerNextFallback) {
+        fun pagerNext() {
+            pagerState.update { state ->
+                state.copyWithPageIndex(Integer.min(state.pageIndex + 1, state.pages.size - 1))
+            }
+        }
+
+        @OptIn(DelicateLayoutApi::class)
+        val hasNext = pagerState.value.hasNext
+
+        when {
+            !hasNext && fallback == PagerNextFallback.FIRST ->
+                pagerState.update { state ->
+                    state.copyWithPageIndex(0)
+                }
+            !hasNext && fallback == PagerNextFallback.DISMISS ->
+                handleDismiss(isCancel = false)
+            else ->
+                pagerNext()
+        }
+    }
+
+    private fun handlePagerPrevious() {
+        pagerState.update { state ->
+            state.copyWithPageIndex(Integer.max(state.pageIndex - 1, 0))
+        }
+    }
+
+    private suspend fun handleDismiss(isCancel: Boolean) {
+        report(
+            ReportingEvent.DismissFromStory(isCancel, environment.displayTimer.time),
+            layoutState.reportingContext()
+        )
+        modelScope.launch {
+            environment.eventHandler.broadcast(LayoutEvent.Finish)
+        }
+        clearAutomatedActions()
+    }
+
+    private fun pauseStory() {
+        Logger.verbose("pause story")
+        for (timer in automatedActionsTimers) {
+            timer.stop()
+        }
+    }
+
+    private fun resumeStory() {
+        Logger.verbose("resume story")
+        for (timer in automatedActionsTimers) {
+            timer.start()
+        }
+    }
+
+    private fun clearAutomatedActions() {
+        for (timer in automatedActionsTimers) {
+            timer.stop()
+        }
+        automatedActionsTimers.clear()
+    }
 }
+
+internal enum class PagerNextFallback {
+    NONE,
+    DISMISS,
+    FIRST
+}
+
+internal val List<ButtonClickBehaviorType>.pagerNextFallback: PagerNextFallback
+    get() = firstPagerNextOrNull()?.let {
+        when (it) {
+            ButtonClickBehaviorType.PAGER_NEXT_OR_DISMISS -> PagerNextFallback.DISMISS
+            ButtonClickBehaviorType.PAGER_NEXT_OR_FIRST -> PagerNextFallback.FIRST
+            else -> PagerNextFallback.NONE
+        }
+    } ?: PagerNextFallback.NONE

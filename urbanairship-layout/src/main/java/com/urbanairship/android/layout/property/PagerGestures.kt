@@ -9,8 +9,11 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 
 internal sealed class PagerGesture : Identifiable {
+    abstract val reportingMetadata: Map<String, JsonValue>?
+
     data class Tap(
         override val identifier: String,
+        override val reportingMetadata: Map<String, JsonValue>?,
         val location: GestureLocation,
         val behavior: PagerGestureBehavior
     ) : PagerGesture() {
@@ -18,6 +21,7 @@ internal sealed class PagerGesture : Identifiable {
             @Throws(JsonException::class)
             fun from(json: JsonMap): Tap = Tap(
                 identifier = json.requireField("identifier"),
+                reportingMetadata = json.optionalField<JsonMap>("reporting_metadata")?.map,
                 location = GestureLocation.from(json.requireField("location")),
                 behavior = PagerGestureBehavior.from(json.requireField("behavior"))
             )
@@ -25,6 +29,7 @@ internal sealed class PagerGesture : Identifiable {
     }
     data class Swipe(
         override val identifier: String,
+        override val reportingMetadata: Map<String, JsonValue>?,
         val direction: GestureDirection,
         val behavior: PagerGestureBehavior
     ) : PagerGesture() {
@@ -32,6 +37,7 @@ internal sealed class PagerGesture : Identifiable {
             @Throws(JsonException::class)
             fun from(json: JsonMap): Swipe = Swipe(
                 identifier = json.requireField("identifier"),
+                reportingMetadata = json.optionalField<JsonMap>("reporting_metadata")?.map,
                 direction = GestureDirection.from(json.requireField("direction")),
                 behavior = PagerGestureBehavior.from(json.requireField("behavior"))
             )
@@ -39,7 +45,7 @@ internal sealed class PagerGesture : Identifiable {
     }
     data class Hold(
         override val identifier: String,
-        val location: GestureLocation,
+        override val reportingMetadata: Map<String, JsonValue>?,
         val pressBehavior: PagerGestureBehavior,
         val releaseBehavior: PagerGestureBehavior
     ) : PagerGesture() {
@@ -47,7 +53,7 @@ internal sealed class PagerGesture : Identifiable {
             @Throws(JsonException::class)
             fun from(json: JsonMap): Hold = Hold(
                 identifier = json.requireField("identifier"),
-                location = GestureLocation.from(json.requireField("location")),
+                reportingMetadata = json.optionalField<JsonMap>("reporting_metadata")?.map,
                 pressBehavior = PagerGestureBehavior.from(json.requireField("press_behavior")),
                 releaseBehavior = PagerGestureBehavior.from(json.requireField("release_behavior"))
             )
@@ -78,7 +84,7 @@ internal data class PagerGestureBehavior(
     companion object {
         fun from(json: JsonMap): PagerGestureBehavior = PagerGestureBehavior(
             actions = json.optionalField<JsonMap>("actions")?.map,
-            behaviors = json.optionalField<JsonList>("button_click")?.let {
+            behaviors = json.optionalField<JsonList>("behaviors")?.let {
                 ButtonClickBehaviorType.fromList(it)
             }
         )
@@ -107,21 +113,7 @@ internal enum class GestureType(private val value: String) {
 
 internal enum class GestureDirection(private val value: String) {
     UP("up"),
-    DOWN("down"),
-    /**
-     * For LTR and RTL support.
-     * Clients determine "left" and "right" based on device locale.
-     */
-    START("start"),
-    /**
-     * For LTR and RTL support.
-     * Clients determine "left" and "right" based on device locale.
-     */
-    END("end"),
-    /** For LTR-only support. */
-    LEFT("left"),
-    /** For LTR-only support. */
-    RIGHT("right");
+    DOWN("down");
 
     companion object {
         @Throws(IllegalArgumentException::class)

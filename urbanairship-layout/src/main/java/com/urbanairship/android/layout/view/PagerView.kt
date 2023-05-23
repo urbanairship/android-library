@@ -2,29 +2,48 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
-import android.view.View
+import android.view.MotionEvent
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.gestures.PagerGestureDetector
+import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.widget.PagerRecyclerView
 
 internal class PagerView(
     context: Context,
-    model: PagerModel,
+    val model: PagerModel,
     viewEnvironment: ViewEnvironment
 ) : FrameLayout(context), BaseView {
 
     fun interface OnScrollListener {
-        fun onScrollTo(Position: Int, isInternalScroll: Boolean)
+        fun onScrollTo(position: Int, isInternalScroll: Boolean)
+    }
+
+    interface OnPagerGestureListener {
+        fun onGesture(event: PagerGestureEvent)
     }
 
     var scrollListener: OnScrollListener? = null
+    var gestureListener: OnPagerGestureListener? = null
+        set(value) {
+            field = value
+
+            // Create a gesture detector if a listener is being set, otherwise clear it.
+            gestureDetector = when (value) {
+                null -> null
+                else -> gestureDetector ?: PagerGestureDetector(this) {
+                    gestureListener?.onGesture(it)
+                }
+            }
+        }
+
+    private var gestureDetector: PagerGestureDetector? = null
 
     private val view: PagerRecyclerView = PagerRecyclerView(context, model, viewEnvironment)
 
@@ -54,8 +73,15 @@ internal class PagerView(
         }
 
         // Pass along any calls to apply insets to the view.
-        ViewCompat.setOnApplyWindowInsetsListener(this) { _: View, insets: WindowInsetsCompat ->
+        ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
             ViewCompat.dispatchApplyWindowInsets(view, insets)
         }
+    }
+
+    override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+        // If we have a gesture detector, snoop on motion events without consuming them.
+        gestureDetector?.onTouchEvent(event)
+
+        return super.onInterceptTouchEvent(event)
     }
 }

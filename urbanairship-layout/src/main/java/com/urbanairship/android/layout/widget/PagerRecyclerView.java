@@ -57,7 +57,7 @@ public class PagerRecyclerView extends RecyclerView {
                 getContext(), LinearLayoutManager.HORIZONTAL);
         } else {
             layoutManager = new ThomasLinearLayoutManager(
-                getContext(), HORIZONTAL);
+                getContext(), LinearLayoutManager.HORIZONTAL);
         }
 
         setLayoutManager(layoutManager);

@@ -11,7 +11,8 @@ internal data class AutomatedAction(
     override val identifier: String,
     val delay: Int = 0,
     val actions: Map<String, JsonValue>? = null,
-    val behaviors: List<ButtonClickBehaviorType>? = null
+    val behaviors: List<ButtonClickBehaviorType>? = null,
+    val reportingMetadata: Map<String, JsonValue>? = null
 ) : Identifiable {
     companion object {
         fun from(json: JsonMap): AutomatedAction = AutomatedAction(
@@ -20,7 +21,8 @@ internal data class AutomatedAction(
             actions = json.optionalField<JsonMap>("actions")?.map,
             behaviors = json.optionalField<JsonList>("behaviors")?.let {
                 ButtonClickBehaviorType.fromList(it)
-            }
+            },
+            reportingMetadata = json.optionalField<JsonMap>("reporting_metadata")?.map
         )
 
         fun fromList(json: JsonList): List<AutomatedAction> =

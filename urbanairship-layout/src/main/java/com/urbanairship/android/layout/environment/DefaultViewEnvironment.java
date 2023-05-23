@@ -75,12 +75,6 @@ public class DefaultViewEnvironment implements ViewEnvironment {
 
     @NonNull
     @Override
-    public Activity activity() {
-        return activity;
-    }
-
-    @NonNull
-    @Override
     public ActivityMonitor activityMonitor() {
         return activityMonitor;
     }

@@ -67,6 +67,7 @@ public sealed class ViewInfo : View {
 
     public companion object {
         @JvmStatic
+        @Throws(JsonException::class)
         public fun viewInfoFromJson(json: JsonMap): ViewInfo {
             return when (val type = ViewType.from(json.requireField<String>("type"))) {
                 CONTAINER -> ContainerLayoutInfo(json)
@@ -220,6 +221,7 @@ internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(),
 internal interface Button : View, Accessible, Identifiable {
     val clickBehaviors: List<ButtonClickBehaviorType>
     val actions: Map<String, JsonValue>?
+    val reportingMetadata: Map<String, JsonValue>?
 }
 
 internal open class ButtonInfo(
@@ -231,6 +233,9 @@ internal open class ButtonInfo(
 
     override val actions: Map<String, JsonValue>? =
         json.optionalField<JsonMap>("actions")?.map
+
+    override val reportingMetadata: Map<String, JsonValue>? =
+        json.optionalField<JsonMap>("reporting_metadata")?.map
 }
 
 internal interface Checkable : View, Accessible {
@@ -246,7 +251,7 @@ internal open class CheckableInfo(
 // ------ Components ------
 
 internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemInfo>(), View by view(json) {
-    val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
+    private val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
     val direction: Direction = Direction.from(json.requireField("direction"))
     val items = json.requireField<JsonList>("items").map { LinearLayoutItemInfo(it.requireMap()) }
         .let { if (randomizeChildren) it.shuffled() else it }

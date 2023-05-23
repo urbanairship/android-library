@@ -206,6 +206,37 @@ public abstract class ReportingEvent {
 
     }
 
+    /**
+     * Bubbled up to the top level when the view is dismissed from a button.
+     */
+    public static class DismissFromStory extends DismissReportingEvent {
+
+        private final boolean cancel;
+
+        // TODO Complete this and handle all the other stories reporting events
+        public DismissFromStory(
+                boolean cancel,
+                long displayTime
+        ) {
+            super(ReportType.BUTTON_DISMISS, displayTime);
+            this.cancel = cancel;
+        }
+
+        public boolean isCancel() {
+            return cancel;
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return "ReportingEvent.DismissFromButton{" +
+                    "cancel=" + cancel +
+                    ", displayTime=" + getDisplayTime() +
+                    '}';
+        }
+
+    }
+
     public static class FormResult extends ReportingEvent {
 
         @NonNull

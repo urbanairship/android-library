@@ -16,7 +16,6 @@ import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
-import com.urbanairship.android.layout.property.firstPagerNextOrNull
 import com.urbanairship.android.layout.property.hasCancel
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
 import com.urbanairship.android.layout.property.hasFormSubmit
@@ -183,18 +182,3 @@ internal abstract class ButtonModel<T>(
         }
     }
 }
-
-private enum class PagerNextFallback {
-    NONE,
-    DISMISS,
-    FIRST
-}
-
-private val List<ButtonClickBehaviorType>.pagerNextFallback: PagerNextFallback
-    get() = firstPagerNextOrNull()?.let {
-        when (it) {
-            ButtonClickBehaviorType.PAGER_NEXT_OR_DISMISS -> PagerNextFallback.DISMISS
-            ButtonClickBehaviorType.PAGER_NEXT_OR_FIRST -> PagerNextFallback.FIRST
-            else -> PagerNextFallback.NONE
-        }
-    } ?: PagerNextFallback.NONE

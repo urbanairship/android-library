@@ -1,5 +1,6 @@
 package com.urbanairship.android.layout.util
 
+import android.graphics.RectF
 import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
@@ -8,6 +9,7 @@ import android.view.MotionEvent.ACTION_MASK
 import android.view.MotionEvent.ACTION_UP
 import android.view.View
 import android.widget.EditText
+import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.android.layout.view.ScoreView
 import com.urbanairship.android.layout.widget.CheckableView
@@ -96,8 +98,29 @@ internal data class PagerScrollEvent(
     val isInternalScroll: Boolean
 )
 
+internal fun PagerView.pagerGestures(): Flow<PagerGestureEvent> =
+    callbackFlow {
+        checkMainThread()
+
+        val listener = object : PagerView.OnPagerGestureListener {
+            override fun onGesture(event: PagerGestureEvent) {
+                trySend(event)
+            }
+        }
+
+        gestureListener = listener
+        awaitClose { gestureListener = null }
+    }.conflate()
+
 internal val MotionEvent.isActionUp: Boolean
     get() = action and ACTION_MASK == ACTION_UP
+
+/** Returns view bounds in the view's coordinate space. */
+internal val View.localBounds: RectF
+    get() = RectF(0f, 0f, width.toFloat(), height.toFloat())
+
+internal val View.isLayoutRtl: Boolean
+    get() = layoutDirection == View.LAYOUT_DIRECTION_RTL
 
 @Throws(IllegalStateException::class)
 private fun checkMainThread() {
