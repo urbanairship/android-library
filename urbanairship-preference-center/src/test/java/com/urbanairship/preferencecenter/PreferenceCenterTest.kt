@@ -7,7 +7,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.preferencecenter.PreferenceCenter.Companion.KEY_PREFERENCE_FORMS
@@ -39,12 +38,7 @@ import org.robolectric.annotation.LooperMode
 class PreferenceCenterTest {
 
     companion object {
-        private val EMPTY_PAYLOADS = RemoteDataPayload.newBuilder()
-                .setType(PAYLOAD_TYPE)
-                .setTimeStamp(0L)
-                .setMetadata(JsonMap.EMPTY_MAP)
-                .setData(JsonMap.EMPTY_MAP)
-                .build()
+        private val EMPTY_PAYLOADS = RemoteDataPayload.emptyPayload(PAYLOAD_TYPE)
 
         private const val ID_1 = "id-1"
         private const val ID_2 = "id-2"
@@ -55,21 +49,17 @@ class PreferenceCenterTest {
         private val FORM_1_PAYLOAD = PreferenceCenterPayload(PREFERENCE_FORM_1)
         private val FORM_2_PAYLOAD = PreferenceCenterPayload(PREFERENCE_FORM_2)
 
-        private val METADATA = jsonMapOf("metadata" to "foo")
+        private val SINGLE_FORM_PAYLOAD = RemoteDataPayload(
+            PAYLOAD_TYPE,
+            1L,
+            jsonMapOf(KEY_PREFERENCE_FORMS to jsonListOf(FORM_1_PAYLOAD.toJson()))
+        )
 
-        private val SINGLE_FORM_PAYLOAD = RemoteDataPayload.newBuilder()
-                .setType(PAYLOAD_TYPE)
-                .setTimeStamp(1L)
-                .setMetadata(METADATA)
-                .setData(jsonMapOf(KEY_PREFERENCE_FORMS to jsonListOf(FORM_1_PAYLOAD.toJson())))
-                .build()
-
-        private val MULTI_FORM_PAYLOAD = RemoteDataPayload.newBuilder()
-                .setType(PAYLOAD_TYPE)
-                .setTimeStamp(2L)
-                .setMetadata(METADATA)
-                .setData(jsonMapOf(KEY_PREFERENCE_FORMS to jsonListOf(FORM_1_PAYLOAD.toJson(), FORM_2_PAYLOAD.toJson())))
-                .build()
+        private val MULTI_FORM_PAYLOAD = RemoteDataPayload(
+            PAYLOAD_TYPE,
+            1L,
+            jsonMapOf(KEY_PREFERENCE_FORMS to jsonListOf(FORM_1_PAYLOAD.toJson(), FORM_2_PAYLOAD.toJson()))
+        )
     }
 
     private val context: Context = TestApplication.getApplication()

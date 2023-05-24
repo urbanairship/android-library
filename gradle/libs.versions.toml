@@ -31,7 +31,7 @@ androidx-paging = '2.1.2'
 
 androidx-preference = '1.2.0'
 androidx-recyclerview = "1.2.1"
-androidx-room = '2.5.0'
+androidx-room = '2.5.1'
 androidx-startup = '1.1.1'
 androidx-swiperefreshlayout = '1.1.0'
 androidx-test-core = '1.4.0'

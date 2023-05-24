@@ -227,11 +227,7 @@ public class RemoteConfigManagerTest extends BaseTestCase {
     }
 
     static RemoteDataPayload createRemoteDataPayload(String type, long timeStamp, JsonMap data) {
-        return RemoteDataPayload.newBuilder()
-                                .setType(type)
-                                .setTimeStamp(timeStamp)
-                                .setData(data)
-                                .build();
+        return new RemoteDataPayload(type, timeStamp, data, null);
     }
 
     static RemoteDataPayload createDisablePayload(String type, long refreshInterval, Collection<String> modules) {

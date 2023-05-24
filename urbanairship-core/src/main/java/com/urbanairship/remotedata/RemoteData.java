@@ -8,13 +8,6 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-import androidx.core.content.pm.PackageInfoCompat;
-
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.Logger;
 import com.urbanairship.PendingResult;
@@ -28,12 +21,14 @@ import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.app.SimpleApplicationListener;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.http.RequestAuth;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobResult;
-import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleChangedListener;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.push.PushListener;
@@ -53,10 +48,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.core.content.pm.PackageInfoCompat;
 
 /**
  * RemoteData top-level class.
@@ -102,16 +102,6 @@ public class RemoteData extends AirshipComponent {
     private static final String RANDOM_VALUE_KEY = "com.urbanairship.remotedata.RANDOM_VALUE";
 
     /**
-     * Key for the URL that was used to fetch the remote-data in the metadata.
-     */
-    private static final String URL_METADATA_KEY = "url";
-
-    /**
-     * Key for the last modified timestamp in the remote-data metadata.
-     */
-    private static final String LAST_MODIFIED_METADATA_KEY = "last_modified";
-
-    /**
      * Default foreground refresh interval in milliseconds.
      */
     public static final long DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS = 10000; // 10 seconds
@@ -139,6 +129,8 @@ public class RemoteData extends AirshipComponent {
     private final RemoteDataApiClient apiClient;
     private final PrivacyManager privacyManager;
     private final Network network;
+
+    private final RemoteDataUrlFactory urlFactory;
 
     private boolean isRefreshing = false;
     private final Object refreshLock = new Object();
@@ -202,7 +194,7 @@ public class RemoteData extends AirshipComponent {
                       @NonNull Supplier<PushProviders> pushProviders) {
         this(context, preferenceDataStore, configOptions, privacyManager, GlobalActivityMonitor.shared(context),
                 JobDispatcher.shared(context), localeManager, pushManager, Clock.DEFAULT_CLOCK,
-                new RemoteDataApiClient(configOptions, pushProviders), Network.shared());
+                new RemoteDataApiClient(configOptions), Network.shared(), new RemoteDataUrlFactory(configOptions, pushProviders));
     }
 
     @VisibleForTesting
@@ -210,7 +202,8 @@ public class RemoteData extends AirshipComponent {
                @NonNull AirshipRuntimeConfig configOptions, @NonNull PrivacyManager privacyManager,
                @NonNull ActivityMonitor activityMonitor, @NonNull JobDispatcher dispatcher,
                @NonNull LocaleManager localeManager, @NonNull PushManager pushManager,
-               @NonNull Clock clock, @NonNull RemoteDataApiClient apiClient, @NonNull Network network) {
+               @NonNull Clock clock, @NonNull RemoteDataApiClient apiClient, @NonNull Network network,
+               @NonNull RemoteDataUrlFactory urlFactory) {
         super(context, preferenceDataStore);
         this.jobDispatcher = dispatcher;
         this.dataStore = new RemoteDataStore(context, configOptions.getConfigOptions().appKey, DATABASE_NAME);
@@ -224,6 +217,7 @@ public class RemoteData extends AirshipComponent {
         this.clock = clock;
         this.apiClient = apiClient;
         this.network = network;
+        this.urlFactory = urlFactory;
     }
 
     @Override
@@ -426,7 +420,8 @@ public class RemoteData extends AirshipComponent {
                                  if (mappedPayloads != null) {
                                      payloads.addAll(mappedPayloads);
                                  } else {
-                                     payloads.add(RemoteDataPayload.emptyPayload(type));
+                                     payloads.add(
+                                             RemoteDataPayload.emptyPayload(type));
                                  }
                              }
 
@@ -481,9 +476,15 @@ public class RemoteData extends AirshipComponent {
      *
      * @return {@code true} if the metadata is current, otherwise {@code false}.
      */
-    public boolean isMetadataCurrent(@NonNull JsonMap jsonMap) {
-        Uri uri = apiClient.getRemoteDataUrl(localeManager.getLocale(), getRandomValue());
-        return jsonMap.equals(createMetadata(uri, preferenceDataStore.getString(LAST_MODIFIED_KEY, null)));
+    public boolean isCurrent(@NonNull RemoteDataInfo remoteDataInfo) {
+        Uri uri = this.urlFactory.createAppUrl(localeManager.getLocale(), getRandomValue());
+        if (uri == null) {
+            return false;
+        }
+
+        String lastModified = preferenceDataStore.getString(LAST_MODIFIED_KEY, null);
+
+        return remoteDataInfo.equals(new RemoteDataInfo(uri.toString(), lastModified, RemoteDataSource.APP));
     }
 
     /**
@@ -492,7 +493,15 @@ public class RemoteData extends AirshipComponent {
      * @return {@code true} if the metadata is current, otherwise {@code false}.
      */
     private boolean isLastMetadataCurrent() {
-        return isMetadataCurrent(preferenceDataStore.getJsonValue(LAST_REFRESH_METADATA).optMap());
+        try {
+            JsonValue value = preferenceDataStore.getJsonValue(LAST_REFRESH_METADATA);
+            if (value.isNull()) {
+                return false;
+            }
+            return isCurrent(new RemoteDataInfo(value));
+        } catch (JsonException e) {
+            return false;
+        }
     }
 
     /**
@@ -507,14 +516,18 @@ public class RemoteData extends AirshipComponent {
             isRefreshing = true;
         }
 
+        Uri url = this.urlFactory.createAppUrl(localeManager.getLocale(), getRandomValue());
+        if (url == null) {
+            Logger.error("Failed to refresh data, null URL");
+            return JobResult.FAILURE;
+        }
+
         String lastModified = isLastMetadataCurrent() ? preferenceDataStore.getString(LAST_MODIFIED_KEY, null) : null;
-        Locale locale = localeManager.getLocale();
 
         Response<RemoteDataApiClient.Result> response;
         try {
-            response = apiClient.fetchRemoteDataPayloads(lastModified, locale, getRandomValue(), (headers, url, payloads) -> {
-                String lm = headers.get("Last-Modified");
-                return RemoteDataPayload.parsePayloads(payloads, createMetadata(url, lm));
+            response = apiClient.fetch(url, RequestAuth.BasicAppAuth.INSTANCE, lastModified, (lm) -> {
+                return new RemoteDataInfo(url.toString(), lm, RemoteDataSource.APP);
             });
         } catch (RequestException e) {
             Logger.error(e, "RemoteDataJobHandler - Failed to refresh data");
@@ -531,10 +544,10 @@ public class RemoteData extends AirshipComponent {
 
         if (response.isSuccessful()) {
             String lm = response.getHeaders().get("Last-Modified");
-            JsonMap metadata = createMetadata(response.getResult().url, lm);
-            Set<RemoteDataPayload> remoteDataPayloads = response.getResult().payloads;
+            RemoteDataInfo remoteDataInfo = response.getResult().getRemoteDataInfo();
+            Set<RemoteDataPayload> remoteDataPayloads = response.getResult().getPayloads();
             if (saveNewPayloads(remoteDataPayloads)) {
-                preferenceDataStore.put(LAST_REFRESH_METADATA, metadata);
+                preferenceDataStore.put(LAST_REFRESH_METADATA, remoteDataInfo);
                 preferenceDataStore.put(LAST_MODIFIED_KEY, lm);
                 notifyPayloadUpdates(remoteDataPayloads);
                 onRefreshFinished(true);
@@ -572,18 +585,10 @@ public class RemoteData extends AirshipComponent {
     }
 
     private boolean saveNewPayloads(@NonNull final Set<RemoteDataPayload> payloads) {
-        return dataStore.deletePayloads() && dataStore.savePayloads(payloads);
+        return dataStore.deletePayloads() != -1 && dataStore.savePayloads(payloads);
     }
 
     private void notifyPayloadUpdates(@NonNull final Set<RemoteDataPayload> payloads) {
         backgroundHandler.post(() -> payloadUpdates.onNext(payloads));
-    }
-
-    @NonNull
-    private JsonMap createMetadata(@Nullable Uri uri, @Nullable String lastModified) {
-        return JsonMap.newBuilder()
-                      .putOpt(URL_METADATA_KEY, uri == null ? null : uri.toString())
-                      .putOpt(LAST_MODIFIED_METADATA_KEY, lastModified)
-                      .build();
     }
 }

@@ -54,12 +54,11 @@ public class ExperimentManagerTest {
     @Test
     public fun testExperimentManagerParseValidPayloadData(): TestResult = runTest {
         val experimentJson = generateExperimentsPayload("fake-id").build()
-        val data = RemoteDataPayload.newBuilder()
-            .setType(PAYLOAD_TYPE)
-            .setTimeStamp(1L)
-            .setMetadata(jsonMapOf())
-            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson)))
-            .build()
+        val data = RemoteDataPayload(
+            type = PAYLOAD_TYPE,
+            timestamp = 1L,
+            data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson))
+        )
 
         every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
 
@@ -80,12 +79,11 @@ public class ExperimentManagerTest {
     public fun testExperimentManagerOmitsInvalidExperiments(): TestResult = runTest {
         val experimentJson = generateExperimentsPayload("fake-id", hashIdentifier = "channel").build()
         val invalid = generateExperimentsPayload("fake-id-2", hashIdentifier = "invalid").build()
-        val data = RemoteDataPayload.newBuilder()
-            .setType(PAYLOAD_TYPE)
-            .setTimeStamp(1L)
-            .setMetadata(jsonMapOf())
-            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson, invalid)))
-            .build()
+        val data = RemoteDataPayload(
+            type = PAYLOAD_TYPE,
+            timestamp = 1L,
+            data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson, invalid))
+        )
 
         every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
 
@@ -101,12 +99,11 @@ public class ExperimentManagerTest {
     public fun testExperimentManagerParseMultipleExperiments(): TestResult = runTest {
         val experiment1 = generateExperimentsPayload("fake-id").build()
         val experiment2 = generateExperimentsPayload("fake-id-2").build()
-        val data = RemoteDataPayload.newBuilder()
-            .setType(PAYLOAD_TYPE)
-            .setTimeStamp(1L)
-            .setMetadata(jsonMapOf())
-            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(experiment1, experiment2)))
-            .build()
+        val data = RemoteDataPayload(
+            type = PAYLOAD_TYPE,
+            timestamp = 1L,
+            data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experiment1, experiment2))
+        )
 
         every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
 
@@ -116,12 +113,11 @@ public class ExperimentManagerTest {
 
     @Test
     public fun testExperimentManagerHandleNoExperimentsPayload(): TestResult = runTest {
-        val data = RemoteDataPayload.newBuilder()
-            .setType(PAYLOAD_TYPE)
-            .setTimeStamp(1L)
-            .setMetadata(jsonMapOf())
-            .setData(jsonMapOf())
-            .build()
+        val data = RemoteDataPayload(
+            type = PAYLOAD_TYPE,
+            timestamp = 1L,
+            data = jsonMapOf()
+        )
 
         every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
         assertNull(subject.getExperimentWithId("no-experiment"))
@@ -130,13 +126,11 @@ public class ExperimentManagerTest {
     @Test
     public fun testExperimentManagerHandleInvalidPayload(): TestResult = runTest {
         val experiment = generateExperimentsPayload("fake-id").build()
-        val data = RemoteDataPayload.newBuilder()
-            .setType(PAYLOAD_TYPE)
-            .setTimeStamp(1L)
-            .setMetadata(jsonMapOf())
-            .setData(jsonMapOf("invalid" to experiment))
-            .build()
-
+        val data = RemoteDataPayload(
+            type = PAYLOAD_TYPE,
+            timestamp = 1L,
+            data = jsonMapOf("invalid" to experiment)
+        )
         every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
 
         assertNull(subject.getExperimentWithId("fake-id"))

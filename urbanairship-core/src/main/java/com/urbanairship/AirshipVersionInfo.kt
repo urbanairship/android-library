@@ -9,19 +9,19 @@ import androidx.annotation.RestrictTo
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal interface AirshipVersionInfo {
+public interface AirshipVersionInfo {
 
     /**
      * The Airship semantic version.
      *
      * @return The version string.
      */
-    val airshipVersion: String
+    public val airshipVersion: String
 
     /**
      * The full package version with format - "!SDK-VERSION-STRING!:<GROUP>:<ARTIFACT_ID>[:<VERSION_QUALIFIER>]:[VERSION]
      *
      * @return The package version.
     </VERSION_QUALIFIER></ARTIFACT_ID></GROUP> */
-    val packageVersion: String
+    public val packageVersion: String
 }
