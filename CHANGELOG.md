@@ -2,6 +2,16 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.9.3, May 24, 2023
+
+Patch release that includes fixes for Preference Center, Scenes & Surveys, and Message Center.
+
+### Changes
+- Fixed a bug that could cause tag actions to not be run on the first page of a Scene.
+- Fixed an issue with window resizing in Scenes and Surveys to prevent the keyboard from covering the input field.
+- Fixed Preference Center contact subscription chips to avoid duplicate chips when scrolling a long Preference Center.
+- Fixed `sms:`, `tel:` and `mailto:` link handling in Message Center, when using custom HTML and `<a>` tags.
+
 ## Version 16.9.2 April 6, 2023
 
 Patch release that fixes Preference Center subscription list state when switching named users. Apps
