@@ -107,7 +107,7 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
      * given [preferenceCenterId].
      *
      * @param preferenceCenterId The ID of the Preference Center.
-     * @return The requested [PreferenceForm].
+     * @return The requested [PreferenceCenterConfig].
      */
     fun getConfig(preferenceCenterId: String): PendingResult<PreferenceCenterConfig> {
         val pendingResult = PendingResult<PreferenceCenterConfig>()
