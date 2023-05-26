@@ -3,7 +3,6 @@
 package com.urbanairship.automation;
 
 import android.net.Uri;
-import android.os.Looper;
 
 import com.urbanairship.PendingResult;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
@@ -16,9 +15,6 @@ import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.reactive.Subject;
-import com.urbanairship.reactive.Subscription;
-import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.remotedata.RemoteDataInfo;
 import com.urbanairship.remotedata.RemoteDataPayload;
 import com.urbanairship.remotedata.RemoteDataSource;
@@ -27,11 +23,13 @@ import com.urbanairship.util.DateUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,11 +37,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.Consumer;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -61,20 +59,19 @@ public class InAppRemoteDataObserverTest {
 
     private InAppRemoteDataObserver observer;
     private TestDelegate delegate;
-    private RemoteData remoteData;
-    private Subject<RemoteDataPayload> updates;
-    private Subscription subscription;
+
+    private RemoteDataAccess remoteDataAccess = mock(RemoteDataAccess.class);
+    private Consumer<List<RemoteDataPayload>> consumer;
+    private Cancelable cancelable = mock(Cancelable.class);
 
     @Before
     public void setup() {
-        remoteData = mock(RemoteData.class);
-        updates = Subject.create();
-        when(remoteData.payloadsForType(anyString())).thenReturn(updates);
-
         delegate = new TestDelegate();
-
-        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData, "1.0.0", Looper.getMainLooper());
-        subscription = observer.subscribe(delegate);
+        ArgumentCaptor<Consumer<List<RemoteDataPayload>>> consumerArgumentCaptor = ArgumentCaptor.forClass(Consumer.class);
+        when(remoteDataAccess.subscribe(consumerArgumentCaptor.capture())).thenReturn(cancelable);
+        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteDataAccess, "1.0.0");
+        observer.subscribe(delegate);
+        consumer = consumerArgumentCaptor.getValue();
     }
 
     @Test
@@ -142,7 +139,7 @@ public class InAppRemoteDataObserverTest {
                 .build();
 
         // Notify the observer
-        updates.onNext(payload);
+        consumer.accept(Collections.singletonList(payload));
 
         // Verify "foo" and "bar" are scheduled
         assertEquals(fooSchedule, delegate.schedules.get("foo"));
@@ -158,7 +155,7 @@ public class InAppRemoteDataObserverTest {
                 .build();
 
         // Notify the observer
-        updates.onNext(payload);
+        consumer.accept(Collections.singletonList(payload));
 
         // Verify "baz" is scheduled
         assertEquals(bazSchedule, delegate.schedules.get("baz"));
@@ -172,9 +169,12 @@ public class InAppRemoteDataObserverTest {
     public void testMinSdkVersion() {
         RemoteDataInfo remoteDataInfo = new RemoteDataInfo("some url", "some time stamp", RemoteDataSource.APP);
         RemoteDataInfo updatedRemoteDataInfo = new RemoteDataInfo("some other url", "Some other date", RemoteDataSource.APP);
-        subscription.cancel();
-        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData, "1.0.0", Looper.getMainLooper());
-        subscription = observer.subscribe(delegate);
+
+        ArgumentCaptor<Consumer<List<RemoteDataPayload>>> consumerArgumentCaptor = ArgumentCaptor.forClass(Consumer.class);
+        when(remoteDataAccess.subscribe(consumerArgumentCaptor.capture())).thenReturn(cancelable);
+        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteDataAccess, "1.0.0");
+        observer.subscribe(delegate);
+        consumer = consumerArgumentCaptor.getValue();
 
         // Create an empty payload
         RemoteDataPayload payload = new TestPayloadBuilder()
@@ -183,11 +183,11 @@ public class InAppRemoteDataObserverTest {
                 .build();
 
         // Notify the observer
-        updates.onNext(payload);
-        subscription.cancel();
+        consumer.accept(Collections.singletonList(payload));
 
-        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteData, "2.0.0", Looper.getMainLooper());
-        subscription = observer.subscribe(delegate);
+        observer = new InAppRemoteDataObserver(TestApplication.getApplication().preferenceDataStore, remoteDataAccess, "2.0.0");
+        observer.subscribe(delegate);
+        consumer = consumerArgumentCaptor.getValue();
 
         JsonMap expectedMetadata = JsonMap.newBuilder()
                                           .put("com.urbanairship.iaa.REMOTE_DATA_METADATA", JsonMap.EMPTY_MAP)
@@ -213,7 +213,7 @@ public class InAppRemoteDataObserverTest {
                 .build();
 
         // Notify the observer
-        updates.onNext(payload);
+        consumer.accept(Collections.singletonList(payload));
 
         // Verify "foo" is scheduled
         assertEquals(fooSchedule, delegate.schedules.get("foo"));
@@ -256,7 +256,7 @@ public class InAppRemoteDataObserverTest {
                 .build();
 
         // Notify the observer
-        updates.onNext(payload);
+        consumer.accept(Collections.singletonList(payload));
 
         // Verify "foo" and "bar" are scheduled
         assertEquals(legacySchedule, delegate.schedules.get("legacy"));
@@ -297,7 +297,7 @@ public class InAppRemoteDataObserverTest {
                 .setRemoteDataInfo(remoteDataInfo)
                 .build();
 
-        updates.onNext(payload);
+        consumer.accept(Collections.singletonList(payload));
 
         // Verify "foo" and "bar" are scheduled
         assertEquals(fooSchedule, delegate.schedules.get("foo"));
@@ -309,7 +309,7 @@ public class InAppRemoteDataObserverTest {
                 .setRemoteDataInfo(remoteDataInfo)
                 .build();
 
-        updates.onNext(payload);
+        consumer.accept(Collections.singletonList(payload));
 
         // Verify "foo" and "bar" are still scheduled
         assertEquals(fooSchedule, delegate.schedules.get("foo"));
@@ -349,7 +349,7 @@ public class InAppRemoteDataObserverTest {
                 .build();
 
         // Process payload
-        updates.onNext(payload);
+        consumer.accept(Collections.singletonList(payload));
 
         // Verify "foo" is scheduled
         assertEquals(fooSchedule, delegate.schedules.get("foo"));
@@ -381,7 +381,7 @@ public class InAppRemoteDataObserverTest {
                 .build();
 
         // Return pending result for the edit
-        updates.onNext(payload);
+        consumer.accept(Collections.singletonList(payload));
 
         // Verify "foo" was edited with the updated message
         ScheduleEdits<? extends ScheduleData> edits = delegate.scheduleEdits.get("foo");
@@ -419,7 +419,7 @@ public class InAppRemoteDataObserverTest {
                 .build();
 
         // Process payload
-        updates.onNext(payload);
+        consumer.accept(Collections.singletonList(payload));
 
         JsonMap updatedMetadata = JsonMap.newBuilder().putOpt("fun", "fun").build();
 
@@ -430,7 +430,7 @@ public class InAppRemoteDataObserverTest {
                 .setRemoteDataInfo(updatedRemoteDataInfo)
                 .build();
 
-        updates.onNext(payload);
+        consumer.accept(Collections.singletonList(payload));
 
         // Verify "foo" was edited with the updated message
         ScheduleEdits<? extends ScheduleData> edits = delegate.getScheduleEdits("foo");
@@ -452,7 +452,7 @@ public class InAppRemoteDataObserverTest {
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
                 .build();
 
-        updates.onNext(payload);
+        consumer.accept(Collections.singletonList(payload));
 
         assertTrue(delegate.constraintUpdates.get(0).isEmpty());
         assertEquals(1, delegate.constraintUpdates.size());
@@ -489,7 +489,7 @@ public class InAppRemoteDataObserverTest {
                                             .build());
         }
 
-        updates.onNext(builder.build());
+        consumer.accept(Collections.singletonList(builder.build()));
 
         assertEquals(expected, delegate.constraintUpdates.get(0));
         assertEquals(1, delegate.constraintUpdates.size());
@@ -513,7 +513,7 @@ public class InAppRemoteDataObserverTest {
                                       .build())
                 .build();
 
-        updates.onNext(payload);
+        consumer.accept(Collections.singletonList(payload));
 
         List<FrequencyConstraint> expected = new ArrayList<>();
         expected.add(FrequencyConstraint.newBuilder().setRange(TimeUnit.DAYS, 20)

@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.common.java8)
     implementation(libs.androidx.lifecycle.runtimektx)
     implementation(libs.androidx.lifecycle.viewmodelktx)
+    implementation(libs.androidx.lifecycle.livedataktx)
 
     // Paging
     implementation(libs.androidx.paging.runtimektx)

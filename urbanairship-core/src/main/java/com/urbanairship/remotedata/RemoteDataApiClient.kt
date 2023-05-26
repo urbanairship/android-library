@@ -2,14 +2,12 @@
 package com.urbanairship.remotedata
 
 import android.net.Uri
-import androidx.annotation.RestrictTo
-import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
-import com.urbanairship.http.RequestException
-import com.urbanairship.http.RequestSession
-import com.urbanairship.http.Response
+import com.urbanairship.http.RequestResult
+import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -19,28 +17,22 @@ import com.urbanairship.util.DateUtils
 
 /**
  * API client for fetching remote data.
- *
- * @hide
  */
-// TODO: Remove public once everything is in kotlin
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@OpenForTesting
-public class RemoteDataApiClient @JvmOverloads constructor(
+internal class RemoteDataApiClient @JvmOverloads constructor(
     private val config: AirshipRuntimeConfig,
-    private val session: RequestSession = config.requestSession
+    private val session: SuspendingRequestSession = config.requestSession.toSuspendingRequestSession()
 ) {
-    public data class Result(
+    internal data class Result(
         val remoteDataInfo: RemoteDataInfo,
         val payloads: Set<RemoteDataPayload>
     )
 
-    @Throws(RequestException::class)
-    public fun fetch(
-        remoteDataUrl: Uri,
+    internal suspend fun fetch(
+        remoteDataUrl: Uri?,
         auth: RequestAuth,
         lastModified: String?,
         remoteDataInfoFactory: (String?) -> RemoteDataInfo
-    ): Response<Result?> {
+    ): RequestResult<Result> {
         val headers = mutableMapOf(
             "X-UA-Appkey" to config.configOptions.appKey
         )
@@ -84,6 +76,7 @@ public class RemoteDataApiClient @JvmOverloads constructor(
         )
     }
 
+    @Throws(JsonException::class)
     private fun parseResponse(responseBody: String?, remoteDataInfo: RemoteDataInfo): Set<RemoteDataPayload> {
         if (responseBody == null) {
             return emptySet()

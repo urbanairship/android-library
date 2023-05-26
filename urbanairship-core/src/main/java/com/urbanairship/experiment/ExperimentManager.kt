@@ -9,19 +9,10 @@ import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.Logger
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
-import com.urbanairship.json.requireField
-import com.urbanairship.reactive.Observable
-import com.urbanairship.reactive.Subscriber
 import com.urbanairship.remotedata.RemoteData
-import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.util.FarmHashFingerprint64
-import java.lang.Exception
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
  * Airship Experiment Manager.
@@ -107,30 +98,16 @@ public class ExperimentManager internal constructor(
 
     private suspend fun getExperiments(): List<Experiment> {
         try {
-            return remoteData
-                .singlePayloadForType(PAYLOAD_TYPE)
-                .data
-                .requireField<JsonList>(PAYLOAD_TYPE)
+            return remoteData.payloads(PAYLOAD_TYPE)
+                .mapNotNull {
+                    it.data.opt(PAYLOAD_TYPE).list?.list
+                }
+                .flatten()
                 .map { it.optMap() }
                 .mapNotNull(Experiment::fromJson)
         } catch (ex: JsonException) {
             Logger.e(ex) { "Failed to parse experiments from remoteData payload" }
             return emptyList()
-        }
-    }
-}
-
-internal suspend fun RemoteData.singlePayloadForType(type: String): RemoteDataPayload {
-    return suspendCancellableCoroutine { job ->
-        val subscription = this.payloadsForType(type)
-            .flatMap { Observable.just(it) }
-            .subscribe(object : Subscriber<RemoteDataPayload>() {
-                override fun onNext(value: RemoteDataPayload) = job.resume(value)
-                override fun onError(e: Exception) = job.resumeWithException(e)
-            })
-
-        job.invokeOnCancellation {
-            subscription.cancel()
         }
     }
 }

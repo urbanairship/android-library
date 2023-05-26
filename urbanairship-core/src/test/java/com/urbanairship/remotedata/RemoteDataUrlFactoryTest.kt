@@ -123,9 +123,26 @@ public class RemoteDataUrlFactoryTest {
         Assert.assertEquals(uri.getQueryParameter("country"), "US")
     }
 
-    public fun testUrl() {
+    @Test
+    public fun testAppUrl() {
         val uri = factory.createAppUrl(Locale.CANADA_FRENCH, 555)!!
-        Assert.assertEquals(uri.getQueryParameter("country"), uri.toString())
+        val sdkVersion = UAirship.getVersion()
+
+        Assert.assertEquals(
+            "https://remote-data.urbanairship.com/api/remote-data/app/appKey/android?sdk_version=$sdkVersion&random_value=555&language=fr&country=CA",
+            uri.toString()
+        )
+    }
+
+    @Test
+    public fun testContactUrl() {
+        val uri = factory.createContactUrl("some-contact-id", Locale.CANADA_FRENCH, 555)!!
+
+        val sdkVersion = UAirship.getVersion()
+        Assert.assertEquals(
+            "https://remote-data.urbanairship.com/api/remote-data-contact/android/some-contact-id?sdk_version=$sdkVersion&random_value=555&language=fr&country=CA",
+            uri.toString()
+        )
     }
 
     private class TestPushProvider(private val deliveryType: String) : PushProvider {

@@ -21,8 +21,6 @@ import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.data.evaluate
 import com.urbanairship.preferencecenter.util.execute
 import com.urbanairship.preferencecenter.util.scanConcat
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -45,7 +43,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 
 @OpenForTesting
 internal class PreferenceCenterViewModel @JvmOverloads constructor(
@@ -314,16 +311,9 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         data class UpdateConditionState(val state: Condition.State) : Change()
     }
 
-    private suspend fun getConfig(preferenceCenterId: String): PreferenceCenterConfig =
-        suspendCancellableCoroutine { continuation ->
-            preferenceCenter.getConfig(preferenceCenterId).addResultCallback { config ->
-                if (config != null) {
-                    continuation.resume(config)
-                } else {
-                    continuation.resumeWithException(IllegalStateException("Null preference center for id: $preferenceCenterId"))
-                }
-            }
-        }
+    private suspend fun getConfig(preferenceCenterId: String): PreferenceCenterConfig {
+        return preferenceCenter.getConfig(preferenceCenterId) ?: throw IllegalStateException("Null preference center for id: $preferenceCenterId")
+    }
 
     private suspend fun getChannelSubscriptions(): Set<String> {
         return channel.fetchSubscriptionLists().getOrThrow()

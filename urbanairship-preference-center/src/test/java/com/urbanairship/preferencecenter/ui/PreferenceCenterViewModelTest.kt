@@ -786,7 +786,7 @@ class PreferenceCenterViewModelTest {
             mock {}
         } else {
             mock<PreferenceCenter> {
-                on { getConfig(preferenceCenterId) } doReturn pendingResultOf(config)
+                onBlocking { getConfig(preferenceCenterId) } doReturn config
             }.also(mockPreferenceCenter::invoke)
         }
         channel = if (mockChannel == null) {

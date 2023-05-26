@@ -10,11 +10,9 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.reactive.Observable
-import com.urbanairship.reactive.Subject
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
-import io.mockk.every
+import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -31,10 +29,7 @@ public class ExperimentManagerTest {
     private val context: Context = TestApplication.getApplication()
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
 
-    private val payloads = Subject.create<RemoteDataPayload>()
-    private val remoteData: RemoteData = mockk {
-        every { this@mockk.payloadsForType(PAYLOAD_TYPE) } returns payloads
-    }
+    private val remoteData: RemoteData = mockk()
 
     private lateinit var subject: ExperimentManager
     private var channelId: String? = "default-channel-id"
@@ -60,7 +55,7 @@ public class ExperimentManagerTest {
             data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson))
         )
 
-        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
         val experiment = subject.getExperimentWithId("fake-id")
 
@@ -85,7 +80,7 @@ public class ExperimentManagerTest {
             data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson, invalid))
         )
 
-        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
         val validExperiment = subject.getExperimentWithId("fake-id")
         assertNotNull(validExperiment)
@@ -105,7 +100,7 @@ public class ExperimentManagerTest {
             data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experiment1, experiment2))
         )
 
-        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
         assertNotNull(subject.getExperimentWithId("fake-id"))
         assertNotNull(subject.getExperimentWithId("fake-id-2"))
@@ -119,7 +114,8 @@ public class ExperimentManagerTest {
             data = jsonMapOf()
         )
 
-        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
+
         assertNull(subject.getExperimentWithId("no-experiment"))
     }
 
@@ -131,7 +127,7 @@ public class ExperimentManagerTest {
             timestamp = 1L,
             data = jsonMapOf("invalid" to experiment)
         )
-        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
         assertNull(subject.getExperimentWithId("fake-id"))
     }
@@ -145,14 +141,14 @@ public class ExperimentManagerTest {
             id = "fake-id",
             hashIdentifier = "channel")
             .build()
-        val data = RemoteDataPayload.newBuilder()
-            .setType(PAYLOAD_TYPE)
-            .setTimeStamp(1L)
-            .setMetadata(jsonMapOf())
-            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson)))
-            .build()
 
-        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+        val data = RemoteDataPayload(
+            type = PAYLOAD_TYPE,
+            timestamp = 1L,
+            data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson))
+        )
+
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
         val result = subject.evaluateGlobalHoldouts(MessageInfo(""))
         assertNotNull(result)
@@ -172,14 +168,14 @@ public class ExperimentManagerTest {
             id = "unmatched",
             bucketMax = 1239).build()
         val matchedJson = generateExperimentsPayload("matched", bucketMin = 1239).build()
-        val data = RemoteDataPayload.newBuilder()
-            .setType(PAYLOAD_TYPE)
-            .setTimeStamp(1L)
-            .setMetadata(jsonMapOf())
-            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson)))
-            .build()
 
-        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+        val data = RemoteDataPayload(
+            type = PAYLOAD_TYPE,
+            timestamp = 1L,
+            data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson))
+        )
+
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
         val result = subject.evaluateGlobalHoldouts(MessageInfo(""), activeContactId)
         assertNotNull(result)
@@ -191,14 +187,14 @@ public class ExperimentManagerTest {
     public fun testHoldoutGroupEvaluationPicksFirstMatchingExperiment(): TestResult = runTest {
         val firstJson = generateExperimentsPayload(id = "first").build()
         val secondJson = generateExperimentsPayload("second").build()
-        val data = RemoteDataPayload.newBuilder()
-            .setType(PAYLOAD_TYPE)
-            .setTimeStamp(1L)
-            .setMetadata(jsonMapOf())
-            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(firstJson, secondJson)))
-            .build()
 
-        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+        val data = RemoteDataPayload(
+            type = PAYLOAD_TYPE,
+            timestamp = 1L,
+            data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(firstJson, secondJson))
+        )
+
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
         val result = subject.evaluateGlobalHoldouts(MessageInfo(""))
         assertNotNull(result)
@@ -212,14 +208,14 @@ public class ExperimentManagerTest {
             id = "matched",
             messageTypeToExclude = "none")
             .build()
-        val data = RemoteDataPayload.newBuilder()
-            .setType(PAYLOAD_TYPE)
-            .setTimeStamp(1L)
-            .setMetadata(jsonMapOf())
-            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson)))
-            .build()
 
-        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+        val data = RemoteDataPayload(
+            type = PAYLOAD_TYPE,
+            timestamp = 1L,
+            data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson))
+        )
+
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
         val result = subject.evaluateGlobalHoldouts(MessageInfo("Transactional"))
         assertNotNull(result)
@@ -244,14 +240,13 @@ public class ExperimentManagerTest {
         )
             .build()
 
-        val data = RemoteDataPayload.newBuilder()
-            .setType(PAYLOAD_TYPE)
-            .setTimeStamp(1L)
-            .setMetadata(jsonMapOf())
-            .setData(jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson)))
-            .build()
+        val data = RemoteDataPayload(
+            type = PAYLOAD_TYPE,
+            timestamp = 1L,
+            data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson))
+        )
 
-        every { remoteData.payloadsForType(PAYLOAD_TYPE) } returns Observable.just(data)
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
         val result = subject.evaluateGlobalHoldouts(MessageInfo(""))
         assertNotNull(result)

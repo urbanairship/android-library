@@ -7,6 +7,9 @@ import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.core.util.Consumer;
 import androidx.core.util.ObjectsCompat;
 
 import com.urbanairship.AirshipLoopers;
@@ -22,12 +25,10 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.reactive.Schedulers;
-import com.urbanairship.reactive.Subscriber;
-import com.urbanairship.reactive.Subscription;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.remotedata.RemoteDataInfo;
 import com.urbanairship.remotedata.RemoteDataPayload;
+import com.urbanairship.remotedata.RemoteDataSource;
 import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
 import com.urbanairship.util.VersionUtils;
@@ -49,8 +50,6 @@ import java.util.concurrent.TimeUnit;
  * @hide
  */
 class InAppRemoteDataObserver {
-
-    private static final String IAM_PAYLOAD_TYPE = "in_app_messages";
 
     // JSON keys
     private static final String MESSAGES_JSON_KEY = "in_app_messages";
@@ -86,29 +85,26 @@ class InAppRemoteDataObserver {
     private static final String FREQUENCY_CONSTRAINT_IDS_KEY = "frequency_constraint_ids";
 
     // Data store keys
-    private static final String LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP";
+    private static final String APP_LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP";
+    private static final String APP_LAST_PAYLOAD_INFO = "com.urbanairship.iam.data.last_payload_info";
+    private static final String APP_LAST_SDK_VERSION_KEY = "com.urbanairship.iaa.last_sdk_version";
+
+    private static final String CONTACT_LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.contact_last_payload_timestamp";
+    private static final String CONTACT_LAST_PAYLOAD_INFO = "com.urbanairship.iam.data.contact_last_payload_info";
+    private static final String CONTACT_LAST_SDK_VERSION_KEY = "com.urbanairship.iaa.contact_last_sdk_version";
+
     private static final String LAST_PAYLOAD_METADATA = "com.urbanairship.iam.data.LAST_PAYLOAD_METADATA";
-    private static final String LAST_PAYLOAD_INFO = "com.urbanairship.iam.data.LAST_PAYLOAD_INFO";
 
     private static final String SCHEDULE_NEW_USER_CUTOFF_TIME_KEY = "com.urbanairship.iam.data.NEW_USER_TIME";
     static final String REMOTE_DATA_METADATA = "com.urbanairship.iaa.REMOTE_DATA_METADATA";
     static final String REMOTE_DATA_INFO = "com.urbanairship.iaa.REMOTE_DATA_INFO";
 
-    static final String LAST_SDK_VERSION_KEY = "com.urbanairship.iaa.last_sdk_version";
 
     private static final String MIN_SDK_VERSION_KEY = "min_sdk_version";
 
     private final PreferenceDataStore preferenceDataStore;
-    private final RemoteData remoteData;
-    private final List<Listener> listeners = new ArrayList<>();
+    private final RemoteDataAccess remoteData;
     private final String sdkVersion;
-    private final Looper looper;
-
-    interface Listener {
-
-        void onSchedulesUpdated();
-
-    }
 
     interface Delegate {
 
@@ -134,84 +130,129 @@ class InAppRemoteDataObserver {
                             @NonNull final RemoteData remoteData) {
 
         this.preferenceDataStore = preferenceDataStore;
-        this.remoteData = remoteData;
+        this.remoteData = new RemoteDataAccess(remoteData);
         this.sdkVersion = UAirship.getVersion();
-        this.looper = AirshipLoopers.getBackgroundLooper();
     }
 
+    @VisibleForTesting
     InAppRemoteDataObserver(@NonNull PreferenceDataStore preferenceDataStore,
-                            @NonNull final RemoteData remoteData,
-                            @NonNull String sdkVersion,
-                            @NonNull Looper looper) {
+                            @NonNull final RemoteDataAccess remoteDataAccess,
+                            @NonNull String sdkVersion) {
 
         this.preferenceDataStore = preferenceDataStore;
-        this.remoteData = remoteData;
+        this.remoteData = remoteDataAccess;
         this.sdkVersion = sdkVersion;
-        this.looper = looper;
-    }
-
-    /**
-     * Adds a listener.
-     * <p>
-     * Updates will be called on the looper provided in
-     * {@link #subscribe(Delegate)}.
-     *
-     * @param listener The listener to add.
-     */
-    void addListener(Listener listener) {
-        synchronized (listeners) {
-            listeners.add(listener);
-        }
-    }
-
-    /**
-     * Removes a listener.
-     *
-     * @param listener The listener to remove.
-     */
-    void removeListener(Listener listener) {
-        synchronized (listeners) {
-            listeners.remove(listener);
-        }
     }
 
     /**
      * Subscribes to remote data.
      *
      * @param delegate The delegate.
-     * @return The subcription.
+     * @return A cancelable to cancel the subscription.
      */
-    Subscription subscribe(@NonNull final Delegate delegate) {
-        return remoteData.payloadsForType(IAM_PAYLOAD_TYPE)
-                         .observeOn(Schedulers.looper(looper))
-                         .subscribeOn(Schedulers.looper(looper))
-                         .subscribe(new Subscriber<RemoteDataPayload>() {
-                             @Override
-                             public void onNext(@NonNull RemoteDataPayload payload) {
-                                 try {
-                                     processPayload(payload, delegate);
-                                     Logger.debug("Finished processing messages.");
-                                 } catch (Exception e) {
-                                     Logger.error(e, "InAppRemoteDataObserver - Failed to process payload: ");
-                                 }
-                             }
-                         });
+    Cancelable subscribe(@NonNull final Delegate delegate) {
+        return remoteData.subscribe((payloads) -> {
+            try {
+                processPayloads(payloads, delegate);
+                Logger.debug("Finished processing messages.");
+            } catch (Exception e) {
+                Logger.error(e, "InAppRemoteDataObserver - Failed to process payload: ");
+            }
+        });
     }
 
-    /**
-     * Processes a payload.
-     *
-     * @param payload The remote data payload.
-     * @param delegate The delegate.
-     */
-    private void processPayload(@NonNull RemoteDataPayload payload, @NonNull Delegate delegate) throws ExecutionException, InterruptedException {
-        long lastUpdate = preferenceDataStore.getLong(LAST_PAYLOAD_TIMESTAMP_KEY, -1);
-        RemoteDataInfo lastPayloadRemoteInfo = getLastPayloadRemoteInfo();
+    @Nullable
+    private RemoteDataPayload findPayload(@NonNull List<RemoteDataPayload> payloads, RemoteDataSource source) {
+        for (RemoteDataPayload payload : payloads) {
+            if (payload.getRemoteDataInfo() == null) {
+                if (source == RemoteDataSource.APP) {
+                    return payload;
+                }
+            } else if (payload.getRemoteDataInfo().getSource() == source) {
+                return payload;
+            }
+        }
+        return null;
+    }
+    private void processPayloads(@NonNull List<RemoteDataPayload> payloads, @NonNull Delegate delegate) throws ExecutionException, InterruptedException {
+        // Fixes issue with 17.x -> 16.x -> 17.x
+        if (this.preferenceDataStore.isSet(LAST_PAYLOAD_METADATA)) {
+            this.preferenceDataStore.remove(LAST_PAYLOAD_METADATA);
+            this.preferenceDataStore.remove(APP_LAST_PAYLOAD_INFO);
+            this.preferenceDataStore.remove(CONTACT_LAST_PAYLOAD_INFO);
+        }
 
+        if (payloads.isEmpty()) {
+            return;
+        }
+
+        processAppPayload(findPayload(payloads, RemoteDataSource.APP), delegate);
+        processContactPayload(findPayload(payloads, RemoteDataSource.CONTACT), delegate);
+    }
+
+    private void processAppPayload(@Nullable RemoteDataPayload payload, @NonNull Delegate delegate) throws ExecutionException, InterruptedException {
+        if (payload == null) {
+            stopAll(RemoteDataSource.APP, delegate);
+            preferenceDataStore.remove(APP_LAST_PAYLOAD_INFO);
+            return;
+        }
+
+        long lastUpdate = preferenceDataStore.getLong(APP_LAST_PAYLOAD_TIMESTAMP_KEY, -1);
+        RemoteDataInfo lastPayloadRemoteInfo = getLastPayloadRemoteInfo(APP_LAST_PAYLOAD_INFO);
+        String lastSdkVersion = preferenceDataStore.getString(APP_LAST_SDK_VERSION_KEY, null);
+
+        boolean processed =  processPayload(payload, delegate, lastPayloadRemoteInfo, lastUpdate, lastSdkVersion, RemoteDataSource.APP);
+
+        // Store data
+        if (processed) {
+            preferenceDataStore.put(APP_LAST_PAYLOAD_TIMESTAMP_KEY, payload.getTimestamp());
+            preferenceDataStore.put(APP_LAST_PAYLOAD_INFO, payload.getRemoteDataInfo());
+            preferenceDataStore.put(APP_LAST_SDK_VERSION_KEY, sdkVersion);
+        }
+    }
+
+    private void processContactPayload(@Nullable RemoteDataPayload payload, @NonNull Delegate delegate) throws ExecutionException, InterruptedException {
+        if (payload == null) {
+            stopAll(RemoteDataSource.CONTACT, delegate);
+            preferenceDataStore.remove(CONTACT_LAST_PAYLOAD_INFO);
+            return;
+        }
+
+        String contactId = "";
+        if (payload.getRemoteDataInfo() != null && payload.getRemoteDataInfo().getContactId()  != null) {
+            contactId = payload.getRemoteDataInfo().getContactId();
+        }
+
+        // We store the last update and the last SDK version with the contact ID in the key so we can
+        // probably detect new schedules across contact ID changes. We continue to store the last payload
+        // info without the contact Id so we can detect when we should process the listing again
+        long lastUpdate = preferenceDataStore.getLong(CONTACT_LAST_PAYLOAD_TIMESTAMP_KEY + contactId, -1);
+        String lastSdkVersion = preferenceDataStore.getString(CONTACT_LAST_SDK_VERSION_KEY + contactId, null);
+
+        RemoteDataInfo lastPayloadRemoteInfo = getLastPayloadRemoteInfo(CONTACT_LAST_PAYLOAD_INFO);
+
+        boolean processed =  processPayload(payload, delegate, lastPayloadRemoteInfo, lastUpdate, lastSdkVersion, RemoteDataSource.CONTACT);
+
+        // Store data
+        if (processed) {
+            preferenceDataStore.put(CONTACT_LAST_PAYLOAD_TIMESTAMP_KEY + contactId, payload.getTimestamp());
+            preferenceDataStore.put(CONTACT_LAST_SDK_VERSION_KEY + contactId, sdkVersion);
+            preferenceDataStore.put(CONTACT_LAST_PAYLOAD_INFO, payload.getRemoteDataInfo());
+        }
+    }
+
+    private Boolean processPayload(
+            @NonNull RemoteDataPayload payload,
+            @NonNull Delegate delegate,
+            @Nullable RemoteDataInfo lastPayloadRemoteInfo,
+            long lastUpdate,
+            @Nullable String lastSdkVersion,
+            RemoteDataSource source
+    ) throws ExecutionException, InterruptedException {
         boolean isMetadataUpToDate = ObjectsCompat.equals(payload.getRemoteDataInfo(), lastPayloadRemoteInfo);
 
         if (lastUpdate == payload.getTimestamp() && isMetadataUpToDate) {
-            return;
+            return false;
         }
 
         JsonMap scheduleMetadata = JsonMap.newBuilder()
@@ -222,15 +263,14 @@ class InAppRemoteDataObserver {
 
         List<Schedule<? extends ScheduleData>> newSchedules = new ArrayList<>();
         List<String> incomingScheduleIds = new ArrayList<>();
-        Set<String> scheduledRemoteIds = filterRemoteSchedules(delegate.getSchedules().get());
+        Set<String> scheduledRemoteIds = filterRemoteSchedules(delegate.getSchedules().get(), source);
         Collection<FrequencyConstraint> constraints = parseConstraints(payload.getData().opt(CONSTRAINTS_JSON_KEY).optList());
 
         // Update constraints
         if (!delegate.updateConstraints(constraints).get()) {
-            return;
+            return false;
         }
 
-        String lastSdkVersion = preferenceDataStore.getString(LAST_SDK_VERSION_KEY, null);
 
         // Parse messages
         for (JsonValue messageJson : payload.getData().opt(MESSAGES_JSON_KEY).optList()) {
@@ -256,6 +296,7 @@ class InAppRemoteDataObserver {
             if (isMetadataUpToDate && lastUpdatedTimeStamp <= lastUpdate) {
                 continue;
             }
+
             if (scheduledRemoteIds.contains(scheduleId)) {
                 try {
                     ScheduleEdits<?> edits = parseEdits(messageJson, scheduleMetadata);
@@ -307,18 +348,23 @@ class InAppRemoteDataObserver {
             }
         }
 
-        // Store data
-        preferenceDataStore.put(LAST_PAYLOAD_TIMESTAMP_KEY, payload.getTimestamp());
-        preferenceDataStore.put(LAST_PAYLOAD_INFO, payload.getRemoteDataInfo());
-        preferenceDataStore.put(LAST_SDK_VERSION_KEY, sdkVersion);
+        return true;
+    }
 
-        synchronized (listeners) {
-            if (!listeners.isEmpty()) {
-                List<Listener> listeners = new ArrayList<>(this.listeners);
-                for (Listener listener : listeners) {
-                    listener.onSchedulesUpdated();
-                }
-            }
+    private void stopAll(RemoteDataSource source, @NonNull Delegate delegate) throws ExecutionException, InterruptedException {
+        Set<String> scheduledRemoteIds = filterRemoteSchedules(delegate.getSchedules().get(), source);
+        if (scheduledRemoteIds.isEmpty()) {
+            return;
+        }
+
+        long time = System.currentTimeMillis();
+        ScheduleEdits<? extends ScheduleData> edits = ScheduleEdits.newBuilder()
+                                                                   .setStart(time)
+                                                                   .setEnd(time)
+                                                                   .build();
+
+        for (String scheduleId : scheduledRemoteIds) {
+            delegate.editSchedule(scheduleId, edits).get();
         }
     }
 
@@ -440,7 +486,7 @@ class InAppRemoteDataObserver {
     }
 
     @NonNull
-    private Set<String> filterRemoteSchedules(@Nullable Collection<Schedule<? extends ScheduleData>> schedules) {
+    private Set<String> filterRemoteSchedules(@Nullable Collection<Schedule<? extends ScheduleData>> schedules, RemoteDataSource source) {
         if (schedules == null) {
             return Collections.emptySet();
         }
@@ -448,7 +494,14 @@ class InAppRemoteDataObserver {
         HashSet<String> scheduleIds = new HashSet<>();
 
         for (Schedule<? extends ScheduleData> schedule : schedules) {
-            if (isRemoteSchedule(schedule)) {
+            if (!isRemoteSchedule(schedule)) {
+                continue;
+            }
+
+            RemoteDataInfo info = parseRemoteDataInfo(schedule);
+            if (info == null && source == RemoteDataSource.APP) {
+                scheduleIds.add(schedule.getId());
+            } else if (info != null && source == info.getSource()) {
                 scheduleIds.add(schedule.getId());
             }
         }
@@ -476,14 +529,9 @@ class InAppRemoteDataObserver {
         preferenceDataStore.put(SCHEDULE_NEW_USER_CUTOFF_TIME_KEY, time);
     }
 
-    /**
-     * Gets the last payload metadata.
-     *
-     * @return The last payload metadata.
-     */
     @Nullable
-    private RemoteDataInfo getLastPayloadRemoteInfo() {
-        JsonValue jsonValue = preferenceDataStore.getJsonValue(LAST_PAYLOAD_INFO);
+    private RemoteDataInfo getLastPayloadRemoteInfo(@NonNull String key) {
+        JsonValue jsonValue = preferenceDataStore.getJsonValue(key);
         if (jsonValue.isNull()) {
             return null;
         }
@@ -636,25 +684,16 @@ class InAppRemoteDataObserver {
     }
 
     /**
-     * Checks to see if the the observer has processed all updates from remote-data.
-     *
-     * @return {@code true} if the observer is up to date, otherwise {@code false}.
-     */
-    private boolean isUpToDate() {
-        RemoteDataInfo remoteDataInfo = getLastPayloadRemoteInfo();
-        if (remoteDataInfo == null) {
-            return false;
-        }
-        return remoteData.isCurrent(remoteDataInfo);
-    }
-
-    /**
      * Checks to see if the schedule is valid.
      *
      * @param schedule The schedule.
      * @return {@code true} if the schedule valid, otherwise {@code false}.
      */
     public boolean isScheduleValid(@NonNull Schedule<? extends ScheduleData> schedule) {
+        if (!isRemoteSchedule(schedule)) {
+            return true;
+        }
+
         RemoteDataInfo remoteDataInfo = parseRemoteDataInfo(schedule);
         if (remoteDataInfo == null) {
             return false;
@@ -704,23 +743,18 @@ class InAppRemoteDataObserver {
         return false;
     }
 
-    public void attemptRefresh(boolean force, @NonNull Runnable onComplete) {
-        remoteData.refresh(force).addResultCallback(result -> {
-            if (result == null || !result) {
-                Logger.debug("Failed to refresh remote-data.");
-            }
+    public void refreshOutdated(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull Runnable onComplete) {
+        RemoteDataInfo remoteDataInfo = parseRemoteDataInfo(schedule);
+        remoteData.refreshOutdated(remoteDataInfo, onComplete);
+    }
 
-            if (isUpToDate()) {
-                onComplete.run();
-            } else {
-                addListener(new Listener() {
-                    @Override
-                    public void onSchedulesUpdated() {
-                        removeListener(this);
-                        onComplete.run();
-                    }
-                });
-            }
-        });
+    @WorkerThread
+    public boolean refreshAndCheckCurrentSync(@NonNull Context context, Schedule<? extends ScheduleData> schedule) {
+        if (!isRemoteSchedule(schedule)) {
+            return true;
+        }
+
+        RemoteDataInfo remoteDataInfo = parseRemoteDataInfo(schedule);
+        return remoteData.refreshAndCheckCurrentSync(context, remoteDataInfo);
     }
 }

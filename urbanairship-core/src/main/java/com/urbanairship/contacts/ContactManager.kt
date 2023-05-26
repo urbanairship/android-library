@@ -127,7 +127,7 @@ internal class ContactManager(
             }
         }
 
-    private val currentContactIdUpdate: ContactIdUpdate?
+    internal val currentContactIdUpdate: ContactIdUpdate?
         get() {
             val lastIdentity = this.lastContactIdentity ?: return null
             val isStable = this.operations.firstOrNull {

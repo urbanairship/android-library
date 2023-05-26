@@ -40,7 +40,10 @@ public final class PreferenceDataStore {
             "com.urbanairship.chat.CHAT",
             "com.urbanairship.user.LAST_MESSAGE_REFRESH_TIME",
             "com.urbanairship.push.LAST_REGISTRATION_TIME",
-            "com.urbanairship.push.LAST_REGISTRATION_PAYLOAD"
+            "com.urbanairship.push.LAST_REGISTRATION_PAYLOAD",
+            "com.urbanairship.remotedata.LAST_REFRESH_APP_VERSION",
+            "com.urbanairship.remotedata.LAST_MODIFIED",
+            "com.urbanairship.remotedata.LAST_REFRESH_TIME"
     };
 
     Executor executor = AirshipExecutors.newSerialExecutor();

@@ -6,18 +6,23 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
 import com.urbanairship.http.RequestAuth
+import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class RemoteDataApiClientTest {
     private val testConfig = TestAirshipRuntimeConfig.newTestConfig()
     private val requestSession = TestRequestSession()
-    private var client: RemoteDataApiClient = RemoteDataApiClient(testConfig, requestSession)
+    private var client: RemoteDataApiClient = RemoteDataApiClient(testConfig, requestSession.toSuspendingRequestSession())
 
     private val validPayload = RemoteDataPayload(
         type = "test_data_type",
@@ -50,7 +55,7 @@ public class RemoteDataApiClientTest {
     """
 
     @Test
-    public fun testFetch() {
+    public fun testFetch(): TestResult = runTest {
         val responseTimestamp = DateUtils.createIso8601TimeStamp(10000)
         requestSession.addResponse(
             200,
@@ -80,7 +85,7 @@ public class RemoteDataApiClientTest {
             expectedInfo
         }
 
-        assertEquals(expectedResult, response.result)
+        assertEquals(expectedResult, response.value)
         assertEquals(200, response.status)
 
         val expectedHeaders = mutableMapOf(
@@ -95,7 +100,7 @@ public class RemoteDataApiClientTest {
     }
 
     @Test
-    public fun testFetchNoLastModified() {
+    public fun testFetchNoLastModified(): TestResult = runTest {
         val responseTimestamp = DateUtils.createIso8601TimeStamp(10000)
         requestSession.addResponse(
             200,
@@ -124,7 +129,7 @@ public class RemoteDataApiClientTest {
             expectedInfo
         }
 
-        assertEquals(expectedResult, response.result)
+        assertEquals(expectedResult, response.value)
         assertEquals(200, response.status)
 
         val expectedHeaders = mutableMapOf(
@@ -137,7 +142,7 @@ public class RemoteDataApiClientTest {
     }
 
     @Test
-    public fun testFetch304() {
+    public fun testFetch304(): TestResult = runTest {
         requestSession.addResponse(
             304,
             null,
@@ -153,7 +158,7 @@ public class RemoteDataApiClientTest {
             throw IllegalStateException("should not be called")
         }
 
-        assertNull(response.result)
+        assertNull(response.value)
         assertEquals(304, response.status)
 
         val expectedHeaders = mutableMapOf(
@@ -166,7 +171,7 @@ public class RemoteDataApiClientTest {
     }
 
     @Test
-    public fun testError() {
+    public fun testError(): TestResult = runTest {
         requestSession.addResponse(
             400,
             null,
@@ -182,7 +187,7 @@ public class RemoteDataApiClientTest {
            throw IllegalStateException("should not be called")
         }
 
-        assertNull(response.result)
+        assertNull(response.value)
         assertEquals(400, response.status)
 
         val expectedHeaders = mutableMapOf(
@@ -195,7 +200,7 @@ public class RemoteDataApiClientTest {
     }
 
     @Test
-    public fun testEmptyResponse() {
+    public fun testEmptyResponse(): TestResult = runTest {
         requestSession.addResponse(
             200,
             "{ \"ok\": true }",
@@ -223,7 +228,7 @@ public class RemoteDataApiClientTest {
             payloads = emptySet()
         )
 
-        assertEquals(expectedResult, response.result)
+        assertEquals(expectedResult, response.value)
         assertEquals(200, response.status)
 
         val expectedHeaders = mutableMapOf(

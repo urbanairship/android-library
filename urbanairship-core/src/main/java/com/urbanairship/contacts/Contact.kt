@@ -38,6 +38,7 @@ import com.urbanairship.util.SerialQueue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -110,6 +111,8 @@ public class Contact internal constructor(
     @JvmSynthetic
     public val namedUserIdFlow: StateFlow<String?> = contactManager.currentNamedUserIdUpdates
 
+    internal val contactIdUpdateFlow: Flow<ContactIdUpdate?> = contactManager.contactIdUpdates
+
     /**
      * Contact conflict listener.
      */
@@ -126,6 +129,13 @@ public class Contact internal constructor(
     private var lastResolvedDate: Long
         get() = preferenceDataStore.getLong(LAST_RESOLVED_DATE_KEY, -1)
         set(newValue) = preferenceDataStore.put(LAST_RESOLVED_DATE_KEY, newValue)
+
+    internal val currentContactIdUpdate: ContactIdUpdate?
+        get() = contactManager.currentContactIdUpdate
+
+    internal suspend fun stableContactId(): String {
+        return contactManager.stableContactId()
+    }
 
     init {
         migrateNamedUser()

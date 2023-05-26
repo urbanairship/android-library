@@ -76,8 +76,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions);
         UAirship.sharedAirship.actionRegistry = new ActionRegistry();
         UAirship.sharedAirship.actionRegistry.registerDefaultActions(this);
-        UAirship.sharedAirship.remoteData = new RemoteData(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.pushManager, UAirship.sharedAirship.localeManager, pushProviders);
-        UAirship.sharedAirship.remoteConfigManager = new RemoteConfigManager(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.remoteData);
     }
 
     @Override

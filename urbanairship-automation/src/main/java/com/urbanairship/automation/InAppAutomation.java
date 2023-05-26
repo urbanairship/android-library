@@ -79,7 +79,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private final Map<String, Uri> redirectURLs = new HashMap<>();
 
     private final AtomicBoolean isStarted = new AtomicBoolean(false);
-    private Subscription subscription;
+    private Cancelable subscription;
 
     private final AudienceOverridesProvider audienceOverridesProvider;
 
@@ -522,6 +522,15 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             callback.onFinish(result);
         };
 
+        RetryingExecutor.Operation checkValid = () -> {
+            if (!remoteDataSubscriber.refreshAndCheckCurrentSync(getContext(), schedule)) {
+                callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                return RetryingExecutor.cancelResult();
+            } else {
+                return RetryingExecutor.finishedResult();
+            }
+        };
+
         RetryingExecutor.Operation frequencyChecks = () -> {
             if (!schedule.getFrequencyConstraintIds().isEmpty()) {
                 FrequencyChecker frequencyChecker = getFrequencyChecker(schedule);
@@ -567,19 +576,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return RetryingExecutor.finishedResult();
         };
 
-        RetryingExecutor.Operation[] operations = new RetryingExecutor.Operation[] { frequencyChecks, audienceChecks, prepareSchedule };
-
-        if (remoteDataSubscriber.isRemoteSchedule(schedule)) {
-            remoteDataSubscriber.attemptRefresh(false, () -> {
-                if (isScheduleInvalid(schedule)) {
-                    callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
-                } else {
-                    retryingExecutor.execute(operations);
-                }
-            });
-        } else {
-            retryingExecutor.execute(operations);
-        }
+        RetryingExecutor.Operation[] operations = new RetryingExecutor.Operation[] { checkValid, frequencyChecks, audienceChecks, prepareSchedule };
+        retryingExecutor.execute(operations);
     }
 
     private <T extends ScheduleData> void prepareSchedule(final Schedule<? extends ScheduleData> schedule, T scheduleData, final ScheduleDelegate<T> delegate, final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
@@ -653,7 +651,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                 return RetryingExecutor.retryResult();
 
             case 409:
-                remoteDataSubscriber.attemptRefresh(true, () -> {
+                remoteDataSubscriber.refreshOutdated(schedule, () -> {
                     callback.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
                 });
                 return RetryingExecutor.finishedResult();
@@ -682,7 +680,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return AutomationDriver.READY_RESULT_NOT_READY;
         }
 
-        if (isScheduleInvalid(schedule)) {
+        if (!this.remoteDataSubscriber.isScheduleValid(schedule)) {
             ScheduleDelegate<?> delegate = scheduleDelegateMap.remove(schedule.getId());
             if (delegate != null) {
                 delegate.onExecutionInvalidated(schedule);
@@ -738,17 +736,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private void updateEnginePauseState() {
         boolean isEnabled = privacyManager.isEnabled(PrivacyManager.FEATURE_IN_APP_AUTOMATION) && isComponentEnabled();
         automationEngine.setPaused(!isEnabled);
-    }
-
-    /**
-     * Checks to see if a schedule from remote-data is still valid by checking
-     * the schedule metadata.
-     *
-     * @param schedule The in-app schedule.
-     * @return {@code true} if the schedule is valid, otherwise {@code false}.
-     */
-    private boolean isScheduleInvalid(@NonNull Schedule<? extends ScheduleData> schedule) {
-        return remoteDataSubscriber.isRemoteSchedule(schedule) && !remoteDataSubscriber.isScheduleValid(schedule);
     }
 
     /**

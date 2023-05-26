@@ -744,16 +744,17 @@ public class UAirship {
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.channelCapture);
 
-        this.remoteData = new RemoteData(application, preferenceDataStore, runtimeConfig, privacyManager, pushManager, localeManager, pushProviders);
+        this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, audienceOverridesProvider);
+        components.add(this.contact);
+        requestSession.setContactAuthTokenProvider(this.contact.getAuthTokenProvider());
+
+        this.remoteData = new RemoteData(application, runtimeConfig, preferenceDataStore, privacyManager, localeManager,  pushManager, pushProviders, contact);
         components.add(this.remoteData);
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, runtimeConfig, privacyManager, remoteData);
         this.remoteConfigManager.addRemoteAirshipConfigListener(remoteAirshipUrlConfigProvider);
         components.add(this.remoteConfigManager);
 
-        this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, audienceOverridesProvider);
-        components.add(this.contact);
-        requestSession.setContactAuthTokenProvider(this.contact.getAuthTokenProvider());
 
         // Experiments
         this.experimentManager = new ExperimentManager(application, preferenceDataStore, remoteData,

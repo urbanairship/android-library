@@ -1,11 +1,11 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.remotedata
 
 import android.net.Uri
 import android.os.Build
-import androidx.annotation.RestrictTo
 import com.urbanairship.PushProviders
 import com.urbanairship.UAirship
-import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.base.Supplier
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.config.UrlBuilder
@@ -15,10 +15,7 @@ import java.util.Locale
 /**
  * @hide
  */
-// TODO: Remove public once everything is in kotlin
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@OpenForTesting
-public class RemoteDataUrlFactory(
+internal class RemoteDataUrlFactory(
     private val runtimeConfig: AirshipRuntimeConfig,
     private val pushProvidersSupplier: Supplier<PushProviders>,
 ) {
@@ -44,12 +41,26 @@ public class RemoteDataUrlFactory(
         return UAStringUtil.join(deliveryTypes, ",")
     }
 
+    public fun createContactUrl(contactID: String, locale: Locale, randomValue: Int): Uri? {
+        return createUrl(
+            path = "api/remote-data-contact/$platform/$contactID",
+            locale = locale,
+            randomValue = randomValue
+        )
+    }
+
     public fun createAppUrl(locale: Locale, randomValue: Int): Uri? {
-        // api/remote-data/app/{appkey}/{platform}?sdk_version={version}&language={language}&country={country}&manufacturer={manufacturer}&push_providers={push_providers}
+        return createUrl(
+            path = "api/remote-data/app/${runtimeConfig.configOptions.appKey}/$platform",
+            locale = locale,
+            randomValue = randomValue
+        )
+    }
+
+    private fun createUrl(path: String, locale: Locale, randomValue: Int): Uri? {
+        // {path}?sdk_version={version}&language={language}&country={country}&manufacturer={manufacturer}&push_providers={push_providers}
         val builder: UrlBuilder = runtimeConfig.urlConfig.remoteDataUrl()
-            .appendEncodedPath("api/remote-data/app/")
-            .appendPath(runtimeConfig.configOptions.appKey)
-            .appendPath(this.platform)
+            .appendEncodedPath(path)
             .appendQueryParameter(
                 SDK_VERSION_QUERY_PARAM,
                 UAirship.getVersion()

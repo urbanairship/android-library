@@ -10,5 +10,6 @@ import androidx.annotation.RestrictTo
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public enum class RemoteDataSource {
-    APP
+    APP,
+    CONTACT
 }

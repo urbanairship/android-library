@@ -15,10 +15,11 @@ import com.urbanairship.json.requireField
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class RemoteDataInfo(
+public data class RemoteDataInfo @JvmOverloads constructor(
     val url: String,
     val lastModified: String?,
-    val source: RemoteDataSource
+    val source: RemoteDataSource,
+    val contactId: String? = null
 ) : JsonSerializable {
 
     @Throws(JsonException::class)
@@ -31,12 +32,14 @@ public data class RemoteDataInfo(
             } catch (e: Exception) {
                 throw JsonException("Invalid source", e)
             }
-        }
+        },
+        contactId = json.requireMap().optionalField("contactId")
     )
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
         "url" to url,
         "lastModified" to lastModified,
         "source" to source.name,
+        "contactId" to contactId
     ).toJsonValue()
 }

@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.remotedata
 
 import android.content.Context
@@ -385,7 +387,7 @@ internal class TestRemoteDataProvider(context: Context) : RemoteDataProvider(
     var isRemoteDataInfoUpToDateCallback: ((RemoteDataInfo, Locale, Int) -> Boolean)? = null
     var fetchRemoteDataCallback: ((Locale, Int, RemoteDataInfo?) -> RequestResult<RemoteDataApiClient.Result>)? = null
 
-    override suspend fun isRemoteDataInfoUpToDate(
+    override fun isRemoteDataInfoUpToDate(
         remoteDataInfo: RemoteDataInfo,
         locale: Locale,
         randomValue: Int

@@ -1,5 +1,7 @@
 plugins {
     id 'airship-module'
+    id 'kotlin-android'
+    id 'kotlin-allopen'
 }
 
 description = "Airship Android SDK Automation module"
@@ -24,4 +26,13 @@ dependencies {
 
 android {
     namespace 'com.urbanairship.automation'
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+        freeCompilerArgs = ["-Xexplicit-api=strict"]
+    }
 }
+
+allOpen {
+    annotation "com.urbanairship.annotation.OpenForTesting"
+}
+

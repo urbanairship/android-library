@@ -2,6 +2,7 @@
 
 package com.urbanairship.remotedata
 
+import com.google.android.gms.common.util.VisibleForTesting
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.Logger
 import com.urbanairship.PreferenceDataStore
@@ -58,7 +59,11 @@ internal abstract class RemoteDataProvider(
         }
     }
 
-    suspend fun isCurrent(locale: Locale, randomValue: Int): Boolean {
+    protected fun clearLastRefreshState() {
+        this.lastRefreshState = null
+    }
+
+    fun isCurrent(locale: Locale, randomValue: Int): Boolean {
         if (!isEnabled) {
             return false
         }
@@ -130,13 +135,15 @@ internal abstract class RemoteDataProvider(
         return RefreshResult.FAILED
     }
 
-    protected abstract suspend fun isRemoteDataInfoUpToDate(
+    @VisibleForTesting
+    abstract fun isRemoteDataInfoUpToDate(
         remoteDataInfo: RemoteDataInfo,
         locale: Locale,
         randomValue: Int
     ): Boolean
 
-    protected abstract suspend fun fetchRemoteData(
+    @VisibleForTesting
+    abstract suspend fun fetchRemoteData(
         locale: Locale,
         randomValue: Int,
         lastRemoteDataInfo: RemoteDataInfo?

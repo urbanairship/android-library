@@ -2,7 +2,6 @@ package com.urbanairship.preferencecenter
 
 import android.content.Context
 import android.net.Uri
-import android.os.Looper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
@@ -14,27 +13,20 @@ import com.urbanairship.preferencecenter.PreferenceCenter.Companion.PAYLOAD_TYPE
 import com.urbanairship.preferencecenter.data.CommonDisplay
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.PreferenceCenterPayload
-import com.urbanairship.reactive.Observable
-import com.urbanairship.reactive.Subject
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
+import io.mockk.coEvery
+import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.never
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
-import org.robolectric.annotation.LooperMode
 
 @RunWith(AndroidJUnit4::class)
-@LooperMode(LooperMode.Mode.LEGACY)
 class PreferenceCenterTest {
 
     companion object {
@@ -66,79 +58,46 @@ class PreferenceCenterTest {
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
     private val privacyManager = PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL)
 
-    private val payloads = Subject.create<RemoteDataPayload>()
-    private val remoteData: RemoteData = mock {
-        on { payloadsForType(eq(PAYLOAD_TYPE)) } doReturn payloads
-    }
+    private val remoteData: RemoteData = mockk()
 
-    private val backgroundLooper: Looper = Looper.getMainLooper()
-    private val onOpenListener: PreferenceCenter.OnOpenListener = mock()
+    private val onOpenListener: PreferenceCenter.OnOpenListener = mockk(relaxed = true)
 
-    private lateinit var prefCenter: PreferenceCenter
-
-    @Before
-    fun setUp() {
-        prefCenter = PreferenceCenter(context, dataStore, privacyManager, remoteData, backgroundLooper)
-    }
+    private val prefCenter: PreferenceCenter = PreferenceCenter(
+        context, dataStore, privacyManager, remoteData
+    )
 
     @Test
-    fun testOnOpenListener() {
-        whenever(remoteData.payloadsForType(eq(PAYLOAD_TYPE)))
-            .doReturn(Observable.just(SINGLE_FORM_PAYLOAD))
-
+    fun testOnOpenListener(): TestResult = runTest {
         prefCenter.openListener = onOpenListener
-        verify(onOpenListener, never()).onOpenPreferenceCenter(any())
+        verify(exactly = 0) { onOpenListener.onOpenPreferenceCenter(any()) }
 
         prefCenter.open(ID_1)
-        verify(onOpenListener).onOpenPreferenceCenter(eq(ID_1))
+        verify(exactly = 1) { onOpenListener.onOpenPreferenceCenter(ID_1) }
     }
 
     @Test
-    fun testGetConfigWithEmptyRemoteDataPayload() {
-        whenever(remoteData.payloadsForType(eq(PAYLOAD_TYPE)))
-            .doReturn(Observable.just(EMPTY_PAYLOADS))
-
-        val pendingResult = prefCenter.getConfig(ID_1)
-        assertEquals(null, pendingResult.result)
+    fun testGetConfigWithEmptyRemoteDataPayload(): TestResult = runTest {
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(EMPTY_PAYLOADS)
+        assertEquals(null, prefCenter.getConfig(ID_1))
     }
 
     @Test
-    fun testGetConfigWithSingleRemoteDataPayload() {
-        whenever(remoteData.payloadsForType(eq(PAYLOAD_TYPE)))
-            .doReturn(Observable.just(SINGLE_FORM_PAYLOAD))
-
-        val pendingResult = prefCenter.getConfig(ID_1)
-        assertEquals(PREFERENCE_FORM_1, pendingResult.result)
+    fun testGetConfigWithSingleRemoteDataPayload(): TestResult = runTest {
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
+        assertEquals(PREFERENCE_FORM_1, prefCenter.getConfig(ID_1))
     }
 
     @Test
-    fun testGetJsonConfigWithSingleRemoteDataPayload() {
-        whenever(remoteData.payloadsForType(eq(PAYLOAD_TYPE)))
-            .doReturn(Observable.just(SINGLE_FORM_PAYLOAD))
-
-        val pendingResult = prefCenter.getJsonConfig(ID_1)
-        assertEquals(PREFERENCE_FORM_1.toJson().toJsonValue(), pendingResult.result)
+    fun testGetJsonConfigWithSingleRemoteDataPayload(): TestResult = runTest {
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
+        assertEquals(PREFERENCE_FORM_1.toJson(), prefCenter.getJsonConfig(ID_1))
     }
 
     @Test
-    fun testGetConfigWithMultipleRemoteDataPayloads() {
-        whenever(remoteData.payloadsForType(eq(PAYLOAD_TYPE)))
-            .doReturn(Observable.just(MULTI_FORM_PAYLOAD))
-
-        val pendingResult1 = prefCenter.getConfig(ID_1)
-        assertEquals(PREFERENCE_FORM_1, pendingResult1.result)
-
-        val pendingResult2 = prefCenter.getConfig(ID_2)
-        assertEquals(PREFERENCE_FORM_2, pendingResult2.result)
-    }
-
-    @Test
-    fun testGetConfigWithRemoteDataError() {
-        whenever(remoteData.payloadsForType(eq(PAYLOAD_TYPE)))
-            .doReturn(Observable.error(IllegalStateException("oops")))
-
-        val pendingResult = prefCenter.getConfig("foo")
-        assertEquals(null, pendingResult.result)
+    fun testGetConfigWithMultipleRemoteDataPayloads(): TestResult = runTest {
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(MULTI_FORM_PAYLOAD)
+        assertEquals(PREFERENCE_FORM_1, prefCenter.getConfig(ID_1))
+        assertEquals(PREFERENCE_FORM_2, prefCenter.getConfig(ID_2))
     }
 
     @Test
@@ -147,7 +106,7 @@ class PreferenceCenterTest {
         prefCenter.openListener = onOpenListener
 
         assertTrue(prefCenter.onAirshipDeepLink(deepLink))
-        verify(onOpenListener).onOpenPreferenceCenter("some-preference")
+        verify { onOpenListener.onOpenPreferenceCenter("some-preference") }
     }
 
     @Test
@@ -156,7 +115,7 @@ class PreferenceCenterTest {
         prefCenter.openListener = onOpenListener
 
         assertTrue(prefCenter.onAirshipDeepLink(deepLink))
-        verify(onOpenListener).onOpenPreferenceCenter("some-preference")
+        verify { onOpenListener.onOpenPreferenceCenter("some-preference") }
     }
 
     @Test
@@ -172,6 +131,6 @@ class PreferenceCenterTest {
         val tooManyArgs = Uri.parse("uairship://preferences/what/what")
         assertFalse(prefCenter.onAirshipDeepLink(tooManyArgs))
 
-        verify(onOpenListener, never()).onOpenPreferenceCenter(any())
+        verify(exactly = 0) { onOpenListener.onOpenPreferenceCenter(any()) }
     }
 }
