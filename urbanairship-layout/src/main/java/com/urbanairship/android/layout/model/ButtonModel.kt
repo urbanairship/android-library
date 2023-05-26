@@ -139,7 +139,7 @@ internal abstract class ButtonModel<T>(
 
         fun pagerNext() {
             pagerState.update { state ->
-                state.copyWithPageIndex(min(state.pageIndex + 1, state.pages.size - 1))
+                state.copyWithPageIndex(min(state.pageIndex + 1, state.pageIds.size - 1))
             }
         }
 

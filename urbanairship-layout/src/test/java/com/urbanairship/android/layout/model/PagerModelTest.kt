@@ -84,12 +84,9 @@ public class PagerModelTest {
         // Sanity check
         assertEquals(PAGER_ID, state.identifier)
         // Verify that the model set page IDs on pagerState
-        assertEquals(PAGE_IDS, state.pages)
+        assertEquals(PAGE_IDS, state.pageIds)
         // Verify that the correct number of page items is available via the model
         assertEquals(3, pagerModel.items.size)
-
-        // Verify that the model notified the view to scroll to the first page
-        verify { mockViewListener.scrollTo(0) }
         // Verify that actions were run for the initial page display
         verify(exactly = 1) { mockActionsRunner.run(any(), any()) }
     }
@@ -98,7 +95,6 @@ public class PagerModelTest {
     public fun testUserScrolls(): TestResult = runTest {
         pagerState.changes.test {
             pagerModel.onViewAttached(mockView)
-            verify { mockViewListener.scrollTo(0) }
 
             val initialState = awaitItem()
             assertEquals(0, initialState.pageIndex)
@@ -127,7 +123,6 @@ public class PagerModelTest {
     public fun testInternalScrolls(): TestResult = runTest {
         pagerState.changes.test {
             pagerModel.onViewAttached(mockView)
-            verify { mockViewListener.scrollTo(0) }
 
             val initialState = awaitItem()
             assertEquals(0, initialState.pageIndex)
@@ -156,7 +151,6 @@ public class PagerModelTest {
     public fun testStateChanges(): TestResult = runTest {
         pagerModel.onViewAttached(mockView)
 
-        verify { mockViewListener.scrollTo(0) }
         // Verify actions were run for the initial page display
         verify(exactly = 1) { mockActionsRunner.run(any(), any()) }
 

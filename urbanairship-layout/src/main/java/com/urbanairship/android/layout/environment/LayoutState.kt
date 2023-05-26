@@ -32,7 +32,7 @@ internal class LayoutState(
             parentForm = parentForm ?: this.parentForm,
             checkbox = checkboxState ?: this.checkbox,
             radio = radioState ?: this.radio,
-            layout = layoutState ?: this.layout
+            layout = layoutState ?: this.layout,
         )
     }
 
@@ -63,18 +63,20 @@ internal sealed class FormType(
 }
 
 internal sealed class State {
-    // TODO(stories): Add support for tracking pager and page progress for the
-    //   Story Indicator model/view. We may want to split that out into a separate
+    // TODO(stories): We may want to split that out into a separate
     //   state flow to avoid a ton of extra updates to pager state?
+    //   Or, we could sprinkle some distinctUntilChanged() calls around and circle back.
     data class Pager(
         val identifier: String,
         val pageIndex: Int = 0,
         val lastPageIndex: Int = 0,
         val completed: Boolean = false,
-        val pages: List<String> = emptyList()
+        val pageIds: List<String> = emptyList(),
+        val durations: List<Int?> = emptyList(),
+        val progress: Int = 0
     ) : State() {
         val hasNext
-            get() = pageIndex < pages.size - 1
+            get() = pageIndex < pageIds.size - 1
         val hasPrevious
             get() = pageIndex > 0
 
@@ -85,18 +87,22 @@ internal sealed class State {
                 copy(
                     pageIndex = index,
                     lastPageIndex = pageIndex,
-                    completed = completed || (index == pages.size - 1)
+                    completed = completed || (index == pageIds.size - 1),
+                    progress = 0
                 )
             }
 
         fun copyWithPageIds(pageIds: List<String>) =
             copy(
-                pages = pageIds,
+                pageIds = pageIds,
                 completed = pageIds.size <= 1
             )
 
+        fun copyWithDurations(durations: List<Int?>) =
+            copy(durations = durations)
+
         fun reportingContext(): PagerData =
-            PagerData(identifier, pageIndex, pages.getOrElse(pageIndex) { "NULL!" }, pages.size, completed)
+            PagerData(identifier, pageIndex, pageIds.getOrElse(pageIndex) { "NULL!" }, pageIds.size, completed)
     }
 
     data class Form(
@@ -189,7 +195,6 @@ internal fun <T : FormData<*>> State.Form.inputData(identifier: String): T? {
     return data[identifier] as? T
 }
 
-@Suppress("UNCHECKED_CAST")
 internal fun <T : FormData<*>> SharedState<State.Form>.inputData(identifier: String): T? {
     return changes.value.inputData(identifier)
 }

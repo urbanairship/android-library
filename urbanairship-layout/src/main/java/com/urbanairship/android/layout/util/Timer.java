@@ -13,9 +13,8 @@ public abstract class Timer {
     private boolean isStarted;
     private long startTimeMs;
     private long remainingTimeMs;
-
+    private long duration;
     private long elapsedTimeMs;
-
     private final Handler handler = new Handler();
     private final Runnable trigger = new Runnable() {
         @Override
@@ -33,6 +32,7 @@ public abstract class Timer {
      * @param milliseconds The duration of the timer in milliseconds.
      */
     public Timer(long milliseconds) {
+        this.duration = milliseconds;
         this.remainingTimeMs = milliseconds;
     }
 
@@ -62,7 +62,7 @@ public abstract class Timer {
             return;
         }
 
-        elapsedTimeMs = SystemClock.elapsedRealtime() - startTimeMs;
+        elapsedTimeMs += SystemClock.elapsedRealtime() - startTimeMs;
 
         isStarted = false;
         handler.removeCallbacks(trigger);
@@ -80,6 +80,15 @@ public abstract class Timer {
         }
 
         return elapsedTimeMs;
+    }
+
+    /**
+     * Gets the progress in percentage.
+     *
+     * @return The progress in percentage.
+     */
+    public int getProgress() {
+        return (int) (getRunTime() * 100 / duration);
     }
 
     /**

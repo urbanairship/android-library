@@ -14,6 +14,8 @@ import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.view.StoryIndicatorView
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 internal class StoryIndicatorModel(
@@ -49,16 +51,15 @@ internal class StoryIndicatorModel(
     )
 
     interface Listener : BaseModel.Listener {
-        fun onUpdate(size: Int, progress: Int)
+        fun onUpdate(size: Int, pageIndex: Int, progress: Int, durations: List<Int?>)
     }
 
     override var listener: Listener? = null
         set(value) {
             field = value
+
             layoutState.pager?.changes?.value?.let { state ->
-                // TODO(stories): need to update pager/current_page progress here instead of
-                //   just passing the page index.
-                listener?.onUpdate(state.pages.size, state.pageIndex)
+                listener?.onUpdate(state.pageIds.size, state.pageIndex, state.progress, state.durations)
             }
         }
 
@@ -70,14 +71,24 @@ internal class StoryIndicatorModel(
         }
 
     override fun onViewAttached(view: StoryIndicatorView) {
-        modelScope.launch {
-            layoutState.pager?.changes?.collect { state ->
-                // TODO(stories): need to update pager/current_page progress here instead of
-                //   just passing the page index.
-                listener?.onUpdate(state.pages.size, state.pageIndex)
-            }
+        viewScope.launch {
+            layoutState.pager?.changes
+                // Pull out the state we care about so that we can use distinctUntilChanged to
+                // avoid unnecessary updates.
+                ?.map { StoryIndicatorUpdate(it.pageIds.size, it.pageIndex, it.progress, it.durations) }
+                ?.distinctUntilChanged()
+                ?.collect { (size, pageIndex, progress, durations) ->
+                    listener?.onUpdate(size, pageIndex, progress, durations)
+                }
         }
     }
+
+    data class StoryIndicatorUpdate(
+        val size: Int,
+        val pageIndex: Int,
+        val progress: Int,
+        val durations: List<Int?>
+    )
 
     /** Returns a stable viewId for the indicator view at the given `position`.  */
     fun getIndicatorViewId(position: Int): Int =

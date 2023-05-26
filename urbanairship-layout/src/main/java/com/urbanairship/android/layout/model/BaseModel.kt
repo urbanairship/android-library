@@ -114,7 +114,7 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
             var isDisplayed = false
 
             layoutState.pager?.changes?.collect { state ->
-                val currentPageId = state.pages[state.pageIndex]
+                val currentPageId = state.pageIds[state.pageIndex]
                 val wasDisplayed = isDisplayed
                 isDisplayed = currentPageId == properties.pagerPageId
                 if (wasDisplayed != isDisplayed) {

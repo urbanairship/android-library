@@ -81,7 +81,7 @@ public class FormControllerTest {
     ))
 
     private val pagerState = spyk(SharedState(State.Pager(
-        identifier = PAGER_ID, pages = PAGER_PAGE_IDS)
+        identifier = PAGER_ID, pageIds = PAGER_PAGE_IDS)
     ))
 
     private lateinit var formController: FormController

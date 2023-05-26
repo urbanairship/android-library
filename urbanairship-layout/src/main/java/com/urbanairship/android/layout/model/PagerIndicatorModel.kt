@@ -57,7 +57,7 @@ internal class PagerIndicatorModel(
         set(value) {
             field = value
             layoutState.pager?.changes?.value?.let { state ->
-                listener?.onUpdate(state.pages.size, state.pageIndex)
+                listener?.onUpdate(state.pageIds.size, state.pageIndex)
             }
         }
 
@@ -71,7 +71,7 @@ internal class PagerIndicatorModel(
     override fun onViewAttached(view: PagerIndicatorView) {
         modelScope.launch {
             layoutState.pager?.changes?.collect { state ->
-                listener?.onUpdate(state.pages.size, state.pageIndex)
+                listener?.onUpdate(state.pageIds.size, state.pageIndex)
             }
         }
     }

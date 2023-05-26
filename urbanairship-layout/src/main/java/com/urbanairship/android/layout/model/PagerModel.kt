@@ -38,8 +38,12 @@ import com.urbanairship.android.layout.util.pagerGestures
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 internal class PagerModel(
@@ -95,6 +99,8 @@ internal class PagerModel(
         fun scrollTo(position: Int)
     }
 
+    private var scheduledJob: Job? = null
+
     /** Stable viewId for the recycler view.  */
     val recyclerViewId = View.generateViewId()
 
@@ -102,12 +108,14 @@ internal class PagerModel(
 
     private val pageViewIds = mutableMapOf<Int, Int>()
 
+    private var navigationActionTimer: Timer? = null
     private val automatedActionsTimers: MutableList<Timer> = ArrayList()
 
     init {
         // Update pager state with our page identifiers
         pagerState.update { state ->
             state.copyWithPageIds(pageIds = items.map { it.identifier })
+                .copyWithDurations(durations = items.map { it.automatedActions?.earliestNavigationAction?.delay })
         }
 
         // Listen for page changes (or the initial page display)
@@ -121,6 +129,7 @@ internal class PagerModel(
                     // Otherwise, we only want to act on changes to the pageIndex.
                     pageIndex == 0 && lastPageIndex == 0 || pageIndex != lastPageIndex
                 }
+                .distinctUntilChanged()
                 .collect { (pageIndex, previousIndex) ->
                     // Clear any automated actions scheduled for the previous page.
                     if (pageIndex != previousIndex) {
@@ -148,9 +157,13 @@ internal class PagerModel(
 
         // Collect page index changes from state and tell the view to scroll to the current page.
         viewScope.launch {
-            pagerState.changes.collect {
-                listener?.scrollTo(it.pageIndex)
-            }
+            pagerState.changes
+                .map { it.pageIndex to it.lastPageIndex }
+                .filter { (pageIndex, lastPageIndex) -> pageIndex != lastPageIndex }
+                .distinctUntilChanged()
+                .collect { (pageIndex, _) ->
+                    listener?.scrollTo(pageIndex)
+                }
         }
 
         // Collect pager scrolls, update pager state, and report
@@ -219,7 +232,30 @@ internal class PagerModel(
             // the page display, and can be used to determine the progress value for the
             // currently displayed page.
             actions.earliestNavigationAction?.let { action ->
-                scheduleAutomatedAction(action)
+                navigationActionTimer = object : Timer(action.delay.toLong() * 1000L) {
+                    override fun onFinish() {
+                        // Clean up the progress timer and this navigation action timer.
+                        scheduledJob?.cancel()
+                        automatedActionsTimers.remove(this)
+
+                        action.behaviors?.let {
+                            viewScope.launch {
+                                evaluateClickBehaviors(it)
+                            }
+                        }
+                    }
+                }.apply {
+                    start()
+                    scheduledJob = modelScope.launch {
+                        while (isActive) {
+                            pagerState.update { state ->
+                                Logger.verbose("updating progress to $progress")
+                                state.copy(progress = progress)
+                            }
+                            delay(100)
+                        }
+                    }
+                }
             }
 
             // Run the other automated actions
@@ -310,7 +346,7 @@ internal class PagerModel(
     private suspend fun handlePagerNext(fallback: PagerNextFallback) {
         fun pagerNext() {
             pagerState.update { state ->
-                state.copyWithPageIndex(Integer.min(state.pageIndex + 1, state.pages.size - 1))
+                state.copyWithPageIndex(Integer.min(state.pageIndex + 1, state.pageIds.size - 1))
             }
         }
 
@@ -348,6 +384,7 @@ internal class PagerModel(
 
     private fun pauseStory() {
         Logger.verbose("pause story")
+        navigationActionTimer?.stop()
         for (timer in automatedActionsTimers) {
             timer.stop()
         }
@@ -355,12 +392,15 @@ internal class PagerModel(
 
     private fun resumeStory() {
         Logger.verbose("resume story")
+        navigationActionTimer?.start()
         for (timer in automatedActionsTimers) {
             timer.start()
         }
     }
 
     private fun clearAutomatedActions() {
+        navigationActionTimer?.stop()
+        scheduledJob?.cancel()
         for (timer in automatedActionsTimers) {
             timer.stop()
         }

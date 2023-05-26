@@ -267,7 +267,8 @@ internal class ThomasModelFactory : ModelFactory {
         val pager: Tag?,
         val checkbox: Tag?,
         val radio: Tag?,
-        val layout: Tag?
+        val layout: Tag?,
+        val story: Tag?
     ) {
         @Suppress("UNCHECKED_CAST")
         fun buildLayoutState(states: Map<Tag, SharedState<State>?>): LayoutState {
@@ -279,7 +280,7 @@ internal class ThomasModelFactory : ModelFactory {
                 pager = pager?.let { states[it] as? SharedState<State.Pager> },
                 checkbox = checkbox?.let { states[it] as? SharedState<State.Checkbox> },
                 radio = radio?.let { states[it] as? SharedState<State.Radio> },
-                layout = layout?.let { states[it] as? SharedState<State.Layout> }
+                layout = layout?.let { states[it] as? SharedState<State.Layout> },
             )
         }
 
@@ -288,7 +289,8 @@ internal class ThomasModelFactory : ModelFactory {
             var pager: Tag? = null,
             var checkbox: Tag? = null,
             var radio: Tag? = null,
-            var layout: Tag? = null
+            var layout: Tag? = null,
+            var story: Tag? = null
         ) {
             fun update(type: ViewType, tag: Tag): Builder = when (type) {
                 ViewType.FORM_CONTROLLER,
@@ -297,6 +299,7 @@ internal class ThomasModelFactory : ModelFactory {
                 ViewType.CHECKBOX_CONTROLLER -> copy(checkbox = tag)
                 ViewType.RADIO_INPUT_CONTROLLER -> copy(radio = tag)
                 ViewType.STATE_CONTROLLER -> copy(layout = tag)
+                ViewType.STORY_INDICATOR -> copy(story = tag)
                 else -> this
             }
 
@@ -305,7 +308,8 @@ internal class ThomasModelFactory : ModelFactory {
                 pager = pager,
                 checkbox = checkbox,
                 radio = radio,
-                layout = layout
+                layout = layout,
+                story = story
             )
         }
     }

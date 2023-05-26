@@ -70,8 +70,14 @@ view:
                 behaviors:
                   - pager_next
             - type: tap
-              identifier: "end-tap-gesture-id"
+              identifier: "bottom-tap-gesture-id"
               location: bottom
+              behavior:
+                behaviors:
+                  - dismiss
+            - type: swipe
+              identifier: "down-swipe-gesture-id"
+              direction: down
               behavior:
                 behaviors:
                   - dismiss
@@ -88,7 +94,7 @@ view:
             - identifier: "pager-page-1-id"
               automated_actions:
                 - identifier: "pager-pager-1-action-id"
-                  delay: 4
+                  delay: 8
                   behaviors:
                     - pager_next
               display_actions:
@@ -191,7 +197,7 @@ view:
             - identifier: "pager-page-3-id"
               automated_actions:
                 - identifier: "pager-pager-3-action-id"
-                  delay: 8
+                  delay: 4
                   behaviors:
                     - pager_next_or_first
               display_actions:
@@ -310,12 +316,13 @@ view:
                             alpha: 1
 
       - size:
-          height: 5
+          height: 3
           width: 80%
         position:
           vertical: top
           horizontal: center
         margin:
+          top: 8
           bottom: 8
         view:
           type: story_indicator
@@ -323,11 +330,11 @@ view:
             default:
               hex: "#ffffff"
               alpha: 0.4
-          source: "pager"
+          source: pager
           style:
             type: linear_progress
             direction: horizontal
-            sizing: equal
+            sizing: page_duration
             spacing: 4
             color:
               default:
