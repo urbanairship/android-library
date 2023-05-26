@@ -2,6 +2,19 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.0.0, May 26, 2023
+
+Beta release for SDK 17.0.0. This release brings several breaking changes. This version is not suitable for a production app, but we encourage testing out the new APIs and providing us feedback so we can make changes before the final SDK 17 release.
+
+### Changes
+- Removed Accengage, Location, and Chat modules
+- Deprecated `urbanairship-preference` module. Apps should either use `urbanairship-preference-center` module or maintain a copy of the current preferences from the preference module.
+- Deprecated `urbanairship-ads-identifier` module
+- Video improvements for Scenes & Surveys
+- Log listener has been removed and replaced by a log handler.
+- Channel listener has been updated to only listen for channel create, channel update has been removed
+- Added new PushNotificationStatus and PushNotificationStatus flow that provides the current status of push notifications
+
 ## Version 16.9.3, May 24, 2023
 
 Patch release that includes fixes for Preference Center, Scenes & Surveys, and Message Center.
