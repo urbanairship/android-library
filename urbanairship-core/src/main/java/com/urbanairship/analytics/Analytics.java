@@ -298,12 +298,13 @@ public class Analytics extends AirshipComponent {
                 return JobResult.SUCCESS;
             }
 
-            if (airshipChannel.getId() == null) {
+            String channelId = airshipChannel.getId();
+            if (channelId == null) {
                 Logger.debug("No channel ID, skipping analytics send.");
                 return JobResult.SUCCESS;
             }
 
-            if (!eventManager.uploadEvents(getAnalyticHeaders())) {
+            if (!eventManager.uploadEvents(channelId, getAnalyticHeaders())) {
                 return JobResult.RETRY;
             }
 

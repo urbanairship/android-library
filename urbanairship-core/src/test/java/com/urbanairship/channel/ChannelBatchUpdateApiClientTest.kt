@@ -69,8 +69,27 @@ public class ChannelBatchUpdateApiClientTest {
             SubscriptionListMutation.newUnsubscribeMutation("burritos", 100)
         )
 
+        val liveUpdates = listOf(
+            LiveUpdateMutation.Set("apples", 100, 100),
+            LiveUpdateMutation.Remove("fish", 100, 100),
+        )
+
         val expectedBody = """
-                    {
+                   {
+                       "live_updates":[
+                          {
+                             "name":"apples",
+                             "action":"set",
+                             "action_ts_ms":100,
+                             "start_ts_ms":100
+                          },
+                          {
+                             "name":"fish",
+                             "action":"remove",
+                             "action_ts_ms":100,
+                             "start_ts_ms":100
+                          }
+                       ],
                        "attributes":[
                           {
                              "action":"set",
@@ -117,7 +136,7 @@ public class ChannelBatchUpdateApiClientTest {
                     }
                 """
 
-        val response = client.update("someChannelId", tags, attributes, subscriptions)
+        val response = client.update("someChannelId", tags, attributes, subscriptions, liveUpdates)
 
         assertNull(response.exception)
         assertEquals(200, response.status)
@@ -125,7 +144,7 @@ public class ChannelBatchUpdateApiClientTest {
         assertEquals(
             "https://example.com/api/channels/sdk/batch/someChannelId?platform=android", requestSession.lastRequest.url.toString()
         )
-        assertEquals(RequestAuth.BasicAppAuth, requestSession.lastRequest.auth)
+        assertEquals(RequestAuth.ChannelTokenAuth("someChannelId"), requestSession.lastRequest.auth)
         assertEquals(requestSession.lastRequest.body, RequestBody.Json(expectedBody))
     }
 
@@ -141,7 +160,6 @@ public class ChannelBatchUpdateApiClientTest {
         assertEquals(
             "https://example.com/api/channels/sdk/batch/someChannelId?platform=android", requestSession.lastRequest.url.toString()
         )
-        assertEquals(RequestAuth.BasicAppAuth, requestSession.lastRequest.auth)
         assertEquals(requestSession.lastRequest.body, RequestBody.Json("{}"))
     }
 
@@ -149,7 +167,7 @@ public class ChannelBatchUpdateApiClientTest {
     public fun testAndroidPlatform(): TestResult = runTest {
         config.platform = UAirship.ANDROID_PLATFORM
         requestSession.addResponse(200)
-        client.update("someChannelId", emptyList(), emptyList(), emptyList())
+        client.update("someChannelId", emptyList(), emptyList(), emptyList(), emptyList())
         assertEquals(
             "https://example.com/api/channels/sdk/batch/someChannelId?platform=android", requestSession.lastRequest.url.toString()
         )
@@ -159,7 +177,7 @@ public class ChannelBatchUpdateApiClientTest {
     public fun testAmazonPlatform(): TestResult = runTest {
         config.platform = UAirship.AMAZON_PLATFORM
         requestSession.addResponse(200)
-        client.update("someChannelId", emptyList(), emptyList(), emptyList())
+        client.update("someChannelId", emptyList(), emptyList(), emptyList(), emptyList())
         assertEquals(
             "https://example.com/api/channels/sdk/batch/someChannelId?platform=amazon", requestSession.lastRequest.url.toString()
         )

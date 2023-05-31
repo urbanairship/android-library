@@ -4,7 +4,11 @@ import android.util.Base64
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.UAirship
+import com.urbanairship.util.Clock
+import com.urbanairship.util.DateUtils
 import com.urbanairship.util.PlatformUtils
+import com.urbanairship.util.UAStringUtil
+import java.util.UUID
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -19,6 +23,8 @@ public class DefaultRequestSession : RequestSession {
     private val configOptions: AirshipConfigOptions
     private val httpClient: HttpClient
     private val platform: Int
+    private val clock: Clock
+    private val nonceTokenFactory: () -> String
 
     public constructor(configOptions: AirshipConfigOptions, platform: Int) : this(
         configOptions, platform, DefaultHttpClient()
@@ -27,12 +33,15 @@ public class DefaultRequestSession : RequestSession {
     internal constructor(
         configOptions: AirshipConfigOptions,
         platform: Int,
-        httpClient: HttpClient
+        httpClient: HttpClient,
+        clock: Clock = Clock.DEFAULT_CLOCK,
+        nonceTokenFactory: () -> String = { UUID.randomUUID().toString() }
     ) {
         this.configOptions = configOptions
         this.platform = platform
         this.httpClient = httpClient
-
+        this.nonceTokenFactory = nonceTokenFactory
+        this.clock = clock
         this.defaultHeaders = mapOf(
             "X-UA-App-Key" to configOptions.appKey,
             "User-Agent" to "(UrbanAirshipLib-${PlatformUtils.asString(platform)}/${UAirship.getVersion()}; ${configOptions.appKey})"
@@ -86,15 +95,15 @@ public class DefaultRequestSession : RequestSession {
             }
 
             auth?.let {
-                headers["Authorization"] = "${auth.prefix} ${auth.token}"
+                headers += it.headers
             }
 
             val response = httpClient.execute(
                 request.url, request.method, headers, request.body, request.followRedirects, parser
             )
 
-            return if (response.status == 401 && auth != null && auth.isAuthToken) {
-                expireAuth(request.auth, auth.token)
+            return if (response.status == 401 && auth != null && auth.authToken != null) {
+                expireAuth(request.auth, auth.authToken)
                 RequestResult(true, response)
             } else {
                 RequestResult(false, response)
@@ -108,37 +117,96 @@ public class DefaultRequestSession : RequestSession {
         return when (auth) {
             is RequestAuth.BasicAppAuth -> {
                 val credentials = configOptions.appKey + ":" + configOptions.appSecret
+                val token = Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
                 ResolvedAuth(
-                    prefix = "Basic",
-                    token = Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
+                    headers = mapOf(
+                        "Authorization" to "Basic $token"
+                    )
                 )
             }
 
             is RequestAuth.BasicAuth -> {
                 val credentials = auth.user + ":" + auth.password
+                val token = Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
                 ResolvedAuth(
-                    prefix = "Basic",
-                    token = Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
+                    headers = mapOf(
+                        "Authorization" to "Basic $token"
+                    )
                 )
             }
 
             is RequestAuth.BearerToken -> {
                 ResolvedAuth(
-                    prefix = "Bearer", token = auth.token
+                    headers = mapOf(
+                        "Authorization" to "Bearer ${auth.token}"
+                    )
                 )
             }
 
             is RequestAuth.ChannelTokenAuth -> {
                 val token = getToken(auth.channelId, requireNotNull(channelAuthTokenProvider))
                 ResolvedAuth(
-                    prefix = "Bearer", token = token, isAuthToken = true
+                    headers = mapOf(
+                        "Authorization" to "Bearer $token",
+                        "X-UA-Appkey" to configOptions.appKey,
+                    ),
+                    authToken = token
                 )
             }
 
             is RequestAuth.ContactTokenAuth -> {
                 val token = getToken(auth.contactId, requireNotNull(contactAuthTokenProvider))
                 ResolvedAuth(
-                    prefix = "Bearer", token = token, isAuthToken = true
+                    headers = mapOf(
+                        "Authorization" to "Bearer $token",
+                        "X-UA-Appkey" to configOptions.appKey,
+                    ),
+                    authToken = token
+                )
+            }
+
+            is RequestAuth.GeneratedAppToken -> {
+                val requestTime = clock.currentTimeMillis()
+                val nonce = nonceTokenFactory()
+                val timestamp = DateUtils.createIso8601TimeStamp(requestTime)
+
+                val token = UAStringUtil.generateSignedToken(
+                        configOptions.appSecret,
+                        listOf(
+                            configOptions.appKey, nonce, timestamp
+                        )
+                    )
+
+                ResolvedAuth(
+                    headers = mapOf(
+                        "X-UA-Appkey" to configOptions.appKey,
+                        "X-UA-Nonce" to nonce,
+                        "X-UA-Timestamp" to timestamp,
+                        "Authorization" to "Bearer $token",
+                    )
+                )
+            }
+
+            is RequestAuth.GeneratedChannelToken -> {
+                val requestTime = clock.currentTimeMillis()
+                val nonce = nonceTokenFactory()
+                val timestamp = DateUtils.createIso8601TimeStamp(requestTime)
+
+                val token = UAStringUtil.generateSignedToken(
+                    configOptions.appSecret,
+                    listOf(
+                        configOptions.appKey, auth.channelId, nonce, timestamp
+                    )
+                )
+
+                ResolvedAuth(
+                    headers = mapOf(
+                        "X-UA-Appkey" to configOptions.appKey,
+                        "X-UA-Nonce" to nonce,
+                        "X-UA-Channel-ID" to auth.channelId,
+                        "X-UA-Timestamp" to timestamp,
+                        "Authorization" to "Bearer $token",
+                    )
                 )
             }
         }
@@ -168,8 +236,7 @@ public class DefaultRequestSession : RequestSession {
     private data class RequestResult<T>(val shouldRetry: Boolean, val response: Response<T>)
 
     private data class ResolvedAuth(
-        val prefix: String,
-        val token: String,
-        val isAuthToken: Boolean = false
+        val headers: Map<String, String>,
+        val authToken: String? = null,
     )
 }

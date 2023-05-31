@@ -6,12 +6,10 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.urbanairship.Logger
-import com.urbanairship.job.JobDispatcher
-import com.urbanairship.job.JobInfo
+import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.json.JsonMap
 import com.urbanairship.liveupdate.LiveUpdateProcessor.HandlerCallback
 import com.urbanairship.liveupdate.LiveUpdateProcessor.Operation
-import com.urbanairship.liveupdate.api.LiveUpdateMutation
 import com.urbanairship.liveupdate.data.LiveUpdateDao
 import com.urbanairship.liveupdate.notification.LiveUpdateNotificationReceiver
 import com.urbanairship.liveupdate.notification.LiveUpdatePayload
@@ -33,9 +31,9 @@ import kotlinx.coroutines.withContext
 /** Manages Live Update handlers and an operation queue to process Live Update events. */
 internal class LiveUpdateRegistrar(
     private val context: Context,
+    private val channel: AirshipChannel,
     dao: LiveUpdateDao,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO,
-    private val jobDispatcher: JobDispatcher = JobDispatcher.shared(context),
     private val processor: LiveUpdateProcessor = LiveUpdateProcessor(dao),
     private val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(context),
     private val notificationTimeoutCompat: NotificationTimeoutCompat = NotificationTimeoutCompat(context),
@@ -58,7 +56,7 @@ internal class LiveUpdateRegistrar(
 
         // Handle Channel updates from the processor.
         processor.channelUpdates
-            .onEach { batchUpdateChannel(it) }
+            .onEach { channel.trackLiveUpdateMutation(it) }
             .launchIn(scope)
     }
 
@@ -222,16 +220,6 @@ internal class LiveUpdateRegistrar(
 
     private fun cancelNotification(tag: String) =
         notificationManager.cancel(tag, NOTIFICATION_ID)
-
-    private fun batchUpdateChannel(update: LiveUpdateMutation) = jobDispatcher.dispatch(
-        JobInfo.newBuilder()
-            .setAction(LiveUpdateManager.ACTION_UPDATE_CHANNEL)
-            .setAirshipComponent(LiveUpdateManager::class.java)
-            .setConflictStrategy(JobInfo.APPEND)
-            .setNetworkAccessRequired(true)
-            .setExtras(update.toJsonValue().optMap())
-            .build()
-    )
 
     internal companion object {
         @VisibleForTesting

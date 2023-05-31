@@ -24,10 +24,8 @@ import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.PlatformUtils
 import com.urbanairship.util.UAHttpStatusUtil
-import com.urbanairship.util.UAStringUtil
 import java.util.Locale
 import java.util.TimeZone
-import java.util.UUID
 
 /**
  * A high level abstraction for performing Contact API requests.
@@ -38,7 +36,6 @@ internal class ContactApiClient constructor(
     private val runtimeConfig: AirshipRuntimeConfig,
     private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession(),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
-    private val nonceTokenFactory: () -> String = { UUID.randomUUID().toString() }
 ) {
 
     @Throws(RequestException::class)
@@ -257,7 +254,7 @@ internal class ContactApiClient constructor(
         val request = Request(
             url = url,
             method = "POST",
-            auth = RequestAuth.BasicAppAuth,
+            auth = RequestAuth.GeneratedAppToken,
             body = RequestBody.Json(payload),
             headers = headers
         )
@@ -285,10 +282,6 @@ internal class ContactApiClient constructor(
     ): RequestResult<IdentityResult> {
         val url = runtimeConfig.urlConfig.deviceUrl().appendEncodedPath(IDENTIFY_PATH).build()
 
-        val requestTime = clock.currentTimeMillis()
-        val nonce = nonceTokenFactory()
-        val timestamp = DateUtils.createIso8601TimeStamp(requestTime)
-
         val payload = jsonMapOf(
             DEVICE_INFO to jsonMapOf(
                 DEVICE_TYPE to PlatformUtils.getDeviceType(
@@ -298,27 +291,13 @@ internal class ContactApiClient constructor(
         )
 
         val headers = mapOf(
-            "Accept" to "application/vnd.urbanairship+json; version=3;",
-            "X-UA-Channel-ID" to channelId,
-            "X-UA-Appkey" to runtimeConfig.configOptions.appKey,
-            "X-UA-Nonce" to nonce,
-            "X-UA-Timestamp" to timestamp
+            "Accept" to "application/vnd.urbanairship+json; version=3;"
         )
-
-        val token = try {
-            UAStringUtil.generateSignedToken(
-                runtimeConfig.configOptions.appSecret, listOf(
-                    runtimeConfig.configOptions.appKey, channelId, nonce, timestamp
-                )
-            )
-        } catch (e: Exception) {
-            return RequestResult(exception = e)
-        }
 
         val request = Request(
             url = url,
             method = "POST",
-            auth = RequestAuth.BearerToken(token),
+            auth = RequestAuth.GeneratedChannelToken(channelId),
             body = RequestBody.Json(payload),
             headers = headers
         )

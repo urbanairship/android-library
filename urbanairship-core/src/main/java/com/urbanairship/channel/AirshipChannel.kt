@@ -490,6 +490,15 @@ public class AirshipChannel internal constructor(
     }
 
     /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun trackLiveUpdateMutation(mutation: LiveUpdateMutation) {
+        channelManager.addUpdate(liveUpdates = listOf(mutation))
+        updateRegistration()
+    }
+
+    /**
      * Updates registration.
      *
      * @hide

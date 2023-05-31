@@ -31,7 +31,7 @@ internal class ChannelApiClient @VisibleForTesting constructor(
         val request = Request(
             url = builder.build(),
             method = "POST",
-            auth = RequestAuth.BasicAppAuth,
+            auth = RequestAuth.GeneratedAppToken,
             body = RequestBody.Json(channelPayload),
             headers = mapOf(
                 "Accept" to "application/vnd.urbanairship+json; version=3;"
@@ -61,7 +61,7 @@ internal class ChannelApiClient @VisibleForTesting constructor(
         val request = Request(
             url = url,
             method = "PUT",
-            auth = RequestAuth.BasicAppAuth,
+            auth = RequestAuth.ChannelTokenAuth(channelId),
             body = RequestBody.Json(channelPayload),
             headers = mapOf(
                 "Accept" to "application/vnd.urbanairship+json; version=3;"

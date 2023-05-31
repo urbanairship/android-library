@@ -78,7 +78,7 @@ public class AppRemoteDataProviderTest {
         val uri = Uri.parse("some uri")
 
         coEvery {
-            mockApiClient.fetch(uri, RequestAuth.BasicAppAuth, null, any())
+            mockApiClient.fetch(uri, RequestAuth.GeneratedAppToken, null, any())
         } returns result
 
         every {
@@ -110,7 +110,7 @@ public class AppRemoteDataProviderTest {
         } returns uri
 
         coEvery {
-            mockApiClient.fetch(uri, RequestAuth.BasicAppAuth, "some last modified", any())
+            mockApiClient.fetch(uri, RequestAuth.GeneratedAppToken, "some last modified", any())
         } returns result
 
         assertEquals(
@@ -138,7 +138,7 @@ public class AppRemoteDataProviderTest {
         } returns uri
 
         coEvery {
-            mockApiClient.fetch(uri, RequestAuth.BasicAppAuth, null, any())
+            mockApiClient.fetch(uri, RequestAuth.GeneratedAppToken, null, any())
         } returns result
 
         assertEquals(

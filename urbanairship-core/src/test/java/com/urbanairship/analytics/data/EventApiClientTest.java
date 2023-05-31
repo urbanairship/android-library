@@ -6,6 +6,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequestSession;
 import com.urbanairship.config.AirshipUrlConfig;
+import com.urbanairship.http.RequestAuth;
 import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
@@ -56,13 +57,15 @@ public class EventApiClientTest extends BaseTestCase {
     public void testSendEventsSucceed() throws RequestException, JsonException {
         requestSession.addResponse(200, "");
 
-        Response<EventResponse> response = client.sendEvents(events, Collections.<String, String>emptyMap());
+        Response<EventResponse> response = client.sendEvents("some channel", events, Collections.<String, String>emptyMap());
 
         assertEquals(200, response.getStatus());
         assertEquals("", response.getBody());
         assertEquals("POST", requestSession.getLastRequest().getMethod());
         assertEquals("http://example.com/warp9/", requestSession.getLastRequest().getUrl().toString());
         assertEquals(new RequestBody.GzippedJson(JsonValue.wrapOpt(events)), requestSession.getLastRequest().getBody());
+        assertEquals(new RequestAuth.ChannelTokenAuth("some channel"), requestSession.getLastRequest().getAuth());
+
     }
 
     /**
@@ -71,7 +74,7 @@ public class EventApiClientTest extends BaseTestCase {
     @Test(expected = RequestException.class)
     public void testNullUrl() throws RequestException {
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
-        client.sendEvents(events, Collections.<String, String>emptyMap());
+        client.sendEvents("some channel", events, Collections.<String, String>emptyMap());
     }
 
     /**
@@ -82,7 +85,7 @@ public class EventApiClientTest extends BaseTestCase {
         requestSession.addResponse(200, "");
         events = new ArrayList<>();
 
-        Response<EventResponse> response = client.sendEvents(events, Collections.<String, String>emptyMap());
+        Response<EventResponse> response = client.sendEvents("some channel", events, Collections.<String, String>emptyMap());
 
         assertEquals(200, response.getStatus());
         assertEquals("", response.getBody());
@@ -100,7 +103,7 @@ public class EventApiClientTest extends BaseTestCase {
         Map<String, String> headers = new HashMap<>();
         headers.put("foo", "bar");
 
-        Response<EventResponse> response = client.sendEvents(events, headers);
+        Response<EventResponse> response = client.sendEvents("some channel", events, headers);
 
         Map<String, String> requestHeaders = requestSession.getLastRequest().getHeaders();
 
@@ -120,7 +123,7 @@ public class EventApiClientTest extends BaseTestCase {
 
         events = new ArrayList<>();
         events.add(invalidEvent);
-        Response<EventResponse> response = client.sendEvents(events, Collections.<String, String>emptyMap());
+        Response<EventResponse> response = client.sendEvents("some channel", events, Collections.<String, String>emptyMap());
         assertEquals(200, response.getStatus());
         assertEquals("", response.getBody());
         assertEquals("POST", requestSession.getLastRequest().getMethod());
