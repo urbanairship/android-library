@@ -29,7 +29,7 @@ public data class LiveUpdate(
     public val lastContentUpdateTime: Long,
 
     /**
-     * The timestamp of the last START or STOP event for this Live Update.
+     * The timestamp of the last START or END event for this Live Update.
      */
     public val lastStateChangeTime: Long,
 

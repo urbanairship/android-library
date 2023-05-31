@@ -116,7 +116,7 @@ public class HomeFragment extends Fragment {
                                      .put("status_update", status)
                                      .build();
 
-            LiveUpdateManager.shared().stop("foxes-tigers", content);
+            LiveUpdateManager.shared().end("foxes-tigers", content);
 
             score1.set(0);
             score2.set(0);

@@ -27,7 +27,7 @@ public interface LiveUpdateNotificationHandler : LiveUpdateHandler<NotificationC
      *
      * Implementations should return [LiveUpdateResult.ok] with a `NotificationCompat.Builder` to
      * display the Live Update in a notification, or [LiveUpdateResult.cancel] to cancel the
-     * notification and stop Live Updates.
+     * notification and end Live Updates.
      *
      * An `ok` result with a `null` value will be ignored and will neither update nor cancel the
      * existing notification.
@@ -65,7 +65,7 @@ public sealed class LiveUpdateResult<out T> {
         public fun <T> ok(value: T? = null): LiveUpdateResult<T> = Ok(value)
 
         /**
-         * Indicates that the Live Update should be cancelled and updates stopped.
+         * Indicates that the Live Update should be cancelled and updates ended.
          */
         @JvmStatic
         public fun <T> cancel(): LiveUpdateResult<T> = Cancel()

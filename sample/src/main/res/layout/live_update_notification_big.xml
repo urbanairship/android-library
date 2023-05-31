@@ -1,22 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal">
 
-    <TextView
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/TextAppearance.Compat.Notification.Info"
-        android:gravity="center"
-        android:text="@string/live_update_team_foxes"
-        app:drawableTopCompat="@drawable/foxes" />
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/foxes" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            style="@style/TextAppearance.Compat.Notification.Info"
+            android:text="Foxes" />
+    </LinearLayout>
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:orientation="vertical">
@@ -46,7 +56,7 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 style="@style/TextAppearance.Compat.Notification.Info"
-                android:text="@string/live_update_vs" />
+                android:text="VS" />
 
             <TextView
                 android:layout_width="0dp"
@@ -66,19 +76,32 @@
             android:layout_gravity="bottom"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center|bottom"
+            android:gravity="center_horizontal|bottom"
             style="@style/TextAppearance.Compat.Notification.Info"
+
             tools:text="status area" />
 
     </LinearLayout>
 
-    <TextView
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/TextAppearance.Compat.Notification.Info"
-        android:gravity="center"
-        app:drawableTopCompat="@drawable/tigers"
-        android:text="@string/live_update_team_tigers" />
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/tigers" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            style="@style/TextAppearance.Compat.Notification.Info"
+
+            android:text="Tigers" />
+    </LinearLayout>
 
 </LinearLayout>
 

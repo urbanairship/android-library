@@ -170,13 +170,13 @@ internal class LiveUpdateProcessor(
             val lastContent = liveUpdate?.content
 
             if (lastState == null || lastContent == null || !lastState.isActive) {
-                Logger.warn("Ignored stop for Live Update '$name'. Live Update is not started!")
+                Logger.warn("Ignored end for Live Update '$name'. Live Update is not started!")
                 return
             }
 
             val lastTimestamp = lastState.timestamp
             if (lastTimestamp > timestamp) {
-                Logger.verbose("Ignored stop for Live Update '$name'. Stop event was stale.")
+                Logger.verbose("Ignored end for Live Update '$name'. Stop event was stale.")
                 return
             }
 
