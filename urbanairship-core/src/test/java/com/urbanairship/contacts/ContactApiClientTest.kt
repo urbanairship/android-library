@@ -259,7 +259,7 @@ public class ContactApiClientTest {
                    }
                 """
             ),
-            auth = RequestAuth.BasicAppAuth,
+            auth = RequestAuth.GeneratedAppToken,
             headers = mapOf(
                 "Accept" to "application/vnd.urbanairship+json; version=3;",
                 "X-UA-Appkey" to runtimeConfig.configOptions.appKey
@@ -332,7 +332,7 @@ public class ContactApiClientTest {
                     }
                 """
             ),
-            auth = RequestAuth.BasicAppAuth,
+            auth = RequestAuth.GeneratedAppToken,
             headers = mapOf(
                 "Accept" to "application/vnd.urbanairship+json; version=3;",
                 "X-UA-Appkey" to runtimeConfig.configOptions.appKey
@@ -395,7 +395,7 @@ public class ContactApiClientTest {
                     }
                 """
             ),
-            auth = RequestAuth.BasicAppAuth,
+            auth = RequestAuth.GeneratedAppToken,
             headers = mapOf(
                 "Accept" to "application/vnd.urbanairship+json; version=3;",
                 "X-UA-Appkey" to runtimeConfig.configOptions.appKey

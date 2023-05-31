@@ -254,7 +254,7 @@ internal class ContactApiClient constructor(
         val request = Request(
             url = url,
             method = "POST",
-            auth = RequestAuth.BasicAppAuth,
+            auth = RequestAuth.GeneratedAppToken,
             body = RequestBody.Json(payload),
             headers = headers
         )

@@ -55,7 +55,7 @@ internal class AppRemoteDataProvider(
             lastModified = lastRemoteDataInfo.lastModified
         }
 
-        return apiClient.fetch(url, RequestAuth.BasicAppAuth, lastModified) {
+        return apiClient.fetch(url, RequestAuth.GeneratedAppToken, lastModified) {
             RemoteDataInfo(
                 url = url.toString(),
                 lastModified = it,

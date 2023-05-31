@@ -267,6 +267,20 @@ public class AirshipChannelTest {
     }
 
     @Test
+    public fun testTrackLiveUpdate(): TestResult = runTest {
+        val liveUpdateMutation = LiveUpdateMutation.Remove("name", testClock.currentTimeMillis)
+        channel.trackLiveUpdateMutation(liveUpdateMutation)
+        verify { mockJobDispatcher.dispatch(keepJob) }
+        verify {
+            mockBatchUpdateManager.addUpdate(
+                liveUpdates = listOf(
+                    liveUpdateMutation
+                )
+            )
+        }
+    }
+
+    @Test
     public fun testEditAttributes(): TestResult = runTest {
         channel.editAttributes().removeAttribute("some attribute").apply()
         verify { mockJobDispatcher.dispatch(keepJob) }
