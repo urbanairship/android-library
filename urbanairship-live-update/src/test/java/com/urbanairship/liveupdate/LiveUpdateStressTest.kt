@@ -3,6 +3,7 @@ package com.urbanairship.liveupdate
 import androidx.core.app.NotificationManagerCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.liveupdate.data.LiveUpdateDao
 import com.urbanairship.liveupdate.data.LiveUpdateDatabase
 import com.urbanairship.liveupdate.util.jsonMapOf
@@ -54,6 +55,7 @@ public class LiveUpdateStressTest {
     private lateinit var processor: LiveUpdateProcessor
     private lateinit var registrar: LiveUpdateRegistrar
     private val notificationManager: NotificationManagerCompat = mockk(relaxed = true)
+    private val channel: AirshipChannel = mockk(relaxed = true)
 
     @Before
     public fun setUp() {
@@ -65,6 +67,7 @@ public class LiveUpdateStressTest {
 
         registrar = LiveUpdateRegistrar(
             context = context,
+            channel = channel,
             dao = dao,
             dispatcher = registrarDispatcher,
             processor = processor,

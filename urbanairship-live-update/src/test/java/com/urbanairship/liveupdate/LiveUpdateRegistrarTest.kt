@@ -3,7 +3,7 @@ package com.urbanairship.liveupdate
 import androidx.core.app.NotificationManagerCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestApplication
-import com.urbanairship.job.JobDispatcher
+import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.liveupdate.LiveUpdateProcessor.Operation
 import com.urbanairship.liveupdate.data.LiveUpdateDao
 import com.urbanairship.liveupdate.data.LiveUpdateDatabase
@@ -29,12 +29,12 @@ public class LiveUpdateRegistrarTest {
 
     private val context = TestApplication.getApplication()
     private val testDispatcher = StandardTestDispatcher()
+    private val channel: AirshipChannel = mockk(relaxed = true)
 
     private val database: LiveUpdateDatabase = mockk(relaxed = true)
     private val dao: LiveUpdateDao = mockk(relaxed = true)
     private val processor: LiveUpdateProcessor = mockk(relaxed = true)
     private val notificationManager: NotificationManagerCompat = mockk(relaxed = true)
-    private val jobDispatcher: JobDispatcher = mockk(relaxed = true)
     private val notificationTimeoutCompat: NotificationTimeoutCompat = mockk(relaxed = true)
 
     private lateinit var registrar: LiveUpdateRegistrar
@@ -43,11 +43,11 @@ public class LiveUpdateRegistrarTest {
     public fun setUp() {
         registrar = LiveUpdateRegistrar(
             context = context,
+            channel = channel,
             dao = dao,
             processor = processor,
             dispatcher = testDispatcher,
             notificationManager = notificationManager,
-            jobDispatcher = jobDispatcher,
             notificationTimeoutCompat = notificationTimeoutCompat
         )
         verifySequence {

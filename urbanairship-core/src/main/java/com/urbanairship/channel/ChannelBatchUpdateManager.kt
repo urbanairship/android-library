@@ -68,23 +68,25 @@ internal class ChannelBatchUpdateManager(
         var mergedTags = mutableListOf<TagGroupsMutation>()
         var mergedAttributes = mutableListOf<AttributeMutation>()
         var mergedSubLists = mutableListOf<SubscriptionListMutation>()
+        var mergedLiveUpdates = mutableListOf<LiveUpdateMutation>()
 
         updates.forEach { update ->
             update.tags?.let { mergedTags.addAll(it) }
             update.attributes?.let { mergedAttributes.addAll(it) }
             update.subscriptions?.let { mergedSubLists.addAll(it) }
+            update.liveUpdates?.let { mergedLiveUpdates.addAll(it) }
         }
 
         mergedTags = TagGroupsMutation.collapseMutations(mergedTags)
         mergedAttributes = AttributeMutation.collapseMutations(mergedAttributes)
         mergedSubLists = SubscriptionListMutation.collapseMutations(mergedSubLists)
 
-        if (mergedTags.isNullOrEmpty() && mergedAttributes.isNullOrEmpty() && mergedSubLists.isNullOrEmpty()) {
+        if (mergedTags.isEmpty() && mergedAttributes.isEmpty() && mergedSubLists.isEmpty() && mergedLiveUpdates.isEmpty()) {
             popAudienceUpdates(updates)
             return true
         }
 
-        val response = apiClient.update(channelId, mergedTags, mergedAttributes, mergedSubLists)
+        val response = apiClient.update(channelId, mergedTags, mergedAttributes, mergedSubLists, mergedLiveUpdates)
         if (response.isSuccessful || response.isClientError) {
 
             if (response.isSuccessful) {
@@ -106,16 +108,18 @@ internal class ChannelBatchUpdateManager(
     internal fun addUpdate(
         tags: List<TagGroupsMutation>? = null,
         attributes: List<AttributeMutation>? = null,
-        subscriptions: List<SubscriptionListMutation>? = null
+        subscriptions: List<SubscriptionListMutation>? = null,
+        liveUpdates: List<LiveUpdateMutation>? = null,
     ) {
-        if (tags.isNullOrEmpty() && attributes.isNullOrEmpty() && subscriptions.isNullOrEmpty()) {
+        if (tags.isNullOrEmpty() && attributes.isNullOrEmpty() && subscriptions.isNullOrEmpty() && liveUpdates.isNullOrEmpty()) {
             return
         }
 
         val update = AudienceUpdate(
             tags = tags,
             attributes = attributes,
-            subscriptions = subscriptions
+            subscriptions = subscriptions,
+            liveUpdates = liveUpdates
         )
 
         lock.withLock {
@@ -192,6 +196,7 @@ private data class AudienceUpdate(
     val tags: List<TagGroupsMutation>? = null,
     val attributes: List<AttributeMutation>? = null,
     val subscriptions: List<SubscriptionListMutation>? = null,
+    val liveUpdates: List<LiveUpdateMutation>? = null,
 ) : JsonSerializable {
 
     constructor(json: JsonMap) : this(
@@ -203,6 +208,9 @@ private data class AudienceUpdate(
         },
         subscriptions = json.get(SUBSCRIPTION_LISTS)?.optList()?.let { list ->
             list.map { SubscriptionListMutation.fromJsonValue(it) }
+        },
+        liveUpdates = json.get(LIVE_UPDATES)?.optList()?.let { list ->
+            list.map { LiveUpdateMutation.fromJson(it.requireMap()) }
         }
     )
 
@@ -210,11 +218,13 @@ private data class AudienceUpdate(
         TAGS to tags,
         ATTRIBUTES to attributes,
         SUBSCRIPTION_LISTS to subscriptions,
+        LIVE_UPDATES to liveUpdates
     ).toJsonValue()
 
     private companion object {
         private const val TAGS = "tags"
         private const val ATTRIBUTES = "attributes"
         private const val SUBSCRIPTION_LISTS = "subscription_lists"
+        private const val LIVE_UPDATES = "live_updates"
     }
 }

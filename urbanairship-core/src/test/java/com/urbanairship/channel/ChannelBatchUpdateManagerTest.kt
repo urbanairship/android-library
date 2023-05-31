@@ -206,7 +206,14 @@ public class ChannelBatchUpdateManagerTest {
             )
         )
 
-        coEvery { mockApiClient.update(any(), any(), any(), any()) } returns RequestResult(
+        manager.addUpdate(
+            liveUpdates = listOf(
+                LiveUpdateMutation.Remove("some event", 100, 100),
+                LiveUpdateMutation.Set("some other event", 100, 100)
+            )
+        )
+
+        coEvery { mockApiClient.update(any(), any(), any(), any(), any()) } returns RequestResult(
             status = 200,
             value = null,
             body = null,
@@ -230,6 +237,10 @@ public class ChannelBatchUpdateManagerTest {
                 subscriptions = listOf(
                     SubscriptionListMutation.newSubscribeMutation("some list", 100),
                     SubscriptionListMutation.newSubscribeMutation("some other list", 100)
+                ),
+                liveUpdates = listOf(
+                    LiveUpdateMutation.Remove("some event", 100, 100),
+                    LiveUpdateMutation.Set("some other event", 100, 100)
                 )
             )
         }
@@ -247,7 +258,7 @@ public class ChannelBatchUpdateManagerTest {
                 subscriptions = listOf(
                     SubscriptionListMutation.newSubscribeMutation("some list", 100),
                     SubscriptionListMutation.newSubscribeMutation("some other list", 100)
-                )
+                ),
             )
         }
 
@@ -262,7 +273,7 @@ public class ChannelBatchUpdateManagerTest {
             )
         )
 
-        coEvery { mockApiClient.update(any(), any(), any(), any()) } returns RequestResult(
+        coEvery { mockApiClient.update(any(), any(), any(), any(), any()) } returns RequestResult(
             status = 500,
             value = null,
             body = null,
@@ -278,7 +289,8 @@ public class ChannelBatchUpdateManagerTest {
                     TagGroupsMutation.newRemoveTagsMutation("some group", setOf("tag"))
                 ),
                 attributes = emptyList(),
-                subscriptions = emptyList()
+                subscriptions = emptyList(),
+                liveUpdates = emptyList(),
             )
         }
 
@@ -293,7 +305,7 @@ public class ChannelBatchUpdateManagerTest {
             )
         )
 
-        coEvery { mockApiClient.update(any(), any(), any(), any()) } returns RequestResult(
+        coEvery { mockApiClient.update(any(), any(), any(), any(), any()) } returns RequestResult(
             status = 400,
             value = null,
             body = null,
@@ -310,7 +322,8 @@ public class ChannelBatchUpdateManagerTest {
                     TagGroupsMutation.newRemoveTagsMutation("some group", setOf("tag"))
                 ),
                 attributes = emptyList(),
-                subscriptions = emptyList()
+                subscriptions = emptyList(),
+                liveUpdates = emptyList(),
             )
         }
 
@@ -325,7 +338,7 @@ public class ChannelBatchUpdateManagerTest {
             )
         )
 
-        coEvery { mockApiClient.update(any(), any(), any(), any()) } returns RequestResult(
+        coEvery { mockApiClient.update(any(), any(), any(), any(), any()) } returns RequestResult(
             exception = IllegalArgumentException()
         )
 
@@ -338,7 +351,8 @@ public class ChannelBatchUpdateManagerTest {
                     TagGroupsMutation.newRemoveTagsMutation("some group", setOf("tag"))
                 ),
                 attributes = emptyList(),
-                subscriptions = emptyList()
+                subscriptions = emptyList(),
+                liveUpdates = emptyList(),
             )
         }
 

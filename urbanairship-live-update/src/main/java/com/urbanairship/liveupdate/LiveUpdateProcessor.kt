@@ -2,8 +2,8 @@ package com.urbanairship.liveupdate
 
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Logger
+import com.urbanairship.channel.LiveUpdateMutation
 import com.urbanairship.json.JsonMap
-import com.urbanairship.liveupdate.api.LiveUpdateMutation
 import com.urbanairship.liveupdate.data.LiveUpdateContent
 import com.urbanairship.liveupdate.data.LiveUpdateDao
 import com.urbanairship.liveupdate.data.LiveUpdateState

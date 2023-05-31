@@ -27,12 +27,14 @@ internal class ChannelBatchUpdateApiClient(
         tags: List<TagGroupsMutation>? = null,
         attributes: List<AttributeMutation>? = null,
         subscriptions: List<SubscriptionListMutation>? = null,
+        liveUpdates: List<LiveUpdateMutation>? = null
     ): RequestResult<Unit> {
 
         val payload = jsonMapOf(
             TAGS to tags?.ifEmpty { null }?.tagsPayload(),
             ATTRIBUTES to attributes?.ifEmpty { null },
             SUBSCRIPTION_LISTS to subscriptions?.ifEmpty { null },
+            LIVE_UPDATES to liveUpdates?.ifEmpty { null }
         )
 
         Logger.v { "Bulk updating channel ($channelId) with payload: $payload" }
@@ -79,6 +81,7 @@ internal class ChannelBatchUpdateApiClient(
         private const val TAGS = "tags"
         private const val ATTRIBUTES = "attributes"
         private const val SUBSCRIPTION_LISTS = "subscription_lists"
+        private const val LIVE_UPDATES = "live_updates"
     }
 }
 

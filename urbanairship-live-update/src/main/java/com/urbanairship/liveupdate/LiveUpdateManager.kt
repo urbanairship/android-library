@@ -7,23 +7,17 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipComponentGroups
-import com.urbanairship.Logger
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PrivacyManager.FEATURE_PUSH
 import com.urbanairship.UAirship
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
-import com.urbanairship.job.JobInfo
-import com.urbanairship.job.JobResult
 import com.urbanairship.json.JsonMap
-import com.urbanairship.liveupdate.api.ChannelBulkUpdateApiClient
-import com.urbanairship.liveupdate.api.LiveUpdateMutation
 import com.urbanairship.liveupdate.data.LiveUpdateDatabase
 import com.urbanairship.liveupdate.notification.LiveUpdatePayload
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
-import kotlinx.coroutines.runBlocking
 
 /**
  * Airship Live Updates.
@@ -39,9 +33,8 @@ internal constructor(
     private val privacyManager: PrivacyManager,
     private val pushManager: PushManager,
     private val channel: AirshipChannel,
-    private val bulkUpdateClient: ChannelBulkUpdateApiClient = ChannelBulkUpdateApiClient(config),
     db: LiveUpdateDatabase = LiveUpdateDatabase.createDatabase(context, config),
-    private val registrar: LiveUpdateRegistrar = LiveUpdateRegistrar(context, db.liveUpdateDao()),
+    private val registrar: LiveUpdateRegistrar = LiveUpdateRegistrar(context, channel, db.liveUpdateDao()),
 ) : AirshipComponent(context, dataStore) {
 
     private val isFeatureEnabled: Boolean
@@ -163,35 +156,6 @@ internal constructor(
         updateLiveActivityEnablement()
     }
 
-    override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
-        return when (jobInfo.action) {
-            ACTION_UPDATE_CHANNEL ->
-                channel.id?.let { channelId ->
-                    try {
-                        runBlocking {
-                            val update = LiveUpdateMutation.fromJson(jobInfo.extras)
-                            val resp =
-                                bulkUpdateClient.update(channelId, liveUpdates = listOf(update))
-                            when {
-                                resp.isSuccessful -> JobResult.SUCCESS
-                                else -> JobResult.RETRY
-                            }
-                        }
-                    } catch (e: Throwable) {
-                        Logger.error(e, "Failed to batch update channel for live update.")
-                        JobResult.RETRY
-                    }
-                } ?: run {
-                    Logger.warn("Unable to update channel for live update. Channel ID is null.")
-                    JobResult.RETRY
-                }
-            else -> {
-                Logger.debug("Unexpected job: $jobInfo")
-                JobResult.SUCCESS
-            }
-        }
-    }
-
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onComponentEnableChange(isEnabled: Boolean): Unit =
@@ -208,8 +172,6 @@ internal constructor(
     }
 
     public companion object {
-        internal const val ACTION_UPDATE_CHANNEL = "ACTION_UPDATE_CHANNEL"
-
         /**
          * Gets the shared [LiveUpdateManager] instance.
          *
