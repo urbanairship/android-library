@@ -162,6 +162,7 @@ internal constructor(
         updateLiveActivityEnablement()
     }
 
+    /** @hide */
     override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
         return when (jobInfo.action) {
             ACTION_UPDATE_CHANNEL ->
@@ -197,6 +198,11 @@ internal constructor(
     private fun updateLiveActivityEnablement() {
         if (isFeatureEnabled) {
             pushManager.addPushListener(pushListener)
+
+            // Check for any active live Updates that have had their notifications cleared.
+            // This makes sure we'll end the live update if the notification is dropped due
+            // to an app upgrade or other cases where we don't get notified of the dismiss.
+            registrar.stopLiveUpdatesForClearedNotifications()
         } else {
             // Clear all live updates.
             registrar.clearAll()

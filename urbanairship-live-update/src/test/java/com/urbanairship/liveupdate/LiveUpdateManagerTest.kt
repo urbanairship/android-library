@@ -1,7 +1,6 @@
 package com.urbanairship.liveupdate
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
@@ -33,7 +32,7 @@ public class LiveUpdateManagerTest {
     private val database: LiveUpdateDatabase = mockk {
         every { liveUpdateDao() } returns dao
     }
-    private val registrar: LiveUpdateRegistrar = mockk()
+    private val registrar: LiveUpdateRegistrar = mockk(relaxUnitFun = true)
 
     private lateinit var dataStore: PreferenceDataStore
     private lateinit var privacyManager: PrivacyManager
@@ -42,7 +41,6 @@ public class LiveUpdateManagerTest {
 
     @Before
     public fun setUp() {
-        val context = InstrumentationRegistry.getInstrumentation().context
         dataStore = PreferenceDataStore.inMemoryStore(TestApplication.getApplication())
         privacyManager = PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL)
 
