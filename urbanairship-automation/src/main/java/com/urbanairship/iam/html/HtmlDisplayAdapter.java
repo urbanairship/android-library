@@ -12,7 +12,7 @@ import com.urbanairship.iam.ForegroundDisplayAdapter;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.assets.Assets;
-import com.urbanairship.js.UrlAllowList;
+import com.urbanairship.UrlAllowList;
 import com.urbanairship.util.Network;
 
 import androidx.annotation.NonNull;

@@ -4,12 +4,14 @@ package com.urbanairship.actions;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
+import com.urbanairship.UrlAllowList;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+import androidx.core.util.Supplier;
 
 /**
  * Action for opening Android Pay deep links.
@@ -38,6 +40,18 @@ public class WalletAction extends OpenExternalUrlAction {
      */
     @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^w";
+
+    /**
+     * Default constructor.
+     */
+    public WalletAction() {
+        super();
+    }
+
+    @VisibleForTesting
+    WalletAction(@NonNull Supplier<UrlAllowList> allowListSupplier) {
+        super(allowListSupplier);
+    }
 
     @NonNull
     @Override

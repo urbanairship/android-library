@@ -1,9 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.js;
-
-import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.BaseTestCase;
+package com.urbanairship;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +35,34 @@ public class UrlAllowListTest extends BaseTestCase {
         assertFalse(urlAllowList.isAllowed("file:///*", UrlAllowList.SCOPE_OPEN_URL));
     }
 
+    @Test
+    public void testDefaultAllowListAnyOpen() {
+        AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
+                .setDevelopmentAppKey("appKey")
+                .setDevelopmentAppSecret("appSecret")
+                .build();
+
+        UrlAllowList urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions);
+
+        // Messages
+        assertTrue(urlAllowList.isAllowed("https://device-api.urbanairship.com/api/user/", UrlAllowList.SCOPE_OPEN_URL));
+        assertTrue(urlAllowList.isAllowed("https://device-api.urbanairship.com/api/user/", UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE));
+        assertTrue(urlAllowList.isAllowed("https://device-api.urbanairship.com/api/user/", UrlAllowList.SCOPE_ALL));
+        assertTrue(urlAllowList.isAllowed("https://sbux-dl.urbanairship.com/binary/token/", UrlAllowList.SCOPE_OPEN_URL));
+        assertTrue(urlAllowList.isAllowed("https://sbux-dl.urbanairship.com/binary/token/", UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE));
+        assertTrue(urlAllowList.isAllowed("https://sbux-dl.urbanairship.com/binary/token/", UrlAllowList.SCOPE_ALL));
+        assertTrue(urlAllowList.isAllowed("https://dl.asnapieu.com/binary/token/", UrlAllowList.SCOPE_OPEN_URL));
+        assertTrue(urlAllowList.isAllowed("https://dl.asnapieu.com/binary/token/", UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE));
+        assertTrue(urlAllowList.isAllowed("https://dl.asnapieu.com/binary/token/", UrlAllowList.SCOPE_ALL));
+        assertTrue(urlAllowList.isAllowed("sms:+18675309?body=Hi%20you", UrlAllowList.SCOPE_OPEN_URL));
+        assertTrue(urlAllowList.isAllowed("sms:8675309", UrlAllowList.SCOPE_OPEN_URL));
+        assertTrue(urlAllowList.isAllowed("tel:+18675309", UrlAllowList.SCOPE_OPEN_URL));
+        assertTrue(urlAllowList.isAllowed("tel:867-5309", UrlAllowList.SCOPE_OPEN_URL));
+        assertTrue(urlAllowList.isAllowed("mailto:name@example.com?subject=The%20subject%20of%20the%20mail", UrlAllowList.SCOPE_OPEN_URL));
+        assertTrue(urlAllowList.isAllowed("mailto:name@example.com", UrlAllowList.SCOPE_OPEN_URL));
+        assertTrue(urlAllowList.isAllowed("https://some-random-url.com", UrlAllowList.SCOPE_OPEN_URL));
+    }
+
     /**
      * Test the default urlAllowList accepts Airship URLs.
      */
@@ -46,6 +71,7 @@ public class UrlAllowListTest extends BaseTestCase {
         AirshipConfigOptions airshipConfigOptions = new AirshipConfigOptions.Builder()
                 .setDevelopmentAppKey("appKey")
                 .setDevelopmentAppSecret("appSecret")
+                .setUrlAllowListScopeOpenUrl(null)
                 .build();
 
         UrlAllowList urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions);
@@ -59,11 +85,6 @@ public class UrlAllowListTest extends BaseTestCase {
         assertTrue(urlAllowList.isAllowed("https://sbux-dl.urbanairship.com/binary/token/", UrlAllowList.SCOPE_OPEN_URL));
         assertTrue(urlAllowList.isAllowed("https://sbux-dl.urbanairship.com/binary/token/", UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE));
         assertTrue(urlAllowList.isAllowed("https://sbux-dl.urbanairship.com/binary/token/", UrlAllowList.SCOPE_ALL));
-
-        // Youtube
-        assertTrue(urlAllowList.isAllowed("https://www.youtube.com/embed/wJelEXaPhJ8", UrlAllowList.SCOPE_OPEN_URL));
-        assertFalse(urlAllowList.isAllowed("https://www.youtube.com/embed/wJelEXaPhJ8", UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE));
-        assertFalse(urlAllowList.isAllowed("https://www.youtube.com/embed/wJelEXaPhJ8", UrlAllowList.SCOPE_ALL));
 
         // EU
         assertTrue(urlAllowList.isAllowed("https://dl.asnapieu.com/binary/token/", UrlAllowList.SCOPE_OPEN_URL));
@@ -81,6 +102,9 @@ public class UrlAllowListTest extends BaseTestCase {
         // email
         assertTrue(urlAllowList.isAllowed("mailto:name@example.com?subject=The%20subject%20of%20the%20mail", UrlAllowList.SCOPE_OPEN_URL));
         assertTrue(urlAllowList.isAllowed("mailto:name@example.com", UrlAllowList.SCOPE_OPEN_URL));
+
+        // Others are denied
+        assertFalse(urlAllowList.isAllowed("https://some-random-url.com", UrlAllowList.SCOPE_OPEN_URL));
     }
 
     /**

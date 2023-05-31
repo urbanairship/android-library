@@ -12,14 +12,11 @@ import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.contacts.Contact;
 import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.remoteconfig.RemoteConfigManager;
-import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.PlatformUtils;
 
 import org.robolectric.TestLifecycleApplication;

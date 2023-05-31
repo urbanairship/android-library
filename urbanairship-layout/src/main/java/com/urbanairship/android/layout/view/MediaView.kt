@@ -34,7 +34,6 @@ import com.urbanairship.android.layout.widget.TouchAwareWebView
 import com.urbanairship.app.FilteredActivityListener
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
-import com.urbanairship.js.UrlAllowList
 import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.Flow
@@ -286,12 +285,6 @@ internal class MediaView(
         }
 
         addView(frameLayout)
-
-        if (!UAirship.shared().urlAllowList.isAllowed(model.url, UrlAllowList.SCOPE_OPEN_URL)) {
-            Logger.error("URL not allowed. Unable to load: $model.url")
-            return
-        }
-
         load.run()
     }
 

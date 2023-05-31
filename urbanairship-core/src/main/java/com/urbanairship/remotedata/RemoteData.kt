@@ -7,7 +7,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.Logger
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
@@ -237,7 +236,6 @@ public class RemoteData @VisibleForTesting internal constructor(
             .filter { providerSources.contains(it.first) }
             .runningFold(mutableListOf<RemoteDataProvider.RefreshResult>()) { acc, value ->
                 acc.add(value.second)
-                Logger.e { "$acc" }
                 acc
             }
             .filter { it.size == providerSources.count() }

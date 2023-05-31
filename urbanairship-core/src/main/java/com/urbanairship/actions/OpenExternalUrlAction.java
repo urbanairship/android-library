@@ -7,10 +7,12 @@ import android.net.Uri;
 
 import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
-import com.urbanairship.js.UrlAllowList;
+import com.urbanairship.UrlAllowList;
 import com.urbanairship.util.UriUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+import androidx.core.util.Supplier;
 
 /**
  * Action for opening a URL for viewing.
@@ -39,6 +41,20 @@ public class OpenExternalUrlAction extends Action {
      */
     @NonNull
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^u";
+
+    private Supplier<UrlAllowList> allowListSupplier;
+
+    /**
+     * Default constructor.
+     */
+    public OpenExternalUrlAction() {
+        this(() -> UAirship.shared().getUrlAllowList());
+    }
+
+    @VisibleForTesting
+    OpenExternalUrlAction(@NonNull Supplier<UrlAllowList> allowListSupplier) {
+        this.allowListSupplier = allowListSupplier;
+    }
 
     @NonNull
     @Override
@@ -73,7 +89,7 @@ public class OpenExternalUrlAction extends Action {
                     return false;
                 }
 
-                return UAirship.shared().getUrlAllowList().isAllowed(arguments.getValue().getString(), UrlAllowList.SCOPE_OPEN_URL);
+                return allowListSupplier.get().isAllowed(arguments.getValue().getString(), UrlAllowList.SCOPE_OPEN_URL);
 
             case Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON:
             case Action.SITUATION_PUSH_RECEIVED:

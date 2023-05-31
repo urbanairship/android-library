@@ -41,7 +41,7 @@ import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.iam.events.InAppReportingEvent;
 import com.urbanairship.iam.events.InAppReportingEvent.PageViewSummary;
-import com.urbanairship.js.UrlAllowList;
+import com.urbanairship.UrlAllowList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
 import com.urbanairship.permission.PermissionStatus;
@@ -133,7 +133,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
     public int onPrepare(@NonNull Context context, @NonNull Assets assets) {
         assetCacheMap.clear();
         for (UrlInfo urlInfo : this.urlInfoList) {
-            if (!urlAllowList.isAllowed(urlInfo.getUrl(), UrlAllowList.SCOPE_OPEN_URL)) {
+            if (urlInfo.getType() == UrlInfo.UrlType.WEB_PAGE && !urlAllowList.isAllowed(urlInfo.getUrl(), UrlAllowList.SCOPE_OPEN_URL)) {
                 Logger.error("Url not allowed: %s. Unable to display message %s.", urlInfo.getUrl(), message.getName());
                 return CANCEL;
             }

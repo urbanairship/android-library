@@ -23,7 +23,7 @@ import com.urbanairship.iam.InAppMessageWebViewClient;
 import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.iam.events.InAppReportingEvent;
-import com.urbanairship.js.UrlAllowList;
+import com.urbanairship.UrlAllowList;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Network;
@@ -133,10 +133,8 @@ import static org.mockito.Mockito.when;
                 "                  \"height\":\"100%\"\n" +
                 "               },\n" +
                 "               \"view\":{\n" +
-                "                  \"type\":\"media\",\n" +
-                "                  \"media_fit\":\"center\",\n" +
-                "                  \"url\":\"https://some-youtube-url\",\n" +
-                "                  \"media_type\":\"youtube\"\n" +
+                "                  \"type\":\"web_view\",\n" +
+                "                  \"url\":\"https://some-youtube-url\"\n" +
                 "               }\n" +
                 "            },\n" +
                 "            {\n" +

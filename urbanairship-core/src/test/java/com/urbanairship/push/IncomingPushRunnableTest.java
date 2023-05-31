@@ -19,7 +19,6 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.js.TestActivity;
 import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.push.notifications.NotificationArguments;
 import com.urbanairship.push.notifications.NotificationChannelCompat;

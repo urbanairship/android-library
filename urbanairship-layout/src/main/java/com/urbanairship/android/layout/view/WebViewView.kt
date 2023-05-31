@@ -19,6 +19,7 @@ import android.widget.ProgressBar
 import androidx.core.view.isGone
 import com.urbanairship.Logger
 import com.urbanairship.UAirship
+import com.urbanairship.UrlAllowList
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.WebViewModel
@@ -28,7 +29,6 @@ import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.android.layout.widget.TouchAwareAirshipWebView
 import com.urbanairship.app.FilteredActivityListener
 import com.urbanairship.app.SimpleActivityListener
-import com.urbanairship.js.UrlAllowList
 import com.urbanairship.util.ManifestUtils
 import com.urbanairship.webkit.AirshipWebViewClient
 import java.lang.ref.WeakReference

@@ -97,45 +97,6 @@ public class FullScreenAdapterTest  {
         assertEquals(InAppMessageAdapter.OK, videoType);
     }
 
-    @Test
-    public void testUrlAllowListEnabled() {
-        int youTubeOnPrepare = testPrepare(MediaInfo.TYPE_YOUTUBE, "https://www.youtube.com", "Youtube");
-        assertEquals(InAppMessageAdapter.OK, youTubeOnPrepare);
-
-        int imageOnPrepare = testPrepare(MediaInfo.TYPE_IMAGE, "cool://story", "Its cool.");
-        assertEquals(InAppMessageAdapter.OK, imageOnPrepare);
-
-        int videoType = testPrepare(MediaInfo.TYPE_VIDEO, "cool://story", "Its cool.");
-        assertEquals(InAppMessageAdapter.CANCEL, videoType);
-    }
-
-    @Test
-    public void testUrlAllowListEnabledWithEntry() {
-        UAirship.shared().getUrlAllowList().addEntry("*://story");
-
-        int youTubeOnPrepare = testPrepare(MediaInfo.TYPE_YOUTUBE, "https://www.youtube.com", "Youtube");
-        assertEquals(InAppMessageAdapter.OK, youTubeOnPrepare);
-
-        int imageOnPrepare = testPrepare(MediaInfo.TYPE_IMAGE, "cool://story", "Its cool.");
-        assertEquals(InAppMessageAdapter.OK, imageOnPrepare);
-
-        int videoType = testPrepare(MediaInfo.TYPE_VIDEO, "cool://story", "Its cool.");
-        assertEquals(InAppMessageAdapter.OK, videoType);
-
-    }
-
-    @Test
-    public void testCancelPrepare() {
-        int youtubeResult = testPrepare(MediaInfo.TYPE_VIDEO, "badurl", "Youtube");
-        assertEquals(InAppMessageAdapter.CANCEL, youtubeResult);
-
-        int imageResult = testPrepare(MediaInfo.TYPE_IMAGE, "badurl", "description");
-        assertEquals(InAppMessageAdapter.OK, imageResult);
-
-        int videoResult = testPrepare(MediaInfo.TYPE_VIDEO, "badurl", "description");
-        assertEquals(InAppMessageAdapter.CANCEL, videoResult);
-    }
-
     public int testPrepare(String type, String url, String description) {
         Context context = Mockito.mock(Context.class);
         Assets assets = Mockito.mock(Assets.class);

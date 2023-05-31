@@ -25,7 +25,7 @@ import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.javascript.JavaScriptEnvironment;
 import com.urbanairship.javascript.JavaScriptExecutor;
 import com.urbanairship.javascript.NativeBridge;
-import com.urbanairship.js.UrlAllowList;
+import com.urbanairship.UrlAllowList;
 
 import java.io.BufferedInputStream;
 import java.util.HashMap;

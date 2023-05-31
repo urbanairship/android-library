@@ -6,7 +6,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.Checks;
@@ -241,38 +240,31 @@ public class AirshipConfigOptions {
     public final PushProvider customPushProvider;
 
     /**
-     * List of URLs that are allowed to be used for various features, including:
-     * Airship JS interface, open external URL action, wallet action, HTML in-app messages,
-     * and landing pages. Airship https URLs are included by default.
-     * <p>
-     * See {@link UrlAllowList#addEntry(String)} for valid url patterns.
-     * <p>
-     * Defaults null.
+     * Additional URLs that will be added to the allow list for both {@link UrlAllowList#SCOPE_OPEN_URL} and
+     * {@link UrlAllowList#SCOPE_JAVASCRIPT_INTERFACE} scopes.
+     *
+     * See {@link UrlAllowList#addEntry(String)} for valid URL patterns.
      */
     @NonNull
     public final List<String> urlAllowList;
 
     /**
-     * List of URLs that are allowed to be used for Airship JS interface.
-     * Airship https URLs are included by default.
-     * <p>
-     * See {@link UrlAllowList#addEntry(String)} for valid url patterns.
-     * <p>
-     * Defaults null.
+     * Additional URLs that will be added to the allow list for scope {@link UrlAllowList#SCOPE_JAVASCRIPT_INTERFACE}.
+     *
+     * See {@link UrlAllowList#addEntry(String)} for valid URL patterns.
      */
     @NonNull
     public final List<String> urlAllowListScopeJavaScriptInterface;
 
     /**
-     * List of URLs that are allowed to be used for open external URL action.
-     * Airship https URLs are included by default.
-     * <p>
-     * See {@link UrlAllowList#addEntry(String)} for valid url patterns.
-     * <p>
-     * Defaults null.
+     * Additional URLs that will be added to the allow list for scope {@link UrlAllowList#SCOPE_OPEN_URL}.
+     * See {@link UrlAllowList#addEntry(String)} for valid URL patterns.
      */
     @NonNull
     public final List<String> urlAllowListScopeOpenUrl;
+
+    final boolean isAllowListScopeOpenSet;
+    final boolean isAllowListSet;
 
     /**
      * Flag indicating whether the application will use analytics.
@@ -450,9 +442,11 @@ public class AirshipConfigOptions {
         }
 
         this.allowedTransports = Collections.unmodifiableList(new ArrayList<>(builder.allowedTransports));
-        this.urlAllowList = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowList));
-        this.urlAllowListScopeJavaScriptInterface = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowListScopeJavaScriptInterface));
-        this.urlAllowListScopeOpenUrl = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowListScopeOpenUrl));
+        this.urlAllowList = copyOrEmpty(builder.urlAllowList);
+        this.urlAllowListScopeJavaScriptInterface = copyOrEmpty(builder.urlAllowListScopeJavaScriptInterface);
+        this.urlAllowListScopeOpenUrl = copyOrEmpty(builder.urlAllowListScopeOpenUrl);
+        this.isAllowListScopeOpenSet = builder.isAllowListScopeOpenSet;
+        this.isAllowListSet = builder.isAllowListSet;
         this.inProduction = builder.inProduction;
         this.analyticsEnabled = builder.analyticsEnabled;
         this.backgroundReportingIntervalMS = builder.backgroundReportingIntervalMS;
@@ -472,6 +466,14 @@ public class AirshipConfigOptions {
         this.fcmFirebaseAppName = builder.fcmFirebaseAppName;
         this.initialConfigUrl = builder.initialConfigUrl;
         this.isPromptForPermissionOnUserNotificationsEnabled = builder.isPromptForPermissionOnUserNotificationsEnabled;
+    }
+
+    private static <T> List<T> copyOrEmpty(@Nullable List<T> list) {
+        if (list == null) {
+            return Collections.emptyList();
+        } else {
+            return Collections.unmodifiableList(list);
+        }
     }
 
     /**
@@ -627,7 +629,6 @@ public class AirshipConfigOptions {
         private static final String FIELD_SITE = "site";
         private static final String FIELD_DATA_COLLECTION_OPT_IN_ENABLED = "dataCollectionOptInEnabled";
         private static final String FIELD_EXTENDED_BROADCASTS_ENABLED = "extendedBroadcastsEnabled";
-        private static final String FIELD_SUPPRESS_ALLOW_LIST_ERROR = "suppressAllowListError";
         private static final String FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED = "requireInitialRemoteConfigEnabled";
         private static final String FIELD_ENABLED_FEATURES = "enabledFeatures";
         private static final String FIELD_INITIAL_CONFIG_URL = "initialConfigUrl";
@@ -644,9 +645,11 @@ public class AirshipConfigOptions {
         private String analyticsUrl;
         private String remoteDataUrl;
         private List<String> allowedTransports = new ArrayList<>(Arrays.asList(ADM_TRANSPORT, FCM_TRANSPORT, HMS_TRANSPORT));
-        private List<String> urlAllowList = new ArrayList<>();
-        private List<String> urlAllowListScopeJavaScriptInterface = new ArrayList<>();
-        private List<String> urlAllowListScopeOpenUrl = new ArrayList<>();
+        private List<String> urlAllowList = null;
+        private List<String> urlAllowListScopeJavaScriptInterface = null;
+        private List<String> urlAllowListScopeOpenUrl = null;
+        private boolean isAllowListScopeOpenSet = false;
+        private boolean isAllowListSet = false;
         private Boolean inProduction = null;
         private boolean analyticsEnabled = true;
         private long backgroundReportingIntervalMS = DEFAULT_BG_REPORTING_INTERVAL_MS;
@@ -671,7 +674,6 @@ public class AirshipConfigOptions {
         @PrivacyManager.Feature
         public int enabledFeatures = PrivacyManager.FEATURE_ALL;
 
-        private boolean suppressAllowListError = false;
         private boolean requireInitialRemoteConfigEnabled = true;
         private String fcmFirebaseAppName;
 
@@ -1040,10 +1042,6 @@ public class AirshipConfigOptions {
                             this.setExtendedBroadcastsEnabled(configParser.getBoolean(name, false));
                             break;
 
-                        case FIELD_SUPPRESS_ALLOW_LIST_ERROR:
-                            this.setSuppressAllowListError(configParser.getBoolean(name, false));
-                            break;
-
                         case FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED:
                             this.setRequireInitialRemoteConfigEnabled(configParser.getBoolean(name, false));
                             break;
@@ -1327,51 +1325,58 @@ public class AirshipConfigOptions {
         }
 
         /**
-         * Set the list of additional URLs that are allowed to be used for various features, including:
-         * Airship JS interface, open external URL action, wallet action, HTML in-app messages,
-         * and landing pages. Airship https URLs are included by default.
+         * Sets the additional URLs that will be added to the allow list for both {@link UrlAllowList#SCOPE_OPEN_URL} and
+         * {@link UrlAllowList#SCOPE_JAVASCRIPT_INTERFACE} scopes.
+         * See {@link UrlAllowList#addEntry(String)} for valid URL patterns.
          *
-         * @param urlAllowList The urlAllowList.
+         * @param urlAllowList An array of URL patterns.
          * @return The config options builder.
          */
         @NonNull
         public Builder setUrlAllowList(@Nullable String[] urlAllowList) {
-            this.urlAllowList.clear();
             if (urlAllowList != null) {
-                this.urlAllowList.addAll(Arrays.asList(urlAllowList));
+                this.urlAllowList = Arrays.asList(urlAllowList);
+            } else {
+                this.urlAllowList = null;
             }
+
+            this.isAllowListSet = true;
             return this;
         }
 
         /**
-         * Set the list of additional URLs that are allowed to be used for the Airship JS interface.
-         * Airship https URLs are included by default.
+         * Sets the additional URLs that will be added to the allow list for scope {@link UrlAllowList#SCOPE_JAVASCRIPT_INTERFACE}.
+         * See {@link UrlAllowList#addEntry(String)} for valid URL patterns.
          *
-         * @param urlAllowListScopeJavaScriptInterface The URL allow list for the Airship JS interface.
+         * @param urlAllowListScopeJavaScriptInterface An array of URL patterns.
          * @return The config options builder.
          */
         @NonNull
         public Builder setUrlAllowListScopeJavaScriptInterface(@Nullable String[] urlAllowListScopeJavaScriptInterface) {
-            this.urlAllowListScopeJavaScriptInterface.clear();
             if (urlAllowListScopeJavaScriptInterface != null) {
-                this.urlAllowListScopeJavaScriptInterface.addAll(Arrays.asList(urlAllowListScopeJavaScriptInterface));
+                this.urlAllowListScopeJavaScriptInterface = Arrays.asList(urlAllowListScopeJavaScriptInterface);
+            } else {
+                this.urlAllowListScopeJavaScriptInterface = null;
             }
             return this;
         }
 
         /**
-         * Set the list of additional URLs that are allowed to be used for the open external URL action.
-         * Airship https URLs are included by default.
+         * Sets the additional URLs that will be added to the allow list for scope {@link UrlAllowList#SCOPE_OPEN_URL}.
+         * See {@link UrlAllowList#addEntry(String)} for valid URL patterns.
          *
-         * @param urlAllowListScopeOpenUrl The URL allow list for the open external URL action.
+         * @param urlAllowListScopeOpenUrl An array of URL patterns.
          * @return The config options builder.
          */
         @NonNull
         public Builder setUrlAllowListScopeOpenUrl(@Nullable String[] urlAllowListScopeOpenUrl) {
-            this.urlAllowListScopeOpenUrl.clear();
             if (urlAllowListScopeOpenUrl != null) {
-                this.urlAllowListScopeOpenUrl.addAll(Arrays.asList(urlAllowListScopeOpenUrl));
+                this.urlAllowListScopeOpenUrl = Arrays.asList(urlAllowListScopeOpenUrl);
+            } else {
+                this.urlAllowListScopeOpenUrl = null;
             }
+
+            this.isAllowListScopeOpenSet = true;
             return this;
         }
 
@@ -1608,18 +1613,6 @@ public class AirshipConfigOptions {
         }
 
         /**
-         * Sets the flag suppressing the error normally generated when no allow list entries have been added to allowList or allowListScopeOpenUrl.
-         *
-         * @param suppressAllowListError {@code true} to supress the allow list warning, otherwise {@code false}.
-         * @return The config options builder.
-         */
-        @NonNull
-        public Builder setSuppressAllowListError(boolean suppressAllowListError) {
-            this.suppressAllowListError = suppressAllowListError;
-            return this;
-        }
-
-        /**
          * Sets the Firebase app name that is used for FCM. If set, the app name must exist in order
          * for Airship to get registration token. The app should be initialized with Firebase before takeOff, or during
          * onAirshipReady callback.
@@ -1665,16 +1658,6 @@ public class AirshipConfigOptions {
          */
         @NonNull
         public AirshipConfigOptions build() {
-            if (urlAllowList.isEmpty() && urlAllowListScopeOpenUrl.isEmpty() && !suppressAllowListError) {
-                Logger.error(
-                        "The airship config options is missing URL allow list rules for SCOPE_OPEN. " +
-                                "By default only Airship, YouTube, mailto, sms, and tel URLs will be allowed." +
-                                "To suppress this error, specify allow list rules by providing rules for " +
-                                "urlAllowListScopeOpenUrl or urlAllowList. Alternatively you can suppress " +
-                                "this error and keep the default rules by using the flag suppressAllowListError. " +
-                                "For more information, see https://docs.airship.com/platform/android/getting-started/#url-allow-list.");
-            }
-
             if (inProduction == null) {
                 inProduction = false;
             }

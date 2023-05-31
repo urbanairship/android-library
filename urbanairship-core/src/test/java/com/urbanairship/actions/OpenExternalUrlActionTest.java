@@ -5,38 +5,33 @@ package com.urbanairship.actions;
 import android.content.Intent;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.UAirship;
-import com.urbanairship.js.UrlAllowList;
+import com.urbanairship.UrlAllowList;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowApplication;
 
-import java.net.MalformedURLException;
-
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.robolectric.Shadows.shadowOf;
 
 public class OpenExternalUrlActionTest extends BaseTestCase {
 
-    private OpenExternalUrlAction action;
-    private UrlAllowList urlAllowList;
-
-    @Before
-    public void setup() {
-        action = new OpenExternalUrlAction();
-        urlAllowList = UAirship.shared().getUrlAllowList();
-    }
+    private final UrlAllowList urlAllowList = mock(UrlAllowList.class);
+    private final OpenExternalUrlAction action = new OpenExternalUrlAction(() -> urlAllowList);
 
     /**
      * Test accepts arguments
      */
     @Test
     public void testAcceptsArguments() {
-        urlAllowList.addEntry("*");
+        when(urlAllowList.isAllowed(any(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
+
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "http://example.com");
         assertTrue("Should accept valid url string", action.acceptsArguments(args));
 
@@ -55,7 +50,8 @@ public class OpenExternalUrlActionTest extends BaseTestCase {
      */
     @Test
     public void testUrlAllowList() {
-        urlAllowList.addEntry("https://yep.example.com");
+        when(urlAllowList.isAllowed("https://yep.example.com", UrlAllowList.SCOPE_OPEN_URL)).thenReturn(true);
+        when(urlAllowList.isAllowed("https://nope.example.com", UrlAllowList.SCOPE_OPEN_URL)).thenReturn(false);
 
         assertTrue(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "https://yep.example.com")));
         assertFalse(action.acceptsArguments(ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "https://nope.example.com")));
@@ -66,6 +62,8 @@ public class OpenExternalUrlActionTest extends BaseTestCase {
      */
     @Test
     public void testPerform() {
+        when(urlAllowList.isAllowed(any(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
+
         ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "http://example.com");
         ActionResult result = action.perform(args);
 

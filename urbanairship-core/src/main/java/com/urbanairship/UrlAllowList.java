@@ -1,11 +1,9 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.js;
+package com.urbanairship;
 
 import android.net.Uri;
 
-import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.Logger;
 import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
@@ -24,12 +22,14 @@ import androidx.annotation.Nullable;
 public class UrlAllowList {
 
     /**
-     * UrlAllowList entry applies to JS interface.
+     * Allow list scope for testing web view URLs before injected the
+     * Airship JS interface (native bridge).
      */
     public static final int SCOPE_JAVASCRIPT_INTERFACE = 1;
 
     /**
-     * UrlAllowList entry applies to any url handling.
+     * Allow list scope for testing URLs before loading them in either
+     * a web view or deep linking to them externally from the app.
      */
     public static final int SCOPE_OPEN_URL = 1 << 1;
 
@@ -293,18 +293,32 @@ public class UrlAllowList {
     public static UrlAllowList createDefaultUrlAllowList(@NonNull AirshipConfigOptions airshipConfigOptions) {
         UrlAllowList urlAllowList = new UrlAllowList();
         urlAllowList.addEntry("https://*.urbanairship.com");
-        urlAllowList.addEntry("https://*.youtube.com", SCOPE_OPEN_URL);
         urlAllowList.addEntry("https://*.asnapieu.com");
         urlAllowList.addEntry("sms:", SCOPE_OPEN_URL);
         urlAllowList.addEntry("mailto:", SCOPE_OPEN_URL);
         urlAllowList.addEntry("tel:", SCOPE_OPEN_URL);
 
+        if (!airshipConfigOptions.isAllowListSet && !airshipConfigOptions.isAllowListScopeOpenSet) {
+            Logger.error(
+                    "The Airship config options is missing URL allow list rules for SCOPE_OPEN " +
+                            "that controls what external URLs are able to be opened externally or loaded " +
+                            "in a web view by Airship. By default, all URLs will be allowed. " +
+                            "To suppress this error, specify the config urlAllowListScopeOpenUrl = [*] " +
+                            "to keep the defaults, or by providing a list of rules that your app expects. " +
+                            "See https://docs.airship.com/platform/mobile/setup/sdk/android/#url-allow-list " +
+                            "for more information."
+            );
+            urlAllowList.addEntry("*", SCOPE_OPEN_URL);
+        }
+
         for (String entry : airshipConfigOptions.urlAllowList) {
             urlAllowList.addEntry(entry, SCOPE_ALL);
         }
+
         for (String entry : airshipConfigOptions.urlAllowListScopeJavaScriptInterface) {
             urlAllowList.addEntry(entry, SCOPE_JAVASCRIPT_INTERFACE);
         }
+
         for (String entry : airshipConfigOptions.urlAllowListScopeOpenUrl) {
             urlAllowList.addEntry(entry, SCOPE_OPEN_URL);
         }
