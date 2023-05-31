@@ -125,7 +125,7 @@ public class ChannelBatchUpdateApiClientTest {
         assertEquals(
             "https://example.com/api/channels/sdk/batch/someChannelId?platform=android", requestSession.lastRequest.url.toString()
         )
-        assertEquals(RequestAuth.BasicAppAuth, requestSession.lastRequest.auth)
+        assertEquals(RequestAuth.ChannelTokenAuth("someChannelId"), requestSession.lastRequest.auth)
         assertEquals(requestSession.lastRequest.body, RequestBody.Json(expectedBody))
     }
 
@@ -141,7 +141,6 @@ public class ChannelBatchUpdateApiClientTest {
         assertEquals(
             "https://example.com/api/channels/sdk/batch/someChannelId?platform=android", requestSession.lastRequest.url.toString()
         )
-        assertEquals(RequestAuth.BasicAppAuth, requestSession.lastRequest.auth)
         assertEquals(requestSession.lastRequest.body, RequestBody.Json("{}"))
     }
 

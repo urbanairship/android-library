@@ -53,6 +53,8 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -370,9 +372,9 @@ public class AnalyticsTest extends BaseTestCase {
     @Test
     public void testSendingEvents() {
         analytics.setEnabled(true);
-        when(mockChannel.getId()).thenReturn(null);
+        when(mockChannel.getId()).thenReturn("some channel");
 
-        when(mockEventManager.uploadEvents(ArgumentMatchers.<String, String>anyMap())).thenReturn(true);
+        when(mockEventManager.uploadEvents(eq("some channel"), anyMap())).thenReturn(true);
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(EventManager.ACTION_SEND)
@@ -389,8 +391,6 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.setEnabled(true);
         when(mockChannel.getId()).thenReturn(null);
 
-        when(mockEventManager.uploadEvents(ArgumentMatchers.<String, String>anyMap())).thenReturn(false);
-
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(EventManager.ACTION_SEND)
                                  .build();
@@ -405,8 +405,6 @@ public class AnalyticsTest extends BaseTestCase {
     public void testSendingWithAnalyticsDisabled() {
         analytics.setEnabled(false);
         when(mockChannel.getId()).thenReturn("channel");
-
-        when(mockEventManager.uploadEvents(ArgumentMatchers.<String, String>anyMap())).thenReturn(false);
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(EventManager.ACTION_SEND)
@@ -423,7 +421,7 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.setEnabled(true);
         when(mockChannel.getId()).thenReturn("channel");
 
-        when(mockEventManager.uploadEvents(ArgumentMatchers.<String, String>anyMap())).thenReturn(false);
+        when(mockEventManager.uploadEvents(eq("channel"), anyMap())).thenReturn(false);
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(EventManager.ACTION_SEND)
@@ -466,7 +464,7 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.onPerformJob(UAirship.shared(), jobInfo);
 
         ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+        verify(mockEventManager).uploadEvents(any(), argumentCaptor.capture());
 
         Map<String, String> headers = argumentCaptor.getValue();
 
@@ -493,7 +491,7 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.onPerformJob(UAirship.shared(), jobInfo);
 
         ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+        verify(mockEventManager).uploadEvents(any(), argumentCaptor.capture());
 
         Map<String, String> headers = argumentCaptor.getValue();
         assertEquals("amazon", headers.get("X-UA-Device-Family"));
@@ -517,7 +515,7 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.onPerformJob(UAirship.shared(), jobInfo);
 
         ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+        verify(mockEventManager).uploadEvents(any(), argumentCaptor.capture());
 
         Map<String, String> headers = argumentCaptor.getValue();
         assertNull(headers.get("X-UA-Locale-Country"));
@@ -540,7 +538,7 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.onPerformJob(UAirship.shared(), jobInfo);
 
         ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+        verify(mockEventManager).uploadEvents(any(), argumentCaptor.capture());
 
         Map<String, String> headers = argumentCaptor.getValue();
         assertNull(headers.get("X-UA-Locale-Variant"));
@@ -563,7 +561,7 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.onPerformJob(UAirship.shared(), jobInfo);
 
         ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+        verify(mockEventManager).uploadEvents(any(), argumentCaptor.capture());
 
         Map<String, String> headers = argumentCaptor.getValue();
         assertNull(headers.get("X-UA-Locale-Language"));
@@ -593,7 +591,7 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.onPerformJob(UAirship.shared(), jobInfo);
 
         ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+        verify(mockEventManager).uploadEvents(any(), argumentCaptor.capture());
 
         Map<String, String> headers = argumentCaptor.getValue();
         String expected = "cordova:1.0.0,unity:2.0.0,flutter:3.0.0,react-native:4.0.0,xamarin:5.0.0,titanum:6.0.0";
@@ -625,7 +623,7 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.onPerformJob(UAirship.shared(), jobInfo);
 
         ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+        verify(mockEventManager).uploadEvents(any(), argumentCaptor.capture());
 
         Map<String, String> headers = argumentCaptor.getValue();
         assertEquals("not_determined", headers.get("X-UA-Permission-location"));
@@ -666,7 +664,7 @@ public class AnalyticsTest extends BaseTestCase {
         analytics.onPerformJob(UAirship.shared(), jobInfo);
 
         ArgumentCaptor<Map<String, String>> argumentCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(mockEventManager).uploadEvents(argumentCaptor.capture());
+        verify(mockEventManager).uploadEvents(any(), argumentCaptor.capture());
 
         Map<String, String> headers = argumentCaptor.getValue();
         assertEquals("bar", headers.get("foo"));

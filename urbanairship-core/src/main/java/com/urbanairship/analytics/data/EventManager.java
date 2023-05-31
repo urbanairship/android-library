@@ -221,11 +221,12 @@ public class EventManager {
     /**
      * Uploads events.
      *
+     * @param channelId The channel Id.
      * @param headers The analytic headers.
      * @return {@code true} if the events uploaded, otherwise {@code false}.
      */
     @WorkerThread
-    public boolean uploadEvents(@NonNull Map<String, String> headers) {
+    public boolean uploadEvents(@NonNull String channelId, @NonNull Map<String, String> headers) {
         synchronized (scheduleLock) {
             isScheduled = false;
             preferenceDataStore.put(LAST_SEND_KEY, System.currentTimeMillis());
@@ -260,7 +261,7 @@ public class EventManager {
         }
 
         try {
-            Response<EventResponse> response = apiClient.sendEvents(eventPayloads, headers);
+            Response<EventResponse> response = apiClient.sendEvents(channelId, eventPayloads, headers);
             if (!response.isSuccessful()) {
                 Logger.debug("Analytic upload failed.");
                 return false;

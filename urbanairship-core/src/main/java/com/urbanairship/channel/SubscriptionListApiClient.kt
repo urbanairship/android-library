@@ -33,7 +33,7 @@ internal class SubscriptionListApiClient constructor(
         val request = Request(
             url = url,
             method = "GET",
-            auth = RequestAuth.BasicAppAuth,
+            auth = RequestAuth.ChannelTokenAuth(channelId),
             headers = headers
         )
 

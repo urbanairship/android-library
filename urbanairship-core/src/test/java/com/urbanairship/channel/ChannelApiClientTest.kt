@@ -60,7 +60,7 @@ public class ChannelApiClientTest {
         assertEquals(
             "https://example.com/api/channels/", requestSession.lastRequest.url.toString()
         )
-        assertEquals(RequestAuth.BasicAppAuth, requestSession.lastRequest.auth)
+        assertEquals(RequestAuth.GeneratedAppToken, requestSession.lastRequest.auth)
         assertEquals(requestSession.lastRequest.body, RequestBody.Json(payload))
     }
 
@@ -85,7 +85,7 @@ public class ChannelApiClientTest {
         )
 
         assertEquals("PUT", requestSession.lastRequest.method)
-        assertEquals(RequestAuth.BasicAppAuth, requestSession.lastRequest.auth)
+        assertEquals(RequestAuth.ChannelTokenAuth("someChannelId"), requestSession.lastRequest.auth)
         assertEquals(
             "https://example.com/api/channels/someChannelId", requestSession.lastRequest.url.toString()
         )

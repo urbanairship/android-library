@@ -40,7 +40,7 @@ internal class ChannelBatchUpdateApiClient(
         val request = Request(
             url = bulkUpdateUrl(channelId),
             method = "PUT",
-            auth = RequestAuth.BasicAppAuth,
+            auth = RequestAuth.ChannelTokenAuth(channelId),
             body = RequestBody.Json(payload),
             headers = mapOf(
                 "Accept" to "application/vnd.urbanairship+json; version=3;"

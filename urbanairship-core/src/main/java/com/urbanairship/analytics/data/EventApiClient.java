@@ -7,6 +7,7 @@ import android.net.Uri;
 import com.urbanairship.Logger;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestAuth;
 import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestSession;
@@ -55,13 +56,16 @@ public class EventApiClient {
     /**
      * Sends a collection of events.
      *
+     * @param channelId The channel Id
      * @param events Specified events
      * @param headers Headers
      * @return eventResponse
      */
     @NonNull
-    Response<EventResponse> sendEvents(@NonNull List<JsonValue> events,
-                                       @NonNull @Size(min=1) Map<String, String> headers) throws RequestException {
+    Response<EventResponse> sendEvents(
+            @NonNull String channelId,
+            @NonNull List<JsonValue> events,
+            @NonNull @Size(min=1) Map<String, String> headers) throws RequestException {
 
         double sentAt = System.currentTimeMillis() / 1000.0;
         Map<String, String> requestHeaders = new HashMap<>(headers);
@@ -75,7 +79,7 @@ public class EventApiClient {
         Request request = new Request(
                 url,
                 "POST",
-                null,
+                new RequestAuth.ChannelTokenAuth(channelId),
                 new RequestBody.GzippedJson(JsonValue.wrapOpt(events)),
                 requestHeaders
         );
