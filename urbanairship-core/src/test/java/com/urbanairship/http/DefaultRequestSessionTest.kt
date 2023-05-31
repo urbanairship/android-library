@@ -3,8 +3,11 @@ package com.urbanairship.http
 import android.net.Uri
 import android.util.Base64
 import com.urbanairship.TestAirshipRuntimeConfig
+import com.urbanairship.TestClock
 import com.urbanairship.UAirship
+import com.urbanairship.util.DateUtils
 import com.urbanairship.util.PlatformUtils
+import com.urbanairship.util.UAStringUtil
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.confirmVerified
@@ -27,6 +30,7 @@ public class DefaultRequestSessionTest {
     private val platform = UAirship.ANDROID_PLATFORM
     private val mockClient = mockk<HttpClient>()
     private val mockAuthProvider = mockk<AuthTokenProvider>()
+    private val testClock = TestClock()
 
     @Suppress("ObjectLiteralToLambda") // Breaks test when converted
     private val testParser = object : ResponseParser<String> {
@@ -44,9 +48,13 @@ public class DefaultRequestSessionTest {
         "User-Agent" to "(UrbanAirshipLib-${PlatformUtils.asString(platform)}/${UAirship.getVersion()}; ${appConfig.appKey})"
     )
 
+    private var nonce = "noncesense"
+
     private val requestSession = DefaultRequestSession(
-        appConfig, platform, mockClient
-    )
+        appConfig, platform, mockClient, testClock
+    ) {
+        nonce
+    }
 
     @Test
     public fun testRequest() {
@@ -165,6 +173,83 @@ public class DefaultRequestSessionTest {
     }
 
     @Test
+    public fun testGeneratedAppTokenAuth() {
+        val request = Request(
+            url = Uri.parse("some uri"),
+            auth = RequestAuth.GeneratedAppToken,
+            method = "POST",
+            headers = mapOf("foo" to "bar")
+        )
+
+        val token = UAStringUtil.generateSignedToken(
+            appConfig.appSecret,
+            listOf(
+                appConfig.appKey, nonce, DateUtils.createIso8601TimeStamp(testClock.currentTimeMillis)
+            )
+        )
+
+        val authHeaders = mapOf(
+            "X-UA-Appkey" to appConfig.appKey,
+            "X-UA-Nonce" to nonce,
+            "X-UA-Timestamp" to DateUtils.createIso8601TimeStamp(testClock.currentTimeMillis),
+            "Authorization" to "Bearer $token"
+        )
+
+        val expectedHeaders = (request.headers + expectedDefaultHeaders + authHeaders)
+
+        every<Response<String>> {
+            mockClient.execute(any(), any(), any(), any(), any(), any())
+        } returns Response(200, "neat", "neat", emptyMap())
+
+        requestSession.execute(request, testParser)
+        verify {
+            mockClient.execute(
+                Uri.parse("some uri"), request.method, expectedHeaders, null, true, testParser
+            )
+        }
+        confirmVerified(mockClient)
+    }
+
+    @Test
+    public fun testGeneratedChannelTokenAuth() {
+        val request = Request(
+            url = Uri.parse("some uri"),
+            auth = RequestAuth.GeneratedChannelToken("some channel"),
+            method = "POST",
+            headers = mapOf("foo" to "bar")
+        )
+
+        val token = UAStringUtil.generateSignedToken(
+            appConfig.appSecret,
+            listOf(
+                appConfig.appKey, "some channel", nonce, DateUtils.createIso8601TimeStamp(testClock.currentTimeMillis)
+            )
+        )
+
+        val authHeaders = mapOf(
+            "X-UA-Channel-ID" to "some channel",
+            "X-UA-Appkey" to appConfig.appKey,
+            "X-UA-Nonce" to nonce,
+            "X-UA-Timestamp" to DateUtils.createIso8601TimeStamp(testClock.currentTimeMillis),
+            "Authorization" to "Bearer $token"
+        )
+
+        val expectedHeaders = (request.headers + expectedDefaultHeaders + authHeaders)
+
+        every<Response<String>> {
+            mockClient.execute(any(), any(), any(), any(), any(), any())
+        } returns Response(200, "neat", "neat", emptyMap())
+
+        requestSession.execute(request, testParser)
+        verify {
+            mockClient.execute(
+                Uri.parse("some uri"), request.method, expectedHeaders, null, true, testParser
+            )
+        }
+        confirmVerified(mockClient)
+    }
+
+    @Test
     public fun testChannelAuthToken(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
@@ -178,8 +263,12 @@ public class DefaultRequestSessionTest {
         } returns Result.success("some auth token")
         requestSession.channelAuthTokenProvider = mockAuthProvider
 
-        val expectedHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
-        expectedHeaders["Authorization"] = "Bearer some auth token"
+        val authHeaders = mapOf(
+            "X-UA-Appkey" to appConfig.appKey,
+            "Authorization" to "Bearer some auth token"
+        )
+
+        val expectedHeaders = (request.headers + expectedDefaultHeaders + authHeaders)
 
         every<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
@@ -259,9 +348,11 @@ public class DefaultRequestSessionTest {
 
         val firstRequestHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
         firstRequestHeaders["Authorization"] = "Bearer first"
+        firstRequestHeaders["X-UA-Appkey"] = appConfig.appKey
 
         val secondRequestHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
         secondRequestHeaders["Authorization"] = "Bearer second"
+        secondRequestHeaders["X-UA-Appkey"] = appConfig.appKey
 
         verify {
             mockClient.execute(
@@ -295,8 +386,12 @@ public class DefaultRequestSessionTest {
         requestSession.contactAuthTokenProvider = mockAuthProvider
         coEvery { mockAuthProvider.fetchToken("some contact ID") } returns Result.success("some auth token")
 
-        val expectedHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
-        expectedHeaders["Authorization"] = "Bearer some auth token"
+        val authHeaders = mapOf(
+            "X-UA-Appkey" to appConfig.appKey,
+            "Authorization" to "Bearer some auth token"
+        )
+
+        val expectedHeaders = (request.headers + expectedDefaultHeaders + authHeaders)
 
         every<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
@@ -373,9 +468,11 @@ public class DefaultRequestSessionTest {
 
         val firstRequestHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
         firstRequestHeaders["Authorization"] = "Bearer first"
+        firstRequestHeaders["X-UA-Appkey"] = appConfig.appKey
 
         val secondRequestHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
         secondRequestHeaders["Authorization"] = "Bearer second"
+        secondRequestHeaders["X-UA-Appkey"] = appConfig.appKey
 
         verify {
             mockClient.execute(

@@ -6,22 +6,17 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.AuthToken
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
-import com.urbanairship.http.RequestException
 import com.urbanairship.http.RequestResult
 import com.urbanairship.http.SuspendingRequestSession
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
-import com.urbanairship.util.DateUtils
 import com.urbanairship.util.UAHttpStatusUtil
-import com.urbanairship.util.UAStringUtil
-import java.util.UUID
 
 internal class ChannelAuthApiClient(
     private val runtimeConfig: AirshipRuntimeConfig,
     private val requestSession: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession(),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
-    private val nonceTokenFactory: () -> String = { UUID.randomUUID().toString() }
 ) {
     suspend fun getToken(channelId: String): RequestResult<AuthToken> {
         val url: Uri? = runtimeConfig.urlConfig
@@ -30,33 +25,11 @@ internal class ChannelAuthApiClient(
             .build()
 
         val requestTime = clock.currentTimeMillis()
-        val nonce = nonceTokenFactory()
-        val timestamp = DateUtils.createIso8601TimeStamp(requestTime)
-
-        val headers = mapOf(
-            "Accept" to "application/vnd.urbanairship+json; version=3;",
-            "X-UA-Channel-ID" to channelId,
-            "X-UA-Appkey" to runtimeConfig.configOptions.appKey,
-            "X-UA-Nonce" to nonce,
-            "X-UA-Timestamp" to timestamp
-        )
-
-        val token = try {
-            UAStringUtil.generateSignedToken(
-                runtimeConfig.configOptions.appSecret,
-                listOf(
-                    runtimeConfig.configOptions.appKey, channelId, nonce, timestamp
-                )
-            )
-        } catch (e: Exception) {
-            throw RequestException("Unable to generate token", e)
-        }
 
         val request = Request(
             url = url,
             method = "GET",
-            auth = RequestAuth.BearerToken(token),
-            headers = headers
+            auth = RequestAuth.GeneratedChannelToken(channelId),
         )
 
         return requestSession.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->

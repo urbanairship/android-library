@@ -15,7 +15,6 @@ import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
-import com.urbanairship.util.UAStringUtil
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -43,7 +42,6 @@ public class ContactApiClientTest {
     private val fakeEmail = "fake@email.com"
     private val fakeMsisdn = "123456789"
     private val fakeSenderId = "fake_sender_id"
-    private val fakeNonce = "fake nonce"
 
     private val clock = TestClock()
     private var runtimeConfig: TestAirshipRuntimeConfig =
@@ -54,9 +52,7 @@ public class ContactApiClientTest {
 
     private var client: ContactApiClient = ContactApiClient(
         runtimeConfig, requestSession.toSuspendingRequestSession(), clock
-    ) {
-        fakeNonce
-    }
+    )
 
     @Before
     public fun setUp() {
@@ -91,26 +87,13 @@ public class ContactApiClientTest {
             )
         )
 
-        val token = UAStringUtil.generateSignedToken(
-            runtimeConfig.configOptions.appSecret, listOf(
-                runtimeConfig.configOptions.appKey,
-                fakeChannelId,
-                fakeNonce,
-                DateUtils.createIso8601TimeStamp(clock.currentTimeMillis())
-            )
-        )
-
         val expectedRequest = Request(
             url = Uri.parse("https://example.com/api/contacts/identify/v2"),
             method = "POST",
             body = RequestBody.Json(expectedRequestBody),
-            auth = RequestAuth.BearerToken(token),
+            auth = RequestAuth.GeneratedChannelToken(fakeChannelId),
             headers = mapOf(
                 "Accept" to "application/vnd.urbanairship+json; version=3;",
-                "X-UA-Channel-ID" to fakeChannelId,
-                "X-UA-Appkey" to runtimeConfig.configOptions.appKey,
-                "X-UA-Nonce" to fakeNonce,
-                "X-UA-Timestamp" to DateUtils.createIso8601TimeStamp(clock.currentTimeMillis())
             )
         )
 
@@ -156,26 +139,13 @@ public class ContactApiClientTest {
             )
         )
 
-        val token = UAStringUtil.generateSignedToken(
-            runtimeConfig.configOptions.appSecret, listOf(
-                runtimeConfig.configOptions.appKey,
-                fakeChannelId,
-                fakeNonce,
-                DateUtils.createIso8601TimeStamp(clock.currentTimeMillis())
-            )
-        )
-
         val expectedRequest = Request(
             url = Uri.parse("https://example.com/api/contacts/identify/v2"),
             method = "POST",
             body = RequestBody.Json(expectedRequestBody),
-            auth = RequestAuth.BearerToken(token),
+            auth = RequestAuth.GeneratedChannelToken(fakeChannelId),
             headers = mapOf(
                 "Accept" to "application/vnd.urbanairship+json; version=3;",
-                "X-UA-Channel-ID" to fakeChannelId,
-                "X-UA-Appkey" to runtimeConfig.configOptions.appKey,
-                "X-UA-Nonce" to fakeNonce,
-                "X-UA-Timestamp" to DateUtils.createIso8601TimeStamp(clock.currentTimeMillis())
             )
         )
 
@@ -219,26 +189,13 @@ public class ContactApiClientTest {
             )
         )
 
-        val token = UAStringUtil.generateSignedToken(
-            runtimeConfig.configOptions.appSecret, listOf(
-                runtimeConfig.configOptions.appKey,
-                fakeChannelId,
-                fakeNonce,
-                DateUtils.createIso8601TimeStamp(clock.currentTimeMillis())
-            )
-        )
-
         val expectedRequest = Request(
             url = Uri.parse("https://example.com/api/contacts/identify/v2"),
             method = "POST",
             body = RequestBody.Json(expectedRequestBody),
-            auth = RequestAuth.BearerToken(token),
+            auth = RequestAuth.GeneratedChannelToken(fakeChannelId),
             headers = mapOf(
                 "Accept" to "application/vnd.urbanairship+json; version=3;",
-                "X-UA-Channel-ID" to fakeChannelId,
-                "X-UA-Appkey" to runtimeConfig.configOptions.appKey,
-                "X-UA-Nonce" to fakeNonce,
-                "X-UA-Timestamp" to DateUtils.createIso8601TimeStamp(clock.currentTimeMillis())
             )
         )
 

@@ -11,7 +11,6 @@ import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.util.DateUtils
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,11 +32,7 @@ public class ChannelAuthApiClientTest {
     private var clock = TestClock()
     private val testDispatcher = StandardTestDispatcher()
 
-    private var nonce = "noncesense"
-
-    private var client = ChannelAuthApiClient(config, requestSession.toSuspendingRequestSession(), clock) {
-        nonce
-    }
+    private var client = ChannelAuthApiClient(config, requestSession.toSuspendingRequestSession(), clock)
 
     @Before
     public fun setup() {
@@ -83,14 +78,7 @@ public class ChannelAuthApiClientTest {
         val expectedRequest = Request(
             url = Uri.parse("https://example.com/api/auth/device"),
             method = "GET",
-            headers = mapOf(
-                "Accept" to "application/vnd.urbanairship+json; version=3;",
-                "X-UA-Channel-ID" to "some channel",
-                "X-UA-Appkey" to config.configOptions.appKey,
-                "X-UA-Nonce" to nonce,
-                "X-UA-Timestamp" to DateUtils.createIso8601TimeStamp(100)
-            ),
-            auth = RequestAuth.BearerToken("B+vEEJqqBZY2N6pzviaQq96YrJFVQkvmc10rMnioado=\n")
+            auth = RequestAuth.GeneratedChannelToken("some channel")
         )
 
         assertEquals(expectedRequest, requestSession.lastRequest)
