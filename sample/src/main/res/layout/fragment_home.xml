@@ -56,72 +56,15 @@
                 app:layout_constraintVertical_bias="0.302"
                 tools:text="a61635e7-60c5-47e7-b9fb-870754e70a86" />
 
-
-            <Button
-                android:id="@+id/start_live_update"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/channel_title"
-                app:layout_constraintVertical_bias="0.302"
-                android:text="Start Live Update"/>
-
             <LinearLayout
-                android:orientation="horizontal"
                 android:id="@+id/update_buttons"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/start_live_update"
-                app:layout_constraintVertical_bias="0">
-
-                <Button
-                    android:id="@+id/update_live_update_1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_marginHorizontal="8dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/start_live_update"
-                    app:layout_constraintVertical_bias="0"
-                    android:text="+1 Foxes"/>
-
-                <Button
-                    android:id="@+id/update_live_update_2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_marginHorizontal="8dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/start_live_update"
-                    app:layout_constraintVertical_bias="0"
-                    android:text="+1 Tigers"/>
-
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/stop_live_update"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/update_buttons"
-                app:layout_constraintVertical_bias="0"
-                android:text="Stop Live Update"/>
-
+                />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

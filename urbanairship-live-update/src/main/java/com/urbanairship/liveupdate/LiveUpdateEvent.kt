@@ -4,7 +4,7 @@ package com.urbanairship.liveupdate
 public enum class LiveUpdateEvent {
     /** The Live Update was started. */
     START,
-    /** The Live Update was stopped. */
+    /** The Live Update was ended. */
     END,
     /** The Live Update content was updated. */
     UPDATE;

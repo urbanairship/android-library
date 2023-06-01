@@ -43,8 +43,7 @@ internal interface LiveUpdateDao {
     suspend fun getContent(name: String): LiveUpdateContent?
 
     @Transaction
-    @Query("SELECT * FROM live_update_state WHERE isActive = 1 " +
-            "AND ((dismissal_date IS NULL) OR (dismissal_date >= strftime('%s', 'now') * 1000))")
+    @Query("SELECT * FROM live_update_state WHERE isActive = 1")
     suspend fun getAllActive(): List<LiveUpdateStateWithContent>
 
     @Transaction
@@ -75,8 +74,7 @@ internal interface LiveUpdateDao {
         deleteAllContent()
     }
 
-    @Query("SELECT COUNT(*) > 0 FROM live_update_state WHERE isActive = 1 " +
-            "AND ((dismissal_date IS NULL) OR (dismissal_date >= strftime('%s', 'now') * 1000))")
+    @Query("SELECT COUNT(*) > 0 FROM live_update_state WHERE isActive = 1")
     suspend fun isAnyActive(): Boolean
 
     @Query("SELECT COUNT(*) FROM live_update_state")

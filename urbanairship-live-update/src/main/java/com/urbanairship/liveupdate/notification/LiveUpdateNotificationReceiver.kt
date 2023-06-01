@@ -23,12 +23,12 @@ public class LiveUpdateNotificationReceiver : BroadcastReceiver() {
         when (action) {
             ACTION_NOTIFICATION_DISMISSED -> {
                 // Stop updates for this live activity.
-                LiveUpdateManager.shared().stop(name)
-                Logger.verbose("Stopped live updates for: $name")
+                LiveUpdateManager.shared().end(name)
+                Logger.verbose("Ended live updates for: $name")
             }
             ACTION_NOTIFICATION_TIMEOUT -> {
                 // Stop updates for this live activity and cancel the notification, if one exists.
-                LiveUpdateManager.shared().stop(name)
+                LiveUpdateManager.shared().end(name)
                 LiveUpdateManager.shared().cancel(name)
                 Logger.verbose("Timed out live updates for: $name")
             }

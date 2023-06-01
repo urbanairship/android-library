@@ -72,7 +72,7 @@ internal constructor(
      * @param type The handler type.
      * @param content A [JsonMap] with initial content.
      * @param timestamp The start timestamp, used to filter out-of-order events (default: now).
-     * @param dismissTimestamp Optional timestamp, when to stop this Live Update (default: null).
+     * @param dismissTimestamp Optional timestamp, when to end this Live Update (default: null).
      */
     @JvmOverloads
     public fun start(
@@ -107,13 +107,13 @@ internal constructor(
     }
 
     /**
-     * Stops tracking for the Live Update with the given [name].
+     * Ends tracking for the Live Update with the given [name].
      *
      * @param name The live update name.
-     * @param timestamp The stop timestamp, used to filter out-of-order events (default: now).
+     * @param timestamp The end timestamp, used to filter out-of-order events (default: now).
      */
     @JvmOverloads
-    public fun stop(
+    public fun end(
         name: String,
         content: JsonMap? = null,
         timestamp: Long = System.currentTimeMillis(),
@@ -124,7 +124,7 @@ internal constructor(
         }
     }
 
-    /** Stops tracking for all active Live Updates. */
+    /** Ends tracking for all active Live Updates. */
     public fun clearAll() {
         if (isFeatureEnabled) {
             registrar.clearAll()
@@ -134,7 +134,7 @@ internal constructor(
     /**
      * Cancels the notification associated with the given Live Update [name].
      *
-     * This will not stop tracking the Live Update and is a no-op for live updates that use custom
+     * This will not end tracking the Live Update and is a no-op for live updates that use custom
      * handlers.
      *
      * @param name The live update name.
@@ -164,6 +164,11 @@ internal constructor(
     private fun updateLiveActivityEnablement() {
         if (isFeatureEnabled) {
             pushManager.addPushListener(pushListener)
+
+            // Check for any active live Updates that have had their notifications cleared.
+            // This makes sure we'll end the live update if the notification is dropped due
+            // to an app upgrade or other cases where we don't get notified of the dismiss.
+            registrar.stopLiveUpdatesForClearedNotifications()
         } else {
             // Clear all live updates.
             registrar.clearAll()

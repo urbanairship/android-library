@@ -1,7 +1,10 @@
 package com.urbanairship.liveupdate
 
+import android.app.NotificationManager
 import android.content.Context
+import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
+import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -26,13 +29,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** Manages Live Update handlers and an operation queue to process Live Update events. */
 internal class LiveUpdateRegistrar(
     private val context: Context,
     private val channel: AirshipChannel,
-    dao: LiveUpdateDao,
+    private val dao: LiveUpdateDao,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO,
     private val processor: LiveUpdateProcessor = LiveUpdateProcessor(dao),
     private val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(context),
@@ -132,7 +136,7 @@ internal class LiveUpdateRegistrar(
             Operation.ClearAll(timestamp = timestamp)
         )
 
-    internal fun onLiveUpdatePushReceived(message: PushMessage, payload: LiveUpdatePayload) {
+    fun onLiveUpdatePushReceived(message: PushMessage, payload: LiveUpdatePayload) {
         with(payload) {
             when (event) {
                 LiveUpdateEvent.START -> if (type != null) {
@@ -142,6 +146,31 @@ internal class LiveUpdateRegistrar(
                 }
                 LiveUpdateEvent.END -> stop(name, content, timestamp, dismissalDate, message)
                 LiveUpdateEvent.UPDATE -> update(name, content, timestamp, dismissalDate, message)
+            }
+        }
+    }
+
+    /**
+     * End any Live Updates notifications that are no longer displayed.
+     * On API 21 and 22, the notification manager does not provide a way to query for
+     * active notifications, so this method will no-op.
+     */
+    fun stopLiveUpdatesForClearedNotifications() {
+        scope.launch {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val nm = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                val activeNotifications = nm.activeNotifications.map { it.tag }
+
+                dao.getAllActive()
+                    // Filter out any LUs that use custom handlers or have active notifications
+                    .filter { (update, _) ->
+                        handlers[update.type] is LiveUpdateNotificationHandler &&
+                                notificationTag(update.type, update.name) !in activeNotifications
+                    }
+                    // End any Live Updates that are no longer displayed
+                    .forEach { (update, content) ->
+                        stop(update.name, content?.content, update.timestamp, update.dismissalDate)
+                    }
             }
         }
     }

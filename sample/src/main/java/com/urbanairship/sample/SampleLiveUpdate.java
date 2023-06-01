@@ -27,7 +27,7 @@ public class SampleLiveUpdate implements LiveUpdateNotificationHandler {
         Logger.debug("SampleLiveUpdate - onUpdate: action=" + event + ", update=" + update);
 
         if (event == LiveUpdateEvent.END) {
-            // Dismiss the live update on STOP. The default behavior will leave the Live Update
+            // Dismiss the live update on END. The default behavior will leave the Live Update
             // in the notification tray until the dismissal time is reached or the user dismisses it.
             return LiveUpdateResult.cancel();
         }
