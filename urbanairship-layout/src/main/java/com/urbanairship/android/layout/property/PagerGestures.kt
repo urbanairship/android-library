@@ -9,11 +9,11 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 
 internal sealed class PagerGesture : Identifiable {
-    abstract val reportingMetadata: Map<String, JsonValue>?
+    abstract val reportingMetadata: JsonValue?
 
     data class Tap(
         override val identifier: String,
-        override val reportingMetadata: Map<String, JsonValue>?,
+        override val reportingMetadata: JsonValue?,
         val location: GestureLocation,
         val behavior: PagerGestureBehavior
     ) : PagerGesture() {
@@ -21,7 +21,7 @@ internal sealed class PagerGesture : Identifiable {
             @Throws(JsonException::class)
             fun from(json: JsonMap): Tap = Tap(
                 identifier = json.requireField("identifier"),
-                reportingMetadata = json.optionalField<JsonMap>("reporting_metadata")?.map,
+                reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
                 location = GestureLocation.from(json.requireField("location")),
                 behavior = PagerGestureBehavior.from(json.requireField("behavior"))
             )
@@ -29,7 +29,7 @@ internal sealed class PagerGesture : Identifiable {
     }
     data class Swipe(
         override val identifier: String,
-        override val reportingMetadata: Map<String, JsonValue>?,
+        override val reportingMetadata: JsonValue?,
         val direction: GestureDirection,
         val behavior: PagerGestureBehavior
     ) : PagerGesture() {
@@ -37,7 +37,7 @@ internal sealed class PagerGesture : Identifiable {
             @Throws(JsonException::class)
             fun from(json: JsonMap): Swipe = Swipe(
                 identifier = json.requireField("identifier"),
-                reportingMetadata = json.optionalField<JsonMap>("reporting_metadata")?.map,
+                reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
                 direction = GestureDirection.from(json.requireField("direction")),
                 behavior = PagerGestureBehavior.from(json.requireField("behavior"))
             )
@@ -45,7 +45,7 @@ internal sealed class PagerGesture : Identifiable {
     }
     data class Hold(
         override val identifier: String,
-        override val reportingMetadata: Map<String, JsonValue>?,
+        override val reportingMetadata: JsonValue?,
         val pressBehavior: PagerGestureBehavior,
         val releaseBehavior: PagerGestureBehavior
     ) : PagerGesture() {
@@ -53,7 +53,7 @@ internal sealed class PagerGesture : Identifiable {
             @Throws(JsonException::class)
             fun from(json: JsonMap): Hold = Hold(
                 identifier = json.requireField("identifier"),
-                reportingMetadata = json.optionalField<JsonMap>("reporting_metadata")?.map,
+                reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
                 pressBehavior = PagerGestureBehavior.from(json.requireField("press_behavior")),
                 releaseBehavior = PagerGestureBehavior.from(json.requireField("release_behavior"))
             )

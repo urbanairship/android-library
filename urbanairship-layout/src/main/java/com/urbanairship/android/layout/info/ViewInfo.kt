@@ -221,7 +221,7 @@ internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(),
 internal interface Button : View, Accessible, Identifiable {
     val clickBehaviors: List<ButtonClickBehaviorType>
     val actions: Map<String, JsonValue>?
-    val reportingMetadata: Map<String, JsonValue>?
+    val reportingMetadata: JsonValue?
 }
 
 internal open class ButtonInfo(
@@ -234,8 +234,8 @@ internal open class ButtonInfo(
     override val actions: Map<String, JsonValue>? =
         json.optionalField<JsonMap>("actions")?.map
 
-    override val reportingMetadata: Map<String, JsonValue>? =
-        json.optionalField<JsonMap>("reporting_metadata")?.map
+    override val reportingMetadata: JsonValue? =
+        json.optionalField<JsonValue>("reporting_metadata")
 }
 
 internal interface Checkable : View, Accessible {

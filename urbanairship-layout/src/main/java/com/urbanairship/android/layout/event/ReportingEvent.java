@@ -6,6 +6,7 @@ import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.PagerData;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
@@ -19,12 +20,14 @@ public abstract class ReportingEvent {
 
     public enum ReportType {
         PAGE_VIEW,
-        PAGE_SWIPE,
+        PAGE_SWIPE, // Horizontal swipes only. Used for Stories and regular Pagers.
+        PAGE_GESTURE, // Up/Down swipes only, also taps on page regions. Used for Stories.
+        PAGE_ACTION, // Pager automated actions. Used for Stories.
         BUTTON_TAP,
         OUTSIDE_DISMISS,
         BUTTON_DISMISS,
         FORM_RESULT,
-        FORM_DISPLAY
+        FORM_DISPLAY,
     }
 
     @NonNull
@@ -116,15 +119,23 @@ public abstract class ReportingEvent {
 
         @NonNull
         private final String buttonId;
+        @Nullable
+        private final JsonValue reportingMetadata;
 
-        public ButtonTap(@NonNull String buttonId) {
+        public ButtonTap(@NonNull String buttonId, @Nullable JsonValue reportingMetadata) {
             super(ReportType.BUTTON_TAP);
             this.buttonId = buttonId;
+            this.reportingMetadata = reportingMetadata;
         }
 
         @NonNull
         public String getButtonId() {
             return buttonId;
+        }
+
+        @Nullable
+        public JsonValue getReportingMetadata() {
+            return reportingMetadata;
         }
 
         @Override
@@ -206,37 +217,6 @@ public abstract class ReportingEvent {
 
     }
 
-    /**
-     * Bubbled up to the top level when the view is dismissed from a button.
-     */
-    public static class DismissFromStory extends DismissReportingEvent {
-
-        private final boolean cancel;
-
-        // TODO Complete this and handle all the other stories reporting events
-        public DismissFromStory(
-                boolean cancel,
-                long displayTime
-        ) {
-            super(ReportType.BUTTON_DISMISS, displayTime);
-            this.cancel = cancel;
-        }
-
-        public boolean isCancel() {
-            return cancel;
-        }
-
-        @Override
-        @NonNull
-        public String toString() {
-            return "ReportingEvent.DismissFromButton{" +
-                    "cancel=" + cancel +
-                    ", displayTime=" + getDisplayTime() +
-                    '}';
-        }
-
-    }
-
     public static class FormResult extends ReportingEvent {
 
         @NonNull
@@ -304,6 +284,78 @@ public abstract class ReportingEvent {
                     '}';
         }
 
+    }
+
+    public static class PageGesture extends PagerReportingEvent {
+
+        @NonNull
+        private final String gestureId;
+        @Nullable
+        private final JsonValue reportingMetadata;
+
+        public PageGesture(
+                @NonNull String gestureId,
+                @Nullable JsonValue reportingMetadata,
+                @NonNull PagerData pagerData
+        ) {
+            super(ReportType.PAGE_GESTURE, pagerData);
+            this.gestureId = gestureId;
+            this.reportingMetadata = reportingMetadata;
+        }
+
+        @NonNull
+        public String getGestureId() {
+            return gestureId;
+        }
+
+        @Nullable
+        public JsonValue getReportingMetadata() {
+            return reportingMetadata;
+        }
+
+        @Override
+        public String toString() {
+            return "PageGesture{" +
+                    "gestureId='" + gestureId + '\'' +
+                    ", reportingMetadata=" + reportingMetadata +
+                    '}';
+        }
+    }
+
+    public static class PageAction extends PagerReportingEvent {
+
+        @NonNull
+        private final String actionId;
+        @Nullable
+        private final JsonValue reportingMetadata;
+
+        public PageAction(
+                @NonNull String actionId,
+                @Nullable JsonValue reportingMetadata,
+                @NonNull PagerData pagerData
+        ) {
+            super(ReportType.PAGE_ACTION, pagerData);
+            this.actionId = actionId;
+            this.reportingMetadata = reportingMetadata;
+        }
+
+        @NonNull
+        public String getActionId() {
+            return actionId;
+        }
+
+        @Nullable
+        public JsonValue getReportingMetadata() {
+            return reportingMetadata;
+        }
+
+        @Override
+        public String toString() {
+            return "PageAction{" +
+                    "actionId='" + actionId + '\'' +
+                    ", reportingMetadata=" + reportingMetadata +
+                    '}';
+        }
     }
 
     private abstract static class DismissReportingEvent extends ReportingEvent {

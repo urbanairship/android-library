@@ -146,7 +146,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        override fun onButtonTap(buttonId: String, state: LayoutData) {
+        override fun onButtonTap(buttonId: String, reportingMetadata: JsonValue?, state: LayoutData) {
             "onButtonTap(buttonId: $buttonId, state: $state)".let {
                 events.add(it)
                 Logger.debug(it)
@@ -205,6 +205,27 @@ class MainActivity : AppCompatActivity() {
                 ActionRunRequest.createRequest(it).setMetadata(bundle)
             })
         }
+
+        override fun onPagerGesture(
+            gestureId: String,
+            reportingMetadata: JsonValue?,
+            state: LayoutData
+        ) {
+            "onPagerGesture(gestureId: $gestureId, reportingMetadata: $reportingMetadata, state: $state)".let {
+                events.add(it)
+                Logger.debug(it)
+            }
+        }
+
+        override fun onPagerAutomatedAction(
+            actionId: String,
+            reportingMetadata: JsonValue?,
+            state: LayoutData
+        ) {
+            "onPagerAutomatedAction(gestureId: $actionId, reportingMetadata: $reportingMetadata, state: $state)".let {
+                events.add(it)
+                Logger.debug(it)
+            } }
 
         private fun dumpEvents() {
             Logger.debug("\n")

@@ -50,9 +50,13 @@ public interface ThomasListener {
      * Called when a button is tapped.
      *
      * @param buttonId The button Id.
+     * @param reportingMetadata Optional reporting metadata.
      * @param state The layout state.
      */
-    void onButtonTap(@NonNull String buttonId, @NonNull LayoutData state);
+    void onButtonTap(
+            @NonNull String buttonId,
+            @Nullable JsonValue reportingMetadata,
+            @NonNull LayoutData state);
 
     /**
      * Called when the view is dismissed from outside the view.
@@ -99,4 +103,26 @@ public interface ThomasListener {
      * @param state The layout sate.
      */
     void onRunActions(@NonNull Map<String, JsonValue> actions, @NonNull LayoutData state);
+
+    /**
+     * Called when a pager changes its page due to a tap.
+     *
+     * @param gestureId The gesture Id.
+     * @param reportingMetadata Optional reporting metadata.
+     * @param state The layout state.
+     */
+    void onPagerGesture(@NonNull String gestureId,
+                     @Nullable JsonValue reportingMetadata,
+                     @NonNull LayoutData state);
+
+    /**
+     * Called when a pager changes its page due to a swipe.
+     *
+     * @param actionId The action Id.
+     * @param reportingMetadata Optional reporting metadata.
+     * @param state The layout state.
+     */
+    void onPagerAutomatedAction(@NonNull String actionId,
+                       @Nullable JsonValue reportingMetadata,
+                       @NonNull LayoutData state);
 }

@@ -61,6 +61,8 @@ import static com.urbanairship.iam.events.InAppReportingEvent.buttonTap;
 import static com.urbanairship.iam.events.InAppReportingEvent.formDisplay;
 import static com.urbanairship.iam.events.InAppReportingEvent.formResult;
 import static com.urbanairship.iam.events.InAppReportingEvent.pageSwipe;
+import static com.urbanairship.iam.events.InAppReportingEvent.pagerAction;
+import static com.urbanairship.iam.events.InAppReportingEvent.pagerGesture;
 import static com.urbanairship.iam.events.InAppReportingEvent.pagerSummary;
 import static com.urbanairship.iam.events.InAppReportingEvent.permissionResultEvent;
 import static com.urbanairship.iam.events.InAppReportingEvent.resolution;
@@ -277,9 +279,13 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         }
 
         @Override
-        public void onButtonTap(@NonNull String buttonId, @Nullable LayoutData layoutData) {
+        public void onButtonTap(
+                @NonNull String buttonId,
+                @Nullable JsonValue reportingMetadata,
+                @Nullable LayoutData layoutData
+        ) {
             try {
-                InAppReportingEvent event = buttonTap(scheduleId, message, buttonId)
+                InAppReportingEvent event = buttonTap(scheduleId, message, buttonId, reportingMetadata)
                         .setLayoutData(layoutData);
 
                 displayHandler.addEvent(event);
@@ -366,6 +372,36 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                 return ActionRunRequest.createRequest(actionName)
                                        .setMetadata(bundle);
             }));
+        }
+
+        @Override
+        public void onPagerGesture(
+                @NonNull String gestureId,
+                @Nullable JsonValue reportingMetadata,
+                @NonNull LayoutData state
+        ) {
+            try {
+                InAppReportingEvent event = pagerGesture(scheduleId, message, gestureId, reportingMetadata)
+                        .setLayoutData(state);
+                displayHandler.addEvent(event);
+            } catch (IllegalArgumentException e) {
+                Logger.error("pagerGesture InAppReportingEvent is not valid!", e);
+            }
+        }
+
+        @Override
+        public void onPagerAutomatedAction(
+                @NonNull String actionId,
+                @Nullable JsonValue reportingMetadata,
+                @NonNull LayoutData state
+        ) {
+            try {
+                InAppReportingEvent event = pagerAction(scheduleId, message, actionId, reportingMetadata)
+                        .setLayoutData(state);
+                displayHandler.addEvent(event);
+            } catch (IllegalArgumentException e) {
+                Logger.error("onPagerAutomatedAction InAppReportingEvent is not valid!", e);
+            }
         }
 
         /**

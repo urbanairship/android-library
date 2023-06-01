@@ -22,11 +22,9 @@ import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.GestureLocation
 import com.urbanairship.android.layout.property.PagerGesture
-import com.urbanairship.android.layout.property.PagerGestureBehavior
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.earliestNavigationAction
 import com.urbanairship.android.layout.property.firstPagerNextOrNull
-import com.urbanairship.android.layout.property.hasCancel
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
 import com.urbanairship.android.layout.property.hasPagerNext
 import com.urbanairship.android.layout.property.hasPagerPause
@@ -38,6 +36,8 @@ import com.urbanairship.android.layout.util.pagerGestures
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
+import java.lang.Integer.max
+import java.lang.Integer.min
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -217,6 +217,28 @@ internal class PagerModel(
         )
     }
 
+    private fun reportGesture(gesture: PagerGesture, pagerState: State.Pager) {
+        val pagerContext = pagerState.reportingContext()
+        report(
+            ReportingEvent.PageGesture(
+                gesture.identifier,
+                gesture.reportingMetadata,
+                pagerContext
+            ), layoutState.reportingContext(pagerContext = pagerContext)
+        )
+    }
+
+    private fun reportAutomatedAction(action: AutomatedAction, pagerState: State.Pager) {
+        val pagerContext = pagerState.reportingContext()
+        report(
+            ReportingEvent.PageAction(
+                action.identifier,
+                action.reportingMetadata,
+                pagerContext
+            ), layoutState.reportingContext(pagerContext = pagerContext)
+        )
+    }
+
     private suspend fun handlePageActions(
         displayActions: Map<String, JsonValue>?,
         automatedActions: List<AutomatedAction>?
@@ -232,6 +254,7 @@ internal class PagerModel(
             // the page display, and can be used to determine the progress value for the
             // currently displayed page.
             actions.earliestNavigationAction?.let { action ->
+                scheduleAutomatedAction(action)
                 navigationActionTimer = object : Timer(action.delay.toLong() * 1000L) {
                     override fun onFinish() {
                         // Clean up the progress timer and this navigation action timer.
@@ -264,6 +287,8 @@ internal class PagerModel(
                     //  If delay is zero run immediately
                     action.behaviors?.let { evaluateClickBehaviors(it) }
                     action.actions?.let { runActions(it) }
+
+                    reportAutomatedAction(action, pagerState.changes.value)
                 } else {
                     // otherwise schedule the action
                     scheduleAutomatedAction(action)
@@ -281,8 +306,11 @@ internal class PagerModel(
                     }
                 }
                 automatedActionsTimers.remove(this)
+
+                reportAutomatedAction(action, pagerState.changes.value)
             }
         }
+
         timer.start()
         automatedActionsTimers.add(timer)
     }
@@ -290,33 +318,33 @@ internal class PagerModel(
     private suspend fun handleGesture(event: PagerGestureEvent) {
         Logger.verbose("handleGesture: $event")
 
-        val triggeredGestures: List<PagerGestureBehavior> = when (event) {
+        val triggeredGestures = when (event) {
             is PagerGestureEvent.Tap -> gestures.orEmpty()
                 .filterIsInstance<PagerGesture.Tap>()
                 .filter { it.location == event.location || it.location == GestureLocation.ANY }
-                .map { it.behavior }
+                .map { it to it.behavior }
 
             is PagerGestureEvent.Swipe -> gestures.orEmpty()
                 .filterIsInstance<PagerGesture.Swipe>()
                 .filter { it.direction == event.direction }
-                .map { it.behavior }
+                .map { it to it.behavior }
 
             is Hold -> gestures.orEmpty()
                 .filterIsInstance<PagerGesture.Hold>()
                 .map {
-                    when (event.action) {
+                    it to when (event.action) {
                         Hold.Action.PRESS -> it.pressBehavior
                         Hold.Action.RELEASE -> it.releaseBehavior
                     }
                 }
         }
 
-        triggeredGestures.forEach { gesture ->
-            gesture.actions?.let { runActions(it) }
-            gesture.behaviors?.let { evaluateClickBehaviors(it) }
-        }
+        triggeredGestures.forEach { (gesture, gestureBehaviors) ->
+            gestureBehaviors.actions?.let { runActions(it) }
+            gestureBehaviors.behaviors?.let { evaluateClickBehaviors(it) }
 
-        // TODO: Handle the gesture reporting
+            reportGesture(gesture, pagerState.changes.value)
+        }
     }
 
     private suspend fun evaluateClickBehaviors(behaviors: List<ButtonClickBehaviorType>) {
@@ -324,7 +352,7 @@ internal class PagerModel(
             // If there's only a CANCEL or DISMISS, and no FORM_SUBMIT, handle
             // immediately. We don't need to handle pager behaviors, as the layout
             // will be dismissed.
-            handleDismiss(behaviors.hasCancel)
+            handleDismiss()
         } else {
             // No FORM_SUBMIT, CANCEL, or DISMISS, so we only need to
             // handle pager behaviors.
@@ -343,13 +371,7 @@ internal class PagerModel(
         }
     }
 
-    private suspend fun handlePagerNext(fallback: PagerNextFallback) {
-        fun pagerNext() {
-            pagerState.update { state ->
-                state.copyWithPageIndex(Integer.min(state.pageIndex + 1, state.pageIds.size - 1))
-            }
-        }
-
+    private fun handlePagerNext(fallback: PagerNextFallback) {
         @OptIn(DelicateLayoutApi::class)
         val hasNext = pagerState.value.hasNext
 
@@ -358,28 +380,27 @@ internal class PagerModel(
                 pagerState.update { state ->
                     state.copyWithPageIndex(0)
                 }
-            !hasNext && fallback == PagerNextFallback.DISMISS ->
-                handleDismiss(isCancel = false)
-            else ->
-                pagerNext()
+            !hasNext && fallback == PagerNextFallback.DISMISS -> handleDismiss()
+            else -> pagerState.update { state ->
+                state.copyWithPageIndex(min(state.pageIndex + 1, state.pageIds.size - 1))
+            }
         }
     }
 
     private fun handlePagerPrevious() {
         pagerState.update { state ->
-            state.copyWithPageIndex(Integer.max(state.pageIndex - 1, 0))
+            state.copyWithPageIndex(max(state.pageIndex - 1, 0))
         }
     }
 
-    private suspend fun handleDismiss(isCancel: Boolean) {
+    private fun handleDismiss() {
+        clearAutomatedActions()
+
         report(
-            ReportingEvent.DismissFromStory(isCancel, environment.displayTimer.time),
+            ReportingEvent.DismissFromOutside(environment.displayTimer.time),
             layoutState.reportingContext()
         )
-        modelScope.launch {
-            environment.eventHandler.broadcast(LayoutEvent.Finish)
-        }
-        clearAutomatedActions()
+        broadcast(LayoutEvent.Finish)
     }
 
     private fun pauseStory() {

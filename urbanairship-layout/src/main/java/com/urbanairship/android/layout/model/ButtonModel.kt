@@ -40,6 +40,7 @@ internal abstract class ButtonModel<T>(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
+    private val reportingMetadata: JsonValue? = null,
     private val formState: SharedState<State.Form>?,
     private val pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
@@ -69,7 +70,7 @@ internal abstract class ButtonModel<T>(
                 val reportingContext = layoutState.reportingContext(buttonId = identifier)
 
                 // Report button tap event.
-                report(ButtonTap(identifier), reportingContext)
+                report(ButtonTap(identifier, reportingMetadata), reportingContext)
 
                 // Run any actions.
                 if (!actions.isNullOrEmpty()) {

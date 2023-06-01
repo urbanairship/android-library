@@ -25,6 +25,7 @@ import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.iam.events.InAppReportingEvent;
 import com.urbanairship.UrlAllowList;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Network;
 import com.urbanairship.webkit.AirshipWebViewClient;
@@ -39,6 +40,7 @@ import org.robolectric.annotation.LooperMode;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -287,9 +289,27 @@ import static org.mockito.Mockito.when;
         LayoutData layoutData = mock(LayoutData.class);
         ThomasListener listener = prepareListenerTest();
 
-        listener.onButtonTap("button id", layoutData);
+        listener.onButtonTap("button id", null, layoutData);
 
-        InAppReportingEvent expected = InAppReportingEvent.buttonTap(scheduleId, message, "button id")
+        InAppReportingEvent expected = InAppReportingEvent.buttonTap(scheduleId, message, "button id", null)
+                                                          .setLayoutData(layoutData);
+
+        verify(displayHandler).addEvent(eq(expected));
+    }
+
+    @Test
+    public void testButtonTapWithMetadata() {
+        LayoutData layoutData = mock(LayoutData.class);
+        ThomasListener listener = prepareListenerTest();
+
+        JsonValue metadata = JsonMap.newBuilder()
+                                    .put("foo", "bar")
+                                    .build()
+                                    .toJsonValue();
+
+        listener.onButtonTap("button id", metadata, layoutData);
+
+        InAppReportingEvent expected = InAppReportingEvent.buttonTap(scheduleId, message, "button id", metadata)
                                                           .setLayoutData(layoutData);
 
         verify(displayHandler).addEvent(eq(expected));
@@ -353,6 +373,34 @@ import static org.mockito.Mockito.when;
         listener.onPageSwipe(pagerData, 10, "page10", 20, "page20", layoutData);
 
         InAppReportingEvent expected = InAppReportingEvent.pageSwipe(scheduleId, message, pagerData, 10, "page10", 20, "page20")
+                                                          .setLayoutData(layoutData);
+
+        verify(displayHandler).addEvent(eq(expected));
+    }
+
+    @Test
+    public void testPagerGesture() {
+        LayoutData layoutData = mock(LayoutData.class);
+        ThomasListener listener = prepareListenerTest();
+        JsonValue metadata = JsonValue.wrap("foo");
+
+        listener.onPagerGesture("gesture ID", metadata, layoutData);
+
+        InAppReportingEvent expected = InAppReportingEvent.pagerGesture(scheduleId, message, "gesture ID", metadata)
+                                                          .setLayoutData(layoutData);
+
+        verify(displayHandler).addEvent(eq(expected));
+    }
+
+    @Test
+    public void testPagerAutomatedAction() {
+        LayoutData layoutData = mock(LayoutData.class);
+        ThomasListener listener = prepareListenerTest();
+        JsonValue metadata = JsonValue.wrap("foo");
+
+        listener.onPagerAutomatedAction("action ID", metadata, layoutData);
+
+        InAppReportingEvent expected = InAppReportingEvent.pagerAction(scheduleId, message, "action ID", metadata)
                                                           .setLayoutData(layoutData);
 
         verify(displayHandler).addEvent(eq(expected));

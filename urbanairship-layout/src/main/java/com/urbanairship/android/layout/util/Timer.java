@@ -3,6 +3,7 @@
 package com.urbanairship.android.layout.util;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 
 /**
@@ -15,7 +16,7 @@ public abstract class Timer {
     private long remainingTimeMs;
     private long duration;
     private long elapsedTimeMs;
-    private final Handler handler = new Handler();
+    private final Handler handler = new Handler(Looper.myLooper());
     private final Runnable trigger = new Runnable() {
         @Override
         public void run() {

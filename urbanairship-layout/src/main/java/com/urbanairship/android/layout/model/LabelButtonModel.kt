@@ -28,10 +28,11 @@ internal class LabelButtonModel(
     visibility: VisibilityInfo? = null,
     eventHandlers: List<EventHandler>? = null,
     enableBehaviors: List<EnableBehaviorType>? = null,
+    reportingMetadata: JsonValue? = null,
     formState: SharedState<State.Form>?,
     pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
-    properties: ModelProperties
+    properties: ModelProperties,
 ) : ButtonModel<LabelButtonView>(
     viewType = ViewType.LABEL_BUTTON,
     identifier = identifier,
@@ -43,10 +44,11 @@ internal class LabelButtonModel(
     visibility = visibility,
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
+    reportingMetadata = reportingMetadata,
     formState = formState,
     pagerState = pagerState,
     environment = environment,
-    properties = properties
+    properties = properties,
 ) {
     constructor(
         info: LabelButtonInfo,
@@ -54,7 +56,7 @@ internal class LabelButtonModel(
         formState: SharedState<State.Form>?,
         pagerState: SharedState<State.Pager>?,
         env: ModelEnvironment,
-        props: ModelProperties
+        props: ModelProperties,
     ) : this(
         identifier = info.identifier,
         label = label,
@@ -66,10 +68,11 @@ internal class LabelButtonModel(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors ?: emptyList(),
+        reportingMetadata = info.reportingMetadata,
         formState = formState,
         pagerState = pagerState,
         environment = env,
-        properties = props
+        properties = props,
     )
 
     override val reportingDescription: String =

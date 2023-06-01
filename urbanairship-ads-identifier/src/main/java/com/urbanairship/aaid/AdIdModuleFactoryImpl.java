@@ -27,6 +27,8 @@ public class AdIdModuleFactoryImpl implements AdIdModuleFactory {
                         @NonNull AirshipRuntimeConfig runtimeConfig,
                         @NonNull PrivacyManager privacyManager,
                         @NonNull Analytics analytics) {
+        // TODO: Remove `ads-identifier` in SDK 18.0.0
+        //noinspection deprecation
         return Module.singleComponent(new AdvertisingIdTracker(context, dataStore, runtimeConfig, privacyManager, analytics), 0);
     }
 

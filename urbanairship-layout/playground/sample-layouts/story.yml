@@ -63,6 +63,8 @@ view:
               behavior:
                 behaviors:
                   - pager_previous
+              reporting_metadata:
+                foo: bar
             - type: tap
               identifier: "end-tap-gesture-id"
               location: end
@@ -90,6 +92,8 @@ view:
               release_behavior:
                 behaviors:
                   - pager_resume
+              reporting_metadata:
+                boo: hoo
           items:
             - identifier: "pager-page-1-id"
               automated_actions:
@@ -97,6 +101,9 @@ view:
                   delay: 8
                   behaviors:
                     - pager_next
+                  reporting_metadata:
+                     key1: val1
+                     key2: val2
               display_actions:
                 add_tags_action: 'pager-page-1x'
               view:
@@ -197,7 +204,7 @@ view:
             - identifier: "pager-page-3-id"
               automated_actions:
                 - identifier: "pager-pager-3-action-id"
-                  delay: 4
+                  delay: 8
                   behaviors:
                     - pager_next_or_first
               display_actions:
@@ -316,13 +323,12 @@ view:
                             alpha: 1
 
       - size:
-          height: 3
+          height: 5
           width: 80%
         position:
           vertical: top
           horizontal: center
         margin:
-          top: 8
           bottom: 8
         view:
           type: story_indicator
@@ -330,11 +336,11 @@ view:
             default:
               hex: "#ffffff"
               alpha: 0.4
-          source: pager
+          source: "pager"
           style:
             type: linear_progress
             direction: horizontal
-            sizing: page_duration
+            sizing: equal
             spacing: 4
             color:
               default:

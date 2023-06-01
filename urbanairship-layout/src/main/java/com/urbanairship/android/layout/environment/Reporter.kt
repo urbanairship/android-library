@@ -19,8 +19,14 @@ internal class ExternalReporter(val listener: ThomasListener) : Reporter {
                 listener.onPageSwipe(
                     pagerData, toPageIndex, toPageId, fromPageIndex, fromPageId, state)
             }
+            is ReportingEvent.PageGesture -> with(event) {
+                listener.onPagerGesture(gestureId, reportingMetadata, state)
+            }
+            is ReportingEvent.PageAction -> with(event) {
+                listener.onPagerAutomatedAction(actionId, reportingMetadata, state)
+            }
             is ReportingEvent.ButtonTap -> with(event) {
-                listener.onButtonTap(buttonId, state)
+                listener.onButtonTap(buttonId, reportingMetadata, state)
             }
             is ReportingEvent.DismissFromOutside -> with(event) {
                 listener.onDismiss(displayTime)
