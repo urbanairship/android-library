@@ -75,7 +75,7 @@ public class InAppMessageManager {
     /**
      * Default delay between displaying in-app messages.
      */
-    public static final long DEFAULT_DISPLAY_INTERVAL_MS = 30000;
+    public static final long DEFAULT_DISPLAY_INTERVAL_MS = 0;
     /**
      * Preference key for display interval of in-app automation
      */
