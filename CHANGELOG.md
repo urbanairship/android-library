@@ -15,6 +15,14 @@ Beta release for SDK 17.0.0. This release brings several breaking changes. This 
 - Channel listener has been updated to only listen for channel create, channel update has been removed
 - Added new PushNotificationStatus and PushNotificationStatus flow that provides the current status of push notifications
 
+## Version 16.10.0, June 2, 2023
+
+Minor release that adds support for Android Live Updates, which bring functionality similar to iOS Live Activities to the Android platform.
+Live Updates make it easier to keep information updated in real time instead of receiving multiple notifications from the same app for things like a game’s latest score, food delivery status, or rideshare arrivals.
+
+### Changes
+- Added new `urbanairship-live-update` module.
+
 ## Version 16.9.3, May 24, 2023
 
 Patch release that includes fixes for Preference Center, Scenes & Surveys, and Message Center.
