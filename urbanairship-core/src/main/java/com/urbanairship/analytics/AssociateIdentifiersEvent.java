@@ -2,7 +2,7 @@
 
 package com.urbanairship.analytics;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
@@ -36,18 +36,18 @@ class AssociateIdentifiersEvent extends Event {
         boolean isValid = true;
 
         if (ids.size() > AssociatedIdentifiers.MAX_IDS) {
-            Logger.error("Associated identifiers exceeds %s", AssociatedIdentifiers.MAX_IDS);
+            UALog.e("Associated identifiers exceeds %s", AssociatedIdentifiers.MAX_IDS);
             isValid = false;
         }
 
         for (Map.Entry<String, String> entry : ids.entrySet()) {
             if (entry.getKey().length() > AssociatedIdentifiers.MAX_CHARACTER_COUNT) {
-                Logger.error("Associated identifiers key %s exceeds %s characters.", entry.getKey(), AssociatedIdentifiers.MAX_CHARACTER_COUNT);
+                UALog.e("Associated identifiers key %s exceeds %s characters.", entry.getKey(), AssociatedIdentifiers.MAX_CHARACTER_COUNT);
                 isValid = false;
             }
 
             if (entry.getValue().length() > AssociatedIdentifiers.MAX_CHARACTER_COUNT) {
-                Logger.error("Associated identifiers for key %s exceeds %s characters.", entry.getKey(), AssociatedIdentifiers.MAX_CHARACTER_COUNT);
+                UALog.e("Associated identifiers for key %s exceeds %s characters.", entry.getKey(), AssociatedIdentifiers.MAX_CHARACTER_COUNT);
                 isValid = false;
             }
         }

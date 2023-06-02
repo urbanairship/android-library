@@ -5,7 +5,7 @@ import android.graphics.RectF
 import android.graphics.Region
 import android.view.MotionEvent
 import androidx.core.graphics.toRegion
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.property.GestureDirection
 import com.urbanairship.android.layout.property.GestureLocation
 import com.urbanairship.android.layout.property.GestureLocation.BOTTOM
@@ -57,7 +57,7 @@ internal class PagerGestureMapper(
         velocityX: Float,
         velocityY: Float
     ): GestureDirection? {
-        Logger.warn("PagerGestureMapper - mapSwipe: $e1, $e2, $velocityX, $velocityY")
+        UALog.w("PagerGestureMapper - mapSwipe: $e1, $e2, $velocityX, $velocityY")
 
         // Ignore multi-pointer gestures.
         if (e1.pointerCount > 1 || e2.pointerCount > 1) return null

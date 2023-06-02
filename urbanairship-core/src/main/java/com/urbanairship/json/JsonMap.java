@@ -2,7 +2,7 @@
 
 package com.urbanairship.json;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 
 import org.json.JSONException;
 import org.json.JSONStringer;
@@ -213,7 +213,7 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
             return stringer.toString();
         } catch (JSONException | StringIndexOutOfBoundsException e) {
             // Should never happen
-            Logger.error(e, "JsonMap - Failed to create JSON String.");
+            UALog.e(e, "JsonMap - Failed to create JSON String.");
             return "";
         }
     }

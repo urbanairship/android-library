@@ -63,15 +63,15 @@ class DeferredPlatformProvider implements PlatformProvider {
         PushProvider bestProvider = pushProviders.get().getBestProvider();
         if (bestProvider != null) {
             platform = PlatformUtils.parsePlatform(bestProvider.getPlatform());
-            Logger.info("Setting platform to %s for push provider: %s", PlatformUtils.asString(platform), bestProvider);
+            UALog.i("Setting platform to %s for push provider: %s", PlatformUtils.asString(platform), bestProvider);
         } else if (PlayServicesUtils.isGooglePlayStoreAvailable(context)) {
-            Logger.info("Google Play Store available. Setting platform to Android.");
+            UALog.i("Google Play Store available. Setting platform to Android.");
             platform = UAirship.ANDROID_PLATFORM;
         } else if ("amazon".equalsIgnoreCase(Build.MANUFACTURER)) {
-            Logger.info("Build.MANUFACTURER is AMAZON. Setting platform to Amazon.");
+            UALog.i("Build.MANUFACTURER is AMAZON. Setting platform to Amazon.");
             platform = UAirship.AMAZON_PLATFORM;
         } else {
-            Logger.info("Defaulting platform to Android.");
+            UALog.i("Defaulting platform to Android.");
             platform = UAirship.ANDROID_PLATFORM;
         }
 

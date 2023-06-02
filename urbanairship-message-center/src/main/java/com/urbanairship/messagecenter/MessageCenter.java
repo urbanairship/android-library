@@ -18,7 +18,7 @@ import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
@@ -143,7 +143,7 @@ public class MessageCenter extends AirshipComponent {
             @Override
             public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
                 if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && getInbox().getMessage(message.getRichPushMessageId()) == null) {
-                    Logger.debug("Received a Rich Push.");
+                    UALog.d("Received a Rich Push.");
                     getInbox().fetchMessages();
                 }
             }
@@ -187,7 +187,7 @@ public class MessageCenter extends AirshipComponent {
 
         if (isEnabled) {
             if (!isStarted.getAndSet(true)) {
-                Logger.verbose("Initializing Inbox...");
+                UALog.v("Initializing Inbox...");
 
                 pushManager.addInternalPushListener(pushListener);
             }
@@ -314,7 +314,7 @@ public class MessageCenter extends AirshipComponent {
      */
     public void showMessageCenter(@Nullable String messageId) {
         if (!privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)) {
-            Logger.warn("Unable to show Message Center. FEATURE_MESSAGE_CENTER is not enabled in PrivacyManager.");
+            UALog.w("Unable to show Message Center. FEATURE_MESSAGE_CENTER is not enabled in PrivacyManager.");
             return;
         }
 

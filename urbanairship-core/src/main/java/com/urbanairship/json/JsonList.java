@@ -2,7 +2,7 @@
 
 package com.urbanairship.json;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 
 import org.json.JSONException;
 import org.json.JSONStringer;
@@ -156,7 +156,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
             return stringer.toString();
         } catch (JSONException | StringIndexOutOfBoundsException e) {
             // Should never happen
-            Logger.error(e, "JsonList - Failed to create JSON String.");
+            UALog.e(e, "JsonList - Failed to create JSON String.");
             return "";
         }
     }

@@ -3,17 +3,14 @@
 package com.urbanairship.automation;
 
 import android.content.Context;
-import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
-import androidx.core.util.Consumer;
 import androidx.core.util.ObjectsCompat;
 
-import com.urbanairship.AirshipLoopers;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
@@ -154,9 +151,9 @@ class InAppRemoteDataObserver {
         return remoteData.subscribe((payloads) -> {
             try {
                 processPayloads(payloads, delegate);
-                Logger.debug("Finished processing messages.");
+                UALog.d("Finished processing messages.");
             } catch (Exception e) {
-                Logger.error(e, "InAppRemoteDataObserver - Failed to process payload: ");
+                UALog.e(e, "InAppRemoteDataObserver - Failed to process payload: ");
             }
         });
     }
@@ -280,13 +277,13 @@ class InAppRemoteDataObserver {
                 createdTimeStamp = DateUtils.parseIso8601(messageJson.optMap().opt(CREATED_JSON_KEY).getString());
                 lastUpdatedTimeStamp = DateUtils.parseIso8601(messageJson.optMap().opt(UPDATED_JSON_KEY).getString());
             } catch (ParseException e) {
-                Logger.error(e, "Failed to parse in-app message timestamps: %s", messageJson);
+                UALog.e(e, "Failed to parse in-app message timestamps: %s", messageJson);
                 continue;
             }
 
             String scheduleId = parseScheduleId(messageJson);
             if (UAStringUtil.isEmpty(scheduleId)) {
-                Logger.error("Missing schedule ID: %s", messageJson);
+                UALog.e("Missing schedule ID: %s", messageJson);
                 continue;
             }
 
@@ -302,10 +299,10 @@ class InAppRemoteDataObserver {
                     ScheduleEdits<?> edits = parseEdits(messageJson, scheduleMetadata);
                     Boolean edited = delegate.editSchedule(scheduleId, edits).get();
                     if (edited != null && edited) {
-                        Logger.debug("Updated in-app automation: %s with edits: %s", scheduleId, edits);
+                        UALog.d("Updated in-app automation: %s with edits: %s", scheduleId, edits);
                     }
                 } catch (JsonException e) {
-                    Logger.error(e, "Failed to parse in-app automation edits: %s", scheduleId);
+                    UALog.e(e, "Failed to parse in-app automation edits: %s", scheduleId);
                 }
             } else {
                 String minSdkVersion = messageJson.optMap().opt(MIN_SDK_VERSION_KEY).optString();
@@ -314,10 +311,10 @@ class InAppRemoteDataObserver {
                         Schedule<? extends ScheduleData> schedule = parseSchedule(scheduleId, messageJson, scheduleMetadata);
                         if (shouldSchedule(schedule, createdTimeStamp)) {
                             newSchedules.add(schedule);
-                            Logger.debug("New in-app automation: %s", schedule);
+                            UALog.d("New in-app automation: %s", schedule);
                         }
                     } catch (Exception e) {
-                        Logger.error(e, "Failed to parse in-app automation: %s", messageJson);
+                        UALog.e(e, "Failed to parse in-app automation: %s", messageJson);
                     }
                 }
             }
@@ -375,7 +372,7 @@ class InAppRemoteDataObserver {
             try {
                 constraints.add(parseConstraint(value.optMap()));
             } catch (JsonException e) {
-                Logger.error(e, "Invalid constraint: " + value);
+                UALog.e(e, "Invalid constraint: " + value);
             }
         }
         return constraints;
@@ -539,7 +536,7 @@ class InAppRemoteDataObserver {
         try {
             return new RemoteDataInfo(jsonValue);
         } catch (JsonException e) {
-            Logger.error(e, "Failed to parse remote info.");
+            UALog.e(e, "Failed to parse remote info.");
             return null;
         }
     }
@@ -712,7 +709,7 @@ class InAppRemoteDataObserver {
         try {
             return new RemoteDataInfo(value);
         } catch (JsonException e) {
-            Logger.error(e, "Failed to parse remote info.");
+            UALog.e(e, "Failed to parse remote info.");
             return null;
         }
     }

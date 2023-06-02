@@ -9,10 +9,10 @@ import androidx.annotation.WorkerThread
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.Logger
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.app.ActivityMonitor
@@ -251,7 +251,7 @@ public class Contact internal constructor(
      */
     public fun identify(@Size(min = 1, max = 128) externalId: String) {
         if (!privacyManager.isContactsEnabled) {
-            Logger.d { "Contacts is disabled, ignoring contact identifying." }
+            UALog.d { "Contacts is disabled, ignoring contact identifying." }
             return
         }
         contactManager.addOperation(ContactOperation.Identify(externalId))
@@ -263,7 +263,7 @@ public class Contact internal constructor(
      */
     public fun reset() {
         if (!privacyManager.isContactsEnabled) {
-            Logger.d { "Contacts is disabled, ignoring contact reset." }
+            UALog.d { "Contacts is disabled, ignoring contact reset." }
             return
         }
         contactManager.addOperation(ContactOperation.Reset)
@@ -279,7 +279,7 @@ public class Contact internal constructor(
             override fun onApply(collapsedMutations: List<TagGroupsMutation>) {
                 super.onApply(collapsedMutations)
                 if (!privacyManager.isContactsAudienceEnabled) {
-                    Logger.w { "Ignoring contact tag edits while contacts and/or tags and attributes are disabled." }
+                    UALog.w { "Ignoring contact tag edits while contacts and/or tags and attributes are disabled." }
                     return
                 }
 
@@ -300,7 +300,7 @@ public class Contact internal constructor(
      */
     public fun registerEmail(address: String, options: EmailRegistrationOptions) {
         if (!privacyManager.isContactsEnabled) {
-            Logger.w { "Ignoring Email registration while contacts are disabled." }
+            UALog.w { "Ignoring Email registration while contacts are disabled." }
             return
         }
         contactManager.addOperation(ContactOperation.RegisterEmail(address, options))
@@ -314,7 +314,7 @@ public class Contact internal constructor(
      */
     public fun registerSms(msisdn: String, options: SmsRegistrationOptions) {
         if (!privacyManager.isContactsEnabled) {
-            Logger.w { "Ignoring SMS registration while contacts are disabled." }
+            UALog.w { "Ignoring SMS registration while contacts are disabled." }
             return
         }
         contactManager.addOperation(ContactOperation.RegisterSms(msisdn, options))
@@ -328,7 +328,7 @@ public class Contact internal constructor(
      */
     public fun registerOpenChannel(address: String, options: OpenChannelRegistrationOptions) {
         if (!privacyManager.isContactsEnabled) {
-            Logger.w { "Ignoring open channel registration while contacts are disabled." }
+            UALog.w { "Ignoring open channel registration while contacts are disabled." }
             return
         }
         contactManager.addOperation(ContactOperation.RegisterOpen(address, options))
@@ -342,7 +342,7 @@ public class Contact internal constructor(
      */
     public fun associateChannel(channelId: String, channelType: ChannelType) {
         if (!privacyManager.isContactsEnabled) {
-            Logger.w { "Ignoring associate channel request while contacts are disabled." }
+            UALog.w { "Ignoring associate channel request while contacts are disabled." }
             return
         }
         contactManager.addOperation(ContactOperation.AssociateChannel(channelId, channelType))
@@ -357,7 +357,7 @@ public class Contact internal constructor(
         return object : AttributeEditor(clock) {
             override fun onApply(collapsedMutations: List<AttributeMutation>) {
                 if (!privacyManager.isContactsAudienceEnabled) {
-                    Logger.warn("Contact - Ignoring tag edits while contacts and/or tags and attributes are disabled.")
+                    UALog.w("Contact - Ignoring tag edits while contacts and/or tags and attributes are disabled.")
                     return
                 }
 
@@ -379,7 +379,7 @@ public class Contact internal constructor(
         return object : ScopedSubscriptionListEditor(clock) {
             override fun onApply(mutations: List<ScopedSubscriptionListMutation>) {
                 if (!privacyManager.isContactsAudienceEnabled) {
-                    Logger.warn("Contact - Ignoring subscription list edits while contacts and/or tags and attributes are disabled.")
+                    UALog.w("Contact - Ignoring subscription list edits while contacts and/or tags and attributes are disabled.")
                     return
                 }
 

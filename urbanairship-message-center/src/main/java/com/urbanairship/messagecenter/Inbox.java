@@ -16,7 +16,7 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Cancelable;
 import com.urbanairship.CancelableOperation;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
@@ -763,7 +763,7 @@ public class Inbox {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     void dispatchUpdateUserJob(boolean forcefully) {
-        Logger.debug("Updating user.");
+        UALog.d("Updating user.");
 
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)

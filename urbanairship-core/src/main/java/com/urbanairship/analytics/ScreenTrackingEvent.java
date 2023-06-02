@@ -2,7 +2,7 @@
 
 package com.urbanairship.analytics;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.NonNull;
@@ -80,12 +80,12 @@ class ScreenTrackingEvent extends Event {
     @Override
     public boolean isValid() {
         if (screen.length() > SCREEN_TRACKING_EVENT_MAX_CHARACTERS || screen.length() <= 0) {
-            Logger.error("Screen identifier string must be between 1 and 255 characters long.");
+            UALog.e("Screen identifier string must be between 1 and 255 characters long.");
             return false;
         }
 
         if (startTime > stopTime) {
-            Logger.error("Screen tracking duration must be positive or zero.");
+            UALog.e("Screen tracking duration must be positive or zero.");
             return false;
         }
 

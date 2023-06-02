@@ -7,11 +7,11 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.Logger
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
@@ -84,11 +84,11 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
      */
     fun open(preferenceCenterId: String) {
         if (!isFeatureEnabled) {
-            Logger.warn("Unable to open Preference Center! FEATURE_TAGS_AND_ATTRIBUTES not enabled.")
+            UALog.w("Unable to open Preference Center! FEATURE_TAGS_AND_ATTRIBUTES not enabled.")
             return
         }
         if (openListener?.onOpenPreferenceCenter(preferenceCenterId) != true) {
-            Logger.verbose("Launching PreferenceCenterActivity with id = $preferenceCenterId")
+            UALog.v("Launching PreferenceCenterActivity with id = $preferenceCenterId")
 
             val intent = Intent(context, PreferenceCenterActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -109,7 +109,7 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
         return try {
             PreferenceCenterConfig.parse(config.optMap())
         } catch (e: Exception) {
-            Logger.w(e) { "Failed to parse preference center config" }
+            UALog.w(e) { "Failed to parse preference center config" }
             null
         }
     }

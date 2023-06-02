@@ -8,7 +8,7 @@ import android.os.Looper;
 import android.text.TextUtils;
 
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.UrlBuilder;
 import com.urbanairship.http.Request;
@@ -17,7 +17,6 @@ import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestSession;
 import com.urbanairship.http.Response;
-import com.urbanairship.http.ResponseParser;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
@@ -131,11 +130,11 @@ public class PassRequest {
         Runnable requestRunnable = new Runnable() {
             @Override
             public void run() {
-                Logger.info("Requesting pass %s", templateId);
+                UALog.i("Requesting pass %s", templateId);
                 Uri url = getPassUrl();
 
                 if (url == null) {
-                    Logger.error( "PassRequest - Invalid pass URL");
+                    UALog.e( "PassRequest - Invalid pass URL");
                     requestCallback.setResult(-1, null);
                     return;
                 }
@@ -180,7 +179,7 @@ public class PassRequest {
                 );
 
 
-                Logger.debug("Requesting pass %s with payload: %s", url, body);
+                UALog.d("Requesting pass %s with payload: %s", url, body);
                 try {
                     Response<Pass> response = session.execute(httpRequest, (status, headers1, responseBody) -> {
                         if (UAHttpStatusUtil.inSuccessRange(status)) {
@@ -189,10 +188,10 @@ public class PassRequest {
                         }
                         return null;
                     });
-                    Logger.debug("Pass %s request finished with status %s", templateId, response.getStatus());
+                    UALog.d("Pass %s request finished with status %s", templateId, response.getStatus());
                     requestCallback.setResult(response.getStatus(), response.getResult());
                 } catch (RequestException e) {
-                    Logger.error(e, "PassRequest - Request failed");
+                    UALog.e(e, "PassRequest - Request failed");
                     requestCallback.setResult(-1, null);
                 }
 

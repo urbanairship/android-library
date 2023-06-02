@@ -3,7 +3,7 @@
 package com.urbanairship.channel
 
 import android.net.Uri
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.UAirship.AMAZON_PLATFORM
 import com.urbanairship.UAirship.ANDROID_PLATFORM
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -37,7 +37,7 @@ internal class ChannelBatchUpdateApiClient(
             LIVE_UPDATES to liveUpdates?.ifEmpty { null }
         )
 
-        Logger.v { "Bulk updating channel ($channelId) with payload: $payload" }
+        UALog.v { "Bulk updating channel ($channelId) with payload: $payload" }
 
         val request = Request(
             url = bulkUpdateUrl(channelId),
@@ -50,7 +50,7 @@ internal class ChannelBatchUpdateApiClient(
         )
 
         return session.execute(request).also { response ->
-            Logger.v { "Bulk finished with response $response" }
+            UALog.v { "Bulk finished with response $response" }
         }
     }
 

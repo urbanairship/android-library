@@ -4,7 +4,7 @@ package com.urbanairship.javascript;
 
 import android.content.Context;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.R;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
@@ -57,7 +57,7 @@ public class JavaScriptEnvironment {
         try {
             sb.append(readNativeBridge(context));
         } catch (IOException e) {
-            Logger.error("Failed to read native bridge.");
+            UALog.e("Failed to read native bridge.");
             return "";
         }
 
@@ -89,7 +89,7 @@ public class JavaScriptEnvironment {
                 input.close();
                 outputStream.close();
             } catch (Exception e) {
-                Logger.debug(e, "Failed to close streams");
+                UALog.d(e, "Failed to close streams");
             }
         }
     }

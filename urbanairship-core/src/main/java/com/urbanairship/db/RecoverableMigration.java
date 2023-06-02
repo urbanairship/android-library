@@ -2,9 +2,7 @@
 
 package com.urbanairship.db;
 
-import android.database.sqlite.SQLiteException;
-
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -35,12 +33,12 @@ public abstract class RecoverableMigration extends Migration {
         try {
             tryMigrate(db);
         } catch (Exception e) {
-            Logger.debug(e, "Migration (%d to %d) failed!", startVersion, endVersion);
+            UALog.d(e, "Migration (%d to %d) failed!", startVersion, endVersion);
             error = e;
         }
 
         if (error != null) {
-            Logger.debug("Attempting to recover (%d to %d) migration!", startVersion, endVersion);
+            UALog.d("Attempting to recover (%d to %d) migration!", startVersion, endVersion);
             tryRecover(db, error);
         }
     }

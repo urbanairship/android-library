@@ -4,7 +4,7 @@ package com.urbanairship.iam.assets;
 
 import android.content.Context;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
 
@@ -113,7 +113,7 @@ public class AssetManager {
                     assetCache.releaseAssets(scheduleId, false);
                 }
             } catch (Exception e) {
-                Logger.error(e, "Unable to prepare assets for schedule: %s", scheduleId);
+                UALog.e(e, "Unable to prepare assets for schedule: %s", scheduleId);
             }
         }
     }

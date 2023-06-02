@@ -8,7 +8,7 @@ import android.os.Build;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
@@ -744,7 +744,7 @@ public class PushManager extends AirshipComponent {
         try {
             quietTimeInterval = QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL));
         } catch (JsonException e) {
-            Logger.error("Failed to parse quiet time interval");
+            UALog.e("Failed to parse quiet time interval");
             return false;
         }
 
@@ -766,7 +766,7 @@ public class PushManager extends AirshipComponent {
         try {
             quietTimeInterval = QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL));
         } catch (JsonException e) {
-            Logger.error("Failed to parse quiet time interval");
+            UALog.e("Failed to parse quiet time interval");
             return null;
         }
 
@@ -975,7 +975,7 @@ public class PushManager extends AirshipComponent {
      */
     public void addNotificationActionButtonGroup(@NonNull String id, @NonNull NotificationActionButtonGroup group) {
         if (id.startsWith(UA_NOTIFICATION_BUTTON_GROUP_PREFIX)) {
-            Logger.error("Unable to add any notification button groups that starts with the reserved Airship prefix %s", UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
+            UALog.e("Unable to add any notification button groups that starts with the reserved Airship prefix %s", UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
             return;
         }
 
@@ -1016,7 +1016,7 @@ public class PushManager extends AirshipComponent {
      */
     public void removeNotificationActionButtonGroup(@NonNull String id) {
         if (id.startsWith(UA_NOTIFICATION_BUTTON_GROUP_PREFIX)) {
-            Logger.error("Unable to remove any reserved Airship actions groups that begin with %s", UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
+            UALog.e("Unable to remove any reserved Airship actions groups that begin with %s", UA_NOTIFICATION_BUTTON_GROUP_PREFIX);
             return;
         }
 
@@ -1085,7 +1085,7 @@ public class PushManager extends AirshipComponent {
             try {
                 jsonList = JsonValue.parseString(preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null)).getList();
             } catch (JsonException e) {
-                Logger.debug(e, "Unable to parse canonical Ids.");
+                UALog.d(e, "Unable to parse canonical Ids.");
             }
 
             List<JsonValue> canonicalIds = jsonList == null ? new ArrayList<>() : jsonList.getList();
@@ -1124,12 +1124,12 @@ public class PushManager extends AirshipComponent {
         final PushProvider provider = pushProvider;
 
         if (provider == null) {
-            Logger.info("PushManager - Push registration failed. Missing push provider.");
+            UALog.i("PushManager - Push registration failed. Missing push provider.");
             return JobResult.SUCCESS;
         }
 
         if (!provider.isAvailable(context)) {
-            Logger.warn("PushManager - Push registration failed. Push provider unavailable: %s", provider);
+            UALog.w("PushManager - Push registration failed. Push provider unavailable: %s", provider);
             return JobResult.RETRY;
         }
 
@@ -1138,19 +1138,19 @@ public class PushManager extends AirshipComponent {
             token = provider.getRegistrationToken(context);
         } catch (PushProvider.RegistrationException e) {
             if (e.isRecoverable()) {
-                Logger.debug("Push registration failed with error: %s. Will retry.", e.getMessage());
-                Logger.verbose(e);
+                UALog.d("Push registration failed with error: %s. Will retry.", e.getMessage());
+                UALog.v(e);
                 clearPushToken();
                 return JobResult.RETRY;
             } else {
-                Logger.error(e, "PushManager - Push registration failed.");
+                UALog.e(e, "PushManager - Push registration failed.");
                 clearPushToken();
                 return JobResult.SUCCESS;
             }
         }
 
         if (token != null && !UAStringUtil.equals(token, currentToken)) {
-            Logger.info("PushManager - Push registration updated.");
+            UALog.i("PushManager - Push registration updated.");
 
             preferenceDataStore.put(PUSH_DELIVERY_TYPE, provider.getDeliveryType());
             preferenceDataStore.put(PUSH_TOKEN_KEY, token);

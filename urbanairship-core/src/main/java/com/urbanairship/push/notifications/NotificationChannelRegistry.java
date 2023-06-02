@@ -9,11 +9,10 @@ import android.os.Build;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PendingResult;
 import com.urbanairship.R;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -24,7 +23,6 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 import androidx.annotation.XmlRes;
-import androidx.core.app.NotificationCompat;
 
 /**
  * Compatibility class for registering notification channels.
@@ -125,10 +123,10 @@ public class NotificationChannelRegistry {
         try {
             return getNotificationChannel(id).get();
         } catch (InterruptedException e) {
-            Logger.error(e, "Failed to get notification channel.");
+            UALog.e(e, "Failed to get notification channel.");
             Thread.currentThread().interrupt();
         } catch (ExecutionException e) {
-            Logger.error(e, "Failed to get notification channel.");
+            UALog.e(e, "Failed to get notification channel.");
         }
 
         return null;

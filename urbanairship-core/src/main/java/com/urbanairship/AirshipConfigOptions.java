@@ -493,9 +493,9 @@ public class AirshipConfigOptions {
         }
 
         if (backgroundReportingIntervalMS < MIN_BG_REPORTING_INTERVAL_MS) {
-            Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS %s may decrease battery life.", backgroundReportingIntervalMS);
+            UALog.w("AirshipConfigOptions - The backgroundReportingIntervalMS %s may decrease battery life.", backgroundReportingIntervalMS);
         } else if (backgroundReportingIntervalMS > MAX_BG_REPORTING_INTERVAL_MS) {
-            Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS %s may provide less detailed analytic reports.", backgroundReportingIntervalMS);
+            UALog.w("AirshipConfigOptions - The backgroundReportingIntervalMS %s may provide less detailed analytic reports.", backgroundReportingIntervalMS);
         }
     }
 
@@ -742,7 +742,7 @@ public class AirshipConfigOptions {
             try {
                 tryApplyProperties(context, propertiesFile);
             } catch (Exception e) {
-                Logger.error(e);
+                UALog.e(e);
             }
 
             return this;
@@ -782,7 +782,7 @@ public class AirshipConfigOptions {
                 ConfigParser configParser = PropertiesConfigParser.fromProperties(context, properties);
                 applyConfigParser(context, configParser);
             } catch (Exception e) {
-                Logger.error(e);
+                UALog.e(e);
             }
 
             return this;
@@ -836,7 +836,7 @@ public class AirshipConfigOptions {
             try {
                 tryApplyConfig(context, xmlResourceId);
             } catch (Exception e) {
-                Logger.error(e);
+                UALog.e(e);
             }
 
             return this;
@@ -933,7 +933,7 @@ public class AirshipConfigOptions {
 
                         /* Deprecated. To be removed in a future version of the SDK. */
                         case "whitelist":
-                            Logger.error("Parameter whitelist is deprecated and will be removed in a future version of the SDK. Use urlAllowList instead.");
+                            UALog.e("Parameter whitelist is deprecated and will be removed in a future version of the SDK. Use urlAllowList instead.");
                             this.setUrlAllowList(configParser.getStringArray(name));
                             break;
 
@@ -962,15 +962,15 @@ public class AirshipConfigOptions {
                             break;
 
                         case FIELD_DEVELOPMENT_LOG_LEVEL:
-                            this.setDevelopmentLogLevel(Logger.parseLogLevel(configParser.getString(name), DEFAULT_DEVELOPMENT_LOG_LEVEL));
+                            this.setDevelopmentLogLevel(UALog.parseLogLevel(configParser.getString(name), DEFAULT_DEVELOPMENT_LOG_LEVEL));
                             break;
 
                         case FIELD_PRODUCTION_LOG_LEVEL:
-                            this.setProductionLogLevel(Logger.parseLogLevel(configParser.getString(name), DEFAULT_PRODUCTION_LOG_LEVEL));
+                            this.setProductionLogLevel(UALog.parseLogLevel(configParser.getString(name), DEFAULT_PRODUCTION_LOG_LEVEL));
                             break;
 
                         case FIELD_LOG_LEVEL:
-                            this.setLogLevel(Logger.parseLogLevel(configParser.getString(name), DEFAULT_PRODUCTION_LOG_LEVEL));
+                            this.setLogLevel(UALog.parseLogLevel(configParser.getString(name), DEFAULT_PRODUCTION_LOG_LEVEL));
                             break;
 
                         case FIELD_AUTO_LAUNCH_APPLICATION:
@@ -1008,7 +1008,7 @@ public class AirshipConfigOptions {
                         case FIELD_FCM_SENDER_ID:
                         case FIELD_DEVELOPMENT_FCM_SENDER_ID:
                         case FIELD_PRODUCTION_FCM_SENDER_ID:
-                            Logger.error("Support for Sender ID override has been removed. Configure a FirebaseApp and use fcmFirebaseAppName instead.");
+                            UALog.e("Support for Sender ID override has been removed. Configure a FirebaseApp and use fcmFirebaseAppName instead.");
                             break;
 
                         case FIELD_FCM_FIREBASE_APP_NAME:
@@ -1016,7 +1016,7 @@ public class AirshipConfigOptions {
                             break;
 
                         case "enableUrlWhitelisting":
-                            Logger.error("Parameter enableUrlWhitelisting has been removed. See urlAllowListScopeJavaScriptBridge and urlAllowListScopeOpen instead.");
+                            UALog.e("Parameter enableUrlWhitelisting has been removed. See urlAllowListScopeJavaScriptBridge and urlAllowListScopeOpen instead.");
                             break;
 
                         case FIELD_CUSTOM_PUSH_PROVIDER:
@@ -1074,7 +1074,7 @@ public class AirshipConfigOptions {
 
                     }
                 } catch (Exception e) {
-                    Logger.error(e, "Unable to set config field '%s' due to invalid configuration value.", configParser.getName(i));
+                    UALog.e(e, "Unable to set config field '%s' due to invalid configuration value.", configParser.getName(i));
                 }
             }
 
@@ -1405,7 +1405,7 @@ public class AirshipConfigOptions {
                 Field field = clazz.getField("DEBUG");
                 inProduction = !(boolean) field.get(null);
             } catch (Exception e) {
-                Logger.warn("AirshipConfigOptions - Unable to determine the build mode. Defaulting to debug.");
+                UALog.w("AirshipConfigOptions - Unable to determine the build mode. Defaulting to debug.");
                 inProduction = false;
             }
             return this;
@@ -1663,15 +1663,15 @@ public class AirshipConfigOptions {
             }
 
             if (productionAppKey != null && productionAppKey.equals(developmentAppKey)) {
-                Logger.warn("Production App Key matches Development App Key");
+                UALog.w("Production App Key matches Development App Key");
             }
 
             if (productionAppSecret != null && productionAppSecret.equals(developmentAppSecret)) {
-                Logger.warn("Production App Secret matches Development App Secret");
+                UALog.w("Production App Secret matches Development App Secret");
             }
 
             if (dataCollectionOptInEnabled) {
-                Logger.warn("dataCollectionOptInEnabled is deprecated. Use enabledFeatures instead.");
+                UALog.w("dataCollectionOptInEnabled is deprecated. Use enabledFeatures instead.");
                 if (enabledFeatures == PrivacyManager.FEATURE_ALL) {
                     enabledFeatures = PrivacyManager.FEATURE_NONE;
                 }

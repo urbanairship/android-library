@@ -1,7 +1,7 @@
 package com.urbanairship.experiment
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.optionalField
@@ -32,7 +32,7 @@ internal data class EvaluationOptions(
                     ttl = json.optionalField(KEY_TTL)
                 )
             } catch (ex: JsonException) {
-                Logger.e { "failed to parse EvaluationOptions from json $json" }
+                UALog.e { "failed to parse EvaluationOptions from json $json" }
                 return null
             }
         }

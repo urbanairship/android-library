@@ -2,7 +2,7 @@
 
 package com.urbanairship.channel;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ public class TagGroupsEditor {
     public TagGroupsEditor addTags(@NonNull String tagGroup, @NonNull Set<String> tags) {
         tagGroup = tagGroup.trim();
         if (UAStringUtil.isEmpty(tagGroup)) {
-            Logger.error("The tag group ID string cannot be null.");
+            UALog.e("The tag group ID string cannot be null.");
             return this;
         }
 
@@ -90,7 +90,7 @@ public class TagGroupsEditor {
     public TagGroupsEditor setTags(@NonNull String tagGroup, @Nullable Set<String> tags) {
         tagGroup = tagGroup.trim();
         if (UAStringUtil.isEmpty(tagGroup)) {
-            Logger.error("The tag group ID string cannot be null.");
+            UALog.e("The tag group ID string cannot be null.");
             return this;
         }
 
@@ -131,7 +131,7 @@ public class TagGroupsEditor {
     public TagGroupsEditor removeTags(@NonNull String tagGroup, @NonNull Set<String> tags) {
         tagGroup = tagGroup.trim();
         if (UAStringUtil.isEmpty(tagGroup)) {
-            Logger.error("The tag group ID string cannot be null.");
+            UALog.e("The tag group ID string cannot be null.");
             return this;
         }
 

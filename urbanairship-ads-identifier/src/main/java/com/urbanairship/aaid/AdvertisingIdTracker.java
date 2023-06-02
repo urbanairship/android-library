@@ -10,7 +10,7 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
@@ -118,7 +118,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
             getDataStore().put(ENABLED_KEY, isEnabled);
 
             if (!privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
-                Logger.warn("AdvertisingIdTracker - Unable to track advertising ID when analytics is disabled.");
+                UALog.w("AdvertisingIdTracker - Unable to track advertising ID when analytics is disabled.");
                 return;
             }
 
@@ -168,7 +168,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
                             advertisingId = adInfo.getId();
                             limitedAdTrackingEnabled = adInfo.isLimitAdTrackingEnabled();
                         } catch (IOException | GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException e) {
-                            Logger.error(e, "AdvertisingIdTracker - Failed to retrieve and update advertising ID.");
+                            UALog.e(e, "AdvertisingIdTracker - Failed to retrieve and update advertising ID.");
                             return;
                         }
 

@@ -15,7 +15,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.urbanairship.Autopilot;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.Predicate;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
@@ -81,12 +81,12 @@ class IncomingPushRunnable implements Runnable {
         UAirship airship = UAirship.waitForTakeOff(airshipWaitTime);
 
         if (airship == null) {
-            Logger.error("Unable to process push, Airship is not ready. Make sure takeOff is called by either using autopilot or by calling takeOff in the application's onCreate method.");
+            UALog.e("Unable to process push, Airship is not ready. Make sure takeOff is called by either using autopilot or by calling takeOff in the application's onCreate method.");
             return;
         }
 
         if (!message.isAccengagePush() && !message.isAirshipPush()) {
-            Logger.debug("Ignoring push: %s", message);
+            UALog.d("Ignoring push: %s", message);
             return;
         }
 
@@ -106,30 +106,30 @@ class IncomingPushRunnable implements Runnable {
      * @param airship The airship instance.
      */
     private void processPush(UAirship airship) {
-        Logger.info("Processing push: %s", message);
+        UALog.i("Processing push: %s", message);
 
         if (!airship.getPushManager().isPushEnabled()) {
-            Logger.debug("Push disabled, ignoring message");
+            UALog.d("Push disabled, ignoring message");
             return;
         }
 
         if (!airship.getPushManager().isComponentEnabled()) {
-            Logger.debug("PushManager component is disabled, ignoring message.");
+            UALog.d("PushManager component is disabled, ignoring message.");
             return;
         }
 
         if (!airship.getPushManager().isUniqueCanonicalId(message.getCanonicalPushId())) {
-            Logger.debug("Received a duplicate push with canonical ID: %s", message.getCanonicalPushId());
+            UALog.d("Received a duplicate push with canonical ID: %s", message.getCanonicalPushId());
             return;
         }
 
         if (message.isExpired()) {
-            Logger.debug("Received expired push message, ignoring.");
+            UALog.d("Received expired push message, ignoring.");
             return;
         }
 
         if (message.isPing() || message.isRemoteDataUpdate()) {
-            Logger.verbose("Received internal push.");
+            UALog.v("Received internal push.");
             airship.getAnalytics().addEvent(new PushArrivedEvent(message));
             airship.getPushManager().onPushReceived(message, false);
             return;
@@ -153,21 +153,21 @@ class IncomingPushRunnable implements Runnable {
      */
     private void postProcessPush(final UAirship airship) {
         if (!airship.getPushManager().isOptIn()) {
-            Logger.info("User notifications opted out. Unable to display notification for message: %s", message);
+            UALog.i("User notifications opted out. Unable to display notification for message: %s", message);
             postProcessPushFinished(airship, message, false);
             return;
         }
 
         if (activityMonitor.isAppForegrounded()) {
             if (!message.isForegroundDisplayable()) {
-                Logger.info("Push message flagged as not able to be displayed in the foreground: %s", message);
+                UALog.i("Push message flagged as not able to be displayed in the foreground: %s", message);
                 postProcessPushFinished(airship, message, false);
                 return;
             }
 
             Predicate<PushMessage> displayForegroundPredicate = airship.getPushManager().getForegroundNotificationDisplayPredicate();
             if (displayForegroundPredicate != null && !displayForegroundPredicate.apply(message)) {
-                Logger.info("Foreground notification display predicate prevented the display of message: %s", message);
+                UALog.i("Foreground notification display predicate prevented the display of message: %s", message);
                 postProcessPushFinished(airship, message, false);
                 return;
             }
@@ -178,7 +178,7 @@ class IncomingPushRunnable implements Runnable {
         final NotificationProvider provider = getNotificationProvider(airship);
 
         if (provider == null) {
-            Logger.error("NotificationProvider is null. Unable to display notification for message: %s", message);
+            UALog.e("NotificationProvider is null. Unable to display notification for message: %s", message);
             postProcessPushFinished(airship, message, false);
             return;
         }
@@ -187,13 +187,13 @@ class IncomingPushRunnable implements Runnable {
         try {
             arguments = provider.onCreateNotificationArguments(context, message);
         } catch (Exception e) {
-            Logger.error(e, "Failed to generate notification arguments for message. Skipping.");
+            UALog.e(e, "Failed to generate notification arguments for message. Skipping.");
             postProcessPushFinished(airship, message, false);
             return;
         }
 
         if (!isLongRunning && arguments.getRequiresLongRunningTask()) {
-            Logger.debug("Push requires a long running task. Scheduled for a later time: %s", message);
+            UALog.d("Push requires a long running task. Scheduled for a later time: %s", message);
             reschedulePush(message);
             return;
         }
@@ -202,11 +202,11 @@ class IncomingPushRunnable implements Runnable {
         try {
             result = provider.onCreateNotification(context, arguments);
         } catch (Exception e) {
-            Logger.error(e, "Cancelling notification display to create and display notification.");
+            UALog.e(e, "Cancelling notification display to create and display notification.");
             result = NotificationResult.cancel();
         }
 
-        Logger.debug("Received result status %s for push message: %s", result.getStatus(), message);
+        UALog.d("Received result status %s for push message: %s", result.getStatus(), message);
 
         switch (result.getStatus()) {
             case NotificationResult.OK:
@@ -223,7 +223,7 @@ class IncomingPushRunnable implements Runnable {
                         applyDeprecatedSettings(airship, notification);
                     }
                 } else if (notificationChannel == null) {
-                    Logger.error("Missing required notification channel. Notification will most likely not display.");
+                    UALog.e("Missing required notification channel. Notification will most likely not display.");
                 }
 
                 // Notify the provider the notification was created
@@ -245,7 +245,7 @@ class IncomingPushRunnable implements Runnable {
                 break;
 
             case NotificationResult.RETRY:
-                Logger.debug("Scheduling notification to be retried for a later time: %s", message);
+                UALog.d("Scheduling notification to be retried for a later time: %s", message);
                 reschedulePush(message);
                 break;
         }
@@ -349,13 +349,13 @@ class IncomingPushRunnable implements Runnable {
         notification.contentIntent = PendingIntentCompat.getActivity(context, 0, contentIntent, 0);
         notification.deleteIntent = PendingIntentCompat.getBroadcast(context, 0, deleteIntent, 0);
 
-        Logger.info("Posting notification: %s id: %s tag: %s", notification, id, tag);
+        UALog.i("Posting notification: %s id: %s tag: %s", notification, id, tag);
         try {
             notificationManager.notify(tag, id, notification);
 
             return true;
         } catch (Exception e) {
-            Logger.error(e, "Failed to post notification.");
+            UALog.e(e, "Failed to post notification.");
             return false;
         }
     }
@@ -388,17 +388,17 @@ class IncomingPushRunnable implements Runnable {
         PushProvider provider = airship.getPushManager().getPushProvider();
 
         if (provider == null || !provider.getClass().toString().equals(providerClass)) {
-            Logger.error("Received message callback from unexpected provider %s. Ignoring.", providerClass);
+            UALog.e("Received message callback from unexpected provider %s. Ignoring.", providerClass);
             return false;
         }
 
         if (!provider.isAvailable(context)) {
-            Logger.error("Received message callback when provider is unavailable. Ignoring.");
+            UALog.e("Received message callback when provider is unavailable. Ignoring.");
             return false;
         }
 
         if (!airship.getPushManager().isPushAvailable() || !airship.getPushManager().isPushEnabled()) {
-            Logger.error("Received message when push is disabled. Ignoring.");
+            UALog.e("Received message when push is disabled. Ignoring.");
             return false;
         }
 

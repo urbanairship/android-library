@@ -2,7 +2,7 @@
 
 package com.urbanairship.channel;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.Clock;
 import com.urbanairship.util.DateUtils;
@@ -174,12 +174,12 @@ abstract public class AttributeEditor {
 
     private boolean isInvalidField(@NonNull String key) {
         if (UAStringUtil.isEmpty(key)) {
-            Logger.error("Attribute fields cannot be empty.");
+            UALog.e("Attribute fields cannot be empty.");
             return true;
         }
 
         if (key.length() > MAX_ATTRIBUTE_FIELD_LENGTH) {
-            Logger.error("Attribute field inputs cannot be greater than %s characters in length", MAX_ATTRIBUTE_FIELD_LENGTH);
+            UALog.e("Attribute field inputs cannot be greater than %s characters in length", MAX_ATTRIBUTE_FIELD_LENGTH);
             return true;
         }
 
@@ -200,7 +200,7 @@ abstract public class AttributeEditor {
             try {
                 mutations.add(partial.toMutation(timestamp));
             } catch (IllegalArgumentException e) {
-                Logger.error(e, "Invalid attribute mutation.");
+                UALog.e(e, "Invalid attribute mutation.");
             }
         }
 

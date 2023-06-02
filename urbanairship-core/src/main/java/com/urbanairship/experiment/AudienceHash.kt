@@ -1,6 +1,6 @@
 package com.urbanairship.experiment
 
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.optionalField
@@ -68,7 +68,7 @@ internal data class AudienceHash(
                     overrides = json.optionalField(KEY_OVERRIDES)
                 )
             } catch (ex: JsonException) {
-                Logger.e { "failed to parse AudienceHash from json $json" }
+                UALog.e { "failed to parse AudienceHash from json $json" }
                 return null
             }
         }

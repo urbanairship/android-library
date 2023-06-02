@@ -1,6 +1,6 @@
 package com.urbanairship.experiment
 
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
@@ -25,7 +25,7 @@ internal data class MessageCriteria(
                     messageTypePredicate = JsonPredicate.parse(json.require(KEY_PREDICATE))
                 )
             } catch (ex: JsonException) {
-                Logger.e { "failed to parse MessageCriteria from json $json" }
+                UALog.e { "failed to parse MessageCriteria from json $json" }
                 return null
             }
         }

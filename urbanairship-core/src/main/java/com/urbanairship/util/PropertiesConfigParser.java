@@ -7,7 +7,7 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Color;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -73,7 +73,7 @@ public class PropertiesConfigParser implements ConfigParser {
                 try {
                     inStream.close();
                 } catch (IOException e) {
-                    Logger.debug(e, "Failed to close input stream.");
+                    UALog.d(e, "Failed to close input stream.");
                 }
             }
         }

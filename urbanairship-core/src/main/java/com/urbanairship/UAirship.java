@@ -346,7 +346,7 @@ public class UAirship {
         }
 
         if (Looper.myLooper() == null || Looper.getMainLooper() != Looper.myLooper()) {
-            Logger.error("takeOff() must be called on the main thread!");
+            UALog.e("takeOff() must be called on the main thread!");
         }
 
         isMainProcess = ProcessUtils.isMainProcess(application);
@@ -359,17 +359,17 @@ public class UAirship {
                 sb.append(element.toString());
             }
 
-            Logger.debug("Takeoff stack trace: %s", sb.toString());
+            UALog.d("Takeoff stack trace: %s", sb.toString());
         }
 
         synchronized (airshipLock) {
             // airships only take off once!!
             if (isFlying || isTakingOff) {
-                Logger.error("You can only call takeOff() once.");
+                UALog.e("You can only call takeOff() once.");
                 return;
             }
 
-            Logger.info("Airship taking off!");
+            UALog.i("Airship taking off!");
 
             isTakingOff = true;
 
@@ -401,13 +401,13 @@ public class UAirship {
 
         options.validate();
 
-        Logger.setLogLevel(options.logLevel);
-        Logger.setTag(UAirship.getAppName() + " - " + Logger.DEFAULT_TAG);
+        UALog.setLogLevel(options.logLevel);
+        UALog.setTag(UAirship.getAppName() + " - " + UALog.DEFAULT_TAG);
 
-        Logger.info("Airship taking off!");
-        Logger.info("Airship log level: %s", options.logLevel);
-        Logger.info("UA Version: %s / App key = %s Production = %s", getVersion(), options.appKey, options.inProduction);
-        Logger.verbose(BuildConfig.SDK_VERSION);
+        UALog.i("Airship taking off!");
+        UALog.i("Airship log level: %s", options.logLevel);
+        UALog.i("UA Version: %s / App key = %s Production = %s", getVersion(), options.appKey, options.inProduction);
+        UALog.v(BuildConfig.SDK_VERSION);
 
         sharedAirship = new UAirship(options);
 
@@ -421,7 +421,7 @@ public class UAirship {
             // Initialize the modules
             sharedAirship.init();
 
-            Logger.info("Airship ready!");
+            UALog.i("Airship ready!");
 
             // Ready callback for setup
             if (readyCallback != null) {
@@ -538,7 +538,7 @@ public class UAirship {
         try {
             return getPackageManager().getPackageInfo(getPackageName(), 0);
         } catch (PackageManager.NameNotFoundException e) {
-            Logger.warn(e, "UAirship - Unable to get package info.");
+            UALog.w(e, "UAirship - Unable to get package info.");
             return null;
         }
     }
@@ -1061,7 +1061,7 @@ public class UAirship {
                 }
             }
 
-            Logger.debug("Airship deep link not handled: %s", deepLink);
+            UALog.d("Airship deep link not handled: %s", deepLink);
             return true;
         } else {
             DeepLinkListener deepLinkListener = getDeepLinkListener();

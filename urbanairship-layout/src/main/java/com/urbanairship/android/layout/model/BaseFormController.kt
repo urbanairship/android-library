@@ -2,7 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import android.view.View
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
@@ -178,7 +178,7 @@ internal abstract class BaseFormController<T : View>(
                     // Now that we've reported, we can stop collecting form state changes.
                     cancel("Successfully reported form display.")
                 } else {
-                    Logger.verbose("Skipped form display reporting! No inputs are currently displayed.")
+                    UALog.v("Skipped form display reporting! No inputs are currently displayed.")
                 }
             }
         }

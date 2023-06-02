@@ -11,7 +11,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.BuildConfig;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.push.PushProvider;
@@ -57,11 +57,11 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         try {
             int playServicesStatus = PlayServicesUtils.isGooglePlayServicesAvailable(context);
             if (ConnectionResult.SUCCESS != playServicesStatus) {
-                Logger.info("Google Play services is currently unavailable.");
+                UALog.i("Google Play services is currently unavailable.");
                 return false;
             }
         } catch (Exception e) {
-            Logger.error(e, "Unable to register with FCM.");
+            UALog.e(e, "Unable to register with FCM.");
             return false;
         }
         return true;

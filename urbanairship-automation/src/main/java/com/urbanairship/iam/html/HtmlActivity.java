@@ -18,7 +18,7 @@ import android.webkit.WebViewClient;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.automation.R;
 import com.urbanairship.iam.InAppMessageActivity;
@@ -63,7 +63,7 @@ public class HtmlActivity extends InAppMessageActivity {
 
         final HtmlDisplayContent displayContent = getMessage().getDisplayContent();
         if (displayContent == null) {
-            Logger.error("HtmlActivity - Invalid display type: %s", getMessage().getDisplayContent());
+            UALog.e("HtmlActivity - Invalid display type: %s", getMessage().getDisplayContent());
             finish();
             return;
         }
@@ -89,7 +89,7 @@ public class HtmlActivity extends InAppMessageActivity {
         this.url = displayContent.getUrl();
 
         if (!UAirship.shared().getUrlAllowList().isAllowed(url, UrlAllowList.SCOPE_OPEN_URL)) {
-            Logger.error("HTML in-app message URL is not allowed. Unable to display message.");
+            UALog.e("HTML in-app message URL is not allowed. Unable to display message.");
             finish();
             return;
         }
@@ -107,7 +107,7 @@ public class HtmlActivity extends InAppMessageActivity {
                     finish();
 
                 } catch (JsonException e) {
-                    Logger.error("Unable to parse message resolution JSON", e);
+                    UALog.e("Unable to parse message resolution JSON", e);
                 }
             }
 
@@ -135,7 +135,7 @@ public class HtmlActivity extends InAppMessageActivity {
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 if (failingUrl != null && failingUrl.equals(getIntent().getDataString())) {
-                    Logger.error("HtmlActivity - Failed to load page %s with error %s %s", failingUrl, errorCode, description);
+                    UALog.e("HtmlActivity - Failed to load page %s with error %s %s", failingUrl, errorCode, description);
                     error = errorCode;
                 }
             }
@@ -247,7 +247,7 @@ public class HtmlActivity extends InAppMessageActivity {
             return;
         }
 
-        Logger.info("Loading url: %s", url);
+        UALog.i("Loading url: %s", url);
         error = null;
         webView.loadUrl(url);
     }

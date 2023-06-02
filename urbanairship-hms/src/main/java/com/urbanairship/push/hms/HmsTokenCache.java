@@ -2,7 +2,7 @@ package com.urbanairship.push.hms;
 
 import android.content.Context;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.util.UAStringUtil;
 
 import java.io.Closeable;
@@ -46,7 +46,7 @@ class HmsTokenCache {
         synchronized (lock) {
             if (token == null) {
                 token = readToken(context);
-                Logger.verbose("HMS token from cache: " + token);
+                UALog.v("HMS token from cache: " + token);
             }
             return token;
         }
@@ -62,10 +62,10 @@ class HmsTokenCache {
 
             if (token != null) {
                 writeToken(context, token);
-                Logger.verbose("Cached HMS token %s", token);
+                UALog.v("Cached HMS token %s", token);
             } else {
                 deleteToken(context);
-                Logger.verbose("Deleted cached HMS token");
+                UALog.v("Deleted cached HMS token");
             }
         }
     }
@@ -85,7 +85,7 @@ class HmsTokenCache {
             String token = new String(data, "UTF-8");
             return token;
         } catch (Exception e) {
-            Logger.error(e, "Failed to read HMS token");
+            UALog.e(e, "Failed to read HMS token");
         } finally {
             closeQuietly(inputStream);
         }
@@ -98,7 +98,7 @@ class HmsTokenCache {
         File parent = file.getParentFile();
 
         if (parent == null || !parent.exists() && !parent.mkdirs()) {
-            Logger.warn("Unable to create HMS token cache.");
+            UALog.w("Unable to create HMS token cache.");
             return;
         }
 
@@ -108,7 +108,7 @@ class HmsTokenCache {
             fileOutputStream.write(token.getBytes());
             fileOutputStream.close();
         } catch (Exception e) {
-            Logger.error(e, "Failed to write HMS token.");
+            UALog.e(e, "Failed to write HMS token.");
         } finally {
             closeQuietly(fileOutputStream);
         }
@@ -119,7 +119,7 @@ class HmsTokenCache {
             try {
                 outputStream.close();
             } catch (IOException e) {
-                Logger.error(e, "Failed to close stream.");
+                UALog.e(e, "Failed to close stream.");
             }
         }
     }
@@ -127,7 +127,7 @@ class HmsTokenCache {
     private void deleteToken(@NonNull Context context) {
         File file = new File(ContextCompat.getNoBackupFilesDir(context), FILE_PATH);
         if (file.exists() && !file.delete()) {
-            Logger.error("Failed to delete HMS token cache.");
+            UALog.e("Failed to delete HMS token cache.");
         }
     }
 

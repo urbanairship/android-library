@@ -4,14 +4,13 @@ package com.urbanairship.android.layout.reporting;
 
 import android.app.Activity;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.Predicate;
 import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.FilteredActivityListener;
 import com.urbanairship.app.SimpleActivityListener;
 
-import java.io.File;
 import java.lang.ref.WeakReference;
 
 import androidx.annotation.NonNull;
@@ -102,7 +101,7 @@ public class DisplayTimer {
             if (timer != null) {
                 timer.onPause();
             } else {
-                Logger.warn("DisplayTimer ref was null!");
+                UALog.w("DisplayTimer ref was null!");
             }
         }
 
@@ -112,7 +111,7 @@ public class DisplayTimer {
             if (timer != null) {
                 timer.onResume();
             } else {
-                Logger.warn("DisplayTimer ref was null!");
+                UALog.w("DisplayTimer ref was null!");
             }
         }
     }
@@ -130,7 +129,7 @@ public class DisplayTimer {
             if (timer != null) {
                 timer.onResume();
             } else {
-                Logger.warn("DisplayTimer ref was null!");
+                UALog.w("DisplayTimer ref was null!");
             }
         }
 
@@ -140,7 +139,7 @@ public class DisplayTimer {
             if (timer != null) {
                 timer.onPause();
             } else {
-                Logger.warn("DisplayTimer ref was null!");
+                UALog.w("DisplayTimer ref was null!");
             }
         }
 

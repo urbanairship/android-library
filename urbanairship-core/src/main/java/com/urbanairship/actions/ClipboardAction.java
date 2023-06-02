@@ -5,11 +5,7 @@ package com.urbanairship.actions;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 
-import com.urbanairship.AirshipLoopers;
-import com.urbanairship.Logger;
 import com.urbanairship.UAirship;
 
 import androidx.annotation.NonNull;

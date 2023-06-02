@@ -2,7 +2,7 @@
 
 package com.urbanairship.messagecenter;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.util.UAStringUtil;
@@ -129,7 +129,7 @@ public class User {
      * @param userToken The user token from the response
      */
     void setUser(@NonNull String userId, @NonNull String userToken) {
-        Logger.debug("Setting Rich Push user: %s", userId);
+        UALog.d("Setting Rich Push user: %s", userId);
         preferences.put(USER_ID_KEY, userId);
         preferences.put(USER_TOKEN_KEY, encode(userToken, userId));
     }
@@ -214,9 +214,9 @@ public class User {
 
             return new String(decodedBytes, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            Logger.error(e, "RichPushUser - Unable to decode string.");
+            UALog.e(e, "RichPushUser - Unable to decode string.");
         } catch (NumberFormatException e) {
-            Logger.error(e, "RichPushUser - String contains invalid hex numbers.");
+            UALog.e(e, "RichPushUser - String contains invalid hex numbers.");
         }
 
         return null;

@@ -4,7 +4,7 @@ package com.urbanairship.analytics.data;
 
 import android.net.Uri;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestAuth;
@@ -84,12 +84,12 @@ public class EventApiClient {
                 requestHeaders
         );
 
-        Logger.debug("Sending analytics events. Request: %s Events: %s", request, events);
+        UALog.d("Sending analytics events. Request: %s Events: %s", request, events);
         Response<EventResponse> response = session.execute(request, (status, responseHeaders, responseBody) -> {
             return new EventResponse(responseHeaders);
         });
 
-        Logger.debug("Analytics event response: %s", response);
+        UALog.d("Analytics event response: %s", response);
         return response;
     }
 }

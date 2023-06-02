@@ -4,7 +4,7 @@ package com.urbanairship.push.notifications;
 
 import android.app.Notification;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 
 import androidx.annotation.NonNull;
@@ -40,7 +40,7 @@ public class NotificationChannelUtils {
         }
 
         if (UAirship.shared().getPushManager().getNotificationChannelRegistry().getNotificationChannelSync(channelId) == null) {
-            Logger.error("Notification channel %s does not exist. Falling back to %s", channelId, defaultChannel);
+            UALog.e("Notification channel %s does not exist. Falling back to %s", channelId, defaultChannel);
             return defaultChannel;
         }
 

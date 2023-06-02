@@ -1,6 +1,6 @@
 package com.urbanairship.android.layout.environment
 
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.property.AttributeValue
@@ -91,7 +91,7 @@ internal class AttributeHandler(
             val attribute = (if (key.isContact) key.contact else key.channel) ?: continue
             if (value.isNull) continue
 
-            Logger.verbose(
+            UALog.v(
                 "Setting ${if (key.isChannel) "channel" else "contact"} attribute: " +
                         "'$attribute' => '$value'"
             )

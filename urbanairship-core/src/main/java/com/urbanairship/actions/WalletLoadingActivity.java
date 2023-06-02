@@ -8,7 +8,7 @@ import android.os.Bundle;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Autopilot;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.activity.ThemedActivity;
@@ -17,8 +17,6 @@ import com.urbanairship.http.RequestException;
 import com.urbanairship.http.RequestSession;
 import com.urbanairship.http.Response;
 import com.urbanairship.util.UAHttpStatusUtil;
-
-import java.util.Collections;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
@@ -36,7 +34,7 @@ public class WalletLoadingActivity extends ThemedActivity {
 
         Uri url = getIntent().getData();
         if (url == null) {
-            Logger.warn("User URI null, unable to process link.");
+            UALog.w("User URI null, unable to process link.");
             finish();
             return;
         }
@@ -56,7 +54,7 @@ public class WalletLoadingActivity extends ThemedActivity {
     private void resolveWalletUrl(@NonNull final Uri url) {
         AirshipExecutors.threadPoolExecutor().submit(() -> {
             try {
-                Logger.debug("Runner starting");
+                UALog.d("Runner starting");
 
                 RequestSession session = UAirship.shared().getRuntimeConfig().getRequestSession();
 
@@ -76,7 +74,7 @@ public class WalletLoadingActivity extends ThemedActivity {
                 if (response.getResult() != null) {
                     liveData.postValue(new Result(Uri.parse(response.getResult()), null));
                 } else {
-                    Logger.warn("No result found for Wallet URL, finishing action.");
+                    UALog.w("No result found for Wallet URL, finishing action.");
                     liveData.postValue(new Result(null, null));
                 }
             } catch (RequestException e) {

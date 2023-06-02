@@ -6,7 +6,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.Predicate;
 import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
@@ -147,7 +147,7 @@ public class InAppActivityMonitor implements ActivityMonitor {
     private boolean shouldIgnoreActivity(Activity activity) {
         ActivityInfo info = ManifestUtils.getActivityInfo(activity.getClass());
         if (info != null && info.metaData != null && info.metaData.getBoolean(EXCLUDE_FROM_AUTO_SHOW, false)) {
-            Logger.verbose("Activity contains metadata to exclude it from auto showing an in-app message");
+            UALog.v("Activity contains metadata to exclude it from auto showing an in-app message");
             return true;
         }
 

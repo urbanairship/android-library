@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.urbanairship.Autopilot;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
 
@@ -28,7 +28,7 @@ public class NotificationProxyActivity extends Activity {
         Autopilot.automaticTakeOff(this);
 
         if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
-            Logger.error("NotificationProxyActivity - unable to receive intent, takeOff not called.");
+            UALog.e("NotificationProxyActivity - unable to receive intent, takeOff not called.");
             finish();
             return;
         }
@@ -39,14 +39,14 @@ public class NotificationProxyActivity extends Activity {
             return;
         }
 
-        Logger.verbose("Received intent: %s", intent.getAction());
+        UALog.v("Received intent: %s", intent.getAction());
 
         new NotificationIntentProcessor(this, intent)
                 .process()
                 .addResultCallback(new ResultCallback<Boolean>() {
                     @Override
                     public void onResult(@Nullable Boolean result) {
-                        Logger.verbose("Finished processing notification intent with result %s.", result);
+                        UALog.v("Finished processing notification intent with result %s.", result);
                     }
                 });
 

@@ -2,8 +2,6 @@
 
 package com.urbanairship.messagecenter;
 
-import android.graphics.Bitmap;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +11,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.urbanairship.Cancelable;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.messagecenter.webkit.MessageWebView;
 import com.urbanairship.messagecenter.webkit.MessageWebViewClient;
 import com.urbanairship.webkit.AirshipWebChromeClient;
@@ -337,7 +335,7 @@ public class MessageFragment extends Fragment {
         message = MessageCenter.shared().getInbox().getMessage(getMessageId());
 
         if (message == null) {
-            Logger.debug("Fetching messages.");
+            UALog.d("Fetching messages.");
             fetchMessageRequest = MessageCenter.shared().getInbox().fetchMessages(new Inbox.FetchMessagesCallback() {
                 @Override
                 public void onFinished(boolean success) {
@@ -351,7 +349,7 @@ public class MessageFragment extends Fragment {
                         return;
                     }
 
-                    Logger.info("Loading message: " + message.getMessageId());
+                    UALog.i("Loading message: " + message.getMessageId());
                     webView.loadMessage(message);
                 }
             });
@@ -361,7 +359,7 @@ public class MessageFragment extends Fragment {
                 return;
             }
 
-            Logger.info("Loading message: %s", message.getMessageId());
+            UALog.i("Loading message: %s", message.getMessageId());
             webView.loadMessage(message);
         }
     }

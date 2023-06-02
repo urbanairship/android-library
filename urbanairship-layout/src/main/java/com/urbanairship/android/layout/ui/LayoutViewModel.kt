@@ -2,7 +2,7 @@ package com.urbanairship.android.layout.ui
 
 import android.view.View
 import androidx.lifecycle.ViewModel
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.ModelFactory
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.ThomasListener
@@ -54,7 +54,7 @@ internal class LayoutViewModel : ViewModel() {
         }
 
     override fun onCleared() {
-        Logger.verbose("Lifecycle: CLEARED")
+        UALog.v("Lifecycle: CLEARED")
         environment?.modelScope?.cancel()
     }
 }

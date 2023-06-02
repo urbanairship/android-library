@@ -4,7 +4,7 @@ package com.urbanairship.http
 import android.net.Uri
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.UAHttpStatusUtil
@@ -75,7 +75,7 @@ public data class Response<T> @JvmOverloads constructor(
             return try {
                 Uri.parse(location)
             } catch (e: Exception) {
-                Logger.error("Failed to parse location header.")
+                UALog.e("Failed to parse location header.")
                 null
             }
         }
@@ -105,7 +105,7 @@ public data class Response<T> @JvmOverloads constructor(
             return timeUnit.convert(seconds, TimeUnit.SECONDS)
         } catch (ignored: Exception) {
         }
-        Logger.error("Invalid RetryAfter header %s", retryAfter)
+        UALog.e("Invalid RetryAfter header %s", retryAfter)
         return defaultValue
     }
 }

@@ -3,7 +3,7 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import android.view.View
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
@@ -134,7 +134,7 @@ internal class PagerModel(
                     // Clear any automated actions scheduled for the previous page.
                     if (pageIndex != previousIndex) {
                         clearAutomatedActions()
-                        Logger.verbose("cleared automated actions for page: $previousIndex")
+                        UALog.v("cleared automated actions for page: $previousIndex")
                     }
 
                     // Handle any actions defined for the current page.
@@ -182,14 +182,14 @@ internal class PagerModel(
 
         // If we have gestures defined, collect events from the view and handle them.
         if (gestures != null) {
-            Logger.verbose("${gestures.size} gestures defined.")
+            UALog.v("${gestures.size} gestures defined.")
             viewScope.launch {
                 view.pagerGestures().collect {
                     handleGesture(it)
                 }
             }
         } else {
-            Logger.verbose("No gestures defined.")
+            UALog.v("No gestures defined.")
         }
     }
 
@@ -197,7 +197,7 @@ internal class PagerModel(
         super.onViewDetached(view)
 
         clearAutomatedActions()
-        Logger.verbose("cleared all automated actions for pager.")
+        UALog.v("cleared all automated actions for pager.")
     }
 
     /** Returns a stable viewId for the pager item view at the given adapter `position`.  */
@@ -272,7 +272,7 @@ internal class PagerModel(
                     scheduledJob = modelScope.launch {
                         while (isActive) {
                             pagerState.update { state ->
-                                Logger.verbose("updating progress to $progress")
+                                UALog.v("updating progress to $progress")
                                 state.copy(progress = progress)
                             }
                             delay(100)
@@ -316,7 +316,7 @@ internal class PagerModel(
     }
 
     private suspend fun handleGesture(event: PagerGestureEvent) {
-        Logger.verbose("handleGesture: $event")
+        UALog.v("handleGesture: $event")
 
         val triggeredGestures = when (event) {
             is PagerGestureEvent.Tap -> gestures.orEmpty()
@@ -404,7 +404,7 @@ internal class PagerModel(
     }
 
     private fun pauseStory() {
-        Logger.verbose("pause story")
+        UALog.v("pause story")
         navigationActionTimer?.stop()
         for (timer in automatedActionsTimers) {
             timer.stop()
@@ -412,7 +412,7 @@ internal class PagerModel(
     }
 
     private fun resumeStory() {
-        Logger.verbose("resume story")
+        UALog.v("resume story")
         navigationActionTimer?.start()
         for (timer in automatedActionsTimers) {
             timer.start()

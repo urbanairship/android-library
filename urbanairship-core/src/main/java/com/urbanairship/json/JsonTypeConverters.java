@@ -1,6 +1,6 @@
 package com.urbanairship.json;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 
 import androidx.annotation.RestrictTo;
 import androidx.room.TypeConverter;
@@ -20,7 +20,7 @@ public class JsonTypeConverters {
         try {
             return JsonValue.parseString(value);
         } catch (JsonException e) {
-            Logger.error(e, "Unable to parse json value: " + value);
+            UALog.e(e, "Unable to parse json value: " + value);
             return null;
         }
     }
@@ -39,7 +39,7 @@ public class JsonTypeConverters {
         try {
             return JsonValue.parseString(value).optMap();
         } catch (JsonException e) {
-            Logger.error(e, "Unable to parse json value: " + value);
+            UALog.e(e, "Unable to parse json value: " + value);
             return null;
         }
     }
@@ -63,7 +63,7 @@ public class JsonTypeConverters {
         try {
             return JsonPredicate.parse(JsonValue.parseString(value));
         } catch (JsonException e) {
-            Logger.error(e, "Unable to parse trigger context: " + value);
+            UALog.e(e, "Unable to parse trigger context: " + value);
             return null;
         }
     }

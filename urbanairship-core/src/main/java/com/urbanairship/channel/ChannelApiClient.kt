@@ -3,7 +3,7 @@ package com.urbanairship.channel
 
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
@@ -24,7 +24,7 @@ internal class ChannelApiClient @VisibleForTesting constructor(
     private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
 ) {
     suspend fun createChannel(channelPayload: ChannelRegistrationPayload): RequestResult<Channel> {
-        Logger.d { "Creating channel with payload: $channelPayload" }
+        UALog.d { "Creating channel with payload: $channelPayload" }
 
         val builder = runtimeConfig.urlConfig.deviceUrl().appendEncodedPath(CHANNEL_API_PATH)
 
@@ -54,7 +54,7 @@ internal class ChannelApiClient @VisibleForTesting constructor(
     }
 
     suspend fun updateChannel(channelId: String, channelPayload: ChannelRegistrationPayload): RequestResult<Channel> {
-        Logger.d { "Updating channel $channelId with payload: $channelPayload" }
+        UALog.d { "Updating channel $channelId with payload: $channelPayload" }
 
         val url = createLocation(channelId)
 

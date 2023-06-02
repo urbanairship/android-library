@@ -6,9 +6,9 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.Logger.error
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -78,7 +78,7 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
                             try {
                                 processConfig(config)
                             } catch (e: Exception) {
-                                error(e, "Failed to process remote data")
+                                UALog.e(e, "Failed to process remote data")
                             }
                         }
                 }
@@ -108,7 +108,7 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
                     try {
                         disableInfos.add(DisableInfo.fromJson(disableInfoJson))
                     } catch (e: JsonException) {
-                        error(e, "Failed to parse remote config: %s", config)
+                        UALog.e(e, "Failed to parse remote config: %s", config)
                     }
                 }
                 continue

@@ -11,7 +11,7 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -318,14 +318,14 @@ public class PushMessage implements Parcelable, JsonSerializable {
     boolean isExpired() {
         String expirationStr = data.get(EXTRA_EXPIRATION);
         if (!UAStringUtil.isEmpty(expirationStr)) {
-            Logger.verbose("Notification expiration time is \"%s\"", expirationStr);
+            UALog.v("Notification expiration time is \"%s\"", expirationStr);
             try {
                 long expiration = Long.parseLong(expirationStr) * 1000;
                 if (expiration < System.currentTimeMillis()) {
                     return true;
                 }
             } catch (NumberFormatException e) {
-                Logger.debug(e, "Ignoring malformed expiration time.");
+                UALog.d(e, "Ignoring malformed expiration time.");
             }
         }
         return false;
@@ -492,7 +492,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
                 }
             }
         } catch (JsonException e) {
-            Logger.error("Unable to parse action payload: %s", actionsPayload);
+            UALog.e("Unable to parse action payload: %s", actionsPayload);
             return actions;
         }
 
@@ -653,7 +653,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
             } else if (!DEFAULT_SOUND_NAME.equals(notificationSoundName)) {
                 // Do not log a warning for the "default" name. Android plays the default sound if no sound
                 // is provided.
-                Logger.warn("PushMessage - unable to find notification sound with name: %s", notificationSoundName);
+                UALog.w("PushMessage - unable to find notification sound with name: %s", notificationSoundName);
             }
         }
 
@@ -671,7 +671,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
             try {
                 return Color.parseColor(colorString);
             } catch (IllegalArgumentException e) {
-                Logger.warn("Unrecognized icon color string: %s. Using default color: %s", colorString, defaultColor);
+                UALog.w("Unrecognized icon color string: %s. Using default color: %s", colorString, defaultColor);
             }
         }
 
@@ -691,7 +691,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
             if (iconId != 0) {
                 return iconId;
             } else {
-                Logger.warn("PushMessage - unable to find icon drawable with name: %s. Using default icon: %s", resourceString, defaultIcon);
+                UALog.w("PushMessage - unable to find icon drawable with name: %s. Using default icon: %s", resourceString, defaultIcon);
             }
         }
 
@@ -799,7 +799,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
 
             return new PushMessage(pushBundle);
         } catch (BadParcelableException e) {
-            Logger.error(e, "Failed to parse push message from intent.");
+            UALog.e(e, "Failed to parse push message from intent.");
             return null;
         }
     }

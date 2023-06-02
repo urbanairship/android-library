@@ -126,7 +126,7 @@ public final class PreferenceDataStore {
 
             finishLoad(fromStore);
         } catch (Exception e) {
-            Logger.error(e, "Failed to load preferences. Retrying with fallback loading.");
+            UALog.e(e, "Failed to load preferences. Retrying with fallback loading.");
             fallbackLoad();
         }
     }
@@ -136,15 +136,15 @@ public final class PreferenceDataStore {
         try {
             keys = dao.queryKeys();
         } catch (Exception e) {
-            Logger.error(e, "Failed to load keys.");
+            UALog.e(e, "Failed to load keys.");
         }
 
         if (keys == null || keys.isEmpty()) {
-            Logger.error("Unable to load keys, deleting preference store.");
+            UALog.e("Unable to load keys, deleting preference store.");
             try {
                 dao.deleteAll();
             } catch (Exception e) {
-                Logger.error(e,"Failed to delete preferences.");
+                UALog.e(e,"Failed to delete preferences.");
             }
             return;
         }
@@ -155,13 +155,13 @@ public final class PreferenceDataStore {
             try {
                 PreferenceData preferenceData = dao.queryValue(key);
                 if (preferenceData.value == null) {
-                    Logger.error("Unable to fetch preference value. Deleting: %s", key);
+                    UALog.e("Unable to fetch preference value. Deleting: %s", key);
                     dao.delete(key);
                 } else {
                     fromStore.add(new Preference(preferenceData.getKey(), preferenceData.getValue()));
                 }
             } catch (Exception e) {
-                Logger.error(e, "Failed to delete preference %s", key);
+                UALog.e(e, "Failed to delete preference %s", key);
             }
         }
         finishLoad(fromStore);
@@ -274,7 +274,7 @@ public final class PreferenceDataStore {
             return JsonValue.parseString(getPreference(key).get());
         } catch (JsonException e) {
             // Should never happen
-            Logger.debug(e, "Unable to parse preference value: %s", key);
+            UALog.d(e, "Unable to parse preference value: %s", key);
             return JsonValue.NULL;
         }
     }
@@ -285,7 +285,7 @@ public final class PreferenceDataStore {
             return JsonValue.parseString(getPreference(key).get());
         } catch (JsonException e) {
             // Should never happen
-            Logger.debug(e, "Unable to parse preference value: %s", key);
+            UALog.d(e, "Unable to parse preference value: %s", key);
             return null;
         }
     }
@@ -498,7 +498,7 @@ public final class PreferenceDataStore {
                 }
                 this.value = value;
             }
-            Logger.verbose("Preference updated: %s", key);
+            UALog.v("Preference updated: %s", key);
             onPreferenceChanged(key);
             return true;
         }
@@ -514,15 +514,15 @@ public final class PreferenceDataStore {
             synchronized (this) {
                 try {
                     if (value == null) {
-                        Logger.verbose("Removing preference: %s", key);
+                        UALog.v("Removing preference: %s", key);
                         dao.delete(key);
                     } else {
-                        Logger.verbose("Saving preference: %s value: %s", key, value);
+                        UALog.v("Saving preference: %s value: %s", key, value);
                         dao.upsert(new PreferenceData(key, value));
                     }
                     return true;
                 } catch (Exception e) {
-                    Logger.error(e, "Failed to write preference %s:%s", key, value);
+                    UALog.e(e, "Failed to write preference %s:%s", key, value);
                     return false;
                 }
 

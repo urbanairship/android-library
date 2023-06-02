@@ -6,8 +6,8 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipComponentGroups
-import com.urbanairship.Logger
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
@@ -106,7 +106,7 @@ public class ExperimentManager internal constructor(
                 .map { it.optMap() }
                 .mapNotNull(Experiment::fromJson)
         } catch (ex: JsonException) {
-            Logger.e(ex) { "Failed to parse experiments from remoteData payload" }
+            UALog.e(ex) { "Failed to parse experiments from remoteData payload" }
             return emptyList()
         }
     }
@@ -127,7 +127,7 @@ internal fun AudienceSelector.isMatching(properties: Map<String, String?>): Bool
 
 internal fun AudienceHash.generate(properties: Map<String, String?>): Long? {
     if (!properties.containsKey(property.jsonValue)) {
-        Logger.e { "can't find device property ${property.jsonValue}" }
+        UALog.e { "can't find device property ${property.jsonValue}" }
     }
 
     val key = properties[property.jsonValue] ?: return null

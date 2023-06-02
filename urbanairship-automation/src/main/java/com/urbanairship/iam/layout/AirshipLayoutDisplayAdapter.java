@@ -13,7 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestFactory;
@@ -136,7 +136,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         assetCacheMap.clear();
         for (UrlInfo urlInfo : this.urlInfoList) {
             if (urlInfo.getType() == UrlInfo.UrlType.WEB_PAGE && !urlAllowList.isAllowed(urlInfo.getUrl(), UrlAllowList.SCOPE_OPEN_URL)) {
-                Logger.error("Url not allowed: %s. Unable to display message %s.", urlInfo.getUrl(), message.getName());
+                UALog.e("Url not allowed: %s. Unable to display message %s.", urlInfo.getUrl(), message.getName());
                 return CANCEL;
             }
 
@@ -151,7 +151,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         try {
             this.displayRequest = this.prepareDisplayCallback.prepareDisplay(displayContent.getPayload());
         } catch (DisplayException e) {
-            Logger.error("Unable to display layout", e);
+            UALog.e("Unable to display layout", e);
             return InAppMessageAdapter.CANCEL;
         }
         return InAppMessageAdapter.OK;
@@ -170,7 +170,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                 case VIDEO:
                 case WEB_PAGE:
                     if (!isConnected) {
-                        Logger.error("Message not ready. Device is not connected and the message contains a webpage or video.", urlInfo.getUrl(), message);
+                        UALog.e("Message not ready. Device is not connected and the message contains a webpage or video.", urlInfo.getUrl(), message);
                         return false;
                     }
                     break;
@@ -181,7 +181,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                     }
 
                     if (!isConnected) {
-                        Logger.error("Message not ready. Device is not connected and the message contains a webpage or video.", urlInfo.getUrl(), message);
+                        UALog.e("Message not ready. Device is not connected and the message contains a webpage or video.", urlInfo.getUrl(), message);
                         return false;
                     }
                     break;
@@ -262,7 +262,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                 }
                 summary.updatePagerData(pagerData, displayedAt);
             } catch (IllegalArgumentException e) {
-                Logger.error("pageView InAppReportingEvent is not valid!", e);
+                UALog.e("pageView InAppReportingEvent is not valid!", e);
             }
         }
 
@@ -274,7 +274,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
                 displayHandler.addEvent(event);
             } catch (IllegalArgumentException e) {
-                Logger.error("pageSwipe InAppReportingEvent is not valid!", e);
+                UALog.e("pageSwipe InAppReportingEvent is not valid!", e);
             }
         }
 
@@ -290,7 +290,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
                 displayHandler.addEvent(event);
             } catch (IllegalArgumentException e) {
-                Logger.error("buttonTap InAppReportingEvent is not valid!", e);
+                UALog.e("buttonTap InAppReportingEvent is not valid!", e);
             }
         }
 
@@ -303,7 +303,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                 displayHandler.addEvent(event);
                 displayHandler.notifyFinished(resolutionInfo);
             } catch (IllegalArgumentException e) {
-                Logger.error("dismissed info for resolution InAppReportingEvent is not valid!", e);
+                UALog.e("dismissed info for resolution InAppReportingEvent is not valid!", e);
             }
         }
 
@@ -322,7 +322,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                     displayHandler.cancelFutureDisplays();
                 }
             } catch (IllegalArgumentException e) {
-                Logger.error("buttonPressed info for resolution InAppReportingEvent is not valid!", e);
+                UALog.e("buttonPressed info for resolution InAppReportingEvent is not valid!", e);
             }
         }
 
@@ -334,7 +334,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
                 displayHandler.addEvent(event);
             } catch (IllegalArgumentException e) {
-                Logger.error("formResult InAppReportingEvent is not valid!", e);
+                UALog.e("formResult InAppReportingEvent is not valid!", e);
             }
         }
 
@@ -346,7 +346,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
                 displayHandler.addEvent(event);
             } catch (IllegalArgumentException e) {
-                Logger.error("formDisplay InAppReportingEvent is not valid!", e);
+                UALog.e("formDisplay InAppReportingEvent is not valid!", e);
             }
         }
 
@@ -361,7 +361,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
                         displayHandler.addEvent(event);
                     } catch (IllegalArgumentException e) {
-                        Logger.error("permissionResultEvent InAppReportingEvent is not valid!", e);
+                        UALog.e("permissionResultEvent InAppReportingEvent is not valid!", e);
                     }
                 }
             };
@@ -385,7 +385,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                         .setLayoutData(state);
                 displayHandler.addEvent(event);
             } catch (IllegalArgumentException e) {
-                Logger.error("pagerGesture InAppReportingEvent is not valid!", e);
+                UALog.e("pagerGesture InAppReportingEvent is not valid!", e);
             }
         }
 
@@ -400,7 +400,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                         .setLayoutData(state);
                 displayHandler.addEvent(event);
             } catch (IllegalArgumentException e) {
-                Logger.error("onPagerAutomatedAction InAppReportingEvent is not valid!", e);
+                UALog.e("onPagerAutomatedAction InAppReportingEvent is not valid!", e);
             }
         }
 
@@ -441,7 +441,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                             .setLayoutData(layoutData);
                     displayHandler.addEvent(event);
                 } catch (IllegalArgumentException e) {
-                    Logger.error("pagerSummary InAppReportingEvent is not valid!", e);
+                    UALog.e("pagerSummary InAppReportingEvent is not valid!", e);
                 }
             }
         }

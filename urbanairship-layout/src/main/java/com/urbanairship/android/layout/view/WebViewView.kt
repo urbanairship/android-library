@@ -17,7 +17,7 @@ import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
 import android.widget.ProgressBar
 import androidx.core.view.isGone
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.UrlAllowList
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -154,7 +154,7 @@ internal class WebViewView(
         addView(frameLayout)
 
         if (!UAirship.shared().urlAllowList.isAllowed(model.url, UrlAllowList.SCOPE_OPEN_URL)) {
-            Logger.error("URL not allowed. Unable to load: %s", model.url)
+            UALog.e("URL not allowed. Unable to load: %s", model.url)
             return
         }
 
@@ -198,9 +198,9 @@ internal class WebViewView(
             error: WebResourceError
         ) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                Logger.error("Error loading web view! %d - %s", error.errorCode, error.description)
+                UALog.e("Error loading web view! %d - %s", error.errorCode, error.description)
             } else {
-                Logger.error("Error loading web view!")
+                UALog.e("Error loading web view!")
             }
             this.error = true
         }

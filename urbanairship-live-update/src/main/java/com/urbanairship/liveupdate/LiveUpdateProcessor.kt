@@ -1,7 +1,7 @@
 package com.urbanairship.liveupdate
 
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.channel.LiveUpdateMutation
 import com.urbanairship.json.JsonMap
 import com.urbanairship.liveupdate.data.LiveUpdateContent
@@ -60,11 +60,11 @@ internal class LiveUpdateProcessor(
         // handled appropriately.
 
         processJob = scope.launch {
-            Logger.verbose("Live Update processor started.")
+            UALog.v("Live Update processor started.")
             for (operation in operationQueue) {
                 process(operation)
             }
-            Logger.verbose("Live Update processor finished.")
+            UALog.v("Live Update processor finished.")
         }
     }
 
@@ -75,7 +75,7 @@ internal class LiveUpdateProcessor(
         if (isQueueEmpty && !dao.isAnyActive()) {
             processJob?.cancel()
             processJob = null
-            Logger.verbose("Live Update processor stopped.")
+            UALog.v("Live Update processor stopped.")
         }
     }
 
@@ -95,7 +95,7 @@ internal class LiveUpdateProcessor(
         // Check timestamp, as we may have received a stale start.
         val lastTimestamp = state?.timestamp ?: 0
         if (lastTimestamp > timestamp) {
-            Logger.warn("Ignored start for Live Update '$name'. Start event was stale.")
+            UALog.w("Ignored start for Live Update '$name'. Start event was stale.")
             return
         }
 
@@ -108,7 +108,7 @@ internal class LiveUpdateProcessor(
 
         // If already started, ignore the start.
         if (state?.isActive == true) {
-            Logger.warn("Ignored start for Live Update '$name'. Already started.")
+            UALog.w("Ignored start for Live Update '$name'. Already started.")
             return
         }
 
@@ -143,7 +143,7 @@ internal class LiveUpdateProcessor(
         val lastTimestamp = liveUpdate?.content?.timestamp ?: -1
 
         if (lastTimestamp > timestamp) {
-            Logger.verbose("Ignoring stale Live Update content for '$name': $content")
+            UALog.v("Ignoring stale Live Update content for '$name': $content")
             return
         }
 
@@ -159,7 +159,7 @@ internal class LiveUpdateProcessor(
             val update = LiveUpdate.from(liveUpdate.state, updateContent)
             callbacks.trySend(HandlerCallback(LiveUpdateEvent.UPDATE, update, operation.message))
         } else {
-            Logger.warn("Ignoring Live Update for '$name'. Live Update is not started!")
+            UALog.w("Ignoring Live Update for '$name'. Live Update is not started!")
         }
     }
 
@@ -170,13 +170,13 @@ internal class LiveUpdateProcessor(
             val lastContent = liveUpdate?.content
 
             if (lastState == null || lastContent == null || !lastState.isActive) {
-                Logger.warn("Ignored end for Live Update '$name'. Live Update is not started!")
+                UALog.w("Ignored end for Live Update '$name'. Live Update is not started!")
                 return
             }
 
             val lastTimestamp = lastState.timestamp
             if (lastTimestamp > timestamp) {
-                Logger.verbose("Ignored end for Live Update '$name'. Stop event was stale.")
+                UALog.v("Ignored end for Live Update '$name'. Stop event was stale.")
                 return
             }
 

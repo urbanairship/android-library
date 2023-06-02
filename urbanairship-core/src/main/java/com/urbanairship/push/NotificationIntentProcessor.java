@@ -9,7 +9,7 @@ import android.os.Bundle;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PendingResult;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
@@ -78,12 +78,12 @@ class NotificationIntentProcessor {
         final PendingResult<Boolean> pendingResult = new PendingResult<>();
 
         if (intent.getAction() == null || notificationInfo == null) {
-            Logger.error("NotificationIntentProcessor - invalid intent %s", intent);
+            UALog.e("NotificationIntentProcessor - invalid intent %s", intent);
             pendingResult.setResult(false);
             return pendingResult;
         }
 
-        Logger.verbose("Processing intent: %s", intent.getAction());
+        UALog.v("Processing intent: %s", intent.getAction());
         switch (intent.getAction()) {
             case PushManager.ACTION_NOTIFICATION_RESPONSE:
                 onNotificationResponse(new Runnable() {
@@ -99,7 +99,7 @@ class NotificationIntentProcessor {
                 break;
 
             default:
-                Logger.error("NotificationIntentProcessor - Invalid intent action: %s", intent.getAction());
+                UALog.e("NotificationIntentProcessor - Invalid intent action: %s", intent.getAction());
                 pendingResult.setResult(false);
                 break;
         }
@@ -112,7 +112,7 @@ class NotificationIntentProcessor {
      * @param completionHandler The completion handler.
      */
     private void onNotificationResponse(@NonNull Runnable completionHandler) {
-        Logger.info("Notification response: %s, %s", notificationInfo, actionButtonInfo);
+        UALog.i("Notification response: %s, %s", notificationInfo, actionButtonInfo);
 
         if (actionButtonInfo == null || actionButtonInfo.isForeground()) {
             // Set the conversion push id and metadata
@@ -154,7 +154,7 @@ class NotificationIntentProcessor {
      * Handles notification dismissed intent.
      */
     private void onNotificationDismissed() {
-        Logger.info("Notification dismissed: %s", notificationInfo);
+        UALog.i("Notification dismissed: %s", notificationInfo);
 
         if (intent.getExtras() != null) {
             PendingIntent deleteIntent = (PendingIntent) intent.getExtras().get(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT);
@@ -162,7 +162,7 @@ class NotificationIntentProcessor {
                 try {
                     deleteIntent.send();
                 } catch (PendingIntent.CanceledException e) {
-                    Logger.debug("Failed to send notification's deleteIntent, already canceled.");
+                    UALog.d("Failed to send notification's deleteIntent, already canceled.");
                 }
             }
         }
@@ -184,7 +184,7 @@ class NotificationIntentProcessor {
                 try {
                     contentIntent.send();
                 } catch (PendingIntent.CanceledException e) {
-                    Logger.debug("Failed to send notification's contentIntent, already canceled.");
+                    UALog.d("Failed to send notification's contentIntent, already canceled.");
                 }
                 return;
             }
@@ -197,10 +197,10 @@ class NotificationIntentProcessor {
                 launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 launchIntent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, notificationInfo.getMessage().getPushBundle());
                 launchIntent.setPackage(null);
-                Logger.info("Starting application's launch intent.");
+                UALog.i("Starting application's launch intent.");
                 context.startActivity(launchIntent);
             } else {
-                Logger.info("Unable to launch application. Launch intent is unavailable.");
+                UALog.i("Unable to launch application. Launch intent is unavailable.");
             }
         }
     }
@@ -270,7 +270,7 @@ class NotificationIntentProcessor {
                 try {
                     countDownLatch.await();
                 } catch (InterruptedException e) {
-                    Logger.error(e, "Failed to wait for actions");
+                    UALog.e(e, "Failed to wait for actions");
                     Thread.currentThread().interrupt();
                 }
 
@@ -297,7 +297,7 @@ class NotificationIntentProcessor {
                 }
             }
         } catch (JsonException e) {
-            Logger.error(e, "Failed to parse actions for push.");
+            UALog.e(e, "Failed to parse actions for push.");
         }
 
         return actionValueMap;

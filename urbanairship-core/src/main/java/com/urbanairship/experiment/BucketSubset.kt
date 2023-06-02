@@ -1,6 +1,6 @@
 package com.urbanairship.experiment
 
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.optionalField
@@ -28,7 +28,7 @@ internal class BucketSubset(
                     max = json.optionalField(KEY_BUCKET_MAX) ?: Long.MAX_VALUE
                 )
             } catch (ex: JsonException) {
-                Logger.e { "failed to parse ExperimentBucket from json $json" }
+                UALog.e { "failed to parse ExperimentBucket from json $json" }
                 return null
             }
         }

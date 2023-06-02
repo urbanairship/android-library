@@ -13,7 +13,7 @@ import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.actions.PermissionResultReceiver
@@ -114,7 +114,7 @@ class MainActivity : AppCompatActivity() {
         try {
             val jsonMap = ResourceUtils.readJsonAsset(this, "sample_layouts/$fileName")
             if (jsonMap == null) {
-                Logger.error("Failed to display layout! Not a valid JSON object: '$fileName'")
+                UALog.e("Failed to display layout! Not a valid JSON object: '$fileName'")
                 Toast.makeText(this, "Not a valid JSON object", Toast.LENGTH_LONG).show()
                 return
             }
@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity() {
                 .setListener(thomasListener)
                 .display(this)
         } catch (e: Exception) {
-            Logger.error(e)
+            UALog.e(e)
             Toast.makeText(this, "Error trying to display layout", Toast.LENGTH_LONG).show()
         }
     }
@@ -135,28 +135,28 @@ class MainActivity : AppCompatActivity() {
         override fun onPageView(pagerData: PagerData, state: LayoutData, displayedAt: Long) {
             "onPageView(pagerData: $pagerData, state: $state, displayedAt: $displayedAt)".let {
                 events.add(it)
-                Logger.debug(it)
+                UALog.d(it)
             }
         }
 
         override fun onPageSwipe(pagerData: PagerData, toPageIndex: Int, toPageId: String, fromPageIndex: Int, fromPageId: String, state: LayoutData) {
             "onPageSwipe(pagerData: $pagerData, toPageIndex: $toPageIndex, toPageId: $toPageId, fromPageIndex: $fromPageIndex, fromPageId: $fromPageId, state: $state)".let {
                 events.add(it)
-                Logger.debug(it)
+                UALog.d(it)
             }
         }
 
         override fun onButtonTap(buttonId: String, reportingMetadata: JsonValue?, state: LayoutData) {
             "onButtonTap(buttonId: $buttonId, state: $state)".let {
                 events.add(it)
-                Logger.debug(it)
+                UALog.d(it)
             }
         }
 
         override fun onDismiss(displayTime: Long) {
             "onDismiss(displayTime: $displayTime)".let {
                 events.add(it)
-                Logger.debug(it)
+                UALog.d(it)
             }
             dumpEvents()
         }
@@ -164,7 +164,7 @@ class MainActivity : AppCompatActivity() {
         override fun onDismiss(buttonId: String, buttonDescription: String?, cancel: Boolean, displayTime: Long, state: LayoutData) {
             "onDismiss(buttonId: $buttonId, buttonDescription: $buttonDescription, cancel: $cancel, displayTime: $displayTime, state: $state".let {
                 events.add(it)
-                Logger.debug(it)
+                UALog.d(it)
             }
             dumpEvents()
         }
@@ -172,28 +172,28 @@ class MainActivity : AppCompatActivity() {
         override fun onFormResult(formData: FormData.BaseForm, state: LayoutData) {
             "onFormResult(formData: ${formData.toJsonValue()}, state: $state)".let {
                 events.add(it)
-                Logger.debug(it)
+                UALog.d(it)
             }
         }
 
         override fun onFormDisplay(formInfo: FormInfo, state: LayoutData) {
             "onFormDisplay(formInfo: $formInfo, state: $state)".let {
                 events.add(it)
-                Logger.debug(it)
+                UALog.d(it)
             }
         }
 
         override fun onRunActions(actions: MutableMap<String, JsonValue>, state: LayoutData) {
             "onRunActions(actions: $actions, state: $state)".let {
                 events.add(it)
-                Logger.debug(it)
+                UALog.d(it)
             }
 
             val permissionResultReceiver = object : PermissionResultReceiver(Handler(Looper.getMainLooper())) {
                 override fun onResult(permission: Permission, before: PermissionStatus, after: PermissionStatus) {
                     "onPermissionResult(permission: $permission, before: $before, after: $after, state: $state)".let {
                         events.add(it)
-                        Logger.debug(it)
+                        UALog.d(it)
                     }
                 }
             }
@@ -213,7 +213,7 @@ class MainActivity : AppCompatActivity() {
         ) {
             "onPagerGesture(gestureId: $gestureId, reportingMetadata: $reportingMetadata, state: $state)".let {
                 events.add(it)
-                Logger.debug(it)
+                UALog.d(it)
             }
         }
 
@@ -224,15 +224,15 @@ class MainActivity : AppCompatActivity() {
         ) {
             "onPagerAutomatedAction(gestureId: $actionId, reportingMetadata: $reportingMetadata, state: $state)".let {
                 events.add(it)
-                Logger.debug(it)
+                UALog.d(it)
             } }
 
         private fun dumpEvents() {
-            Logger.debug("\n")
-            Logger.debug("---- LAYOUT EVENTS ----")
-            events.forEachIndexed { index, s -> Logger.debug("$index: $s") }
-            Logger.debug("-----------------------")
-            Logger.debug("\n")
+            UALog.d("\n")
+            UALog.d("---- LAYOUT EVENTS ----")
+            events.forEachIndexed { index, s -> UALog.d("$index: $s") }
+            UALog.d("-----------------------")
+            UALog.d("\n")
             events.clear()
         }
     }

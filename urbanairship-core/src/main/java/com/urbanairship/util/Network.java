@@ -7,7 +7,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 
 import androidx.annotation.NonNull;
@@ -41,7 +41,7 @@ public class Network {
         if (cm != null) {
             info = cm.getActiveNetworkInfo();
         } else {
-            Logger.error("Error fetching network info.");
+            UALog.e("Error fetching network info.");
             return false;
         }
 
@@ -59,7 +59,7 @@ public class Network {
             TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
             return tm == null ? null : tm.getNetworkOperatorName();
         } catch (Exception e) {
-            Logger.warn("Unable to get network operator name", e);
+            UALog.w("Unable to get network operator name", e);
             return null;
         }
     }

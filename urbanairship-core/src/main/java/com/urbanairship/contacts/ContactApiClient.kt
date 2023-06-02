@@ -2,7 +2,7 @@
 package com.urbanairship.contacts
 
 import android.net.Uri
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.TagGroupsMutation
@@ -191,7 +191,7 @@ internal class ContactApiClient constructor(
             headers = headers
         )
 
-        Logger.d { "Associating channel $channelId type $channelType request: $request" }
+        UALog.d { "Associating channel $channelId type $channelType request: $request" }
 
         return session.execute(request) { status: Int, _: Map<String, String>, _: String? ->
             if (status == 200) {
@@ -233,7 +233,7 @@ internal class ContactApiClient constructor(
             headers = headers
         )
 
-        Logger.d { "Updating contact $contactId request: $request" }
+        UALog.d { "Updating contact $contactId request: $request" }
 
         return session.execute(request).also { result ->
             result.log { "Updating contact $contactId result: $result" }
@@ -259,7 +259,7 @@ internal class ContactApiClient constructor(
             headers = headers
         )
 
-        Logger.d { "Registering channel $channelType request: $request" }
+        UALog.d { "Registering channel $channelType request: $request" }
 
         val result =
             session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
@@ -302,7 +302,7 @@ internal class ContactApiClient constructor(
             headers = headers
         )
 
-        Logger.d { "Identifying contact for channel $channelId request: $request" }
+        UALog.d { "Identifying contact for channel $channelId request: $request" }
 
         return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
             if (UAHttpStatusUtil.inSuccessRange(status)) {

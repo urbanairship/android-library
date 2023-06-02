@@ -5,7 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.liveupdate.LiveUpdateManager
 import com.urbanairship.push.PushManager.EXTRA_NOTIFICATION_DELETE_INTENT
 
@@ -15,7 +15,7 @@ public class LiveUpdateNotificationReceiver : BroadcastReceiver() {
         val name = getStringExtra(EXTRA_ACTIVITY_NAME)
         if (name == null) {
             // This shouldn't happen.
-            Logger.error("Received Live Update notification broadcast without a name!")
+            UALog.e("Received Live Update notification broadcast without a name!")
             return
         }
 
@@ -24,15 +24,15 @@ public class LiveUpdateNotificationReceiver : BroadcastReceiver() {
             ACTION_NOTIFICATION_DISMISSED -> {
                 // Stop updates for this live activity.
                 LiveUpdateManager.shared().end(name)
-                Logger.verbose("Ended live updates for: $name")
+                UALog.v("Ended live updates for: $name")
             }
             ACTION_NOTIFICATION_TIMEOUT -> {
                 // Stop updates for this live activity and cancel the notification, if one exists.
                 LiveUpdateManager.shared().end(name)
                 LiveUpdateManager.shared().cancel(name)
-                Logger.verbose("Timed out live updates for: $name")
+                UALog.v("Timed out live updates for: $name")
             }
-            else -> Logger.warn("Received unknown Live Update broadcast: $action")
+            else -> UALog.w("Received unknown Live Update broadcast: $action")
         }
 
         // Call through to the original delete intent, if one was provided.
@@ -40,7 +40,7 @@ public class LiveUpdateNotificationReceiver : BroadcastReceiver() {
             try {
                 intent.send()
             } catch (e: PendingIntent.CanceledException) {
-                Logger.debug("Failed to send notification's deleteIntent, already canceled.")
+                UALog.d("Failed to send notification's deleteIntent, already canceled.")
             }
         }
     }

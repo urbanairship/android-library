@@ -1,7 +1,7 @@
 package com.urbanairship.experiment
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.optionalFieldConverted
@@ -104,7 +104,7 @@ internal data class Experiment(
                     exclusions = exclusions
                 )
             } catch (ex: JsonException) {
-                Logger.e { "failed to parse Experiment from json $json" }
+                UALog.e { "failed to parse Experiment from json $json" }
                 return null
             }
         }

@@ -15,7 +15,7 @@ import androidx.annotation.WorkerThread;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
@@ -36,7 +36,6 @@ import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
-import com.urbanairship.reactive.Subscription;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.RetryingExecutor;
 
@@ -513,7 +512,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private void onPrepareSchedule(final @NonNull Schedule<? extends ScheduleData> schedule,
                                    final @Nullable TriggerContext triggerContext,
                                    final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
-        Logger.verbose("onPrepareSchedule schedule: %s, trigger context: %s", schedule.getId(), triggerContext);
+        UALog.v("onPrepareSchedule schedule: %s, trigger context: %s", schedule.getId(), triggerContext);
 
         final AutomationDriver.PrepareScheduleCallback callbackWrapper = result -> {
             if (result != AutomationDriver.PREPARE_RESULT_CONTINUE) {
@@ -611,10 +610,10 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     channelOverrides.getAttributes());
         } catch (RequestException e) {
             if (deferredScheduleData.getRetryOnTimeout()) {
-                Logger.debug(e, "Failed to resolve deferred schedule, will retry. Schedule: %s", schedule.getId());
+                UALog.d(e, "Failed to resolve deferred schedule, will retry. Schedule: %s", schedule.getId());
                 return RetryingExecutor.retryResult();
             } else {
-                Logger.debug(e, "Failed to resolve deferred schedule. Schedule: %s", schedule.getId());
+                UALog.d(e, "Failed to resolve deferred schedule. Schedule: %s", schedule.getId());
                 callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
                 return RetryingExecutor.cancelResult();
             }
@@ -640,7 +639,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return RetryingExecutor.finishedResult();
         }
 
-        Logger.debug("Failed to resolve deferred schedule. Schedule: %s, Response: %s", schedule.getId(), response.getResult());
+        UALog.d("Failed to resolve deferred schedule. Schedule: %s, Response: %s", schedule.getId(), response.getResult());
 
         Uri location = response.getLocationHeader();
         long retryAfter = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, -1);
@@ -673,7 +672,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @MainThread
     @AutomationDriver.ReadyResult
     private int onCheckExecutionReadiness(@NonNull Schedule<? extends ScheduleData> schedule) {
-        Logger.verbose("onCheckExecutionReadiness schedule: %s", schedule.getId());
+        UALog.v("onCheckExecutionReadiness schedule: %s", schedule.getId());
 
         // Prevent display on pause.
         if (isPaused()) {
@@ -710,20 +709,20 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @MainThread
     private void onExecuteTriggeredSchedule(@NonNull Schedule<? extends
             ScheduleData> schedule, @NonNull AutomationDriver.ExecutionCallback callback) {
-        Logger.verbose("onExecuteTriggeredSchedule schedule: %s", schedule.getId());
+        UALog.v("onExecuteTriggeredSchedule schedule: %s", schedule.getId());
         frequencyCheckerMap.remove(schedule.getId());
 
         ScheduleDelegate<?> delegate = scheduleDelegateMap.remove(schedule.getId());
         if (delegate != null) {
             delegate.onExecute(schedule, callback);
         } else {
-            Logger.error("Unexpected schedule type: %s", schedule.getType());
+            UALog.e("Unexpected schedule type: %s", schedule.getType());
             callback.onFinish();
         }
     }
 
     private void onScheduleExecutionInterrupted(Schedule<? extends ScheduleData> schedule) {
-        Logger.verbose("onScheduleExecutionInterrupted schedule: %s", schedule.getId());
+        UALog.v("onScheduleExecutionInterrupted schedule: %s", schedule.getId());
         ScheduleDelegate<? extends ScheduleData> delegate = delegateForSchedule(schedule);
         if (delegate != null) {
             delegate.onExecutionInterrupted(schedule);
@@ -749,7 +748,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         try {
             return frequencyLimitManager.getFrequencyChecker(schedule.getFrequencyConstraintIds()).get();
         } catch (InterruptedException | ExecutionException e) {
-            Logger.error("InAppAutomation - Failed to get Frequency Limit Checker : " + e);
+            UALog.e("InAppAutomation - Failed to get Frequency Limit Checker : " + e);
         }
         return null;
     }
@@ -800,7 +799,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
     private void ensureStarted() {
         if (!isStarted.getAndSet(true)) {
-            Logger.verbose("Starting In-App automation");
+            UALog.v("Starting In-App automation");
             automationEngine.start(driver);
         }
     }
@@ -827,7 +826,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         try {
             return getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0).firstInstallTime;
         } catch (Exception e) {
-            Logger.warn("Unable to get install date", e);
+            UALog.w("Unable to get install date", e);
             return airshipChannel.getId() == null ? System.currentTimeMillis() : 0;
         }
     }

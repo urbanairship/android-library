@@ -3,8 +3,8 @@
 package com.urbanairship.channel
 
 import android.content.Context
-import com.urbanairship.Logger
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.UALog
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.base.Extender
@@ -129,10 +129,10 @@ internal class ChannelRegistrar(
         val payload = buildCraPayload()
         val result = channelApiClient.createChannel(payload)
 
-        Logger.i { "Channel registration finished with result: $result" }
+        UALog.i { "Channel registration finished with result: $result" }
 
         return if (result.isSuccessful && result.value != null) {
-            Logger.i { "Airship channel created: ${result.value.identifier}" }
+            UALog.i { "Airship channel created: ${result.value.identifier}" }
             this.channelId = result.value.identifier
             this.lastChannelRegistrationInfo = RegistrationInfo(
                 dateMillis = clock.currentTimeMillis(),
@@ -157,16 +157,16 @@ internal class ChannelRegistrar(
         val payload = buildCraPayload()
         val updatePayload = minimizeUpdatePayload(channelId, payload)
         if (updatePayload == null) {
-            Logger.v { "Channel already up to date." }
+            UALog.v { "Channel already up to date." }
             return RegistrationResult.SUCCESS
         }
 
         val result = channelApiClient.updateChannel(channelId, updatePayload)
 
-        Logger.i { "Channel registration finished with result $result" }
+        UALog.i { "Channel registration finished with result $result" }
 
         return if (result.isSuccessful && result.value != null) {
-            Logger.i { "Airship channel updated" }
+            UALog.i { "Airship channel updated" }
             // Set non-minimized payload as the last sent version, for future comparison
             this.lastChannelRegistrationInfo = RegistrationInfo(
                 dateMillis = clock.currentTimeMillis(),
@@ -179,7 +179,7 @@ internal class ChannelRegistrar(
                 RegistrationResult.NEEDS_UPDATE
             }
         } else if (result.status == 409) {
-            Logger.d { "Channel registration conflict, will recreate channel." }
+            UALog.d { "Channel registration conflict, will recreate channel." }
             this.lastChannelRegistrationInfo = null
             this.channelId = null
             return createChannel()

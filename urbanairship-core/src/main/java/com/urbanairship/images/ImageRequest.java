@@ -11,7 +11,7 @@ import android.widget.ImageView;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.CancelableOperation;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.util.ImageUtils;
 
 import java.io.IOException;
@@ -165,7 +165,7 @@ abstract class ImageRequest {
                         }
 
                     } catch (IOException e) {
-                        Logger.debug(e, "Unable to fetch bitmap");
+                        UALog.d(e, "Unable to fetch bitmap");
                     }
                 }
             });

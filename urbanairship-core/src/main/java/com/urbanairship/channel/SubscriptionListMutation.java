@@ -5,7 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.util.ObjectsCompat;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -106,7 +106,7 @@ public class SubscriptionListMutation implements JsonSerializable {
             try {
                 mutations.add(fromJsonValue(value));
             } catch (JsonException e) {
-                Logger.error(e, "Invalid subscription list mutation!");
+                UALog.e(e, "Invalid subscription list mutation!");
             }
         }
 

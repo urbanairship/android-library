@@ -4,7 +4,7 @@ package com.urbanairship.iam.actions;
 
 import android.net.Uri;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.UrlAllowList;
 import com.urbanairship.actions.Action;
@@ -257,7 +257,7 @@ public class LandingPageAction extends Action {
         }
 
         if (!allowListSupplier.get().isAllowed(uri.toString(), UrlAllowList.SCOPE_OPEN_URL)) {
-            Logger.error("Landing page URL is not allowed: %s", uri);
+            UALog.e("Landing page URL is not allowed: %s", uri);
             return null;
         }
 

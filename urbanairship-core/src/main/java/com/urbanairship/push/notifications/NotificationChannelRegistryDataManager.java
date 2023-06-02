@@ -7,7 +7,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DataManager;
@@ -18,7 +18,6 @@ import java.util.Set;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE;
@@ -59,7 +58,7 @@ public class NotificationChannelRegistryDataManager extends DataManager {
 
     @Override
     protected void onCreate(@NonNull SQLiteDatabase db) {
-        Logger.debug("Creating database");
+        UALog.d("Creating database");
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ("
                 + COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + COLUMN_NAME_CHANNEL_ID + " TEXT UNIQUE,"
@@ -105,7 +104,7 @@ public class NotificationChannelRegistryDataManager extends DataManager {
         final SQLiteDatabase db = getWritableDatabase();
 
         if (db == null) {
-            Logger.error("NotificationChannelRegistryDataManager - Unable to save notification channel.");
+            UALog.e("NotificationChannelRegistryDataManager - Unable to save notification channel.");
             return false;
         }
 
@@ -180,7 +179,7 @@ public class NotificationChannelRegistryDataManager extends DataManager {
         int result = delete(TABLE_NAME, where, new String[]{channelId});
 
         if (result == -1) {
-            Logger.error("Unable to remove notification channel: %s", channelId);
+            UALog.e("Unable to remove notification channel: %s", channelId);
             return false;
         }
 
@@ -196,7 +195,7 @@ public class NotificationChannelRegistryDataManager extends DataManager {
     boolean deleteChannels() {
         boolean success = delete(TABLE_NAME, null, null) >= 0;
         if (!success) {
-            Logger.error("NotificationChannelRegistryDatamanager - failed to delete channels");
+            UALog.e("NotificationChannelRegistryDatamanager - failed to delete channels");
         }
         return success;
     }
@@ -215,7 +214,7 @@ public class NotificationChannelRegistryDataManager extends DataManager {
         try {
             return NotificationChannelCompat.fromJson(JsonValue.parseString(data));
         } catch (JsonException e) {
-            Logger.error("Unable to parse notification channel: %s", data);
+            UALog.e("Unable to parse notification channel: %s", data);
             return null;
         }
     }

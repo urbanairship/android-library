@@ -4,7 +4,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.annotation.OpenForTesting
@@ -30,7 +30,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
@@ -75,7 +74,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
     init {
         viewModelScope.launch {
             actions.collect { action ->
-                Logger.verbose("< $action")
+                UALog.v("< $action")
 
                 launch {
                     map(action)
@@ -96,7 +95,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         }
 
         viewModelScope.launch {
-            states.collect { state -> Logger.verbose("> $state") }
+            states.collect { state -> UALog.v("> $state") }
         }
 
         // Collect updates from the condition monitor and repost them on the actions flow.
@@ -230,7 +229,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                     )
                 )
             }.catch<Change> { error ->
-                Logger.error(error, "Failed to fetch preference center data!")
+                UALog.e(error, "Failed to fetch preference center data!")
                 emit(Change.ShowError(error = error))
             }.flowOn(ioDispatcher)
         )
@@ -251,7 +250,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         scopes: Set<Scope> = emptySet(),
         isEnabled: Boolean
     ): Flow<Change> = flow {
-        Logger.verbose("Updating preference item: " +
+        UALog.v("Updating preference item: " +
             "id = ${item.id}, title = ${item.display.name}, scopes = $scopes, state = $isEnabled")
 
         when (item) {

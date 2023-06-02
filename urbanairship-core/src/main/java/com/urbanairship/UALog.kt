@@ -12,11 +12,11 @@ import java.util.Locale
  * single location.
  */
 @Keep
-public object Logger {
+public object UALog {
 
     /** List of classes to ignore when prepending names to debug and verbose log messages.  */
     private val IGNORED_CALLING_CLASS_NAMES = listOf(
-        Logger::class.java.name
+        UALog::class.java.name
     )
 
     /**
@@ -51,7 +51,7 @@ public object Logger {
      * @param args The message args.
      */
     @JvmStatic
-    public fun warn(message: String, vararg args: Any?) {
+    public fun w(message: String, vararg args: Any?) {
         sendLog(Log.WARN, null, format(message, *args))
     }
 
@@ -65,7 +65,7 @@ public object Logger {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @JvmStatic
-    public fun warn(t: Throwable, message: String, vararg args: Any?) {
+    public fun w(t: Throwable, message: String, vararg args: Any?) {
         sendLog(Log.WARN, t, format(message, *args))
     }
 
@@ -75,7 +75,7 @@ public object Logger {
      * @param t An exception to log
      */
     @JvmStatic
-    public fun warn(t: Throwable) {
+    public fun w(t: Throwable) {
         sendLog(Log.WARN, t, EMPTY)
     }
 
@@ -85,7 +85,7 @@ public object Logger {
      * @param t An exception to log
      */
     @JvmStatic
-    public fun verbose(t: Throwable) {
+    public fun v(t: Throwable) {
         sendLog(Log.VERBOSE, t, EMPTY)
     }
 
@@ -96,7 +96,7 @@ public object Logger {
      * @param args The message args.
      */
     @JvmStatic
-    public fun verbose(message: String, vararg args: Any?) {
+    public fun v(message: String, vararg args: Any?) {
         sendLog(Log.VERBOSE, null, format(message, *args))
     }
 
@@ -107,7 +107,7 @@ public object Logger {
      * @param args The message args.
      */
     @JvmStatic
-    public fun debug(message: String, vararg args: Any?) {
+    public fun d(message: String, vararg args: Any?) {
         sendLog(Log.DEBUG, null, format(message, *args))
     }
 
@@ -119,7 +119,7 @@ public object Logger {
      * @param args The message args.
      */
     @JvmStatic
-    public fun debug(t: Throwable, message: String, vararg args: Any?) {
+    public fun d(t: Throwable, message: String, vararg args: Any?) {
         sendLog(Log.DEBUG, t, format(message, *args))
     }
 
@@ -130,7 +130,7 @@ public object Logger {
      * @param args The message args.
      */
     @JvmStatic
-    public fun info(message: String, vararg args: Any) {
+    public fun i(message: String, vararg args: Any) {
         sendLog(Log.INFO, null, format(message, *args))
     }
 
@@ -143,7 +143,7 @@ public object Logger {
      * @hide
      */
     @JvmStatic
-    public fun info(t: Throwable, message: String, vararg args: Any?) {
+    public fun i(t: Throwable, message: String, vararg args: Any?) {
         sendLog(Log.INFO, t, format(message, *args))
     }
 
@@ -155,7 +155,7 @@ public object Logger {
      * @hide
      */
     @JvmStatic
-    public fun error(message: String, vararg args: Any?) {
+    public fun e(message: String, vararg args: Any?) {
         sendLog(Log.ERROR, null, format(message, *args))
     }
 
@@ -165,7 +165,7 @@ public object Logger {
      * @param t An exception to log
      */
     @JvmStatic
-    public fun error(t: Throwable) {
+    public fun e(t: Throwable) {
         sendLog(Log.ERROR, t, EMPTY)
     }
 
@@ -177,7 +177,7 @@ public object Logger {
      * @param args The message args.
      */
     @JvmStatic
-    public fun error(t: Throwable, message: String, vararg args: Any?) {
+    public fun e(t: Throwable, message: String, vararg args: Any?) {
         sendLog(Log.ERROR, t, format(message, *args))
     }
 
@@ -270,7 +270,7 @@ public object Logger {
             if (intValue <= Log.ASSERT && intValue >= Log.VERBOSE) {
                 return intValue
             }
-            warn("%s is not a valid log level. Falling back to %s.", intValue, defaultValue)
+            w("%s is not a valid log level. Falling back to %s.", intValue, defaultValue)
             defaultValue
         } catch (nfe: NumberFormatException) {
             throw IllegalArgumentException("Invalid log level: $value")
@@ -320,7 +320,7 @@ public object Logger {
                     )
                 }
             } catch (e: Exception) {
-                error("Unable to format log message: $format")
+                e("Unable to format log message: $format")
                 format
             }
         }

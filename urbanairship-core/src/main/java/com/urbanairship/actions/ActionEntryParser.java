@@ -6,7 +6,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.util.UAStringUtil;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -54,7 +54,7 @@ class ActionEntryParser {
             return parseEntries(parser);
         } catch (IOException | XmlPullParserException | Resources.NotFoundException | NullPointerException e) {
             // Note: NullPointerException can occur in rare circumstances further down the call stack
-            Logger.error(e, "Failed to parse action entries.");
+            UALog.e(e, "Failed to parse action entries.");
             return new ArrayList<>();
         } finally {
             parser.close();
@@ -125,7 +125,7 @@ class ActionEntryParser {
         }
 
         if (names.isEmpty()) {
-            Logger.error("Action names not found.");
+            UALog.e("Action names not found.");
             return null;
         }
 
@@ -133,7 +133,7 @@ class ActionEntryParser {
         try {
             clazz = Class.forName(className).asSubclass(Action.class);
         } catch (ClassNotFoundException e) {
-            Logger.error("Action class %s not found.", className);
+            UALog.e("Action class %s not found.", className);
             return null;
         }
 
@@ -144,7 +144,7 @@ class ActionEntryParser {
                 ActionRegistry.Predicate predicate = Class.forName(predicateClassName).asSubclass(ActionRegistry.Predicate.class).newInstance();
                 entry.setPredicate(predicate);
             } catch (Exception e) {
-                Logger.error("Predicate class %s not found. Skipping predicate.", predicateClassName);
+                UALog.e("Predicate class %s not found. Skipping predicate.", predicateClassName);
             }
         }
 

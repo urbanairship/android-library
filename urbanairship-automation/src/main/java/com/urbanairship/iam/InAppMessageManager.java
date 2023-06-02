@@ -4,9 +4,8 @@ package com.urbanairship.iam;
 
 import android.content.Context;
 import android.os.Looper;
-import android.view.Display;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
@@ -27,7 +26,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.IntRange;
@@ -35,7 +33,6 @@ import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
-import androidx.arch.core.util.Function;
 
 /**
  * In-app messaging manager.
@@ -274,16 +271,16 @@ public class InAppMessageManager {
 
             switch (result) {
                 case AssetManager.PREPARE_RESULT_OK:
-                    Logger.debug("Assets prepared for schedule %s.", scheduleId);
+                    UALog.d("Assets prepared for schedule %s.", scheduleId);
                     return RetryingExecutor.finishedResult();
 
                 case AssetManager.PREPARE_RESULT_RETRY:
-                    Logger.debug("Assets failed to prepare for schedule %s. Will retry.", scheduleId);
+                    UALog.d("Assets failed to prepare for schedule %s. Will retry.", scheduleId);
                     return RetryingExecutor.retryResult();
 
                 case AssetManager.PREPARE_RESULT_CANCEL:
                 default:
-                    Logger.debug("Assets failed to prepare. Cancelling display for schedule %s.", scheduleId);
+                    UALog.d("Assets failed to prepare. Cancelling display for schedule %s.", scheduleId);
                     assetManager.onDisplayFinished(scheduleId, adapter.message);
                     callback.onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
                     return RetryingExecutor.cancelResult();
@@ -296,7 +293,7 @@ public class InAppMessageManager {
 
             switch (result) {
                 case InAppMessageAdapter.OK:
-                    Logger.debug("Adapter prepared schedule %s.", scheduleId);
+                    UALog.d("Adapter prepared schedule %s.", scheduleId);
 
                     // Store the adapter
                     adapterWrappers.put(scheduleId, adapter);
@@ -304,12 +301,12 @@ public class InAppMessageManager {
                     return RetryingExecutor.finishedResult();
 
                 case InAppMessageAdapter.RETRY:
-                    Logger.debug("Adapter failed to prepare schedule %s. Will retry.", scheduleId);
+                    UALog.d("Adapter failed to prepare schedule %s. Will retry.", scheduleId);
                     return RetryingExecutor.retryResult();
 
                 case InAppMessageAdapter.CANCEL:
                 default:
-                    Logger.debug("Adapter failed to prepare. Cancelling display for schedule %s.", scheduleId);
+                    UALog.d("Adapter failed to prepare. Cancelling display for schedule %s.", scheduleId);
                     callback.onFinish(AutomationDriver.PREPARE_RESULT_CANCEL);
                     return RetryingExecutor.cancelResult();
             }
@@ -328,7 +325,7 @@ public class InAppMessageManager {
     public int onCheckExecutionReadiness(@NonNull String scheduleId) {
         AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
         if (adapterWrapper == null) {
-            Logger.error("Missing adapter for schedule %.", scheduleId);
+            UALog.e("Missing adapter for schedule %.", scheduleId);
             return AutomationDriver.READY_RESULT_INVALIDATE;
         }
 
@@ -348,7 +345,7 @@ public class InAppMessageManager {
     public void onExecute(@NonNull String scheduleId, @NonNull AutomationDriver.ExecutionCallback callback) {
         final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
         if (adapterWrapper == null) {
-            Logger.error("Missing adapter for schedule %.", scheduleId);
+            UALog.e("Missing adapter for schedule %.", scheduleId);
             callback.onFinish();
             return;
         }
@@ -360,7 +357,7 @@ public class InAppMessageManager {
         try {
             adapterWrapper.display(context);
         } catch (AdapterWrapper.DisplayException e) {
-            Logger.error(e, "Failed to display in-app message for schedule %s.", scheduleId);
+            UALog.e(e, "Failed to display in-app message for schedule %s.", scheduleId);
             callExecutionFinishedCallback(scheduleId);
             executor.execute(new Runnable() {
                 @Override
@@ -384,7 +381,7 @@ public class InAppMessageManager {
             }
         }
 
-        Logger.verbose("Message displayed for schedule %s.", scheduleId);
+        UALog.v("Message displayed for schedule %s.", scheduleId);
     }
 
     /**
@@ -430,7 +427,7 @@ public class InAppMessageManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
     void onResolution(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo, long displayTime) {
-        Logger.verbose("Message finished for schedule %s.", scheduleId);
+        UALog.v("Message finished for schedule %s.", scheduleId);
 
         final AdapterWrapper adapterWrapper = adapterWrappers.get(scheduleId);
 
@@ -450,7 +447,7 @@ public class InAppMessageManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @MainThread
     void onDisplayFinished(@NonNull String scheduleId, @NonNull ResolutionInfo resolutionInfo) {
-        Logger.verbose("Message finished for schedule %s.", scheduleId);
+        UALog.v("Message finished for schedule %s.", scheduleId);
 
         final AdapterWrapper adapterWrapper = adapterWrappers.remove(scheduleId);
 
@@ -534,7 +531,7 @@ public class InAppMessageManager {
             }
 
             if (factory == null) {
-                Logger.debug("InAppMessageManager - No display adapter for message type: %s. " +
+                UALog.d("InAppMessageManager - No display adapter for message type: %s. " +
                         "Unable to process schedule: %s.", message.getType(), scheduleId);
             } else {
                 adapter = factory.createAdapter(message);
@@ -557,12 +554,12 @@ public class InAppMessageManager {
                 }
             }
         } catch (Exception e) {
-            Logger.error(e, "InAppMessageManager - Failed to create in-app message adapter.");
+            UALog.e(e, "InAppMessageManager - Failed to create in-app message adapter.");
             return null;
         }
 
         if (adapter == null) {
-            Logger.error("InAppMessageManager - Failed to create in-app message adapter.");
+            UALog.e("InAppMessageManager - Failed to create in-app message adapter.");
             return null;
         }
 

@@ -10,11 +10,11 @@ import androidx.annotation.WorkerThread
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.Logger
-import com.urbanairship.Logger.logLevel
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
+import com.urbanairship.UALog
+import com.urbanairship.UALog.logLevel
 import com.urbanairship.UAirship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.app.ActivityMonitor
@@ -164,7 +164,7 @@ public class AirshipChannel internal constructor(
                         try {
                             context.sendBroadcast(channelCreatedIntent)
                         } catch (e: Exception) {
-                            Logger.e(e) { "Failed to send channel create intent" }
+                            UALog.e(e) { "Failed to send channel create intent" }
                         }
                     }
 
@@ -218,7 +218,7 @@ public class AirshipChannel internal constructor(
     @WorkerThread
     override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
         if (!isRegistrationAllowed) {
-            Logger.d { "Channel registration is currently disabled." }
+            UALog.d { "Channel registration is currently disabled." }
             return JobResult.SUCCESS
         }
 
@@ -309,7 +309,7 @@ public class AirshipChannel internal constructor(
             ) {
                 tagLock.withLock {
                     if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-                        Logger.w { "AirshipChannel - Unable to apply tag group edits when opted out of tags and attributes." }
+                        UALog.w { "AirshipChannel - Unable to apply tag group edits when opted out of tags and attributes." }
                         return
                     }
                     val tags: MutableSet<String> =
@@ -331,7 +331,7 @@ public class AirshipChannel internal constructor(
         return object : TagGroupsEditor() {
             override fun allowTagGroupChange(tagGroup: String): Boolean {
                 if (channelTagRegistrationEnabled && DEFAULT_TAG_GROUP == tagGroup) {
-                    Logger.e { "Unable to add tags to $tagGroup tag group when `channelTagRegistrationEnabled` is true." }
+                    UALog.e { "Unable to add tags to $tagGroup tag group when `channelTagRegistrationEnabled` is true." }
                     return false
                 }
                 return true
@@ -339,7 +339,7 @@ public class AirshipChannel internal constructor(
 
             override fun onApply(collapsedMutations: List<TagGroupsMutation>) {
                 if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-                    Logger.w { "Unable to apply channel tag edits when opted out of tags and attributes." }
+                    UALog.w { "Unable to apply channel tag edits when opted out of tags and attributes." }
                     return
                 }
 
@@ -360,7 +360,7 @@ public class AirshipChannel internal constructor(
         return object : AttributeEditor(clock) {
             override fun onApply(mutations: List<AttributeMutation>) {
                 if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-                    Logger.w { "AirshipChannel - Unable to apply attribute edits when opted out of tags and attributes." }
+                    UALog.w { "AirshipChannel - Unable to apply attribute edits when opted out of tags and attributes." }
                     return
                 }
 
@@ -404,7 +404,7 @@ public class AirshipChannel internal constructor(
         set(tags) {
             tagLock.withLock {
                 if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-                    Logger.w { "AirshipChannel - Unable to apply attribute edits when opted out of tags and attributes." }
+                    UALog.w { "AirshipChannel - Unable to apply attribute edits when opted out of tags and attributes." }
                     return
                 }
                 val normalizedTags = TagUtils.normalizeTags(tags)
@@ -462,7 +462,7 @@ public class AirshipChannel internal constructor(
         return object : SubscriptionListEditor(clock) {
             override fun onApply(collapsedMutations: List<SubscriptionListMutation>) {
                 if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-                    Logger.w { "AirshipChannel - Unable to apply subscription list edits when opted out of tags and attributes." }
+                    UALog.w { "AirshipChannel - Unable to apply subscription list edits when opted out of tags and attributes." }
                     return
                 }
 

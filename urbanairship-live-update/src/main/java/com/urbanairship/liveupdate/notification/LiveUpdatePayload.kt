@@ -2,7 +2,7 @@
 
 package com.urbanairship.liveupdate.notification
 
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.liveupdate.LiveUpdateEvent
@@ -34,7 +34,7 @@ internal data class LiveUpdatePayload(
             try {
                 JsonValue.parseString(json).map?.let { fromJson(it) }
             } catch (e: Exception) {
-                Logger.warn(e, "Failed to parse live update payload: $json")
+                UALog.w(e, "Failed to parse live update payload: $json")
                 null
             }
 
@@ -47,7 +47,7 @@ internal data class LiveUpdatePayload(
                     contentState.isString -> JsonValue.parseString(contentState.string).optMap()
                     // Invalid content.
                     else -> {
-                        Logger.warn("Invalid Live Update content_state: '$contentState'")
+                        UALog.w("Invalid Live Update content_state: '$contentState'")
                         JsonMap.EMPTY_MAP
                     }
                 }

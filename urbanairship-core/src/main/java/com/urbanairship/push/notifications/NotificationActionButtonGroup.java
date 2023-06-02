@@ -4,7 +4,7 @@ package com.urbanairship.push.notifications;
 
 import android.content.Context;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -57,7 +57,7 @@ public class NotificationActionButtonGroup {
             try {
                 notificationActionMap = JsonValue.parseString(actionsPayload).optMap();
             } catch (JsonException e) {
-                Logger.error(e, "Failed to parse notification actions payload: %s", actionsPayload);
+                UALog.e(e, "Failed to parse notification actions payload: %s", actionsPayload);
             }
         }
 

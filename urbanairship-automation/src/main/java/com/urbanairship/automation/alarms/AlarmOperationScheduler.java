@@ -8,7 +8,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.util.Clock;
 import com.urbanairship.util.PendingIntentCompat;
 
@@ -105,7 +105,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
         long time = clock.elapsedRealtime() + delay;
         PendingOperation pendingOperation = new PendingOperation(time, operation);
 
-        Logger.verbose("Operation scheduled with %d delay", delay);
+        UALog.v("Operation scheduled with %d delay", delay);
 
         synchronized (pendingOperations) {
             pendingOperations.add(pendingOperation);
@@ -118,7 +118,7 @@ public class AlarmOperationScheduler implements OperationScheduler {
      * Called by {@link AlarmOperationReceiver}.
      */
     void onAlarmFired() {
-        Logger.verbose("Alarm fired");
+        UALog.v("Alarm fired");
 
         long time = clock.elapsedRealtime();
 
@@ -150,9 +150,9 @@ public class AlarmOperationScheduler implements OperationScheduler {
 
         try {
             delegate.onSchedule(nextScheduleTime, pendingIntent);
-            Logger.verbose("Next alarm set %d", nextScheduleTime - clock.elapsedRealtime());
+            UALog.v("Next alarm set %d", nextScheduleTime - clock.elapsedRealtime());
         } catch (Exception e) {
-            Logger.error(e, "AlarmOperationScheduler - Failed to schedule alarm.");
+            UALog.e(e, "AlarmOperationScheduler - Failed to schedule alarm.");
         }
     }
 

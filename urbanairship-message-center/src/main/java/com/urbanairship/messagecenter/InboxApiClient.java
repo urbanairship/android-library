@@ -4,7 +4,7 @@ package com.urbanairship.messagecenter;
 
 import android.net.Uri;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.AirshipUrlConfig;
@@ -94,7 +94,7 @@ public class InboxApiClient {
                                  .put(MESSAGES_REPORTINGS_KEY, JsonValue.wrapOpt(reportingsToDelete))
                                  .build();
 
-        Logger.verbose("Deleting inbox messages with payload: %s", payload);
+        UALog.v("Deleting inbox messages with payload: %s", payload);
 
         Map<String, String> headers = new HashMap<>();
         headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
@@ -119,7 +119,7 @@ public class InboxApiClient {
                                  .put(MESSAGES_REPORTINGS_KEY, JsonValue.wrapOpt(reportingsToUpdate))
                                  .build();
 
-        Logger.verbose("Marking inbox messages read request with payload: %s", payload);
+        UALog.v("Marking inbox messages read request with payload: %s", payload);
 
         Map<String, String> headers = new HashMap<>();
         headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
@@ -143,7 +143,7 @@ public class InboxApiClient {
                                  .putOpt(getPayloadChannelsKey(), Collections.singletonList(channelId))
                                  .build();
 
-        Logger.verbose("Creating Rich Push user with payload: %s", payload);
+        UALog.v("Creating Rich Push user with payload: %s", payload);
 
         Map<String, String> headers = new HashMap<>();
         headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
@@ -180,7 +180,7 @@ public class InboxApiClient {
                                  )
                                  .build();
 
-        Logger.verbose("Updating user with payload: %s", payload);
+        UALog.v("Updating user with payload: %s", payload);
 
         Map<String, String> headers = new HashMap<>();
         headers.put("Accept", "application/vnd.urbanairship+json; version=3;");

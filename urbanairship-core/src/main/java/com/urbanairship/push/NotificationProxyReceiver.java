@@ -8,7 +8,7 @@ import android.content.Intent;
 
 import com.urbanairship.AirshipExecutors;
 import com.urbanairship.Autopilot;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 
 import java.util.concurrent.ExecutionException;
@@ -34,7 +34,7 @@ public class NotificationProxyReceiver extends BroadcastReceiver {
         Autopilot.automaticTakeOff(context);
 
         if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
-            Logger.error("NotificationProxyReceiver - unable to receive intent, takeOff not called.");
+            UALog.e("NotificationProxyReceiver - unable to receive intent, takeOff not called.");
             return;
         }
 
@@ -42,7 +42,7 @@ public class NotificationProxyReceiver extends BroadcastReceiver {
             return;
         }
 
-        Logger.verbose("Received intent: %s", intent.getAction());
+        UALog.v("Received intent: %s", intent.getAction());
 
         final PendingResult pendingResult = goAsync();
         final Future<Boolean> future = new NotificationIntentProcessor(context, intent).process();
@@ -52,12 +52,12 @@ public class NotificationProxyReceiver extends BroadcastReceiver {
             public void run() {
                 try {
                     Boolean result = future.get(ACTION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-                    Logger.verbose("Finished processing notification intent with result %s.", result);
+                    UALog.v("Finished processing notification intent with result %s.", result);
                 } catch (InterruptedException | ExecutionException  e) {
-                    Logger.error(e, "NotificationProxyReceiver - Exception when processing notification intent.");
+                    UALog.e(e, "NotificationProxyReceiver - Exception when processing notification intent.");
                     Thread.currentThread().interrupt();
                 } catch (TimeoutException e) {
-                    Logger.error("NotificationProxyReceiver - Application took too long to process notification intent.");
+                    UALog.e("NotificationProxyReceiver - Application took too long to process notification intent.");
                 }
                 pendingResult.finish();
             }

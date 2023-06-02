@@ -5,7 +5,7 @@ package com.urbanairship.iam.html;
 import android.content.Context;
 import android.content.Intent;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.ForegroundDisplayAdapter;
@@ -55,7 +55,7 @@ public class HtmlDisplayAdapter extends ForegroundDisplayAdapter {
     @Override
     public int onPrepare(@NonNull Context context, @NonNull Assets assets) {
         if (!UAirship.shared().getUrlAllowList().isAllowed(displayContent.getUrl(), UrlAllowList.SCOPE_OPEN_URL)) {
-            Logger.error("HTML in-app message URL is not allowed. Unable to display message.");
+            UALog.e("HTML in-app message URL is not allowed. Unable to display message.");
             return InAppMessageAdapter.CANCEL;
         }
 

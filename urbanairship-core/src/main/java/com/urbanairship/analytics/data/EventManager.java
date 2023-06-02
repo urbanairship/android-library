@@ -2,7 +2,7 @@ package com.urbanairship.analytics.data;
 
 import android.content.Context;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.Event;
@@ -113,7 +113,7 @@ public class EventManager {
     public void scheduleEventUpload(final long delay, @NonNull TimeUnit timeUnit) {
         long milliseconds = timeUnit.toMillis(delay);
 
-        Logger.verbose("Requesting to schedule event upload with delay %s ms.", milliseconds);
+        UALog.v("Requesting to schedule event upload with delay %s ms.", milliseconds);
 
         int conflictStrategy = JobInfo.REPLACE;
 
@@ -125,13 +125,13 @@ public class EventManager {
                 long currentDelay = Math.max(System.currentTimeMillis() - previousScheduledTime, 0);
 
                 if (currentDelay < milliseconds) {
-                    Logger.verbose("Event upload already scheduled for an earlier time.");
+                    UALog.v("Event upload already scheduled for an earlier time.");
                     conflictStrategy = JobInfo.KEEP;
                     milliseconds = currentDelay;
                 }
             }
 
-            Logger.verbose("Scheduling upload in %s ms.", milliseconds);
+            UALog.v("Scheduling upload in %s ms.", milliseconds);
             JobInfo jobInfo = JobInfo.newBuilder()
                                      .setAction(ACTION_SEND)
                                      .setNetworkAccessRequired(true)
@@ -159,7 +159,7 @@ public class EventManager {
         try {
             entity = EventEntity.create(event, sessionId);
         } catch (JsonException e) {
-            Logger.error(e, "Analytics - Invalid event: %s", event);
+            UALog.e(e, "Analytics - Invalid event: %s", event);
             return;
         }
 
@@ -239,7 +239,7 @@ public class EventManager {
             eventCount = eventDao.count();
 
             if (eventCount <= 0) {
-                Logger.debug("No events to send.");
+                UALog.d("No events to send.");
                 return true;
             }
 
@@ -251,7 +251,7 @@ public class EventManager {
         }
 
         if (events.isEmpty()) {
-            Logger.verbose("No analytics events to send.");
+            UALog.v("No analytics events to send.");
             return false;
         }
 
@@ -263,11 +263,11 @@ public class EventManager {
         try {
             Response<EventResponse> response = apiClient.sendEvents(channelId, eventPayloads, headers);
             if (!response.isSuccessful()) {
-                Logger.debug("Analytic upload failed.");
+                UALog.d("Analytic upload failed.");
                 return false;
             }
 
-            Logger.debug("Analytic events uploaded.");
+            UALog.d("Analytic events uploaded.");
             synchronized (eventLock) {
                 eventDao.deleteBatch(events);
             }
@@ -285,7 +285,7 @@ public class EventManager {
             return true;
 
         } catch (RequestException e) {
-            Logger.error(e, "EventManager - Failed to upload events");
+            UALog.e(e, "EventManager - Failed to upload events");
             return false;
         }
     }

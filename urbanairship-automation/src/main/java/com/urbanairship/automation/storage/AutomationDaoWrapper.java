@@ -2,7 +2,7 @@
 
 package com.urbanairship.automation.storage;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -31,7 +31,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             dao.insert(entity, entities);
         } catch (Exception e) {
-            Logger.error(e, "Failed to insert schedule %s triggers %s", entity, entities);
+            UALog.e(e, "Failed to insert schedule %s triggers %s", entity, entities);
         }
     }
 
@@ -40,7 +40,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             dao.update(entity, entities);
         } catch (Exception e) {
-            Logger.error(e, "Failed to update schedule %s triggers %s", entity, entities);
+            UALog.e(e, "Failed to update schedule %s triggers %s", entity, entities);
         }
     }
 
@@ -49,7 +49,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             dao.updateTriggers(entities);
         } catch (Exception e) {
-            Logger.error(e, "Failed to update triggers %s", entities);
+            UALog.e(e, "Failed to update triggers %s", entities);
         }
     }
 
@@ -58,7 +58,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             dao.delete(entity);
         } catch (Exception e) {
-            Logger.error(e, "Failed to delete schedule %s", entity);
+            UALog.e(e, "Failed to delete schedule %s", entity);
         }
     }
 
@@ -67,7 +67,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getScheduleCount();
         } catch (Exception e) {
-            Logger.error(e, "Failed to get schedule count");
+            UALog.e(e, "Failed to get schedule count");
             return -1;
         }
     }
@@ -78,7 +78,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getSchedules();
         } catch (Exception e) {
-            Logger.error(e, "Failed to get schedules");
+            UALog.e(e, "Failed to get schedules");
             return Collections.emptyList();
         }
     }
@@ -89,7 +89,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getSchedulesByType(type);
         } catch (Exception e) {
-            Logger.error(e, "Failed to get schedules by type %s", type);
+            UALog.e(e, "Failed to get schedules by type %s", type);
             return Collections.emptyList();
         }
     }
@@ -100,7 +100,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getSchedule(scheduleId);
         } catch (Exception e) {
-            Logger.error(e, "Failed to get schedule with id %s", scheduleId);
+            UALog.e(e, "Failed to get schedule with id %s", scheduleId);
             return null;
         }
     }
@@ -111,7 +111,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getSchedule(scheduleId, type);
         } catch (Exception e) {
-            Logger.error(e, "Failed to get schedule with id %s type %s", scheduleId, type);
+            UALog.e(e, "Failed to get schedule with id %s type %s", scheduleId, type);
             return null;
         }
     }
@@ -122,7 +122,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getSchedules(scheduleIds);
         } catch (Exception e) {
-            Logger.error(e, "Failed to get schedules with ids %s", scheduleIds);
+            UALog.e(e, "Failed to get schedules with ids %s", scheduleIds);
             return Collections.emptyList();
         }
     }
@@ -133,7 +133,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getSchedules(scheduleIds, type);
         } catch (Exception e) {
-            Logger.error(e, "Failed to get schedules with ids %s type %s", scheduleIds, type);
+            UALog.e(e, "Failed to get schedules with ids %s type %s", scheduleIds, type);
             return Collections.emptyList();
         }
     }
@@ -144,7 +144,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getSchedulesWithGroup(group, type);
         } catch (Exception e) {
-            Logger.error(e, "Failed to get schedules with group %s type %s", group, type);
+            UALog.e(e, "Failed to get schedules with group %s type %s", group, type);
             return Collections.emptyList();
         }
     }
@@ -155,7 +155,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getSchedulesWithGroup(group);
         } catch (Exception e) {
-            Logger.error(e, "Failed to get schedules with group %s", group);
+            UALog.e(e, "Failed to get schedules with group %s", group);
             return Collections.emptyList();
         }
     }
@@ -166,7 +166,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getSchedulesWithStates(executionStates);
         } catch (Exception e) {
-            Logger.error(e, "Failed to get schedules with state %s", executionStates);
+            UALog.e(e, "Failed to get schedules with state %s", executionStates);
             return Collections.emptyList();
         }
     }
@@ -177,7 +177,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getActiveExpiredSchedules();
         } catch (Exception e) {
-            Logger.error(e, "Failed to get active expired schedules");
+            UALog.e(e, "Failed to get active expired schedules");
             return Collections.emptyList();
         }
     }
@@ -188,7 +188,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getActiveTriggers(type, scheduleId);
         } catch (Exception e) {
-            Logger.error(e, "Failed to get active triggers %s %s", type, scheduleId);
+            UALog.e(e, "Failed to get active triggers %s %s", type, scheduleId);
             return Collections.emptyList();
         }
     }
@@ -199,7 +199,7 @@ public class AutomationDaoWrapper extends AutomationDao {
         try {
             return dao.getActiveTriggers(type);
         } catch (Exception e) {
-            Logger.error(e, "Failed to get active triggers %s", type);
+            UALog.e(e, "Failed to get active triggers %s", type);
             return Collections.emptyList();
         }
     }

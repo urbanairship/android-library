@@ -4,8 +4,8 @@ package com.urbanairship.remotedata
 
 import com.google.android.gms.common.util.VisibleForTesting
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.Logger
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.UALog
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -121,7 +121,7 @@ internal abstract class RemoteDataProvider(
 
         if (result.status == 304) {
             if (refreshState == null) {
-                Logger.e { "Received a 304 without a previous refresh state" }
+                UALog.e { "Received a 304 without a previous refresh state" }
                 return RefreshResult.FAILED
             }
 

@@ -62,7 +62,7 @@ public class PushProviders {
         List<PushProvider> providers = createProviders();
 
         if (providers.isEmpty()) {
-            Logger.warn("No push providers found!. Make sure to install either `urbanairship-fcm` or `urbanairship-adm`.");
+            UALog.w("No push providers found!. Make sure to install either `urbanairship-fcm` or `urbanairship-adm`.");
             return;
         }
 
@@ -86,7 +86,7 @@ public class PushProviders {
         if (provider instanceof AirshipVersionInfo) {
             AirshipVersionInfo versionInfo = (AirshipVersionInfo) provider;
             if (!UAirship.getVersion().equals(versionInfo.getAirshipVersion())) {
-                Logger.error("Provider: %s version %s does not match the SDK version %s. Make sure all Airship dependencies are the same version.", provider, versionInfo.getAirshipVersion(), UAirship.getVersion());
+                UALog.e("Provider: %s version %s does not match the SDK version %s. Make sure all Airship dependencies are the same version.", provider, versionInfo.getAirshipVersion(), UAirship.getVersion());
                 return false;
             }
         }
@@ -94,14 +94,14 @@ public class PushProviders {
         switch (provider.getDeliveryType()) {
             case PushProvider.ADM_DELIVERY_TYPE:
                 if (provider.getPlatform() != UAirship.AMAZON_PLATFORM) {
-                    Logger.error("Invalid Provider: %s. ADM delivery is only available for Amazon platforms.", provider);
+                    UALog.e("Invalid Provider: %s. ADM delivery is only available for Amazon platforms.", provider);
                     return false;
                 }
                 break;
             case PushProvider.FCM_DELIVERY_TYPE:
             case PushProvider.HMS_DELIVERY_TYPE:
                 if (provider.getPlatform() != UAirship.ANDROID_PLATFORM) {
-                    Logger.error("Invalid Provider: %s. %s delivery is only available for Android platforms.", provider.getDeliveryType(), provider);
+                    UALog.e("Invalid Provider: %s. %s delivery is only available for Android platforms.", provider.getDeliveryType(), provider);
                     return false;
                 }
                 break;
@@ -128,11 +128,11 @@ public class PushProviders {
             try {
                 Class providerClass = Class.forName(className);
                 pushProvider = (PushProvider) providerClass.newInstance();
-                Logger.verbose("Found provider: %s", pushProvider);
+                UALog.v("Found provider: %s", pushProvider);
             } catch (InstantiationException e) {
-                Logger.error(e, "Unable to create provider %s", className);
+                UALog.e(e, "Unable to create provider %s", className);
             } catch (IllegalAccessException e) {
-                Logger.error(e, "Unable to create provider %s", className);
+                UALog.e(e, "Unable to create provider %s", className);
             } catch (ClassNotFoundException e) {
                 continue;
             }

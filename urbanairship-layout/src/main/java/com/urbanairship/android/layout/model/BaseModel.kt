@@ -5,7 +5,7 @@ import android.content.Context
 import android.view.View
 import android.view.View.OnAttachStateChangeListener
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
@@ -222,25 +222,25 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
                 for (action in handler.actions) {
                     when (action) {
                         is StateAction.SetFormValue -> layoutState.layout?.let { state ->
-                           Logger.verbose("StateAction: SetFormValue ${action.key} = ${JsonValue.wrapOpt(value)}")
+                           UALog.v("StateAction: SetFormValue ${action.key} = ${JsonValue.wrapOpt(value)}")
                             state.update {
                                 it.copy(state = it.state + (action.key to JsonValue.wrapOpt(value)))
                             }
-                        } ?: Logger.warn("StateAction: SetFormValue skipped. Missing State Controller!")
+                        } ?: UALog.w("StateAction: SetFormValue skipped. Missing State Controller!")
 
                         is StateAction.SetState -> layoutState.layout?.let { state ->
-                            Logger.verbose("StateAction: SetState ${action.key} = ${action.value}")
+                            UALog.v("StateAction: SetState ${action.key} = ${action.value}")
                             state.update {
                                 it.copy(state = it.state + (action.key to action.value))
                             }
-                        } ?: Logger.warn("StateAction: SetState skipped. Missing State Controller!")
+                        } ?: UALog.w("StateAction: SetState skipped. Missing State Controller!")
 
                         StateAction.ClearState -> layoutState.layout?.let { state ->
-                            Logger.verbose("StateAction: ClearState")
+                            UALog.v("StateAction: ClearState")
                             state.update {
                                 it.copy(state = emptyMap())
                             }
-                        } ?: Logger.warn("StateAction: ClearState skipped. Missing State Controller!")
+                        } ?: UALog.w("StateAction: ClearState skipped. Missing State Controller!")
                     }
                 }
             }

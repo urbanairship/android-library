@@ -6,7 +6,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.json.JsonValue;
 
@@ -71,10 +71,10 @@ final class AdapterWrapper {
     @InAppMessageAdapter.PrepareResult
     int prepare(@NonNull Context context, @NonNull Assets assets) {
         try {
-            Logger.debug("Preparing message for schedule %s", scheduleId);
+            UALog.d("Preparing message for schedule %s", scheduleId);
             return adapter.onPrepare(context, assets);
         } catch (Exception e) {
-            Logger.error(e, "AdapterWrapper - Exception during prepare(Context).");
+            UALog.e(e, "AdapterWrapper - Exception during prepare(Context).");
             return InAppMessageAdapter.RETRY;
         }
     }
@@ -89,7 +89,7 @@ final class AdapterWrapper {
         try {
             return adapter.isReady(context) && coordinator.isReady();
         } catch (Exception e) {
-            Logger.error(e, "AdapterWrapper - Exception during isReady(Activity).");
+            UALog.e(e, "AdapterWrapper - Exception during isReady(Activity).");
             return false;
         }
     }
@@ -100,7 +100,7 @@ final class AdapterWrapper {
      * @throws DisplayException if the adapter throws an exception.
      */
     void display(@NonNull Context context) throws DisplayException {
-        Logger.debug("Displaying message for schedule %s", scheduleId);
+        UALog.d("Displaying message for schedule %s", scheduleId);
         displayed = true;
 
         try {
@@ -117,12 +117,12 @@ final class AdapterWrapper {
      */
     @MainThread
     void displayFinished() {
-        Logger.debug("Display finished for schedule %s", scheduleId);
+        UALog.d("Display finished for schedule %s", scheduleId);
         new Handler(Looper.getMainLooper()).post(() -> {
             try {
                 coordinator.onDisplayFinished(message);
             } catch (Exception e) {
-                Logger.error(e, "AdapterWrapper - Exception during onDisplayFinished().");
+                UALog.e(e, "AdapterWrapper - Exception during onDisplayFinished().");
             }
         });
     }
@@ -132,11 +132,11 @@ final class AdapterWrapper {
      */
     @WorkerThread
     void adapterFinished(@NonNull Context context) {
-        Logger.debug("Adapter finished for schedule %s", scheduleId);
+        UALog.d("Adapter finished for schedule %s", scheduleId);
         try {
             adapter.onFinish(context);
         } catch (Exception e) {
-            Logger.error(e, "AdapterWrapper - Exception during finish().");
+            UALog.e(e, "AdapterWrapper - Exception during finish().");
         }
     }
 

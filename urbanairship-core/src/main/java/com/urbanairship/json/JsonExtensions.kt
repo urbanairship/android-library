@@ -1,6 +1,6 @@
 package com.urbanairship.json
 
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 
 public fun jsonMapOf(vararg fields: Pair<String, *>): JsonMap =
     JsonMap.newBuilder().apply {
@@ -14,7 +14,7 @@ public inline fun <T, R> R.tryParse(logError: Boolean = false, parser: (R) -> T)
         parser(this)
     } catch (e: JsonException) {
         if (logError) {
-            Logger.error("Failed to parse json", e)
+            UALog.e("Failed to parse json", e)
         }
         null
     }
@@ -75,7 +75,7 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
 internal inline fun <reified T> JsonMap.optionalFieldConverted(key: String, builder: (String) -> T?): T? {
     val result = optionalField<String>(key)?.let(builder)
     if (result == null) {
-        Logger.e { "Failed to parse ${T::class.simpleName} from $key" }
+        UALog.e { "Failed to parse ${T::class.simpleName} from $key" }
     }
     return result
 }

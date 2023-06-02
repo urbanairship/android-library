@@ -152,25 +152,25 @@ public class UrlAllowList {
 
         Uri uri = Uri.parse(pattern);
         if (uri == null) {
-            Logger.error("Invalid URL allow list pattern %s", pattern);
+            UALog.e("Invalid URL allow list pattern %s", pattern);
             return false;
         }
 
         String scheme = uri.getScheme();
         if (UAStringUtil.isEmpty(scheme) || !PATH_OR_SCHEME_PATTERN.matcher(scheme).matches()) {
-            Logger.error("Invalid scheme %s in URL allow list pattern %s", scheme, pattern);
+            UALog.e("Invalid scheme %s in URL allow list pattern %s", scheme, pattern);
             return false;
         }
 
         String host = UAStringUtil.nullIfEmpty(uri.getEncodedAuthority());
         if (host != null && !HOST_PATTERN.matcher(host).matches()) {
-            Logger.error("Invalid host %s in URL allow list pattern %s", host, pattern);
+            UALog.e("Invalid host %s in URL allow list pattern %s", host, pattern);
             return false;
         }
 
         String path = uri.isOpaque() ? uri.getSchemeSpecificPart() : uri.getPath();
         if (path != null && !PATH_OR_SCHEME_PATTERN.matcher(path).matches()) {
-            Logger.error("Invalid path %s in URL allow list pattern %s", path, pattern);
+            UALog.e("Invalid path %s in URL allow list pattern %s", path, pattern);
             return false;
         }
 
@@ -299,7 +299,7 @@ public class UrlAllowList {
         urlAllowList.addEntry("tel:", SCOPE_OPEN_URL);
 
         if (!airshipConfigOptions.isAllowListSet && !airshipConfigOptions.isAllowListScopeOpenSet) {
-            Logger.error(
+            UALog.e(
                     "The Airship config options is missing URL allow list rules for SCOPE_OPEN " +
                             "that controls what external URLs are able to be opened externally or loaded " +
                             "in a web view by Airship. By default, all URLs will be allowed. " +

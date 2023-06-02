@@ -5,7 +5,7 @@ package com.urbanairship.actions;
 import android.content.Intent;
 import android.net.Uri;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.UrlAllowList;
 
@@ -56,7 +56,7 @@ public class WalletAction extends OpenExternalUrlAction {
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
-        Logger.info("Processing Wallet adaptive link.");
+        UALog.i("Processing Wallet adaptive link.");
 
         Intent intent = new Intent(UAirship.getApplicationContext(), WalletLoadingActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

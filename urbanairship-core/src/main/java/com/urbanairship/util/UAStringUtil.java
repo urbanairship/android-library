@@ -5,7 +5,7 @@ package com.urbanairship.util;
 import android.content.Context;
 import android.util.Base64;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
@@ -105,7 +105,7 @@ public abstract class UAStringUtil {
             byte[] hash = digest.digest(value.getBytes("UTF-8"));
             return byteToHex(hash);
         } catch (@NonNull NoSuchAlgorithmException | UnsupportedEncodingException e) {
-            Logger.error(e, "Failed to encode string: %s", value);
+            UALog.e(e, "Failed to encode string: %s", value);
             return null;
         }
     }
@@ -127,7 +127,7 @@ public abstract class UAStringUtil {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return digest.digest(value.getBytes("UTF-8"));
         } catch (@NonNull NoSuchAlgorithmException | UnsupportedEncodingException e) {
-            Logger.error(e, "Failed to encode string: %s", value);
+            UALog.e(e, "Failed to encode string: %s", value);
             return null;
         }
     }
@@ -163,7 +163,7 @@ public abstract class UAStringUtil {
         try {
             return Base64.decode(encoded, Base64.DEFAULT);
         } catch (IllegalArgumentException e) {
-            Logger.verbose("Failed to decode string: %s", encoded);
+            UALog.v("Failed to decode string: %s", encoded);
             return null;
         }
     }
@@ -184,7 +184,7 @@ public abstract class UAStringUtil {
         try {
             return new String(decoded, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            Logger.error(e, "Failed to create string");
+            UALog.e(e, "Failed to create string");
             return null;
         }
     }

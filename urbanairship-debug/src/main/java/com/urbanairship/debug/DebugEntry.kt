@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.res.XmlResourceParser
 import androidx.annotation.RestrictTo
 import androidx.annotation.XmlRes
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.util.UAStringUtil
 import java.io.IOException
 import org.xmlpull.v1.XmlPullParser
@@ -40,7 +40,7 @@ data class DebugEntry(
                 parser = context.resources.getXml(resource)
                 parse(context, parser)
             } catch (e: Exception) {
-                Logger.error(e, "Failed to parse ua_debug_entries config.")
+                UALog.e(e, "Failed to parse ua_debug_entries config.")
                 emptyList()
             } finally {
                 parser?.close()
@@ -60,12 +60,12 @@ data class DebugEntry(
                     val description = getString(context, parser, DESCRIPTION_ATTRIBUTE)
 
                     if (navigationId == 0) {
-                        Logger.error("%s missing navigation id.", NAVIGATION_ID_ATTRIBUTE)
+                        UALog.e("%s missing navigation id.", NAVIGATION_ID_ATTRIBUTE)
                         continue
                     }
 
                     if (UAStringUtil.isEmpty(title)) {
-                        Logger.error("%s missing title.", TITLE_ATTRIBUTE)
+                        UALog.e("%s missing title.", TITLE_ATTRIBUTE)
                         continue
                     }
 

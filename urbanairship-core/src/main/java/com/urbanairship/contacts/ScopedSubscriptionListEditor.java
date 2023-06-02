@@ -2,7 +2,7 @@
 
 package com.urbanairship.contacts;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.util.Clock;
 import com.urbanairship.util.UAStringUtil;
 
@@ -36,7 +36,7 @@ public abstract class ScopedSubscriptionListEditor {
     public ScopedSubscriptionListEditor subscribe(@NonNull String subscriptionListId, @NonNull Scope scope) {
         subscriptionListId = subscriptionListId.trim();
         if (UAStringUtil.isEmpty(subscriptionListId)) {
-            Logger.error("The subscription list ID must not be null or empty." );
+            UALog.e("The subscription list ID must not be null or empty." );
             return this;
         }
 
@@ -72,7 +72,7 @@ public abstract class ScopedSubscriptionListEditor {
     public ScopedSubscriptionListEditor unsubscribe(String subscriptionListId, @NonNull Scope scope) {
         subscriptionListId = subscriptionListId.trim();
         if (UAStringUtil.isEmpty(subscriptionListId)) {
-            Logger.error("The subscription list ID must not be null or empty." );
+            UALog.e("The subscription list ID must not be null or empty." );
             return this;
         }
 

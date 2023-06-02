@@ -9,7 +9,7 @@ import android.os.Build;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
@@ -41,7 +41,6 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -300,7 +299,7 @@ public class Analytics extends AirshipComponent {
 
             String channelId = airshipChannel.getId();
             if (channelId == null) {
-                Logger.debug("No channel ID, skipping analytics send.");
+                UALog.d("No channel ID, skipping analytics send.");
                 return JobResult.SUCCESS;
             }
 
@@ -332,16 +331,16 @@ public class Analytics extends AirshipComponent {
     public void addEvent(@NonNull final Event event) {
         //noinspection ConstantConditions
         if (event == null || !event.isValid()) {
-            Logger.error("Analytics - Invalid event: %s", event);
+            UALog.e("Analytics - Invalid event: %s", event);
             return;
         }
 
         if (!isEnabled()) {
-            Logger.debug("Disabled ignoring event: %s", event.getType());
+            UALog.d("Disabled ignoring event: %s", event.getType());
             return;
         }
 
-        Logger.verbose("Adding event: %s", event.getType());
+        UALog.v("Adding event: %s", event.getType());
 
         executor.execute(new Runnable() {
             @Override
@@ -372,7 +371,7 @@ public class Analytics extends AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public void setConversionSendId(@Nullable String sendId) {
-        Logger.debug("Setting conversion send ID: %s", sendId);
+        UALog.d("Setting conversion send ID: %s", sendId);
         this.conversionSendId = sendId;
     }
 
@@ -396,7 +395,7 @@ public class Analytics extends AirshipComponent {
      * @hide
      */
     public void setConversionMetadata(@Nullable String metadata) {
-        Logger.debug("Setting conversion metadata: %s", metadata);
+        UALog.d("Setting conversion metadata: %s", metadata);
         this.conversionMetadata = metadata;
     }
 
@@ -418,7 +417,7 @@ public class Analytics extends AirshipComponent {
     void onForeground(long timeMS) {
         // Start a new environment when the app enters the foreground
         sessionId = UUID.randomUUID().toString();
-        Logger.debug("New session: %s", sessionId);
+        UALog.d("New session: %s", sessionId);
 
         // If the app backgrounded, there should be no current screen
         if (currentScreen == null) {
@@ -469,7 +468,7 @@ public class Analytics extends AirshipComponent {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                Logger.info("Deleting all analytic events.");
+                UALog.i("Deleting all analytic events.");
                 eventManager.deleteEvents();
             }
         });
@@ -505,7 +504,7 @@ public class Analytics extends AirshipComponent {
             void onApply(boolean clear, @NonNull Map<String, String> idsToAdd, @NonNull List<String> idsToRemove) {
                 synchronized (associatedIdentifiersLock) {
                     if (!isEnabled()) {
-                        Logger.warn("Analytics - Unable to track associated identifiers when analytics is disabled.");
+                        UALog.w("Analytics - Unable to track associated identifiers when analytics is disabled.");
                         return;
                     }
 
@@ -526,7 +525,7 @@ public class Analytics extends AirshipComponent {
                     AssociatedIdentifiers identifiers = new AssociatedIdentifiers(ids);
 
                     if (associatedIdentifiers.getIds().equals(identifiers.getIds())) {
-                        Logger.info("Skipping analytics event addition for duplicate associated identifiers.");
+                        UALog.i("Skipping analytics event addition for duplicate associated identifiers.");
                         return;
                     }
 
@@ -551,7 +550,7 @@ public class Analytics extends AirshipComponent {
                     return AssociatedIdentifiers.fromJson(value);
                 }
             } catch (JsonException e) {
-                Logger.error(e, "Unable to parse associated identifiers.");
+                UALog.e(e, "Unable to parse associated identifiers.");
                 getDataStore().remove(ASSOCIATED_IDENTIFIERS_KEY);
             }
 
@@ -664,7 +663,7 @@ public class Analytics extends AirshipComponent {
                     headers.put("X-UA-Permission-" + permission.getValue(), currentStatus.getValue());
                 }
             } catch (Exception e) {
-                Logger.error(e, "Failed to get status for permission %s", permission);
+                UALog.e(e, "Failed to get status for permission %s", permission);
             }
         }
 

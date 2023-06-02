@@ -11,7 +11,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.ModalPresentation
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.R
@@ -56,7 +56,7 @@ public class ModalActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         loader = parcelableExtra(EXTRA_DISPLAY_ARGS_LOADER) ?: run {
-            Logger.error("Missing layout args loader")
+            UALog.e("Missing layout args loader")
             finish()
             return@onCreate
         }
@@ -70,7 +70,7 @@ public class ModalActivity : AppCompatActivity() {
             reporter = ExternalReporter(externalListener)
 
             val presentation = (args.payload.presentation as? ModalPresentation) ?: run {
-                Logger.error("Not a modal presentation")
+                UALog.e("Not a modal presentation")
                 finish()
                 return@onCreate
             }
@@ -124,10 +124,10 @@ public class ModalActivity : AppCompatActivity() {
                 applyAdjustResizeWorkaround()
             }
         } catch (e: LoadException) {
-            Logger.error(e, "Failed to load model!")
+            UALog.e(e, "Failed to load model!")
             finish()
         } catch (e: ModelFactoryException) {
-            Logger.error(e, "Failed to load model!")
+            UALog.e(e, "Failed to load model!")
             finish()
         }
     }
@@ -181,7 +181,7 @@ public class ModalActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            Logger.error(e, "Unable to set orientation lock.")
+            UALog.e(e, "Unable to set orientation lock.")
         }
     }
 

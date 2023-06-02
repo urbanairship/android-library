@@ -8,7 +8,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DataManager;
@@ -65,7 +65,7 @@ public class RemoteDataStore extends DataManager {
 
     @Override
     protected void onCreate(@NonNull SQLiteDatabase db) {
-        Logger.debug("Creating database");
+        UALog.d("Creating database");
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ("
                 + COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + COLUMN_NAME_TYPE + " TEXT,"
@@ -107,7 +107,7 @@ public class RemoteDataStore extends DataManager {
 
         final SQLiteDatabase db = getWritableDatabase();
         if (db == null) {
-            Logger.error("RemoteDataStore - Unable to save remote data payloads.");
+            UALog.e("RemoteDataStore - Unable to save remote data payloads.");
             return false;
         }
 
@@ -132,14 +132,14 @@ public class RemoteDataStore extends DataManager {
                         return false;
                     }
                 } catch (SQLException e) {
-                    Logger.error(e, "RemoteDataStore - Unable to save remote data payload.");
+                    UALog.e(e, "RemoteDataStore - Unable to save remote data payload.");
                 }
             }
 
             db.setTransactionSuccessful();
             db.endTransaction();
         } catch (SQLException e) {
-            Logger.error(e, "RemoteDataStore - Unable to save remote data payloads.");
+            UALog.e(e, "RemoteDataStore - Unable to save remote data payloads.");
             return false;
         }
 
@@ -221,7 +221,7 @@ public class RemoteDataStore extends DataManager {
                 );
                 entries.add(payload);
             } catch (IllegalArgumentException | JsonException e) {
-                Logger.error(e, "RemoteDataStore - failed to retrieve payload");
+                UALog.e(e, "RemoteDataStore - failed to retrieve payload");
             }
 
             cursor.moveToNext();

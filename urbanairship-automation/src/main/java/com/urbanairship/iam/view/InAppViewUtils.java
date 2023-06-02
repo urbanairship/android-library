@@ -25,7 +25,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.urbanairship.Fonts;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.iam.TextInfo;
@@ -130,7 +130,7 @@ public class InAppViewUtils {
             try {
                 drawable = ContextCompat.getDrawable(textView.getContext(), drawableId);
             } catch (android.content.res.Resources.NotFoundException e) {
-                Logger.debug("Drawable " + drawableId + " no longer exists.");
+                UALog.d("Drawable " + drawableId + " no longer exists.");
             }
         }
 
@@ -157,7 +157,7 @@ public class InAppViewUtils {
 
                 textView.setText(text);
             } catch (Resources.NotFoundException e) {
-                Logger.error(e, "Unable to find button drawable.");
+                UALog.e(e, "Unable to find button drawable.");
                 textView.setText(textInfo.getText());
             }
         } else {

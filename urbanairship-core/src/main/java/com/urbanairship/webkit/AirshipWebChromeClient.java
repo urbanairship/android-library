@@ -21,7 +21,7 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.javascript.NativeBridge;
 import com.urbanairship.util.UriUtils;
 
@@ -117,7 +117,7 @@ public class AirshipWebChromeClient extends WebChromeClient {
                         try {
                             view.getContext().startActivity(intent);
                         } catch (ActivityNotFoundException e) {
-                            Logger.error(e);
+                            UALog.e(e);
                         }
                     }
                     return true;

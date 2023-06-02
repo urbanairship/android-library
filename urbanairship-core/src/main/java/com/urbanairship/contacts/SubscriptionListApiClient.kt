@@ -2,7 +2,7 @@
 
 package com.urbanairship.contacts
 
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
@@ -42,7 +42,7 @@ internal class SubscriptionListApiClient constructor(
             headers = headers
         )
 
-        Logger.d { "Fetching contact subscription lists for $contactId request: $request" }
+        UALog.d { "Fetching contact subscription lists for $contactId request: $request" }
 
         return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
 

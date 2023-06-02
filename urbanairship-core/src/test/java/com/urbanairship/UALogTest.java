@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 
-public class LoggerTest extends BaseTestCase {
+public class UALogTest extends BaseTestCase {
 
     /**
      * Test the logger listener.
@@ -27,19 +27,19 @@ public class LoggerTest extends BaseTestCase {
             called.add(message.invoke());
         };
 
-        Logger.setLogHandler(myLogger);
+        UALog.setLogHandler(myLogger);
 
-        Logger.error(error, errorMessage);
+        UALog.e(error, errorMessage);
 
         Assert.assertEquals(called.size(), 1);
         Assert.assertEquals(called.get(0), errorMessage);
 
-        Logger.setLogHandler(new DefaultLogHandler());
+        UALog.setLogHandler(new DefaultLogHandler());
     }
 
     @Test
     public void testClassNamePrefix() {
-        Logger.setLogLevel(Log.VERBOSE);
+        UALog.setLogLevel(Log.VERBOSE);
 
         final String rawMessage = "This is another test";
         final String prefixedMessage = String.format("%s - %s", getClass().getSimpleName(), rawMessage);
@@ -57,31 +57,31 @@ public class LoggerTest extends BaseTestCase {
             called.add(message.invoke());
         };
 
-        Logger.setLogHandler(myLogger);
+        UALog.setLogHandler(myLogger);
 
         // Make sure we properly add the prefix to the raw message
-        Logger.verbose(rawMessage);
+        UALog.v(rawMessage);
         Assert.assertEquals(1, called.size());
         Assert.assertEquals(prefixedMessage, called.get(0));
 
         // Make sure we don't add an extra prefix if the message was already prefixed manually
-        Logger.debug(prefixedMessage);
+        UALog.d(prefixedMessage);
         Assert.assertEquals(2, called.size());
         Assert.assertEquals(prefixedMessage, called.get(1));
 
         // Make sure we don't muck with log levels above debug
-        Logger.info(rawMessage);
+        UALog.i(rawMessage);
         Assert.assertEquals(3, called.size());
         Assert.assertEquals(rawMessage, called.get(2));
 
-        Logger.warn(rawMessage);
+        UALog.w(rawMessage);
         Assert.assertEquals(4, called.size());
         Assert.assertEquals(rawMessage, called.get(3));
 
-        Logger.error(rawMessage);
+        UALog.e(rawMessage);
         Assert.assertEquals(5, called.size());
         Assert.assertEquals(rawMessage, called.get(4));
 
-        Logger.setLogHandler(new DefaultLogHandler());
+        UALog.setLogHandler(new DefaultLogHandler());
     }
 }

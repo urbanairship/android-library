@@ -4,7 +4,7 @@
 
 package com.urbanairship.android.layout.property;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.ColorInt;
@@ -28,7 +28,7 @@ public final class HexColor {
         float alpha = json.opt("alpha").getFloat(1f);
 
         if (hex.isEmpty() || alpha > 1f || alpha < 0) {
-            Logger.warn("Invalid Color json: %s", json.toString());
+            UALog.w("Invalid Color json: %s", json.toString());
             return null;
         }
 

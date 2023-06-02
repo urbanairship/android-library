@@ -3,9 +3,9 @@ package com.urbanairship.sample;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.RemoteViews;
 
-import com.urbanairship.Logger;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.liveupdate.LiveUpdate;
 import com.urbanairship.liveupdate.LiveUpdateEvent;
@@ -24,7 +24,7 @@ public class SampleLiveUpdate implements LiveUpdateNotificationHandler {
     @NotNull
     public LiveUpdateResult<NotificationCompat.Builder> onUpdate(@NonNull Context context, @NonNull LiveUpdateEvent event, @NonNull LiveUpdate update) {
 
-        Logger.debug("SampleLiveUpdate - onUpdate: action=" + event + ", update=" + update);
+        Log.d("SampleLiveUpdate", "onUpdate: action=" + event + ", update=" + update);
 
         if (event == LiveUpdateEvent.END) {
             // Dismiss the live update on END. The default behavior will leave the Live Update

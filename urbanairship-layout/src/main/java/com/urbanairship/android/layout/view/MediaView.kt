@@ -17,7 +17,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.core.view.isGone
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.BaseModel
@@ -95,7 +95,7 @@ internal class MediaView(
             // Shouldn't get here, unless models are set up incorrectly and
             // attempting to collect too early.
             ?: emptyFlow<Unit>().also {
-                Logger.debug("MediaView.clicks() was collected before child views were ready!")
+                UALog.d("MediaView.clicks() was collected before child views were ready!")
             }
     }
 

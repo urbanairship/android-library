@@ -8,7 +8,7 @@ import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.json.JsonMap
 import com.urbanairship.liveupdate.LiveUpdateProcessor.HandlerCallback
@@ -78,7 +78,7 @@ internal class LiveUpdateRegistrar(
     ) {
         val handler = handlers[type]
         if (handler == null) {
-            Logger.error("Can't start Live Update '$name'. No handler registered for type '$type'!")
+            UALog.e("Can't start Live Update '$name'. No handler registered for type '$type'!")
             return
         }
 
@@ -142,7 +142,7 @@ internal class LiveUpdateRegistrar(
                 LiveUpdateEvent.START -> if (type != null) {
                     start(name, type, content, timestamp, dismissalDate, message)
                 } else {
-                    Logger.warn("Unable to start Live Update: $name. Missing required type!")
+                    UALog.w("Unable to start Live Update: $name. Missing required type!")
                 }
                 LiveUpdateEvent.END -> stop(name, content, timestamp, dismissalDate, message)
                 LiveUpdateEvent.UPDATE -> update(name, content, timestamp, dismissalDate, message)
@@ -180,7 +180,7 @@ internal class LiveUpdateRegistrar(
         val type = update.type
         val handler = handlers[type]
         if (handler == null) {
-            Logger.error("No handler was registered to handle events for Live Update type: $type!")
+            UALog.e("No handler was registered to handle events for Live Update type: $type!")
             return
         }
 
@@ -238,12 +238,12 @@ internal class LiveUpdateRegistrar(
         // Set our delete intent.
         notification.deleteIntent = PendingIntentCompat.getBroadcast(context, 0, deleteIntent, 0)
 
-        Logger.debug("Posting live update notification for: ${update.name}")
+        UALog.d("Posting live update notification for: ${update.name}")
 
         try {
             notificationManager.notify(update.notificationTag, NOTIFICATION_ID, notification)
         } catch (e: Exception) {
-            Logger.error(e, "Failed to post live update notification for: ${update.name}")
+            UALog.e(e, "Failed to post live update notification for: ${update.name}")
         }
     }
 

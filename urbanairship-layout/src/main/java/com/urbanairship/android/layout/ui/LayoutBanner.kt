@@ -14,8 +14,8 @@ import androidx.customview.widget.ViewDragHelper.STATE_IDLE
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
-import com.urbanairship.Logger
 import com.urbanairship.Predicate
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.R
@@ -71,11 +71,11 @@ internal class LayoutBanner(
     private val activityPredicate = Predicate { activity: Activity ->
         try {
             if (getContainerView(activity) == null) {
-                Logger.error("BannerAdapter - Unable to display in-app message. No view group found.")
+                UALog.e("BannerAdapter - Unable to display in-app message. No view group found.")
                 return@Predicate false
             }
         } catch (e: Exception) {
-            Logger.error("Failed to find container view.", e)
+            UALog.e("Failed to find container view.", e)
             return@Predicate false
         }
         true
@@ -192,7 +192,7 @@ internal class LayoutBanner(
             lastActivity = WeakReference(activity)
             currentView = WeakReference(bannerView)
         } catch (e: ModelFactoryException) {
-            Logger.error("Failed to load model!", e)
+            UALog.e("Failed to load model!", e)
         }
     }
 

@@ -8,7 +8,7 @@ import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
 
@@ -122,7 +122,7 @@ public class Pass implements Parcelable {
             return new Pass(url, id);
         }
 
-        Logger.error("Pass - unable to parse URI from %s", pass);
+        UALog.e("Pass - unable to parse URI from %s", pass);
         return null;
     }
 
