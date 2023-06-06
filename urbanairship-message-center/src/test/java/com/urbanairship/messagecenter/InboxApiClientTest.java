@@ -10,6 +10,7 @@ import com.urbanairship.TestRequestSession;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipUrlConfig;
+import com.urbanairship.http.RequestAuth;
 import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
@@ -168,6 +169,7 @@ public class InboxApiClientTest {
         assertEquals("https://example.com/api/user/", requestSession.getLastRequest().getUrl().toString());
         assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
         assertEquals("{\"android_channels\":[\"channelId\"]}", requestSession.getLastRequest().getBody().getContent());
+        assertEquals(new RequestAuth.ChannelTokenAuth("channelId"), requestSession.getLastRequest().getAuth());
 
         UserCredentials userCredentials = response.getResult();
         assertEquals("someUserId", userCredentials.getUsername());

@@ -152,7 +152,7 @@ public class InboxApiClient {
         Request request = new Request(
                 url,
                 "POST",
-                RequestAuth.BasicAppAuth.INSTANCE,
+                new RequestAuth.ChannelTokenAuth(channelId),
                 new RequestBody.Json(payload),
                 headers
         );

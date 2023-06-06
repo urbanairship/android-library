@@ -111,6 +111,6 @@ public fun RequestResult<*>.log(message: () -> String) {
             }
         }
         this.isClientError -> UALog.log(Log.ERROR, null, message)
-        else -> UALog.log(Log.VERBOSE, null, message)
+        else -> UALog.log(Log.DEBUG, null, message)
     }
 }
