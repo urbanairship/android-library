@@ -11,10 +11,10 @@ import androidx.core.view.isGone
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator.INDICATOR_DIRECTION_START_TO_END
 import com.urbanairship.android.layout.model.StoryIndicatorModel
-import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
+import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 
 internal class StoryIndicatorView(
@@ -32,6 +32,8 @@ internal class StoryIndicatorView(
                 gravity = Gravity.CENTER
             }
         }
+
+        LayoutUtils.applyBorderAndBackground(this, model)
 
         model.listener = object : StoryIndicatorModel.Listener {
             private var isInitialized = false
@@ -67,8 +69,8 @@ internal class StoryIndicatorView(
                     val progressIndicator = LinearProgressIndicator(context).apply {
                         id = model.getIndicatorViewId(i)
                         max = 100
-                        setIndicatorColor(style.color.resolve(context))
-                        trackColor = model.backgroundColor?.resolve(context) ?: Color.TRANSPARENT
+                        setIndicatorColor(style.progressColor.resolve(context))
+                        trackColor = style.trackColor.resolve(context)
                         indicatorDirection = INDICATOR_DIRECTION_START_TO_END
                         isIndeterminate = false
                     }

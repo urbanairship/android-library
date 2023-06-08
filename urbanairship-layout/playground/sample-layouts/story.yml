@@ -438,15 +438,19 @@ view:
           type: story_indicator
           background_color:
             default:
-              hex: "#ffffff"
-              alpha: 0.4
+              hex: "#000000"
+              alpha: 0.0
           source: "pager"
           style:
             type: linear_progress
             direction: horizontal
             sizing: equal
             spacing: 4
-            color:
+            progress_color:
               default:
                 hex: "#ffffff"
                 alpha: 0.7
+            track_color:
+              default:
+                hex: "#ffffff"
+                alpha: 0.4
