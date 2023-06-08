@@ -55,15 +55,11 @@ public class PagerRecyclerView extends RecyclerView {
         if (model.getPages().size() <= 1 || model.isSwipeDisabled()) {
             layoutManager = new SwipeDisabledLinearLayoutManager(
                     getContext(),
-                    LinearLayoutManager.HORIZONTAL,
-                    ViewExtensionsKt.isLayoutRtl(this)
-            );
+                    LinearLayoutManager.HORIZONTAL);
         } else {
             layoutManager = new ThomasLinearLayoutManager(
                     getContext(),
-                    LinearLayoutManager.HORIZONTAL,
-                    ViewExtensionsKt.isLayoutRtl(this)
-            );
+                    LinearLayoutManager.HORIZONTAL);
         }
 
         setLayoutManager(layoutManager);
@@ -82,6 +78,11 @@ public class PagerRecyclerView extends RecyclerView {
             }
             return insets;
         });
+
+        if (ViewExtensionsKt.isLayoutRtl(this)) {
+            // This is fixing an eventual measuring issue (depending on the pager size) in the recycler view in RTL
+            scrollToPosition(0);
+        }
     }
 
     public int getDisplayedItemPosition() {
@@ -126,8 +127,8 @@ public class PagerRecyclerView extends RecyclerView {
     };
 
     private static class ThomasLinearLayoutManager extends LinearLayoutManager {
-        public ThomasLinearLayoutManager(Context context, int orientation, boolean reverseLayout) {
-            super(context, orientation, reverseLayout);
+        public ThomasLinearLayoutManager(Context context, int orientation) {
+            super(context, orientation, false);
             // Disable prefetch so that we won't get display events from items that aren't yet visible.
             // TODO: revisit this now that we have a better way for models to determine if they
             //   are displayed in the current pager page.
@@ -144,8 +145,8 @@ public class PagerRecyclerView extends RecyclerView {
      * Custom {@code LinearLayoutManager} that disables scrolling via touch, but can still be scrolled programmatically.
      */
     private static class SwipeDisabledLinearLayoutManager extends ThomasLinearLayoutManager {
-        public SwipeDisabledLinearLayoutManager(Context context, int orientation, boolean reverseLayout) {
-            super(context, orientation, reverseLayout);
+        public SwipeDisabledLinearLayoutManager(Context context, int orientation) {
+            super(context, orientation);
         }
 
         @Override
@@ -192,11 +193,12 @@ public class PagerRecyclerView extends RecyclerView {
         @Nullable
         @Override
         public View findSnapView(LayoutManager layoutManager) {
-            if (layoutManager.getLayoutDirection() == VERTICAL) {
+            if (layoutManager.canScrollVertically()) {
                 return findCenterView(layoutManager, getVerticalHelper(layoutManager));
-            } else {
+            } else if (layoutManager.canScrollHorizontally()) {
                 return findCenterView(layoutManager, getHorizontalHelper(layoutManager));
             }
+            return null;
         }
 
         @Nullable

@@ -9,6 +9,8 @@ import android.view.MotionEvent.ACTION_MASK
 import android.view.MotionEvent.ACTION_UP
 import android.view.View
 import android.widget.EditText
+import androidx.core.text.TextUtilsCompat
+import com.urbanairship.UAirship
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.android.layout.view.ScoreView
@@ -120,7 +122,7 @@ internal val View.localBounds: RectF
     get() = RectF(0f, 0f, width.toFloat(), height.toFloat())
 
 internal val View.isLayoutRtl: Boolean
-    get() = layoutDirection == View.LAYOUT_DIRECTION_RTL
+    get() = TextUtilsCompat.getLayoutDirectionFromLocale(UAirship.shared().locale) == View.LAYOUT_DIRECTION_RTL
 
 @Throws(IllegalStateException::class)
 private fun checkMainThread() {

@@ -93,6 +93,20 @@ view:
                           default:
                             hex: "#FF00FF"
                             alpha: 0.5
+                    - identifier: "page4"
+                      view:
+                        type: empty_view
+                        background_color:
+                          default:
+                            hex: "#F0F0F0"
+                            alpha: 0.5
+                    - identifier: "page5"
+                      view:
+                        type: empty_view
+                        background_color:
+                          default:
+                            hex: "#0F0F0F"
+                            alpha: 0.5
 
               - position:
                   horizontal: center
