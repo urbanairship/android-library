@@ -151,10 +151,6 @@ internal class PagerModel(
         }
 
     override fun onViewAttached(view: PagerView) {
-        // TODO(stories): need to fix scrolling to previous when laying out in RTL.
-        //   Scrolling back from the last page skips to the first page in a 3-page pager,
-        //   only when RTL :(
-
         // Collect page index changes from state and tell the view to scroll to the current page.
         viewScope.launch {
             pagerState.changes
@@ -254,7 +250,6 @@ internal class PagerModel(
             // the page display, and can be used to determine the progress value for the
             // currently displayed page.
             actions.earliestNavigationAction?.let { action ->
-                scheduleAutomatedAction(action)
                 navigationActionTimer = object : Timer(action.delay.toLong() * 1000L) {
                     override fun onFinish() {
                         // Clean up the progress timer and this navigation action timer.
@@ -272,7 +267,6 @@ internal class PagerModel(
                     scheduledJob = modelScope.launch {
                         while (isActive) {
                             pagerState.update { state ->
-                                UALog.v("updating progress to $progress")
                                 state.copy(progress = progress)
                             }
                             delay(100)
@@ -300,19 +294,19 @@ internal class PagerModel(
     private suspend fun scheduleAutomatedAction(action: AutomatedAction) {
         val timer = object : Timer(action.delay.toLong() * 1000L) {
             override fun onFinish() {
+                automatedActionsTimers.remove(this)
+
                 action.behaviors?.let {
                     modelScope.launch {
                         evaluateClickBehaviors(it)
                     }
                 }
-                automatedActionsTimers.remove(this)
 
                 reportAutomatedAction(action, pagerState.changes.value)
             }
         }
-
-        timer.start()
         automatedActionsTimers.add(timer)
+        timer.start()
     }
 
     private suspend fun handleGesture(event: PagerGestureEvent) {

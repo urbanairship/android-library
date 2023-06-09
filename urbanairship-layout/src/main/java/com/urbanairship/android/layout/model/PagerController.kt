@@ -15,6 +15,9 @@ import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.reporting.PagerData
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -62,17 +65,17 @@ internal class PagerController(
 
     init {
         modelScope.launch {
-            pagerState.changes.collect { state ->
-                reportPageView(state)
-            }
+            pagerState.changes
+                .map { it.reportingContext() }
+                .distinctUntilChanged()
+                .collect(::reportPageView)
         }
     }
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
         view.createView(context, viewEnvironment)
 
-    private fun reportPageView(pagerState: State.Pager) {
-        val pagerContext = pagerState.reportingContext()
+    private fun reportPageView(pagerContext: PagerData) {
         report(
             ReportingEvent.PageView(pagerContext, environment.displayTimer.time),
             layoutState.reportingContext(pagerContext = pagerContext)

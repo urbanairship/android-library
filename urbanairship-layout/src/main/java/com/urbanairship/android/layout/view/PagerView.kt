@@ -8,7 +8,6 @@ import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.isGone
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
-import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.gestures.PagerGestureDetector
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
@@ -51,7 +50,6 @@ internal class PagerView(
     private val modelListener = object : PagerModel.Listener {
         override fun scrollTo(position: Int) {
             if (position != NO_POSITION) {
-                UALog.w("PagerView - scrollTo: $position")
                 view.scrollTo(position)
             }
         }
