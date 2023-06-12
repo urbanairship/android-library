@@ -126,6 +126,14 @@ internal class ContactManager(
                 preferenceDataStore.put(LAST_CONTACT_IDENTITY_KEY, newValue)
             }
         }
+    private val possiblyOrphanedContactId: String?
+        get() = lastContactIdentity?.let {
+                if (it.isAnonymous && (anonData?.associatedChannels?.isEmpty() != false)) {
+                    it.contactId
+                } else {
+                    null
+                }
+            }
 
     internal val currentContactIdUpdate: ContactIdUpdate?
         get() {
@@ -491,7 +499,7 @@ internal class ContactManager(
     }
 
     private suspend fun performReset(channelId: String): Boolean = doIdentify {
-        val response = contactApiClient.reset(channelId)
+        val response = contactApiClient.reset(channelId, possiblyOrphanedContactId)
 
         if (response.value != null && response.isSuccessful) {
             updateContactIdentity(response.value, null, false)
@@ -504,7 +512,8 @@ internal class ContactManager(
         val response = contactApiClient.identify(
             channelId,
             lastContactIdentity?.contactId,
-            operation.identifier
+            operation.identifier,
+            possiblyOrphanedContactId
         )
 
         if (response.value != null && response.isSuccessful) {
@@ -515,7 +524,11 @@ internal class ContactManager(
     }
 
     private suspend fun performResolve(channelId: String): Boolean = doIdentify {
-        val response = contactApiClient.resolve(channelId, lastContactIdentity?.contactId)
+        val response = contactApiClient.resolve(
+            channelId,
+            lastContactIdentity?.contactId,
+            possiblyOrphanedContactId
+        )
 
         if (response.value != null && response.isSuccessful) {
             updateContactIdentity(response.value, null, true)

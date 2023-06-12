@@ -81,7 +81,9 @@ public class ContactApiClientTest {
 
         val expectedRequestBody = jsonMapOf(
             "action" to jsonMapOf(
-                "contact_id" to "some contact id", "type" to "resolve"
+                "contact_id" to "some contact id",
+                "type" to "resolve",
+                "possibly_orphaned_contact_id" to "some orphaned id",
             ), "device_info" to jsonMapOf(
                 "device_type" to "android"
             )
@@ -105,7 +107,7 @@ public class ContactApiClientTest {
             tokenExpiryDateMs = clock.currentTimeMillis() + 3600000
         )
 
-        val result = client.resolve(fakeChannelId, "some contact id")
+        val result = client.resolve(fakeChannelId, "some contact id", "some orphaned id")
 
         assertEquals(200, result.status)
         assertEquals(expectedResultValue, result.value)
@@ -134,7 +136,8 @@ public class ContactApiClientTest {
                 "type" to "identify",
                 "contact_id" to "some contact id",
                 "named_user_id" to "some named user id",
-            ), "device_info" to jsonMapOf(
+                "possibly_orphaned_contact_id" to "some orphaned id",
+                ), "device_info" to jsonMapOf(
                 "device_type" to "android"
             )
         )
@@ -157,7 +160,7 @@ public class ContactApiClientTest {
             tokenExpiryDateMs = clock.currentTimeMillis() + 3600000
         )
 
-        val result = client.identify(fakeChannelId, "some contact id", "some named user id")
+        val result = client.identify(fakeChannelId, "some contact id", "some named user id", "some orphaned id")
 
         assertEquals(200, result.status)
         assertEquals(expectedResultValue, result.value)
@@ -183,7 +186,8 @@ public class ContactApiClientTest {
 
         val expectedRequestBody = jsonMapOf(
             "action" to jsonMapOf(
-                "type" to "reset"
+                "type" to "reset",
+                "possibly_orphaned_contact_id" to "some orphaned id"
             ), "device_info" to jsonMapOf(
                 "device_type" to "android"
             )
@@ -207,7 +211,7 @@ public class ContactApiClientTest {
             tokenExpiryDateMs = clock.currentTimeMillis() + 3600000
         )
 
-        val result = client.reset(fakeChannelId)
+        val result = client.reset(fakeChannelId, "some orphaned id")
 
         assertEquals(200, result.status)
         assertEquals(expectedResultValue, result.value)

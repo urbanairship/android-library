@@ -39,10 +39,15 @@ internal class ContactApiClient constructor(
 ) {
 
     @Throws(RequestException::class)
-    suspend fun resolve(channelId: String, contactId: String?): RequestResult<IdentityResult> {
+    suspend fun resolve(
+        channelId: String,
+        contactId: String?,
+        possiblyOrphanedContactId: String?
+    ): RequestResult<IdentityResult> {
         val action = jsonMapOf(
             CONTACT_ID to contactId,
-            TYPE_KEY to "resolve"
+            TYPE_KEY to "resolve",
+            POSSIBLY_ORPHANED_CONTACT_ID_KEY to possiblyOrphanedContactId
         )
         return performIdentify(channelId, action)
     }
@@ -52,20 +57,26 @@ internal class ContactApiClient constructor(
         channelId: String,
         contactId: String?,
         namedUserId: String,
+        possiblyOrphanedContactId: String?
     ): RequestResult<IdentityResult> {
         val action = jsonMapOf(
             NAMED_USER_ID to namedUserId,
             TYPE_KEY to "identify",
-            CONTACT_ID to contactId
+            CONTACT_ID to contactId,
+            POSSIBLY_ORPHANED_CONTACT_ID_KEY to possiblyOrphanedContactId
         )
 
         return performIdentify(channelId, action)
     }
 
     @Throws(RequestException::class)
-    suspend fun reset(channelId: String): RequestResult<IdentityResult> {
+    suspend fun reset(
+        channelId: String,
+        possiblyOrphanedContactId: String?
+    ): RequestResult<IdentityResult> {
         val action = jsonMapOf(
-            TYPE_KEY to "reset"
+            TYPE_KEY to "reset",
+            POSSIBLY_ORPHANED_CONTACT_ID_KEY to possiblyOrphanedContactId
         )
 
         return performIdentify(channelId, action)
@@ -351,6 +362,7 @@ internal class ContactApiClient constructor(
         private const val COMMERCIAL_OPTED_IN_KEY = "commercial_opted_in"
         private const val TRANSACTIONAL_OPTED_IN_KEY = "transactional_opted_in"
         private const val PROPERTIES_KEY = "properties"
+        private const val POSSIBLY_ORPHANED_CONTACT_ID_KEY = "possibly_orphaned_contact_id"
     }
 
     internal data class IdentityResult(

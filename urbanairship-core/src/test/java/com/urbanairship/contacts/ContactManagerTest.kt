@@ -160,7 +160,7 @@ public class ContactManagerTest {
     public fun testResolve(): TestResult = runTest {
         assertNull(contactManager.lastContactId)
         contactManager.addOperation(ContactOperation.Resolve)
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -177,7 +177,7 @@ public class ContactManagerTest {
     public fun testResolveFailsClientError(): TestResult = runTest {
         assertNull(contactManager.lastContactId)
         contactManager.addOperation(ContactOperation.Resolve)
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 400, value = null, body = null, headers = emptyMap()
         )
 
@@ -190,7 +190,7 @@ public class ContactManagerTest {
     public fun testResolveFailsServerError(): TestResult = runTest {
         assertNull(contactManager.lastContactId)
         contactManager.addOperation(ContactOperation.Resolve)
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 500, value = null, body = null, headers = emptyMap()
         )
 
@@ -203,7 +203,7 @@ public class ContactManagerTest {
     public fun testResolveFailsException(): TestResult = runTest {
         assertNull(contactManager.lastContactId)
         contactManager.addOperation(ContactOperation.Resolve)
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             IllegalArgumentException("neat")
         )
 
@@ -217,13 +217,13 @@ public class ContactManagerTest {
         contactManager.addOperation(ContactOperation.Identify("some named user id"))
 
         // Resolve is called first
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
         coEvery {
             mockApiClient.identify(
-                "some channel id", anonIdentityResult.contactId, "some named user id"
+                "some channel id", anonIdentityResult.contactId, "some named user id", "anon contact"
             )
         } returns RequestResult(
             status = 200, value = nonAnonIdentifyResult, body = null, headers = emptyMap()
@@ -243,13 +243,13 @@ public class ContactManagerTest {
         contactManager.addOperation(ContactOperation.Identify("some named user id"))
 
         // Resolve is called first
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
         coEvery {
             mockApiClient.identify(
-                "some channel id", anonIdentityResult.contactId, "some named user id"
+                "some channel id", anonIdentityResult.contactId, "some named user id", "anon contact"
             )
         } returns RequestResult(
             status = 400, value = null, body = null, headers = emptyMap()
@@ -265,13 +265,13 @@ public class ContactManagerTest {
         contactManager.addOperation(ContactOperation.Identify("some named user id"))
 
         // Resolve is called first
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
         coEvery {
             mockApiClient.identify(
-                "some channel id", anonIdentityResult.contactId, "some named user id"
+                "some channel id", anonIdentityResult.contactId, "some named user id", "anon contact"
             )
         } returns RequestResult(
             status = 500, value = null, body = null, headers = emptyMap()
@@ -287,13 +287,13 @@ public class ContactManagerTest {
         contactManager.addOperation(ContactOperation.Reset)
 
         // Resolve is called first
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = nonAnonIdentifyResult, body = null, headers = emptyMap()
         )
 
         coEvery {
             mockApiClient.reset(
-                "some channel id"
+                "some channel id", null
             )
         } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
@@ -313,13 +313,13 @@ public class ContactManagerTest {
         contactManager.addOperation(ContactOperation.Reset)
 
         // Resolve is called first
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = nonAnonIdentifyResult, body = null, headers = emptyMap()
         )
 
         coEvery {
             mockApiClient.reset(
-                "some channel id"
+                "some channel id", null
             )
         } returns RequestResult(
             status = 500, value = anonIdentityResult, body = null, headers = emptyMap()
@@ -335,13 +335,13 @@ public class ContactManagerTest {
         contactManager.addOperation(ContactOperation.Reset)
 
         // Resolve is called first
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = nonAnonIdentifyResult, body = null, headers = emptyMap()
         )
 
         coEvery {
             mockApiClient.reset(
-                "some channel id"
+                "some channel id", null
             )
         } returns RequestResult(
             status = 400, value = anonIdentityResult, body = null, headers = emptyMap()
@@ -354,7 +354,7 @@ public class ContactManagerTest {
 
     @Test
     public fun testAuthTokenNoContact(): TestResult = runTest {
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -369,7 +369,7 @@ public class ContactManagerTest {
 
     @Test
     public fun testAuthTokenMismatchContactId(): TestResult = runTest {
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -380,7 +380,7 @@ public class ContactManagerTest {
 
     @Test
     public fun testExpireAuthToken(): TestResult = runTest {
-        coEvery { mockApiClient.resolve(any(), any()) } returns RequestResult(
+        coEvery { mockApiClient.resolve(any(), any(), any()) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -393,19 +393,19 @@ public class ContactManagerTest {
             contactManager.fetchToken(anonIdentityResult.contactId)
         )
 
-        coVerify(exactly = 1) { mockApiClient.resolve(any(), any()) }
+        coVerify(exactly = 1) { mockApiClient.resolve(any(), any(), any()) }
 
         contactManager.expireToken(anonIdentityResult.token)
         assertEquals(
             Result.success(anonIdentityResult.token),
             contactManager.fetchToken(anonIdentityResult.contactId)
         )
-        coVerify(exactly = 2) { mockApiClient.resolve(any(), any()) }
+        coVerify(exactly = 2) { mockApiClient.resolve(any(), any(), any()) }
     }
 
     @Test
     public fun testAuthTokenFailed(): TestResult = runTest {
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 400, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -427,7 +427,7 @@ public class ContactManagerTest {
     @Test
     public fun testGenerateDefaultContactIdAlreadySet(): TestResult = runTest {
         contactManager.addOperation(ContactOperation.Resolve)
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
         assertEquals(true, contactManager.performNextOperation())
@@ -491,7 +491,7 @@ public class ContactManagerTest {
         contactManager.addOperation(ContactOperation.Update(subscriptions = subscriptions))
 
         // Resolve is called first
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
 
         )
@@ -534,7 +534,7 @@ public class ContactManagerTest {
         val options = EmailRegistrationOptions.options(null, null, true)
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -566,7 +566,7 @@ public class ContactManagerTest {
         val options = EmailRegistrationOptions.options(null, null, true)
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -589,7 +589,7 @@ public class ContactManagerTest {
         val options = EmailRegistrationOptions.options(null, null, true)
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -612,7 +612,7 @@ public class ContactManagerTest {
         val options = SmsRegistrationOptions.options("some sender id")
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -644,7 +644,7 @@ public class ContactManagerTest {
         val options = SmsRegistrationOptions.options("some sender id")
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -667,7 +667,7 @@ public class ContactManagerTest {
         val options = SmsRegistrationOptions.options("some sender id")
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -690,7 +690,7 @@ public class ContactManagerTest {
         val options = OpenChannelRegistrationOptions.options("some platform")
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -722,7 +722,7 @@ public class ContactManagerTest {
         val options = OpenChannelRegistrationOptions.options("some platform")
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -748,7 +748,7 @@ public class ContactManagerTest {
         val options = OpenChannelRegistrationOptions.options("some platform")
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -774,7 +774,7 @@ public class ContactManagerTest {
         val type = ChannelType.SMS
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -802,7 +802,7 @@ public class ContactManagerTest {
         val type = ChannelType.SMS
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -828,7 +828,7 @@ public class ContactManagerTest {
         val type = ChannelType.SMS
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
@@ -851,7 +851,7 @@ public class ContactManagerTest {
     @Test
     public fun testAudienceOverrides(): TestResult = runTest {
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
         contactManager.addOperation(ContactOperation.Resolve)
@@ -909,14 +909,14 @@ public class ContactManagerTest {
         )
 
         // Resolve
-        coEvery { mockApiClient.resolve("some channel id", null) } returns RequestResult(
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
 
         // Identify
         coEvery {
             mockApiClient.identify(
-                "some channel id", anonIdentityResult.contactId, "some named user id"
+                "some channel id", anonIdentityResult.contactId, "some named user id", null
             )
         } returns RequestResult(
             status = 200, value = nonAnonIdentifyResult, body = null, headers = emptyMap()
