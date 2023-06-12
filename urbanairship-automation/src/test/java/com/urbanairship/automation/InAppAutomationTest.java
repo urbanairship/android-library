@@ -25,6 +25,7 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipLoopers;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PrivacyManager;
@@ -43,6 +44,7 @@ import com.urbanairship.automation.tags.AudienceManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.TagGroupsMutation;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppMessage;
@@ -105,8 +107,14 @@ public class InAppAutomationTest {
     private PrivacyManager privacyManager;
     private RetryingExecutor executor;
 
+    private AirshipConfigOptions config = AirshipConfigOptions.newBuilder().build();
+    private AirshipRuntimeConfig mockRuntimeConfig = mock(AirshipRuntimeConfig.class);
+
     @Before
     public void setup() {
+
+        when(mockRuntimeConfig.getConfigOptions()).thenAnswer((Answer<AirshipConfigOptions>) invocation -> config);
+
         mockAudienceManager = mock(AudienceManager.class);
         mockChannel = mock(AirshipChannel.class);
         mockIamManager = mock(InAppMessageManager.class);
@@ -143,8 +151,8 @@ public class InAppAutomationTest {
         privacyManager = new PrivacyManager(TestApplication.getApplication().preferenceDataStore, PrivacyManager.FEATURE_ALL);
 
         inAppAutomation = new InAppAutomation(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
-                privacyManager, mockEngine, mockChannel, mockAudienceManager, mockObserver, mockIamManager, executor, mockDeferredScheduleClient,
-                mockActionsScheduleDelegate, mockMessageScheduleDelegate, mockFrequencyLimitManager);
+                mockRuntimeConfig, privacyManager, mockEngine, mockChannel, mockAudienceManager, mockObserver, mockIamManager,
+                executor, mockDeferredScheduleClient, mockActionsScheduleDelegate, mockMessageScheduleDelegate, mockFrequencyLimitManager);
 
         inAppAutomation.init();
         inAppAutomation.onAirshipReady(UAirship.shared());
@@ -154,6 +162,19 @@ public class InAppAutomationTest {
         remoteDataObserverDelegate = argument.getValue();
 
         runLooperTasks();
+    }
+    @Test
+    public void testAutoPauseEnabled() {
+        config = AirshipConfigOptions.newBuilder().setAutoPauseInAppAutomationOnLaunch(true).build();
+        inAppAutomation.init();
+        assertTrue(inAppAutomation.isPaused());
+    }
+
+    @Test
+    public void testAutoPauseDisabled() {
+        config = AirshipConfigOptions.newBuilder().setAutoPauseInAppAutomationOnLaunch(false).build();
+        inAppAutomation.init();
+        assertFalse(inAppAutomation.isPaused());
     }
 
     @Test

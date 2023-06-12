@@ -450,8 +450,13 @@ public class AirshipConfigOptions {
      * Flag indicating whether or not the SDK will automatically prompt for notification permission
      * when enabling notifications with {@link com.urbanairship.push.PushManager#setUserNotificationsEnabled(boolean)}.
      */
-    @Nullable
     public final boolean isPromptForPermissionOnUserNotificationsEnabled;
+
+    /**
+     * Flag indicating whether or not the SDK will automatically pause In-App Automation during app launch.
+     * Defaults to false.
+     */
+    public final boolean autoPauseInAppAutomationOnLaunch;
 
     private AirshipConfigOptions(@NonNull Builder builder) {
         if (builder.inProduction) {
@@ -508,6 +513,7 @@ public class AirshipConfigOptions {
         this.fcmFirebaseAppName = builder.fcmFirebaseAppName;
         this.initialConfigUrl = builder.initialConfigUrl;
         this.isPromptForPermissionOnUserNotificationsEnabled = builder.isPromptForPermissionOnUserNotificationsEnabled;
+        this.autoPauseInAppAutomationOnLaunch = builder.autoPauseInAppAutomationOnLaunch;
     }
 
     /**
@@ -669,8 +675,8 @@ public class AirshipConfigOptions {
         private static final String FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED = "requireInitialRemoteConfigEnabled";
         private static final String FIELD_ENABLED_FEATURES = "enabledFeatures";
         private static final String FIELD_INITIAL_CONFIG_URL = "initialConfigUrl";
-
         private static final String FIELD_IS_PROMPT_FOR_PERMISSION_ON_USER_NOTIFICATIONS_ENABLED = "isPromptForPermissionOnUserNotificationsEnabled";
+        private static final String FIELD_AUTO_PAUSE_IN_APP_AUTOMATION_ON_LAUNCH = "autoPauseInAppAutomationOnLaunch";
 
         private String appKey;
         private String appSecret;
@@ -718,6 +724,8 @@ public class AirshipConfigOptions {
         private String initialConfigUrl;
 
         private boolean isPromptForPermissionOnUserNotificationsEnabled = true;
+
+        private boolean autoPauseInAppAutomationOnLaunch = false;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -1098,6 +1106,10 @@ public class AirshipConfigOptions {
 
                         case FIELD_IS_PROMPT_FOR_PERMISSION_ON_USER_NOTIFICATIONS_ENABLED:
                             this.setIsPromptForPermissionOnUserNotificationsEnabled(configParser.getBoolean(name, true));
+                            break;
+
+                        case FIELD_AUTO_PAUSE_IN_APP_AUTOMATION_ON_LAUNCH:
+                            this.setAutoPauseInAppAutomationOnLaunch(configParser.getBoolean(name, false));
                             break;
 
                         case FIELD_ENABLED_FEATURES:
@@ -1733,6 +1745,19 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setIsPromptForPermissionOnUserNotificationsEnabled(boolean enabled) {
             this.isPromptForPermissionOnUserNotificationsEnabled = enabled;
+            return this;
+        }
+
+
+        /**
+         * Set the auto pause In-App Automation on launch.
+         *
+         * @param autoPauseInAppAutomationOnLaunch {@code true} to auto pause In-App Automation, otherwise {@code false}.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setAutoPauseInAppAutomationOnLaunch(boolean autoPauseInAppAutomationOnLaunch) {
+            this.autoPauseInAppAutomationOnLaunch = autoPauseInAppAutomationOnLaunch;
             return this;
         }
 
