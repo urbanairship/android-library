@@ -13,6 +13,7 @@ import com.urbanairship.android.layout.gestures.PagerGestureDetector
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.util.isWithinClickableDescendant
 import com.urbanairship.android.layout.widget.PagerRecyclerView
 
 internal class PagerView(
@@ -79,9 +80,15 @@ internal class PagerView(
     }
 
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-        // If we have a gesture detector, snoop on motion events without consuming them.
-        gestureDetector?.onTouchEvent(event)
+        // If a gesture detector is attached, check if the event should be intercepted.
+        // We only want to intercept events that are not within a clickable descendant.
+        gestureDetector?.let { detector ->
+            if (!event.isWithinClickableDescendant(view)) {
+                detector.onTouchEvent(event)
+            }
+        }
 
+        // We're just snooping, so always let the event pass through.
         return super.onInterceptTouchEvent(event)
     }
 }

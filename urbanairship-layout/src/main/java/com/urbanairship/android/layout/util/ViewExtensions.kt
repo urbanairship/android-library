@@ -1,5 +1,6 @@
 package com.urbanairship.android.layout.util
 
+import android.graphics.Rect
 import android.graphics.RectF
 import android.os.Looper
 import android.text.Editable
@@ -8,8 +9,10 @@ import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_MASK
 import android.view.MotionEvent.ACTION_UP
 import android.view.View
+import android.view.ViewGroup
 import android.widget.EditText
 import androidx.core.text.TextUtilsCompat
+import androidx.core.view.descendants
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.view.PagerView
@@ -123,6 +126,21 @@ internal val View.localBounds: RectF
 
 internal val View.isLayoutRtl: Boolean
     get() = TextUtilsCompat.getLayoutDirectionFromLocale(UAirship.shared().locale) == View.LAYOUT_DIRECTION_RTL
+
+internal fun MotionEvent.isWithinClickableDescendant(view: View): Boolean {
+    fun isTouchWithin(v: View): Boolean {
+        val rect = Rect().apply { v.getGlobalVisibleRect(this) }
+        return rect.contains(rawX.toInt(), rawY.toInt())
+    }
+
+    return if (view is ViewGroup) {
+        view.descendants
+            .filter { it.isClickable }
+            .any(::isTouchWithin)
+    } else {
+        isTouchWithin(view)
+    }
+}
 
 @Throws(IllegalStateException::class)
 private fun checkMainThread() {
