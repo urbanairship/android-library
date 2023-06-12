@@ -390,7 +390,9 @@ internal class PagerIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json
 }
 
 internal class StoryIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json) {
-    val source: StoryIndicatorSource = StoryIndicatorSource.from(json.requireField("source"))
+    val source: StoryIndicatorSource = json.requireField<JsonMap>("source")
+        .requireField<String>("type")
+        .let { StoryIndicatorSource.from(it) }
     val style = StoryIndicatorStyle.from(json.requireField("style"))
 }
 
