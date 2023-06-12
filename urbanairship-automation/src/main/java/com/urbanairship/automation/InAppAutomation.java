@@ -78,9 +78,12 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private final Map<String, Uri> redirectURLs = new HashMap<>();
 
     private final AtomicBoolean isStarted = new AtomicBoolean(false);
+
     private Cancelable subscription;
 
     private final AudienceOverridesProvider audienceOverridesProvider;
+
+    private final AirshipRuntimeConfig config;
 
     private final AutomationDriver driver = new AutomationDriver() {
         @Override
@@ -177,11 +180,13 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.inAppMessageScheduleDelegate = new InAppMessageScheduleDelegate(inAppMessageManager);
         this.frequencyLimitManager = new FrequencyLimitManager(context, runtimeConfig);
         this.audienceOverridesProvider = audienceOverridesProvider;
+        this.config = runtimeConfig;
     }
 
     @VisibleForTesting
     InAppAutomation(@NonNull Context context,
                     @NonNull PreferenceDataStore preferenceDataStore,
+                    @NonNull AirshipRuntimeConfig runtimeConfig,
                     @NonNull PrivacyManager privacyManager,
                     @NonNull AutomationEngine engine,
                     @NonNull AirshipChannel airshipChannel,
@@ -206,6 +211,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.inAppMessageScheduleDelegate = inAppMessageScheduleDelegate;
         this.frequencyLimitManager = frequencyLimitManager;
         this.audienceOverridesProvider = audienceOverridesProvider;
+        this.config = runtimeConfig;
     }
 
     /**
@@ -216,6 +222,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     protected void init() {
         super.init();
 
+        if (config.getConfigOptions().autoPauseInAppAutomationOnLaunch) {
+            this.setPaused(true);
+        }
         this.automationEngine.setScheduleListener(new AutomationEngine.ScheduleListener() {
             @Override
             public void onScheduleExpired(@NonNull final Schedule<? extends ScheduleData> schedule) {

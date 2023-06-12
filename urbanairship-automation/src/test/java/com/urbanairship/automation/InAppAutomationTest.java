@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipLoopers;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PrivacyManager;
@@ -12,7 +13,6 @@ import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
-import com.urbanairship.audience.AudienceOverrides;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.deferred.Deferred;
@@ -23,6 +23,7 @@ import com.urbanairship.automation.limits.FrequencyLimitManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.TagGroupsMutation;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppMessage;
@@ -30,7 +31,6 @@ import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
-import com.urbanairship.reactive.Subscription;
 import com.urbanairship.util.RetryingExecutor;
 
 import org.junit.Before;
@@ -61,7 +61,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.clearInvocations;
@@ -104,8 +103,12 @@ public class InAppAutomationTest {
     private PrivacyManager privacyManager;
     private RetryingExecutor executor;
 
+    private AirshipConfigOptions config = AirshipConfigOptions.newBuilder().build();
+    private AirshipRuntimeConfig mockRuntimeConfig = mock(AirshipRuntimeConfig.class);
+
     @Before
     public void setup() {
+        when(mockRuntimeConfig.getConfigOptions()).thenAnswer((Answer<AirshipConfigOptions>) invocation -> config);
         mockChannel = mock(AirshipChannel.class);
         mockIamManager = mock(InAppMessageManager.class);
         mockObserver = mock(InAppRemoteDataObserver.class);
@@ -141,7 +144,7 @@ public class InAppAutomationTest {
         privacyManager = new PrivacyManager(TestApplication.getApplication().preferenceDataStore, PrivacyManager.FEATURE_ALL);
 
         inAppAutomation = new InAppAutomation(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
-                privacyManager, mockEngine, mockChannel, mockObserver, mockIamManager, executor, mockDeferredScheduleClient,
+                mockRuntimeConfig, privacyManager, mockEngine, mockChannel, mockObserver, mockIamManager, executor, mockDeferredScheduleClient,
                 mockActionsScheduleDelegate, mockMessageScheduleDelegate, mockFrequencyLimitManager, audienceOverridesProvider);
 
         inAppAutomation.init();
@@ -152,6 +155,19 @@ public class InAppAutomationTest {
         remoteDataObserverDelegate = argument.getValue();
 
         runLooperTasks();
+    }
+    @Test
+    public void testAutoPauseEnabled() {
+        config = AirshipConfigOptions.newBuilder().setAutoPauseInAppAutomationOnLaunch(true).build();
+        inAppAutomation.init();
+        assertTrue(inAppAutomation.isPaused());
+    }
+
+    @Test
+    public void testAutoPauseDisabled() {
+        config = AirshipConfigOptions.newBuilder().setAutoPauseInAppAutomationOnLaunch(false).build();
+        inAppAutomation.init();
+        assertFalse(inAppAutomation.isPaused());
     }
 
     @Test
