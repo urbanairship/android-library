@@ -1068,6 +1068,11 @@ public class UAirship {
                 }
             }
 
+            DeepLinkListener deepLinkListener = getDeepLinkListener();
+            if (deepLinkListener != null && deepLinkListener.onDeepLink(deepLink)) {
+                return true;
+            }
+
             Logger.debug("Airship deep link not handled: %s", deepLink);
             return true;
         } else {
