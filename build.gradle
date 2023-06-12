@@ -4,7 +4,7 @@ buildscript {
         airshipVersion = '17.0.0'
 
         // Airship Version Qualifier beta, release, etc...
-        airshipVersionQualifier = "beta"
+//        airshipVersionQualifier = "beta"
 
         // Android SDK Versions
         minSdkVersion = 21

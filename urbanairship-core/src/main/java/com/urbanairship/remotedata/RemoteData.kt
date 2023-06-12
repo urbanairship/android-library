@@ -273,7 +273,7 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     private fun updateChangeToken() {
         changeTokenLock.withLock {
-            this.dataStore.put(UUID.randomUUID().toString(), CHANGE_TOKEN_KEY)
+            this.dataStore.put(CHANGE_TOKEN_KEY, UUID.randomUUID().toString())
         }
     }
 
@@ -286,7 +286,7 @@ public class RemoteData @VisibleForTesting internal constructor(
                     token
                 }
 
-                token + "$appVersion"
+                "$token:$appVersion"
             }
         }
 
