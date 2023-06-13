@@ -252,11 +252,10 @@ internal class PagerModel(
                         scheduledJob?.cancel()
                         automatedActionsTimers.remove(this)
 
-                        action.behaviors?.let {
-                            viewScope.launch {
-                                evaluateClickBehaviors(it)
-                            }
-                        }
+                        action.behaviors?.let { evaluateClickBehaviors(it) }
+                        action.actions?.let { runActions(it) }
+
+                        reportAutomatedAction(action, pagerState.changes.value)
                     }
                 }.apply {
                     start()
@@ -287,16 +286,13 @@ internal class PagerModel(
         }
     }
 
-    private suspend fun scheduleAutomatedAction(action: AutomatedAction) {
+    private fun scheduleAutomatedAction(action: AutomatedAction) {
         val timer = object : Timer(action.delay.toLong() * 1000L) {
             override fun onFinish() {
                 automatedActionsTimers.remove(this)
 
-                action.behaviors?.let {
-                    modelScope.launch {
-                        evaluateClickBehaviors(it)
-                    }
-                }
+                action.behaviors?.let { evaluateClickBehaviors(it) }
+                action.actions?.let { runActions(it) }
 
                 reportAutomatedAction(action, pagerState.changes.value)
             }
@@ -305,7 +301,7 @@ internal class PagerModel(
         timer.start()
     }
 
-    private suspend fun handleGesture(event: PagerGestureEvent) {
+    private fun handleGesture(event: PagerGestureEvent) {
         UALog.v { "handleGesture: $event" }
 
         val triggeredGestures = when (event) {
@@ -337,7 +333,7 @@ internal class PagerModel(
         }
     }
 
-    private suspend fun evaluateClickBehaviors(behaviors: List<ButtonClickBehaviorType>) {
+    private fun evaluateClickBehaviors(behaviors: List<ButtonClickBehaviorType>) {
         if (behaviors.hasCancelOrDismiss) {
             // If there's only a CANCEL or DISMISS, and no FORM_SUBMIT, handle
             // immediately. We don't need to handle pager behaviors, as the layout
