@@ -123,22 +123,18 @@ internal class PagerModel(
         modelScope.launch {
 
             pagerState.changes
-                .map { it.pageIndex to it.lastPageIndex }
-                .filter { (pageIndex, lastPageIndex) ->
+                .filter {
                     // If current and last are both 0, we're initializing the pager.
                     // Otherwise, we only want to act on changes to the pageIndex.
-                    pageIndex == 0 && lastPageIndex == 0 || pageIndex != lastPageIndex
+                    (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex) && it.progress == 0
                 }
-                .distinctUntilChanged()
-                .collect { (pageIndex, previousIndex) ->
+                .collect {
                     // Clear any automated actions scheduled for the previous page.
-                    if (pageIndex != previousIndex) {
-                        clearAutomatedActions()
-                        UALog.v("cleared automated actions for page: $previousIndex")
-                    }
+                    clearAutomatedActions()
+                    UALog.v { "cleared automated actions for page: ${it.lastPageIndex}" }
 
                     // Handle any actions defined for the current page.
-                    items[pageIndex].run {
+                    items[it.pageIndex].run {
                         handlePageActions(displayActions, automatedActions)
                     }
                 }
@@ -178,14 +174,14 @@ internal class PagerModel(
 
         // If we have gestures defined, collect events from the view and handle them.
         if (gestures != null) {
-            UALog.v("${gestures.size} gestures defined.")
+            UALog.v { "${gestures.size} gestures defined." }
             viewScope.launch {
                 view.pagerGestures().collect {
                     handleGesture(it)
                 }
             }
         } else {
-            UALog.v("No gestures defined.")
+            UALog.v { "No gestures defined." }
         }
     }
 
@@ -193,7 +189,7 @@ internal class PagerModel(
         super.onViewDetached(view)
 
         clearAutomatedActions()
-        UALog.v("cleared all automated actions for pager.")
+        UALog.v { "cleared all automated actions for pager." }
     }
 
     /** Returns a stable viewId for the pager item view at the given adapter `position`.  */
@@ -310,7 +306,7 @@ internal class PagerModel(
     }
 
     private suspend fun handleGesture(event: PagerGestureEvent) {
-        UALog.v("handleGesture: $event")
+        UALog.v { "handleGesture: $event" }
 
         val triggeredGestures = when (event) {
             is PagerGestureEvent.Tap -> gestures.orEmpty()
@@ -372,7 +368,7 @@ internal class PagerModel(
         when {
             !hasNext && fallback == PagerNextFallback.FIRST ->
                 pagerState.update { state ->
-                    state.copyWithPageIndex(0)
+                    state.copyWithPageIndexAndResetProgress(0)
                 }
             !hasNext && fallback == PagerNextFallback.DISMISS -> handleDismiss()
             else -> pagerState.update { state ->
@@ -398,7 +394,7 @@ internal class PagerModel(
     }
 
     private fun pauseStory() {
-        UALog.v("pause story")
+        UALog.v { "pause story" }
         navigationActionTimer?.stop()
         for (timer in automatedActionsTimers) {
             timer.stop()
@@ -406,7 +402,7 @@ internal class PagerModel(
     }
 
     private fun resumeStory() {
-        UALog.v("resume story")
+        UALog.v { "resume story" }
         navigationActionTimer?.start()
         for (timer in automatedActionsTimers) {
             timer.start()

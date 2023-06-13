@@ -92,6 +92,15 @@ internal sealed class State {
                 )
             }
 
+        fun copyWithPageIndexAndResetProgress(index: Int) =
+            if (index == pageIndex) {
+                copy(
+                    progress = 0
+                )
+            } else {
+                copyWithPageIndex(index)
+            }
+
         fun copyWithPageIds(pageIds: List<String>) =
             copy(
                 pageIds = pageIds,

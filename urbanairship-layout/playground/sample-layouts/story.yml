@@ -201,14 +201,14 @@ view:
                           default:
                             hex: "#000000"
                             alpha: 1
-            - identifier: "pager-page-4-id"
+            - identifier: "pager-page-3-id"
               automated_actions:
-                - identifier: "pager-pager-4-action-id"
+                - identifier: "pager-pager-3-action-id"
                   delay: 6
                   behaviors:
                     - pager_next
               display_actions:
-                add_tags_action: 'pager-page-2x'
+                add_tags_action: 'pager-page-3x'
               view:
                 type: container
                 background_color:
@@ -244,7 +244,7 @@ view:
                       end: 8
                     view:
                       type: image_button
-                      identifier: close_button_2
+                      identifier: close_button_3
                       button_click: [ dismiss ]
                       image:
                         type: icon
@@ -253,14 +253,14 @@ view:
                           default:
                             hex: "#000000"
                             alpha: 1
-            - identifier: "pager-page-5-id"
+            - identifier: "pager-page-4-id"
               automated_actions:
-                - identifier: "pager-pager-5-action-id"
+                - identifier: "pager-pager-4-action-id"
                   delay: 6
                   behaviors:
                     - pager_next
               display_actions:
-                add_tags_action: 'pager-page-2x'
+                add_tags_action: 'pager-page-4x'
               view:
                 type: container
                 background_color:
@@ -296,7 +296,7 @@ view:
                       end: 8
                     view:
                       type: image_button
-                      identifier: close_button_2
+                      identifier: close_button_4
                       button_click: [ dismiss ]
                       image:
                         type: icon
@@ -305,14 +305,14 @@ view:
                           default:
                             hex: "#000000"
                             alpha: 1
-            - identifier: "pager-page-3-id"
+            - identifier: "pager-page-5-id"
               automated_actions:
-                - identifier: "pager-pager-3-action-id"
+                - identifier: "pager-pager-5-action-id"
                   delay: 8
                   behaviors:
                     - pager_next_or_first
               display_actions:
-                add_tags_action: 'pager-page-3x'
+                add_tags_action: 'pager-page-5x'
               view:
                 type: container
                 background_color:
@@ -328,7 +328,7 @@ view:
                       width: auto
                     view:
                       type: nps_form_controller
-                      identifier: page_3_nps_form
+                      identifier: page_5_nps_form
                       nps_identifier: score_identifier
                       submit: submit_event
                       view:
@@ -393,7 +393,7 @@ view:
                               button_click: ["form_submit", "cancel"]
                               enabled: ["form_validation"]
                               display_actions:
-                                add_tags_action: 'pager-page-3-form-submit'
+                                add_tags_action: 'pager-page-5-form-submit'
                               label:
                                 type: label
                                 text: SuBmIt!1!1@
@@ -425,7 +425,6 @@ view:
                           default:
                             hex: "#000000"
                             alpha: 1
-
       - size:
           height: 5
           width: 80%
@@ -440,7 +439,8 @@ view:
             default:
               hex: "#000000"
               alpha: 0.0
-          source: "pager"
+          source:
+            type: "pager"
           style:
             type: linear_progress
             direction: horizontal

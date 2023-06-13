@@ -150,7 +150,7 @@ internal abstract class ButtonModel<T>(
         when {
             !hasNext && fallback == PagerNextFallback.FIRST ->
                 pagerState.update { state ->
-                    state.copyWithPageIndex(0)
+                    state.copyWithPageIndexAndResetProgress(0)
                 }
             !hasNext && fallback == PagerNextFallback.DISMISS ->
                 handleDismiss(isCancel = false)
