@@ -118,16 +118,14 @@ class InAppRemoteDataObserver {
 
     }
 
-    /**
-     * Default constructor.
-     *
-     * @param preferenceDataStore The preference data store.
-     */
-    InAppRemoteDataObserver(@NonNull PreferenceDataStore preferenceDataStore,
-                            @NonNull final RemoteData remoteData) {
+    InAppRemoteDataObserver(
+            @NonNull Context context,
+            @NonNull PreferenceDataStore preferenceDataStore,
+            @NonNull final RemoteData remoteData
+    ) {
 
         this.preferenceDataStore = preferenceDataStore;
-        this.remoteData = new RemoteDataAccess(remoteData);
+        this.remoteData = new RemoteDataAccess(context, remoteData);
         this.sdkVersion = UAirship.getVersion();
     }
 
@@ -244,7 +242,7 @@ class InAppRemoteDataObserver {
             @Nullable RemoteDataInfo lastPayloadRemoteInfo,
             long lastUpdate,
             @Nullable String lastSdkVersion,
-            RemoteDataSource source
+            @NonNull RemoteDataSource source
     ) throws ExecutionException, InterruptedException {
         boolean isMetadataUpToDate = ObjectsCompat.equals(payload.getRemoteDataInfo(), lastPayloadRemoteInfo);
 
@@ -746,12 +744,12 @@ class InAppRemoteDataObserver {
     }
 
     @WorkerThread
-    public boolean refreshAndCheckCurrentSync(@NonNull Context context, Schedule<? extends ScheduleData> schedule) {
+    public boolean refreshAndCheckCurrentSync(@NonNull Schedule<? extends ScheduleData> schedule) {
         if (!isRemoteSchedule(schedule)) {
             return true;
         }
 
         RemoteDataInfo remoteDataInfo = parseRemoteDataInfo(schedule);
-        return remoteData.refreshAndCheckCurrentSync(context, remoteDataInfo);
+        return remoteData.refreshAndCheckCurrentSync(remoteDataInfo);
     }
 }

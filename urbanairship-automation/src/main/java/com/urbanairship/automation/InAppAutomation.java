@@ -172,7 +172,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.privacyManager = privacyManager;
         this.automationEngine = new AutomationEngine(context, runtimeConfig, analytics, preferenceDataStore);
         this.airshipChannel = airshipChannel;
-        this.remoteDataSubscriber = new InAppRemoteDataObserver(preferenceDataStore, remoteData);
+        this.remoteDataSubscriber = new InAppRemoteDataObserver(context, preferenceDataStore, remoteData);
         this.inAppMessageManager = new InAppMessageManager(context, preferenceDataStore, analytics, automationEngine::checkPendingSchedules);
         this.retryingExecutor = RetryingExecutor.newSerialExecutor(Looper.getMainLooper());
         this.deferredScheduleClient = new DeferredScheduleClient(runtimeConfig);
@@ -531,7 +531,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         };
 
         RetryingExecutor.Operation checkValid = () -> {
-            if (!remoteDataSubscriber.refreshAndCheckCurrentSync(getContext(), schedule)) {
+            if (!remoteDataSubscriber.refreshAndCheckCurrentSync(schedule)) {
                 callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
                 return RetryingExecutor.cancelResult();
             } else {
