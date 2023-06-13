@@ -103,6 +103,7 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
                 airshipConfig = value
                 continue
             }
+
             if (DISABLE_INFO_KEY == key) {
                 for (disableInfoJson in value.optList()) {
                     try {
@@ -113,6 +114,11 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
                 }
                 continue
             }
+
+            if (FETCH_CONTACT_REMOTE_DATA_KEY == key) {
+                continue
+            }
+
             moduleConfigs[key] = value
         }
         updateRemoteAirshipConfig(airshipConfig)
@@ -131,7 +137,7 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
         }
 
         // Remote data refresh interval
-        val contactEnabled = config.optionalField<Boolean>("fetch_contact_remote_data") ?: false
+        val contactEnabled = config.optionalField<Boolean>(FETCH_CONTACT_REMOTE_DATA_KEY) ?: false
         remoteData.setContactSourceEnabled(contactEnabled)
     }
 
@@ -200,5 +206,7 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
 
         // Airship config key
         private const val AIRSHIP_CONFIG_KEY = "airship_config"
+
+        private const val FETCH_CONTACT_REMOTE_DATA_KEY = "fetch_contact_remote_data"
     }
 }
