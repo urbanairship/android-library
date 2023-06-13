@@ -1061,7 +1061,13 @@ public class UAirship {
                 }
             }
 
+            DeepLinkListener deepLinkListener = getDeepLinkListener();
+            if (deepLinkListener != null && deepLinkListener.onDeepLink(deepLink)) {
+                return true;
+            }
+
             UALog.d("Airship deep link not handled: %s", deepLink);
+
             return true;
         } else {
             DeepLinkListener deepLinkListener = getDeepLinkListener();
