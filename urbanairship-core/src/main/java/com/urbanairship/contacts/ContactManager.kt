@@ -78,13 +78,13 @@ internal class ContactManager(
             }
         }
 
-    private var _operations: List<DatedOperation>? = null
-    private var operations: List<DatedOperation>
+    private var _operations: List<OperationEntry>? = null
+    private var operations: List<OperationEntry>
         get() {
             return operationLock.withLock {
                 val result = _operations ?: preferenceDataStore.optJsonValue(OPERATIONS_KEY)
                     ?.tryParse { json ->
-                        json.requireList().map { DatedOperation(it) }
+                        json.requireList().map { OperationEntry(it) }
                     } ?: emptyList()
 
                 _operations = result
@@ -174,10 +174,10 @@ internal class ContactManager(
     init {
         // Migrate operations -> dated operations
         preferenceDataStore.optJsonValue(OPERATIONS_KEY)?.let { json ->
-            if (!preferenceDataStore.isSet(DATED_OPERATIONS_KEY)) {
+            if (!preferenceDataStore.isSet(OPERATION_ENTRIES_KEY)) {
                 val operations = json.optList()
                     .tryParse(logError = true) { list -> list.map { ContactOperation.fromJson(it) } }
-                operations?.map { DatedOperation(clock.currentTimeMillis(), it) }?.let {
+                operations?.map { OperationEntry(clock.currentTimeMillis(), it) }?.let {
                     this.operations = it
                 }
             }
@@ -206,7 +206,7 @@ internal class ContactManager(
     internal fun addOperation(operation: ContactOperation) {
         operationLock.withLock {
             val operations = this.operations.toMutableList()
-            operations.add(DatedOperation(clock.currentTimeMillis(), operation))
+            operations.add(OperationEntry(clock.currentTimeMillis(), operation))
             this.operations = operations
         }
 
@@ -286,13 +286,8 @@ internal class ContactManager(
 
             return@withContext if (performOperation(nextOperationGroup.merged)) {
                 operationLock.withLock {
-                    val operationsCopy = operations.toMutableList()
-                    nextOperationGroup.operations.forEach {
-                        if (operationsCopy[0] == it) {
-                            operationsCopy.removeAt(0)
-                        }
-                    }
-                    operations = operationsCopy
+                    val identifiers = nextOperationGroup.operations.map { it.identifier }
+                    operations = operations.filter { !identifiers.contains(it.identifier) }
                     if (operations.isNotEmpty()) {
                         dispatchContactUpdateJob(JobInfo.REPLACE)
                     }
@@ -749,23 +744,29 @@ internal class ContactManager(
         }
     }
 
-    private data class OperationGroup(val operations: List<DatedOperation>, val merged: ContactOperation)
+    private data class OperationGroup(val operations: List<OperationEntry>, val merged: ContactOperation)
 
-    private data class DatedOperation(val dateMillis: Long, val operation: ContactOperation) : JsonSerializable {
+    private data class OperationEntry(
+        val dateMillis: Long,
+        val operation: ContactOperation,
+        val identifier: String = UUID.randomUUID().toString()
+    ) : JsonSerializable {
         constructor(jsonValue: JsonValue) : this(
             jsonValue.requireMap().requireField("timestamp"),
-            ContactOperation.fromJson(jsonValue.requireMap().require("operation"))
+            ContactOperation.fromJson(jsonValue.requireMap().require("operation")),
+            jsonValue.requireMap().requireField("identifier")
         )
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             "timestamp" to dateMillis,
-            "operation" to operation
+            "operation" to operation,
+            "identifier" to identifier
         ).toJsonValue()
     }
 
     companion object {
         private const val OPERATIONS_KEY = "com.urbanairship.contacts.OPERATIONS"
-        private const val DATED_OPERATIONS_KEY = "com.urbanairship.contacts.DATED_OPERATIONS"
+        private const val OPERATION_ENTRIES_KEY = "com.urbanairship.contacts.OPERATION_ENTRIES"
 
         private const val ANON_CONTACT_DATA_KEY = "com.urbanairship.contacts.ANON_CONTACT_DATA_KEY"
         private const val LAST_CONTACT_IDENTITY_KEY = "com.urbanairship.contacts.LAST_CONTACT_IDENTITY_KEY"
