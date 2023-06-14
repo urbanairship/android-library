@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.11.1, June 14, 2023
+Patch release that fixes app deep links that use the `uairship://` prefix. Any `uairship://` deep links that are not handled by Airship directly will now be delivered to the `DeepLinkListener`.
+
+### Changes
+- Allow the `DeepLinkListener` to process unhandled `uairship://` deep links
+
 ## Version 16.11.0, June 12, 2023
 Minor release that adds new config option `autoPauseInAppAutomationOnLaunch` to always pause IAA during app launch. 
 
