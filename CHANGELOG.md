@@ -2,18 +2,27 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
-## Version 17.0.0-Beta, May 26, 2023
+## Version 17.0.0, June 15, 2023
+Major SDK release that adds support for Stories, In-App experiences downstream of a sequence in Journeys, and improves SDK auth.
 
-Beta release for SDK 17.0.0. This release brings several breaking changes. This version is not suitable for a production app, but we encourage testing out the new APIs and providing us feedback so we can make changes before the final SDK 17 release.
+The Airship SDK now requires `compileSdk` version 33 (Android 13) or higher.
 
 ### Changes
+- Added support for Stories, a new format for Scenes
+- Added support for In-App experiences downstream of a sequence in Journeys
+- Updated minimum compile SDK to 33
 - Removed Accengage, Location, and Chat modules
 - Deprecated `urbanairship-preference` module. Apps should either use `urbanairship-preference-center` module or maintain a copy of the current preferences from the preference module.
 - Deprecated `urbanairship-ads-identifier` module
-- Video improvements for Scenes & Surveys
-- Log listener has been removed and replaced by a log handler.
+- Video improvements for Scenes
+- Log listener has been replaced by a new log handler interface
 - Channel listener has been updated to only listen for channel create, channel update has been removed
-- Added new PushNotificationStatus and PushNotificationStatus flow that provides the current status of push notifications
+- Added new `PushNotificationStatus` API that provides the current opt-in status for push notifications
+- Improved SDK auth
+- Default In-App Automation display interval has been changed from 30 seconds to 0 seconds
+- The SDK Allow list has been updated to allow opening all URLs by default if neither `urlAllowList` or `urlAllowListScopeOpen` have been set in the config. Media URLs for In-App experiences are no longer checked on the allow list. Youtube URLs have been removed from the default `urlAllowListScopeOpen`.
+
+See the [Migration Guide](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-16-17.md) for further details.
 
 ## Version 16.11.1, June 14, 2023
 Patch release that fixes app deep links that use the `uairship://` prefix. Any `uairship://` deep links that are not handled by Airship directly will now be delivered to the `DeepLinkListener`.
@@ -34,6 +43,19 @@ Live Updates make it easier to keep information updated in real time instead of 
 
 ### Changes
 - Added new `urbanairship-live-update` module.
+
+## Version 17.0.0-Beta, May 26, 2023
+
+Beta release for SDK 17.0.0. This release brings several breaking changes. This version is not suitable for a production app, but we encourage testing out the new APIs and providing us feedback so we can make changes before the final SDK 17 release.
+
+### Changes
+- Removed Accengage, Location, and Chat modules
+- Deprecated `urbanairship-preference` module. Apps should either use `urbanairship-preference-center` module or maintain a copy of the current preferences from the preference module.
+- Deprecated `urbanairship-ads-identifier` module
+- Video improvements for Scenes & Surveys
+- Log listener has been removed and replaced by a log handler.
+- Channel listener has been updated to only listen for channel create, channel update has been removed
+- Added new PushNotificationStatus and PushNotificationStatus flow that provides the current status of push notifications
 
 ## Version 16.9.3, May 24, 2023
 
