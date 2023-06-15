@@ -42,7 +42,7 @@ public object UALog {
      * The log handler.
      */
     @JvmStatic
-    public var logHandler: LogHandler? = DefaultLogHandler()
+    public var logHandler: AirshipLogHandler? = DefaultLogHandler()
 
     /**
      * Send a warning log message.

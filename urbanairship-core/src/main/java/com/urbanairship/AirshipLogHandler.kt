@@ -3,7 +3,7 @@ package com.urbanairship
 /**
  * Log handler
  */
-public interface LogHandler {
+public fun interface AirshipLogHandler {
 
     /**
      * Called to log.
