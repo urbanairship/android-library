@@ -1,11 +1,14 @@
 package com.urbanairship.images;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.AnimatedImageDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
@@ -19,6 +22,7 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.concurrent.Executor;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,6 +35,7 @@ import androidx.core.content.ContextCompat;
 abstract class ImageRequest {
 
     private final Executor EXECUTOR = AirshipExecutors.threadPoolExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     /**
      * Duration of the fade in animation when loading a bitmap into the image view in milliseconds.
@@ -43,6 +48,8 @@ abstract class ImageRequest {
     private final Context context;
 
     private final CancelableOperation pendingRequest = new CancelableOperation();
+
+    private final ColorDrawable transparentDrawable;
 
     private ViewTreeObserver.OnPreDrawListener preDrawListener;
     private int width;
@@ -65,6 +72,8 @@ abstract class ImageRequest {
         this.imageCache = imageCache;
         this.imageRequestOptions = imageRequestOptions;
         this.imageViewReference = new WeakReference<>(imageView);
+        this.transparentDrawable =
+                new ColorDrawable(ContextCompat.getColor(context, android.R.color.transparent));
     }
 
     /**
@@ -217,19 +226,22 @@ abstract class ImageRequest {
     @MainThread
     private boolean applyDrawable(Drawable drawable) {
         final ImageView imageView = imageViewReference.get();
-        if (drawable != null && imageView != null) {
-            // Transition drawable with a transparent drawable and the final drawable
-            TransitionDrawable td = new TransitionDrawable(new Drawable[] {
-                    new ColorDrawable(ContextCompat.getColor(context, android.R.color.transparent)),
-                    drawable
+        if (drawable != null && imageView != null && !pendingRequest.isCancelled()) {
+            mainHandler.post(() -> {
+                try {
+                    // Transition drawable with a transparent drawable and the final drawable
+                    TransitionDrawable td = new TransitionDrawable(new Drawable[] { transparentDrawable, drawable });
+
+                    imageView.setImageDrawable(td);
+                    td.startTransition(FADE_IN_TIME_MS);
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && drawable instanceof AnimatedImageDrawable) {
+                        ((AnimatedImageDrawable) drawable).start();
+                    }
+                } catch (Exception e) {
+                    UALog.w(e, "ImageRequest failed! Unable to apply drawable.");
+                }
             });
-
-            imageView.setImageDrawable(td);
-            td.startTransition(FADE_IN_TIME_MS);
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && drawable instanceof AnimatedImageDrawable) {
-                ((AnimatedImageDrawable) drawable).start();
-            }
             return true;
         }
         return false;
