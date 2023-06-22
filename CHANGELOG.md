@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.0.1, June 22, 2023
+Patch release that improves image loading for Stories and Scenes, and hardens image loading against potential crashes.
+
+### Changes
+- Adjust image loading for Scenes and Surveys to improve performance
+- Avoid potential crashes when loading many images at once in a Scene or Survey
+
 ## Version 17.0.0, June 15, 2023
 Major SDK release that adds support for Stories, In-App experiences downstream of a sequence in Journeys, and improves SDK auth.
 
