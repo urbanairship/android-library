@@ -26,6 +26,8 @@ plugins {
     id 'airship-doclava'
     id 'airship-dokka'
     id 'airship-publish'
+    id 'com.android.library'
+    id 'maven-publish'
 
     alias(libs.plugins.benmanes.versions)
     alias(libs.plugins.spotless)

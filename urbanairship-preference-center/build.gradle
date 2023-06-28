@@ -3,8 +3,16 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id 'airship-module'
     id 'kotlin-android'
-    id 'kotlin-allopen'
+    id 'com.android.library'
     id 'maven-publish'
+    id 'kotlin-allopen'
+}
+
+repositories {
+    gradlePluginPortal()
+    google()
+    mavenCentral()
+    maven { url "https://jitpack.io" }
 }
 
 description = "Airship Preference Center extension."

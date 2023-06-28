@@ -72,7 +72,7 @@ dependencies {
     implementation project(':urbanairship-live-update')
 
     // Airship Debug: Normally this is a debug only dependency but we embed the view in sample app
-    implementation project(':urbanairship-debug')
+//    implementation project(':urbanairship-debug')
 
     // Testing-only dependencies
 

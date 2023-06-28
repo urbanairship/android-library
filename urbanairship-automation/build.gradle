@@ -2,6 +2,15 @@ plugins {
     id 'airship-module'
     id 'kotlin-android'
     id 'kotlin-allopen'
+    id 'com.android.library'
+    id 'maven-publish'
+}
+
+repositories {
+    gradlePluginPortal()
+    google()
+    mavenCentral()
+    maven { url "https://jitpack.io" }
 }
 
 description = "Airship Android SDK Automation module"

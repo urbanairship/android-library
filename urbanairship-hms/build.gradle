@@ -1,6 +1,14 @@
 plugins {
-    id("airship-module")
+    id 'airship-module'
+    id 'com.android.library'
     id 'maven-publish'
+}
+
+repositories {
+    gradlePluginPortal()
+    google()
+    mavenCentral()
+    maven { url "https://jitpack.io" }
 }
 
 description = "Airship Android SDK HMS plugin"

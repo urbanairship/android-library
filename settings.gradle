@@ -3,16 +3,28 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
-        maven {url "https://jitpack.io"}
+        maven { url "https://jitpack.io" }
+    }
+
+    plugins {
+        id 'com.android.library'
+        id 'maven-publish'
     }
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+//    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
         mavenCentral()
         maven { url "https://jitpack.io" }
+    }
+
+    pluginManagement {
+        plugins {
+            id 'com.android.library'
+            id 'maven-publish'
+        }
     }
 }
 
