@@ -150,6 +150,14 @@ internal class LiveUpdateRegistrar(
         }
     }
 
+    suspend fun getAllActiveUpdates(): List<LiveUpdate> {
+        return dao
+            .getAllActive()
+            .mapNotNull { item ->
+                item.content?.let { LiveUpdate.from(item.state, it) }
+            }
+    }
+
     /**
      * End any Live Updates notifications that are no longer displayed.
      * On API 21 and 22, the notification manager does not provide a way to query for
