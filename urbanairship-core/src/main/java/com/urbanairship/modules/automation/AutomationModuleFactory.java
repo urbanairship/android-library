@@ -8,6 +8,7 @@ import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.contacts.Contact;
@@ -35,6 +36,6 @@ public interface AutomationModuleFactory extends AirshipVersionInfo {
                  @NonNull PushManager pushManager,
                  @NonNull Analytics analytics,
                  @NonNull RemoteData remoteData,
-                 @NonNull Contact contact);
+                 @NonNull AudienceOverridesProvider audienceOverridesProvider);
 
-}
+    }

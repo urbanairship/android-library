@@ -10,8 +10,12 @@ import android.widget.Toast;
 
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ClipboardAction;
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.liveupdate.LiveUpdateManager;
 import com.urbanairship.sample.R;
 import com.urbanairship.sample.databinding.FragmentHomeBinding;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,6 +30,7 @@ import androidx.navigation.ui.NavigationUI;
  */
 public class HomeFragment extends Fragment {
 
+    @NonNull
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         HomeViewModel viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
@@ -51,5 +56,4 @@ public class HomeFragment extends Fragment {
         Toolbar toolbar = view.findViewById(R.id.toolbar);
         NavigationUI.setupWithNavController(toolbar, Navigation.findNavController(view));
     }
-
 }

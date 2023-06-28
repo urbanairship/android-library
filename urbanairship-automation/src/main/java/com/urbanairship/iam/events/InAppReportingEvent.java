@@ -78,6 +78,10 @@ public class InAppReportingEvent {
     public static final String TYPE_BUTTON_TAP = "in_app_button_tap";
     @NonNull
     public static final String TYPE_PERMISSION_RESULT_EVENT = "in_app_permission_result";
+    @NonNull
+    public static final String TYPE_PAGER_GESTURE = "in_app_gesture";
+    @NonNull
+    public static final String TYPE_PAGER_ACTION = "in_app_page_action";
 
     // Permission result keys
     private static final String PERMISSION_KEY = "permission";
@@ -104,6 +108,8 @@ public class InAppReportingEvent {
     private static final String PAGER_FROM_INDEX = "from_page_index";
     private static final String PAGER_FROM_ID = "from_page_identifier";
     private static final String PAGE_VIEW_DISPLAY_TIME = "display_time";
+    private static final String PAGER_GESTURE_ID = "gesture_identifier";
+    private static final String PAGER_ACTION_ID = "action_identifier";
 
     // Button keys
     private static final String BUTTON_IDENTIFIER = "button_identifier";
@@ -125,6 +131,7 @@ public class InAppReportingEvent {
     private static final String SOURCE = "source";
     private static final String CONTEXT = "context";
     private static final String LOCALE = "locale";
+    private static final String REPORTING_INFO = "reporting_info";
 
     // Context keys
     private static final String REPORTING_CONTEXT = "reporting_context";
@@ -247,9 +254,13 @@ public class InAppReportingEvent {
 
     public static InAppReportingEvent buttonTap(@NonNull String scheduleId,
                                                 @NonNull InAppMessage message,
-                                                @NonNull String buttonId) {
+                                                @NonNull String buttonId,
+                                                @Nullable JsonValue reportingMetadata) {
         return new InAppReportingEvent(TYPE_BUTTON_TAP, scheduleId, message)
-                .setOverrides(JsonMap.newBuilder().put(BUTTON_IDENTIFIER, buttonId).build());
+                .setOverrides(JsonMap.newBuilder()
+                                     .put(BUTTON_IDENTIFIER, buttonId)
+                                     .putOpt(REPORTING_INFO, reportingMetadata)
+                                     .build());
     }
 
     public static InAppReportingEvent pageView(@NonNull String scheduleId,
@@ -309,6 +320,28 @@ public class InAppReportingEvent {
                                      .put(PAGER_COUNT, pagerData.getCount())
                                      .put(PAGER_COMPLETED, pagerData.isCompleted())
                                      .putOpt(PAGER_VIEWED_PAGES, pageViews)
+                                     .build());
+    }
+
+    public static InAppReportingEvent pagerGesture(@NonNull String scheduleId,
+                                               @NonNull InAppMessage message,
+                                               @NonNull String gestureId,
+                                               @Nullable JsonValue reportingMetadata) {
+        return new InAppReportingEvent(TYPE_PAGER_GESTURE, scheduleId, message)
+                .setOverrides(JsonMap.newBuilder()
+                                     .put(PAGER_GESTURE_ID, gestureId)
+                                     .put(REPORTING_INFO, reportingMetadata)
+                                     .build());
+    }
+
+    public static InAppReportingEvent pagerAction(@NonNull String scheduleId,
+                                               @NonNull InAppMessage message,
+                                               @NonNull String actionId,
+                                               @Nullable JsonValue reportingMetadata) {
+        return new InAppReportingEvent(TYPE_PAGER_ACTION, scheduleId, message)
+                .setOverrides(JsonMap.newBuilder()
+                                     .put(PAGER_ACTION_ID, actionId)
+                                     .put(REPORTING_INFO, reportingMetadata)
                                      .build());
     }
 

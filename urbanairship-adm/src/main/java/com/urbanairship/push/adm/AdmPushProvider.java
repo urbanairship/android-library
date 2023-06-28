@@ -12,7 +12,7 @@ import android.os.Looper;
 
 import com.amazon.device.messaging.ADMConstants;
 import com.urbanairship.AirshipVersionInfo;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushProvider;
 
@@ -125,7 +125,7 @@ public class AdmPushProvider implements PushProvider, AirshipVersionInfo {
         public void onReceive(Context context, Intent intent) {
             if (intent != null && intent.getExtras() != null && ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT.equals(intent.getAction())) {
                 if (intent.getExtras().containsKey(ADMConstants.LowLevel.EXTRA_ERROR)) {
-                    Logger.error("ADM error occurred: %s", intent.getExtras().getString(ADMConstants.LowLevel.EXTRA_ERROR));
+                    UALog.e("ADM error occurred: %s", intent.getExtras().getString(ADMConstants.LowLevel.EXTRA_ERROR));
                     this.error = intent.getExtras().getString(ADMConstants.LowLevel.EXTRA_ERROR);
                 } else {
                     this.registrationToken = intent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID);

@@ -2,7 +2,7 @@
 
 package com.urbanairship.actions;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AttributeEditor;
 import com.urbanairship.json.JsonValue;
@@ -189,7 +189,7 @@ public class SetAttributesAction extends Action {
         } else if (value instanceof Date) {
             attributeEditor.setAttribute(key, (Date) value);
         } else {
-            Logger.warn("SetAttributesAction - Invalid value type for the key: %s", key);
+            UALog.w("SetAttributesAction - Invalid value type for the key: %s", key);
         }
     }
 

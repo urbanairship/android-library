@@ -2,9 +2,15 @@
 
 package com.urbanairship.android.layout;
 
+import android.content.Context;
+
 import com.urbanairship.android.layout.property.BannerPlacement;
 import com.urbanairship.android.layout.property.BannerPlacementSelector;
+import com.urbanairship.android.layout.property.ModalPlacementSelector;
+import com.urbanairship.android.layout.property.Orientation;
 import com.urbanairship.android.layout.property.PresentationType;
+import com.urbanairship.android.layout.property.WindowSize;
+import com.urbanairship.android.layout.util.ResourceUtils;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -62,5 +68,30 @@ public class BannerPresentation extends BasePresentation {
     @Nullable
     public List<BannerPlacementSelector> getPlacementSelectors() {
         return placementSelectors;
+    }
+
+    @NonNull
+    public BannerPlacement getResolvedPlacement(@NonNull Context context) {
+        if (placementSelectors == null || placementSelectors.isEmpty()) {
+            return defaultPlacement;
+        }
+
+        Orientation orientation = ResourceUtils.getOrientation(context);
+        WindowSize windowSize = ResourceUtils.getWindowSize(context);
+
+        // Try to find a matching placement selector.
+        for (BannerPlacementSelector selector : placementSelectors) {
+            if (selector.getWindowSize() != null && selector.getWindowSize() != windowSize) {
+                continue;
+            }
+            if (selector.getOrientation() != null && selector.getOrientation() != orientation) {
+                continue;
+            }
+
+            return selector.getPlacement();
+        }
+
+        // Otherwise, return the default placement.
+        return defaultPlacement;
     }
 }

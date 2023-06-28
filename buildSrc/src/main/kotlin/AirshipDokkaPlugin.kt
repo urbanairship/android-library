@@ -22,9 +22,7 @@ class AirshipDokkaPlugin : Plugin<Project> {
     private lateinit var dokkaVersion: String
 
     override fun apply(target: Project) = target.run {
-        dokkaVersion = requireNotNull(rootProject.findProperty("dokkaVersion")?.toString()) {
-            "Root project 'dokkaVersion' property not found! Verify that it is defined in buildscript.ext"
-        }
+        dokkaVersion = libs.requiredVersion("dokka")
 
         if (this == rootProject) {
             configureDokkaProject()

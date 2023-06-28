@@ -7,7 +7,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PendingResult;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
@@ -159,14 +159,14 @@ public class PermissionsManager {
      */
     @NonNull
     public PendingResult<PermissionStatus> checkPermissionStatus(@NonNull Permission permission) {
-        Logger.debug("Checking permission for %s", permission);
+        UALog.d("Checking permission for %s", permission);
 
         synchronized (pendingCheckResults) {
             return pendingOrCall(permission, pendingCheckResults, delegate -> {
                 final PendingResult<PermissionStatus> pendingResult = new PendingResult<>();
 
                 if (delegate == null) {
-                    Logger.debug("No delegate for permission %s", permission);
+                    UALog.d("No delegate for permission %s", permission);
                     pendingResult.setResult(PermissionStatus.NOT_DETERMINED);
                     return pendingResult;
                 }
@@ -176,7 +176,7 @@ public class PermissionsManager {
                 }
 
                 mainHandler.post(() -> delegate.checkPermissionStatus(context, status -> {
-                    Logger.debug("Check permission %s status result: %s", permission, status);
+                    UALog.d("Check permission %s status result: %s", permission, status);
                     updatePermissionStatus(permission, status);
                     pendingResult.setResult(status);
 
@@ -239,14 +239,14 @@ public class PermissionsManager {
      */
     @NonNull
     public PendingResult<PermissionRequestResult> requestPermission(@NonNull Permission permission, boolean enableAirshipUsageOnGrant) {
-        Logger.debug("Requesting permission for %s", permission);
+        UALog.d("Requesting permission for %s", permission);
 
         synchronized (pendingRequestResults) {
             PendingResult<PermissionRequestResult> result = pendingOrCall(permission, pendingRequestResults, delegate -> {
                 final PendingResult<PermissionRequestResult> pendingResult = new PendingResult<>();
 
                 if (delegate == null) {
-                    Logger.debug("No delegate for permission %s", permission);
+                    UALog.d("No delegate for permission %s", permission);
                     pendingResult.setResult(PermissionRequestResult.notDetermined());
                     return pendingResult;
                 }
@@ -256,7 +256,7 @@ public class PermissionsManager {
                 }
 
                 mainHandler.post(() -> delegate.requestPermission(context, requestResult -> {
-                    Logger.debug("Permission %s request result: %s", permission, requestResult);
+                    UALog.d("Permission %s request result: %s", permission, requestResult);
                     updatePermissionStatus(permission, requestResult.getPermissionStatus());
                     pendingResult.setResult(requestResult);
 

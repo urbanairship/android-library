@@ -5,7 +5,7 @@ package com.urbanairship.push.notifications;
 import android.content.Context;
 import android.graphics.Bitmap;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -88,7 +88,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         try {
             styleJson = JsonValue.parseString(stylePayload).optMap();
         } catch (JsonException e) {
-            Logger.error(e, "Failed to parse notification style payload.");
+            UALog.e(e, "Failed to parse notification style payload.");
             return false;
         }
 
@@ -107,7 +107,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
                 return applyBigPictureStyle(builder, styleJson);
 
             default:
-                Logger.error("Unrecognized notification style type: %s", type);
+                UALog.e("Unrecognized notification style type: %s", type);
                 return false;
         }
     }
@@ -160,7 +160,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         try {
             url = new URL(styleJson.opt(BIG_PICTURE_KEY).optString());
         } catch (MalformedURLException e) {
-            Logger.error(e, "Malformed big picture URL.");
+            UALog.e(e, "Malformed big picture URL.");
             return false;
         }
 

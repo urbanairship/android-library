@@ -13,7 +13,7 @@ import android.os.Looper;
 import android.os.ResultReceiver;
 
 import com.urbanairship.Autopilot;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 
 import java.util.ArrayList;
@@ -69,7 +69,7 @@ public class HelperActivity extends AppCompatActivity {
         Autopilot.automaticTakeOff(getApplication());
 
         if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
-            Logger.error("HelperActivity - unable to create activity, takeOff not called.");
+            UALog.e("HelperActivity - unable to create activity, takeOff not called.");
             finish();
             return;
         }
@@ -101,7 +101,7 @@ public class HelperActivity extends AppCompatActivity {
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && permissions != null) {
             requestPermissions(permissions, 0);
         } else {
-            Logger.error("HelperActivity - Started without START_ACTIVITY_INTENT_EXTRA or PERMISSIONS_EXTRA extra.");
+            UALog.e("HelperActivity - Started without START_ACTIVITY_INTENT_EXTRA or PERMISSIONS_EXTRA extra.");
             intents.remove(0);
             processNextIntent();
         }
@@ -221,7 +221,7 @@ public class HelperActivity extends AppCompatActivity {
             try {
                 result.wait();
             } catch (InterruptedException e) {
-                Logger.error(e, "Thread interrupted when waiting for result from activity.");
+                UALog.e(e, "Thread interrupted when waiting for result from activity.");
                 Thread.currentThread().interrupt();
             }
         }
@@ -263,7 +263,7 @@ public class HelperActivity extends AppCompatActivity {
             try {
                 result.wait();
             } catch (InterruptedException e) {
-                Logger.error(e, "Thread interrupted when waiting for result from activity.");
+                UALog.e(e, "Thread interrupted when waiting for result from activity.");
                 Thread.currentThread().interrupt();
                 return new ActivityResult();
             }

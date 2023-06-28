@@ -5,7 +5,7 @@ package com.urbanairship.iam;
 import android.content.Context;
 import android.graphics.Color;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -302,7 +302,7 @@ public class TextInfo implements JsonSerializable {
             try {
                 return context.getResources().getIdentifier(drawableName,"drawable", context.getPackageName());
             } catch (android.content.res.Resources.NotFoundException e) {
-                Logger.debug("Drawable " + drawableName + " no longer exists.");
+                UALog.d("Drawable " + drawableName + " no longer exists.");
                 return 0;
             }
         } else {
@@ -434,7 +434,7 @@ public class TextInfo implements JsonSerializable {
             try {
                 this.drawableName = context.getResources().getResourceName(drawable);
             } catch (android.content.res.Resources.NotFoundException e) {
-                Logger.debug("Drawable " + drawable + " no longer exists or has a new identifier.");
+                UALog.d("Drawable " + drawable + " no longer exists or has a new identifier.");
             }
             return this;
         }

@@ -6,20 +6,21 @@ import android.content.Context;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
-import com.urbanairship.contacts.Contact;
 import com.urbanairship.modules.aaid.AdIdModuleFactory;
 import com.urbanairship.modules.accengage.AccengageModule;
 import com.urbanairship.modules.accengage.AccengageModuleFactory;
 import com.urbanairship.modules.automation.AutomationModuleFactory;
 import com.urbanairship.modules.chat.ChatModuleFactory;
 import com.urbanairship.modules.debug.DebugModuleFactory;
+import com.urbanairship.modules.liveupdate.LiveUpdateModuleFactory;
 import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.modules.location.LocationModuleFactory;
 import com.urbanairship.modules.messagecenter.MessageCenterModuleFactory;
@@ -47,6 +48,7 @@ public class Modules {
     private static final String DEBUG_MODULE_FACTORY = "com.urbanairship.debug.DebugModuleFactoryImpl";
     private static final String AD_ID_FACTORY = "com.urbanairship.aaid.AdIdModuleFactoryImpl";
     private static final String CHAT_FACTORY = "com.urbanairship.chat.ChatModuleFactoryImpl";
+    private static final String LIVE_UPDATE_FACTORY = "com.urbanairship.liveupdate.LiveUpdateModuleFactoryImpl";
     private static final String PREFERENCE_CENTER_FACTORY = "com.urbanairship.preferencecenter.PreferenceCenterModuleFactoryImpl";
 
     @Nullable
@@ -62,7 +64,7 @@ public class Modules {
                 return moduleFactory.build(context, configOptions, preferenceDataStore, privacyManager, channel, pushManager);
             }
         } catch (Exception e) {
-            Logger.error(e, "Failed to build Accengage module");
+            UALog.e(e, "Failed to build Accengage module");
         }
         return null;
     }
@@ -81,7 +83,7 @@ public class Modules {
                 return moduleFactory.build(context, preferenceDataStore, privacyManager, channel, pushManager, configOptions);
             }
         } catch (Exception e) {
-            Logger.error(e, "Failed to build Message Center module");
+            UALog.e(e, "Failed to build Message Center module");
         }
         return null;
     }
@@ -98,7 +100,7 @@ public class Modules {
                 return moduleFactory.build(context, preferenceDataStore, privacyManager, channel, permissionsManager);
             }
         } catch (Exception e) {
-            Logger.error(e, "Failed to build Location module");
+            UALog.e(e, "Failed to build Location module");
         }
         return null;
     }
@@ -112,15 +114,15 @@ public class Modules {
                                     @NonNull PushManager pushManager,
                                     @NonNull Analytics analytics,
                                     @NonNull RemoteData remoteData,
-                                    @NonNull Contact contact) {
+                                    @NonNull AudienceOverridesProvider audienceOverridesProvider) {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager, airshipChannel, pushManager,
-                        analytics, remoteData, contact);
+                        analytics, remoteData, audienceOverridesProvider);
             }
         } catch (Exception e) {
-            Logger.error(e, "Failed to build Automation module");
+            UALog.e(e, "Failed to build Automation module");
         }
         return null;
     }
@@ -134,7 +136,7 @@ public class Modules {
                 return moduleFactory.build(context, dataStore);
             }
         } catch (Exception e) {
-            Logger.error(e, "Failed to build Debug module");
+            UALog.e(e, "Failed to build Debug module");
         }
         return null;
     }
@@ -151,7 +153,7 @@ public class Modules {
                 return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager, analytics);
             }
         } catch (Exception e) {
-            Logger.error(e, "Failed to build Ad Id module");
+            UALog.e(e, "Failed to build Ad Id module");
         }
         return null;
     }
@@ -169,7 +171,7 @@ public class Modules {
                 return moduleFactory.build(context, dataStore, config, privacyManager, airshipChannel, pushManager);
             }
         } catch (Exception e) {
-            Logger.error(e, "Failed to build Chat module");
+            UALog.e(e, "Failed to build Chat module");
         }
         return null;
     }
@@ -186,7 +188,26 @@ public class Modules {
                 return moduleFactory.build(context, dataStore, privacyManager, remoteData);
             }
         } catch (Exception e) {
-            Logger.error(e, "Failed to build Preference Center module");
+            UALog.e(e, "Failed to build Preference Center module");
+        }
+        return null;
+    }
+
+    @Nullable
+    public static Module liveUpdateManager(@NonNull Context context,
+                                           @NonNull PreferenceDataStore dataStore,
+                                           @NonNull AirshipRuntimeConfig config,
+                                           @NonNull PrivacyManager privacyManager,
+                                           @NonNull AirshipChannel airshipChannel,
+                                           @NonNull PushManager pushManager) {
+        try {
+            LiveUpdateModuleFactory moduleFactory =
+                    createFactory(LIVE_UPDATE_FACTORY, LiveUpdateModuleFactory.class);
+            if (moduleFactory != null) {
+                return moduleFactory.build(context, dataStore, config, privacyManager, airshipChannel, pushManager);
+            }
+        } catch (Exception e) {
+            UALog.e(e, "Failed to build Live Update module");
         }
         return null;
     }
@@ -204,13 +225,13 @@ public class Modules {
             Class<? extends T> clazz = Class.forName(className).asSubclass(factoryClass);
             T instance = clazz.newInstance();
             if (!UAirship.getVersion().equals(instance.getAirshipVersion())) {
-                Logger.error("Unable to load module with factory %s, versions do not match. Core Version: %s, Module Version: %s.", factoryClass, UAirship.getVersion(), instance.getAirshipVersion());
+                UALog.e("Unable to load module with factory %s, versions do not match. Core Version: %s, Module Version: %s.", factoryClass, UAirship.getVersion(), instance.getAirshipVersion());
                 return null;
             }
             return instance;
         } catch (ClassNotFoundException ignored) {
         } catch (Exception e) {
-            Logger.error(e, "Unable to create module factory %s", factoryClass);
+            UALog.e(e, "Unable to create module factory %s", factoryClass);
         }
 
         return null;

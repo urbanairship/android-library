@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
@@ -107,7 +107,7 @@ public class AttributeMutation implements JsonSerializable {
             try {
                 mutations.add(fromJsonValue(value));
             } catch (JsonException e) {
-                Logger.error(e, "Invalid attribute.");
+                UALog.e(e, "Invalid attribute.");
             }
         }
 

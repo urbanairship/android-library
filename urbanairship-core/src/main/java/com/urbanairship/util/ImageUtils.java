@@ -11,7 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.webkit.URLUtil;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 
 import java.io.File;
 import java.io.IOException;
@@ -182,7 +182,7 @@ public final class ImageUtils {
         });
 
         if (bitmap != null) {
-            Logger.debug("Fetched image from: %s. Original image size: %dx%d. Requested image size: %dx%d. Bitmap size: %dx%d.", url, reqWidth, reqHeight, reqWidth, reqHeight, bitmap.getWidth(), bitmap.getHeight());
+            UALog.d("Fetched image from: %s. Original image size: %dx%d. Requested image size: %dx%d. Bitmap size: %dx%d.", url, reqWidth, reqHeight, reqWidth, reqHeight, bitmap.getWidth(), bitmap.getHeight());
         }
 
         return bitmap;
@@ -211,7 +211,7 @@ public final class ImageUtils {
             // Calculate the largest inSampleSize value that is a power of 2 and keeps both
             // height and width larger than the requested height and width.
             while ((halfHeight / inSampleSize) > reqHeight
-                    && (halfWidth / inSampleSize) > reqWidth) {
+                    || (halfWidth / inSampleSize) > reqWidth) {
                 inSampleSize *= 2;
             }
         }
@@ -289,7 +289,7 @@ public final class ImageUtils {
      * @throws IOException
      */
     private static <T> T fetchImage(@NonNull Context context, @NonNull URL url, ImageProcessor<T> imageProcessor) throws IOException {
-        Logger.verbose("Fetching image from: %s", url);
+        UALog.v("Fetching image from: %s", url);
 
         boolean deleteFile = false;
         File imageFile = null;
@@ -302,21 +302,21 @@ public final class ImageUtils {
                 deleteFile = true;
 
                 if (!FileUtils.downloadFile(url, imageFile).isSuccess) {
-                    Logger.verbose("Failed to fetch image from: %s", url);
+                    UALog.v("Failed to fetch image from: %s", url);
                     return null;
                 }
             }
 
             return imageProcessor.onProcessFile(imageFile);
         } catch (URISyntaxException e) {
-            Logger.error("ImageUtils - Invalid URL: %s ", url);
+            UALog.e("ImageUtils - Invalid URL: %s ", url);
             return null;
         } finally {
             if (deleteFile && imageFile != null) {
                 if (imageFile.delete()) {
-                    Logger.verbose("Deleted temp file: %s", imageFile);
+                    UALog.v("Deleted temp file: %s", imageFile);
                 } else {
-                    Logger.verbose("Failed to delete temp file: %s", imageFile);
+                    UALog.v("Failed to delete temp file: %s", imageFile);
                 }
             }
         }

@@ -8,7 +8,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
 import androidx.core.util.ObjectsCompat;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -441,7 +441,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
                     try {
                         builder.setTagChanges(getTagChanges(last.tags));
                     } catch (JsonException e) {
-                        Logger.debug(e, "ChannelRegistrationPayload - Failed to wrap tag changes to JsonMap");
+                        UALog.d(e, "ChannelRegistrationPayload - Failed to wrap tag changes to JsonMap");
                     }
                 }
             }

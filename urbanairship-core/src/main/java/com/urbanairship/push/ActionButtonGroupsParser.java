@@ -9,7 +9,7 @@ import android.content.res.XmlResourceParser;
 import android.util.AttributeSet;
 import android.util.Xml;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.R;
 import com.urbanairship.push.notifications.NotificationActionButton;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
@@ -53,7 +53,7 @@ class ActionButtonGroupsParser {
             return parseGroups(context, parser);
         } catch (IOException | XmlPullParserException | Resources.NotFoundException | NullPointerException e) {
             // Note: NullPointerException can occur in rare circumstances further down the call stack
-            Logger.error(e, "Failed to parse NotificationActionButtonGroups.");
+            UALog.e(e, "Failed to parse NotificationActionButtonGroups.");
             return new HashMap<>();
         }
     }
@@ -82,7 +82,7 @@ class ActionButtonGroupsParser {
             if (tagType == XmlPullParser.START_TAG && BUTTON_GROUP_TAG.equals(tagName)) {
                 String id = parser.getAttributeValue(null, ID_ATTRIBUTE);
                 if (UAStringUtil.isEmpty(id)) {
-                    Logger.error("%s missing id.", BUTTON_GROUP_TAG);
+                    UALog.e("%s missing id.", BUTTON_GROUP_TAG);
                     continue;
                 }
 
@@ -100,7 +100,7 @@ class ActionButtonGroupsParser {
             if (tagType == XmlPullParser.START_TAG && BUTTON_TAG.equals(tagName)) {
                 String buttonId = parser.getAttributeValue(null, ID_ATTRIBUTE);
                 if (UAStringUtil.isEmpty(buttonId)) {
-                    Logger.error("%s missing id.", BUTTON_TAG);
+                    UALog.e("%s missing id.", BUTTON_TAG);
                     continue;
                 }
 
@@ -130,7 +130,7 @@ class ActionButtonGroupsParser {
             if (tagType == XmlPullParser.END_TAG && BUTTON_GROUP_TAG.equals(tagName)) {
                 NotificationActionButtonGroup group = groupBuilder.build();
                 if (group.getNotificationActionButtons().isEmpty()) {
-                    Logger.error("%s %s missing action buttons.", BUTTON_GROUP_TAG, groupId);
+                    UALog.e("%s %s missing action buttons.", BUTTON_GROUP_TAG, groupId);
                     continue;
                 }
 

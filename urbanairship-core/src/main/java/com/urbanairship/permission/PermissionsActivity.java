@@ -11,7 +11,7 @@ import android.os.Looper;
 import android.os.ResultReceiver;
 
 import com.urbanairship.Autopilot;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 
 import java.util.ArrayList;
@@ -105,7 +105,7 @@ public class PermissionsActivity extends AppCompatActivity {
         }
 
         for (Intent intent : intents) {
-            Logger.verbose("Permission request cancelled", intent);
+            UALog.v("Permission request cancelled", intent);
 
             ResultReceiver resultReceiver = intent.getParcelableExtra(RESULT_RECEIVER_EXTRA);
             if (resultReceiver != null) {
@@ -144,7 +144,7 @@ public class PermissionsActivity extends AppCompatActivity {
                 resultReceiver
         );
 
-        Logger.verbose("Requesting permission %s", permission);
+        UALog.v("Requesting permission %s", permission);
         this.requestPermissionLauncher.launch(permission);
     }
 
@@ -157,7 +157,7 @@ public class PermissionsActivity extends AppCompatActivity {
 
         boolean afterShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(this, request.permission);
         long time = System.currentTimeMillis() - request.startTime;
-        Logger.verbose(
+        UALog.v(
                 "Received permission result: permission %s, shouldShowRequestPermissionRationale before: %s, shouldShowRequestPermissionRationale after: %s, granted: %s, time: %s",
                 request.permission,
                 request.startShowRationale,

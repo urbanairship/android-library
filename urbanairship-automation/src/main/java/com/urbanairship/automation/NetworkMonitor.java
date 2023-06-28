@@ -7,7 +7,7 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.os.Build;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 
 import androidx.annotation.NonNull;
@@ -57,7 +57,7 @@ public class NetworkMonitor {
         } catch (SecurityException e) {
             // Workaround "Package android does not belong to 10246" exceptions that occur on
             // a small set of devices.
-            Logger.warn(e, "NetworkMonitor failed to register network callback!");
+            UALog.w(e, "NetworkMonitor failed to register network callback!");
         }
     }
 
@@ -69,7 +69,7 @@ public class NetworkMonitor {
             connectivityManager.unregisterNetworkCallback(networkCallback);
         } catch (Exception e) {
             // Ignore unregister errors in case the callback wasn't previously registered.
-            Logger.warn(e, "NetworkMonitor failed to unregister network callback!");
+            UALog.w(e, "NetworkMonitor failed to unregister network callback!");
         }
     }
 

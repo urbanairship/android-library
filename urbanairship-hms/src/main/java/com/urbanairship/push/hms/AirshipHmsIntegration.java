@@ -5,11 +5,10 @@ package com.urbanairship.push.hms;
 import android.content.Context;
 
 import com.huawei.hms.push.RemoteMessage;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PendingResult;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProviderBridge;
-import com.urbanairship.util.UAStringUtil;
 
 import java.util.concurrent.Future;
 
@@ -67,7 +66,7 @@ public class AirshipHmsIntegration {
             HmsTokenCache.shared().set(context, token);
             PushProviderBridge.requestRegistrationUpdate(context, HmsPushProvider.class, token);
         } else {
-            Logger.debug("Ignoring call to process new token. Token is already registered!");
+            UALog.d("Ignoring call to process new token. Token is already registered!");
         }
     }
 

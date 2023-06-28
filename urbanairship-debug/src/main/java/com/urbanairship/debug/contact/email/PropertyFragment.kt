@@ -49,6 +49,7 @@ class PropertyFragment : Fragment() {
             PropertyType.NUMBER -> binding.radioGroupPropertyType.check(R.id.numberChip)
             PropertyType.BOOLEAN -> binding.radioGroupPropertyType.check(R.id.booleanChip)
             PropertyType.JSON -> binding.radioGroupPropertyType.check(R.id.jsonChip)
+            else -> Unit // Do nothing
         }
         return binding.root
     }

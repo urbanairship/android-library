@@ -10,7 +10,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class AirshipUrlConfigTest extends BaseTestCase {
 
@@ -58,5 +60,19 @@ public class AirshipUrlConfigTest extends BaseTestCase {
                                                      .build();
 
         assertEquals(Uri.parse("https://test.example.com"), urlConfig.remoteDataUrl().build());
+    }
+
+    @Test
+    public void testIsDeviceUrlAvailable() {
+        AirshipUrlConfig urlConfig = AirshipUrlConfig.newBuilder()
+                .setDeviceUrl("https://test.example.com")
+                                                     .build();
+        assertTrue(urlConfig.isDeviceUrlAvailable());
+    }
+    @Test
+    public void testIsDeviceUrlNotAvailable() {
+        AirshipUrlConfig urlConfig = AirshipUrlConfig.newBuilder()
+                                                     .build();
+        assertFalse(urlConfig.isDeviceUrlAvailable());
     }
 }

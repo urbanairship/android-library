@@ -1,6 +1,7 @@
 plugins {
     id 'airship-module'
     id 'kotlin-android'
+    id 'kotlin-kapt'
 }
 
 description = "Airship Android Debug Library"
@@ -22,7 +23,7 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
     }
-    
+
     namespace 'com.urbanairship.debug'
 }
 
@@ -30,94 +31,38 @@ dependencies {
     api project(':urbanairship-core')
     implementation project(':urbanairship-ads-identifier')
     implementation project(':urbanairship-automation')
-    implementation project(':urbanairship-location')
     implementation project(':urbanairship-message-center')
     implementation project(':urbanairship-preference-center')
     implementation project(':urbanairship-preference')
 
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$rootProject.kotlinVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.kotlinCoroutinesVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.kotlinCoroutinesVersion"
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
 
     // Room
-    implementation "androidx.room:room-runtime:$rootProject.androidxRoomVersion"
-//    kapt "androidx.room:room-compiler:$rootProject.androidxRoomVersion"
+    implementation(libs.androidx.room.runtime)
+    kapt(libs.androidx.room.compiler)
 
     // Navigation
-    implementation "androidx.navigation:navigation-fragment-ktx:$rootProject.androidxNavigationVersion"
-    implementation "androidx.navigation:navigation-ui-ktx:$rootProject.androidxNavigationVersion"
+    implementation(libs.androidx.navigation.fragmentktx)
+    implementation(libs.androidx.navigation.uiktx)
 
     // Constraint layout
-    implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
+    implementation(libs.androidx.constraintlayout)
 
     // Lifecycle
-    implementation "androidx.lifecycle:lifecycle-common-java8:$rootProject.androidxLifeCycleVersion"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.androidxLifeCycleVersion"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.androidxLifeCycleVersion"
-    implementation "androidx.lifecycle:lifecycle-common-java8:$rootProject.androidxLifeCycleVersion"
+    implementation(libs.androidx.lifecycle.common.java8)
+    implementation(libs.androidx.lifecycle.runtimektx)
+    implementation(libs.androidx.lifecycle.viewmodelktx)
+    implementation(libs.androidx.lifecycle.livedataktx)
 
     // Paging
-    implementation "androidx.paging:paging-runtime-ktx:$rootProject.androidxPagingVersion"
+    implementation(libs.androidx.paging.runtimektx)
 
     // Support libraries
-    implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
-    implementation "com.google.android.material:material:$rootProject.materialVersion"
-    implementation "androidx.vectordrawable:vectordrawable:$rootProject.androidxVectorDrawableVersion"
-    implementation "androidx.preference:preference-ktx:$rootProject.androidxPreferenceVersion"
-}
-
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
-}
-
-afterEvaluate {
-    publishing {
-        publications {
-            // Creates a Maven publication called "release".
-            Production(MavenPublication) {
-//                from components.release
-                groupId = 'com.urbanairship.android'
-                artifactId = project.name
-                version = project.version.toString()
-
-                artifact("$buildDir/outputs/aar/${project.name}-release.aar")
-                artifact(sourcesJar)
-
-                pom {
-                    name.set(project.name)
-                    description.set(project.description)
-                    url.set("https://github.com/urbanairship/android-library")
-
-                    developers {
-                        developer { name.set("Airship") }
-                    }
-
-                    licenses {
-                        license {
-                            name.set("The Apache Software License, Version 2.0")
-                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                            distribution.set("repo")
-                        }
-                    }
-
-                    scm {
-                        connection.set("https://github.com/urbanairship/android-library.git")
-                        url.set("https://github.com/urbanairship/android-library")
-                    }
-                }
-
-                pom.withXml {
-                    def dependencies = asNode().appendNode("dependencies")
-                    configurations["implementation"].allDependencies.forEach {
-                        def dep = dependencies.appendNode("dependency")
-                        dep.appendNode("groupId", it.group)
-                        dep.appendNode("artifactId", it.name)
-                        dep.appendNode("version", it.version)
-                    }
-                }
-            }
-        }
-    }
+    implementation(libs.androidx.appcompat)
+    implementation(libs.google.material)
+    implementation(libs.androidx.vectordrawable)
+    implementation(libs.androidx.preferencektx)
 }

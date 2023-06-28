@@ -23,9 +23,8 @@ import android.app.ActivityManager;
 import android.app.Application;
 import android.content.Context;
 import android.os.Process;
-import android.text.TextUtils;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -90,7 +89,7 @@ public class ProcessUtils {
                 return (String) packageName;
             }
         } catch (Throwable exception) {
-            Logger.debug("Unable to check ActivityThread for processName", exception);
+            UALog.d("Unable to check ActivityThread for processName", exception);
         }
 
         // Fallback to the most expensive way

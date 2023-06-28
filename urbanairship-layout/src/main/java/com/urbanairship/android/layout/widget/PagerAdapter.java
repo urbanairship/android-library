@@ -7,8 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.urbanairship.android.layout.Thomas;
-import com.urbanairship.android.layout.environment.Environment;
+import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.BaseModel;
 import com.urbanairship.android.layout.model.PagerModel;
 import com.urbanairship.android.layout.util.LayoutUtils;
@@ -26,16 +25,16 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> {
     @NonNull
-    private final List<BaseModel> items = new ArrayList<>();
+    private final List<BaseModel<?, ?>> items = new ArrayList<>();
 
     @NonNull
     private final PagerModel pagerModel;
     @NonNull
-    private final Environment environment;
+    private final ViewEnvironment viewEnvironment;
 
-    public PagerAdapter(@NonNull PagerModel model, @NonNull Environment environment) {
+    public PagerAdapter(@NonNull PagerModel model, @NonNull ViewEnvironment viewEnvironment) {
         this.pagerModel = model;
-        this.environment = environment;
+        this.viewEnvironment = viewEnvironment;
     }
 
     @NonNull
@@ -46,9 +45,9 @@ public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull PagerAdapter.ViewHolder holder, int position) {
-        BaseModel model = getItemAtPosition(position);
+        BaseModel<?, ?> model = getItemAtPosition(position);
         holder.container.setId(pagerModel.getPageViewId(position));
-        holder.bind(model, environment);
+        holder.bind(model, viewEnvironment);
     }
 
     @Override
@@ -64,14 +63,14 @@ public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> 
 
     @Override
     public int getItemViewType(int position) {
-        return items.get(position).getType().ordinal();
+        return items.get(position).getViewType().ordinal();
     }
 
-    public BaseModel getItemAtPosition(int position) {
+    public BaseModel<?, ?> getItemAtPosition(int position) {
         return items.get(position);
     }
 
-    public void setItems(@NonNull List<BaseModel> items) {
+    public void setItems(@NonNull List<BaseModel<?, ?>> items) {
         if (!this.items.equals(items)) {
             this.items.clear();
             this.items.addAll(items);
@@ -88,13 +87,12 @@ public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> 
 
         private ViewHolder(@NonNull ViewGroup container) {
             super(container);
-            container.setLayoutParams(new RecyclerView.LayoutParams(MATCH_PARENT, MATCH_PARENT));
             this.container = container;
         }
 
-        public void bind(@NonNull BaseModel item, @NonNull Environment environment) {
-            View view = Thomas.view(itemView.getContext(), item, environment);
-            container.addView(view, new RecyclerView.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+        public void bind(@NonNull BaseModel<?, ?> item, @NonNull ViewEnvironment viewEnvironment) {
+            View view = item.createView(itemView.getContext(), viewEnvironment);
+            container.addView(view, MATCH_PARENT, MATCH_PARENT);
 
             // Register a listener, so we can request insets when the view is attached.
             LayoutUtils.doOnAttachToWindow(itemView, () ->

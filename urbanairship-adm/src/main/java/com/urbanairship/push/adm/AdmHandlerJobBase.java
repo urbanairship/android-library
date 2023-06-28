@@ -7,7 +7,7 @@ import android.content.Intent;
 
 import com.amazon.device.messaging.ADMMessageHandlerJobBase;
 import com.urbanairship.Autopilot;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProviderBridge;
 
@@ -22,7 +22,7 @@ public class AdmHandlerJobBase extends ADMMessageHandlerJobBase {
 
     @Override
     protected void onRegistrationError(Context context, String errorId) {
-        Logger.error("An error occured during ADM Registration : " + errorId);
+        UALog.e("An error occured during ADM Registration : " + errorId);
     }
 
     @Override

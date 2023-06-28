@@ -5,7 +5,7 @@ package com.urbanairship.push.notifications;
 import android.app.Notification;
 import android.content.Context;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -56,7 +56,7 @@ public class WearableNotificationExtender implements NotificationCompat.Extender
         try {
             wearableJson = JsonValue.parseString(wearablePayload).optMap();
         } catch (JsonException e) {
-            Logger.error(e, "Failed to parse wearable payload.");
+            UALog.e(e, "Failed to parse wearable payload.");
             return builder;
         }
 

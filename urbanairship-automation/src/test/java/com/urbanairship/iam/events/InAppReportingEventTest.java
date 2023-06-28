@@ -28,11 +28,14 @@ import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -210,7 +213,7 @@ public class InAppReportingEventTest {
 
     @Test
     public void testButtonTap() {
-        InAppReportingEvent.buttonTap("schedule ID", message, "button id")
+        InAppReportingEvent.buttonTap("schedule ID", message, "button id", null)
                            .record(mockAnalytics);
 
         JsonMap expectedData = JsonMap.newBuilder()
@@ -219,6 +222,28 @@ public class InAppReportingEventTest {
                                                         .put("message_id", "schedule ID")
                                                         .build())
                                       .put("button_identifier", "button id")
+                                      .build();
+
+        verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_BUTTON_TAP, expectedData)));
+    }
+
+    @Test
+    public void testButtonTapWithMetadata() {
+        JsonValue metadata = JsonMap.newBuilder()
+                                    .put("foo", "bar")
+                                    .build()
+                                    .toJsonValue();
+
+        InAppReportingEvent.buttonTap("schedule ID", message, "button id", metadata)
+                           .record(mockAnalytics);
+
+        JsonMap expectedData = JsonMap.newBuilder()
+                                      .put("source", "urban-airship")
+                                      .put("id", JsonMap.newBuilder()
+                                                        .put("message_id", "schedule ID")
+                                                        .build())
+                                      .put("button_identifier", "button id")
+                                      .put("reporting_info", metadata)
                                       .build();
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_BUTTON_TAP, expectedData)));
@@ -265,6 +290,42 @@ public class InAppReportingEventTest {
                                       .build();
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_PAGE_SWIPE, expectedData)));
+    }
+
+    @Test
+    public void testPagerViewGesture() {
+        JsonValue metadata = JsonValue.wrap("foo");
+        InAppReportingEvent.pagerGesture("schedule ID", message, "gesture ID", metadata)
+                           .record(mockAnalytics);
+
+        JsonMap expectedData = JsonMap.newBuilder()
+                                      .put("source", "urban-airship")
+                                      .put("id", JsonMap.newBuilder()
+                                                        .put("message_id", "schedule ID")
+                                                        .build())
+                                      .put("gesture_identifier", "gesture ID")
+                                      .put("reporting_info", metadata)
+                                      .build();
+
+        verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_PAGER_GESTURE, expectedData)));
+    }
+
+    @Test
+    public void testPagerViewAction() {
+        JsonValue metadata = JsonValue.wrap("foo");
+        InAppReportingEvent.pagerAction("schedule ID", message, "action ID", metadata)
+                           .record(mockAnalytics);
+
+        JsonMap expectedData = JsonMap.newBuilder()
+                                      .put("source", "urban-airship")
+                                      .put("id", JsonMap.newBuilder()
+                                                        .put("message_id", "schedule ID")
+                                                        .build())
+                                      .put("action_identifier", "action ID")
+                                      .put("reporting_info", metadata)
+                                      .build();
+
+        verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_PAGER_ACTION, expectedData)));
     }
 
     @Test
@@ -350,7 +411,7 @@ public class InAppReportingEventTest {
 
     @Test
     public void testFormResult() {
-        FormData.BaseForm formData = new FormData.Nps("form_id", "response type", "score_id", Collections.singleton(new FormData.Score("score_id", 1)));
+        FormData.BaseForm formData = new FormData.Nps("form_id", "response type", "score_id", Collections.singleton(new FormData.Score("score_id", 1, true, null, null)));
 
         InAppReportingEvent.formResult("schedule ID", message, formData)
                            .record(mockAnalytics);

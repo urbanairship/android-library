@@ -64,10 +64,6 @@ public class AirshipListener implements PushListener, NotificationListener, Push
         Log.i(TAG, "Channel created " + channelId);
     }
 
-    @Override
-    public void onChannelUpdated(@NonNull String channelId) {
-        Log.i(TAG, "Channel updated " + channelId);
-    }
 
     @Override
     public void onPushTokenUpdated(@NonNull String token) {

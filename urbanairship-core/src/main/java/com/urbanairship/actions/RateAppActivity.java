@@ -13,7 +13,7 @@ import android.os.Bundle;
 import android.view.View;
 
 import com.urbanairship.Autopilot;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.R;
 import com.urbanairship.UAirship;
 import com.urbanairship.activity.ThemedActivity;
@@ -36,7 +36,7 @@ public class RateAppActivity extends ThemedActivity {
         Autopilot.automaticTakeOff(getApplication());
 
         if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
-            Logger.error("RateAppActivity - unable to create activity, takeOff not called.");
+            UALog.e("RateAppActivity - unable to create activity, takeOff not called.");
             finish();
         }
     }
@@ -44,7 +44,7 @@ public class RateAppActivity extends ThemedActivity {
     @Override
     public void onNewIntent(@NonNull Intent intent) {
         super.onNewIntent(intent);
-        Logger.debug("New intent received for rate app activity");
+        UALog.d("New intent received for rate app activity");
         restartActivity(intent.getData(), intent.getExtras());
     }
 
@@ -80,7 +80,7 @@ public class RateAppActivity extends ThemedActivity {
 
         Intent intent = getIntent();
         if (intent == null) {
-            Logger.error("RateAppActivity - Started activity with null intent.");
+            UALog.e("RateAppActivity - Started activity with null intent.");
             finish();
             return;
         }
@@ -114,7 +114,7 @@ public class RateAppActivity extends ThemedActivity {
                             Intent openLinkIntent = AppStoreUtils.getAppStoreIntent(context, airship.getPlatformType(), airship.getAirshipConfigOptions());
                             startActivity(openLinkIntent);
                         } catch (ActivityNotFoundException e) {
-                            Logger.error(e, "No web browser available to handle request to open the store link.");
+                            UALog.e(e, "No web browser available to handle request to open the store link.");
                         }
 
                         dialog.cancel();
@@ -151,7 +151,7 @@ public class RateAppActivity extends ThemedActivity {
      * @param extras The extras bundle.
      */
     private void restartActivity(@Nullable Uri uri, @Nullable Bundle extras) {
-        Logger.debug("Relaunching activity");
+        UALog.d("Relaunching activity");
 
         finish();
 

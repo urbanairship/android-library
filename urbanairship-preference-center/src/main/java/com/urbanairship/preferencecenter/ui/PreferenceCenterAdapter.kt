@@ -638,6 +638,8 @@ internal sealed class PrefCenterItem(val type: Int) {
                 titleView.setTextOrHide(item.title)
                 descriptionView.setTextOrHide(item.subtitle)
 
+                // Remove all chips and re-add them.
+                chipGroup.removeAllViews()
                 for (component in item.components) {
                     SubscriptionTypeChip(itemView.context).apply {
                         text = component.display.name

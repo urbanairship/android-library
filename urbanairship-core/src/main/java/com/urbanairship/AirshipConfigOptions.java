@@ -6,7 +6,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.Checks;
@@ -41,6 +40,22 @@ import androidx.core.app.NotificationCompat;
 public class AirshipConfigOptions {
 
     /**
+     * Config exceptions when trying to load properties from a resource.
+     */
+    public static class ConfigException extends Exception {
+
+        /**
+         * Default constructor.
+         *
+         * @param message The message.
+         * @param throwable The cause.
+         */
+        public ConfigException(@NonNull String message, @Nullable Throwable throwable) {
+            super(message, throwable);
+        }
+    }
+
+    /**
      * Maps to the feature {@link PrivacyManager#FEATURE_IN_APP_AUTOMATION} when used in the properties or xml config.
      */
     @NonNull
@@ -71,22 +86,10 @@ public class AirshipConfigOptions {
     public static final String FEATURE_PUSH = "push";
 
     /**
-     * Maps to the feature {@link PrivacyManager#FEATURE_CHAT} when used in the properties or xml config.
-     */
-    @NonNull
-    public static final String FEATURE_CHAT = "chat";
-
-    /**
      * Maps to the feature {@link PrivacyManager#FEATURE_CONTACTS} when used in the properties or xml config.
      */
     @NonNull
     public static final String FEATURE_CONTACTS = "contacts";
-
-    /**
-     * Maps to the feature {@link PrivacyManager#FEATURE_LOCATION} when used in the properties or xml config.
-     */
-    @NonNull
-    public static final String FEATURE_LOCATION = "location";
 
     /**
      * Maps to the feature {@link PrivacyManager#FEATURE_NONE} when used in the properties or xml config.
@@ -212,24 +215,6 @@ public class AirshipConfigOptions {
     public final String walletUrl;
 
     /**
-     * The chat url.
-     *
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @NonNull
-    public final String chatUrl;
-
-    /**
-     * The chat socket URL.
-     *
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @NonNull
-    public final String chatSocketUrl;
-
-    /**
      * Optional app store link when using the rate app action. If not set,
      * the action will generate it using hte app's current package name.
      * <p>
@@ -255,38 +240,31 @@ public class AirshipConfigOptions {
     public final PushProvider customPushProvider;
 
     /**
-     * List of URLs that are allowed to be used for various features, including:
-     * Airship JS interface, open external URL action, wallet action, HTML in-app messages,
-     * and landing pages. Airship https URLs are included by default.
-     * <p>
-     * See {@link UrlAllowList#addEntry(String)} for valid url patterns.
-     * <p>
-     * Defaults null.
+     * Additional URLs that will be added to the allow list for both {@link UrlAllowList#SCOPE_OPEN_URL} and
+     * {@link UrlAllowList#SCOPE_JAVASCRIPT_INTERFACE} scopes.
+     *
+     * See {@link UrlAllowList#addEntry(String)} for valid URL patterns.
      */
     @NonNull
     public final List<String> urlAllowList;
 
     /**
-     * List of URLs that are allowed to be used for Airship JS interface.
-     * Airship https URLs are included by default.
-     * <p>
-     * See {@link UrlAllowList#addEntry(String)} for valid url patterns.
-     * <p>
-     * Defaults null.
+     * Additional URLs that will be added to the allow list for scope {@link UrlAllowList#SCOPE_JAVASCRIPT_INTERFACE}.
+     *
+     * See {@link UrlAllowList#addEntry(String)} for valid URL patterns.
      */
     @NonNull
     public final List<String> urlAllowListScopeJavaScriptInterface;
 
     /**
-     * List of URLs that are allowed to be used for open external URL action.
-     * Airship https URLs are included by default.
-     * <p>
-     * See {@link UrlAllowList#addEntry(String)} for valid url patterns.
-     * <p>
-     * Defaults null.
+     * Additional URLs that will be added to the allow list for scope {@link UrlAllowList#SCOPE_OPEN_URL}.
+     * See {@link UrlAllowList#addEntry(String)} for valid URL patterns.
      */
     @NonNull
     public final List<String> urlAllowListScopeOpenUrl;
+
+    final boolean isAllowListScopeOpenSet;
+    final boolean isAllowListSet;
 
     /**
      * Flag indicating whether the application will use analytics.
@@ -363,7 +341,6 @@ public class AirshipConfigOptions {
      * - {@link #FEATURE_IN_APP_AUTOMATION}
      * - {@link #FEATURE_CONTACTS}
      * - {@link #FEATURE_ANALYTICS}
-     * - {@link #FEATURE_CHAT}
      * - {@link #FEATURE_PUSH}
      */
     @PrivacyManager.Feature
@@ -430,6 +407,18 @@ public class AirshipConfigOptions {
     @Nullable
     public final String initialConfigUrl;
 
+    /**
+     * Flag indicating whether or not the SDK will automatically prompt for notification permission
+     * when enabling notifications with {@link com.urbanairship.push.PushManager#setUserNotificationsEnabled(boolean)}.
+     */
+    public final boolean isPromptForPermissionOnUserNotificationsEnabled;
+
+    /**
+     * Flag indicating whether or not the SDK will automatically pause In-App Automation during app launch.
+     * Defaults to false.
+     */
+    public final boolean autoPauseInAppAutomationOnLaunch;
+
     private AirshipConfigOptions(@NonNull Builder builder) {
         if (builder.inProduction) {
             this.appKey = firstOrEmpty(builder.productionAppKey, builder.appKey);
@@ -447,8 +436,6 @@ public class AirshipConfigOptions {
                 this.analyticsUrl = firstOrEmpty(builder.analyticsUrl, EU_ANALYTICS_URL);
                 this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, EU_REMOTE_DATA_URL);
                 this.walletUrl = firstOrEmpty(builder.walletUrl, EU_WALLET_URL);
-                this.chatUrl = firstOrEmpty(builder.chatUrl);
-                this.chatSocketUrl = firstOrEmpty(builder.chatSocketUrl);
                 break;
 
             case SITE_US:
@@ -457,15 +444,15 @@ public class AirshipConfigOptions {
                 this.analyticsUrl = firstOrEmpty(builder.analyticsUrl, US_ANALYTICS_URL);
                 this.remoteDataUrl = firstOrEmpty(builder.remoteDataUrl, US_REMOTE_DATA_URL);
                 this.walletUrl = firstOrEmpty(builder.walletUrl, US_WALLET_URL);
-                this.chatUrl = firstOrEmpty(builder.chatUrl);
-                this.chatSocketUrl = firstOrEmpty(builder.chatSocketUrl);
                 break;
         }
 
         this.allowedTransports = Collections.unmodifiableList(new ArrayList<>(builder.allowedTransports));
-        this.urlAllowList = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowList));
-        this.urlAllowListScopeJavaScriptInterface = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowListScopeJavaScriptInterface));
-        this.urlAllowListScopeOpenUrl = Collections.unmodifiableList(new ArrayList<>(builder.urlAllowListScopeOpenUrl));
+        this.urlAllowList = copyOrEmpty(builder.urlAllowList);
+        this.urlAllowListScopeJavaScriptInterface = copyOrEmpty(builder.urlAllowListScopeJavaScriptInterface);
+        this.urlAllowListScopeOpenUrl = copyOrEmpty(builder.urlAllowListScopeOpenUrl);
+        this.isAllowListScopeOpenSet = builder.isAllowListScopeOpenSet;
+        this.isAllowListSet = builder.isAllowListSet;
         this.inProduction = builder.inProduction;
         this.analyticsEnabled = builder.analyticsEnabled;
         this.backgroundReportingIntervalMS = builder.backgroundReportingIntervalMS;
@@ -484,6 +471,16 @@ public class AirshipConfigOptions {
         this.requireInitialRemoteConfigEnabled = builder.requireInitialRemoteConfigEnabled;
         this.fcmFirebaseAppName = builder.fcmFirebaseAppName;
         this.initialConfigUrl = builder.initialConfigUrl;
+        this.isPromptForPermissionOnUserNotificationsEnabled = builder.isPromptForPermissionOnUserNotificationsEnabled;
+        this.autoPauseInAppAutomationOnLaunch = builder.autoPauseInAppAutomationOnLaunch;
+    }
+
+    private static <T> List<T> copyOrEmpty(@Nullable List<T> list) {
+        if (list == null) {
+            return Collections.emptyList();
+        } else {
+            return Collections.unmodifiableList(list);
+        }
     }
 
     /**
@@ -503,9 +500,9 @@ public class AirshipConfigOptions {
         }
 
         if (backgroundReportingIntervalMS < MIN_BG_REPORTING_INTERVAL_MS) {
-            Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS %s may decrease battery life.", backgroundReportingIntervalMS);
+            UALog.w("AirshipConfigOptions - The backgroundReportingIntervalMS %s may decrease battery life.", backgroundReportingIntervalMS);
         } else if (backgroundReportingIntervalMS > MAX_BG_REPORTING_INTERVAL_MS) {
-            Logger.warn("AirshipConfigOptions - The backgroundReportingIntervalMS %s may provide less detailed analytic reports.", backgroundReportingIntervalMS);
+            UALog.w("AirshipConfigOptions - The backgroundReportingIntervalMS %s may provide less detailed analytic reports.", backgroundReportingIntervalMS);
         }
     }
 
@@ -611,8 +608,6 @@ public class AirshipConfigOptions {
         private static final String FIELD_ANALYTICS_URL = "analyticsUrl";
         private static final String FIELD_LEGACY_REMOTE_DATA_URL = "remoteDataURL";
         private static final String FIELD_REMOTE_DATA_URL = "remoteDataUrl";
-        private static final String FIELD_CHAT_URL = "chatUrl";
-        private static final String FIELD_CHAT_SOCKET_URL = "chatSocketUrl";
         private static final String FIELD_GCM_SENDER = "gcmSender";
         private static final String FIELD_ALLOWED_TRANSPORTS = "allowedTransports";
         private static final String FIELD_URL_ALLOW_LIST = "urlAllowList";
@@ -641,10 +636,11 @@ public class AirshipConfigOptions {
         private static final String FIELD_SITE = "site";
         private static final String FIELD_DATA_COLLECTION_OPT_IN_ENABLED = "dataCollectionOptInEnabled";
         private static final String FIELD_EXTENDED_BROADCASTS_ENABLED = "extendedBroadcastsEnabled";
-        private static final String FIELD_SUPPRESS_ALLOW_LIST_ERROR = "suppressAllowListError";
         private static final String FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED = "requireInitialRemoteConfigEnabled";
         private static final String FIELD_ENABLED_FEATURES = "enabledFeatures";
         private static final String FIELD_INITIAL_CONFIG_URL = "initialConfigUrl";
+        private static final String FIELD_IS_PROMPT_FOR_PERMISSION_ON_USER_NOTIFICATIONS_ENABLED = "isPromptForPermissionOnUserNotificationsEnabled";
+        private static final String FIELD_AUTO_PAUSE_IN_APP_AUTOMATION_ON_LAUNCH = "autoPauseInAppAutomationOnLaunch";
 
         private String appKey;
         private String appSecret;
@@ -655,12 +651,12 @@ public class AirshipConfigOptions {
         private String deviceUrl;
         private String analyticsUrl;
         private String remoteDataUrl;
-        private String chatSocketUrl;
-        private String chatUrl;
         private List<String> allowedTransports = new ArrayList<>(Arrays.asList(ADM_TRANSPORT, FCM_TRANSPORT, HMS_TRANSPORT));
-        private List<String> urlAllowList = new ArrayList<>();
-        private List<String> urlAllowListScopeJavaScriptInterface = new ArrayList<>();
-        private List<String> urlAllowListScopeOpenUrl = new ArrayList<>();
+        private List<String> urlAllowList = null;
+        private List<String> urlAllowListScopeJavaScriptInterface = null;
+        private List<String> urlAllowListScopeOpenUrl = null;
+        private boolean isAllowListScopeOpenSet = false;
+        private boolean isAllowListSet = false;
         private Boolean inProduction = null;
         private boolean analyticsEnabled = true;
         private long backgroundReportingIntervalMS = DEFAULT_BG_REPORTING_INTERVAL_MS;
@@ -685,11 +681,14 @@ public class AirshipConfigOptions {
         @PrivacyManager.Feature
         public int enabledFeatures = PrivacyManager.FEATURE_ALL;
 
-        private boolean suppressAllowListError = false;
         private boolean requireInitialRemoteConfigEnabled = true;
         private String fcmFirebaseAppName;
 
         private String initialConfigUrl;
+
+        private boolean isPromptForPermissionOnUserNotificationsEnabled = true;
+
+        private boolean autoPauseInAppAutomationOnLaunch = false;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -702,6 +701,19 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder applyDefaultProperties(@NonNull Context context) {
             return applyProperties(context, DEFAULT_PROPERTIES_FILENAME);
+        }
+
+        /**
+         * Same as {@link #applyDefaultProperties(Context)}, but throws an exception instead of
+         * logging an error.
+         *
+         * @param context The application context
+         * @return The config option builder.
+         * @throws ConfigException
+         */
+        @NonNull
+        public Builder tryApplyDefaultProperties(@NonNull Context context) throws ConfigException {
+            return tryApplyProperties(context, DEFAULT_PROPERTIES_FILENAME);
         }
 
         /**
@@ -737,10 +749,30 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder applyProperties(@NonNull Context context, @NonNull String propertiesFile) {
             try {
+                tryApplyProperties(context, propertiesFile);
+            } catch (Exception e) {
+                UALog.e(e);
+            }
+
+            return this;
+        }
+
+        /**
+         * Same as {@link #applyProperties(Context, String)}, but throws an exception instead of
+         * logging an error.
+         *
+         * @param context The application context.
+         * @param propertiesFile The name of the properties file in the assets directory.
+         * @return The config option builder.
+         * @throws ConfigException
+         */
+        @NonNull
+        public Builder tryApplyProperties(@NonNull Context context, @NonNull String propertiesFile) throws ConfigException {
+            try {
                 ConfigParser configParser = PropertiesConfigParser.fromAssets(context, propertiesFile);
                 applyConfigParser(context, configParser);
             } catch (Exception e) {
-                Logger.error(e, "AirshipConfigOptions - Unable to apply config.");
+                throw new ConfigException("Unable to apply config from file " + propertiesFile, e);
             }
 
             return this;
@@ -759,9 +791,29 @@ public class AirshipConfigOptions {
                 ConfigParser configParser = PropertiesConfigParser.fromProperties(context, properties);
                 applyConfigParser(context, configParser);
             } catch (Exception e) {
-                Logger.error(e, "AirshipConfigOptions - Unable to apply config.");
+                UALog.e(e);
             }
 
+            return this;
+        }
+
+        /**
+         * The same as {@link #applyProperties(Context, Properties)}, but throws an exception
+         * instead of logging an error.
+         *
+         * @param context The application context.
+         * @param properties The properties
+         * @return The config option builder.
+         * @throws ConfigException
+         */
+        @NonNull
+        public Builder tryApplyProperties(@NonNull Context context, @NonNull Properties properties) throws ConfigException {
+            try {
+                ConfigParser configParser = PropertiesConfigParser.fromProperties(context, properties);
+                applyConfigParser(context, configParser);
+            } catch (Exception e) {
+                throw new ConfigException("Unable to apply config.", e);
+            }
             return this;
         }
 
@@ -790,12 +842,31 @@ public class AirshipConfigOptions {
          */
         @NonNull
         public Builder applyConfig(@NonNull Context context, @XmlRes int xmlResourceId) {
+            try {
+                tryApplyConfig(context, xmlResourceId);
+            } catch (Exception e) {
+                UALog.e(e);
+            }
+
+            return this;
+        }
+
+        /**
+         * The same as {@link #applyConfig(Context, int)}, but throws an exception instead of
+         * logging an error.
+         *
+         * @param context The application context.
+         * @param xmlResourceId The xml resource ID.
+         * @return The config option builder.
+         */
+        @NonNull
+        public Builder tryApplyConfig(@NonNull Context context, @XmlRes int xmlResourceId) throws Exception {
             XmlConfigParser configParser = null;
             try {
                 configParser = XmlConfigParser.parseElement(context, xmlResourceId, CONFIG_ELEMENT);
                 applyConfigParser(context, configParser);
             } catch (Exception e) {
-                Logger.error(e, "AirshipConfigOptions - Unable to apply config.");
+                throw new ConfigException("Unable to apply config from xml.", e);
             } finally {
                 if (configParser != null) {
                     configParser.close();
@@ -861,14 +932,6 @@ public class AirshipConfigOptions {
                             this.setInitialConfigUrl(configParser.getString(name, null));
                             break;
 
-                        case FIELD_CHAT_URL:
-                            this.setChatUrl(configParser.getString(name, chatUrl));
-                            break;
-
-                        case FIELD_CHAT_SOCKET_URL:
-                            this.setChatSocketUrl(configParser.getString(name, chatSocketUrl));
-                            break;
-
                         case FIELD_GCM_SENDER:
                             throw new IllegalArgumentException("gcmSender no longer supported. Please use " +
                                     "fcmSender or remove it to allow the Airship SDK to pull from the google-services.json.");
@@ -879,7 +942,7 @@ public class AirshipConfigOptions {
 
                         /* Deprecated. To be removed in a future version of the SDK. */
                         case "whitelist":
-                            Logger.error("Parameter whitelist is deprecated and will be removed in a future version of the SDK. Use urlAllowList instead.");
+                            UALog.e("Parameter whitelist is deprecated and will be removed in a future version of the SDK. Use urlAllowList instead.");
                             this.setUrlAllowList(configParser.getStringArray(name));
                             break;
 
@@ -908,15 +971,15 @@ public class AirshipConfigOptions {
                             break;
 
                         case FIELD_DEVELOPMENT_LOG_LEVEL:
-                            this.setDevelopmentLogLevel(Logger.parseLogLevel(configParser.getString(name), DEFAULT_DEVELOPMENT_LOG_LEVEL));
+                            this.setDevelopmentLogLevel(UALog.parseLogLevel(configParser.getString(name), DEFAULT_DEVELOPMENT_LOG_LEVEL));
                             break;
 
                         case FIELD_PRODUCTION_LOG_LEVEL:
-                            this.setProductionLogLevel(Logger.parseLogLevel(configParser.getString(name), DEFAULT_PRODUCTION_LOG_LEVEL));
+                            this.setProductionLogLevel(UALog.parseLogLevel(configParser.getString(name), DEFAULT_PRODUCTION_LOG_LEVEL));
                             break;
 
                         case FIELD_LOG_LEVEL:
-                            this.setLogLevel(Logger.parseLogLevel(configParser.getString(name), DEFAULT_PRODUCTION_LOG_LEVEL));
+                            this.setLogLevel(UALog.parseLogLevel(configParser.getString(name), DEFAULT_PRODUCTION_LOG_LEVEL));
                             break;
 
                         case FIELD_AUTO_LAUNCH_APPLICATION:
@@ -954,7 +1017,7 @@ public class AirshipConfigOptions {
                         case FIELD_FCM_SENDER_ID:
                         case FIELD_DEVELOPMENT_FCM_SENDER_ID:
                         case FIELD_PRODUCTION_FCM_SENDER_ID:
-                            Logger.error("Support for Sender ID override has been removed. Configure a FirebaseApp and use fcmFirebaseAppName instead.");
+                            UALog.e("Support for Sender ID override has been removed. Configure a FirebaseApp and use fcmFirebaseAppName instead.");
                             break;
 
                         case FIELD_FCM_FIREBASE_APP_NAME:
@@ -962,7 +1025,7 @@ public class AirshipConfigOptions {
                             break;
 
                         case "enableUrlWhitelisting":
-                            Logger.error("Parameter enableUrlWhitelisting has been removed. See urlAllowListScopeJavaScriptBridge and urlAllowListScopeOpen instead.");
+                            UALog.e("Parameter enableUrlWhitelisting has been removed. See urlAllowListScopeJavaScriptBridge and urlAllowListScopeOpen instead.");
                             break;
 
                         case FIELD_CUSTOM_PUSH_PROVIDER:
@@ -988,12 +1051,16 @@ public class AirshipConfigOptions {
                             this.setExtendedBroadcastsEnabled(configParser.getBoolean(name, false));
                             break;
 
-                        case FIELD_SUPPRESS_ALLOW_LIST_ERROR:
-                            this.setSuppressAllowListError(configParser.getBoolean(name, false));
-                            break;
-
                         case FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED:
                             this.setRequireInitialRemoteConfigEnabled(configParser.getBoolean(name, false));
+                            break;
+
+                        case FIELD_IS_PROMPT_FOR_PERMISSION_ON_USER_NOTIFICATIONS_ENABLED:
+                            this.setIsPromptForPermissionOnUserNotificationsEnabled(configParser.getBoolean(name, true));
+                            break;
+
+                        case FIELD_AUTO_PAUSE_IN_APP_AUTOMATION_ON_LAUNCH:
+                            this.setAutoPauseInAppAutomationOnLaunch(configParser.getBoolean(name, false));
                             break;
 
                         case FIELD_ENABLED_FEATURES:
@@ -1020,7 +1087,7 @@ public class AirshipConfigOptions {
 
                     }
                 } catch (Exception e) {
-                    Logger.error(e, "Unable to set config field '%s' due to invalid configuration value.", configParser.getName(i));
+                    UALog.e(e, "Unable to set config field '%s' due to invalid configuration value.", configParser.getName(i));
                 }
             }
 
@@ -1045,9 +1112,6 @@ public class AirshipConfigOptions {
                     case FEATURE_ANALYTICS:
                         enabledFeatures |= PrivacyManager.FEATURE_ANALYTICS;
                         break;
-                    case FEATURE_CHAT:
-                        enabledFeatures |= PrivacyManager.FEATURE_CHAT;
-                        break;
                     case FEATURE_CONTACTS:
                         enabledFeatures |= PrivacyManager.FEATURE_CONTACTS;
                         break;
@@ -1059,9 +1123,6 @@ public class AirshipConfigOptions {
                         break;
                     case FEATURE_TAGS_AND_ATTRIBUTES:
                         enabledFeatures |= PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES;
-                        break;
-                    case FEATURE_LOCATION:
-                        enabledFeatures |= PrivacyManager.FEATURE_LOCATION;
                         break;
                     case FEATURE_ALL:
                         enabledFeatures |= PrivacyManager.FEATURE_ALL;
@@ -1251,11 +1312,11 @@ public class AirshipConfigOptions {
         /**
          * The Airship URL used to pull the initial config. This should only be set
          * if you are using custom domains that forward to Airship.
-         * @param initialConfigUrl
-         * @return
+         *
+         * @param initialConfigUrl The initial config URL.
+         * @return The config options builder.
          */
         @NonNull
-        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder setInitialConfigUrl(@Nullable String initialConfigUrl) {
             this.initialConfigUrl = initialConfigUrl;
             return this;
@@ -1277,51 +1338,58 @@ public class AirshipConfigOptions {
         }
 
         /**
-         * Set the list of additional URLs that are allowed to be used for various features, including:
-         * Airship JS interface, open external URL action, wallet action, HTML in-app messages,
-         * and landing pages. Airship https URLs are included by default.
+         * Sets the additional URLs that will be added to the allow list for both {@link UrlAllowList#SCOPE_OPEN_URL} and
+         * {@link UrlAllowList#SCOPE_JAVASCRIPT_INTERFACE} scopes.
+         * See {@link UrlAllowList#addEntry(String)} for valid URL patterns.
          *
-         * @param urlAllowList The urlAllowList.
+         * @param urlAllowList An array of URL patterns.
          * @return The config options builder.
          */
         @NonNull
         public Builder setUrlAllowList(@Nullable String[] urlAllowList) {
-            this.urlAllowList.clear();
             if (urlAllowList != null) {
-                this.urlAllowList.addAll(Arrays.asList(urlAllowList));
+                this.urlAllowList = Arrays.asList(urlAllowList);
+            } else {
+                this.urlAllowList = null;
             }
+
+            this.isAllowListSet = true;
             return this;
         }
 
         /**
-         * Set the list of additional URLs that are allowed to be used for the Airship JS interface.
-         * Airship https URLs are included by default.
+         * Sets the additional URLs that will be added to the allow list for scope {@link UrlAllowList#SCOPE_JAVASCRIPT_INTERFACE}.
+         * See {@link UrlAllowList#addEntry(String)} for valid URL patterns.
          *
-         * @param urlAllowListScopeJavaScriptInterface The URL allow list for the Airship JS interface.
+         * @param urlAllowListScopeJavaScriptInterface An array of URL patterns.
          * @return The config options builder.
          */
         @NonNull
         public Builder setUrlAllowListScopeJavaScriptInterface(@Nullable String[] urlAllowListScopeJavaScriptInterface) {
-            this.urlAllowListScopeJavaScriptInterface.clear();
             if (urlAllowListScopeJavaScriptInterface != null) {
-                this.urlAllowListScopeJavaScriptInterface.addAll(Arrays.asList(urlAllowListScopeJavaScriptInterface));
+                this.urlAllowListScopeJavaScriptInterface = Arrays.asList(urlAllowListScopeJavaScriptInterface);
+            } else {
+                this.urlAllowListScopeJavaScriptInterface = null;
             }
             return this;
         }
 
         /**
-         * Set the list of additional URLs that are allowed to be used for the open external URL action.
-         * Airship https URLs are included by default.
+         * Sets the additional URLs that will be added to the allow list for scope {@link UrlAllowList#SCOPE_OPEN_URL}.
+         * See {@link UrlAllowList#addEntry(String)} for valid URL patterns.
          *
-         * @param urlAllowListScopeOpenUrl The URL allow list for the open external URL action.
+         * @param urlAllowListScopeOpenUrl An array of URL patterns.
          * @return The config options builder.
          */
         @NonNull
         public Builder setUrlAllowListScopeOpenUrl(@Nullable String[] urlAllowListScopeOpenUrl) {
-            this.urlAllowListScopeOpenUrl.clear();
             if (urlAllowListScopeOpenUrl != null) {
-                this.urlAllowListScopeOpenUrl.addAll(Arrays.asList(urlAllowListScopeOpenUrl));
+                this.urlAllowListScopeOpenUrl = Arrays.asList(urlAllowListScopeOpenUrl);
+            } else {
+                this.urlAllowListScopeOpenUrl = null;
             }
+
+            this.isAllowListScopeOpenSet = true;
             return this;
         }
 
@@ -1350,7 +1418,7 @@ public class AirshipConfigOptions {
                 Field field = clazz.getField("DEBUG");
                 inProduction = !(boolean) field.get(null);
             } catch (Exception e) {
-                Logger.warn("AirshipConfigOptions - Unable to determine the build mode. Defaulting to debug.");
+                UALog.w("AirshipConfigOptions - Unable to determine the build mode. Defaulting to debug.");
                 inProduction = false;
             }
             return this;
@@ -1471,30 +1539,6 @@ public class AirshipConfigOptions {
         }
 
         /**
-         * Set the chat URL.
-         *
-         * @param chatUrl The chat URL.
-         * @return The config options builder.
-         */
-        @NonNull
-        public Builder setChatUrl(@NonNull String chatUrl) {
-            this.chatUrl = chatUrl;
-            return this;
-        }
-
-        /**
-         * Set the chat socket URL.
-         *
-         * @param chatSocketUrl The chat socket URL.
-         * @return The config options builder.
-         */
-        @NonNull
-        public Builder setChatSocketUrl(@NonNull String chatSocketUrl) {
-            this.chatSocketUrl = chatSocketUrl;
-            return this;
-        }
-
-        /**
          * Used to set a custom push provider for push registration.
          *
          * @param customPushProvider Push provider.
@@ -1582,18 +1626,6 @@ public class AirshipConfigOptions {
         }
 
         /**
-         * Sets the flag suppressing the error normally generated when no allow list entries have been added to allowList or allowListScopeOpenUrl.
-         *
-         * @param suppressAllowListError {@code true} to supress the allow list warning, otherwise {@code false}.
-         * @return The config options builder.
-         */
-        @NonNull
-        public Builder setSuppressAllowListError(boolean suppressAllowListError) {
-            this.suppressAllowListError = suppressAllowListError;
-            return this;
-        }
-
-        /**
          * Sets the Firebase app name that is used for FCM. If set, the app name must exist in order
          * for Airship to get registration token. The app should be initialized with Firebase before takeOff, or during
          * onAirshipReady callback.
@@ -1606,6 +1638,7 @@ public class AirshipConfigOptions {
             this.fcmFirebaseAppName = fcmFirebaseAppName;
             return this;
         }
+
         /**
          * Sets the flag to require initial remote-config for device URLs.
          *
@@ -1619,36 +1652,52 @@ public class AirshipConfigOptions {
         }
 
         /**
+         * Sets if when enabling {@link com.urbanairship.push.PushManager#setUserNotificationsEnabled(boolean)}
+         * if the SDK should prompt for permission on Android 13+ devices. Enabled by default.
+         *
+         * @param enabled {@code true} to prompt for notifications when user notifications are enabled, otherwise {@code false}.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setIsPromptForPermissionOnUserNotificationsEnabled(boolean enabled) {
+            this.isPromptForPermissionOnUserNotificationsEnabled = enabled;
+            return this;
+        }
+
+
+        /**
+         * Set the auto pause In-App Automation on launch.
+         *
+         * @param autoPauseInAppAutomationOnLaunch {@code true} to auto pause In-App Automation, otherwise {@code false}.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setAutoPauseInAppAutomationOnLaunch(boolean autoPauseInAppAutomationOnLaunch) {
+            this.autoPauseInAppAutomationOnLaunch = autoPauseInAppAutomationOnLaunch;
+            return this;
+        }
+
+        /**
          * Builds the config options.
          *
          * @return The built config options.
          */
         @NonNull
         public AirshipConfigOptions build() {
-            if (urlAllowList.isEmpty() && urlAllowListScopeOpenUrl.isEmpty() && !suppressAllowListError) {
-                Logger.error(
-                        "The airship config options is missing URL allow list rules for SCOPE_OPEN. " +
-                                "By default only Airship, YouTube, mailto, sms, and tel URLs will be allowed." +
-                                "To suppress this error, specify allow list rules by providing rules for " +
-                                "urlAllowListScopeOpenUrl or urlAllowList. Alternatively you can suppress " +
-                                "this error and keep the default rules by using the flag suppressAllowListError. " +
-                                "For more information, see https://docs.airship.com/platform/android/getting-started/#url-allow-list.");
-            }
-
             if (inProduction == null) {
                 inProduction = false;
             }
 
             if (productionAppKey != null && productionAppKey.equals(developmentAppKey)) {
-                Logger.warn("Production App Key matches Development App Key");
+                UALog.w("Production App Key matches Development App Key");
             }
 
             if (productionAppSecret != null && productionAppSecret.equals(developmentAppSecret)) {
-                Logger.warn("Production App Secret matches Development App Secret");
+                UALog.w("Production App Secret matches Development App Secret");
             }
 
             if (dataCollectionOptInEnabled) {
-                Logger.warn("dataCollectionOptInEnabled is deprecated. Use enabledFeatures instead.");
+                UALog.w("dataCollectionOptInEnabled is deprecated. Use enabledFeatures instead.");
                 if (enabledFeatures == PrivacyManager.FEATURE_ALL) {
                     enabledFeatures = PrivacyManager.FEATURE_NONE;
                 }

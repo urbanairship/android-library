@@ -8,17 +8,22 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.urbanairship.Logger;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.PermissionResultReceiver;
 import com.urbanairship.actions.PromptPermissionAction;
-import com.urbanairship.android.layout.BasePayload;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.ThomasListener;
 import com.urbanairship.android.layout.display.DisplayException;
 import com.urbanairship.android.layout.display.DisplayRequest;
+import com.urbanairship.android.layout.info.LayoutInfo;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
@@ -28,13 +33,15 @@ import com.urbanairship.android.layout.util.UrlInfo;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.ForegroundDisplayAdapter;
 import com.urbanairship.iam.InAppActionUtils;
+import com.urbanairship.iam.InAppActivityMonitor;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.InAppMessageWebViewClient;
 import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.iam.events.InAppReportingEvent;
-import com.urbanairship.js.UrlAllowList;
+import com.urbanairship.iam.events.InAppReportingEvent.PageViewSummary;
+import com.urbanairship.UrlAllowList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
 import com.urbanairship.permission.PermissionStatus;
@@ -48,12 +55,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.arch.core.util.Function;
-import androidx.core.util.Supplier;
+import static com.urbanairship.iam.ResolutionInfo.buttonPressed;
+import static com.urbanairship.iam.ResolutionInfo.dismissed;
+import static com.urbanairship.iam.events.InAppReportingEvent.buttonTap;
+import static com.urbanairship.iam.events.InAppReportingEvent.formDisplay;
+import static com.urbanairship.iam.events.InAppReportingEvent.formResult;
+import static com.urbanairship.iam.events.InAppReportingEvent.pageSwipe;
+import static com.urbanairship.iam.events.InAppReportingEvent.pagerAction;
+import static com.urbanairship.iam.events.InAppReportingEvent.pagerGesture;
+import static com.urbanairship.iam.events.InAppReportingEvent.pagerSummary;
+import static com.urbanairship.iam.events.InAppReportingEvent.permissionResultEvent;
+import static com.urbanairship.iam.events.InAppReportingEvent.resolution;
 
 /**
  * Airship layout display adapter.
@@ -66,7 +78,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
     @VisibleForTesting
     interface DisplayRequestCallback {
 
-        DisplayRequest prepareDisplay(@NonNull BasePayload basePayload) throws DisplayException;
+        DisplayRequest prepareDisplay(@NonNull LayoutInfo payload) throws DisplayException;
 
     }
 
@@ -123,8 +135,8 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
     public int onPrepare(@NonNull Context context, @NonNull Assets assets) {
         assetCacheMap.clear();
         for (UrlInfo urlInfo : this.urlInfoList) {
-            if (!urlAllowList.isAllowed(urlInfo.getUrl(), UrlAllowList.SCOPE_OPEN_URL)) {
-                Logger.error("Url not allowed: %s. Unable to display message %s.", urlInfo.getUrl(), message.getName());
+            if (urlInfo.getType() == UrlInfo.UrlType.WEB_PAGE && !urlAllowList.isAllowed(urlInfo.getUrl(), UrlAllowList.SCOPE_OPEN_URL)) {
+                UALog.e("Url not allowed: %s. Unable to display message %s.", urlInfo.getUrl(), message.getName());
                 return CANCEL;
             }
 
@@ -139,7 +151,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         try {
             this.displayRequest = this.prepareDisplayCallback.prepareDisplay(displayContent.getPayload());
         } catch (DisplayException e) {
-            Logger.error("Unable to display layout", e);
+            UALog.e("Unable to display layout", e);
             return InAppMessageAdapter.CANCEL;
         }
         return InAppMessageAdapter.OK;
@@ -158,7 +170,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                 case VIDEO:
                 case WEB_PAGE:
                     if (!isConnected) {
-                        Logger.error("Message not ready. Device is not connected and the message contains a webpage or video.", urlInfo.getUrl(), message);
+                        UALog.e("Message not ready. Device is not connected and the message contains a webpage or video.", urlInfo.getUrl(), message);
                         return false;
                     }
                     break;
@@ -169,7 +181,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                     }
 
                     if (!isConnected) {
-                        Logger.error("Message not ready. Device is not connected and the message contains a webpage or video.", urlInfo.getUrl(), message);
+                        UALog.e("Message not ready. Device is not connected and the message contains a webpage or video.", urlInfo.getUrl(), message);
                         return false;
                     }
                     break;
@@ -183,6 +195,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
     public void onDisplay(@NonNull Context context, @NonNull DisplayHandler displayHandler) {
         this.displayRequest.setListener(new Listener(message, displayHandler))
                            .setImageCache(new AssetImageCache(assetCacheMap))
+                           .setInAppActivityMonitor(InAppActivityMonitor.shared(context))
                            .setWebViewClientFactory(() -> new InAppMessageWebViewClient(message))
                            .display(context);
     }
@@ -224,84 +237,117 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
         @Override
         public void onPageView(@NonNull PagerData pagerData, @Nullable LayoutData layoutData, long displayedAt) {
-            // View
-            int viewCount = updatePageViewCount(pagerData);
-            InAppReportingEvent viewed = InAppReportingEvent.pageView(scheduleId, message, pagerData, viewCount)
-                                                            .setLayoutData(layoutData);
-            displayHandler.addEvent(viewed);
+            try {
+                // View
+                int viewCount = updatePageViewCount(pagerData);
+                InAppReportingEvent viewed = InAppReportingEvent.pageView(scheduleId, message, pagerData, viewCount)
+                                                                .setLayoutData(layoutData);
+                displayHandler.addEvent(viewed);
 
-            // Completed
-            if (pagerData.isCompleted() && !completedPagers.contains(pagerData.getIdentifier())) {
-                completedPagers.add(pagerData.getIdentifier());
+                // Completed
+                if (pagerData.isCompleted() && !completedPagers.contains(pagerData.getIdentifier())) {
+                    completedPagers.add(pagerData.getIdentifier());
 
-                InAppReportingEvent completed = InAppReportingEvent.pagerCompleted(scheduleId, message, pagerData)
-                                                                   .setLayoutData(layoutData);
-                displayHandler.addEvent(completed);
+                    InAppReportingEvent completed = InAppReportingEvent.pagerCompleted(scheduleId, message, pagerData)
+                                                                       .setLayoutData(layoutData);
+                    displayHandler.addEvent(completed);
+                }
+
+
+                // Summary
+                PagerSummary summary = this.pagerSummaryMap.get(pagerData.getIdentifier());
+                if (summary == null) {
+                    summary = new PagerSummary();
+                    this.pagerSummaryMap.put(pagerData.getIdentifier(), summary);
+                }
+                summary.updatePagerData(pagerData, displayedAt);
+            } catch (IllegalArgumentException e) {
+                UALog.e("pageView InAppReportingEvent is not valid!", e);
             }
-
-            // Summary
-            PagerSummary summary = this.pagerSummaryMap.get(pagerData.getIdentifier());
-            if (summary == null) {
-                summary = new PagerSummary();
-                this.pagerSummaryMap.put(pagerData.getIdentifier(), summary);
-            }
-            summary.updatePagerData(pagerData, displayedAt);
         }
 
         @Override
         public void onPageSwipe(@NonNull PagerData pagerData, int toPageIndex, @NonNull String toPageId, int fromPageIndex, @NonNull String fromPageId, @Nullable LayoutData layoutData) {
-            InAppReportingEvent event = InAppReportingEvent.pageSwipe(scheduleId, message, pagerData, toPageIndex, toPageId, fromPageIndex, fromPageId)
-                                                           .setLayoutData(layoutData);
+            try {
+                InAppReportingEvent event = pageSwipe(scheduleId, message, pagerData, toPageIndex, toPageId, fromPageIndex, fromPageId)
+                        .setLayoutData(layoutData);
 
-            displayHandler.addEvent(event);
+                displayHandler.addEvent(event);
+            } catch (IllegalArgumentException e) {
+                UALog.e("pageSwipe InAppReportingEvent is not valid!", e);
+            }
         }
 
         @Override
-        public void onButtonTap(@NonNull String buttonId, @Nullable LayoutData layoutData) {
-            InAppReportingEvent event = InAppReportingEvent.buttonTap(scheduleId, message, buttonId)
-                                                           .setLayoutData(layoutData);
+        public void onButtonTap(
+                @NonNull String buttonId,
+                @Nullable JsonValue reportingMetadata,
+                @Nullable LayoutData layoutData
+        ) {
+            try {
+                InAppReportingEvent event = buttonTap(scheduleId, message, buttonId, reportingMetadata)
+                        .setLayoutData(layoutData);
 
-            displayHandler.addEvent(event);
+                displayHandler.addEvent(event);
+            } catch (IllegalArgumentException e) {
+                UALog.e("buttonTap InAppReportingEvent is not valid!", e);
+            }
         }
 
         @Override
         public void onDismiss(long displayTime) {
-            ResolutionInfo resolutionInfo = ResolutionInfo.dismissed();
-            InAppReportingEvent event = InAppReportingEvent.resolution(scheduleId, message, displayTime, resolutionInfo);
-            sendPageSummaryEvents(null, displayTime);
-            displayHandler.addEvent(event);
-            displayHandler.notifyFinished(resolutionInfo);
+            try {
+                ResolutionInfo resolutionInfo = dismissed();
+                InAppReportingEvent event = resolution(scheduleId, message, displayTime, resolutionInfo);
+                sendPageSummaryEvents(null, displayTime);
+                displayHandler.addEvent(event);
+                displayHandler.notifyFinished(resolutionInfo);
+            } catch (IllegalArgumentException e) {
+                UALog.e("dismissed info for resolution InAppReportingEvent is not valid!", e);
+            }
         }
 
         @Override
         public void onDismiss(@NonNull String buttonId, @Nullable String buttonDescription, boolean cancel, long displayTime, @Nullable LayoutData layoutData) {
-            ResolutionInfo resolutionInfo = ResolutionInfo.buttonPressed(buttonId, buttonDescription, cancel);
-            InAppReportingEvent event = InAppReportingEvent.resolution(scheduleId, message, displayTime, resolutionInfo)
-                                                           .setLayoutData(layoutData);
+            try {
+                ResolutionInfo resolutionInfo = buttonPressed(buttonId, buttonDescription, cancel);
+                InAppReportingEvent event = resolution(scheduleId, message, displayTime, resolutionInfo)
+                        .setLayoutData(layoutData);
 
-            sendPageSummaryEvents(layoutData, displayTime);
-            displayHandler.addEvent(event);
-            displayHandler.notifyFinished(resolutionInfo);
+                sendPageSummaryEvents(layoutData, displayTime);
+                displayHandler.addEvent(event);
+                displayHandler.notifyFinished(resolutionInfo);
 
-            if (cancel) {
-                displayHandler.cancelFutureDisplays();
+                if (cancel) {
+                    displayHandler.cancelFutureDisplays();
+                }
+            } catch (IllegalArgumentException e) {
+                UALog.e("buttonPressed info for resolution InAppReportingEvent is not valid!", e);
             }
         }
 
         @Override
         public void onFormResult(@NonNull FormData.BaseForm formData, @Nullable LayoutData layoutData) {
-            InAppReportingEvent event = InAppReportingEvent.formResult(scheduleId, message, formData)
-                                                           .setLayoutData(layoutData);
+            try {
+                InAppReportingEvent event = formResult(scheduleId, message, formData)
+                        .setLayoutData(layoutData);
 
-            displayHandler.addEvent(event);
+                displayHandler.addEvent(event);
+            } catch (IllegalArgumentException e) {
+                UALog.e("formResult InAppReportingEvent is not valid!", e);
+            }
         }
 
         @Override
         public void onFormDisplay(@NonNull FormInfo formInfo, @Nullable LayoutData layoutData) {
-            InAppReportingEvent event = InAppReportingEvent.formDisplay(scheduleId, message, formInfo)
-                                                           .setLayoutData(layoutData);
+            try {
+                InAppReportingEvent event = formDisplay(scheduleId, message, formInfo)
+                        .setLayoutData(layoutData);
 
-            displayHandler.addEvent(event);
+                displayHandler.addEvent(event);
+            } catch (IllegalArgumentException e) {
+                UALog.e("formDisplay InAppReportingEvent is not valid!", e);
+            }
         }
 
         @Override
@@ -309,9 +355,14 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
             PermissionResultReceiver permissionResultReceiver = new PermissionResultReceiver(new Handler(Looper.getMainLooper())) {
                 @Override
                 public void onResult(@NonNull Permission permission, @NonNull PermissionStatus before, @NonNull PermissionStatus after) {
-                    InAppReportingEvent event = InAppReportingEvent.permissionResultEvent(scheduleId, message, permission, before, after)
-                                                                   .setLayoutData(layoutData);
-                    displayHandler.addEvent(event);
+                    try {
+                        InAppReportingEvent event = permissionResultEvent(scheduleId, message, permission, before, after)
+                                .setLayoutData(layoutData);
+
+                        displayHandler.addEvent(event);
+                    } catch (IllegalArgumentException e) {
+                        UALog.e("permissionResultEvent InAppReportingEvent is not valid!", e);
+                    }
                 }
             };
 
@@ -321,69 +372,102 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
                 return ActionRunRequest.createRequest(actionName)
                                        .setMetadata(bundle);
             }));
-    }
-
-    /**
-     * Updates the pager page view count map.
-     *
-     * @param data PagerData from the page view event.
-     * @return the updated viewed count for the current page index.
-     */
-    private int updatePageViewCount(@NonNull PagerData data) {
-        if (!pagerViewCounts.containsKey(data.getIdentifier())) {
-            pagerViewCounts.put(data.getIdentifier(), new HashMap<>(data.getCount()));
-        }
-        Map<Integer, Integer> pageViews = pagerViewCounts.get(data.getIdentifier());
-
-        if (pageViews != null && !pageViews.containsKey(data.getIndex())) {
-            pageViews.put(data.getIndex(), 0);
         }
 
-        Integer count = pageViews != null ? pageViews.get(data.getIndex()) : Integer.valueOf(0);
-        count = count != null ? count + 1 : 1;
-
-        if (pageViews != null) {
-            pageViews.put(data.getIndex(), count);
-        }
-        return count;
-    }
-
-    private void sendPageSummaryEvents(@Nullable LayoutData layoutData, long displayTime) {
-        for (Map.Entry<String, PagerSummary> summaryEntry : this.pagerSummaryMap.entrySet()) {
-            PagerSummary summary = summaryEntry.getValue();
-            summary.pageFinished(displayTime);
-            if (summary.pagerData == null) {
-                continue;
+        @Override
+        public void onPagerGesture(
+                @NonNull String gestureId,
+                @Nullable JsonValue reportingMetadata,
+                @NonNull LayoutData state
+        ) {
+            try {
+                InAppReportingEvent event = pagerGesture(scheduleId, message, gestureId, reportingMetadata)
+                        .setLayoutData(state);
+                displayHandler.addEvent(event);
+            } catch (IllegalArgumentException e) {
+                UALog.e("pagerGesture InAppReportingEvent is not valid!", e);
             }
-            InAppReportingEvent event = InAppReportingEvent.pagerSummary(scheduleId, message, summary.pagerData, summary.pageViewSummaries)
-                                                           .setLayoutData(layoutData);
-            displayHandler.addEvent(event);
+        }
+
+        @Override
+        public void onPagerAutomatedAction(
+                @NonNull String actionId,
+                @Nullable JsonValue reportingMetadata,
+                @NonNull LayoutData state
+        ) {
+            try {
+                InAppReportingEvent event = pagerAction(scheduleId, message, actionId, reportingMetadata)
+                        .setLayoutData(state);
+                displayHandler.addEvent(event);
+            } catch (IllegalArgumentException e) {
+                UALog.e("onPagerAutomatedAction InAppReportingEvent is not valid!", e);
+            }
+        }
+
+        /**
+         * Updates the pager page view count map.
+         *
+         * @param data PagerData from the page view event.
+         * @return the updated viewed count for the current page index.
+         */
+        private int updatePageViewCount(@NonNull PagerData data) {
+            if (!pagerViewCounts.containsKey(data.getIdentifier())) {
+                pagerViewCounts.put(data.getIdentifier(), new HashMap<>(data.getCount()));
+            }
+            Map<Integer, Integer> pageViews = pagerViewCounts.get(data.getIdentifier());
+
+            if (pageViews != null && !pageViews.containsKey(data.getIndex())) {
+                pageViews.put(data.getIndex(), 0);
+            }
+
+            Integer count = pageViews != null ? pageViews.get(data.getIndex()) : Integer.valueOf(0);
+            count = count != null ? count + 1 : 1;
+
+            if (pageViews != null) {
+                pageViews.put(data.getIndex(), count);
+            }
+            return count;
+        }
+
+        private void sendPageSummaryEvents(@Nullable LayoutData layoutData, long displayTime) {
+            for (Map.Entry<String, PagerSummary> summaryEntry : this.pagerSummaryMap.entrySet()) {
+                PagerSummary summary = summaryEntry.getValue();
+                summary.pageFinished(displayTime);
+                if (summary.pagerData == null) {
+                    continue;
+                }
+                try {
+                    InAppReportingEvent event = pagerSummary(scheduleId, message, summary.pagerData, summary.pageViewSummaries)
+                            .setLayoutData(layoutData);
+                    displayHandler.addEvent(event);
+                } catch (IllegalArgumentException e) {
+                    UALog.e("pagerSummary InAppReportingEvent is not valid!", e);
+                }
+            }
         }
     }
 
-}
+    private static class PagerSummary {
 
-private static class PagerSummary {
+        @Nullable
+        private PagerData pagerData;
+        private final List<PageViewSummary> pageViewSummaries = new ArrayList<>();
 
-    @Nullable
-    private PagerData pagerData;
-    private final List<InAppReportingEvent.PageViewSummary> pageViewSummaries = new ArrayList<>();
+        private long pageUpdateTime;
 
-    private long pageUpdateTime;
-
-    private void updatePagerData(PagerData data, long updateTime) {
-        pageFinished(updateTime);
-        this.pagerData = data;
-        this.pageUpdateTime = updateTime;
-    }
-
-    private void pageFinished(long updateTime) {
-        if (this.pagerData != null) {
-            long duration = updateTime - pageUpdateTime;
-            InAppReportingEvent.PageViewSummary summary = new InAppReportingEvent.PageViewSummary(pagerData.getIndex(), pagerData.getPageId(), duration);
-            this.pageViewSummaries.add(summary);
+        private void updatePagerData(PagerData data, long updateTime) {
+            pageFinished(updateTime);
+            this.pagerData = data;
+            this.pageUpdateTime = updateTime;
         }
-    }
 
-}
+        private void pageFinished(long updateTime) {
+            if (this.pagerData != null) {
+                long duration = updateTime - pageUpdateTime;
+                PageViewSummary summary = new PageViewSummary(pagerData.getIndex(), pagerData.getPageId(), duration);
+                this.pageViewSummaries.add(summary);
+            }
+        }
+
+    }
 }

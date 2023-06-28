@@ -2,14 +2,14 @@
 
 package com.urbanairship.android.layout.property;
 
-import com.urbanairship.android.layout.model.SafeAreaAware;
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonMap;
+import static com.urbanairship.android.layout.model.SafeAreaAware.ignoreSafeAreaFromJson;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import static com.urbanairship.android.layout.model.SafeAreaAware.ignoreSafeAreaFromJson;
+import com.urbanairship.android.layout.model.SafeAreaAware;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 
 public class BannerPlacement implements SafeAreaAware {
     @NonNull
@@ -38,12 +38,15 @@ public class BannerPlacement implements SafeAreaAware {
         if (sizeJson.isEmpty()) {
             throw new JsonException("Failed to parse Modal Placement! Field 'size' is required.");
         }
-        JsonMap positionJson = json.opt("position").optMap();
+        String positionJson = json.opt("position").optString();
         JsonMap marginJson = json.opt("margin").optMap();
 
         ConstrainedSize size = ConstrainedSize.fromJson(sizeJson);
         Margin margin = marginJson.isEmpty() ? null : Margin.fromJson(marginJson);
-        Position position = positionJson.isEmpty() ? null : Position.fromJson(positionJson);
+
+        VerticalPosition verticalPosition = VerticalPosition.from(positionJson);
+        Position position = new Position(HorizontalPosition.CENTER, verticalPosition);
+
         boolean ignoreSafeArea = ignoreSafeAreaFromJson(json);
 
         return new BannerPlacement(size, margin, position, ignoreSafeArea);

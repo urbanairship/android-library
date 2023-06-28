@@ -3,27 +3,24 @@ package com.urbanairship.preferencecenter
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Looper
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipComponentGroups
-import com.urbanairship.AirshipLoopers
-import com.urbanairship.Logger
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.PreferenceCenterPayload
 import com.urbanairship.preferencecenter.ui.PreferenceCenterActivity
-import com.urbanairship.preferencecenter.util.requireField
-import com.urbanairship.reactive.Observable
-import com.urbanairship.reactive.Schedulers
-import com.urbanairship.reactive.Subscriber
 import com.urbanairship.remotedata.RemoteData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * Airship Preference Center.
@@ -33,8 +30,9 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
     dataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,
     private val remoteData: RemoteData,
-    backgroundLooper: Looper = AirshipLoopers.getBackgroundLooper()
 ) : AirshipComponent(context, dataStore) {
+
+    private val pendingResultScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
 
     companion object {
         /**
@@ -50,8 +48,6 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
         internal const val KEY_PREFERENCE_FORMS = "preference_forms"
         internal const val DEEP_LINK_HOST = "preferences"
     }
-
-    private val backgroundScheduler = Schedulers.looper(backgroundLooper)
 
     /**
      * Listener to override Preference Center open behavior.
@@ -88,11 +84,11 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
      */
     fun open(preferenceCenterId: String) {
         if (!isFeatureEnabled) {
-            Logger.warn("Unable to open Preference Center! FEATURE_TAGS_AND_ATTRIBUTES not enabled.")
+            UALog.w("Unable to open Preference Center! FEATURE_TAGS_AND_ATTRIBUTES not enabled.")
             return
         }
         if (openListener?.onOpenPreferenceCenter(preferenceCenterId) != true) {
-            Logger.verbose("Launching PreferenceCenterActivity with id = $preferenceCenterId")
+            UALog.v("Launching PreferenceCenterActivity with id = $preferenceCenterId")
 
             val intent = Intent(context, PreferenceCenterActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -103,84 +99,79 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
     }
 
     /**
+     * Returns the preference center config, or null if its not found.
+     *
+     * @param preferenceCenterId The ID of the Preference Center.
+     * @return The requested [PreferenceCenterConfig].
+     */
+    suspend fun getConfig(preferenceCenterId: String): PreferenceCenterConfig? {
+        val config = getJsonConfig(preferenceCenterId) ?: return null
+        return try {
+            PreferenceCenterConfig.parse(config.optMap())
+        } catch (e: Exception) {
+            UALog.w(e) { "Failed to parse preference center config" }
+            null
+        }
+    }
+
+    /**
      * Returns a [PendingResult] containing the configuration of the Preference Center form with the
      * given [preferenceCenterId].
      *
+     * @hide
+     *
      * @param preferenceCenterId The ID of the Preference Center.
-     * @return The requested [PreferenceForm].
+     * @return The requested [PreferenceCenterConfig].
      */
-    fun getConfig(preferenceCenterId: String): PendingResult<PreferenceCenterConfig> {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    fun getConfigPendingResult(preferenceCenterId: String): PendingResult<PreferenceCenterConfig> {
         val pendingResult = PendingResult<PreferenceCenterConfig>()
-
-        remoteData.payloadsForType(PAYLOAD_TYPE)
-                .flatMap { payload ->
-                    val payloadForms = payload.data.opt(KEY_PREFERENCE_FORMS).optList()
-                    Logger.verbose("Found ${payloadForms.size()} preference forms in RemoteData")
-
-                    // Parse the payloads and return the list as a map of ID to PreferenceForms.
-                    val preferenceForms = payloadForms.mapNotNull {
-                        try {
-                            PreferenceCenterPayload.parse(it.optMap()).config
-                        } catch (e: Exception) {
-                            Logger.warn("Failed to parse preference center config: ${e.message}")
-                            null
-                        }
-                    }.associateBy { it.id }
-
-                    Observable.just(preferenceForms)
-                }
-                .subscribeOn(backgroundScheduler)
-                .observeOn(backgroundScheduler)
-                .subscribe(object : Subscriber<Map<String, PreferenceCenterConfig>>() {
-                    override fun onNext(value: Map<String, PreferenceCenterConfig>) {
-                        pendingResult.result = value[preferenceCenterId]
-                    }
-
-                    override fun onError(e: Exception) {
-                        Logger.error(e, "Failed to get preference center config for ID: $preferenceCenterId")
-                        pendingResult.result = null
-                    }
-                })
-
+        pendingResultScope.launch {
+            pendingResult.result = getConfig(preferenceCenterId)
+        }
         return pendingResult
     }
 
-    fun getJsonConfig(preferenceCenterId: String): PendingResult<JsonValue> {
-        val pendingResult = PendingResult<JsonValue>()
-
-        remoteData.payloadsForType(PAYLOAD_TYPE)
-            .flatMap { payload ->
-                val payloadForms = payload.data.opt(KEY_PREFERENCE_FORMS).optList()
-                Logger.verbose("Found ${payloadForms.size()} preference forms in RemoteData")
-
-                // Parse the payloads and return the list as a map of ID to PreferenceForms.
-                val preferenceForms = payloadForms.mapNotNull {
-                    try {
-                        it.optMap().opt(PreferenceCenterPayload.KEY_FORM).map
-                    } catch (e: Exception) {
-                        Logger.warn("Failed to parse preference center config: ${e.message}")
-                        null
-                    }
-                }.associateBy {
-                    val id: String = it.requireField(PreferenceCenterConfig.KEY_ID)
-                    id
+    /**
+     * Returns the configuration of the Preference Center form with the
+     * given [preferenceCenterId] as JSON.
+     *
+     * @hide
+     *
+     * @param preferenceCenterId The ID of the Preference Center.
+     * @return The requested preference center config, or null if not found.
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    suspend fun getJsonConfig(preferenceCenterId: String): JsonValue? {
+        val payloads = remoteData.payloads(PAYLOAD_TYPE)
+        for (payload in payloads) {
+            val forms = payload.data.opt(KEY_PREFERENCE_FORMS).optList()
+            for (form in forms) {
+                val formData = form.optMap().opt(PreferenceCenterPayload.KEY_FORM).optMap()
+                val id = formData.opt(PreferenceCenterConfig.KEY_ID).optString()
+                if (preferenceCenterId == id) {
+                    return formData.toJsonValue()
                 }
-
-                Observable.just(preferenceForms)
             }
-            .subscribeOn(backgroundScheduler)
-            .observeOn(backgroundScheduler)
-            .subscribe(object : Subscriber<Map<String, JsonMap>>() {
-                override fun onNext(value: Map<String, JsonMap>) {
-                    pendingResult.result = value[preferenceCenterId]?.toJsonValue()
-                }
+        }
+        return null
+    }
 
-                override fun onError(e: Exception) {
-                    Logger.error(e, "Failed to get preference center config for ID: $preferenceCenterId")
-                    pendingResult.result = null
-                }
-            })
-
+    /**
+     * Returns a [PendingResult] containing the configuration of the Preference Center form with the
+     * given [preferenceCenterId].
+     *
+     * @hide
+     *
+     * @param preferenceCenterId The ID of the Preference Center.
+     * @return The requested [PreferenceCenterConfig].
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    fun getJsonConfigPendingResult(preferenceCenterId: String): PendingResult<JsonValue> {
+        val pendingResult = PendingResult<JsonValue>()
+        pendingResultScope.launch {
+            pendingResult.result = getJsonConfig(preferenceCenterId)
+        }
         return pendingResult
     }
 

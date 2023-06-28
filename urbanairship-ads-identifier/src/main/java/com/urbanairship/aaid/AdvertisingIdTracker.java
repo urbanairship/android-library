@@ -10,7 +10,7 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
@@ -31,7 +31,13 @@ import androidx.annotation.RestrictTo;
  * Helper class that auto tracks the android advertising Id. The ID will
  * automatically be set on {@link Analytics} by editing the associated identifiers
  * using {@link Analytics#editAssociatedIdentifiers()}.
+ *
+ * @deprecated The ads-identifier module will be removed in a future SDK release. Replace with
+ *  direct usage of {@link Analytics#editAssociatedIdentifiers()} and
+ *  {@link AssociatedIdentifiers.Editor#setAdvertisingId(String, boolean)}.
+ *
  */
+@Deprecated
 public class AdvertisingIdTracker extends AirshipComponent {
 
     private final Executor EXECUTOR = AirshipExecutors.newSerialExecutor();
@@ -112,7 +118,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
             getDataStore().put(ENABLED_KEY, isEnabled);
 
             if (!privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
-                Logger.warn("AdvertisingIdTracker - Unable to track advertising ID when analytics is disabled.");
+                UALog.w("AdvertisingIdTracker - Unable to track advertising ID when analytics is disabled.");
                 return;
             }
 
@@ -162,7 +168,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
                             advertisingId = adInfo.getId();
                             limitedAdTrackingEnabled = adInfo.isLimitAdTrackingEnabled();
                         } catch (IOException | GooglePlayServicesNotAvailableException | GooglePlayServicesRepairableException e) {
-                            Logger.error(e, "AdvertisingIdTracker - Failed to retrieve and update advertising ID.");
+                            UALog.e(e, "AdvertisingIdTracker - Failed to retrieve and update advertising ID.");
                             return;
                         }
 

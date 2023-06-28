@@ -7,9 +7,11 @@ import android.content.Context;
 import com.urbanairship.Cancelable;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.base.Extender;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.channel.ChannelRegistrationPayload;
@@ -65,6 +67,7 @@ public class InboxTest {
     private AirshipChannel mockChannel;
     private MessageDao mockMessageDao;
     private ArrayList<MessageEntity> messageEntities;
+    private PrivacyManager privacyManager;
 
     GlobalActivityMonitor spyActivityMonitor;
 
@@ -74,11 +77,11 @@ public class InboxTest {
         mockUser = mock(User.class);
         mockChannel = mock(AirshipChannel.class);
         mockMessageDao = mock(MessageDao.class);
-
         MessageCenterTestUtils.setup();
 
         Context context = ApplicationProvider.getApplicationContext();
         spyActivityMonitor = Mockito.spy(GlobalActivityMonitor.shared(context));
+        privacyManager = new PrivacyManager(PreferenceDataStore.inMemoryStore(context), PrivacyManager.FEATURE_ALL);
 
         Executor executor = new Executor() {
             @Override
@@ -88,7 +91,7 @@ public class InboxTest {
         };
 
         PreferenceDataStore dataStore = PreferenceDataStore.inMemoryStore(context);
-        inbox = new Inbox(context, dataStore, mockDispatcher, mockUser, mockMessageDao, executor, spyActivityMonitor, mockChannel);
+        inbox = new Inbox(context, dataStore, mockDispatcher, mockUser, mockMessageDao, executor, spyActivityMonitor, mockChannel, privacyManager);
         inbox.setEnabled(true);
 
         messageEntities = new ArrayList<>();
@@ -142,11 +145,11 @@ public class InboxTest {
      */
     @Test
     public void testChannelRegistrationDisabledTokenRegistration() {
-        ArgumentCaptor<AirshipChannel.ChannelRegistrationPayloadExtender> argument = ArgumentCaptor.forClass(AirshipChannel.ChannelRegistrationPayloadExtender.class);
+        ArgumentCaptor<Extender<ChannelRegistrationPayload.Builder>> argument = ArgumentCaptor.forClass(Extender.class);
         inbox.init();
         verify(mockChannel).addChannelRegistrationPayloadExtender(argument.capture());
 
-        AirshipChannel.ChannelRegistrationPayloadExtender extender = argument.getValue();
+        Extender<ChannelRegistrationPayload.Builder> extender = argument.getValue();
         assertNotNull(extender);
 
         when(mockUser.getId()).thenReturn("cool");
@@ -538,7 +541,7 @@ public class InboxTest {
         verify(mockMessageDao).deleteAllMessages();
         verify(spyActivityMonitor).removeApplicationListener(any(ApplicationListener.class));
         verify(mockChannel).removeChannelListener(any(AirshipChannelListener.class));
-        verify(mockChannel).removeChannelRegistrationPayloadExtender(any(AirshipChannel.ChannelRegistrationPayloadExtender.class));
+        verify(mockChannel).removeChannelRegistrationPayloadExtender(any());
         verify(mockUser).removeListener(any(User.Listener.class));
     }
 
@@ -558,7 +561,7 @@ public class InboxTest {
         verify(mockMessageDao).getMessages();
         verify(spyActivityMonitor).addApplicationListener(any(ApplicationListener.class));
         verify(mockChannel).addChannelListener(any(AirshipChannelListener.class));
-        verify(mockChannel).addChannelRegistrationPayloadExtender(any(AirshipChannel.ChannelRegistrationPayloadExtender.class));
+        verify(mockChannel).addChannelRegistrationPayloadExtender(any());
     }
 
     /**

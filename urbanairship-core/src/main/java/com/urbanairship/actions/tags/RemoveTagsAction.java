@@ -2,7 +2,7 @@
 
 package com.urbanairship.actions.tags;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
@@ -57,13 +57,13 @@ public class RemoveTagsAction extends BaseTagsAction {
 
     @Override
     void applyChannelTags(@NonNull Set<String> tags) {
-        Logger.info("RemoveTagsAction - Removing tags: %s", tags);
+        UALog.i("RemoveTagsAction - Removing tags: %s", tags);
         getChannel().editTags().removeTags(tags).apply();
     }
 
     @Override
     void applyChannelTagGroups(@NonNull Map<String, Set<String>> tags) {
-        Logger.info("RemoveTagsAction - Removing channel tag groups: %s", tags);
+        UALog.i("RemoveTagsAction - Removing channel tag groups: %s", tags);
         TagGroupsEditor tagGroupsEditor = getChannel().editTagGroups();
         for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {
             tagGroupsEditor.removeTags(entry.getKey(), entry.getValue());
@@ -74,7 +74,7 @@ public class RemoveTagsAction extends BaseTagsAction {
 
     @Override
     void applyNamedUserTagGroups(@NonNull Map<String, Set<String>> tags) {
-        Logger.info("RemoveTagsAction - Removing named user tag groups: %s", tags);
+        UALog.i("RemoveTagsAction - Removing named user tag groups: %s", tags);
 
         TagGroupsEditor tagGroupsEditor = UAirship.shared().getContact().editTagGroups();
         for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {

@@ -4,9 +4,10 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.urbanairship.Logger
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.actions.ActionRunRequestFactory
+import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.contacts.Contact
 import com.urbanairship.contacts.Scope
@@ -18,11 +19,8 @@ import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.data.evaluate
-import com.urbanairship.preferencecenter.testing.OpenForTesting
 import com.urbanairship.preferencecenter.util.execute
 import com.urbanairship.preferencecenter.util.scanConcat
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -32,7 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapConcat
@@ -44,7 +42,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 
 @OpenForTesting
 internal class PreferenceCenterViewModel @JvmOverloads constructor(
@@ -77,7 +74,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
     init {
         viewModelScope.launch {
             actions.collect { action ->
-                Logger.verbose("< $action")
+                UALog.v("< $action")
 
                 launch {
                     map(action)
@@ -90,7 +87,15 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         }
 
         viewModelScope.launch {
-            states.collect { state -> Logger.verbose("> $state") }
+            contact.namedUserIdFlow
+                .drop(1)
+                .collect {
+                    actions.emit(Action.Refresh)
+                }
+        }
+
+        viewModelScope.launch {
+            states.collect { state -> UALog.v("> $state") }
         }
 
         // Collect updates from the condition monitor and repost them on the actions flow.
@@ -167,9 +172,8 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 else -> state
             }
             is Change.ShowError -> State.Error(error = change.error)
-            is Change.ShowLoading -> when (state) {
-                is State.Content -> state
-                else -> State.Loading
+            is Change.ShowLoading -> {
+                State.Loading
             }
         }.let { flowOf(it) }
 
@@ -225,7 +229,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                     )
                 )
             }.catch<Change> { error ->
-                Logger.error(error, "Failed to fetch preference center data!")
+                UALog.e(error, "Failed to fetch preference center data!")
                 emit(Change.ShowError(error = error))
             }.flowOn(ioDispatcher)
         )
@@ -246,7 +250,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         scopes: Set<Scope> = emptySet(),
         isEnabled: Boolean
     ): Flow<Change> = flow {
-        Logger.verbose("Updating preference item: " +
+        UALog.v("Updating preference item: " +
             "id = ${item.id}, title = ${item.display.name}, scopes = $scopes, state = $isEnabled")
 
         when (item) {
@@ -306,38 +310,17 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         data class UpdateConditionState(val state: Condition.State) : Change()
     }
 
-    private suspend fun getConfig(preferenceCenterId: String): PreferenceCenterConfig =
-        suspendCancellableCoroutine { continuation ->
-            preferenceCenter.getConfig(preferenceCenterId).addResultCallback { config ->
-                if (config != null) {
-                    continuation.resume(config)
-                } else {
-                    continuation.resumeWithException(IllegalStateException("Null preference center for id: $preferenceCenterId"))
-                }
-            }
-        }
+    private suspend fun getConfig(preferenceCenterId: String): PreferenceCenterConfig {
+        return preferenceCenter.getConfig(preferenceCenterId) ?: throw IllegalStateException("Null preference center for id: $preferenceCenterId")
+    }
 
-    private suspend fun getChannelSubscriptions(): Set<String> =
-        suspendCancellableCoroutine { continuation ->
-            channel.getSubscriptionLists(/* includePendingUpdates = */ true).addResultCallback { subscriptions ->
-                if (subscriptions != null) {
-                    continuation.resume(subscriptions)
-                } else {
-                    continuation.resumeWithException(IllegalStateException("Null subscription listing for channel id: ${channel.id}"))
-                }
-            }
-        }
+    private suspend fun getChannelSubscriptions(): Set<String> {
+        return channel.fetchSubscriptionLists().getOrThrow()
+    }
 
-    private suspend fun getContactSubscriptions(): Map<String, Set<Scope>> =
-        suspendCancellableCoroutine { continuation ->
-            contact.getSubscriptionLists(/* includePendingUpdates = */ true).addResultCallback { subscriptions ->
-                if (subscriptions != null) {
-                    continuation.resume(subscriptions)
-                } else {
-                    continuation.resumeWithException(IllegalStateException("Null subscription listing for contact id: ${contact.namedUserId}"))
-                }
-            }
-        }
+    private suspend fun getContactSubscriptions(): Map<String, Set<Scope>> {
+        return contact.fetchSubscriptionLists().getOrThrow()
+    }
 }
 
 /**

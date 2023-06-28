@@ -2,7 +2,7 @@ package com.urbanairship.job;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
@@ -25,27 +25,27 @@ interface JobRunner {
             executor.execute(() -> {
                 final UAirship airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME_MS);
                 if (airship == null) {
-                    Logger.error("UAirship not ready. Rescheduling job: %s", jobInfo);
+                    UALog.e("UAirship not ready. Rescheduling job: %s", jobInfo);
                     resultConsumer.accept(JobResult.RETRY);
                     return;
                 }
 
                 final AirshipComponent component = findAirshipComponent(airship, jobInfo.getAirshipComponentName());
                 if (component == null) {
-                    Logger.error("Unavailable to find airship components for jobInfo: %s", jobInfo);
+                    UALog.e("Unavailable to find airship components for jobInfo: %s", jobInfo);
                     resultConsumer.accept(JobResult.SUCCESS);
                     return;
                 }
 
                 if (!component.isComponentEnabled()) {
-                    Logger.debug("Component disabled. Dropping jobInfo: %s", jobInfo);
+                    UALog.d("Component disabled. Dropping jobInfo: %s", jobInfo);
                     resultConsumer.accept(JobResult.SUCCESS);
                     return;
                 }
 
                 component.getJobExecutor(jobInfo).execute(() -> {
                     JobResult result = component.onPerformJob(airship, jobInfo);
-                    Logger.verbose("Finished: %s with result: %s", jobInfo, result);
+                    UALog.v("Finished: %s with result: %s", jobInfo, result);
                     resultConsumer.accept(result);
                 });
             });

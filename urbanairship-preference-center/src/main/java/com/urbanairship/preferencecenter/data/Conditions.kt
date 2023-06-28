@@ -3,10 +3,10 @@ package com.urbanairship.preferencecenter.data
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.requireField
 import com.urbanairship.preferencecenter.data.Condition.NotificationOptIn.Status
 import com.urbanairship.preferencecenter.data.Condition.NotificationOptIn.Status.OPT_IN
 import com.urbanairship.preferencecenter.data.Condition.NotificationOptIn.Status.OPT_OUT
-import com.urbanairship.preferencecenter.util.requireField
 
 typealias Conditions = List<Condition>
 

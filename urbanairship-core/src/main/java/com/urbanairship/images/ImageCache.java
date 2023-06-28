@@ -5,7 +5,7 @@ import android.graphics.drawable.Drawable;
 import android.net.http.HttpResponseCache;
 import android.util.LruCache;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,14 +78,14 @@ class ImageCache {
         // URL Cache
         File cacheDir = new File(context.getApplicationContext().getCacheDir(), CACHE_DIR);
         if (!cacheDir.exists() && !cacheDir.mkdirs()) {
-            Logger.error("Failed to create the cache.");
+            UALog.e("Failed to create the cache.");
         }
 
         if (HttpResponseCache.getInstalled() == null) {
             try {
                 HttpResponseCache.install(cacheDir, DISK_CACHE_SIZE);
             } catch (IOException e) {
-                Logger.error("Unable to install image loader cache");
+                UALog.e("Unable to install image loader cache");
             }
         }
     }

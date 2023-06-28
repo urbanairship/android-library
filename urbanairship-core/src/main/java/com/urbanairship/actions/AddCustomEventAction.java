@@ -2,7 +2,7 @@
 
 package com.urbanairship.actions;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushMessage;
@@ -95,13 +95,13 @@ public class AddCustomEventAction extends Action {
     public boolean acceptsArguments(@NonNull ActionArguments arguments) {
         if (arguments.getValue().getMap() != null) {
             if (arguments.getValue().getMap().get("event_name") == null) {
-                Logger.error("CustomEventAction requires an event name in the event data.");
+                UALog.e("CustomEventAction requires an event name in the event data.");
                 return false;
             }
             return true;
         }
 
-        Logger.error("CustomEventAction requires a map of event data.");
+        UALog.e("CustomEventAction requires a map of event data.");
         return false;
     }
 

@@ -3,8 +3,8 @@ package com.urbanairship.preferencecenter.data
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
-import com.urbanairship.preferencecenter.util.jsonMapOf
-import com.urbanairship.preferencecenter.util.optionalField
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalField
 
 /**
  * Common display attributes.

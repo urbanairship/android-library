@@ -5,7 +5,7 @@ package com.urbanairship.job;
 import android.content.Context;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonException;
 
 import java.util.UUID;
@@ -40,7 +40,7 @@ public class AirshipWorker extends ListenableWorker {
             final UUID workId = getId();
             int runAttempt = getRunAttemptCount();
 
-            Logger.verbose("Running job: %s, work Id: %s run attempt: %s", jobInfo, workId, runAttempt);
+            UALog.v("Running job: %s, work Id: %s run attempt: %s", jobInfo, workId, runAttempt);
 
             JobDispatcher.shared(getApplicationContext()).onStartJob(jobInfo, runAttempt, jobResult -> {
                 switch (jobResult) {
@@ -61,7 +61,7 @@ public class AirshipWorker extends ListenableWorker {
         try {
             return WorkUtils.convertToJobInfo(getInputData());
         } catch (JsonException e) {
-            Logger.error(e, "Failed to parse jobInfo.");
+            UALog.e(e, "Failed to parse jobInfo.");
             return null;
         }
     }

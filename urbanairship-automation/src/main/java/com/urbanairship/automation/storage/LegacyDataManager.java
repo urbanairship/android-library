@@ -9,7 +9,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.util.DataManager;
 
 import androidx.annotation.NonNull;
@@ -85,7 +85,7 @@ public class LegacyDataManager extends DataManager {
 
     @Override
     protected void onCreate(@NonNull SQLiteDatabase db) {
-        Logger.debug("Creating automation database");
+        UALog.d("Creating automation database");
 
         db.execSQL("CREATE TABLE IF NOT EXISTS " + ScheduleTable.TABLE_NAME + " ("
                 + ScheduleTable.COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -121,7 +121,7 @@ public class LegacyDataManager extends DataManager {
                 + "FOREIGN KEY(" + TriggerTable.COLUMN_NAME_SCHEDULE_ID + ") REFERENCES " + ScheduleTable.TABLE_NAME + "(" + ScheduleTable.COLUMN_NAME_SCHEDULE_ID + ") ON DELETE CASCADE"
                 + ");");
 
-        Logger.debug("Automation database created");
+        UALog.d("Automation database created");
     }
 
     @Override
@@ -342,7 +342,7 @@ public class LegacyDataManager extends DataManager {
     @Override
     protected void onDowngrade(@NonNull SQLiteDatabase db, int oldVersion, int newVersion) {
         // Logs that the database is being downgraded
-        Logger.debug("Dropping automation database. Downgrading from version %s to %s", oldVersion, newVersion);
+        UALog.d("Dropping automation database. Downgrading from version %s to %s", oldVersion, newVersion);
 
         // Drop the table and recreate it
         db.execSQL("DROP TABLE IF EXISTS " + TriggerTable.TABLE_NAME);
@@ -367,7 +367,7 @@ public class LegacyDataManager extends DataManager {
             db.execSQL("DROP TABLE IF EXISTS " + ScheduleTable.TABLE_NAME);
             db.close();
         } catch (Exception e) {
-            Logger.error(e, "Failed to delete schedules.");
+            UALog.e(e, "Failed to delete schedules.");
         }
     }
 
@@ -375,7 +375,7 @@ public class LegacyDataManager extends DataManager {
         try {
             return rawQuery(GET_SCHEDULES_QUERY, null);
         } catch (SQLException e) {
-            Logger.error(e, "LegacyAutomationDataManager - Unable to get schedules.");
+            UALog.e(e, "LegacyAutomationDataManager - Unable to get schedules.");
         }
 
         return null;

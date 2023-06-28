@@ -11,7 +11,6 @@ import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.external.javadoc.StandardJavadocDocletOptions
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.the
 
@@ -19,8 +18,8 @@ class AirshipDoclavaPlugin : Plugin<Project> {
     override fun apply(target: Project) = target.run {
         if (this == rootProject) {
             val doclava = configurations.create("doclava")
-            val doclavaVersion: String by rootProject
             dependencies {
+                val doclavaVersion = libs.requiredVersion("doclava")
                 "doclava"("com.google.doclava:doclava:$doclavaVersion")
             }
             configureDoclava(doclava)

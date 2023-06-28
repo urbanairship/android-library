@@ -8,7 +8,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 
 import com.urbanairship.Autopilot;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.activity.ThemedActivity;
 
@@ -40,7 +40,7 @@ public class MessageActivity extends ThemedActivity {
         Autopilot.automaticTakeOff(getApplication());
 
         if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
-            Logger.error("MessageActivity - unable to create activity, takeOff not called.");
+            UALog.e("MessageActivity - unable to create activity, takeOff not called.");
             finish();
             return;
         }

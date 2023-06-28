@@ -2,7 +2,7 @@
 
 package com.urbanairship.analytics;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -290,43 +290,43 @@ public class CustomEvent extends Event implements JsonSerializable {
 
         boolean isValid = true;
         if (UAStringUtil.isEmpty(eventName) || eventName.length() > MAX_CHARACTER_LENGTH) {
-            Logger.error("Event name must not be null, empty, or larger than %s characters.", MAX_CHARACTER_LENGTH);
+            UALog.e("Event name must not be null, empty, or larger than %s characters.", MAX_CHARACTER_LENGTH);
             isValid = false;
         }
 
         if (eventValue != null) {
             if (eventValue.compareTo(MAX_VALUE) > 0) {
-                Logger.error("Event value is bigger than %s", MAX_VALUE);
+                UALog.e("Event value is bigger than %s", MAX_VALUE);
                 isValid = false;
             } else if (eventValue.compareTo(MIN_VALUE) < 0) {
-                Logger.error("Event value is smaller than %s", MIN_VALUE);
+                UALog.e("Event value is smaller than %s", MIN_VALUE);
                 isValid = false;
             }
         }
 
         if (transactionId != null && transactionId.length() > MAX_CHARACTER_LENGTH) {
-            Logger.error("Transaction ID is larger than %s characters.", MAX_CHARACTER_LENGTH);
+            UALog.e("Transaction ID is larger than %s characters.", MAX_CHARACTER_LENGTH);
             isValid = false;
         }
 
         if (interactionId != null && interactionId.length() > MAX_CHARACTER_LENGTH) {
-            Logger.error("Interaction ID is larger than %s characters.", MAX_CHARACTER_LENGTH);
+            UALog.e("Interaction ID is larger than %s characters.", MAX_CHARACTER_LENGTH);
             isValid = false;
         }
 
         if (interactionType != null && interactionType.length() > MAX_CHARACTER_LENGTH) {
-            Logger.error("Interaction type is larger than %s characters.", MAX_CHARACTER_LENGTH);
+            UALog.e("Interaction type is larger than %s characters.", MAX_CHARACTER_LENGTH);
             isValid = false;
         }
 
         if (templateType != null && templateType.length() > MAX_CHARACTER_LENGTH) {
-            Logger.error("Template type is larger than %s characters.", MAX_CHARACTER_LENGTH);
+            UALog.e("Template type is larger than %s characters.", MAX_CHARACTER_LENGTH);
             isValid = false;
         }
 
         int length = properties.toJsonValue().toString().getBytes().length;
         if (length > MAX_TOTAL_PROPERTIES_SIZE) {
-            Logger.error("Total custom properties size (%s bytes) exceeds maximum size of %s bytes.", length, MAX_TOTAL_PROPERTIES_SIZE);
+            UALog.e("Total custom properties size (%s bytes) exceeds maximum size of %s bytes.", length, MAX_TOTAL_PROPERTIES_SIZE);
             isValid = false;
         }
 

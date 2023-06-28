@@ -2,4 +2,9 @@
     <string name="app_name">Airship Layout Playground</string>
     <string name="layout_picker_label">Pick a layout file</string>
     <string name="render_button_label">Render it!</string>
+
+    <string name="vanilla_activity_title">android.app.Activity</string>
+    <string name="appcompat_activity_title">androidx.appcompat.app.AppCompatActivity</string>
+    <string name="fragment_activity_title">androidx.fragment.app.FragmentActivity</string>
+    <string name="activity_finish">finish activity</string>
 </resources>

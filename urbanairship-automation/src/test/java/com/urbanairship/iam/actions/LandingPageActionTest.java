@@ -13,29 +13,31 @@ import com.urbanairship.automation.InAppAutomation;
 import com.urbanairship.automation.Schedule;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.html.HtmlDisplayContent;
-import com.urbanairship.js.UrlAllowList;
+import com.urbanairship.UrlAllowList;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-
+import static org.mockito.Mockito.when;
 
 @Config(
         sdk = 28,
@@ -46,23 +48,16 @@ import static org.mockito.Mockito.verify;
 @RunWith(AndroidJUnit4.class)
 public class LandingPageActionTest {
 
-    private LandingPageAction action;
-    private UrlAllowList urlAllowList;
-    private InAppAutomation inAppAutomation;
-
-    @Before
-    public void setup() {
-        inAppAutomation = mock(InAppAutomation.class);
-        action = new LandingPageAction(() -> inAppAutomation);
-
-        urlAllowList = UAirship.shared().getUrlAllowList();
-    }
+    private final UrlAllowList urlAllowList = mock(UrlAllowList.class);
+    private final InAppAutomation inAppAutomation = mock(InAppAutomation.class);
+    private final LandingPageAction action = new LandingPageAction(() -> inAppAutomation, () -> urlAllowList);
 
     /**
      * Test accepts arguments
      */
     @Test
     public void testAcceptsArguments() {
+        when(urlAllowList.isAllowed(any(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
         // Basic URIs
         verifyAcceptsArgumentValue("https://www.urbanairship.com", true);
 
@@ -79,7 +74,8 @@ public class LandingPageActionTest {
      */
     @Test
     public void testRejectsArguments() {
-        urlAllowList.addEntry("*");
+        when(urlAllowList.isAllowed(any(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
+
         verifyAcceptsArgumentValue(null, false);
         verifyAcceptsArgumentValue("", false);
         // Empty payload
@@ -92,7 +88,7 @@ public class LandingPageActionTest {
      */
     @Test
     public void testUrlAllowList() {
-        urlAllowList.addEntry("https://yep.example.com");
+        when(urlAllowList.isAllowed("https://yep.example.com", UrlAllowList.SCOPE_OPEN_URL)).thenReturn(true);
 
         // Basic URIs
         verifyAcceptsArgumentValue("https://yep.example.com", true);
@@ -113,7 +109,8 @@ public class LandingPageActionTest {
      */
     @Test
     public void testPerform() {
-        urlAllowList.addEntry("*");
+        when(urlAllowList.isAllowed(any(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
+
 
         // Verify scheme less URIs turn into https
         verifyPerform("www.urbanairship.com", "https://www.urbanairship.com");

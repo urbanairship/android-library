@@ -2,12 +2,10 @@
 
 package com.urbanairship.automation.storage;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.automation.Audience;
 import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonPredicate;
 import com.urbanairship.json.JsonValue;
 
 import java.util.ArrayList;
@@ -37,7 +35,7 @@ public final class Converters {
         try {
             return TriggerContext.fromJson(JsonValue.parseString(value));
         } catch (JsonException e) {
-            Logger.error(e, "Unable to parse trigger context: " + value);
+            UALog.e(e, "Unable to parse trigger context: " + value);
             return null;
         }
     }
@@ -56,7 +54,7 @@ public final class Converters {
         try {
             return Audience.fromJson(JsonValue.parseString(value));
         } catch (JsonException e) {
-            Logger.error(e, "Unable to parse audience: " + value);
+            UALog.e(e, "Unable to parse audience: " + value);
             return null;
         }
     }
@@ -72,7 +70,7 @@ public final class Converters {
             }
             return array;
         } catch (JsonException e) {
-            Logger.error(e, "Unable to parse string array from string: " + value);
+            UALog.e(e, "Unable to parse string array from string: " + value);
             return null;
         }
     }

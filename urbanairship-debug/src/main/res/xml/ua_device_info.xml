@@ -25,16 +25,6 @@
             app:title="Analytics" />
 
         <com.urbanairship.debug.deviceinfo.preferences.EnableFeaturePreference
-            app:key="chat"
-            app:persistent="false"
-            app:title="Chat" />
-
-        <com.urbanairship.debug.deviceinfo.preferences.EnableFeaturePreference
-            app:key="location"
-            app:persistent="false"
-            app:title="Location" />
-
-        <com.urbanairship.debug.deviceinfo.preferences.EnableFeaturePreference
             app:key="contacts"
             app:persistent="false"
             app:title="Contacts" />
@@ -96,23 +86,6 @@
             app:key="associated_identifiers"
             app:persistent="false"
             app:title="@string/ua_associated_identifiers" />
-
-    </androidx.preference.PreferenceCategory>
-
-    <androidx.preference.PreferenceCategory
-        app:dependency="location"
-        app:title="@string/ua_location_settings_category">
-
-        <com.urbanairship.preference.LocationUpdatesEnabledPreference
-            app:key="location_preference"
-            app:persistent="false"
-            app:title="@string/ua_location_enabled_settings_title" />
-
-        <com.urbanairship.preference.LocationBackgroundUpdatesAllowedPreference
-            app:dependency="location_preference"
-            app:key="background_location_preference"
-            app:persistent="false"
-            app:title="@string/ua_background_location_enabled_settings_title" />
 
     </androidx.preference.PreferenceCategory>
 

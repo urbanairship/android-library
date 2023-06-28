@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 /**
  * CheckboxPreference to enable/disable push notifications.
  */
+@Deprecated
 public class PushEnablePreference extends UACheckBoxPreference {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)

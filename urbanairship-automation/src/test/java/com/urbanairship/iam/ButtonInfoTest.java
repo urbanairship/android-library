@@ -63,6 +63,35 @@ public class ButtonInfoTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
+    public void testBuildEnforcesMaxIdLength() {
+        Boolean enforceMaxIdLength = true;
+
+        ButtonInfo.newBuilder()
+                  .setId(UAStringUtil.repeat("a", 101, ""))
+                  .setLabel(TextInfo.newBuilder()
+                                    .setText("hi")
+                                    .build())
+                  .addAction("cool", JsonValue.wrap("story"))
+                  .build(enforceMaxIdLength);
+    }
+
+    @Test
+    public void testBuildSkipsMaxIdLength() {
+        Boolean enforceMaxIdLength = false;
+        String overLengthId = UAStringUtil.repeat("a", 101, "");
+
+        ButtonInfo info = ButtonInfo.newBuilder()
+                  .setId(overLengthId)
+                  .setLabel(TextInfo.newBuilder()
+                                    .setText("hi")
+                                    .build())
+                  .addAction("cool", JsonValue.wrap("story"))
+                  .build(enforceMaxIdLength);
+
+        assertEquals(overLengthId, info.getId());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void testInvalidBorderRadius() {
         ButtonInfo.newBuilder()
                   .setId(UAStringUtil.repeat("a", 100, ""))

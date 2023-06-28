@@ -2,7 +2,7 @@
 
 package com.urbanairship.actions;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.SubscriptionListEditor;
@@ -14,7 +14,6 @@ import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
@@ -125,7 +124,7 @@ public class SubscriptionListAction extends Action {
                         break;
                 }
             } catch (JsonException e) {
-                Logger.error(e, "Invalid argument");
+                UALog.e(e, "Invalid argument");
                 return ActionResult.newErrorResult(e);
             }
         }

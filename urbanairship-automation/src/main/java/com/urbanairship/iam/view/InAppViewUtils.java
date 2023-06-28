@@ -25,7 +25,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.urbanairship.Fonts;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.iam.TextInfo;
@@ -68,7 +68,7 @@ public class InAppViewUtils {
      * @param borderRadiusFlag The border radius flag.
      */
     public static void applyButtonInfo(@NonNull Button button, @NonNull ButtonInfo buttonInfo, @BorderRadius.BorderRadiusFlag int borderRadiusFlag) {
-        applyTextInfo(button, buttonInfo.getLabel());
+        applyButtonTextInfo(button, buttonInfo.getLabel());
 
         int textColor = buttonInfo.getLabel().getColor() == null ? button.getCurrentTextColor() : buttonInfo.getLabel().getColor();
         int backgroundColor = buttonInfo.getBackgroundColor() == null ? Color.TRANSPARENT : buttonInfo.getBackgroundColor();
@@ -89,12 +89,33 @@ public class InAppViewUtils {
     }
 
     /**
-     * Applies text info to a text view.
+     * Applies text info to a text view with a center gravity.
+     *
+     * @param textView The text view.
+     * @param textInfo The text info.
+     */
+    public static void applyButtonTextInfo(@NonNull TextView textView, @NonNull TextInfo textInfo) {
+        applyTextInfo(textView, textInfo, Gravity.CENTER);
+    }
+
+    /**
+     * Applies text info to a text view with a horizontal center gravity.
      *
      * @param textView The text view.
      * @param textInfo The text info.
      */
     public static void applyTextInfo(@NonNull TextView textView, @NonNull TextInfo textInfo) {
+        applyTextInfo(textView, textInfo, Gravity.CENTER_HORIZONTAL);
+    }
+
+    /**
+     * Applies text info to a text view.
+     *
+     * @param textView The text view.
+     * @param textInfo The text info.
+     * @param centerGravity The gravity center to use for center alignment.
+     */
+    private static void applyTextInfo(@NonNull TextView textView, @NonNull TextInfo textInfo, int centerGravity) {
         if (textInfo.getFontSize() != null) {
             textView.setTextSize(textInfo.getFontSize());
         }
@@ -109,7 +130,7 @@ public class InAppViewUtils {
             try {
                 drawable = ContextCompat.getDrawable(textView.getContext(), drawableId);
             } catch (android.content.res.Resources.NotFoundException e) {
-                Logger.debug("Drawable " + drawableId + " no longer exists.");
+                UALog.d("Drawable " + drawableId + " no longer exists.");
             }
         }
 
@@ -136,7 +157,7 @@ public class InAppViewUtils {
 
                 textView.setText(text);
             } catch (Resources.NotFoundException e) {
-                Logger.error(e, "Unable to find button drawable.");
+                UALog.e(e, "Unable to find button drawable.");
                 textView.setText(textInfo.getText());
             }
         } else {
@@ -163,7 +184,7 @@ public class InAppViewUtils {
         if (textInfo.getAlignment() != null) {
             switch (textInfo.getAlignment()) {
                 case TextInfo.ALIGNMENT_CENTER:
-                    textView.setGravity(Gravity.CENTER_HORIZONTAL);
+                    textView.setGravity(centerGravity);
                     break;
 
                 case TextInfo.ALIGNMENT_LEFT:

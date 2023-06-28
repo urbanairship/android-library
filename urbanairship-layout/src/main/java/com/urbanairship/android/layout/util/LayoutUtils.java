@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.view.Gravity;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
@@ -66,11 +67,11 @@ public final class LayoutUtils {
 
     private LayoutUtils() {}
 
-    public static void applyBorderAndBackground(@NonNull View view, @NonNull BaseModel model) {
+    public static void applyBorderAndBackground(@NonNull View view, @NonNull BaseModel<?, ?> model) {
         applyBorderAndBackground(view, model.getBorder(), model.getBackgroundColor());
     }
 
-    public static void applyBorderAndBackground(
+    private static void applyBorderAndBackground(
         @NonNull View view,
         @Nullable Border border,
         @Nullable Color backgroundColor
@@ -109,15 +110,6 @@ public final class LayoutUtils {
             }
         } else if (backgroundColor != null) {
             mergeBackground(view, new ColorDrawable(backgroundColor.resolve(context)));
-        }
-    }
-
-    public static void resetBorderAndBackground(@NonNull View view) {
-        view.setBackground(null);
-        view.setPadding(0,0,0,0);
-
-        if (view instanceof Clippable) {
-            ((Clippable) view).setClipPathBorderRadius(0);
         }
     }
 
@@ -314,6 +306,13 @@ public final class LayoutUtils {
             .add(checkedColor, android.R.attr.state_checked)
             .add(normalColor)
             .build();
+    }
+
+    public static void dismissSoftKeyboard(@NonNull View view) {
+        InputMethodManager imm = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     public static void doOnAttachToWindow(@NonNull View view, @NonNull Runnable callback) {

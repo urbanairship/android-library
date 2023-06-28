@@ -2,7 +2,7 @@
 
 package com.urbanairship.channel;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonValue;
 
 import java.util.HashMap;
@@ -36,13 +36,13 @@ class TagUtils {
 
         for (String tag : tags) {
             if (tag == null) {
-                Logger.debug("Null tag was removed from set.");
+                UALog.d("Null tag was removed from set.");
                 continue;
             }
 
             tag = tag.trim();
             if (tag.length() <= 0 || tag.length() > MAX_TAG_LENGTH) {
-                Logger.error("Tag with zero or greater than max length was removed from set: %s", tag);
+                UALog.e("Tag with zero or greater than max length was removed from set: %s", tag);
                 continue;
             }
 

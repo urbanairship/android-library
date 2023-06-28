@@ -8,7 +8,8 @@ import com.huawei.agconnect.config.AGConnectServicesConfig;
 import com.huawei.hms.aaid.HmsInstanceId;
 import com.huawei.hms.api.HuaweiApiAvailability;
 import com.urbanairship.AirshipVersionInfo;
-import com.urbanairship.Logger;
+import com.urbanairship.BuildConfig;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
@@ -74,7 +75,7 @@ public class HmsPushProvider implements PushProvider, AirshipVersionInfo  {
             String appId = AGConnectServicesConfig.fromContext(context).getString(APP_ID_KEY);
             return !UAStringUtil.isEmpty(appId);
         } catch (Exception e) {
-            Logger.error(e, "HmsPushProvider - HMS availability check failed.");
+            UALog.e(e, "HmsPushProvider - HMS availability check failed.");
             return false;
         }
     }
@@ -84,7 +85,7 @@ public class HmsPushProvider implements PushProvider, AirshipVersionInfo  {
         try {
             return HuaweiApiAvailability.getInstance().isHuaweiMobileNoticeAvailable(context) == 0;
         } catch (Exception e) {
-            Logger.error(e, "HmsPushProvider - HMS is supported check failed.");
+            UALog.e(e, "HmsPushProvider - HMS is supported check failed.");
             return false;
         }
     }

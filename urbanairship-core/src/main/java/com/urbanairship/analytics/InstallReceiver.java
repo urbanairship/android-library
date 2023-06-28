@@ -7,7 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.urbanairship.Autopilot;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.util.UAStringUtil;
 
@@ -49,7 +49,7 @@ public class InstallReceiver extends BroadcastReceiver {
     public void onReceive(@NonNull Context context, @Nullable Intent intent) {
         Autopilot.automaticTakeOff(context);
         if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
-            Logger.error("InstallReceiver - unable to track install referrer, takeOff not called.");
+            UALog.e("InstallReceiver - unable to track install referrer, takeOff not called.");
             return;
         }
 
@@ -59,7 +59,7 @@ public class InstallReceiver extends BroadcastReceiver {
 
         String referrer = intent.getStringExtra(EXTRA_INSTALL_REFERRER);
         if (UAStringUtil.isEmpty(referrer) || !ACTION_INSTALL_REFERRER.equals(intent.getAction())) {
-            Logger.debug("missing referrer or invalid action.");
+            UALog.d("missing referrer or invalid action.");
             return;
         }
 

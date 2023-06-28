@@ -19,14 +19,13 @@ import androidx.preference.Preference;
 /**
  * The Channel ID preference.
  */
+@Deprecated
 public class ChannelIdPreference extends Preference {
 
     private final AirshipChannelListener channelListener = new AirshipChannelListener() {
         @Override
         public void onChannelCreated(@NonNull String channelId) { notifyChangedMainThread(); }
 
-        @Override
-        public void onChannelUpdated(@NonNull String channelId) { notifyChangedMainThread(); }
     };
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)

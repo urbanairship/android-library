@@ -7,7 +7,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -121,7 +121,7 @@ public class JobDispatcher {
             dispatchPending();
             scheduler.schedule(context, jobInfo, delayMs);
         } catch (SchedulerException e) {
-            Logger.error(e, "Scheduler failed to schedule jobInfo");
+            UALog.e(e, "Scheduler failed to schedule jobInfo");
             synchronized (pendingJobInfos) {
                 pendingJobInfos.add(new Pending(jobInfo, delayMs));
             }
@@ -145,7 +145,7 @@ public class JobDispatcher {
     }
 
     protected void onStartJob(@NonNull JobInfo jobInfo, long runAttempt, @NonNull Consumer<JobResult> callback) {
-        Logger.verbose("Running job: %s, run attempt: %s", jobInfo, runAttempt);
+        UALog.v("Running job: %s, run attempt: %s", jobInfo, runAttempt);
 
         long rateLimitDelay = getRateLimitDelay(jobInfo);
         if (rateLimitDelay > 0) {
@@ -159,9 +159,13 @@ public class JobDispatcher {
         }
 
         jobRunner.run(jobInfo, (result) -> {
-            Logger.verbose("Job finished. Job info: %s, result: %s", jobInfo, result);
-            if (result == JobResult.RETRY && runAttempt >= RESCHEDULE_RETRY_COUNT) {
-                Logger.verbose("Job retry limit reached. Rescheduling for a later time. Job info: %s, work Id: %s", jobInfo);
+            UALog.v("Job finished. Job info: %s, result: %s", jobInfo, result);
+            boolean shouldRetry = result == JobResult.RETRY;
+            boolean shouldReschedule = runAttempt >= RESCHEDULE_RETRY_COUNT;
+            // Workaround for APPEND jobs, which we don't want to reschedule like other jobs.
+            boolean isAppend = jobInfo.getConflictStrategy() == JobInfo.APPEND;
+            if (shouldRetry && shouldReschedule && !isAppend) {
+                UALog.v("Job retry limit reached. Rescheduling for a later time. Job info: %s", jobInfo);
                 dispatch(jobInfo, RESCHEDULE_RETRY_DELAY_MS);
                 callback.accept(JobResult.FAILURE);
             } else {

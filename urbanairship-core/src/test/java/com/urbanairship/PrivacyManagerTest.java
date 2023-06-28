@@ -41,17 +41,17 @@ public class PrivacyManagerTest extends BaseTestCase {
 
     @Test
     public void testEnable() {
-        privacyManager.enable(PrivacyManager.FEATURE_CONTACTS, PrivacyManager.FEATURE_CHAT);
-        assertEquals(PrivacyManager.FEATURE_CONTACTS | PrivacyManager.FEATURE_CHAT, privacyManager.getEnabledFeatures());
+        privacyManager.enable(PrivacyManager.FEATURE_CONTACTS, PrivacyManager.FEATURE_PUSH);
+        assertEquals(PrivacyManager.FEATURE_CONTACTS | PrivacyManager.FEATURE_PUSH, privacyManager.getEnabledFeatures());
 
-        privacyManager.enable(PrivacyManager.FEATURE_CHAT);
-        assertEquals(PrivacyManager.FEATURE_CONTACTS | PrivacyManager.FEATURE_CHAT, privacyManager.getEnabledFeatures());
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+        assertEquals(PrivacyManager.FEATURE_CONTACTS | PrivacyManager.FEATURE_PUSH, privacyManager.getEnabledFeatures());
 
         privacyManager.enable(PrivacyManager.FEATURE_NONE);
-        assertEquals(PrivacyManager.FEATURE_CONTACTS | PrivacyManager.FEATURE_CHAT, privacyManager.getEnabledFeatures());
+        assertEquals(PrivacyManager.FEATURE_CONTACTS | PrivacyManager.FEATURE_PUSH, privacyManager.getEnabledFeatures());
 
         privacyManager.enable(PrivacyManager.FEATURE_ANALYTICS);
-        assertEquals(PrivacyManager.FEATURE_CONTACTS | PrivacyManager.FEATURE_CHAT | PrivacyManager.FEATURE_ANALYTICS, privacyManager.getEnabledFeatures());
+        assertEquals(PrivacyManager.FEATURE_CONTACTS | PrivacyManager.FEATURE_PUSH | PrivacyManager.FEATURE_ANALYTICS, privacyManager.getEnabledFeatures());
 
         privacyManager.enable(PrivacyManager.FEATURE_ALL);
         assertEquals(PrivacyManager.FEATURE_ALL, privacyManager.getEnabledFeatures());
@@ -59,16 +59,16 @@ public class PrivacyManagerTest extends BaseTestCase {
 
     @Test
     public void testDisable() {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS, PrivacyManager.FEATURE_CHAT);
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS, PrivacyManager.FEATURE_PUSH);
 
         privacyManager.disable(PrivacyManager.FEATURE_NONE);
-        assertEquals(PrivacyManager.FEATURE_CONTACTS | PrivacyManager.FEATURE_CHAT, privacyManager.getEnabledFeatures());
+        assertEquals(PrivacyManager.FEATURE_CONTACTS | PrivacyManager.FEATURE_PUSH, privacyManager.getEnabledFeatures());
 
         privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS);
-        assertEquals(PrivacyManager.FEATURE_CONTACTS | PrivacyManager.FEATURE_CHAT, privacyManager.getEnabledFeatures());
+        assertEquals(PrivacyManager.FEATURE_CONTACTS | PrivacyManager.FEATURE_PUSH, privacyManager.getEnabledFeatures());
 
         privacyManager.disable(PrivacyManager.FEATURE_CONTACTS);
-        assertEquals(PrivacyManager.FEATURE_CHAT , privacyManager.getEnabledFeatures());
+        assertEquals(PrivacyManager.FEATURE_PUSH , privacyManager.getEnabledFeatures());
 
         privacyManager.disable(PrivacyManager.FEATURE_ALL);
         assertEquals(PrivacyManager.FEATURE_NONE, privacyManager.getEnabledFeatures());
@@ -77,18 +77,18 @@ public class PrivacyManagerTest extends BaseTestCase {
     @Test
     public void testIsEnabled() {
         privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
-        assertFalse(privacyManager.isEnabled(PrivacyManager.FEATURE_CHAT));
+        assertFalse(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH));
         assertFalse(privacyManager.isEnabled(PrivacyManager.FEATURE_ALL));
         assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_NONE));
 
-        privacyManager.enable(PrivacyManager.FEATURE_CHAT);
-        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_CHAT));
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH));
         assertFalse(privacyManager.isEnabled(PrivacyManager.FEATURE_ALL));
         assertFalse(privacyManager.isEnabled(PrivacyManager.FEATURE_NONE));
-        assertFalse(privacyManager.isEnabled(PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS));
+        assertFalse(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_ANALYTICS));
 
         privacyManager.enable(PrivacyManager.FEATURE_ALL);
-        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_CHAT));
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH));
         assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_ANALYTICS));
         assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_ALL));
         assertFalse(privacyManager.isEnabled(PrivacyManager.FEATURE_NONE));
@@ -99,10 +99,10 @@ public class PrivacyManagerTest extends BaseTestCase {
     public void testIsAnyFeatureEnabled() {
         assertFalse(privacyManager.isAnyFeatureEnabled());
 
-        privacyManager.enable(PrivacyManager.FEATURE_CHAT);
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
         assertTrue(privacyManager.isAnyFeatureEnabled());
 
-        privacyManager.disable(PrivacyManager.FEATURE_CHAT);
+        privacyManager.disable(PrivacyManager.FEATURE_PUSH);
         assertFalse(privacyManager.isAnyFeatureEnabled());
     }
 
@@ -110,7 +110,7 @@ public class PrivacyManagerTest extends BaseTestCase {
     public void testIsAnyEnabled() {
         assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_ANALYTICS));
 
-        privacyManager.enable(PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_PUSH);
+        privacyManager.enable(PrivacyManager.FEATURE_IN_APP_AUTOMATION, PrivacyManager.FEATURE_PUSH);
         assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_ANALYTICS));
         assertTrue(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_PUSH));
     }
@@ -147,7 +147,6 @@ public class PrivacyManagerTest extends BaseTestCase {
 
     @Test
     public void testMigrateModuleEnableFlagsWhenDisabled() {
-        dataStore.put(PrivacyManager.CHAT_ENABLED_KEY, false);
         dataStore.put(PrivacyManager.PUSH_ENABLED_KEY, false);
         dataStore.put(PrivacyManager.ANALYTICS_ENABLED_KEY, false);
         dataStore.put(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY, false);
@@ -156,21 +155,19 @@ public class PrivacyManagerTest extends BaseTestCase {
         privacyManager.enable(PrivacyManager.FEATURE_ALL);
         privacyManager.migrateData();
 
-        assertFalse(dataStore.isSet(PrivacyManager.CHAT_ENABLED_KEY));
         assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY));
         assertFalse(dataStore.isSet(PrivacyManager.ANALYTICS_ENABLED_KEY));
         assertFalse(dataStore.isSet(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY));
         assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY));
 
-        assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION));
+        assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION));
 
         privacyManager.enable(PrivacyManager.FEATURE_ALL);
-        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION));
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION));
     }
 
     @Test
     public void testMigrateModuleEnableFlagsWhenEnabled() {
-        dataStore.put(PrivacyManager.CHAT_ENABLED_KEY, true);
         dataStore.put(PrivacyManager.PUSH_ENABLED_KEY, true);
         dataStore.put(PrivacyManager.ANALYTICS_ENABLED_KEY, true);
         dataStore.put(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true);
@@ -179,16 +176,15 @@ public class PrivacyManagerTest extends BaseTestCase {
         privacyManager.enable(PrivacyManager.FEATURE_NONE);
         privacyManager.migrateData();
 
-        assertFalse(dataStore.isSet(PrivacyManager.CHAT_ENABLED_KEY));
         assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY));
         assertFalse(dataStore.isSet(PrivacyManager.ANALYTICS_ENABLED_KEY));
         assertFalse(dataStore.isSet(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY));
         assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY));
 
-        assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION));
+        assertFalse(privacyManager.isAnyEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION));
 
         privacyManager.enable(PrivacyManager.FEATURE_ALL);
-        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_CHAT, PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION));
+        assertTrue(privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH, PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION));
     }
 
     @Test
@@ -197,8 +193,8 @@ public class PrivacyManagerTest extends BaseTestCase {
 
         privacyManager.addListener(listener);
 
-        privacyManager.enable(PrivacyManager.FEATURE_CHAT);
-        privacyManager.disable(PrivacyManager.FEATURE_CHAT);
+        privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+        privacyManager.disable(PrivacyManager.FEATURE_PUSH);
         privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ALL);
 
         verify(listener, times(3)).onEnabledFeaturesChanged();
@@ -211,15 +207,12 @@ public class PrivacyManagerTest extends BaseTestCase {
         privacyManager.addListener(listener);
 
         privacyManager.disable(PrivacyManager.FEATURE_ALL);
-        privacyManager.disable(PrivacyManager.FEATURE_CHAT);
+        privacyManager.disable(PrivacyManager.FEATURE_IN_APP_AUTOMATION);
         verify(listener, never()).onEnabledFeaturesChanged();
 
         privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ALL);
         privacyManager.enable(PrivacyManager.FEATURE_PUSH);
 
         verify(listener, times(1)).onEnabledFeaturesChanged();
-
     }
-
-
 }

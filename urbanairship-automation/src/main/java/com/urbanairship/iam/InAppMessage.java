@@ -5,7 +5,7 @@ package com.urbanairship.iam;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.automation.ScheduleData;
 import com.urbanairship.iam.banner.BannerDisplayContent;
 import com.urbanairship.iam.custom.CustomDisplayContent;
@@ -439,7 +439,7 @@ public class InAppMessage implements Parcelable, ScheduleData {
             try {
                 return fromJson(JsonValue.parseString(payload));
             } catch (JsonException e) {
-                Logger.error("InAppMessage - Invalid parcel: %s", e);
+                UALog.e("InAppMessage - Invalid parcel: %s", e);
                 return null;
             }
         }

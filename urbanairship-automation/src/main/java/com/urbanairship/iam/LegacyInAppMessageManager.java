@@ -5,7 +5,7 @@ import android.graphics.Color;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.ResultCallback;
 import com.urbanairship.UAirship;
@@ -145,7 +145,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                 try {
                     legacyInAppMessage = LegacyInAppMessage.fromPush(message);
                 } catch (IllegalArgumentException | JsonException e) {
-                    Logger.error(e, "LegacyInAppMessageManager - Unable to create in-app message from push payload");
+                    UALog.e(e, "LegacyInAppMessageManager - Unable to create in-app message from push payload");
                 }
 
                 if (legacyInAppMessage == null) {
@@ -159,7 +159,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
 
                 final String messageId = schedule.getId();
 
-                Logger.debug("Received a Push with an in-app message.");
+                UALog.d("Received a Push with an in-app message.");
 
                 final String pendingMessageId = preferenceDataStore.getString(PENDING_MESSAGE_ID, null);
 
@@ -169,7 +169,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                         @Override
                         public void onResult(@Nullable Boolean result) {
                             if (result != null && result) {
-                                Logger.debug("Pending in-app message replaced.");
+                                UALog.d("Pending in-app message replaced.");
                                 InAppReportingEvent.legacyReplaced(pendingMessageId, messageId)
                                                    .record(analytics);
                             }
@@ -198,7 +198,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
                     @Override
                     public void onResult(@Nullable Boolean result) {
                         if (result != null && result) {
-                            Logger.debug("Clearing pending in-app message due to directly interacting with the message's push notification.");
+                            UALog.d("Clearing pending in-app message due to directly interacting with the message's push notification.");
                             // Direct open event
                             InAppReportingEvent.legacyPushOpened(push.getSendId())
                                                .record(analytics);
@@ -290,7 +290,7 @@ public class LegacyInAppMessageManager extends AirshipComponent {
             return builder.build();
 
         } catch (Exception e) {
-            Logger.error(e, "Error during factory method to convert legacy in-app message.");
+            UALog.e(e, "Error during factory method to convert legacy in-app message.");
             return null;
         }
     }

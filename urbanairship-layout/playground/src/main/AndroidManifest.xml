@@ -28,6 +28,14 @@
         </activity>
 
         <activity
+            android:name=".OtherAndroidActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".OtherAppCompatActivity"
+            android:exported="false" />
+
+        <activity
             android:name="leakcanary.internal.activity.LeakActivity">
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"

@@ -5,7 +5,7 @@ package com.urbanairship.permission;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -36,7 +36,7 @@ public class SinglePermissionDelegate implements PermissionDelegate {
             }
             callback.accept(PermissionStatus.DENIED);
         } catch (Exception e) {
-            Logger.error(e, "Failed to get permission status.");
+            UALog.e(e, "Failed to get permission status.");
             callback.accept(PermissionStatus.NOT_DETERMINED);
         }
     }

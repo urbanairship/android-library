@@ -1,6 +1,6 @@
 package com.urbanairship.analytics.data;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.List;
@@ -67,10 +67,10 @@ public abstract class EventDao {
                 return;
             }
 
-            Logger.debug("Event database size exceeded. Deleting oldest session: %s", sessionId);
+            UALog.d("Event database size exceeded. Deleting oldest session: %s", sessionId);
 
             int deleted = deleteSession(sessionId);
-            Logger.debug("Deleted %d rows with session ID %s", deleted, sessionId);
+            UALog.d("Deleted %d rows with session ID %s", deleted, sessionId);
 
             if (deleted == 0) {
                 return;

@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
@@ -46,7 +46,7 @@ public abstract class PermissionResultReceiver extends ResultReceiver {
             PermissionStatus after = parseStatus(resultData, PromptPermissionAction.AFTER_PERMISSION_STATUS_RESULT_KEY);
             onResult(permission, before, after);
         } catch (JsonException e) {
-            Logger.error(e, "Failed to parse result");
+            UALog.e(e, "Failed to parse result");
         }
     }
 

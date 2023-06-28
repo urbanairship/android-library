@@ -2,7 +2,7 @@ package com.urbanairship.locale;
 
 import android.content.Context;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
 
 import java.util.List;
@@ -67,7 +67,7 @@ public class LocaleManager {
     void onDeviceLocaleChanged() {
         synchronized (this) {
             deviceLocale = ConfigurationCompat.getLocales(context.getResources().getConfiguration()).get(0);
-            Logger.debug("Device Locale changed. Locale: %s.", deviceLocale);
+            UALog.d("Device Locale changed. Locale: %s.", deviceLocale);
             if (getLocaleOverride() == null) {
                 notifyLocaleChanged(deviceLocale);
             }

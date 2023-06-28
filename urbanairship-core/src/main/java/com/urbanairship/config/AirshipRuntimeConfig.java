@@ -4,6 +4,7 @@ package com.urbanairship.config;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.UAirship;
+import com.urbanairship.http.RequestSession;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -19,6 +20,7 @@ public class AirshipRuntimeConfig {
     private final AirshipUrlConfigProvider urlConfigProvider;
     private final AirshipConfigOptions configOptions;
     private final PlatformProvider platformProvider;
+    private final RequestSession requestSession;
 
     /**
      * Default constructor.
@@ -29,10 +31,12 @@ public class AirshipRuntimeConfig {
      */
     public AirshipRuntimeConfig(@NonNull PlatformProvider platformProvider,
                                 @NonNull AirshipConfigOptions configOptions,
-                                @NonNull AirshipUrlConfigProvider urlConfigProvider) {
+                                @NonNull AirshipUrlConfigProvider urlConfigProvider,
+                                @NonNull RequestSession requestSession) {
         this.platformProvider = platformProvider;
         this.configOptions = configOptions;
         this.urlConfigProvider = urlConfigProvider;
+        this.requestSession = requestSession;
     }
 
     /**
@@ -65,4 +69,12 @@ public class AirshipRuntimeConfig {
         return configOptions;
     }
 
+    /**
+     * Gets the request ession.
+     * @return The request session.
+     */
+    @NonNull
+    public RequestSession getRequestSession() {
+        return requestSession;
+    }
 }

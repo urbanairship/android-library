@@ -8,7 +8,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.DataManager;
@@ -65,7 +65,7 @@ public class RemoteDataStore extends DataManager {
 
     @Override
     protected void onCreate(@NonNull SQLiteDatabase db) {
-        Logger.debug("Creating database");
+        UALog.d("Creating database");
         db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + " ("
                 + COLUMN_NAME_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + COLUMN_NAME_TYPE + " TEXT,"
@@ -107,7 +107,7 @@ public class RemoteDataStore extends DataManager {
 
         final SQLiteDatabase db = getWritableDatabase();
         if (db == null) {
-            Logger.error("RemoteDataStore - Unable to save remote data payloads.");
+            UALog.e("RemoteDataStore - Unable to save remote data payloads.");
             return false;
         }
 
@@ -119,7 +119,12 @@ public class RemoteDataStore extends DataManager {
                 value.put(COLUMN_NAME_TYPE, payload.getType());
                 value.put(COLUMN_NAME_TIMESTAMP, payload.getTimestamp());
                 value.put(COLUMN_NAME_DATA, payload.getData().toString());
-                value.put(COLUMN_NAME_METADATA, payload.getMetadata().toString());
+                if (payload.getRemoteDataInfo() != null) {
+                    value.put(COLUMN_NAME_METADATA, payload.getRemoteDataInfo().toJsonValue().toString());
+                } else {
+                    value.put(COLUMN_NAME_METADATA, JsonValue.NULL.toString());
+                }
+
                 try {
                     long id = db.insert(TABLE_NAME, null, value);
                     if (id == -1) {
@@ -127,14 +132,14 @@ public class RemoteDataStore extends DataManager {
                         return false;
                     }
                 } catch (SQLException e) {
-                    Logger.error(e, "RemoteDataStore - Unable to save remote data payload.");
+                    UALog.e(e, "RemoteDataStore - Unable to save remote data payload.");
                 }
             }
 
             db.setTransactionSuccessful();
             db.endTransaction();
         } catch (SQLException e) {
-            Logger.error(e, "RemoteDataStore - Unable to save remote data payloads.");
+            UALog.e(e, "RemoteDataStore - Unable to save remote data payloads.");
             return false;
         }
 
@@ -188,14 +193,10 @@ public class RemoteDataStore extends DataManager {
     /**
      * Deletes all payloads.
      *
-     * @return A boolean indicating success.
+     * @return Number of payloads deleted.
      */
-    boolean deletePayloads() {
-        boolean success = delete(TABLE_NAME, null, null) >= 0;
-        if (!success) {
-            Logger.error("RemoteDataStore - failed to delete payloads");
-        }
-        return success;
+    int deletePayloads() {
+        return delete(TABLE_NAME, null, null);
     }
 
     /**
@@ -212,15 +213,15 @@ public class RemoteDataStore extends DataManager {
         while (!cursor.isAfterLast()) {
 
             try {
-                RemoteDataPayload payload = RemoteDataPayload.newBuilder()
-                                                             .setType(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TYPE)))
-                                                             .setTimeStamp(cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_TIMESTAMP)))
-                                                             .setMetadata(JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_METADATA))).optMap())
-                                                             .setData(JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_DATA))).optMap())
-                                                             .build();
+                RemoteDataPayload payload = new RemoteDataPayload(
+                        cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TYPE)),
+                        cursor.getLong(cursor.getColumnIndex(COLUMN_NAME_TIMESTAMP)),
+                        JsonValue.parseString(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_DATA))).optMap(),
+                        parseRemoteDataInfo(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_METADATA)))
+                );
                 entries.add(payload);
             } catch (IllegalArgumentException | JsonException e) {
-                Logger.error(e, "RemoteDataStore - failed to retrieve payload");
+                UALog.e(e, "RemoteDataStore - failed to retrieve payload");
             }
 
             cursor.moveToNext();
@@ -229,4 +230,21 @@ public class RemoteDataStore extends DataManager {
         return entries;
     }
 
+    @Nullable
+    private RemoteDataInfo parseRemoteDataInfo(@Nullable String json) {
+        if (json == null) {
+            return null;
+        }
+
+        try {
+            JsonValue jsonValue = JsonValue.parseString(json);
+            if (jsonValue.isNull()) {
+                return null;
+            }
+            return new RemoteDataInfo(jsonValue);
+        } catch (JsonException e) {
+            // Can happen during migration
+            return null;
+        }
+    }
 }

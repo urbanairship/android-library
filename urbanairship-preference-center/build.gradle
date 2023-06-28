@@ -18,19 +18,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    sourceSets {
-        // Android Studio isn't a fan of shared srcDirs, so we'll only set up headless
-        // instrumentation testing if running from CLI/CI to prevent "Duplicate content root"
-        // warnings. When running via Android Studio, we'll only add sharedTest to the
-        // androidTest sourceSets so instrumentation can still be run normally.
-        if (!System.getProperties().containsKey('idea.active')) {
-            testDebug.java.srcDirs += 'src/sharedTestDebug/java'
-            androidTestDebug.java.srcDirs += 'src/sharedTestDebug/java'
-        } else {
-            androidTestDebug.java.srcDirs += 'src/sharedTestDebug/java'
-        }
-    }
-
     testOptions {
         unitTests.includeAndroidResources = true
     }
@@ -45,80 +32,82 @@ android {
 tasks.withType(KotlinCompile).configureEach {
     it.kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
-        freeCompilerArgs += [ "-Xopt-in=kotlin.RequiresOptIn" ]
+        freeCompilerArgs += [ "-opt-in=kotlin.RequiresOptIn" ]
     }
 }
 
 allOpen {
-    annotation "com.urbanairship.preferencecenter.testing.OpenForTesting"
+    annotation "com.urbanairship.annotation.OpenForTesting"
 }
 
 dependencies {
     api project(':urbanairship-core')
 
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.kotlinVersion"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.kotlinCoroutinesVersion"
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlinx.coroutines.core)
 
     // AndroidX
-    implementation "androidx.core:core:$rootProject.androidxCoreVersion"
-    implementation "androidx.constraintlayout:constraintlayout:$rootProject.androidxConstraintLayoutVersion"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$rootProject.androidxLifeCycleVersion"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.androidxLifeCycleVersion"
-    implementation "androidx.lifecycle:lifecycle-common-java8:$rootProject.androidxLifeCycleVersion"
+    implementation(libs.androidx.core)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.lifecycle.runtimektx)
+    implementation(libs.androidx.lifecycle.viewmodelktx)
+    implementation(libs.androidx.lifecycle.common.java8)
 
     // Support libraries
-    implementation "androidx.appcompat:appcompat:$rootProject.androidxAppCompatVersion"
-    implementation "com.google.android.material:material:$rootProject.materialVersion"
+    implementation(libs.androidx.appcompat)
+    implementation(libs.google.material)
 
     // Tests (Shared)
 
     // debugImplementation is used here so that the empty Activity that FragmentScenario relies on
     // is accessible by the target test process.
-    debugImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
-    debugImplementation "androidx.fragment:fragment-testing:$rootProject.androidxFragmentVersion"
+    debugImplementation(libs.androidx.test.core)
+    debugImplementation(libs.androidx.fragment.testing)
 
     // Unit Tests
     testImplementation project(':urbanairship-test')
-    testImplementation "junit:junit:$rootProject.junitVersion"
-    testImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
-    testImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
-    testImplementation "org.robolectric:robolectric:$rootProject.robolectricVersion"
-    testImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
-    testImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
-    testImplementation "androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"
-    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$rootProject.kotlinxCorutinesTest"
-    testImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.mockitoKotlinVersion"
-    testImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
-    testImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
-    testImplementation "app.cash.turbine:turbine:$rootProject.turbineVersion"
-
-    // Instrumentation Tests
-    androidTestImplementation "androidx.test:core:$rootProject.androidxTestCoreVersion"
-    androidTestImplementation "androidx.test:runner:$rootProject.androidxTestRunnerVersion"
-    androidTestImplementation "androidx.test:rules:$rootProject.androidxTestRulesVersion"
-
-    androidTestImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:$rootProject.kotlinxCorutinesTest"){
-        // https://github.com/Kotlin/kotlinx.coroutines/issues/2023
-        exclude group: "org.jetbrains.kotlinx", module: "kotlinx-coroutines-debug"
-    }
-
-    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.androidxEspressoVersion"
-    androidTestImplementation("androidx.test.espresso:espresso-contrib:$rootProject.androidxEspressoVersion"){
+    testImplementation(libs.junit)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.robolectric.core)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.test.espresso.contrib) {
         // https://github.com/android/android-test/issues/861
         exclude group: 'org.checkerframework', module: 'checker'
     }
-    androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.androidxEspressoVersion"
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.google.truth)
+    testImplementation(libs.androidx.test.ext.truth)
+    testImplementation(libs.turbine)
+    testImplementation(libs.mockk)
 
-    androidTestImplementation "androidx.test.ext:junit:$rootProject.androidxTestJunitVersion"
-    androidTestImplementation "androidx.test.ext:truth:$rootProject.androidxTestTruthVersion"
-    androidTestImplementation "com.google.truth:truth:$rootProject.googleTruthVersion"
+    // Instrumentation Tests
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
 
-    androidTestImplementation "org.robolectric:annotations:$rootProject.robolectricVersion"
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 
-    androidTestImplementation "org.mockito:mockito-core:$rootProject.mockitoVersion"
-    androidTestImplementation "org.mockito:mockito-android:$rootProject.mockitoVersion"
-    androidTestImplementation "org.mockito.kotlin:mockito-kotlin:$rootProject.mockitoKotlinVersion"
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.test.espresso.contrib) {
+        // https://github.com/android/android-test/issues/861
+        exclude group: 'org.checkerframework', module: 'checker'
+    }
+    androidTestImplementation(libs.androidx.test.espresso.intents)
+
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.google.truth)
+    androidTestImplementation(libs.androidx.test.ext.truth)
+
+    androidTestImplementation(libs.robolectric.annotations)
+
+    androidTestImplementation(libs.mockito.core)
+    androidTestImplementation(libs.mockito.android)
+    androidTestImplementation(libs.mockito.kotlin)
+
 }
 
 

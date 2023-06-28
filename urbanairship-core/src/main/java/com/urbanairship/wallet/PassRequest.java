@@ -8,20 +8,22 @@ import android.os.Looper;
 import android.text.TextUtils;
 
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.UrlBuilder;
 import com.urbanairship.http.Request;
+import com.urbanairship.http.RequestAuth;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestFactory;
+import com.urbanairship.http.RequestSession;
 import com.urbanairship.http.Response;
-import com.urbanairship.http.ResponseParser;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAHttpStatusUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -56,7 +58,7 @@ public class PassRequest {
     private final Collection<Field> headers;
     private final String tag;
     private final String externalId;
-    private final RequestFactory requestFactory;
+    private final RequestSession session;
     private final Executor requestExecutor;
 
     private CancelableCallback requestCallback;
@@ -65,10 +67,10 @@ public class PassRequest {
      * Constructor available for testing.
      *
      * @param builder The pass request builder instance.
-     * @param requestFactory An HTTP request factory instance.
+     * @param session An HTTP request session instance.
      * @param requestExecutor A thread executor instance.
      */
-    PassRequest(@NonNull Builder builder, @NonNull RequestFactory requestFactory, @NonNull Executor requestExecutor) {
+    PassRequest(@NonNull Builder builder, @NonNull RequestSession session, @NonNull Executor requestExecutor) {
         this.apiKey = builder.apiKey;
         this.userName = builder.userName;
         this.templateId = builder.templateId;
@@ -76,7 +78,7 @@ public class PassRequest {
         this.headers = builder.headers;
         this.tag = builder.tag;
         this.externalId = builder.externalId;
-        this.requestFactory = requestFactory;
+        this.session = session;
         this.requestExecutor = requestExecutor;
     }
 
@@ -86,7 +88,7 @@ public class PassRequest {
      * @param builder The pass request builder instance.
      */
     PassRequest(@NonNull Builder builder) {
-        this(builder, RequestFactory.DEFAULT_REQUEST_FACTORY, DEFAULT_REQUEST_EXECUTOR);
+        this(builder, UAirship.shared().getRuntimeConfig().getRequestSession(), DEFAULT_REQUEST_EXECUTOR);
     }
 
     /**
@@ -128,11 +130,11 @@ public class PassRequest {
         Runnable requestRunnable = new Runnable() {
             @Override
             public void run() {
-                Logger.info("Requesting pass %s", templateId);
+                UALog.i("Requesting pass %s", templateId);
                 Uri url = getPassUrl();
 
                 if (url == null) {
-                    Logger.error( "PassRequest - Invalid pass URL");
+                    UALog.e( "PassRequest - Invalid pass URL");
                     requestCallback.setResult(-1, null);
                     return;
                 }
@@ -160,32 +162,36 @@ public class PassRequest {
                                       .putOpt(EXTERNAL_ID_KEY, externalId)
                                       .build();
 
-                Request httpRequest = requestFactory.createRequest()
-                                                    .setOperation("POST", url)
-                                                    .setAirshipUserAgent(UAirship.shared().getRuntimeConfig())
-                                                    .setHeader(API_REVISION_HEADER_NAME, API_REVISION)
-                                                    .setRequestBody(body.toString(), "application/json");
+                Map<String, String> headers = new HashMap<>();
+                headers.put(API_REVISION_HEADER_NAME, API_REVISION);
 
-                if (userName != null) {
-                    httpRequest.setCredentials(userName, apiKey);
+                RequestAuth auth = null;
+                if (userName != null && apiKey != null) {
+                    auth = new RequestAuth.BasicAuth(userName, apiKey);
                 }
 
-                Logger.debug("Requesting pass %s with payload: %s", url, body);
+                Request httpRequest = new Request(
+                        url,
+                        "POST",
+                        auth,
+                        new RequestBody.Json(body),
+                        headers
+                );
+
+
+                UALog.d("Requesting pass %s with payload: %s", url, body);
                 try {
-                    Response<Pass> response = httpRequest.execute(new ResponseParser<Pass>() {
-                        @Override
-                        public Pass parseResponse(int status, @Nullable Map<String, List<String>> headers, @Nullable String responseBody) throws Exception {
-                            if (UAHttpStatusUtil.inSuccessRange(status)) {
-                                JsonValue json = JsonValue.parseString(responseBody);
-                                return Pass.parsePass(json);
-                            }
-                            return null;
+                    Response<Pass> response = session.execute(httpRequest, (status, headers1, responseBody) -> {
+                        if (UAHttpStatusUtil.inSuccessRange(status)) {
+                            JsonValue json = JsonValue.parseString(responseBody);
+                            return Pass.parsePass(json);
                         }
+                        return null;
                     });
-                    Logger.debug("Pass %s request finished with status %s", templateId, response.getStatus());
+                    UALog.d("Pass %s request finished with status %s", templateId, response.getStatus());
                     requestCallback.setResult(response.getStatus(), response.getResult());
                 } catch (RequestException e) {
-                    Logger.error(e, "PassRequest - Request failed");
+                    UALog.e(e, "PassRequest - Request failed");
                     requestCallback.setResult(-1, null);
                 }
 

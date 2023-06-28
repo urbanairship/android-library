@@ -12,7 +12,7 @@ import android.os.Build;
 import android.provider.Settings;
 import android.util.Xml;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
@@ -496,7 +496,7 @@ public class NotificationChannelCompat implements JsonSerializable {
             }
         }
 
-        Logger.error("Unable to deserialize notification channel: %s", jsonValue);
+        UALog.e("Unable to deserialize notification channel: %s", jsonValue);
 
         return null;
     }
@@ -516,7 +516,7 @@ public class NotificationChannelCompat implements JsonSerializable {
         try {
             return parseChannels(context, parser);
         } catch (Exception e) {
-            Logger.error(e, "Failed to parse channels");
+            UALog.e(e, "Failed to parse channels");
         } finally {
             parser.close();
         }
@@ -537,7 +537,7 @@ public class NotificationChannelCompat implements JsonSerializable {
                 int importance = configParser.getInt(IMPORTANCE_KEY, -1);
 
                 if (UAStringUtil.isEmpty(name) || UAStringUtil.isEmpty(id) || importance == -1) {
-                    Logger.error("Invalid notification channel. Missing name (%s), id (%s), or importance (%s)", name, id, importance);
+                    UALog.e("Invalid notification channel. Missing name (%s), id (%s), or importance (%s)", name, id, importance);
                     continue;
                 }
 

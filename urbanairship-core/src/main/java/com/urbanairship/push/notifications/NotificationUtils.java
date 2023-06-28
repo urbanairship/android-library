@@ -4,12 +4,11 @@ package com.urbanairship.push.notifications;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.util.ImageUtils;
 
 import java.net.URL;
@@ -46,7 +45,7 @@ public class NotificationUtils {
     @Nullable
     public static Bitmap fetchBigImage(@NonNull final Context context, @NonNull final URL url) {
 
-        Logger.debug("Fetching notification image at URL: %s", url);
+        UALog.d("Fetching notification image at URL: %s", url);
         DisplayMetrics dm = context.getResources().getDisplayMetrics();
 
         // Since notifications do not take up the entire screen, request 3/4 the longest device dimension
@@ -66,10 +65,10 @@ public class NotificationUtils {
         try {
             return future.get(BIG_PICTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException e) {
-            Logger.error("Failed to create big picture style, unable to fetch image: %s", e);
+            UALog.e("Failed to create big picture style, unable to fetch image: %s", e);
         } catch (TimeoutException e) {
             future.cancel(true);
-            Logger.error("Big picture took longer than %s seconds to fetch.", BIG_PICTURE_TIMEOUT_SECONDS);
+            UALog.e("Big picture took longer than %s seconds to fetch.", BIG_PICTURE_TIMEOUT_SECONDS);
         }
 
         return null;

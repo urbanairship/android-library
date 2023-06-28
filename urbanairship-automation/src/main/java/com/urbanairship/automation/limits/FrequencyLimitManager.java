@@ -6,7 +6,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteException;
 
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.PendingResult;
 import com.urbanairship.automation.limits.storage.ConstraintEntity;
 import com.urbanairship.automation.limits.storage.FrequencyLimitDao;
@@ -97,7 +97,7 @@ public class FrequencyLimitManager {
                     };
                     pendingResult.setResult(checker);
                 } catch (Exception e) {
-                    Logger.error("Failed to fetch constraints.");
+                    UALog.e("Failed to fetch constraints.");
                     pendingResult.setResult(null);
                 }
             }
@@ -146,7 +146,7 @@ public class FrequencyLimitManager {
                     dao.delete(constraintEntityMap.keySet());
                     pendingResult.setResult(true);
                 } catch (Exception e) {
-                    Logger.error(e, "Failed to update constraints");
+                    UALog.e(e, "Failed to update constraints");
                     pendingResult.setResult(false);
                 }
             }
@@ -250,7 +250,7 @@ public class FrequencyLimitManager {
             try {
                 dao.insert(occurrence);
             } catch (SQLiteException e) {
-                Logger.verbose(e);
+                UALog.v(e);
             }
         }
     }

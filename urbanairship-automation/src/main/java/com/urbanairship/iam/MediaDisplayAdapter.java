@@ -4,10 +4,7 @@ package com.urbanairship.iam;
 
 import android.content.Context;
 
-import com.urbanairship.Logger;
-import com.urbanairship.UAirship;
 import com.urbanairship.iam.assets.Assets;
-import com.urbanairship.js.UrlAllowList;
 import com.urbanairship.util.Network;
 
 import androidx.annotation.CallSuper;
@@ -38,17 +35,6 @@ public abstract class MediaDisplayAdapter extends ForegroundDisplayAdapter {
     @PrepareResult
     public int onPrepare(@NonNull Context context, @NonNull Assets assets) {
         this.assets = assets;
-        if (mediaInfo == null) {
-            return OK;
-        }
-
-        boolean isAllowed = isAllowed(mediaInfo.getUrl());
-
-        if (!isAllowed && !MediaInfo.TYPE_IMAGE.equals(mediaInfo.getType())) {
-            Logger.error("URL not allowed. Unable to load: %s", mediaInfo.getUrl());
-            return CANCEL;
-        }
-
         return OK;
     }
 
@@ -88,16 +74,6 @@ public abstract class MediaDisplayAdapter extends ForegroundDisplayAdapter {
     @Nullable
     public Assets getAssets() {
         return assets;
-    }
-
-    /**
-     * Checks if a URL is allowed.
-     *
-     * @param url The URL.
-     * @return {@code true} if allowed, otherwise {@code false}.
-     */
-    private static boolean isAllowed(String url) {
-        return UAirship.shared().getUrlAllowList().isAllowed(url, UrlAllowList.SCOPE_OPEN_URL);
     }
 
 }

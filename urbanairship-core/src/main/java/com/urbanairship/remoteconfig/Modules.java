@@ -65,7 +65,12 @@ interface Modules {
      */
     String PREFERENCE_CENTER_MODULE = "preference_center";
 
+    /**
+     * Experiment module.
+     */
+    String EXPERIMENT_MODULE = "experiment";
+
     List<String> ALL_MODULES = Arrays.asList(PUSH_MODULE, ANALYTICS_MODULE, MESSAGE_CENTER,
             IN_APP_MODULE, AUTOMATION_MODULE, NAMED_USER_MODULE, LOCATION_MODULE, CHANNEL_MODULE,
-            CHAT_MODULE, CONTACT_MODULE, PREFERENCE_CENTER_MODULE);
+            CHAT_MODULE, CONTACT_MODULE, PREFERENCE_CENTER_MODULE, EXPERIMENT_MODULE);
 }

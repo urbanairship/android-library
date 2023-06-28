@@ -2,6 +2,113 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.0.1, June 22, 2023
+Patch release that improves image loading for Stories and Scenes, and hardens image loading against potential crashes.
+
+### Changes
+- Adjust image loading for Scenes and Surveys to improve performance
+- Avoid potential crashes when loading many images at once in a Scene or Survey
+
+## Version 17.0.0, June 15, 2023
+Major SDK release that adds support for Stories, In-App experiences downstream of a sequence in Journeys, and improves SDK auth.
+
+The Airship SDK now requires `compileSdk` version 33 (Android 13) or higher.
+
+### Changes
+- Added support for Stories, a new format for Scenes
+- Added support for In-App experiences downstream of a sequence in Journeys
+- Updated minimum compile SDK to 33
+- Removed Accengage, Location, and Chat modules
+- Deprecated `urbanairship-preference` module. Apps should either use `urbanairship-preference-center` module or maintain a copy of the current preferences from the preference module.
+- Deprecated `urbanairship-ads-identifier` module
+- Video improvements for Scenes
+- Log listener has been replaced by a new log handler interface
+- Channel listener has been updated to only listen for channel create, channel update has been removed
+- Added new `PushNotificationStatus` API that provides the current opt-in status for push notifications
+- Improved SDK auth
+- Default In-App Automation display interval has been changed from 30 seconds to 0 seconds
+- The SDK Allow list has been updated to allow opening all URLs by default if neither `urlAllowList` or `urlAllowListScopeOpen` have been set in the config. Media URLs for In-App experiences are no longer checked on the allow list. Youtube URLs have been removed from the default `urlAllowListScopeOpen`.
+
+See the [Migration Guide](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-16-17.md) for further details.
+
+## Version 16.11.1, June 14, 2023
+Patch release that fixes app deep links that use the `uairship://` prefix. Any `uairship://` deep links that are not handled by Airship directly will now be delivered to the `DeepLinkListener`.
+
+### Changes
+- Allow the `DeepLinkListener` to process unhandled `uairship://` deep links
+
+## Version 16.11.0, June 12, 2023
+Minor release that adds new config option `autoPauseInAppAutomationOnLaunch` to always pause IAA during app launch. 
+
+### Changes
+- Added `autoPauseInAppAutomationOnLaunch` config option
+
+## Version 16.10.0, June 2, 2023
+
+Minor release that adds support for Android Live Updates, which bring functionality similar to iOS Live Activities to the Android platform.
+Live Updates make it easier to keep information updated in real time instead of receiving multiple notifications from the same app for things like a game’s latest score, food delivery status, or rideshare arrivals.
+
+### Changes
+- Added new `urbanairship-live-update` module.
+
+## Version 17.0.0-Beta, May 26, 2023
+
+Beta release for SDK 17.0.0. This release brings several breaking changes. This version is not suitable for a production app, but we encourage testing out the new APIs and providing us feedback so we can make changes before the final SDK 17 release.
+
+### Changes
+- Removed Accengage, Location, and Chat modules
+- Deprecated `urbanairship-preference` module. Apps should either use `urbanairship-preference-center` module or maintain a copy of the current preferences from the preference module.
+- Deprecated `urbanairship-ads-identifier` module
+- Video improvements for Scenes & Surveys
+- Log listener has been removed and replaced by a log handler.
+- Channel listener has been updated to only listen for channel create, channel update has been removed
+- Added new PushNotificationStatus and PushNotificationStatus flow that provides the current status of push notifications
+
+## Version 16.9.3, May 24, 2023
+
+Patch release that includes fixes for Preference Center, Scenes & Surveys, and Message Center.
+
+### Changes
+- Fixed a bug that could cause tag actions to not be run on the first page of a Scene.
+- Fixed an issue with window resizing in Scenes and Surveys to prevent the keyboard from covering the input field.
+- Fixed Preference Center contact subscription chips to avoid duplicate chips when scrolling a long Preference Center.
+- Fixed `sms:`, `tel:` and `mailto:` link handling in Message Center, when using custom HTML and `<a>` tags.
+
+## Version 16.9.2 April 6, 2023
+
+Patch release that fixes Preference Center subscription list state when switching named users. Apps
+using Preference Center that apply multiple named user IDs during an app session should update.
+
+### Changes
+- Fixed a bug that could cause locally cached subscription list states to be in an incorrect state when switching named users.
+
+## Version 16.9.1 March 24, 2023
+
+Patch release that fixing Contact update merging order, improves Scene/Survey accessibility and reporting.
+
+### Changes
+- Fixed Contact update merge order, resolving a Preference Center bug that could lead to unexpected subscription states in some circumstances.
+- Improved Scene/Survey accessibility and fixed a reporting bug related to form display events.
+- Removed library group restriction annotation on `AirshipConfigOptions.Builder.setInitialConfigUrl`.
+
+## Version 16.9.0 March 1, 2023
+
+Minor release that adds `ForegroundNotificationDisplayPredicate` on `PushManager`, a new `isPromptForPermissionOnUserNotificationsEnabled` config flag, and other improvements/fixes.
+
+### Changes
+- Added a new `ForegroundNotificationDisplayPredicate` on `PushManager`, to allow apps to control whether notifications will be posted for pushes received in while the app is in the foreground.
+- Added a new optional `isPromptForPermissionOnUserNotificationsEnabled` config flag (default: `true`), to control whether the SDK will automatically prompt for notification permission when calling `PushManager.setUserNotificationsEnabled(true)`.
+- Improved French localized strings.
+- Fixed vertical alignment for button text with icons in In-App Messages.
+- Fixed an Android 13 notification permission prompt regression in v16.8.1.
+- Added support for transparent WebView backgrounds in HTML In-App Automations.
+
+## Version 16.8.1 February 9, 2023
+Patch release to prevent prompting for user notifications until after onAirshipReady is called.
+
+### Changes
+- Prevent user notifications prompt before onAirshipReady.
+
 ## Version 16.8.0 November 2, 2022
 Minor release that adds support for custom Airship domains.
 

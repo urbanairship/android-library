@@ -1,0 +1,99 @@
+name: Publish Docs
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The tag to publish'
+        required: true
+        type: string
+
+  workflow_call:
+    inputs:
+      version:
+        description: 'The tag to publish'
+        required: true
+        type: string
+    secrets:
+      GCP_SA_KEY:
+        description: 'The GCP service account key'
+        required: true
+
+jobs:
+  prepare-docs:
+    if: github.repository == 'urbanairship/android-library'
+    runs-on: ubuntu-latest
+    steps:
+      # Download pre-packaged docs artifacts if they were published by the release workflow.
+      - name: Download pre-packaged docs artifacts
+        id: download_docs
+        uses: actions/download-artifact@v3
+        continue-on-error: true
+        with:
+          name: packaged-docs-${{ inputs.version }}
+          path: build/docs
+
+      # Fallback to building if artifacts were not previously uploaded for the given version.
+      # NOTE: All the steps below this point will be skipped if the download step succeeds.
+      - name: Checkout repo to build docs
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        uses: actions/checkout@v3
+        with:
+          ref: refs/tags/${{ inputs.version }}
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Copy CI gradle.properties
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        run: |
+          mkdir -p ~/.gradle
+          cp .github/ci-gradle.properties ~/.gradle/gradle.properties
+
+      - name: Verify Version
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        run: |
+          VERSION=${{ inputs.version }}
+          if [[ $(./gradlew -q getVersion) = $VERSION ]]; then exit 0 ; else exit 1; fi
+
+      - name: Build docs packages
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        run: |
+          ./gradlew packageDocs --stacktrace
+
+      - name: Upload packaged docs artifacts
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: packaged-docs-${{ inputs.version }}
+          retention-days: 1
+          path: |
+            build/docs/${{ inputs.version }}.tar.gz
+            build/docs/${{ inputs.version }}-kdoc.tar.gz
+
+  upload-docs:
+    if: github.repository == 'urbanairship/android-library'
+    runs-on: ubuntu-latest
+    needs: prepare-docs
+    steps:
+      - name: Download packaged docs artifacts
+        id: download_docs
+        uses: actions/download-artifact@v3
+        with:
+          name: packaged-docs-${{ inputs.version }}
+          path: build/docs
+
+      - name: Setup GCP Auth
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Upload docs
+        env:
+            VERSION: ${{ inputs.version }}
+        run: |
+          gsutil cp build/docs/$VERSION.tar.gz gs://ua-web-ci-prod-docs-transfer/libraries/android/$VERSION.tar.gz
+          gsutil cp build/docs/$VERSION-kdoc.tar.gz gs://ua-web-ci-prod-docs-transfer/libraries/android-kotlin/$VERSION.tar.gz

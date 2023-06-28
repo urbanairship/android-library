@@ -5,7 +5,7 @@ package com.urbanairship.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 
 import androidx.annotation.IntRange;
@@ -62,7 +62,7 @@ public class NotificationIdGenerator {
     public static void setRange(@IntRange(from = 0, to = MAX_RANGE) int newRange) {
 
         if (newRange > MAX_RANGE) {
-            Logger.error("The maximum number of notifications allowed is %s. Limiting alert id range to conform.", MAX_RANGE);
+            UALog.e("The maximum number of notifications allowed is %s. Limiting alert id range to conform.", MAX_RANGE);
             newRange = MAX_RANGE;
         }
 
@@ -103,17 +103,17 @@ public class NotificationIdGenerator {
         //store a new next id: increment by one, unless we're already at the maximum
         int nextId = ++id;
         if (nextId < start + range) {
-            Logger.verbose("Incrementing notification ID count");
+            UALog.v("Incrementing notification ID count");
             putInt(NEXT_ID_KEY, nextId);
         }
 
         //in which case, cycle
         else {
-            Logger.verbose("Resetting notification ID count");
+            UALog.v("Resetting notification ID count");
             putInt(NEXT_ID_KEY, start);
         }
 
-        Logger.verbose("Notification ID: %s", id);
+        UALog.v("Notification ID: %s", id);
 
         return id;
     }

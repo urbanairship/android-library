@@ -7,7 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 
 import java.util.concurrent.Executor;
@@ -209,7 +209,7 @@ public class ActionRunRequest {
         try {
             semaphore.acquire();
         } catch (InterruptedException ex) {
-            Logger.error("Failed to run action with arguments %s", arguments);
+            UALog.e("Failed to run action with arguments %s", arguments);
             Thread.currentThread().interrupt();
             return ActionResult.newErrorResult(ex);
         }
@@ -340,7 +340,7 @@ public class ActionRunRequest {
             if (entry == null) {
                 return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_ACTION_NOT_FOUND);
             } else if (entry.getPredicate() != null && !entry.getPredicate().apply(arguments)) {
-                Logger.info("Action %s will not be run. Registry predicate rejected the arguments: %s", actionName, arguments);
+                UALog.i("Action %s will not be run. Registry predicate rejected the arguments: %s", actionName, arguments);
                 return ActionResult.newEmptyResultWithStatus(ActionResult.STATUS_REJECTED_ARGUMENTS);
             } else {
                 return entry.getActionForSituation(situation).run(arguments);

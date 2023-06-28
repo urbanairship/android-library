@@ -5,14 +5,18 @@ package com.urbanairship.iam.banner;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
-import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.urbanairship.Logger;
+import androidx.annotation.CallSuper;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
+
+import com.urbanairship.UALog;
 import com.urbanairship.Predicate;
 import com.urbanairship.app.ActivityListener;
-import com.urbanairship.app.FilteredActivityListener;
 import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.automation.R;
 import com.urbanairship.iam.ButtonInfo;
@@ -29,12 +33,6 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import androidx.annotation.CallSuper;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.view.ViewCompat;
 
 /**
  * Banner display adapter.
@@ -54,11 +52,11 @@ public class BannerAdapter extends MediaDisplayAdapter {
         public boolean apply(Activity activity) {
             try {
                 if (getContainerView(activity) == null) {
-                    Logger.error("BannerAdapter - Unable to display in-app message. No view group found.");
+                    UALog.e("BannerAdapter - Unable to display in-app message. No view group found.");
                     return false;
                 }
             } catch (Exception e) {
-                Logger.error("Failed to find container view.", e);
+                UALog.e("Failed to find container view.", e);
                 return false;
             }
 
@@ -137,7 +135,7 @@ public class BannerAdapter extends MediaDisplayAdapter {
     @MainThread
     @Override
     public void onDisplay(@NonNull Context context, @NonNull DisplayHandler displayHandler) {
-        Logger.info("BannerAdapter - Displaying in-app message.");
+        UALog.i("BannerAdapter - Displaying in-app message.");
 
         this.displayHandler = displayHandler;
         InAppActivityMonitor.shared(context).addActivityListener(listener);

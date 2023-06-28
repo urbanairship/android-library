@@ -5,8 +5,8 @@ package com.urbanairship.android.layout.event;
 import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.android.layout.reporting.FormInfo;
-import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
@@ -16,29 +16,25 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public abstract class ReportingEvent extends Event {
+public abstract class ReportingEvent {
 
     public enum ReportType {
         PAGE_VIEW,
-        PAGE_SWIPE,
+        PAGE_SWIPE, // Horizontal swipes only. Used for Stories and regular Pagers.
+        PAGE_GESTURE, // Up/Down swipes only, also taps on page regions. Used for Stories.
+        PAGE_ACTION, // Pager automated actions. Used for Stories.
         BUTTON_TAP,
         OUTSIDE_DISMISS,
         BUTTON_DISMISS,
         FORM_RESULT,
-        FORM_DISPLAY
+        FORM_DISPLAY,
     }
 
     @NonNull
     private final ReportType reportType;
 
     protected ReportingEvent(@NonNull ReportType reportType) {
-        super(EventType.REPORTING_EVENT);
         this.reportType = reportType;
-    }
-
-    @NonNull
-    public ReportType getReportType() {
-        return reportType;
     }
 
     /**
@@ -123,15 +119,23 @@ public abstract class ReportingEvent extends Event {
 
         @NonNull
         private final String buttonId;
+        @Nullable
+        private final JsonValue reportingMetadata;
 
-        public ButtonTap(@NonNull String buttonId) {
+        public ButtonTap(@NonNull String buttonId, @Nullable JsonValue reportingMetadata) {
             super(ReportType.BUTTON_TAP);
             this.buttonId = buttonId;
+            this.reportingMetadata = reportingMetadata;
         }
 
         @NonNull
         public String getButtonId() {
             return buttonId;
+        }
+
+        @Nullable
+        public JsonValue getReportingMetadata() {
+            return reportingMetadata;
         }
 
         @Override
@@ -280,6 +284,78 @@ public abstract class ReportingEvent extends Event {
                     '}';
         }
 
+    }
+
+    public static class PageGesture extends PagerReportingEvent {
+
+        @NonNull
+        private final String gestureId;
+        @Nullable
+        private final JsonValue reportingMetadata;
+
+        public PageGesture(
+                @NonNull String gestureId,
+                @Nullable JsonValue reportingMetadata,
+                @NonNull PagerData pagerData
+        ) {
+            super(ReportType.PAGE_GESTURE, pagerData);
+            this.gestureId = gestureId;
+            this.reportingMetadata = reportingMetadata;
+        }
+
+        @NonNull
+        public String getGestureId() {
+            return gestureId;
+        }
+
+        @Nullable
+        public JsonValue getReportingMetadata() {
+            return reportingMetadata;
+        }
+
+        @Override
+        public String toString() {
+            return "PageGesture{" +
+                    "gestureId='" + gestureId + '\'' +
+                    ", reportingMetadata=" + reportingMetadata +
+                    '}';
+        }
+    }
+
+    public static class PageAction extends PagerReportingEvent {
+
+        @NonNull
+        private final String actionId;
+        @Nullable
+        private final JsonValue reportingMetadata;
+
+        public PageAction(
+                @NonNull String actionId,
+                @Nullable JsonValue reportingMetadata,
+                @NonNull PagerData pagerData
+        ) {
+            super(ReportType.PAGE_ACTION, pagerData);
+            this.actionId = actionId;
+            this.reportingMetadata = reportingMetadata;
+        }
+
+        @NonNull
+        public String getActionId() {
+            return actionId;
+        }
+
+        @Nullable
+        public JsonValue getReportingMetadata() {
+            return reportingMetadata;
+        }
+
+        @Override
+        public String toString() {
+            return "PageAction{" +
+                    "actionId='" + actionId + '\'' +
+                    ", reportingMetadata=" + reportingMetadata +
+                    '}';
+        }
     }
 
     private abstract static class DismissReportingEvent extends ReportingEvent {

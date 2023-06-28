@@ -6,12 +6,13 @@ import android.content.Context;
 
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestAirshipRuntimeConfig;
-import com.urbanairship.TestRequest;
+import com.urbanairship.TestRequestSession;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipUrlConfig;
+import com.urbanairship.http.RequestAuth;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestFactory;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
@@ -25,13 +26,14 @@ import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static junit.framework.TestCase.assertEquals;
-import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
 public class InboxApiClientTest {
@@ -41,8 +43,7 @@ public class InboxApiClientTest {
     private User user;
     private PreferenceDataStore dataStore;
 
-    private TestRequest testRequest;
-    private RequestFactory mockRequestFactory;
+    private TestRequestSession requestSession = new TestRequestSession();
     private TestAirshipRuntimeConfig runtimeConfig;
 
     private InboxApiClient inboxApiClient;
@@ -58,23 +59,17 @@ public class InboxApiClientTest {
         // Set a valid user
         user.setUser("fakeUserId", "password");
 
-        testRequest = new TestRequest();
-
-        mockRequestFactory = Mockito.mock(RequestFactory.class);
-        when(mockRequestFactory.createRequest()).thenReturn(testRequest);
-
         runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder()
                 .setDeviceUrl("https://example.com")
                 .build());
 
-        inboxApiClient = new InboxApiClient(runtimeConfig, mockRequestFactory);
+        inboxApiClient = new InboxApiClient(runtimeConfig, requestSession);
     }
 
     @Test
     public void testUpdateMessagesSucceeds() throws RequestException, JsonException {
-        testRequest.responseStatus = 200;
-        testRequest.responseBody = "{ \"messages\": [ {\"message_id\": \"some_mesg_id\"," +
+        String responseBody = "{ \"messages\": [ {\"message_id\": \"some_mesg_id\"," +
                 "\"message_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/\"," +
                 "\"message_body_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/body/\"," +
                 "\"message_read_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/read/\"," +
@@ -82,15 +77,18 @@ public class InboxApiClientTest {
                 "\"title\": \"Message title\", \"extra\": { \"some_key\": \"some_value\"}," +
                 "\"content_type\": \"text/html\", \"content_size\": \"128\"}]}";
 
-        Response<JsonList> response = inboxApiClient.fetchMessages(user, "channelId", 300L);
+        requestSession.addResponse(200, responseBody);
+
+        Response<JsonList> response = inboxApiClient.fetchMessages(user, "channelId",  "some last modified");
 
         assertEquals(200, response.getStatus());
-        assertEquals("GET", testRequest.getRequestMethod());
-        assertEquals(300L, testRequest.getIfModifiedSince());
-        assertEquals("https://example.com/api/user/fakeUserId/messages/", testRequest.getUrl().toString());
-        assertEquals("channelId", testRequest.getRequestHeaders().get("X-UA-Channel-ID"));
-        assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
-        assertEquals(JsonValue.parseString(testRequest.responseBody).optMap().opt("messages").getList(), response.getResult());
+        assertEquals("GET", requestSession.getLastRequest().getMethod());
+        assertEquals("https://example.com/api/user/fakeUserId/messages/", requestSession.getLastRequest().getUrl().toString());
+        assertEquals("channelId", requestSession.getLastRequest().getHeaders().get("X-UA-Channel-ID"));
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
+        assertEquals("some last modified", requestSession.getLastRequest().getHeaders().get("If-Modified-Since"));
+
+        assertEquals(JsonValue.parseString(responseBody).optMap().opt("messages").getList(), response.getResult());
     }
 
     /**
@@ -99,12 +97,12 @@ public class InboxApiClientTest {
     @Test(expected = RequestException.class)
     public void testNullUrlUpdateMessages() throws RequestException {
         runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
-        inboxApiClient.fetchMessages(user, "channelId", 0);
+        inboxApiClient.fetchMessages(user, "channelId", null);
     }
 
     @Test
     public void testSyncDeletedMessageStateSucceeds() throws JsonException, RequestException {
-        testRequest.responseStatus = 200;
+        requestSession.addResponse(200);
 
         List<JsonValue> reportings = new ArrayList<>();
         reportings.add(JsonValue.parseString("{\"message_id\":\"testId1\"}"));
@@ -117,11 +115,11 @@ public class InboxApiClientTest {
         Response<Void> response = inboxApiClient.syncDeletedMessageState(user, "channelId", reportings);
 
         assertEquals(200, response.getStatus());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/user/fakeUserId/messages/delete/", testRequest.getUrl().toString());
-        assertEquals("channelId", testRequest.getRequestHeaders().get("X-UA-Channel-ID"));
-        assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
-        assertEquals(expectedJsonMap, JsonValue.parseString(testRequest.getRequestBody()));
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
+        assertEquals("https://example.com/api/user/fakeUserId/messages/delete/", requestSession.getLastRequest().getUrl().toString());
+        assertEquals("channelId", requestSession.getLastRequest().getHeaders().get("X-UA-Channel-ID"));
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
+        assertEquals(new RequestBody.Json(expectedJsonMap), requestSession.getLastRequest().getBody());
     }
 
     @Test(expected = RequestException.class)
@@ -132,7 +130,7 @@ public class InboxApiClientTest {
 
     @Test
     public void testSyncReadMessageStateSucceeds() throws JsonException, RequestException {
-        testRequest.responseStatus = 200;
+        requestSession.addResponse(200);
 
         List<JsonValue> reportings = new ArrayList<>();
         reportings.add(JsonValue.parseString("{\"message_id\":\"testId1\"}"));
@@ -145,11 +143,11 @@ public class InboxApiClientTest {
         Response<Void> response = inboxApiClient.syncReadMessageState(user, "channelId", reportings);
 
         assertEquals(200, response.getStatus());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/user/fakeUserId/messages/unread/", testRequest.getUrl().toString());
-        assertEquals("channelId", testRequest.getRequestHeaders().get("X-UA-Channel-ID"));
-        assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
-        assertEquals(expectedJsonMap, JsonValue.parseString(testRequest.getRequestBody()));
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
+        assertEquals("https://example.com/api/user/fakeUserId/messages/unread/", requestSession.getLastRequest().getUrl().toString());
+        assertEquals("channelId", requestSession.getLastRequest().getHeaders().get("X-UA-Channel-ID"));
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
+        assertEquals(new RequestBody.Json(expectedJsonMap), requestSession.getLastRequest().getBody());
     }
 
     @Test(expected = RequestException.class)
@@ -160,17 +158,18 @@ public class InboxApiClientTest {
 
     @Test
     public void testCreateUserAndroidChannelsSucceeds() throws RequestException {
-        testRequest.responseStatus = 200;
-        testRequest.responseBody = "{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }";
+
+        requestSession.addResponse(200, "{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }");
         runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM);
 
         Response<UserCredentials> response = inboxApiClient.createUser("channelId");
 
         assertEquals(200, response.getStatus());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/user/", testRequest.getUrl().toString());
-        assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
-        assertEquals("{\"android_channels\":[\"channelId\"]}", testRequest.getRequestBody());
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
+        assertEquals("https://example.com/api/user/", requestSession.getLastRequest().getUrl().toString());
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
+        assertEquals("{\"android_channels\":[\"channelId\"]}", requestSession.getLastRequest().getBody().getContent());
+        assertEquals(new RequestAuth.ChannelTokenAuth("channelId"), requestSession.getLastRequest().getAuth());
 
         UserCredentials userCredentials = response.getResult();
         assertEquals("someUserId", userCredentials.getUsername());
@@ -179,17 +178,16 @@ public class InboxApiClientTest {
 
     @Test
     public void testCreateUserAmazonChannelsSucceeds() throws RequestException {
-        testRequest.responseStatus = 200;
-        testRequest.responseBody = "{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }";
+        requestSession.addResponse(200, "{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }");
         runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
 
         Response<UserCredentials> response = inboxApiClient.createUser("channelId");
 
         assertEquals(200, response.getStatus());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/user/", testRequest.getUrl().toString());
-        assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
-        assertEquals("{\"amazon_channels\":[\"channelId\"]}", testRequest.getRequestBody());
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
+        assertEquals("https://example.com/api/user/", requestSession.getLastRequest().getUrl().toString());
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
+        assertEquals("{\"amazon_channels\":[\"channelId\"]}", requestSession.getLastRequest().getBody().getContent());
 
         UserCredentials userCredentials = response.getResult();
         assertEquals("someUserId", userCredentials.getUsername());
@@ -205,30 +203,30 @@ public class InboxApiClientTest {
 
     @Test
     public void testUpdateUserAndroidChannelsSucceeds() throws RequestException {
-        testRequest.responseStatus = 200;
+        requestSession.addResponse(200);
         runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM);
 
         Response<Void> response = inboxApiClient.updateUser(user,"channelId");
 
         assertEquals(200, response.getStatus());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/user/fakeUserId/", testRequest.getUrl().toString());
-        assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
-        assertEquals("{\"android_channels\":{\"add\":[\"channelId\"]}}", testRequest.getRequestBody());
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
+        assertEquals("https://example.com/api/user/fakeUserId/", requestSession.getLastRequest().getUrl().toString());
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
+        assertEquals("{\"android_channels\":{\"add\":[\"channelId\"]}}", requestSession.getLastRequest().getBody().getContent());
     }
 
     @Test
     public void testUpdateUserAmazonChannelsSucceeds() throws RequestException {
-        testRequest.responseStatus = 200;
+        requestSession.addResponse(200);
         runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
 
         Response<Void> response = inboxApiClient.updateUser(user,"channelId");
 
         assertEquals(200, response.getStatus());
-        assertEquals("POST", testRequest.getRequestMethod());
-        assertEquals("https://example.com/api/user/fakeUserId/", testRequest.getUrl().toString());
-        assertEquals("application/vnd.urbanairship+json; version=3;", testRequest.getRequestHeaders().get("Accept"));
-        assertEquals("{\"amazon_channels\":{\"add\":[\"channelId\"]}}", testRequest.getRequestBody());
+        assertEquals("POST", requestSession.getLastRequest().getMethod());
+        assertEquals("https://example.com/api/user/fakeUserId/", requestSession.getLastRequest().getUrl().toString());
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
+        assertEquals("{\"amazon_channels\":{\"add\":[\"channelId\"]}}", requestSession.getLastRequest().getBody().getContent());
     }
 
     @Test(expected = RequestException.class)

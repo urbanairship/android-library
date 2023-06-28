@@ -5,7 +5,7 @@ package com.urbanairship.iam.html;
 import android.net.Uri;
 import android.webkit.WebView;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageWebViewClient;
 import com.urbanairship.javascript.NativeBridge;
@@ -63,13 +63,13 @@ public abstract class HtmlWebViewClient extends InAppMessageWebViewClient {
                     JsonValue value = JsonValue.parseString(Uri.decode(components[1]));
                     onMessageDismissed(value);
                 } catch (JsonException e) {
-                    Logger.error("Unable to decode message resolution from JSON.", e);
+                    UALog.e("Unable to decode message resolution from JSON.", e);
                 }
             } else {
-                Logger.error("Unable to decode message resolution, invalid path");
+                UALog.e("Unable to decode message resolution, invalid path");
             }
         } else {
-            Logger.error("Unable to decode message resolution, missing path");
+            UALog.e("Unable to decode message resolution, missing path");
         }
     }
 }

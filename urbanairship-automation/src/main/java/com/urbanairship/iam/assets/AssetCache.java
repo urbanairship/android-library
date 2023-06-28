@@ -6,7 +6,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.storage.StorageManager;
 
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.util.FileUtils;
 
 import java.io.File;
@@ -93,14 +93,14 @@ class AssetCache {
     private File getAssetsDirectory(@NonNull String scheduleId) {
         if (!storageDirectory.exists()) {
             if (!storageDirectory.mkdirs()) {
-                Logger.error("Failed to create asset storage directory.");
+                UALog.e("Failed to create asset storage directory.");
             }
         }
 
         File assetDirectory = new File(storageDirectory, scheduleId);
         if (!assetDirectory.exists()) {
             if (!assetDirectory.mkdirs()) {
-                Logger.error("Failed to create assets directory.");
+                UALog.e("Failed to create assets directory.");
             }
         }
 
@@ -109,7 +109,7 @@ class AssetCache {
                 try {
                     storageManager.setCacheBehaviorGroup(assetDirectory, true);
                 } catch (IOException e) {
-                    Logger.error(e, "Failed to set cache behavior on directory: %s", assetDirectory.getAbsoluteFile());
+                    UALog.e(e, "Failed to set cache behavior on directory: %s", assetDirectory.getAbsoluteFile());
                 }
             }
         }

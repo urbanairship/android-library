@@ -5,7 +5,7 @@ package com.urbanairship.push;
 import android.content.Context;
 
 import com.urbanairship.Autopilot;
-import com.urbanairship.Logger;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 
 import java.util.concurrent.CountDownLatch;
@@ -134,9 +134,9 @@ public abstract class PushProviderBridge {
                     future.get();
                 }
             } catch (TimeoutException e) {
-                Logger.error("Application took too long to process push. App may get closed.");
+                UALog.e("Application took too long to process push. App may get closed.");
             } catch (Exception e) {
-                Logger.error(e, "Failed to wait for notification");
+                UALog.e(e, "Failed to wait for notification");
             }
 
             if (callback != null) {
@@ -163,7 +163,7 @@ public abstract class PushProviderBridge {
             try {
                 countDownLatch.await();
             } catch (InterruptedException e) {
-                Logger.error(e, "Failed to wait for push.");
+                UALog.e(e, "Failed to wait for push.");
                 Thread.currentThread().interrupt();
             }
         }
