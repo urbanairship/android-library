@@ -5,6 +5,9 @@ import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS
+import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 import androidx.annotation.RestrictTo
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -14,7 +17,6 @@ import androidx.lifecycle.lifecycleScope
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ModalPresentation
 import com.urbanairship.android.layout.ModelFactoryException
-import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.ThomasListener
 import com.urbanairship.android.layout.display.DisplayArgsLoader
 import com.urbanairship.android.layout.display.DisplayArgsLoader.LoadException
@@ -81,8 +83,15 @@ public class ModalActivity : AppCompatActivity() {
             setOrientationLock(placement)
             if (placement.shouldIgnoreSafeArea()) {
                 WindowCompat.setDecorFitsSystemWindows(window, false)
-                window.statusBarColor = R.color.system_bar_scrim_dark
-                window.navigationBarColor = R.color.system_bar_scrim_dark
+
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+                    window.addFlags(FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS or
+                          FLAG_LAYOUT_NO_LIMITS or FLAG_LAYOUT_IN_SCREEN
+                    )
+                }
+
+                window.statusBarColor = android.R.color.transparent
+                window.navigationBarColor = android.R.color.transparent
             }
 
             val modelEnvironment = viewModel.getOrCreateEnvironment(
