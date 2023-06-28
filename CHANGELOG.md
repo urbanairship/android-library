@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.0.2, June 28, 2023
+Patch release that improves Scene and Survey rendering for layouts that ignore safe areas.
+
+### Changes
+- Improved rendering of Scenes and Surveys when ignoring safe areas
+
 ## Version 17.0.1, June 22, 2023
 Patch release that improves image loading for Stories and Scenes, and hardens image loading against potential crashes.
 
