@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.0.3, July 12, 2023
+Patch release that fixes a pair of issues with Scenes and Surveys, and adds a new `getPushProviderType()` method on `PushManager`. Apps that make use of Scenes or Surveys should update.
+
+### Changes
+- Added a `getPushProviderType()` method on `PushManager`, to allow the current push provider to be determined at runtime.
+- Fixed a rendering issue with Scene and Survey buttons when using more than one line of text for the label.
+- Fixed a potential crash that could occur when displaying a modal or fullscreen Scene or Survey.
+
 ## Version 17.0.2, June 28, 2023
 Patch release that improves Scene and Survey rendering for layouts that ignore safe areas.
 
