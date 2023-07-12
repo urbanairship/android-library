@@ -143,7 +143,7 @@ public class ModalActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        if (isFinishing) {
+        if (isFinishing && ::loader.isInitialized) {
             loader.dispose()
         }
     }

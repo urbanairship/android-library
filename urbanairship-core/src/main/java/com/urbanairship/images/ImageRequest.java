@@ -1,7 +1,6 @@
 package com.urbanairship.images;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.drawable.AnimatedImageDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -22,7 +21,6 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.concurrent.Executor;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -147,35 +145,29 @@ abstract class ImageRequest {
                 imageView.setImageDrawable(null);
             }
 
-            EXECUTOR.execute(new Runnable() {
-                @Override
-                public void run() {
-                    if (pendingRequest.isCancelled()) {
+            EXECUTOR.execute(() -> {
+                if (pendingRequest.isCancelled()) {
+                    return;
+                }
+
+                try {
+                    final Drawable drawable = fetchDrawableOnBackground();
+                    if (drawable == null) {
                         return;
                     }
 
-                    try {
-                        final Drawable drawable = fetchDrawableOnBackground();
-
-                        if (drawable != null) {
-                            pendingRequest.addOnRun(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (pendingRequest.isCancelled()) {
-                                        return;
-                                    }
-
-                                    boolean result = applyDrawable(drawable);
-                                    onFinish(imageView, result);
-                                }
-                            });
-
-                            pendingRequest.run();
+                    pendingRequest.addOnRun(() -> {
+                        if (pendingRequest.isCancelled()) {
+                            return;
                         }
 
-                    } catch (IOException e) {
-                        UALog.d(e, "Unable to fetch bitmap");
-                    }
+                        boolean result = applyDrawable(drawable);
+                        onFinish(imageView, result);
+                    });
+
+                    pendingRequest.run();
+                } catch (Exception e) {
+                    UALog.d(e, "Unable to fetch bitmap");
                 }
             });
         }
@@ -220,7 +212,6 @@ abstract class ImageRequest {
         }
         imageCache.cacheDrawable(getCacheKey(), result.drawable, result.bytes);
         return result.drawable;
-
     }
 
     @MainThread
