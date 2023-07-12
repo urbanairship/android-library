@@ -193,6 +193,31 @@ public class PushManagerTest extends BaseTestCase {
         assertFalse(pushManager.isOptIn());
     }
 
+    @Test
+    public void testGetPushProviderType() {
+        pushManager.init();
+
+        // FCM
+        when(mockPushProvider.getDeliveryType()).thenReturn(PushProvider.FCM_DELIVERY_TYPE);
+        assertEquals(PushProviderType.FCM, pushManager.getPushProviderType());
+
+        // ADM
+        when(mockPushProvider.getDeliveryType()).thenReturn(PushProvider.ADM_DELIVERY_TYPE);
+        assertEquals(PushProviderType.ADM, pushManager.getPushProviderType());
+
+        // HMS
+        when(mockPushProvider.getDeliveryType()).thenReturn(PushProvider.HMS_DELIVERY_TYPE);
+        assertEquals(PushProviderType.HMS, pushManager.getPushProviderType());
+    }
+
+    @Test
+    public void testGetPushProviderTypeNoProvider() {
+        pushManager.init();
+        when(mockPushProviders.getBestProvider(anyInt())).thenReturn(null);
+
+        assertEquals(PushProviderType.NONE, pushManager.getPushProviderType());
+    }
+
     /**
      * Test Airship notification action button groups are available
      */
