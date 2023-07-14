@@ -15,8 +15,10 @@ import androidx.core.text.TextUtilsCompat
 import androidx.core.view.descendants
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
+import com.urbanairship.android.layout.view.MediaView
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.android.layout.view.ScoreView
+import com.urbanairship.android.layout.view.WebViewView
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.CheckableViewAdapter
 import kotlinx.coroutines.FlowPreview
@@ -136,6 +138,7 @@ internal fun MotionEvent.isWithinClickableDescendant(view: View): Boolean {
     return if (view is ViewGroup) {
         view.descendants
             .filter { it.isClickable }
+            .filter { it is MediaView || it is WebViewView }
             .any(::isTouchWithin)
     } else {
         isTouchWithin(view)

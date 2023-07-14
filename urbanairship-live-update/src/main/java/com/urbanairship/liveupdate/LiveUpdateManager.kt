@@ -132,6 +132,12 @@ internal constructor(
     }
 
     /**
+     * Returns a list with all active live updates
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public suspend fun getAllActiveUpdates(): List<LiveUpdate> = registrar.getAllActiveUpdates()
+
+    /**
      * Cancels the notification associated with the given Live Update [name].
      *
      * This will not end tracking the Live Update and is a no-op for live updates that use custom

@@ -16,8 +16,8 @@ class PushProviderPreference : Preference {
 
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {}
 
-    override fun getSummary(): CharSequence? {
+    override fun getSummary(): CharSequence {
         super.getSummary()
-        return UAirship.shared().pushManager.pushProvider?.deliveryType
+        return UAirship.shared().pushManager.pushProviderType.name
     }
 }

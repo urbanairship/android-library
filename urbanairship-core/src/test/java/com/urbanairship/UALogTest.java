@@ -19,7 +19,7 @@ public class UALogTest extends BaseTestCase {
         final Throwable error = new IllegalArgumentException("Oh no");
         final ArrayList<String> called = new ArrayList<>();
 
-        LogHandler myLogger = (tag, logLevel, throwable, message) -> {
+        AirshipLogHandler myLogger = (tag, logLevel, throwable, message) -> {
             Assert.assertEquals(logLevel, Log.ERROR);
             Assert.assertEquals(error, throwable);
             Assert.assertEquals(errorMessage, message.invoke());
@@ -45,7 +45,7 @@ public class UALogTest extends BaseTestCase {
         final String prefixedMessage = String.format("%s - %s", getClass().getSimpleName(), rawMessage);
         final ArrayList<String> called = new ArrayList<>();
 
-        LogHandler myLogger = (tag, logLevel, throwable, message) -> {
+        AirshipLogHandler myLogger = (tag, logLevel, throwable, message) -> {
             Assert.assertNull(throwable);
 
             if (logLevel == Log.DEBUG || logLevel == Log.VERBOSE) {

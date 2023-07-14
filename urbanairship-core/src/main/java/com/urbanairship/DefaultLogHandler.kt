@@ -5,7 +5,7 @@ import android.util.Log
 /**
  * Default log handling. Sends all logs to `android.util.Log`.
  */
-public class DefaultLogHandler : LogHandler {
+public class DefaultLogHandler : AirshipLogHandler {
 
     override fun log(tag: String, logLevel: Int, throwable: Throwable?, message: () -> String) {
         if (throwable == null) {

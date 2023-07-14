@@ -159,6 +159,7 @@ public final class LayoutUtils {
             .add(strokeColor)
             .build());
         button.setCornerRadius((int) dpToPx(context, borderRadius));
+        button.setSingleLine(false);
     }
 
     public static void applyLabelModel(@NonNull TextView textView, @NonNull LabelModel label) {

@@ -1057,6 +1057,16 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
+     * Gets the {@link PushProviderType} corresponding to the current push provider.
+     *
+     * @return The active {@link PushProviderType}.
+     */
+    @NonNull
+    public PushProviderType getPushProviderType() {
+        return PushProviderType.Companion.from(getPushProvider());
+    }
+
+    /**
      * Gets the push provider.
      *
      * @return The available push provider.

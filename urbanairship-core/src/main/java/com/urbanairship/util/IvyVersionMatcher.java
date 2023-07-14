@@ -6,12 +6,14 @@ import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Ivy version matcher.
@@ -33,8 +35,11 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
     private static final String START_PATTERN = String.format(Locale.US, "([\\%s\\%s\\%s])", START_INCLUSIVE, START_EXCLUSIVE, START_INFINITE);
     private static final String END_PATTERN = String.format(Locale.US, "([\\%s\\%s\\%s])", END_INCLUSIVE, END_EXCLUSIVE, END_INFINITE);
 
-    private static final String VERSION_PATTERN = "([0-9]+)(\\.[0-9]+)?(\\.[0-9]+)?";
-
+    private static final String VERSION_NUMBER_PATTERN = "([0-9]+)(\\.[0-9]+)?(\\.[0-9]+)";
+    // Ignored capture group, because we don't care about the qualifiers for version matching.
+    private static final String VERSION_QUALIFIER_PATTERN = "(?:-[a-zA-Z0-9]+)";
+    // Matches an optional version number, and optional (ignored) qualifier.
+    private static final String VERSION_PATTERN = String.format("%s?%s?", VERSION_NUMBER_PATTERN, VERSION_QUALIFIER_PATTERN);
     private static final String VERSION_RANGE_PATTERN = String.format(Locale.US, "^(%s(%s)?)%s((%s)?%s)", START_PATTERN, VERSION_PATTERN, RANGE_SEPARATOR, VERSION_PATTERN, END_PATTERN);
     private static final String SUB_VERSION_PATTERN = "^(.*)\\+$";
     private static final String EXACT_VERSION_PATTERN = "^" + VERSION_PATTERN + "$";
@@ -85,7 +90,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
         if (versionString == null) {
             return false;
         }
-        return predicate.apply(versionString.trim());
+        return predicate.apply(normalizeVersion(versionString));
     }
 
     /**
@@ -95,7 +100,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
      * @return A predicate or null if the constraint is not a valid subversion.
      */
     @Nullable
-    private static Predicate<String> parseSubVersionConstraint(String constraint) {
+    private static Predicate<String> parseSubVersionConstraint(@NonNull String constraint) {
         Matcher matcher = SUB_VERSION.matcher(constraint);
         if (!matcher.matches()) {
             return null;
@@ -103,25 +108,31 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
 
         // +
         if ("+".equals(constraint)) {
-            return new Predicate<String>() {
-                @Override
-                public boolean apply(String object) {
-                    return true;
-                }
-            };
+            return ignored -> true;
         }
 
-        final String number = matcher.groupCount() >= 1 ? matcher.group(1) : null;
-        return new Predicate<String>() {
-            @Override
-            public boolean apply(@NonNull String version) {
-                if (number == null) {
-                    return false;
-                }
-
-                return version.startsWith(number);
+        final String number = normalizeVersion(matcher.groupCount() >= 1 ? matcher.group(1) : null);
+        return otherVersion -> {
+            if (number == null) {
+                return false;
             }
+            return otherVersion.startsWith(number);
         };
+    }
+
+    /** Trims whitespace and removes version qualifiers, to prepare a version for comparison. */
+    @VisibleForTesting
+    static String normalizeVersion(@Nullable String version) {
+        if (version == null) {
+            return null;
+        }
+
+        String trimmed = version.trim();
+        int index = trimmed.indexOf('-');
+        return index > 0
+                // Drop the qualifier, and add back a trailing plus, if we had one.
+                ? trimmed.substring(0, index) + (trimmed.endsWith("+") ? "+" : "")
+                : trimmed;
     }
 
     /**
@@ -131,7 +142,7 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
      * @return A predicate or null if the constraint is not a valid version range.
      */
     @Nullable
-    private static Predicate<String> parseVersionRangeConstraint(String constraint) {
+    private static Predicate<String> parseVersionRangeConstraint(@NonNull String constraint) {
         Matcher matcher = VERSION_RANGE.matcher(constraint);
         if (!matcher.matches()) {
             return null;
@@ -168,49 +179,45 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
             return null;
         }
 
-        return new Predicate<String>() {
-            @Override
-            public boolean apply(@NonNull String object) {
-
-                Version version;
-                try {
-                    version = new Version(object);
-                } catch (NumberFormatException e) {
-                    return false;
-                }
-
-                if (endToken != null && endVersion != null) {
-                    switch (endToken) {
-                        case END_INCLUSIVE:
-                            if (version.compareTo(endVersion) > 0) {
-                                return false;
-                            }
-                            break;
-                        case END_EXCLUSIVE:
-                            if (version.compareTo(endVersion) >= 0) {
-                                return false;
-                            }
-                            break;
-                    }
-                }
-
-                if (startToken != null && startVersion != null) {
-                    switch (startToken) {
-                        case START_INCLUSIVE:
-                            if (version.compareTo(startVersion) < 0) {
-                                return false;
-                            }
-                            break;
-                        case START_EXCLUSIVE:
-                            if (version.compareTo(startVersion) <= 0) {
-                                return false;
-                            }
-                            break;
-                    }
-                }
-
-                return true;
+        return otherVersion -> {
+            Version version;
+            try {
+                version = new Version(otherVersion);
+            } catch (NumberFormatException e) {
+                return false;
             }
+
+            if (endToken != null && endVersion != null) {
+                switch (endToken) {
+                    case END_INCLUSIVE:
+                        if (version.compareTo(endVersion) > 0) {
+                            return false;
+                        }
+                        break;
+                    case END_EXCLUSIVE:
+                        if (version.compareTo(endVersion) >= 0) {
+                            return false;
+                        }
+                        break;
+                }
+            }
+
+            if (startToken != null && startVersion != null) {
+                switch (startToken) {
+                    case START_INCLUSIVE:
+                        if (version.compareTo(startVersion) < 0) {
+                            return false;
+                        }
+                        break;
+                    case START_EXCLUSIVE:
+                        if (version.compareTo(startVersion) <= 0) {
+                            return false;
+                        }
+                        break;
+                }
+            }
+
+            return true;
         };
     }
 
@@ -221,17 +228,13 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
      * @return A predicate or null if the constraint is not a exact version constraint
      */
     @Nullable
-    private static Predicate<String> parseExactVersionConstraint(@NonNull final String constraint) {
-        if (!EXACT_VERSION.matcher(constraint).matches()) {
+    private static Predicate<String> parseExactVersionConstraint(@NonNull String constraint) {
+        String normalized = normalizeVersion(constraint);
+        if (!EXACT_VERSION.matcher(normalized).matches()) {
             return null;
         }
 
-        return new Predicate<String>() {
-            @Override
-            public boolean apply(String object) {
-                return constraint.equals(object);
-            }
-        };
+        return otherVersion -> normalized.equals(normalizeVersion(otherVersion));
     }
 
     @NonNull
@@ -248,10 +251,10 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
         final int[] versionComponent = new int[] { 0, 0, 0 };
         final String version;
 
-        public Version(String version) {
-            this.version = version;
+        public Version(@NonNull String version) {
+            this.version = normalizeVersion(version);
 
-            String[] components = version.split("\\.");
+            String[] components = this.version.split("\\.");
             for (int i = 0; i < 3; i++) {
                 if (components.length <= i) {
                     break;
@@ -285,12 +288,12 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
 
         IvyVersionMatcher that = (IvyVersionMatcher) o;
 
-        return constraint != null ? constraint.equals(that.constraint) : that.constraint == null;
+        return Objects.equals(constraint, that.constraint);
     }
 
     @Override
     public int hashCode() {
-        return constraint != null ? constraint.hashCode() : 0;
+        return Objects.hashCode(constraint);
     }
 
 }
