@@ -6,7 +6,7 @@ import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.automation.Audience;
+import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.automation.InAppAutomation;
 import com.urbanairship.automation.Schedule;
 import com.urbanairship.automation.ScheduleDelay;
@@ -147,7 +147,7 @@ public class ScheduleAction extends Action {
 
         JsonValue audienceJson = jsonMap.opt(AUDIENCE_KEY).optMap().get(AUDIENCE_KEY);
         if (audienceJson != null) {
-            builder.setAudience(Audience.fromJson(audienceJson));
+            builder.setAudience(AudienceSelector.Companion.fromJson(audienceJson));
         }
 
         try {

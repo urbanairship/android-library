@@ -11,6 +11,7 @@ import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.iam.events.InAppReportingEvent;
 import com.urbanairship.json.JsonValue;
 
@@ -34,6 +35,7 @@ public class DisplayHandler implements Parcelable {
     private final boolean isReportingAllowed;
     private final JsonValue campaigns;
     private final JsonValue reportingContext;
+    private final ExperimentResult experimentResult;
 
     /**
      * Default constructor.
@@ -42,17 +44,20 @@ public class DisplayHandler implements Parcelable {
      * @param isReportingAllowed If reporting is allowed or not.
      * @param campaigns The campaigns info.
      * @param reportingContext The reporting context.
+     * @param experimentResult The experiment result.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public DisplayHandler(@NonNull String scheduleId,
                           boolean isReportingAllowed,
                           @NonNull JsonValue campaigns,
-                          @NonNull JsonValue reportingContext) {
+                          @NonNull JsonValue reportingContext,
+                          @Nullable ExperimentResult experimentResult) {
         this.scheduleId = scheduleId;
         this.isReportingAllowed = isReportingAllowed;
         this.campaigns = campaigns;
         this.reportingContext = reportingContext;
+        this.experimentResult = experimentResult;
     }
 
     @Override
@@ -61,6 +66,7 @@ public class DisplayHandler implements Parcelable {
         dest.writeInt(isReportingAllowed ? 1 : 0);
         dest.writeString(campaigns.toString());
         dest.writeString(reportingContext.toString());
+        dest.writeString(experimentResult == null ? JsonValue.NULL.getString() : experimentResult.toJsonValue().toString());
     }
 
     @Override
@@ -84,10 +90,16 @@ public class DisplayHandler implements Parcelable {
                 boolean isReportingAllowed = in.readInt() != 0;
                 JsonValue campaigns = JsonValue.parseString(in.readString());
                 JsonValue reportingContext = JsonValue.parseString(in.readString());
-                return new DisplayHandler(scheduleId == null ? "" : scheduleId, isReportingAllowed, campaigns, reportingContext);
+                JsonValue experimentResultJSON = JsonValue.parseString(in.readString());
+                ExperimentResult experimentResult = null;
+                if (!experimentResultJSON.isNull()) {
+                    experimentResult = ExperimentResult.Companion.fromJson(experimentResultJSON.optMap());
+                }
+
+                return new DisplayHandler(scheduleId == null ? "" : scheduleId, isReportingAllowed, campaigns, reportingContext, experimentResult);
             } catch (Exception e) {
                 UALog.e(e, "failed to create display handler");
-                return new DisplayHandler("", false, JsonValue.NULL, JsonValue.NULL);
+                return new DisplayHandler("", false, JsonValue.NULL, JsonValue.NULL, null);
             }
         }
 
@@ -158,6 +170,7 @@ public class DisplayHandler implements Parcelable {
 
             event.setCampaigns(campaigns)
                  .setReportingContext(reportingContext)
+                 .setExperimentResult(experimentResult)
                  .record(analytics);
         }
     }

@@ -97,7 +97,7 @@ public class AudienceTest {
         assertEquals(predicate, audience.getVersionPredicate());
     }
 
-    @Test (expected = JsonException.class)
+    @Test (expected = NullPointerException.class)
     public void testNotValidMissBehavior() throws JsonException {
         Audience original = Audience.newBuilder()
                                     .addLanguageTag("en-US")

@@ -4,16 +4,20 @@ import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestApplication
+import com.urbanairship.audience.DeviceInfoProviderImpl
 import com.urbanairship.experiment.ExperimentManager.Companion.PAYLOAD_TYPE
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
+import junit.framework.Assert.assertTrue
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -34,15 +38,27 @@ public class ExperimentManagerTest {
     private lateinit var subject: ExperimentManager
     private var channelId: String? = "default-channel-id"
     private var contactId: String = "default-contact-id"
+    private val messageInfo = MessageInfo("", null)
 
     @Before
     public fun setUp() {
+        val permissionManager: PermissionsManager = mockk()
+        every { permissionManager.configuredPermissions } returns emptySet()
+        val infoProvider = DeviceInfoProviderImpl(
+            notificationStatusFetcher = { true },
+            privacyFeatureFetcher = { true },
+            channelTagsFetcher = { emptySet() },
+            channelIdFetcher = { channelId },
+            versionFetcher = { 1 },
+            permissionsManager = permissionManager,
+            contactIdFetcher = { contactId }
+        )
+
         subject = ExperimentManager(
             context = context,
             dataStore = dataStore,
             remoteData = remoteData,
-            channelIdFetcher = { channelId },
-            stableContactIdFetcher = { contactId }
+            infoProvider = infoProvider
         )
     }
 
@@ -57,17 +73,17 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val experiment = subject.getExperimentWithId("fake-id")
+        val experiment = subject.getExperimentWithId(messageInfo, "fake-id")
 
         assertNotNull(experiment)
         val parsed = experiment!!
         assertEquals("fake-id", parsed.id)
-        assertEquals("farm_hash", parsed.audienceSelector.hash.algorithm.jsonValue)
-        assertEquals("contact", parsed.audienceSelector.hash.property.jsonValue)
-        assertEquals(123L, parsed.lastUpdated)
-        assertEquals("Holdout", parsed.type.jsonValue)
-        assertEquals("Static", parsed.resolutionType.jsonValue)
-        assert(parsed.reportingMetadata.equals(experimentJson.require("reporting_metadata")))
+        assertEquals("farm_hash", parsed.audience.hashSelector!!.hash.algorithm.jsonValue)
+        assertEquals("contact", parsed.audience.hashSelector.hash.property.jsonValue)
+        assertEquals(1684868854000L, parsed.lastUpdated)
+        assertEquals("holdout", parsed.type.jsonValue)
+        assertEquals("static", parsed.resolutionType.jsonValue)
+        assert(parsed.reportingMetadata.equals(extractReportingMetadata(experimentJson)))
     }
 
     @Test
@@ -82,12 +98,12 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val validExperiment = subject.getExperimentWithId("fake-id")
+        val validExperiment = subject.getExperimentWithId(messageInfo, "fake-id")
         assertNotNull(validExperiment)
         assertEquals("fake-id", validExperiment!!.id)
-        assertEquals("channel", validExperiment!!.audienceSelector.hash.property.jsonValue)
+        assertEquals("channel", validExperiment.audience.hashSelector!!.hash.property.jsonValue)
 
-        assertNull(subject.getExperimentWithId("fake-id-2"))
+        assertNull(subject.getExperimentWithId(messageInfo, "fake-id-2"))
     }
 
     @Test
@@ -102,8 +118,8 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        assertNotNull(subject.getExperimentWithId("fake-id"))
-        assertNotNull(subject.getExperimentWithId("fake-id-2"))
+        assertNotNull(subject.getExperimentWithId(messageInfo, "fake-id"))
+        assertNotNull(subject.getExperimentWithId(messageInfo, "fake-id-2"))
     }
 
     @Test
@@ -116,7 +132,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        assertNull(subject.getExperimentWithId("no-experiment"))
+        assertNull(subject.getExperimentWithId(messageInfo, "no-experiment"))
     }
 
     @Test
@@ -129,7 +145,7 @@ public class ExperimentManagerTest {
         )
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        assertNull(subject.getExperimentWithId("fake-id"))
+        assertNull(subject.getExperimentWithId(messageInfo, "fake-id"))
     }
 
     @Test
@@ -150,12 +166,13 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateGlobalHoldouts(MessageInfo(""))
-        assertNotNull(result)
-        assertEquals("fake-id", result!!.experimentId)
+        val result = subject.evaluateExperiments(messageInfo)!!
+        assertEquals("fake-id", result.matchedExperimentId)
+        assertTrue(result.isMatching)
         assertEquals(contactId, result.contactId)
         assertEquals(channelId, result.channelId)
-        assert(result.reportingMetadata.equals(experimentJson.require("reporting_metadata")))
+
+        assert(result.allEvaluatedExperimentsMetadata.contains(extractReportingMetadata(experimentJson)))
     }
 
     @Test
@@ -177,10 +194,14 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateGlobalHoldouts(MessageInfo(""), activeContactId)
-        assertNotNull(result)
-        assertEquals("matched", result!!.experimentId)
+        val result = subject.evaluateExperiments(messageInfo, activeContactId)!!
+        assertTrue(result.isMatching)
+        assertEquals("matched", result.matchedExperimentId)
         assertEquals(activeContactId, result.contactId)
+        assert(result.allEvaluatedExperimentsMetadata
+            .containsAll(listOf(
+                extractReportingMetadata(unmatchedJson),
+                extractReportingMetadata(matchedJson))))
     }
 
     @Test
@@ -196,9 +217,11 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateGlobalHoldouts(MessageInfo(""))
-        assertNotNull(result)
-        assertEquals("first", result!!.experimentId)
+        val result = subject.evaluateExperiments(messageInfo)!!
+        assertTrue(result.isMatching)
+        assertEquals("first", result.matchedExperimentId)
+        assertTrue(result.allEvaluatedExperimentsMetadata.size == 1)
+        assert(result.allEvaluatedExperimentsMetadata.contains(extractReportingMetadata(firstJson)))
     }
 
     @Test
@@ -217,9 +240,9 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateGlobalHoldouts(MessageInfo("Transactional"))
-        assertNotNull(result)
-        assertEquals("matched", result!!.experimentId)
+        val result = subject.evaluateExperiments(MessageInfo("transactional", null))!!
+        assert(result.isMatching)
+        assertEquals("matched", result.matchedExperimentId)
     }
 
     @Test
@@ -248,9 +271,9 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateGlobalHoldouts(MessageInfo(""))
-        assertNotNull(result)
-        assertEquals("matched", result!!.experimentId)
+        val result = subject.evaluateExperiments(messageInfo)!!
+        assert(result.isMatching)
+        assertEquals("matched", result.matchedExperimentId)
     }
 
     private fun generateExperimentsPayload(
@@ -260,61 +283,76 @@ public class ExperimentManagerTest {
         hashOverrides: JsonMap? = null,
         bucketMin: Int = 0,
         bucketMax: Int = 16384,
-        messageTypeToExclude: String = "Transactional"
+        messageTypeToExclude: String = "transactional"
     ): JsonMap.Builder {
         return JsonMap.newBuilder()
-            .put("id", id)
-            .put("experimentType", "Holdout")
-            .put("last_updated", 123L)
-            .put("reporting_metadata") {
-                JsonMap
-                    .newBuilder()
-                    .put("experiment_id", id)
-                    .build()
-                    .toJsonValue()
-            }.put("type", "Static")
-            .put("audience_selector") {
-                JsonMap
-                    .newBuilder()
-                    .put("hash") {
-                        JsonMap
-                            .newBuilder()
-                            .put("audience_hash", generateAudienceHash(
-                                identifier = hashIdentifier,
-                                algorithm = hashAlgorithm,
-                                overrides = hashOverrides
-                            ))
-                            .put("audience_subset", generateBucket(bucketMin, bucketMax))
-                            .build()
-                            .toJsonValue()
-                    }
-                    .build()
-                    .toJsonValue()
-            }
-            .put("message_exclusions") {
-                JsonList(
-                    listOf(
-                        JsonMap
-                            .newBuilder()
-                            .put("message_type") {
-                                JsonMap
-                                    .newBuilder()
-                                    .put("value") {
-                                        JsonMap
-                                            .newBuilder()
-                                            .put("equals", messageTypeToExclude)
-                                            .build()
-                                            .toJsonValue()
-                                    }
-                                    .build()
-                                    .toJsonValue()
-                            }
-                            .build()
-                            .toJsonValue()
+            .put("experiment_id", id)
+            .put("created", "2023-05-23T19:07:34.000")
+            .put("last_updated", "2023-05-23T19:07:34.000")
+            .put("experiment_definition", JsonMap
+                .newBuilder()
+                .put("experiment_type", "holdout")
+                .put("reporting_metadata") {
+                    JsonMap
+                        .newBuilder()
+                        .put("experiment_id", id)
+                        .build()
+                        .toJsonValue()
+                }
+                .put("type", "static")
+                .put("audience_selector") {
+                    JsonMap
+                        .newBuilder()
+                        .put("hash") {
+                            JsonMap
+                                .newBuilder()
+                                .put("audience_hash", generateAudienceHash(
+                                    identifier = hashIdentifier,
+                                    algorithm = hashAlgorithm,
+                                    overrides = hashOverrides
+                                ))
+                                .put("audience_subset", generateBucket(bucketMin, bucketMax))
+                                .build()
+                                .toJsonValue()
+                        }
+                        .build()
+                        .toJsonValue()
+                }
+                .put("message_exclusions") {
+                    JsonList(
+                        listOf(
+                            JsonMap
+                                .newBuilder()
+                                .put("message_type") {
+                                    JsonMap
+                                        .newBuilder()
+                                        .put("value") {
+                                            JsonMap
+                                                .newBuilder()
+                                                .put("equals", messageTypeToExclude)
+                                                .build()
+                                                .toJsonValue()
+                                        }
+                                        .build()
+                                        .toJsonValue()
+                                }
+                                .build()
+                                .toJsonValue()
+                        )
                     )
-                )
+                        .toJsonValue()
+                }
+                .build()
                 .toJsonValue()
-            }
+            )
+    }
+
+    private fun extractReportingMetadata(payload: JsonMap): JsonMap {
+        return payload
+            .require("experiment_definition")
+            .optMap()
+            .require("reporting_metadata")
+            .optMap()
     }
 
     private fun generateAudienceHash(identifier: String, algorithm: String, overrides: JsonMap?): JsonValue {

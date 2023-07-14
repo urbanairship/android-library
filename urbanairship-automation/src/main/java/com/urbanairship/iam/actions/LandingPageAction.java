@@ -172,6 +172,7 @@ public class LandingPageAction extends Action {
                                                        .setId(messageId)
                                                        .addTrigger(Triggers.newActiveSessionTriggerBuilder().setGoal(1).build())
                                                        .setLimit(1)
+                                                       .setBypassHoldoutGroups(true)
                                                        .setPriority(Integer.MIN_VALUE);
 
         return extendSchedule(scheduleInfoBuilder).build();

@@ -2,10 +2,12 @@
 
 package com.urbanairship.automation;
 
+import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -35,8 +37,13 @@ class InAppMessageScheduleDelegate implements ScheduleDelegate<InAppMessage> {
     }
 
     @Override
-    public void onPrepareSchedule(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull InAppMessage message, @NonNull AutomationDriver.PrepareScheduleCallback callback) {
-        messageManager.onPrepare(schedule.getId(), schedule.getCampaigns(), schedule.getReportingContext(), message, callback);
+    public void onPrepareSchedule(
+            @NonNull Schedule<? extends ScheduleData> schedule,
+            @NonNull InAppMessage message,
+            @Nullable ExperimentResult experimentResult,
+            @NonNull AutomationDriver.PrepareScheduleCallback callback) {
+        messageManager.onPrepare(schedule.getId(), schedule.getCampaigns(),
+                schedule.getReportingContext(), message, experimentResult, callback);
     }
 
     @Override

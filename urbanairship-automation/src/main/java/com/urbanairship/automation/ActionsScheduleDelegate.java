@@ -11,12 +11,14 @@ import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.json.JsonValue;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -48,7 +50,11 @@ class ActionsScheduleDelegate implements ScheduleDelegate<Actions> {
     }
 
     @Override
-    public void onPrepareSchedule(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull Actions scheduleData, @NonNull AutomationDriver.PrepareScheduleCallback callback) {
+    public void onPrepareSchedule(
+            @NonNull Schedule<? extends ScheduleData> schedule,
+            @NonNull Actions scheduleData,
+            @Nullable ExperimentResult experimentResult,
+            @NonNull AutomationDriver.PrepareScheduleCallback callback) {
         actionsMap.put(schedule.getId(), scheduleData);
         callback.onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
     }

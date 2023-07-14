@@ -67,7 +67,7 @@ public class ActionsScheduleDelegateTest {
         when(mockRunRequestFactory.createActionRequest("cool")).thenReturn(stubbedActionRunRequest);
 
         // Prepare
-        delegate.onPrepareSchedule(actionsSchedule, actionsSchedule.getData(), mock(AutomationDriver.PrepareScheduleCallback.class));
+        delegate.onPrepareSchedule(actionsSchedule, actionsSchedule.getData(), null, mock(AutomationDriver.PrepareScheduleCallback.class));
 
         // Execute
         AutomationDriver.ExecutionCallback callback = mock(AutomationDriver.ExecutionCallback.class);
@@ -87,7 +87,7 @@ public class ActionsScheduleDelegateTest {
     public void testPrepare() {
         // Prepare
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        delegate.onPrepareSchedule(actionsSchedule, actionsSchedule.getData(), callback);
+        delegate.onPrepareSchedule(actionsSchedule, actionsSchedule.getData(), null, callback);
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
     }
 
@@ -96,7 +96,7 @@ public class ActionsScheduleDelegateTest {
         assertEquals(AutomationDriver.READY_RESULT_INVALIDATE, delegate.onCheckExecutionReadiness(actionsSchedule));
 
         // Prepare
-        delegate.onPrepareSchedule(actionsSchedule, actionsSchedule.getData(), mock(AutomationDriver.PrepareScheduleCallback.class));
+        delegate.onPrepareSchedule(actionsSchedule, actionsSchedule.getData(), null, mock(AutomationDriver.PrepareScheduleCallback.class));
         assertEquals(AutomationDriver.READY_RESULT_CONTINUE, delegate.onCheckExecutionReadiness(actionsSchedule));
     }
 

@@ -53,7 +53,7 @@ public class FullScreenAdapterTest  {
                               .setDisplayContent(displayContent)
                               .build();
 
-        displayHandler = new DisplayHandler("schedule ID", true, JsonValue.NULL, JsonValue.NULL);
+        displayHandler = new DisplayHandler("schedule ID", true, JsonValue.NULL, JsonValue.NULL, null);
 
         adapter = FullScreenAdapter.newAdapter(message);
     }

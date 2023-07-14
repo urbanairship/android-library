@@ -12,10 +12,13 @@ import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDriver;
+import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.iam.assets.AssetManager;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.iam.events.InAppReportingEvent;
+import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.RetryingExecutor;
 
@@ -28,6 +31,10 @@ import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -36,6 +43,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import static com.urbanairship.iam.events.InAppReportingEvent.TYPE_RESOLUTION;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -77,6 +85,7 @@ public class InAppMessageManagerTest {
     public void setup() {
         message = InAppMessage.newBuilder()
                               .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                              .setSource(InAppMessage.SOURCE_REMOTE_DATA)
                               .build();
 
         scheduleId = UUID.randomUUID().toString();
@@ -134,7 +143,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, null, message, mockCallback);
+        manager.onPrepare(scheduleId, null, null, message, null, mockCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -150,7 +159,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, null, message, mockCallback);
+        manager.onPrepare(scheduleId, null, null, message, null, mockCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -176,7 +185,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, null, message, mockCallback);
+        manager.onPrepare(scheduleId, null, null, message, null, mockCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -198,7 +207,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, null, extended, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, extended, null, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -233,7 +242,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, null, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -262,7 +271,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, null, extended, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, extended, null, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -290,7 +299,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, null, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
         verify(mockPrepareCallback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
@@ -325,7 +334,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, null, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
 
         // Should call it once, but a runnable should be dispatched on the main thread with a delay to retry
@@ -347,7 +356,7 @@ public class InAppMessageManagerTest {
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, null, mockPrepareCallback);
 
         // Should call it once, but a runnable should be dispatched on the main thread with a delay to retry
         verify(mockAssetManager, times(1)).onPrepare(scheduleId, message);
@@ -369,7 +378,7 @@ public class InAppMessageManagerTest {
 
         // Start preparing
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, null, mockPrepareCallback);
         verify(mockAdapter).onPrepare(any(Context.class), any(Assets.class));
 
         // Should call it once
@@ -386,7 +395,7 @@ public class InAppMessageManagerTest {
 
         // Start preparing
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, null, mockPrepareCallback);
 
         // Should call it once
         verify(mockAssetManager, times(1)).onPrepare(scheduleId, message);
@@ -411,7 +420,7 @@ public class InAppMessageManagerTest {
         // Prepare the message
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
         when(mockAdapter.onPrepare(any(Context.class), any(Assets.class))).thenReturn(InAppMessageAdapter.OK);
-        manager.onPrepare(scheduleId, null, null, message, mockPrepareCallback);
+        manager.onPrepare(scheduleId, null, null, message, null, mockPrepareCallback);
 
         verify(factory).createAdapter(argThat(new ArgumentMatcher<InAppMessage>() {
             @Override
@@ -450,6 +459,147 @@ public class InAppMessageManagerTest {
     public void testNotifyScheduleFinished() {
         manager.onMessageScheduleFinished(scheduleId);
         verify(mockAssetManager, times(1)).onFinish(scheduleId);
+    }
+
+    @Test
+    public void testHoldoutGroupControlEvent() {
+        JsonMap reportingContext = JsonMap.newBuilder()
+                                          .put("some", "data")
+                                          .build();
+        JsonValue campaigns = new JsonList(
+                Arrays.asList(JsonValue.wrap("one"), JsonValue.wrap("two")))
+                .toJsonValue();
+        JsonValue context = JsonMap.newBuilder()
+                                   .put("report", "context")
+                                   .build()
+                                   .toJsonValue();
+
+        List<JsonMap> experimentsContext = Collections.singletonList(reportingContext);
+
+        ExperimentResult experiment = new ExperimentResult("channel-id", "contact-id",
+                "experiment-id", true, experimentsContext);
+
+        String senderId = "mock-sender-id";
+        when(mockAnalytics.getConversionSendId()).thenReturn(senderId);
+        String conversionMetadata = "mock-conversion-metadata";
+        when(mockAnalytics.getConversionMetadata()).thenReturn(conversionMetadata);
+
+        manager.onPrepare("schedule-id", campaigns, context, message,
+                experiment, result -> {
+                });
+        manager.onExecute("schedule-id", () -> {
+        });
+
+        JsonMap expected = JsonMap
+                .newBuilder()
+                .put("id", JsonMap
+                        .newBuilder()
+                        .put("message_id", "schedule-id")
+                        .put("campaigns", campaigns)
+                        .build())
+                .put("source", "urban-airship")
+                .put("conversion_send_id", senderId)
+                .put("conversion_metadata", conversionMetadata)
+                .put("context", JsonMap
+                        .newBuilder()
+                        .putOpt("reporting_context", context)
+                        .putOpt("experiments", experimentsContext)
+                        .build()
+                )
+                .put("device", JsonMap
+                        .newBuilder()
+                        .put("channel_identifier", "channel-id")
+                        .put("contact_identifier", "contact-id")
+                        .build()
+                )
+                .put("resolution", JsonMap.newBuilder().put("type", "control").build())
+                .build();
+
+        verify(mockAnalytics).addEvent(argThat(EventMatchers.event(TYPE_RESOLUTION, expected)));
+    }
+
+    @Test
+    public void testHoldoutGroupControlEventNullContext() {
+        JsonMap reportingContext = JsonMap.newBuilder()
+                                          .put("some", "data")
+                                          .build();
+
+        List<JsonMap> experimentsContext = Collections.singletonList(reportingContext);
+
+        ExperimentResult experiment = new ExperimentResult("channel-id", "contact-id",
+                "experiment-id", true, experimentsContext);
+
+        manager.onPrepare("schedule-id", null, null, message,
+                experiment, result -> {
+                });
+        manager.onExecute("schedule-id", () -> {
+        });
+
+        JsonMap expected = JsonMap
+                .newBuilder()
+                .put("id", JsonMap
+                        .newBuilder()
+                        .put("message_id", "schedule-id")
+                        .build())
+                .put("source", "urban-airship")
+                .put("context", JsonMap
+                        .newBuilder()
+                        .putOpt("experiments", experimentsContext)
+                        .build()
+                )
+                .put("device", JsonMap
+                        .newBuilder()
+                        .put("channel_identifier", "channel-id")
+                        .put("contact_identifier", "contact-id")
+                        .build()
+                )
+                .put("resolution", JsonMap.newBuilder().put("type", "control").build())
+                .build();
+
+        verify(mockAnalytics).addEvent(argThat(EventMatchers.event(TYPE_RESOLUTION, expected)));
+    }
+
+    @Test
+    public void testHoldoutGroupControlEventJsonNull() {
+        JsonMap reportingContext = JsonMap.newBuilder()
+                                          .put("some", "data")
+                                          .build();
+        JsonValue campaigns = JsonValue.NULL;
+        JsonValue context = JsonValue.NULL;
+
+        List<JsonMap> experimentsContext = Collections.singletonList(reportingContext);
+
+        ExperimentResult experiment = new ExperimentResult("channel-id", "contact-id",
+                "experiment-id", true, experimentsContext);
+
+        manager.onPrepare("schedule-id", null, null, message,
+                experiment, result -> {
+                });
+        manager.onExecute("schedule-id", () -> {
+        });
+
+        JsonMap expected = JsonMap
+                .newBuilder()
+                .put("id", JsonMap
+                        .newBuilder()
+                        .put("message_id", "schedule-id")
+                        .build())
+                .put("source", "urban-airship")
+                .put("context", JsonMap
+                        .newBuilder()
+                        .putOpt("experiments", experimentsContext)
+                        .build()
+                )
+                .put("device", JsonMap
+                        .newBuilder()
+                        .put("channel_identifier", "channel-id")
+                        .put("contact_identifier", "contact-id")
+                        .build()
+                )
+                .put("resolution", JsonMap.newBuilder().put("type", "control").build())
+                .build();
+
+        verify(mockAnalytics).addEvent(argThat(EventMatchers.event(TYPE_RESOLUTION, expected)));
     }
 
 }

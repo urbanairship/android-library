@@ -8,7 +8,7 @@ import android.database.SQLException;
 
 import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.automation.Audience;
+import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.automation.Schedule;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.iam.InAppMessage;
@@ -267,7 +267,7 @@ public class LegacyDataMigrator {
             JsonValue audienceJson = scheduleEntity.data.optMap().get("audience");
             if (audienceJson != null) {
                 try {
-                    scheduleEntity.audience = Audience.fromJson(audienceJson);
+                    scheduleEntity.audience = AudienceSelector.Companion.fromJson(audienceJson);
                 } catch (JsonException e) {
                     UALog.e(e, "Unable to schedule due to audience JSON");
                     return;

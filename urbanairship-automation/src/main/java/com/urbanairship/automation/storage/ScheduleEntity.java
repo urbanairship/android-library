@@ -2,7 +2,7 @@
 
 package com.urbanairship.automation.storage;
 
-import com.urbanairship.automation.Audience;
+import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
@@ -43,11 +43,15 @@ public class ScheduleEntity {
     public List<String> screens;
     public long seconds;
     public String regionId;
-    public Audience audience;
+    public AudienceSelector audience;
     public JsonValue campaigns;
     public JsonValue reportingContext;
 
     public List<String> frequencyConstraintIds;
+
+    public String messageType;
+    public boolean bypassHoldoutGroups;
+    public long newUserEvaluationDate;
 
     @Override
     public String toString() {
@@ -76,6 +80,9 @@ public class ScheduleEntity {
                 ", campaigns=" + campaigns +
                 ", reportingContext=" + reportingContext +
                 ", frequencyConstraintIds=" + frequencyConstraintIds +
+                ", messageType=" + messageType +
+                ", bypassHoldoutGroups=" + bypassHoldoutGroups +
+                ", newUserEvaluationDate=" + newUserEvaluationDate +
                 '}';
     }
 

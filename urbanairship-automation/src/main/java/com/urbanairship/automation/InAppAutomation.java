@@ -23,6 +23,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.audience.AudienceOverrides;
 import com.urbanairship.audience.AudienceOverridesProvider;
+import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.deferred.DeferredScheduleClient;
@@ -31,12 +32,16 @@ import com.urbanairship.automation.limits.FrequencyConstraint;
 import com.urbanairship.automation.limits.FrequencyLimitManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.experiment.ExperimentManager;
+import com.urbanairship.experiment.ExperimentResult;
+import com.urbanairship.experiment.MessageInfo;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.remotedata.RemoteData;
+import com.urbanairship.remotedata.RemoteDataInfo;
 import com.urbanairship.util.RetryingExecutor;
 
 import java.util.Collection;
@@ -82,6 +87,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private Cancelable subscription;
 
     private final AudienceOverridesProvider audienceOverridesProvider;
+    private final ExperimentManager experimentManager;
+    private final DeviceInfoProvider infoProvider;
 
     private final AirshipRuntimeConfig config;
 
@@ -157,6 +164,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      * @param remoteData Remote data.
      * @param airshipChannel The airship channel.
      * @param audienceOverridesProvider The audience overrides provider.
+     * @param experimentManager The experiment manager instance.
+     * @param infoProvider The device info provider.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -167,7 +176,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                            @NonNull Analytics analytics,
                            @NonNull RemoteData remoteData,
                            @NonNull AirshipChannel airshipChannel,
-                           @NonNull AudienceOverridesProvider audienceOverridesProvider) {
+                           @NonNull AudienceOverridesProvider audienceOverridesProvider,
+                           @NonNull ExperimentManager experimentManager,
+                           @NonNull DeviceInfoProvider infoProvider) {
         super(context, preferenceDataStore);
         this.privacyManager = privacyManager;
         this.automationEngine = new AutomationEngine(context, runtimeConfig, analytics, preferenceDataStore);
@@ -181,6 +192,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.frequencyLimitManager = new FrequencyLimitManager(context, runtimeConfig);
         this.audienceOverridesProvider = audienceOverridesProvider;
         this.config = runtimeConfig;
+        this.experimentManager = experimentManager;
+        this.infoProvider = infoProvider;
     }
 
     @VisibleForTesting
@@ -197,7 +210,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull ActionsScheduleDelegate actionsScheduleDelegate,
                     @NonNull InAppMessageScheduleDelegate inAppMessageScheduleDelegate,
                     @NonNull FrequencyLimitManager frequencyLimitManager,
-                    @NonNull AudienceOverridesProvider audienceOverridesProvider) {
+                    @NonNull AudienceOverridesProvider audienceOverridesProvider,
+                    @NonNull ExperimentManager experimentManager,
+                    @NonNull DeviceInfoProvider infoProvider) {
 
         super(context, preferenceDataStore);
         this.privacyManager = privacyManager;
@@ -212,6 +227,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.frequencyLimitManager = frequencyLimitManager;
         this.audienceOverridesProvider = audienceOverridesProvider;
         this.config = runtimeConfig;
+        this.experimentManager = experimentManager;
+        this.infoProvider = infoProvider;
     }
 
     /**
@@ -557,39 +574,88 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         // Audience checks
         RetryingExecutor.Operation audienceChecks = () -> {
-            if (schedule.getAudience() == null) {
+            if (schedule.getAudienceSelector() == null) {
                 return RetryingExecutor.finishedResult();
             }
 
-            if (AudienceChecks.checkAudience(getContext(), schedule.getAudience())) {
-                return RetryingExecutor.finishedResult();
-            }
+            RemoteDataInfo info = remoteDataSubscriber.parseRemoteDataInfo(schedule);
+            String contactId = info == null ? null : info.getContactId();
+
+            PendingResult<Boolean> result = schedule.getAudienceSelector().evaluateAsPendingResult(
+                    getContext(), schedule.getNewUserEvaluationDate(), infoProvider, contactId);
+            try {
+                if (Boolean.TRUE.equals(result.get())) { return RetryingExecutor.finishedResult(); }
+            } catch (Exception ignore) { }
 
             callbackWrapper.onFinish(getPrepareResultMissedAudience(schedule));
             return RetryingExecutor.cancelResult();
         };
 
+        PendingResult<ExperimentResult> experimentResults = new PendingResult<>();
+        RetryingExecutor.Operation evaluateExperiments = () -> {
+            try {
+                ExperimentResult result = evaluateExperiments(schedule);
+                experimentResults.setResult(result);
+                return RetryingExecutor.finishedResult();
+            } catch (Exception ex) {
+                UALog.e(ex, "Error on evaluating experiments for schedule " + schedule.getId());
+                return RetryingExecutor.retryResult();
+            }
+        };
+
         RetryingExecutor.Operation prepareSchedule = () -> {
             switch (schedule.getType()) {
                 case Schedule.TYPE_DEFERRED:
-                    return resolveDeferred(schedule, triggerContext, callbackWrapper);
+                    return resolveDeferred(schedule, triggerContext, experimentResults.getResult(), callbackWrapper);
                 case Schedule.TYPE_ACTION:
-                    prepareSchedule(schedule, schedule.coerceType(), actionScheduleDelegate, callbackWrapper);
+                    prepareSchedule(schedule, schedule.coerceType(), experimentResults.getResult(), actionScheduleDelegate, callbackWrapper);
                     break;
                 case Schedule.TYPE_IN_APP_MESSAGE:
-                    prepareSchedule(schedule, schedule.coerceType(), inAppMessageScheduleDelegate, callbackWrapper);
+                    prepareSchedule(schedule, schedule.coerceType(), experimentResults.getResult(), inAppMessageScheduleDelegate, callbackWrapper);
                     break;
             }
 
             return RetryingExecutor.finishedResult();
         };
 
-        RetryingExecutor.Operation[] operations = new RetryingExecutor.Operation[] { checkValid, frequencyChecks, audienceChecks, prepareSchedule };
+        RetryingExecutor.Operation[] operations = new RetryingExecutor.Operation[] {
+                checkValid,
+                frequencyChecks,
+                audienceChecks,
+                evaluateExperiments,
+                prepareSchedule };
         retryingExecutor.execute(operations);
     }
 
-    private <T extends ScheduleData> void prepareSchedule(final Schedule<? extends ScheduleData> schedule, T scheduleData, final ScheduleDelegate<T> delegate, final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
-        delegate.onPrepareSchedule(schedule, scheduleData, result -> {
+    private @Nullable ExperimentResult evaluateExperiments(
+            final @NonNull Schedule<? extends ScheduleData> schedule ) throws ExecutionException, InterruptedException {
+
+        RemoteDataInfo remoteDataInfo = remoteDataSubscriber.parseRemoteDataInfo(schedule);
+
+        // Skip actions for now or anything that is not from remote-data
+        if (remoteDataInfo == null || schedule.getType().equals(Schedule.TYPE_ACTION)) {
+            return null;
+        }
+
+        if (schedule.isBypassHoldoutGroups()) {
+            return null;
+        }
+
+        MessageInfo messageInfo = new MessageInfo(schedule.getMessageType(), schedule.getCampaigns());
+
+        return experimentManager
+                .evaluateGlobalHoldoutsPendingResult(messageInfo, null)
+                .get();
+    }
+
+    private <T extends ScheduleData> void prepareSchedule(
+            final Schedule<? extends ScheduleData> schedule,
+            T scheduleData,
+            ExperimentResult experimentResult,
+            final ScheduleDelegate<T> delegate,
+            final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
+
+        delegate.onPrepareSchedule(schedule, scheduleData, experimentResult, result -> {
             if (result == AutomationDriver.PREPARE_RESULT_CONTINUE) {
                 scheduleDelegateMap.put(schedule.getId(), delegate);
             }
@@ -599,6 +665,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
     private RetryingExecutor.Result resolveDeferred(final @NonNull Schedule<? extends ScheduleData> schedule,
                                                     final @Nullable TriggerContext triggerContext,
+                                                    final @Nullable ExperimentResult experimentResult,
                                                     final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
 
         Deferred deferredScheduleData = schedule.coerceType();
@@ -639,7 +706,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
             InAppMessage message = apiResult.getMessage();
             if (message != null) {
-                prepareSchedule(schedule, message, inAppMessageScheduleDelegate, callback);
+                prepareSchedule(schedule, message, experimentResult, inAppMessageScheduleDelegate, callback);
             } else {
                 // Handled by backend, penalize to count towards limit
                 callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
@@ -765,18 +832,20 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     @AutomationDriver.PrepareResult
     private int getPrepareResultMissedAudience(@NonNull Schedule<? extends ScheduleData> schedule) {
         @AutomationDriver.PrepareResult int result = AutomationDriver.PREPARE_RESULT_PENALIZE;
-        if (schedule.getAudience() != null) {
-            switch (schedule.getAudience().getMissBehavior()) {
-                case Audience.MISS_BEHAVIOR_CANCEL:
-                    result = AutomationDriver.PREPARE_RESULT_CANCEL;
-                    break;
-                case Audience.MISS_BEHAVIOR_SKIP:
-                    result = AutomationDriver.PREPARE_RESULT_SKIP;
-                    break;
-                case Audience.MISS_BEHAVIOR_PENALIZE:
-                    result = AutomationDriver.PREPARE_RESULT_PENALIZE;
-                    break;
-            }
+        if (schedule.getAudienceSelector() == null) {
+            return result;
+        }
+
+        switch (schedule.getAudienceSelector().getMissBehavior()) {
+            case CANCEL:
+                result = AutomationDriver.PREPARE_RESULT_CANCEL;
+                break;
+            case SKIP:
+                result = AutomationDriver.PREPARE_RESULT_SKIP;
+                break;
+            case PENALIZE:
+                result = AutomationDriver.PREPARE_RESULT_PENALIZE;
+                break;
         }
 
         return result;
@@ -818,10 +887,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             if (privacyManager.isEnabled(PrivacyManager.FEATURE_IN_APP_AUTOMATION)) {
                 ensureStarted();
                 if (subscription == null) {
-                    // New user cut off time
-                    if (remoteDataSubscriber.getScheduleNewUserCutOffTime() == -1) {
-                        remoteDataSubscriber.setScheduleNewUserCutOffTime(getNewUserCutOff());
-                    }
                     subscription = remoteDataSubscriber.subscribe(remoteDataObserverDelegate);
                 }
             } else if (subscription != null) {
@@ -830,14 +895,4 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             }
         }
     }
-
-    private long getNewUserCutOff() {
-        try {
-            return getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0).firstInstallTime;
-        } catch (Exception e) {
-            UALog.w("Unable to get install date", e);
-            return airshipChannel.getId() == null ? System.currentTimeMillis() : 0;
-        }
-    }
-
 }

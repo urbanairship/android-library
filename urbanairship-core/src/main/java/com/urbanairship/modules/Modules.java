@@ -12,8 +12,10 @@ import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.audience.AudienceOverridesProvider;
+import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.modules.aaid.AdIdModuleFactory;
 import com.urbanairship.modules.accengage.AccengageModule;
 import com.urbanairship.modules.accengage.AccengageModuleFactory;
@@ -114,12 +116,14 @@ public class Modules {
                                     @NonNull PushManager pushManager,
                                     @NonNull Analytics analytics,
                                     @NonNull RemoteData remoteData,
-                                    @NonNull AudienceOverridesProvider audienceOverridesProvider) {
+                                    @NonNull AudienceOverridesProvider audienceOverridesProvider,
+                                    @NonNull ExperimentManager experimentManager,
+                                    @NonNull DeviceInfoProvider infoProvider) {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager, airshipChannel, pushManager,
-                        analytics, remoteData, audienceOverridesProvider);
+                        analytics, remoteData, audienceOverridesProvider, experimentManager, infoProvider);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Automation module");

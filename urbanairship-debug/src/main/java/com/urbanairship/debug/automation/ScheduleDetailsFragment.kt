@@ -8,7 +8,7 @@ import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.navigation.Navigation
-import com.urbanairship.automation.Audience
+import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.Schedule
 import com.urbanairship.automation.ScheduleData
@@ -35,7 +35,7 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
                 .navigate(R.id.action_inAppMessageDetailsFragment_to_inAppTriggersDetailsFragment, args)
     }
 
-    private fun navigateToAudience(audience: Audience) {
+    private fun navigateToAudience(audience: AudienceSelector) {
         val args = Bundle()
         args.putString(AudienceDetailsFragment.ARGUMENT_AUDIENCE, audience.toJsonValue().toString())
         Navigation.findNavController(requireView())
@@ -76,7 +76,7 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
                 navigateToScheduleData(schedule.data, schedule.id)
             })
 
-            schedule.audience?.let {
+            schedule.audienceSelector?.let {
                 add(AutomationDetail(getString(R.string.ua_iaa_debug_audience_key)) {
                     navigateToAudience(it)
                 })

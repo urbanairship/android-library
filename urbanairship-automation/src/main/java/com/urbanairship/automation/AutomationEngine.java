@@ -1769,10 +1769,13 @@ public class AutomationEngine {
         scheduleEntity.editGracePeriod = edits.getEditGracePeriod() == null ? scheduleEntity.editGracePeriod : edits.getEditGracePeriod();
         scheduleEntity.metadata = edits.getMetadata() == null ? scheduleEntity.metadata : edits.getMetadata();
         scheduleEntity.scheduleType = edits.getType() == null ? scheduleEntity.scheduleType : edits.getType();
-        scheduleEntity.audience = edits.getAudience() == null ? scheduleEntity.audience : edits.getAudience();
+        scheduleEntity.audience = edits.getAudienceSelector() == null ? scheduleEntity.audience : edits.getAudienceSelector();
         scheduleEntity.campaigns = edits.getCampaigns() == null ? scheduleEntity.campaigns : edits.getCampaigns();
         scheduleEntity.reportingContext = edits.getReportingContext() == null ? scheduleEntity.reportingContext : edits.getReportingContext();
         scheduleEntity.frequencyConstraintIds = edits.getFrequencyConstraintIds() == null ? scheduleEntity.frequencyConstraintIds : edits.getFrequencyConstraintIds();
+        scheduleEntity.messageType = edits.getMessageType() == null ? scheduleEntity.messageType : edits.getMessageType();
+        scheduleEntity.bypassHoldoutGroups = edits.getBypassHoldoutGroup() == null ? scheduleEntity.bypassHoldoutGroups : edits.getBypassHoldoutGroup();
+        scheduleEntity.newUserEvaluationDate = edits.getNewUserEvaluationDate();
     }
 
     private boolean isExpired(@NonNull FullSchedule entry) {

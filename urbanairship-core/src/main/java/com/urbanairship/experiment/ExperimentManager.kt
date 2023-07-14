@@ -6,25 +6,35 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipComponentGroups
+import com.urbanairship.AirshipDispatchers
+import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
+import com.urbanairship.annotation.OpenForTesting
+import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonValue
-import com.urbanairship.json.optionalField
+import com.urbanairship.json.JsonMap
 import com.urbanairship.remotedata.RemoteData
-import com.urbanairship.util.FarmHashFingerprint64
+import com.urbanairship.util.Clock
+import kotlin.jvm.Throws
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * Airship Experiment Manager.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@OpenForTesting
 public class ExperimentManager internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     private val remoteData: RemoteData,
-    private val channelIdFetcher: () -> String?,
-    private val stableContactIdFetcher: suspend () -> String
+    private val infoProvider: DeviceInfoProvider,
+    private val clock: Clock = Clock.DEFAULT_CLOCK
 ) : AirshipComponent(context, dataStore) {
+
+    private val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
 
     public companion object {
         internal const val PAYLOAD_TYPE = "experiments"
@@ -39,8 +49,8 @@ public class ExperimentManager internal constructor(
      *
      * @param id The ID of the Experiment.
      */
-    internal suspend fun getExperimentWithId(id: String): Experiment? {
-        return getExperiments()
+    internal suspend fun getExperimentWithId(messageInfo: MessageInfo, id: String): Experiment? {
+        return getActiveExperiments(messageInfo)
             .find { it.id == id }
     }
 
@@ -49,32 +59,54 @@ public class ExperimentManager internal constructor(
      * @param contactId The contact ID. If not provided, the stable contact ID will be used.
      * @return The experiments result. If no experiment matches, null is returned.
      */
-    internal suspend fun evaluateGlobalHoldouts(messageInfo: MessageInfo, contactId: String? = null): ExperimentResult? {
-        val channelId = channelIdFetcher() ?: return null
-        val evaluationContactId = contactId ?: stableContactIdFetcher()
+    /** @hide */
+    @Throws(NullPointerException::class)
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public suspend fun evaluateExperiments(messageInfo: MessageInfo, contactId: String? = null): ExperimentResult? {
 
-        val properties = mapOf(
-            HashIdentifiers.CONTACT.jsonValue to evaluationContactId,
-            HashIdentifiers.CHANNEL.jsonValue to channelId
-        )
+        val activeExperiments = getActiveExperiments(messageInfo)
+        if (activeExperiments.isEmpty()) {
+            return null
+        }
 
-        var result: ExperimentResult? = null
+        val channelId = infoProvider.channelId
+            ?: throw NullPointerException("Channel ID missing, unable to evaluate hold out groups.")
 
-        for (experiment in getExperiments()) {
-            val isResolved = getResolutionFunction(experiment)
-                .invoke(experiment, messageInfo, properties)
+        val evaluationContactId = contactId ?: infoProvider.getStableContactId()
 
-            if (isResolved) {
-                result = ExperimentResult(
-                    channelId = channelId,
-                    contactId = evaluationContactId,
-                    experimentId = experiment.id,
-                    reportingMetadata = experiment.reportingMetadata
-                )
+        val allExperimentsMetadata: MutableList<JsonMap> = mutableListOf()
+        var matchedExperiment: Experiment? = null
+
+        for (experiment in activeExperiments) {
+            val isMatching = getResolutionFunction(experiment)
+                .invoke(experiment, infoProvider, evaluationContactId)
+
+            allExperimentsMetadata.add(experiment.reportingMetadata)
+
+            if (isMatching) {
+                matchedExperiment = experiment
                 break
             }
         }
 
+        return ExperimentResult(
+            channelId = channelId,
+            contactId = evaluationContactId,
+            matchedExperimentId = matchedExperiment?.id,
+            isMatching = (matchedExperiment != null),
+            allEvaluatedExperimentsMetadata = allExperimentsMetadata)
+    }
+
+    /**
+     * Checks if the channel and/or contact is part of a global holdout or not.
+     * @param contactId The contact ID. If not provided, the stable contact ID will be used.
+     * @return The pending experiment result. If no experiment matches, null result is returned.
+     */
+    public fun evaluateGlobalHoldoutsPendingResult(messageInfo: MessageInfo, contactId: String? = null): PendingResult<ExperimentResult?> {
+        val result = PendingResult<ExperimentResult?>()
+        scope.launch {
+            result.result = evaluateExperiments(messageInfo, contactId)
+        }
         return result
     }
 
@@ -84,61 +116,32 @@ public class ExperimentManager internal constructor(
         }
     }
 
-    private fun resolveStatic(
+    private suspend fun resolveStatic(
         experiment: Experiment,
-        messageInfo: MessageInfo,
-        properties: Map<String, String?>
+        infoProvider: DeviceInfoProvider,
+        contactId: String
     ): Boolean {
-        if (experiment.exclusions.any { it.evaluate(messageInfo) }) {
-            return false
-        }
-
-        return experiment.audienceSelector.isMatching(properties)
+        return experiment.audience.evaluate(context, experiment.created, infoProvider, contactId)
     }
 
-    private suspend fun getExperiments(): List<Experiment> {
-        try {
-            return remoteData.payloads(PAYLOAD_TYPE)
+    private suspend fun getActiveExperiments(messageInfo: MessageInfo): List<Experiment> {
+        return try {
+            remoteData.payloads(PAYLOAD_TYPE)
                 .mapNotNull {
                     it.data.opt(PAYLOAD_TYPE).list?.list
                 }
                 .flatten()
                 .map { it.optMap() }
                 .mapNotNull(Experiment::fromJson)
+                .filter { it.isActive(clock.currentTimeMillis()) }
+                .filter { experiment ->
+                    !(experiment.exclusions.any { it.evaluate(messageInfo) })
+                }
         } catch (ex: JsonException) {
             UALog.e(ex) { "Failed to parse experiments from remoteData payload" }
-            return emptyList()
+            emptyList()
         }
     }
 }
 
-// Experiments filtering by message type
-internal fun MessageCriteria.evaluate(info: MessageInfo): Boolean {
-    return messageTypePredicate?.apply(JsonValue.wrap(info.messageType)) ?: false
-}
-
-// Calculate hash and define if it's withing the experiment bucket
-internal fun AudienceSelector.isMatching(properties: Map<String, String?>): Boolean {
-    return hash
-        .generate(properties)
-        ?.let { bucket.contains(it) }
-        ?: false
-}
-
-internal fun AudienceHash.generate(properties: Map<String, String?>): Long? {
-    if (!properties.containsKey(property.jsonValue)) {
-        UALog.e { "can't find device property ${property.jsonValue}" }
-    }
-
-    val key = properties[property.jsonValue] ?: return null
-    val value = overrides?.optionalField<String>(key) ?: key
-
-    val hashFunction: HashFunction = when (algorithm) {
-        HashAlgorithm.FARM -> FarmHashFingerprint64::fingerprint
-    }
-
-    return hashFunction.invoke("$prefix$value") % numberOfHashBuckets
-}
-
-private typealias HashFunction = (String) -> Long
-private typealias ResolutionFunction = (Experiment, MessageInfo, Map<String, String?>) -> Boolean
+private typealias ResolutionFunction = suspend (Experiment, DeviceInfoProvider, String) -> Boolean

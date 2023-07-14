@@ -2,7 +2,7 @@ package com.urbanairship.debug.automation
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.urbanairship.automation.Audience
+import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.debug.R
 import com.urbanairship.debug.extensions.toFormattedJsonString
 import com.urbanairship.json.JsonValue
@@ -15,10 +15,10 @@ class AudienceDetailsFragment : AutomationDetailsFragment() {
 
     override fun createDetails(): LiveData<List<AutomationDetail>> {
         var json = JsonValue.parseString(requireArguments().getString(ARGUMENT_AUDIENCE))
-        return MutableLiveData(audienceDetails(Audience.fromJson(json)))
+        return MutableLiveData(audienceDetails(AudienceSelector.fromJson(json)))
     }
 
-    private fun audienceDetails(audience: Audience): List<AutomationDetail> {
+    private fun audienceDetails(audience: AudienceSelector): List<AutomationDetail> {
         return mutableListOf<AutomationDetail>().apply {
 
             audience.notificationsOptIn?.let {
@@ -47,7 +47,7 @@ class AudienceDetailsFragment : AutomationDetailsFragment() {
                 add(AutomationDetail(getString(R.string.ua_debug_audience_version_predicate), it.toFormattedJsonString()))
             }
 
-            add(AutomationDetail(getString(R.string.ua_debug_audience_miss_behavior), audience.missBehavior))
+            add(AutomationDetail(getString(R.string.ua_debug_audience_miss_behavior), audience.missBehavior.value))
 
             add(AutomationDetail(getString(R.string.ua_debug_audience_test_devices), audience.testDevices.joinToString(", ")))
 

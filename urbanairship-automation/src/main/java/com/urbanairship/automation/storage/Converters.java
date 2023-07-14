@@ -3,7 +3,7 @@
 package com.urbanairship.automation.storage;
 
 import com.urbanairship.UALog;
-import com.urbanairship.automation.Audience;
+import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
@@ -41,18 +41,18 @@ public final class Converters {
     }
 
     @TypeConverter
-    public String audienceToString(Audience audience) {
+    public String audienceToString(AudienceSelector audience) {
         return audience == null ? null : audience.toJsonValue().toString();
     }
 
     @TypeConverter
-    public Audience audienceFromString(String value) {
+    public AudienceSelector audienceFromString(String value) {
         if (value == null) {
             return null;
         }
 
         try {
-            return Audience.fromJson(JsonValue.parseString(value));
+            return AudienceSelector.Companion.fromJson(JsonValue.parseString(value));
         } catch (JsonException e) {
             UALog.e(e, "Unable to parse audience: " + value);
             return null;

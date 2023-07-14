@@ -2,35 +2,28 @@
 
 package com.urbanairship.automation.tags;
 
+import com.urbanairship.audience.DeviceTagSelector;
 import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonList;
-import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.Size;
-import androidx.annotation.StringDef;
 import androidx.core.util.ObjectsCompat;
 
 /**
  * Tag selector.
  */
 public class TagSelector implements JsonSerializable {
+
+    // Not used anymore internally, but still around to avoid breaking the public API.
 
     /*
      * <tag_selector>   := <tag> | <not> | <and> | <or>
@@ -40,39 +33,16 @@ public class TagSelector implements JsonSerializable {
      * <or>             := { "or": [<tag_selector>, <tag_selector>, ...] }
      */
 
-    @StringDef({ OR, AND, NOT, TAG })
-    @Retention(RetentionPolicy.SOURCE)
-    private @interface Type {}
+    private DeviceTagSelector tagSelector;
 
-    private static final String OR = "or";
-    private static final String AND = "and";
-    private static final String NOT = "not";
-    private static final String TAG = "tag";
-
-    private final String type;
-    private String tag;
-
-    private List<TagSelector> selectors;
-
-    /**
-     * Creates a tag selector that matches a single tag.
-     *
-     * @param tag The tag.
-     */
-    private TagSelector(@NonNull String tag) {
-        this.type = TAG;
-        this.tag = tag;
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public TagSelector(DeviceTagSelector core) {
+        this.tagSelector = core;
     }
 
-    /**
-     * Creates a complex tag selector.
-     *
-     * @param type The selector type.
-     * @param selectors The sub tag selectors.
-     */
-    private TagSelector(@Type @NonNull String type, @NonNull @Size(min = 1) List<TagSelector> selectors) {
-        this.type = type;
-        this.selectors = new ArrayList<>(selectors);
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public DeviceTagSelector getTagSelector() {
+        return tagSelector;
     }
 
     /**
@@ -83,7 +53,7 @@ public class TagSelector implements JsonSerializable {
      */
     @NonNull
     public static TagSelector and(@NonNull @Size(min = 1) List<TagSelector> selectors) {
-        return new TagSelector(AND, selectors);
+        return new TagSelector(DeviceTagSelector.Companion.and(convert(selectors)));
     }
 
     /**
@@ -94,7 +64,7 @@ public class TagSelector implements JsonSerializable {
      */
     @NonNull
     public static TagSelector and(@NonNull @Size(min = 1) TagSelector... selectors) {
-        return new TagSelector(AND, Arrays.asList(selectors));
+        return new TagSelector(DeviceTagSelector.Companion.and(convert(Arrays.asList(selectors))));
     }
 
     /**
@@ -105,7 +75,7 @@ public class TagSelector implements JsonSerializable {
      */
     @NonNull
     public static TagSelector or(@NonNull @Size(min = 1) List<TagSelector> selectors) {
-        return new TagSelector(OR, selectors);
+        return new TagSelector(DeviceTagSelector.Companion.or(convert(selectors)));
     }
 
     /**
@@ -116,7 +86,7 @@ public class TagSelector implements JsonSerializable {
      */
     @NonNull
     public static TagSelector or(@NonNull @Size(min = 1) TagSelector... selectors) {
-        return new TagSelector(OR, Arrays.asList(selectors));
+        return new TagSelector(DeviceTagSelector.Companion.or(convert(Arrays.asList(selectors))));
     }
 
     /**
@@ -127,7 +97,7 @@ public class TagSelector implements JsonSerializable {
      */
     @NonNull
     public static TagSelector not(@NonNull TagSelector selector) {
-        return new TagSelector(NOT, Collections.singletonList(selector));
+        return new TagSelector(DeviceTagSelector.Companion.not(selector.tagSelector));
     }
 
     /**
@@ -138,7 +108,7 @@ public class TagSelector implements JsonSerializable {
      */
     @NonNull
     public static TagSelector tag(@NonNull String tag) {
-        return new TagSelector(tag);
+        return new TagSelector(DeviceTagSelector.Companion.tag(tag));
     }
 
     /**
@@ -150,84 +120,21 @@ public class TagSelector implements JsonSerializable {
      */
     @NonNull
     public static TagSelector fromJson(@NonNull JsonValue value) throws JsonException {
-        JsonMap jsonMap = value.optMap();
-
-        if (jsonMap.containsKey(TAG)) {
-            String tag = jsonMap.opt(TAG).getString();
-            if (tag == null) {
-                throw new JsonException("Tag selector expected a tag: " + jsonMap.opt(TAG));
-            }
-
-            return tag(tag);
-        }
-
-        if (jsonMap.containsKey(OR)) {
-            JsonList selectors = jsonMap.opt(OR).getList();
-            if (selectors == null) {
-                throw new JsonException("OR selector expected array of tag selectors: " + jsonMap.opt(OR));
-            }
-
-            return or(parseSelectors(selectors));
-        }
-
-        if (jsonMap.containsKey(AND)) {
-            JsonList selectors = jsonMap.opt(AND).getList();
-            if (selectors == null) {
-                throw new JsonException("AND selector expected array of tag selectors: " + jsonMap.opt(AND));
-            }
-
-            return and(parseSelectors(selectors));
-        }
-
-        if (jsonMap.containsKey(NOT)) {
-            return not(fromJson(jsonMap.opt(NOT)));
-        }
-
-        throw new JsonException("Json value did not contain a valid selector: " + value);
+        return new TagSelector(DeviceTagSelector.Companion.fromJson(value));
     }
 
-    /**
-     * Helper method to parse a list of selectors.
-     *
-     * @param jsonList The json list.
-     * @return A list of tag selectors.
-     * @throws JsonException If the json contains an invalid selector.
-     */
-    private static List<TagSelector> parseSelectors(JsonList jsonList) throws JsonException {
-        List<TagSelector> selectors = new ArrayList<>();
-        for (JsonValue jsonValue : jsonList) {
-            selectors.add(fromJson(jsonValue));
+    private static List<DeviceTagSelector> convert(List<TagSelector> input) {
+        ArrayList<DeviceTagSelector> result = new ArrayList<>();
+        for (TagSelector selector : input) {
+            result.add(selector.tagSelector);
         }
-
-        if (selectors.isEmpty()) {
-            throw new JsonException("Expected 1 or more selectors");
-        }
-
-        return selectors;
+        return result;
     }
 
     @NonNull
     @Override
     public JsonValue toJsonValue() {
-        JsonMap.Builder builder = JsonMap.newBuilder();
-
-        switch (type) {
-            case TAG:
-                builder.put(type, tag);
-                break;
-
-            case NOT:
-                builder.put(type, selectors.get(0));
-                break;
-
-            case OR:
-            case AND:
-            default:
-                builder.put(type, JsonValue.wrapOpt(selectors));
-                break;
-        }
-
-        return builder.build().toJsonValue();
+        return tagSelector.toJsonValue();
     }
 
     /**
@@ -239,32 +146,7 @@ public class TagSelector implements JsonSerializable {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public boolean apply(@NonNull Collection<String> tags) {
-        switch (type) {
-            case TAG:
-                return tags.contains(tag);
-
-            case NOT:
-                return !selectors.get(0).apply(tags);
-
-            case AND:
-                for (TagSelector selector : selectors) {
-                    if (!selector.apply(tags)) {
-                        return false;
-                    }
-                }
-
-                return true;
-
-            case OR:
-            default:
-                for (TagSelector selector : selectors) {
-                    if (selector.apply(tags)) {
-                        return true;
-                    }
-                }
-
-                return false;
-        }
+        return tagSelector.apply(tags);
     }
 
     @Override
@@ -277,14 +159,12 @@ public class TagSelector implements JsonSerializable {
         }
 
         TagSelector that = (TagSelector) o;
-        return ObjectsCompat.equals(type, that.type) &&
-                ObjectsCompat.equals(tag, that.tag) &&
-                ObjectsCompat.equals(selectors, that.selectors);
+        return that.tagSelector.equals(tagSelector);
     }
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(type, tag, selectors);
+        return ObjectsCompat.hash(tagSelector);
     }
 
     @NonNull
@@ -292,5 +172,4 @@ public class TagSelector implements JsonSerializable {
     public String toString() {
         return toJsonValue().toString();
     }
-
 }

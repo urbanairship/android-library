@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation;
 
+import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.iam.InAppMessage;
@@ -68,6 +69,15 @@ public final class Schedule<T extends ScheduleData> {
     public static final String TYPE_DEFERRED = "deferred";
 
     /**
+     * Default automation message type.
+     *
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static final String DEFAULT_MESSAGE_TYPE = "transactional";
+
+    /**
      * The triggers limit for a single schedule.
      */
     public static final long TRIGGER_LIMIT = 10;
@@ -83,10 +93,13 @@ public final class Schedule<T extends ScheduleData> {
     private final long editGracePeriod;
     private final long interval;
     private final String group;
-    private final Audience audience;
+    private final AudienceSelector audience;
     private final JsonValue campaigns;
     private final JsonValue reportingContext;
     private final List<String> frequencyConstraintIds;
+    private final String messageType;
+    private final boolean bypassHoldoutGroups;
+    private final long newUserEvaluationDate;
 
     @Type
     private final String type;
@@ -111,10 +124,13 @@ public final class Schedule<T extends ScheduleData> {
         this.data = builder.data;
         this.type = builder.type;
         this.group = builder.group;
-        this.audience = builder.audience;
+        this.audience = builder.audienceSelector;
         this.campaigns = builder.campaigns == null ? JsonValue.NULL : builder.campaigns;
         this.reportingContext = builder.reportingContext == null ? JsonValue.NULL : builder.reportingContext;
         this.frequencyConstraintIds = builder.frequencyConstraintIds == null ? Collections.<String>emptyList() : Collections.unmodifiableList(builder.frequencyConstraintIds);
+        this.messageType = builder.messageType == null ? DEFAULT_MESSAGE_TYPE : builder.messageType;
+        this.bypassHoldoutGroups = builder.bypassHoldoutGroups == null ? false : builder.bypassHoldoutGroups;
+        this.newUserEvaluationDate = builder.newUserEvaluationDate;
     }
 
     /**
@@ -144,6 +160,21 @@ public final class Schedule<T extends ScheduleData> {
      */
     @Nullable
     public Audience getAudience() {
+        if (audience == null) {
+            return null;
+        }
+        return new Audience(audience);
+    }
+
+    /**
+     * Gets the audience.
+     *
+     * @return The audience.
+     * @hide
+     */
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public AudienceSelector getAudienceSelector() {
         return audience;
     }
 
@@ -210,6 +241,42 @@ public final class Schedule<T extends ScheduleData> {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public List<String> getFrequencyConstraintIds() {
         return frequencyConstraintIds;
+    }
+
+    /**
+     * The automation message type.
+     *
+     * @return The message type.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public String getMessageType() {
+        return messageType;
+    }
+
+    /**
+     * Whether the schedule could be in a holdout group.
+     *
+     * @return Whether the schedule could be in a holdout group.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public boolean isBypassHoldoutGroups() {
+        return bypassHoldoutGroups;
+    }
+
+    /**
+     * The schedule created date
+     *
+     * @return unix timestamp.
+     * @hide
+     */
+    @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public long getNewUserEvaluationDate() {
+        return newUserEvaluationDate;
     }
 
     /**
@@ -393,6 +460,15 @@ public final class Schedule<T extends ScheduleData> {
         if (frequencyConstraintIds != null ? !frequencyConstraintIds.equals(schedule.frequencyConstraintIds) : schedule.frequencyConstraintIds != null)
             return false;
         if (!type.equals(schedule.type)) return false;
+
+        if (!ObjectsCompat.equals(messageType, schedule.messageType)) {
+            return false;
+        }
+
+        if (bypassHoldoutGroups != schedule.bypassHoldoutGroups) {
+            return false;
+        }
+
         return data.equals(schedule.data);
     }
 
@@ -439,6 +515,7 @@ public final class Schedule<T extends ScheduleData> {
                 ", campaigns=" + campaigns +
                 ", reportingContext=" + reportingContext +
                 ", frequencyConstraintIds=" + frequencyConstraintIds +
+                ", newUserEvaluationDate=" + newUserEvaluationDate +
                 '}';
     }
 
@@ -461,10 +538,13 @@ public final class Schedule<T extends ScheduleData> {
         private String group;
         private JsonMap metadata;
         private String id;
-        private Audience audience;
+        private AudienceSelector audienceSelector;
         private JsonValue campaigns;
         private JsonValue reportingContext;
         private List<String> frequencyConstraintIds;
+        private String messageType;
+        private Boolean bypassHoldoutGroups = false;
+        private long newUserEvaluationDate;
 
         private Builder(@NonNull Schedule<T> info) {
             this.id = info.id;
@@ -479,11 +559,14 @@ public final class Schedule<T extends ScheduleData> {
             this.priority = info.priority;
             this.editGracePeriod = info.editGracePeriod;
             this.interval = info.interval;
-            this.audience = info.audience;
+            this.audienceSelector = info.audience;
             this.group = info.group;
             this.campaigns = info.campaigns;
             this.frequencyConstraintIds = info.frequencyConstraintIds;
             this.reportingContext = info.reportingContext;
+            this.messageType = info.messageType;
+            this.bypassHoldoutGroups = info.bypassHoldoutGroups;
+            this.newUserEvaluationDate = info.newUserEvaluationDate;
         }
 
         private Builder(@NonNull @Type String type, @NonNull T data) {
@@ -498,8 +581,22 @@ public final class Schedule<T extends ScheduleData> {
          * @return The builder.
          */
         @NonNull
+        @Deprecated
         public Builder<T> setAudience(@Nullable Audience audience) {
-            this.audience = audience;
+            // no usage
+            this.audienceSelector = audience == null ? null : audience.getAudienceSelector();
+            return this;
+        }
+
+        /**
+         * Sets the audience.
+         *
+         * @param audience The audience.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder<T> setAudience(@Nullable AudienceSelector audience) {
+            this.audienceSelector = audience;
             return this;
         }
 
@@ -703,6 +800,48 @@ public final class Schedule<T extends ScheduleData> {
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder<T> setFrequencyConstraintIds(@Nullable List<String> frequencyConstraintIds) {
             this.frequencyConstraintIds = frequencyConstraintIds;
+            return this;
+        }
+
+        /**
+         * Sets the message type.
+         *
+         * @param messageType The message type.
+         * @return The Builder instance.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder<T> setMessageType(@Nullable String messageType) {
+            this.messageType = messageType;
+            return this;
+        }
+
+        /**
+         * Sets whether or not the schedule could be in a holdout group.
+         *
+         * @param bypassHoldoutGroups The property value.
+         * @return The Builder instance.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder<T> setBypassHoldoutGroups(Boolean bypassHoldoutGroups) {
+            this.bypassHoldoutGroups = bypassHoldoutGroups;
+            return this;
+        }
+
+        /**
+         * Sets the created date for this schedule we can use in IAA audience check
+         *
+         * @param date The property value.
+         * @return The Builder instance.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder<T> setNewUserEvaluationDate(long date) {
+            this.newUserEvaluationDate = date;
             return this;
         }
 

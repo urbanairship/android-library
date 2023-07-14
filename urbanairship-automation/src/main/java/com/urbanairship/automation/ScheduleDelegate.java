@@ -2,8 +2,11 @@
 
 package com.urbanairship.automation;
 
+import com.urbanairship.experiment.ExperimentResult;
+
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -34,9 +37,14 @@ interface ScheduleDelegate<T extends ScheduleData> {
      *
      * @param schedule The schedule.
      * @param resolvedData The schedule data. Will be different than the data on the `schedule.data` if the schedule was deferred.
+     * @param experimentResult The experiment reuslts.
      * @param callback The callback.
      */
-    void onPrepareSchedule(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull T resolvedData, @NonNull AutomationDriver.PrepareScheduleCallback callback);
+    void onPrepareSchedule(
+            @NonNull Schedule<? extends ScheduleData> schedule,
+            @NonNull T resolvedData,
+            @Nullable ExperimentResult experimentResult,
+            @NonNull AutomationDriver.PrepareScheduleCallback callback);
 
     /**
      * Called if the prepared schedule is no longer valid and the execution will be aborted.

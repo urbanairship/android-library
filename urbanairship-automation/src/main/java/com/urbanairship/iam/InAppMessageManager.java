@@ -11,6 +11,7 @@ import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.automation.AutomationDriver;
 import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.iam.assets.AssetManager;
 import com.urbanairship.iam.banner.BannerAdapterFactory;
 import com.urbanairship.iam.events.InAppReportingEvent;
@@ -18,6 +19,7 @@ import com.urbanairship.iam.fullscreen.FullScreenAdapterFactory;
 import com.urbanairship.iam.html.HtmlAdapterFactory;
 import com.urbanairship.iam.layout.AirshipLayoutAdapterFactory;
 import com.urbanairship.iam.modal.ModalAdapterFactory;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.RetryingExecutor;
 
@@ -257,8 +259,20 @@ public class InAppMessageManager {
                           final @Nullable JsonValue campaigns,
                           final @Nullable JsonValue reportingContext,
                           final @NonNull InAppMessage inAppMessage,
+                          final @Nullable ExperimentResult experimentResult,
                           final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
-        final AdapterWrapper adapter = createAdapterWrapper(scheduleId, campaigns, reportingContext, inAppMessage);
+
+        // message is part of a hold out group
+        if (experimentResult != null && experimentResult.isMatching()) {
+            AdapterWrapper wrapper = createAdapterWrapper(scheduleId, campaigns, reportingContext,
+                    inAppMessage, experimentResult);
+            adapterWrappers.put(scheduleId, wrapper);
+            callback.onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+            return;
+        }
+
+        final AdapterWrapper adapter = createAdapterWrapper(scheduleId, campaigns,
+                reportingContext, inAppMessage, experimentResult);
         if (adapter == null) {
             // Failed
             callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
@@ -355,6 +369,22 @@ public class InAppMessageManager {
         }
 
         try {
+            if (reportIfInHoldoutGroup(adapterWrapper)) {
+                // Holdout group
+                synchronized (executionCallbacks) {
+                    executionCallbacks.remove(scheduleId);
+                }
+
+                adapterWrapper.coordinator.onDisplayStarted(adapterWrapper.message);
+                adapterWrapper.coordinator.onDisplayFinished(adapterWrapper.message);
+
+                callback.onFinish();
+                return;
+            }
+
+            // Store the result in case we are interrupted during the display
+            storeExperimentResult(adapterWrapper.experimentResult, scheduleId);
+
             adapterWrapper.display(context);
         } catch (AdapterWrapper.DisplayException e) {
             UALog.e(e, "Failed to display in-app message for schedule %s.", scheduleId);
@@ -372,6 +402,7 @@ public class InAppMessageManager {
             InAppReportingEvent.display(scheduleId, adapterWrapper.message)
                                .setCampaigns(adapterWrapper.campaigns)
                                .setReportingContext(adapterWrapper.reportingContext)
+                               .setExperimentResult(adapterWrapper.experimentResult)
                                .record(analytics);
         }
 
@@ -382,6 +413,39 @@ public class InAppMessageManager {
         }
 
         UALog.v("Message displayed for schedule %s.", scheduleId);
+    }
+
+    private boolean reportIfInHoldoutGroup(AdapterWrapper wrapper) {
+        ExperimentResult result = wrapper.experimentResult;
+        if (result == null || !result.isMatching()) {
+            return false;
+        }
+
+        InAppReportingEvent
+                .holdoutGroupControl(wrapper.scheduleId, wrapper.message, result)
+                .setCampaigns(wrapper.campaigns)
+                .setReportingContext(wrapper.reportingContext)
+                .setExperimentResult(wrapper.experimentResult)
+                .record(analytics);
+
+        return true;
+    }
+
+    private String generateStoreKey(String scheduleId) {
+        return "UAInAppMessageManager:experimentResult:" + scheduleId;
+    }
+
+    private void storeExperimentResult(@Nullable ExperimentResult result, String scheduleId) {
+        dataStore.put(generateStoreKey(scheduleId), result);
+    }
+
+    private @Nullable ExperimentResult getStoredExperimentResult(String scheduleId) {
+        JsonMap stored = dataStore.getJsonValue(generateStoreKey(scheduleId)).optMap();
+        if (stored.isEmpty()) {
+            return null;
+        }
+
+        return ExperimentResult.Companion.fromJson(stored);
     }
 
     /**
@@ -412,7 +476,10 @@ public class InAppMessageManager {
                 InAppReportingEvent.interrupted(scheduleId, source)
                                    .setReportingContext(reportingContext)
                                    .setCampaigns(campaigns)
+                                   .setExperimentResult(getStoredExperimentResult(scheduleId))
                                    .record(analytics);
+
+                storeExperimentResult(null, scheduleId);
             }
         });
     }
@@ -440,6 +507,7 @@ public class InAppMessageManager {
             InAppReportingEvent.resolution(scheduleId, adapterWrapper.message, displayTime, resolutionInfo)
                                .setCampaigns(adapterWrapper.campaigns)
                                .setReportingContext(adapterWrapper.reportingContext)
+                               .setExperimentResult(adapterWrapper.experimentResult)
                                .record(analytics);
         }
     }
@@ -465,6 +533,9 @@ public class InAppMessageManager {
                 listener.onMessageFinished(scheduleId, adapterWrapper.message, resolutionInfo);
             }
         }
+
+        // Clear the result after display
+        storeExperimentResult(null, scheduleId);
 
         // Finish the schedule
         callExecutionFinishedCallback(scheduleId);
@@ -518,7 +589,8 @@ public class InAppMessageManager {
     private AdapterWrapper createAdapterWrapper(@NonNull String scheduleId,
                                                 @Nullable JsonValue campaigns,
                                                 @Nullable JsonValue reportingContext,
-                                                @NonNull InAppMessage message) {
+                                                @NonNull InAppMessage message,
+                                                @Nullable ExperimentResult experimentResult) {
         InAppMessageAdapter adapter = null;
         DisplayCoordinator coordinator = null;
 
@@ -564,7 +636,8 @@ public class InAppMessageManager {
         }
 
         coordinator.setDisplayReadyCallback(displayReadyCallback);
-        return new AdapterWrapper(scheduleId, campaigns, reportingContext, message, adapter, coordinator);
+        return new AdapterWrapper(scheduleId, campaigns, reportingContext, message,
+                adapter, coordinator, experimentResult);
     }
 
     /**
@@ -616,5 +689,4 @@ public class InAppMessageManager {
     public void notifyDisplayConditionsChanged() {
         delegate.onReadinessChanged();
     }
-
 }

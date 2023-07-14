@@ -20,6 +20,8 @@ import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.audience.AudienceOverridesProvider;
+import com.urbanairship.audience.DeviceInfoProvider;
+import com.urbanairship.audience.DeviceInfoProviderImpl;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -41,6 +43,7 @@ import com.urbanairship.push.PushManager;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.AppStoreUtils;
+import com.urbanairship.util.Clock;
 import com.urbanairship.util.ProcessUtils;
 
 import java.lang.annotation.Retention;
@@ -57,6 +60,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.content.pm.PackageInfoCompat;
+import kotlin.Unit;
 
 /**
  * UAirship manages the shared state for all Airship
@@ -754,10 +758,14 @@ public class UAirship {
         this.remoteConfigManager.addRemoteAirshipConfigListener(remoteAirshipUrlConfigProvider);
         components.add(this.remoteConfigManager);
 
+        DeviceInfoProvider infoProvider = new DeviceInfoProviderImpl(
+                pushManager::areNotificationsOptedIn, privacyManager::isEnabled,
+                channel::getTags, channel::getId, applicationMetrics::getCurrentAppVersion,
+                permissionsManager, contact::getStableContactId);
 
         // Experiments
-        this.experimentManager = new ExperimentManager(application, preferenceDataStore, remoteData,
-                channel::getId, contact::getStableContactId);
+        this.experimentManager = new ExperimentManager(application, preferenceDataStore,
+                remoteData, infoProvider, Clock.DEFAULT_CLOCK);
         components.add(this.experimentManager);
 
         // Debug
@@ -780,7 +788,8 @@ public class UAirship {
 
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
-                privacyManager, channel, pushManager, analytics, remoteData, audienceOverridesProvider);
+                privacyManager, channel, pushManager, analytics, remoteData, audienceOverridesProvider,
+                this.experimentManager, infoProvider);
         processModule(automationModule);
 
         // Ad Id

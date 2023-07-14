@@ -7,6 +7,7 @@ import android.net.Uri;
 import com.urbanairship.PendingResult;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
+import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.limits.FrequencyConstraint;
@@ -103,9 +104,9 @@ public class InAppRemoteDataObserverTest {
                                                      .setStart(1000)
                                                      .setEnd(3000)
                                                      .setInterval(10, TimeUnit.SECONDS)
-                                                     .setAudience(Audience.newBuilder()
-                                                                          .setLocationOptIn(true)
-                                                                          .build())
+                                                     .setAudience(AudienceSelector.Companion.newBuilder()
+                                                                                            .setLocationOptIn(true)
+                                                                                            .build())
                                                      .setDelay(ScheduleDelay.newBuilder()
                                                                             .setSeconds(100)
                                                                             .build())
@@ -240,9 +241,9 @@ public class InAppRemoteDataObserverTest {
                                                         .setStart(1000)
                                                         .setEnd(3000)
                                                         .setInterval(10, TimeUnit.SECONDS)
-                                                        .setAudience(Audience.newBuilder()
-                                                                             .setLocationOptIn(true)
-                                                                             .build())
+                                                        .setAudience(AudienceSelector.Companion.newBuilder()
+                                                                                               .setLocationOptIn(true)
+                                                                                               .build())
                                                         .setDelay(ScheduleDelay.newBuilder()
                                                                                .setSeconds(100)
                                                                                .build())
@@ -442,11 +443,6 @@ public class InAppRemoteDataObserverTest {
     }
 
     @Test
-    public void testDefaultNewUserCutoffTime() {
-        assertEquals(-1, observer.getScheduleNewUserCutOffTime());
-    }
-
-    @Test
     public void testEmptyConstraints() {
         RemoteDataPayload payload = new TestPayloadBuilder()
                 .setTimeStamp(TimeUnit.DAYS.toMillis(1))
@@ -550,7 +546,7 @@ public class InAppRemoteDataObserverTest {
             JsonMap messageJson = JsonMap.newBuilder()
                                          .putAll(schedule.getData().toJsonValue().optMap())
                                          .put("message_id", schedule.getId())
-                                         .put("audience", schedule.getAudience())
+                                         .put("audience", schedule.getAudienceSelector())
                                          .build();
 
             JsonMap.Builder scheduleJsonBuilder = JsonMap.newBuilder()
@@ -563,7 +559,7 @@ public class InAppRemoteDataObserverTest {
                                                          .put("id", schedule.getId())
                                                          .put("start", schedule.getStart() > 0 ? DateUtils.createIso8601TimeStamp(schedule.getStart()) : null)
                                                          .put("end", schedule.getEnd() > 0 ? DateUtils.createIso8601TimeStamp(schedule.getEnd()) : null)
-                                                         .put("audience", schedule.getAudience())
+                                                         .put("audience", schedule.getAudienceSelector())
                                                          .put("group", schedule.getGroup())
                                                          .put("delay", schedule.getDelay())
                                                          .put("message", messageJson);
@@ -588,7 +584,7 @@ public class InAppRemoteDataObserverTest {
                                                          .put("id", schedule.getId())
                                                          .put("start", schedule.getStart() > 0 ? DateUtils.createIso8601TimeStamp(schedule.getStart()) : null)
                                                          .put("end", schedule.getEnd() > 0 ? DateUtils.createIso8601TimeStamp(schedule.getEnd()) : null)
-                                                         .put("audience", schedule.getAudience())
+                                                         .put("audience", schedule.getAudienceSelector())
                                                          .put("group", schedule.getGroup())
                                                          .put("delay", schedule.getDelay())
                                                          .put("campaigns", schedule.getCampaigns())

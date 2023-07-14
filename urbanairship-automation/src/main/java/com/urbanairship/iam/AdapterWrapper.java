@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.urbanairship.UALog;
+import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.iam.assets.Assets;
 import com.urbanairship.json.JsonValue;
 
@@ -46,6 +47,9 @@ final class AdapterWrapper {
     public final InAppMessageAdapter adapter;
     public final DisplayCoordinator coordinator;
 
+    @Nullable
+    public final ExperimentResult experimentResult;
+
     public boolean displayed = false;
 
     AdapterWrapper(@NonNull String scheduleId,
@@ -53,13 +57,15 @@ final class AdapterWrapper {
                    @Nullable JsonValue reportingContext,
                    @NonNull InAppMessage message,
                    @NonNull InAppMessageAdapter adapter,
-                   @NonNull DisplayCoordinator coordinator) {
+                   @NonNull DisplayCoordinator coordinator,
+                   @Nullable ExperimentResult experimentResult) {
         this.scheduleId = scheduleId;
         this.campaigns = campaigns == null ? JsonValue.NULL : campaigns;
         this.reportingContext = reportingContext == null ? JsonValue.NULL : reportingContext;
         this.message = message;
         this.adapter = adapter;
         this.coordinator = coordinator;
+        this.experimentResult = experimentResult;
     }
 
     /**
@@ -104,7 +110,7 @@ final class AdapterWrapper {
         displayed = true;
 
         try {
-            DisplayHandler displayHandler = new DisplayHandler(scheduleId, message.isReportingEnabled(), campaigns, reportingContext);
+            DisplayHandler displayHandler = new DisplayHandler(scheduleId, message.isReportingEnabled(), campaigns, reportingContext, experimentResult);
             adapter.onDisplay(context, displayHandler);
             coordinator.onDisplayStarted(message);
         } catch (Exception e) {

@@ -8,6 +8,8 @@ import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
+import com.urbanairship.experiment.ExperimentResult;
+import com.urbanairship.http.RequestBody;
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.EventMatchers;
 import com.urbanairship.iam.InAppMessage;
@@ -15,6 +17,7 @@ import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.iam.TextInfo;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
@@ -26,6 +29,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -474,9 +478,12 @@ public class InAppReportingEventTest {
         FormInfo formInfo = new FormInfo("form id", "form type", "response type", true);
         PagerData pagerData = new PagerData("pager id", 1, "page1", 2, true);
         LayoutData layoutData = new LayoutData(formInfo, pagerData, "button ID!");
+        List<JsonMap> reportingContext = Arrays.asList(JsonMap.newBuilder().put("reporting", "context").build());
+        ExperimentResult experimentResult = new ExperimentResult("channel-id", "contact-id", null, true, reportingContext);
         InAppReportingEvent.display("schedule ID", message)
                            .setLayoutData(layoutData)
                            .setReportingContext(JsonValue.wrap("reporting bits!"))
+                           .setExperimentResult(experimentResult)
                            .record(mockAnalytics);
 
         JsonMap contextData = JsonMap.newBuilder()
@@ -497,6 +504,7 @@ public class InAppReportingEventTest {
                                      .put("button", JsonMap.newBuilder()
                                                            .put("identifier", "button ID!")
                                                            .build())
+                                     .put("experiments", experimentResult.evaluatedExperimentsDataAsJsonValue())
                                      .build();
 
         JsonMap expectedData = JsonMap.newBuilder()

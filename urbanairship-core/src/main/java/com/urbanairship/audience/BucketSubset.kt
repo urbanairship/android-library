@@ -1,14 +1,16 @@
-package com.urbanairship.experiment
+package com.urbanairship.audience
 
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonSerializable
+import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
 
 internal class BucketSubset(
     val min: Long,
     val max: Long
-) {
+) : JsonSerializable {
 
     companion object {
         private const val KEY_BUCKET_MIN = "min_hash_bucket"
@@ -36,5 +38,12 @@ internal class BucketSubset(
 
     fun contains(value: Long): Boolean {
         return value in min until max
+    }
+
+    override fun toJsonValue(): JsonValue {
+        return JsonMap.newBuilder()
+            .put(KEY_BUCKET_MIN, min)
+            .put(KEY_BUCKET_MAX, max)
+            .build().toJsonValue()
     }
 }

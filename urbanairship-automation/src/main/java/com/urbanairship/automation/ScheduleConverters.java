@@ -49,8 +49,10 @@ class ScheduleConverters {
                                          .setAudience(entry.schedule.audience)
                                          .setCampaigns(entry.schedule.campaigns)
                                          .setReportingContext(entry.schedule.reportingContext)
-                                         .setFrequencyConstraintIds(entry.schedule.frequencyConstraintIds);
-
+                                         .setFrequencyConstraintIds(entry.schedule.frequencyConstraintIds)
+                                         .setMessageType(entry.schedule.messageType)
+                                         .setBypassHoldoutGroups(entry.schedule.bypassHoldoutGroups)
+                                         .setNewUserEvaluationDate(entry.schedule.newUserEvaluationDate);
         ScheduleDelay.Builder delayBuilder = ScheduleDelay.newBuilder()
                                                           .setAppState(entry.schedule.appState)
                                                           .setRegionId(entry.schedule.regionId)
@@ -87,12 +89,15 @@ class ScheduleConverters {
         entity.priority = schedule.getPriority();
         entity.interval = schedule.getInterval();
         entity.editGracePeriod = schedule.getEditGracePeriod();
-        entity.audience = schedule.getAudience();
+        entity.audience = schedule.getAudienceSelector();
         entity.scheduleType = schedule.getType();
         entity.data = schedule.getDataAsJson();
         entity.campaigns = schedule.getCampaigns();
         entity.reportingContext = schedule.getReportingContext();
         entity.frequencyConstraintIds = schedule.getFrequencyConstraintIds();
+        entity.messageType = schedule.getMessageType();
+        entity.bypassHoldoutGroups = schedule.isBypassHoldoutGroups();
+        entity.newUserEvaluationDate = schedule.getNewUserEvaluationDate();
 
         for (Trigger trigger : schedule.getTriggers()) {
             triggerEntities.add(convert(trigger, false, schedule.getId()));

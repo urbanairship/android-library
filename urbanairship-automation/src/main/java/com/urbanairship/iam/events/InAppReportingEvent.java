@@ -8,8 +8,10 @@ import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
+import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.ResolutionInfo;
+import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
@@ -123,6 +125,7 @@ public class InAppReportingEvent {
     private static final String BUTTON_ID = "button_id";
     private static final String BUTTON_DESCRIPTION = "button_description";
     private static final String REPLACEMENT_ID = "replacement_id";
+    private static final String RESOLUTION_CONTROL = "control";
 
     // Common keys
     private static final String ID = "id";
@@ -152,6 +155,12 @@ public class InAppReportingEvent {
     private static final String MESSAGE_ID = "message_id";
     private static final String CAMPAIGNS = "campaigns";
 
+    // Holdout Group
+    private static final String EXPERIMENTS = "experiments";
+    private static final String HOLDOUT_DEVICE = "device";
+    private static final String HOLDOUT_DEVICE_CHANNEL_ID = "channel_identifier";
+    private static final String HOLDOUT_DEVICE_CONTACT_ID = "contact_identifier";
+
     // Source
     private static final String SOURCE_URBAN_AIRSHIP = "urban-airship";
     private static final String SOURCE_APP_DEFINED = "app-defined";
@@ -164,6 +173,9 @@ public class InAppReportingEvent {
 
     private JsonValue campaigns;
     private JsonValue reportingContext;
+
+    @Nullable
+    private ExperimentResult experimentResult;
     private LayoutData layoutState;
     private JsonMap overrides;
 
@@ -345,6 +357,27 @@ public class InAppReportingEvent {
                                      .build());
     }
 
+    public static InAppReportingEvent holdoutGroupControl(
+            @NonNull String scheduleId,
+            @NonNull InAppMessage message,
+            @NonNull ExperimentResult holdoutGroup) {
+
+        JsonMap deviceInfo = JsonMap
+                .newBuilder()
+                .put(HOLDOUT_DEVICE_CHANNEL_ID, holdoutGroup.getChannelId())
+                .put(HOLDOUT_DEVICE_CONTACT_ID, holdoutGroup.getContactId())
+                .build();
+
+        JsonMap baseData = JsonMap
+                .newBuilder()
+                .put(RESOLUTION, JsonMap.newBuilder().put(RESOLUTION_TYPE, RESOLUTION_CONTROL).build())
+                .put(HOLDOUT_DEVICE, deviceInfo)
+                .build();
+
+        return new InAppReportingEvent(TYPE_RESOLUTION, scheduleId, message)
+                .setOverrides(baseData);
+    }
+
     public InAppReportingEvent setCampaigns(@Nullable JsonValue campaigns) {
         this.campaigns = campaigns;
         return this;
@@ -360,6 +393,11 @@ public class InAppReportingEvent {
         return this;
     }
 
+    public InAppReportingEvent setExperimentResult(@Nullable ExperimentResult experimentResult) {
+        this.experimentResult = experimentResult;
+        return this;
+    }
+
     private InAppReportingEvent setOverrides(JsonMap overrides) {
         this.overrides = overrides;
         return this;
@@ -372,7 +410,7 @@ public class InAppReportingEvent {
                                          .put(SOURCE, isAppDefined ? SOURCE_APP_DEFINED : SOURCE_URBAN_AIRSHIP)
                                          .putOpt(CONVERSION_SEND_ID, analytics.getConversionSendId())
                                          .putOpt(CONVERSION_METADATA, analytics.getConversionMetadata())
-                                         .put(CONTEXT, contextData(layoutState, reportingContext));
+                                         .put(CONTEXT, contextData(layoutState, reportingContext, experimentResult));
 
         if (renderedLocale != null) {
             builder.putOpt(LOCALE, renderedLocale);
@@ -400,7 +438,7 @@ public class InAppReportingEvent {
         return resolutionDataBuilder.build();
     }
 
-    private static JsonMap contextData(@Nullable LayoutData layoutState, @Nullable JsonValue reportingContext) {
+    private static JsonMap contextData(@Nullable LayoutData layoutState, @Nullable JsonValue reportingContext, @Nullable ExperimentResult experimentResult) {
         JsonMap.Builder contextBuilder = JsonMap.newBuilder()
                                                 .put(REPORTING_CONTEXT, reportingContext);
 
@@ -437,6 +475,11 @@ public class InAppReportingEvent {
                                              .build();
                 contextBuilder.put(REPORTING_CONTEXT_BUTTON, buttonContext);
             }
+        }
+
+        if (experimentResult != null) {
+            JsonValue reportingMetadata = experimentResult.evaluatedExperimentsDataAsJsonValue();
+            contextBuilder.put(EXPERIMENTS, reportingMetadata);
         }
 
         JsonMap contextData = contextBuilder.build();

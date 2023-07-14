@@ -6,6 +6,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 import androidx.core.util.ObjectsCompat;
@@ -14,6 +15,7 @@ import com.urbanairship.UALog;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.UAirship;
+import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.deferred.Deferred;
 import com.urbanairship.automation.limits.FrequencyConstraint;
@@ -80,6 +82,8 @@ class InAppRemoteDataObserver {
     private static final String CAMPAIGNS_KEY = "campaigns";
     private static final String REPORTING_CONTEXT_KEY = "reporting_context";
     private static final String FREQUENCY_CONSTRAINT_IDS_KEY = "frequency_constraint_ids";
+    private static final String MESSAGE_TYPE_KEY = "message_type";
+    private static final String BYPASS_HOLDOUT_GROUP_KEY = "bypass_holdout_groups";
 
     // Data store keys
     private static final String APP_LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP";
@@ -92,7 +96,6 @@ class InAppRemoteDataObserver {
 
     private static final String LAST_PAYLOAD_METADATA = "com.urbanairship.iam.data.LAST_PAYLOAD_METADATA";
 
-    private static final String SCHEDULE_NEW_USER_CUTOFF_TIME_KEY = "com.urbanairship.iam.data.NEW_USER_TIME";
     static final String REMOTE_DATA_METADATA = "com.urbanairship.iaa.REMOTE_DATA_METADATA";
     static final String REMOTE_DATA_INFO = "com.urbanairship.iaa.REMOTE_DATA_INFO";
 
@@ -294,7 +297,7 @@ class InAppRemoteDataObserver {
 
             if (scheduledRemoteIds.contains(scheduleId)) {
                 try {
-                    ScheduleEdits<?> edits = parseEdits(messageJson, scheduleMetadata);
+                    ScheduleEdits<?> edits = parseEdits(messageJson, scheduleMetadata, createdTimeStamp);
                     Boolean edited = delegate.editSchedule(scheduleId, edits).get();
                     if (edited != null && edited) {
                         UALog.d("Updated in-app automation: %s with edits: %s", scheduleId, edits);
@@ -306,11 +309,9 @@ class InAppRemoteDataObserver {
                 String minSdkVersion = messageJson.optMap().opt(MIN_SDK_VERSION_KEY).optString();
                 if (isNewSchedule(minSdkVersion, lastSdkVersion, createdTimeStamp, lastUpdate)) {
                     try {
-                        Schedule<? extends ScheduleData> schedule = parseSchedule(scheduleId, messageJson, scheduleMetadata);
-                        if (shouldSchedule(schedule, createdTimeStamp)) {
-                            newSchedules.add(schedule);
-                            UALog.d("New in-app automation: %s", schedule);
-                        }
+                        Schedule<? extends ScheduleData> schedule = parseSchedule(scheduleId, messageJson, scheduleMetadata, createdTimeStamp);
+                        newSchedules.add(schedule);
+                        UALog.d("New in-app automation: %s", schedule);
                     } catch (Exception e) {
                         UALog.e(e, "Failed to parse in-app automation: %s", messageJson);
                     }
@@ -429,28 +430,14 @@ class InAppRemoteDataObserver {
     }
 
     @Nullable
-    private static Audience parseAudience(@NonNull JsonValue jsonValue) throws JsonException {
+    private static AudienceSelector parseAudience(@NonNull JsonValue jsonValue) throws JsonException {
         JsonValue audienceJson = jsonValue.optMap().get(AUDIENCE_KEY);
         if (audienceJson == null) {
             // Legacy
             audienceJson = jsonValue.optMap().opt(MESSAGE_KEY).optMap().get(AUDIENCE_KEY);
         }
 
-        return audienceJson == null ? null : Audience.fromJson(audienceJson);
-    }
-
-    /**
-     * Helper method to check if the message should be scheduled.
-     *
-     * @param schedule The schedule info.
-     * @param createdTimeStamp The created times stamp.
-     * @return {@code true} if the message should be scheduled, otherwise {@code false}.
-     */
-    private boolean shouldSchedule(Schedule<? extends ScheduleData> schedule, long createdTimeStamp) {
-        Context context = UAirship.getApplicationContext();
-        Audience audience = schedule.getAudience();
-        boolean allowNewUser = createdTimeStamp <= getScheduleNewUserCutOffTime();
-        return AudienceChecks.checkAudienceForScheduling(context, audience, allowNewUser);
+        return audienceJson == null ? null : AudienceSelector.Companion.fromJson(audienceJson);
     }
 
     private boolean isNewSchedule(@Nullable String minSdkVersion,
@@ -504,26 +491,6 @@ class InAppRemoteDataObserver {
         return scheduleIds;
     }
 
-    /**
-     * Gets the schedule new user audience check cut off time.
-     *
-     * @return The new user cut off time.
-     */
-    long getScheduleNewUserCutOffTime() {
-        return preferenceDataStore.getLong(SCHEDULE_NEW_USER_CUTOFF_TIME_KEY, -1);
-    }
-
-    /**
-     * Sets the schedule new user cut off time. Any schedules that have
-     * a new user condition will be dropped if the schedule create time is after the
-     * cut off time.
-     *
-     * @param time The schedule new user cut off time.
-     */
-    void setScheduleNewUserCutOffTime(long time) {
-        preferenceDataStore.put(SCHEDULE_NEW_USER_CUTOFF_TIME_KEY, time);
-    }
-
     @Nullable
     private RemoteDataInfo getLastPayloadRemoteInfo(@NonNull String key) {
         JsonValue jsonValue = preferenceDataStore.getJsonValue(key);
@@ -548,7 +515,11 @@ class InAppRemoteDataObserver {
      * @return A schedule info.
      * @throws JsonException If the json value contains an invalid schedule info.
      */
-    public static Schedule<? extends ScheduleData> parseSchedule(@NonNull String scheduleId, @NonNull JsonValue value, @NonNull JsonMap metadata) throws JsonException {
+    public static Schedule<? extends ScheduleData> parseSchedule(
+            @NonNull String scheduleId,
+            @NonNull JsonValue value,
+            @NonNull JsonMap metadata,
+            long createdDate) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         // Fallback to in-app message to support legacy messages
@@ -587,7 +558,10 @@ class InAppRemoteDataObserver {
                .setInterval(jsonMap.opt(INTERVAL_KEY).getLong(0), TimeUnit.SECONDS)
                .setStart(parseTimeStamp(jsonMap.opt(START_KEY).getString()))
                .setEnd(parseTimeStamp(jsonMap.opt(END_KEY).getString()))
-               .setFrequencyConstraintIds(parseConstraintIds(jsonMap.opt(FREQUENCY_CONSTRAINT_IDS_KEY).optList()));
+               .setFrequencyConstraintIds(parseConstraintIds(jsonMap.opt(FREQUENCY_CONSTRAINT_IDS_KEY).optList()))
+               .setMessageType(jsonMap.opt(MESSAGE_TYPE_KEY).getString())
+               .setBypassHoldoutGroups(jsonMap.opt(BYPASS_HOLDOUT_GROUP_KEY).getBoolean())
+               .setNewUserEvaluationDate(createdDate);
 
         for (JsonValue triggerJson : jsonMap.opt(TRIGGERS_KEY).optList()) {
             builder.addTrigger(Trigger.fromJson(triggerJson));
@@ -613,7 +587,10 @@ class InAppRemoteDataObserver {
      * @throws JsonException If the json is invalid.
      */
     @NonNull
-    public static ScheduleEdits<? extends ScheduleData> parseEdits(@NonNull JsonValue value, @Nullable JsonMap scheduleMetadata) throws JsonException {
+    public static ScheduleEdits<? extends ScheduleData> parseEdits(
+            @NonNull JsonValue value,
+            @Nullable JsonMap scheduleMetadata,
+            long createdDate) throws JsonException {
         JsonMap jsonMap = value.optMap();
 
         // Fallback to in-app message to support legacy messages
@@ -649,7 +626,10 @@ class InAppRemoteDataObserver {
                .setReportingContext(jsonMap.opt(REPORTING_CONTEXT_KEY))
                .setStart(parseTimeStamp(jsonMap.opt(START_KEY).getString()))
                .setEnd(parseTimeStamp(jsonMap.opt(END_KEY).getString()))
-               .setFrequencyConstraintIds(parseConstraintIds(jsonMap.opt(FREQUENCY_CONSTRAINT_IDS_KEY).optList()));
+               .setFrequencyConstraintIds(parseConstraintIds(jsonMap.opt(FREQUENCY_CONSTRAINT_IDS_KEY).optList()))
+               .setMessageType(jsonMap.opt(MESSAGE_TYPE_KEY).getString())
+               .setBypassHoldoutGroup(jsonMap.opt(BYPASS_HOLDOUT_GROUP_KEY).getBoolean())
+               .setNewUserEvaluationDate(createdDate);
 
         return builder.build();
     }
@@ -697,8 +677,9 @@ class InAppRemoteDataObserver {
         return remoteData.isCurrent(remoteDataInfo);
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     @Nullable
-    private RemoteDataInfo parseRemoteDataInfo(@NonNull Schedule<? extends ScheduleData> schedule) {
+    public RemoteDataInfo parseRemoteDataInfo(@NonNull Schedule<? extends ScheduleData> schedule) {
         JsonValue value = schedule.getMetadata().get(InAppRemoteDataObserver.REMOTE_DATA_INFO);
         if (value == null) {
             return null;
