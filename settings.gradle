@@ -28,5 +28,6 @@ include ':urbanairship-adm',
         ':urbanairship-message-center',
         ':urbanairship-preference',
         ':urbanairship-preference-center',
+        ':urbanairship-feature-flag',
         ':urbanairship-test',
         ":sample"

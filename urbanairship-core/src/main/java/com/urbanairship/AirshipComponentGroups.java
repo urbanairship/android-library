@@ -16,7 +16,8 @@ import androidx.annotation.RestrictTo;
 public interface AirshipComponentGroups {
 
 
-    @IntDef({ NONE, PUSH, ANALYTICS, MESSAGE_CENTER, IN_APP, ACTION_AUTOMATION, NAMED_USER, LOCATION, CHANNEL, CHAT, CONTACT, PREFERENCE_CENTER, LIVE_UPDATE, EXPERIMENT })
+    @IntDef({ NONE, PUSH, ANALYTICS, MESSAGE_CENTER, IN_APP, ACTION_AUTOMATION, NAMED_USER, LOCATION,
+            CHANNEL, CHAT, CONTACT, PREFERENCE_CENTER, LIVE_UPDATE, EXPERIMENT, FEATURE_FLAGS })
     @Retention(RetentionPolicy.SOURCE)
     @interface Group {
     }
@@ -35,5 +36,6 @@ public interface AirshipComponentGroups {
     int PREFERENCE_CENTER = 10;
     int LIVE_UPDATE = 11;
     int EXPERIMENT = 12;
+    int FEATURE_FLAGS = 13;
 
 }

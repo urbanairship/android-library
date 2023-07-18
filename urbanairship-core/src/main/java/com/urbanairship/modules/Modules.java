@@ -22,6 +22,7 @@ import com.urbanairship.modules.accengage.AccengageModuleFactory;
 import com.urbanairship.modules.automation.AutomationModuleFactory;
 import com.urbanairship.modules.chat.ChatModuleFactory;
 import com.urbanairship.modules.debug.DebugModuleFactory;
+import com.urbanairship.modules.featureflag.FeatureFlagsModuleFactory;
 import com.urbanairship.modules.liveupdate.LiveUpdateModuleFactory;
 import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.modules.location.LocationModuleFactory;
@@ -52,6 +53,7 @@ public class Modules {
     private static final String CHAT_FACTORY = "com.urbanairship.chat.ChatModuleFactoryImpl";
     private static final String LIVE_UPDATE_FACTORY = "com.urbanairship.liveupdate.LiveUpdateModuleFactoryImpl";
     private static final String PREFERENCE_CENTER_FACTORY = "com.urbanairship.preferencecenter.PreferenceCenterModuleFactoryImpl";
+    private static final String FEATURE_FLAGS_FACTORY = "com.urbanairship.featureflag.FeatureFlagsModuleFactoryImpl";
 
     @Nullable
     public static AccengageModule accengage(@NonNull Context context,
@@ -212,6 +214,23 @@ public class Modules {
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Live Update module");
+        }
+        return null;
+    }
+
+    @Nullable
+    public static Module featureFlags(
+            @NonNull Context context,
+            @NonNull PreferenceDataStore dataStore,
+            @NonNull RemoteData remoteData) {
+        try {
+            FeatureFlagsModuleFactory moduleFactory =
+                    createFactory(FEATURE_FLAGS_FACTORY, FeatureFlagsModuleFactory.class);
+            if (moduleFactory != null) {
+                return moduleFactory.build(context, dataStore, remoteData);
+            }
+        } catch (Exception e) {
+            UALog.e(e, "Failed to build Feature Flags module");
         }
         return null;
     }

@@ -808,6 +808,10 @@ public class UAirship {
         Module liveUpdateManager = Modules.liveUpdateManager(application, preferenceDataStore, runtimeConfig, privacyManager, channel, pushManager);
         processModule(liveUpdateManager);
 
+        // Feature flags
+        Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData);
+        processModule(featureFlags);
+
         remoteAirshipUrlConfigProvider.addUrlConfigListener(() -> {
             for (AirshipComponent component : components) {
                 component.onUrlConfigUpdated();
