@@ -88,4 +88,25 @@
         android:label="Contact">
     </fragment>
 
+    <fragment
+        android:id="@+id/featureFlagsListFragment"
+        android:name="com.urbanairship.debug.featureflags.FeatureFlagsListFragment"
+        android:label="Feature Flags">
+        <action
+            android:id="@+id/action_featureFlagsListFragment_to_jsonTreeFragment"
+            app:destination="@id/jsonTreeFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/jsonTreeFragment"
+        android:name="com.urbanairship.debug.json.JsonViewerFragment"
+        android:label="@string/ua_debug_json_viewer_title">
+        <argument
+            android:name="json"
+            app:argType="com.urbanairship.json.JsonValue" />
+        <argument
+            android:name="title"
+            app:nullable="true"
+            app:argType="string" />
+    </fragment>
 </navigation>

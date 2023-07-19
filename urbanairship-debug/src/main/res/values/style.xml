@@ -16,5 +16,6 @@
 
     <style name="AirshipDebug.ItemTitle" parent="@style/TextAppearance.MaterialComponents.Subtitle1" />
     <style name="AirshipDebug.ItemSubTitle" parent="@style/TextAppearance.MaterialComponents.Body2" />
+    <style name="AirshipDebug.ItemHint" parent="@style/TextAppearance.MaterialComponents.Caption" />
 
 </resources>

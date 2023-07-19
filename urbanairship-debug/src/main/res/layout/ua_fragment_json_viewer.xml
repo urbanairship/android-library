@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/coordinator"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <include layout="@layout/ua_include_appbar" />
+
+        <com.urbanairship.debug.json.JsonRecyclerView
+            android:id="@+id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:splitMotionEvents="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:listitem="@layout/ua_item_json_viewer" />
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

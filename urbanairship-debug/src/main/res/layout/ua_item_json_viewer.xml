@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="item"
+            type="com.urbanairship.debug.json.JsonRecyclerView.Item" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/key"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{`&quot;` + item.key + `&quot;`}"
+                android:layout_gravity="center_vertical"
+                android:textAppearance="@style/AirshipDebug.ItemTitle"
+                tools:text="&quot;flag&quot;" />
+
+            <TextView
+                android:id="@+id/type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:textAppearance="@style/AirshipDebug.ItemHint"
+                android:textStyle="italic"
+                android:text="@{`: ` + item.jsonType()}"
+                android:fontFamily="monospace"
+                tools:text=": object" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/toggle"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center_vertical"
+                android:background="@null"
+                android:src="@{item.isExpanded ? @drawable/ua_ic_chevron_down : @drawable/ua_ic_chevron_left}"
+                tools:src="@drawable/ua_ic_chevron_left" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:visibility="@{item.isExpanded ? View.VISIBLE : View.GONE}"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="16dp">
+
+            <TextView
+                android:id="@+id/jsonValue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@{item.prettyPrinted()}"
+                android:scrollHorizontally="true"
+                android:fontFamily="monospace"
+                android:textSize="12sp"
+                tools:text="{\n  &quot;flag&quot;: &quot;value&quot;\n}" />
+        </FrameLayout>
+
+    </LinearLayout>
+</layout>

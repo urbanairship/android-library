@@ -22,6 +22,11 @@
         title="@string/ua_debug_iaa" />
 
     <entry
+        description="@string/ua_debug_feature_flags_description"
+        navigationId="@id/featureFlagsListFragment"
+        title="@string/ua_debug_feature_flags_title" />
+
+    <entry
         description="@string/ua_push_view_description"
         navigationId="@id/pushListFragment"
         title="@string/ua_push_view_title" />

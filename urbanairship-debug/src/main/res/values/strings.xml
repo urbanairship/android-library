@@ -283,4 +283,8 @@
     <string name="ua_sdk_settings_category">SDK Features</string>
     <string name="ua_iaa_debug_payload_key">Schedule Payload</string>
 
+    <string name="ua_debug_feature_flags_title">Feature Flags</string>
+    <string name="ua_debug_feature_flags_description">View feature flags</string>
+
+    <string name="ua_debug_json_viewer_title">JSON Viewer</string>
 </resources>

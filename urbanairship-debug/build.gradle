@@ -34,6 +34,7 @@ dependencies {
     implementation project(':urbanairship-message-center')
     implementation project(':urbanairship-preference-center')
     implementation project(':urbanairship-preference')
+    implementation project(':urbanairship-feature-flag')
 
     // Kotlin
     implementation(libs.kotlin.stdlib)

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="featureFlag"
+            type="com.urbanairship.json.JsonMap" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{featureFlag.get(`flag`).optMap().get(`name`).optString()}"
+            android:textAppearance="@style/AirshipDebug.ItemTitle"
+            tools:text="flag name" />
+
+        <TextView
+            android:id="@+id/id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/AirshipDebug.ItemSubTitle"
+            android:text="@{featureFlag.get(`flag_id`).optString()}"
+            tools:text="flag id" />
+    </LinearLayout>
+</layout>
