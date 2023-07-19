@@ -8,8 +8,8 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
 
 internal class BucketSubset(
-    val min: Long,
-    val max: Long
+    val min: ULong,
+    val max: ULong
 ) : JsonSerializable {
 
     companion object {
@@ -24,10 +24,11 @@ internal class BucketSubset(
          * @hide
          */
         internal fun fromJson(json: JsonMap): BucketSubset? {
+            val converted: (Long) -> ULong = { it.toULong() }
             try {
                 return BucketSubset(
-                    min = json.optionalField(KEY_BUCKET_MIN) ?: 0,
-                    max = json.optionalField(KEY_BUCKET_MAX) ?: Long.MAX_VALUE
+                    min = converted(json.optionalField(KEY_BUCKET_MIN) ?: 0),
+                    max = converted(json.optionalField(KEY_BUCKET_MAX) ?: Long.MAX_VALUE)
                 )
             } catch (ex: JsonException) {
                 UALog.e { "failed to parse ExperimentBucket from json $json" }
@@ -36,14 +37,14 @@ internal class BucketSubset(
         }
     }
 
-    fun contains(value: Long): Boolean {
+    fun contains(value: ULong): Boolean {
         return value in min until max
     }
 
     override fun toJsonValue(): JsonValue {
         return JsonMap.newBuilder()
-            .put(KEY_BUCKET_MIN, min)
-            .put(KEY_BUCKET_MAX, max)
+            .put(KEY_BUCKET_MIN, min.toLong())
+            .put(KEY_BUCKET_MAX, max.toLong())
             .build().toJsonValue()
     }
 }
