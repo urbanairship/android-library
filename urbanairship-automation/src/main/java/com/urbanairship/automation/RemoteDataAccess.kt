@@ -10,14 +10,12 @@ import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
-import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Network
 import com.urbanairship.util.SerialQueue
-import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -36,20 +34,11 @@ public class RemoteDataAccess internal constructor(
 ) {
     public constructor(context: Context, remoteData: RemoteData) : this(context, remoteData, Network(), GlobalActivityMonitor.shared(context), AirshipDispatchers.newSerialDispatcher())
 
-    private var sessionNumber: AtomicLong = AtomicLong()
     private var lastRefreshState: MutableMap<RemoteDataSource, Long> = mutableMapOf()
     private var serialQueues: Map<RemoteDataSource, SerialQueue> =
         RemoteDataSource.values().associateWith {
             SerialQueue()
         }
-
-    init {
-        activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(time: Long) {
-                sessionNumber.incrementAndGet()
-            }
-        })
-    }
 
     private val scope = CoroutineScope(coroutineDispatcher + SupervisorJob())
 
@@ -67,10 +56,9 @@ public class RemoteDataAccess internal constructor(
         UALog.v { "Refreshing outdated remoteDataInfo $remoteDataInfo" }
 
         val source = remoteDataInfo?.source ?: RemoteDataSource.APP
-        val sessionNumber = sessionNumber.get()
 
         scope.launch {
-            refreshOutdated(remoteDataInfo, source, sessionNumber)
+            refreshOutdated(remoteDataInfo, source)
             yield()
             onComplete.run()
         }
@@ -78,10 +66,9 @@ public class RemoteDataAccess internal constructor(
 
     public fun refreshAndCheckCurrentSync(remoteDataInfo: RemoteDataInfo?): Boolean {
         val source = remoteDataInfo?.source ?: RemoteDataSource.APP
-        val sessionNumber = sessionNumber.get()
 
         return runBlocking(coroutineDispatcher) {
-            bestEffortRefresh(remoteDataInfo, source, sessionNumber)
+            bestEffortRefresh(remoteDataInfo, source)
             isCurrent(remoteDataInfo)
         }
     }
@@ -92,12 +79,11 @@ public class RemoteDataAccess internal constructor(
 
     private suspend fun refreshOutdated(
         remoteDataInfo: RemoteDataInfo?,
-        source: RemoteDataSource,
-        sessionNumber: Long
+        source: RemoteDataSource
     ) {
         serialQueues[source].run {
             if (!isCurrent(remoteDataInfo)) {
-                bestEffortRefresh(remoteDataInfo, source, sessionNumber)
+                bestEffortRefresh(remoteDataInfo, source)
                 return
             }
 
@@ -106,32 +92,33 @@ public class RemoteDataAccess internal constructor(
             }
 
             lastRefreshState.remove(source)
-            refresh(source, sessionNumber)
+            refresh(source)
         }
     }
 
     private suspend fun bestEffortRefresh(
         remoteDataInfo: RemoteDataInfo?,
-        source: RemoteDataSource,
-        sessionNumber: Long
+        source: RemoteDataSource
     ) {
         serialQueues[source].run {
-            if (remoteDataInfo == null || !isCurrent(remoteDataInfo)) {
-                refresh(source, sessionNumber)
-            } else if (lastRefreshState[source] != sessionNumber && network.isConnected(context)) {
-                refresh(source, sessionNumber)
+            if (isCurrent(remoteDataInfo)) {
+                if (remoteData.status(source) != RemoteData.Status.UP_TO_DATE &&
+                    network.isConnected(context)) {
+                    refresh(source)
+                }
+            } else {
+                refresh(source)
             }
         }
     }
 
-    private suspend fun refresh(source: RemoteDataSource, sessionNumber: Long) {
-        UALog.v { "Attempting to refresh source $source sessionNumber $sessionNumber" }
+    private suspend fun refresh(source: RemoteDataSource) {
+        UALog.v { "Attempting to refresh source $source" }
 
         if (remoteData.refresh(source)) {
-            UALog.v { "Refreshed source $source sessionNumber $sessionNumber" }
-            lastRefreshState[source] = sessionNumber
+            UALog.v { "Refreshed source $source" }
         } else {
-            UALog.v { "Refreshed source $source sessionNumber $sessionNumber failed" }
+            UALog.v { "Refreshed source $source failed" }
         }
     }
 }

@@ -49,6 +49,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
     public val testDevices: List<String>
 
     internal val hashSelector: AudienceHashSelector?
+    internal val deviceTypes: List<String>?
 
     init {
         newUser = builder.newUser
@@ -62,6 +63,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         permissionsPredicate = builder.permissionsPredicate
         tagSelector = builder.tagSelector
         hashSelector = builder.hashSelector
+        deviceTypes = builder.deviceTypes
     }
 
     override fun toJsonValue(): JsonValue {
@@ -80,7 +82,10 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
             .put(HASH_KEY, hashSelector?.toJsonValue())
             .put(APP_VERSION_KEY, versionPredicate)
             .put(MISS_BEHAVIOR_KEY, missBehavior.value)
-            .put(PERMISSIONS_KEY, permissionsPredicate).build().toJsonValue()
+            .put(PERMISSIONS_KEY, permissionsPredicate)
+            .putOpt(DEVICE_TYPES_KEY, deviceTypes)
+            .build()
+            .toJsonValue()
     }
 
     public companion object {
@@ -96,6 +101,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         private const val REQUIRES_ANALYTICS_KEY = "requires_analytics"
         private const val PERMISSIONS_KEY = "permissions"
         private const val HASH_KEY = "hash"
+        private const val DEVICE_TYPES_KEY = "device_types"
 
         /**
          * Builder factory method.
@@ -218,6 +224,18 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
                     builder.setAudienceHashSelector(hashSelector)
                 }
             }
+
+            // Device types
+            if (content.containsKey(DEVICE_TYPES_KEY)) {
+                if (!content.opt(DEVICE_TYPES_KEY).isJsonList) {
+                    throw JsonException("device types must be a json list: " + content[DEVICE_TYPES_KEY])
+                }
+                builder.deviceTypes = content
+                    .opt(DEVICE_TYPES_KEY)
+                    .optList()
+                    .map { it.requireString() }
+            }
+
             return builder.build()
         }
     }
@@ -316,6 +334,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         internal var permissionsPredicate: JsonPredicate? = null
         internal var tagSelector: DeviceTagSelector? = null
         internal var hashSelector: AudienceHashSelector? = null
+        internal var deviceTypes: List<String>? = null
 
         /**
          * Sets the new user audience condition for scheduling the in-app message.
@@ -457,6 +476,18 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         }
 
         /**
+         * Sets the device types for the in-app message.
+         *
+         * @param types The device types.
+         * @return The builder.
+         * @hide
+         */
+        public fun setDeviceTypes(types: List<String>?): Builder {
+            this.deviceTypes = types
+            return this
+        }
+
+        /**
          * Builds the in-app message audience.
          *
          * @return The audience.
@@ -493,6 +524,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         contactId: String? = null
     ): Boolean {
 
+        if (!checkDeviceType(infoProvider)) { return false }
         if (!checkTestDevice(infoProvider)) { return false }
         if (!checkNotificationOptInStatus(infoProvider)) { return false }
         if (!checkLocale(context, infoProvider)) { return false }
@@ -507,6 +539,10 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         if (!checkHash(infoProvider, contactId)) { return false }
 
         return true
+    }
+
+    private fun checkDeviceType(infoProvider: DeviceInfoProvider): Boolean {
+        return deviceTypes?.contains(infoProvider.platform) ?: true
     }
 
     private fun checkTestDevice(infoProvider: DeviceInfoProvider): Boolean {

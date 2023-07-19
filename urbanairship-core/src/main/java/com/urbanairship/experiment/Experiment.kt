@@ -23,11 +23,14 @@ internal enum class ExperimentType(val jsonValue: String) {
     }
 }
 
-internal enum class ResolutionType(val jsonValue: String) {
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
+public enum class ResolutionType(public val jsonValue: String) {
+    DEFERRED("deferred"),
     STATIC("static");
 
-    companion object {
-        fun from(value: String): ResolutionType? {
+    public companion object {
+        public fun from(value: String): ResolutionType? {
             return values().firstOrNull { it.jsonValue == value }
         }
     }

@@ -295,6 +295,13 @@ public class RemoteData @VisibleForTesting internal constructor(
             ?.isCurrent(localeManager.locale, randomValue) ?: false
     }
 
+    public suspend fun status(source: RemoteDataSource): Status {
+        return providers
+            .firstOrNull { it.source == source }
+            ?.status(changeToken, localeManager.locale, randomValue)
+            ?: Status.OUT_OF_DATE
+    }
+
     public companion object {
 
         // Datastore keys
@@ -347,5 +354,9 @@ public class RemoteData @VisibleForTesting internal constructor(
                 )
             )
         }
+    }
+
+    public enum class Status {
+        UP_TO_DATE, STALE, OUT_OF_DATE
     }
 }

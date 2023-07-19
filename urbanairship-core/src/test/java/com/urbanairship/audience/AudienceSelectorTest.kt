@@ -24,6 +24,8 @@ import io.mockk.mockk
 import java.util.Arrays
 import junit.framework.TestCase
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -71,7 +73,7 @@ public class AudienceSelectorTest {
 
         infoProvider = DeviceInfoProviderImpl(
             { notificationStatus }, { privacyFeatures[it] ?: false }, { channelTags },
-            { channelId }, { version }, permissionManager, contactIdGetter)
+            { channelId }, { version }, permissionManager, contactIdGetter, "android")
     }
 
     @Test
@@ -294,6 +296,24 @@ public class AudienceSelectorTest {
 
         version = 3
         TestCase.assertFalse(checkAudience(audience))
+    }
+
+    @Test
+    public fun testDeviceTypes(): TestResult = runTest {
+        val audience = AudienceSelector.newBuilder().setDeviceTypes(listOf("ios", "android")).build()
+        assert(checkAudience(audience))
+    }
+
+    @Test
+    public fun testDeviceTypesNoAndroid(): TestResult = runTest {
+        val audience = AudienceSelector.newBuilder().setDeviceTypes(listOf("ios")).build()
+        assertFalse(checkAudience(audience))
+    }
+
+    @Test
+    public fun testDeviceTypesEmpty(): TestResult = runTest {
+        val audience = AudienceSelector.newBuilder().setDeviceTypes(listOf()).build()
+        assertFalse(checkAudience(audience))
     }
 
     private suspend fun checkAudience(audience: AudienceSelector, timestamp: Long = 0, contactId: String? = null): Boolean {

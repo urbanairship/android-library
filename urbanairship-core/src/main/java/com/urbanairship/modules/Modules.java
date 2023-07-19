@@ -222,12 +222,13 @@ public class Modules {
     public static Module featureFlags(
             @NonNull Context context,
             @NonNull PreferenceDataStore dataStore,
-            @NonNull RemoteData remoteData) {
+            @NonNull RemoteData remoteData,
+            @NonNull DeviceInfoProvider infoProvider) {
         try {
             FeatureFlagsModuleFactory moduleFactory =
                     createFactory(FEATURE_FLAGS_FACTORY, FeatureFlagsModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore, remoteData);
+                return moduleFactory.build(context, dataStore, remoteData, infoProvider);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Feature Flags module");

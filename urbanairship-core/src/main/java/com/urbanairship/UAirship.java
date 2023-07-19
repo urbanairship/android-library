@@ -44,6 +44,7 @@ import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.AppStoreUtils;
 import com.urbanairship.util.Clock;
+import com.urbanairship.util.PlatformUtils;
 import com.urbanairship.util.ProcessUtils;
 
 import java.lang.annotation.Retention;
@@ -761,7 +762,7 @@ public class UAirship {
         DeviceInfoProvider infoProvider = new DeviceInfoProviderImpl(
                 pushManager::areNotificationsOptedIn, privacyManager::isEnabled,
                 channel::getTags, channel::getId, applicationMetrics::getCurrentAppVersion,
-                permissionsManager, contact::getStableContactId);
+                permissionsManager, contact::getStableContactId, PlatformUtils.asString(getPlatformType()));
 
         // Experiments
         this.experimentManager = new ExperimentManager(application, preferenceDataStore,
@@ -809,7 +810,7 @@ public class UAirship {
         processModule(liveUpdateManager);
 
         // Feature flags
-        Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData);
+        Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, infoProvider);
         processModule(featureFlags);
 
         remoteAirshipUrlConfigProvider.addUrlConfigListener(() -> {

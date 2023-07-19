@@ -113,7 +113,16 @@ public class ExperimentManager internal constructor(
     private fun getResolutionFunction(experiment: Experiment): ResolutionFunction {
         return when (experiment.resolutionType) {
             ResolutionType.STATIC -> this::resolveStatic
+            ResolutionType.DEFERRED -> this::resolveDeferred
         }
+    }
+
+    private suspend fun resolveDeferred(
+        experiment: Experiment,
+        infoProvider: DeviceInfoProvider,
+        contactId: String
+    ): Boolean {
+        return false
     }
 
     private suspend fun resolveStatic(

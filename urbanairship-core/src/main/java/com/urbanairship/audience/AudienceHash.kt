@@ -85,7 +85,7 @@ internal data class AudienceHash(
         }
     }
 
-    internal fun generate(properties: Map<String, String?>): Long? {
+    internal fun generate(properties: Map<String, String?>): ULong? {
         if (!properties.containsKey(property.jsonValue)) {
             UALog.e { "can't find device property ${property.jsonValue}" }
         }
@@ -97,7 +97,7 @@ internal data class AudienceHash(
             HashAlgorithm.FARM -> FarmHashFingerprint64::fingerprint
         }
 
-        return hashFunction.invoke("$prefix$value") % numberOfHashBuckets
+        return hashFunction.invoke("$prefix$value").toULong() % numberOfHashBuckets.toUInt()
     }
 
     override fun toJsonValue(): JsonValue {

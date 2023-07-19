@@ -14,9 +14,11 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
+import com.urbanairship.util.Clock
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import java.util.Date
 import junit.framework.Assert.assertTrue
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -39,6 +41,7 @@ public class ExperimentManagerTest {
     private var channelId: String? = "default-channel-id"
     private var contactId: String = "default-contact-id"
     private val messageInfo = MessageInfo("", null)
+    private var currentTime = 1L
 
     @Before
     public fun setUp() {
@@ -51,14 +54,19 @@ public class ExperimentManagerTest {
             channelIdFetcher = { channelId },
             versionFetcher = { 1 },
             permissionsManager = permissionManager,
-            contactIdFetcher = { contactId }
+            contactIdFetcher = { contactId },
+            platform = "android"
         )
+
+        val clock: Clock = mockk()
+        every { clock.currentTimeMillis() } answers { currentTime }
 
         subject = ExperimentManager(
             context = context,
             dataStore = dataStore,
             remoteData = remoteData,
-            infoProvider = infoProvider
+            infoProvider = infoProvider,
+            clock = clock
         )
     }
 
@@ -276,6 +284,34 @@ public class ExperimentManagerTest {
         assertEquals("matched", result.matchedExperimentId)
     }
 
+    @Test
+    public fun testResultExcludesInactiveExperiments(): TestResult = runTest {
+        val unmatchedJson = generateExperimentsPayload(
+            id = "unmatched",
+            timeCriteria = TimeCriteria(start = 2L, end = Date().time + 4L)
+        )
+            .build()
+
+        val matchedJson = generateExperimentsPayload(
+            id = "matched",
+            timeCriteria = TimeCriteria(start = 1L, end = 2L)
+        )
+            .build()
+
+        val data = RemoteDataPayload(
+            type = PAYLOAD_TYPE,
+            timestamp = 1L,
+            data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson))
+        )
+
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
+        currentTime = 2
+
+        val result = subject.evaluateExperiments(messageInfo)!!
+        assert(result.isMatching)
+        assertEquals("matched", result.matchedExperimentId)
+    }
+
     private fun generateExperimentsPayload(
         id: String,
         hashIdentifier: String = "contact",
@@ -283,7 +319,8 @@ public class ExperimentManagerTest {
         hashOverrides: JsonMap? = null,
         bucketMin: Int = 0,
         bucketMax: Int = 16384,
-        messageTypeToExclude: String = "transactional"
+        messageTypeToExclude: String = "transactional",
+        timeCriteria: TimeCriteria? = null
     ): JsonMap.Builder {
         return JsonMap.newBuilder()
             .put("experiment_id", id)
@@ -342,6 +379,7 @@ public class ExperimentManagerTest {
                     )
                         .toJsonValue()
                 }
+                .put("time_criteria", timeCriteria)
                 .build()
                 .toJsonValue()
             )

@@ -149,6 +149,20 @@ internal abstract class RemoteDataProvider(
         lastRemoteDataInfo: RemoteDataInfo?
     ): RequestResult<RemoteDataApiClient.Result>
 
+    public suspend fun status(token: String, locale: Locale, randomValue: Int): RemoteData.Status {
+        val shouldRefresh = shouldRefresh(lastRefreshState, token, locale, randomValue)
+
+        if (!shouldRefresh) {
+            return RemoteData.Status.UP_TO_DATE
+        }
+
+        if (isCurrent(locale, randomValue)) {
+            return RemoteData.Status.STALE
+        }
+
+        return RemoteData.Status.OUT_OF_DATE
+    }
+
     private suspend fun shouldRefresh(
         refreshState: LastRefreshState?,
         changeToken: String,

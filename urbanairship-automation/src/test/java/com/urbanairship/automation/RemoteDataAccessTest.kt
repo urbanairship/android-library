@@ -37,9 +37,18 @@ public class RemoteDataAccessTest {
 
     @Test
     public fun testRemoteDataCalledOncePerSource(): TestResult = runTest {
+        val statuses = RemoteDataSource
+            .values()
+            .associateWith { RemoteData.Status.OUT_OF_DATE }
+            .toMutableMap()
+
         coEvery { network.isConnected(any()) } returns true
         coEvery { remoteData.isCurrent(any()) } returns true
-        coEvery { remoteData.refresh(any<RemoteDataSource>()) } returns true
+        coEvery { remoteData.refresh(any<RemoteDataSource>()) } answers {
+            statuses[firstArg()] = RemoteData.Status.UP_TO_DATE
+            true
+        }
+        coEvery { remoteData.status(any()) } answers { statuses[firstArg()]!! }
 
         val appSourceResponses = (1..5).map {
             subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
@@ -58,9 +67,19 @@ public class RemoteDataAccessTest {
 
     @Test
     public fun testRemoteDataCalledOncePerSourceParallel(): TestResult = runTest {
+        val statuses = RemoteDataSource
+            .values()
+            .associateWith { RemoteData.Status.OUT_OF_DATE }
+            .toMutableMap()
+
         coEvery { network.isConnected(any()) } returns true
         coEvery { remoteData.isCurrent(any()) } returns true
-        coEvery { remoteData.refresh(any<RemoteDataSource>()) } returns true
+        coEvery { remoteData.refresh(any<RemoteDataSource>()) } coAnswers {
+            val appSource: RemoteDataSource = firstArg()
+            statuses[appSource] = RemoteData.Status.UP_TO_DATE
+            true
+        }
+        coEvery { remoteData.status(any()) } answers { statuses[firstArg()]!! }
 
         val appSourceResponses = (1..5).map {
             async { subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP)) }
@@ -72,9 +91,11 @@ public class RemoteDataAccessTest {
 
     @Test
     public fun testRefreshEachForeground(): TestResult = runTest {
+        var sourceStatus = RemoteData.Status.OUT_OF_DATE
         coEvery { network.isConnected(any()) } returns true
         coEvery { remoteData.isCurrent(any()) } returns true
         coEvery { remoteData.refresh(any<RemoteDataSource>()) } returns true
+        coEvery { remoteData.status(any()) } answers { sourceStatus }
 
         Assert.assertTrue(
             subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
@@ -85,6 +106,7 @@ public class RemoteDataAccessTest {
         Assert.assertTrue(
             subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
         )
+        sourceStatus = RemoteData.Status.UP_TO_DATE
 
         Assert.assertTrue(
             subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
@@ -97,6 +119,7 @@ public class RemoteDataAccessTest {
     public fun testSkipRefreshNotConnected(): TestResult = runTest {
         coEvery { network.isConnected(any()) } returns false
         coEvery { remoteData.isCurrent(any()) } returns true
+        coEvery { remoteData.status(any()) } returns RemoteData.Status.OUT_OF_DATE
 
         Assert.assertTrue(
             subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
