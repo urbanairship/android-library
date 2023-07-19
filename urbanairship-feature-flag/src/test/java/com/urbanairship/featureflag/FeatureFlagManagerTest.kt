@@ -28,12 +28,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class AirshipFeatureFlagsTest {
+class FeatureFlagManagerTest {
     private val payloadType = "feature_flags"
 
     private val context: Context = TestApplication.getApplication()
     private val remoteData: RemoteData = mockk()
-    private lateinit var featureFlags: AirshipFeatureFlags
+    private lateinit var featureFlags: FeatureFlagManager
     private val infoProvider: DeviceInfoProvider = mockk()
 
     private var currentTime = 2L
@@ -49,7 +49,7 @@ class AirshipFeatureFlagsTest {
         val clock: Clock = mockk()
         every { clock.currentTimeMillis() } answers { currentTime }
 
-        featureFlags = AirshipFeatureFlags(
+        featureFlags = FeatureFlagManager(
             context = context,
             dataStore = PreferenceDataStore.inMemoryStore(context),
             remoteData = remoteData,

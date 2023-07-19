@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 public class FeatureFlag(
 
     /**
-     * Indicates whether the device is elegible or not for the flag.
+     * Indicates whether the device is eligible or not for the flag.
      */
     val isEligible: Boolean,
 
@@ -63,10 +63,10 @@ public class FeatureFlag(
 }
 
 /**
- * Airship Feature Flags provider.
+ * Airship Feature Flags manager.
  */
 @OpenForTesting
-public class AirshipFeatureFlags
+public class FeatureFlagManager
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
@@ -80,13 +80,13 @@ public class AirshipFeatureFlags
         private const val PAYLOAD_TYPE = "feature_flags"
 
         /**
-         * Gets the shared `AirshipFeatureFlags` instance.
+         * Gets the shared `FeatureFlagManager` instance.
          *
-         * @return an instance of `AirshipFeatureFlags`.
+         * @return an instance of `FeatureFlagManager`.
          */
         @JvmStatic
-        fun shared(): AirshipFeatureFlags =
-            UAirship.shared().requireComponent(AirshipFeatureFlags::class.java)
+        fun shared(): FeatureFlagManager =
+            UAirship.shared().requireComponent(FeatureFlagManager::class.java)
     }
 
     private val pendingResultScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
@@ -131,12 +131,12 @@ public class AirshipFeatureFlags
             RemoteData.Status.STALE -> {
                 val items = fetchFlagInfos(name)
                 if (items.isEmpty() || !isStaleAllowed(items)) {
-                    throw FeatureFlagException("no stale data allowed")
+                    throw FeatureFlagException("Unable to fetch data")
                 }
                 evaluate(items)
             }
             RemoteData.Status.OUT_OF_DATE ->
-                throw FeatureFlagException("remote data is outdated")
+                throw FeatureFlagException("Unable to fetch data")
         }
     }
 

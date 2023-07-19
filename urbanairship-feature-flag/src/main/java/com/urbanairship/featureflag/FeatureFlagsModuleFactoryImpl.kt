@@ -17,7 +17,7 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
         remoteData: RemoteData,
         infoProvider: DeviceInfoProvider
     ): Module {
-        val manager = AirshipFeatureFlags(
+        val manager = FeatureFlagManager(
             context = context,
             dataStore = dataStore,
             remoteData = remoteData,

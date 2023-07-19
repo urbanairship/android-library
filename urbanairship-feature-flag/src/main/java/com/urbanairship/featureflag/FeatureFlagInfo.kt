@@ -19,7 +19,7 @@ import kotlin.jvm.Throws
 
 internal enum class FeatureFlagVariablesType(val jsonValue: String) {
     FIXED("fixed"),
-    VARIANTS("variants")
+    VARIANTS("variant")
 }
 
 internal interface FeatureFlagPayload {

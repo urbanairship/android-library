@@ -5,7 +5,6 @@ package com.urbanairship.automation
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.TestActivityMonitor
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
@@ -30,9 +29,8 @@ public class RemoteDataAccessTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val remoteData: RemoteData = mockk()
     private val network: Network = mockk()
-    private val activityMonitor: TestActivityMonitor = TestActivityMonitor()
     private val subject = RemoteDataAccess(
-        context, remoteData, network, activityMonitor, AirshipDispatchers.newSerialDispatcher()
+        context, remoteData, network, AirshipDispatchers.newSerialDispatcher()
     )
 
     @Test
@@ -100,8 +98,6 @@ public class RemoteDataAccessTest {
         Assert.assertTrue(
             subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
         )
-
-        activityMonitor.foreground()
 
         Assert.assertTrue(
             subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))

@@ -8,8 +8,6 @@ import androidx.core.util.Consumer
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
-import com.urbanairship.app.ActivityMonitor
-import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataPayload
@@ -29,10 +27,9 @@ public class RemoteDataAccess internal constructor(
     private val context: Context,
     private val remoteData: RemoteData,
     private val network: Network,
-    activityMonitor: ActivityMonitor,
     private val coroutineDispatcher: CoroutineDispatcher
 ) {
-    public constructor(context: Context, remoteData: RemoteData) : this(context, remoteData, Network(), GlobalActivityMonitor.shared(context), AirshipDispatchers.newSerialDispatcher())
+    public constructor(context: Context, remoteData: RemoteData) : this(context, remoteData, Network(), AirshipDispatchers.newSerialDispatcher())
 
     private var lastRefreshState: MutableMap<RemoteDataSource, Long> = mutableMapOf()
     private var serialQueues: Map<RemoteDataSource, SerialQueue> =

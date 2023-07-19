@@ -66,7 +66,7 @@ class FeatureFlagInfoTest {
                         "end_timestamp" to 321
                     ),
                     "variables" to jsonMapOf(
-                        "type" to "variants",
+                        "type" to "variant",
                         "variants" to jsonListOf(
                             jsonMapOf(
                                 "id" to "dda26cb5-e40b-4bc8-abb1-eb88240f7fd7",
