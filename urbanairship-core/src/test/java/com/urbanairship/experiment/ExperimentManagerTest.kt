@@ -191,7 +191,8 @@ public class ExperimentManagerTest {
 
         val unmatchedJson = generateExperimentsPayload(
             id = "unmatched",
-            bucketMax = 1239).build()
+            bucketMax = 1238
+        ).build()
         val matchedJson = generateExperimentsPayload("matched", bucketMin = 1239).build()
 
         val data = RemoteDataPayload(
@@ -257,19 +258,17 @@ public class ExperimentManagerTest {
     public fun testHoldoutEvaluationRespectOverridesForHash(): TestResult = runTest {
         val unmatchedJson = generateExperimentsPayload(
             id = "unmatched",
-            bucketMax = 2337,
+            bucketMax = 2336,
             hashOverrides = JsonMap
                 .newBuilder()
                 .put(contactId, "overriden")
                 .build()
-        )
-            .build()
+        ).build()
 
         val matchedJson = generateExperimentsPayload(
             id = "matched",
             bucketMax = 2337,
-        )
-            .build()
+        ).build()
 
         val data = RemoteDataPayload(
             type = PAYLOAD_TYPE,

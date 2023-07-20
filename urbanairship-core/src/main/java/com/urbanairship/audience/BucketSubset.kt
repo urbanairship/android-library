@@ -38,7 +38,7 @@ internal class BucketSubset(
     }
 
     fun contains(value: ULong): Boolean {
-        return value in min until max
+        return value in min..max
     }
 
     override fun toJsonValue(): JsonValue {
