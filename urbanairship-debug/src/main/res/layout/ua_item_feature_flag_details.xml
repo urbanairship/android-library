@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="name"
+            type="String" />
+        <variable
+            name="id"
+            type="String" />
+        <variable
+            name="eligible"
+            type="String" />
+        <variable
+            name="exists"
+            type="String" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- DETAILS -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="details"
+                android:textAllCaps="true"
+                android:textAppearance="@style/AirshipDebug.SectionHeading" />
+
+            <!-- Name -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="?android:listPreferredItemHeightSmall"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Name"
+                    android:textAppearance="@style/AirshipDebug.ItemTitle" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text="@{name}"
+                    android:textAppearance="@style/AirshipDebug.ItemSubTitle"
+                    tools:text="my_neato_feature_flag" />
+            </LinearLayout>
+
+            <!-- ID -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="?android:listPreferredItemHeightSmall"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ID"
+                    android:textAppearance="@style/AirshipDebug.ItemTitle" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text="@{id}"
+                    android:textAppearance="@style/AirshipDebug.ItemSubTitle"
+                    tools:text="d3be6913-3b3c-43f9-89f5-7b6ff0bab52b" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_gravity="bottom"
+            android:background="?android:dividerHorizontal" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="16dp">
+
+            <!-- RESULT -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:text="result"
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/AirshipDebug.SectionHeading" />
+
+                <!-- Refresh button -->
+                <ImageButton
+                    android:id="@+id/result_refresh_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:background="?selectableItemBackground"
+                    android:padding="8dp"
+                    android:src="@drawable/ua_ic_refresh"
+                    android:tint="@color/ua_blue" />
+            </LinearLayout>
+
+            <!-- Eligible -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="?android:listPreferredItemHeightSmall"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Eligible"
+                    android:textAppearance="@style/AirshipDebug.ItemTitle" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text="@{eligible}"
+                    android:textAppearance="@style/AirshipDebug.ItemSubTitle"
+                    tools:text="false" />
+            </LinearLayout>
+
+            <!-- Exists -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="?android:listPreferredItemHeightSmall"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Exists"
+                    android:textAppearance="@style/AirshipDebug.ItemTitle" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text="@{exists}"
+                    android:textAppearance="@style/AirshipDebug.ItemSubTitle"
+                    tools:text="true" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_gravity="bottom"
+            android:background="?android:dividerHorizontal" />
+
+        <!-- Hacking in a header for the payload section, which is included via ConcatAdapter -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- RESULT -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:text="payload"
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/AirshipDebug.SectionHeading" />
+
+                <!-- Share button -->
+                <ImageButton
+                    android:id="@+id/share_payload_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:background="?selectableItemBackground"
+                    android:padding="8dp"
+                    android:src="@drawable/ua_ic_share"
+                    android:tint="@color/ua_blue" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</layout>

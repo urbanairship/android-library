@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentFeatureFlagsListBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
-import com.urbanairship.debug.json.JsonViewerFragment
 
 class FeatureFlagsListFragment : Fragment(R.layout.ua_fragment_feature_flags_list) {
     private val viewModel: FeatureFlagsViewModel by lazy {
@@ -46,13 +45,10 @@ class FeatureFlagsListFragment : Fragment(R.layout.ua_fragment_feature_flags_lis
 
         adapter.listener = { featureFlag ->
             val args = Bundle().apply {
-                putParcelable(JsonViewerFragment.JSON, featureFlag.toJsonValue())
-
-                featureFlag.get("flag")?.map?.get("name")?.string?.let { name ->
-                    putString(JsonViewerFragment.TITLE, name)
-                }
+                putParcelable(FeatureFlagsDetailFragment.JSON, featureFlag.toJsonValue())
             }
-            Navigation.findNavController(binding.root).navigate(R.id.jsonTreeFragment, args)
+            Navigation.findNavController(binding.root)
+                .navigate(R.id.featureFlagsDetailFragment, args)
         }
 
         setupToolbarWithNavController(R.id.toolbar)

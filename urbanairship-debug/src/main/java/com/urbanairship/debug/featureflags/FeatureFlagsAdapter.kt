@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.debug.databinding.UaItemFeatureFlagBinding
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.requireField
 
 /** Feature Flags list fragment. */
 class FeatureFlagsAdapter : ListAdapter<JsonMap, FeatureFlagsAdapter.ViewHolder>(DIFF_UTIL) {
@@ -24,11 +25,12 @@ class FeatureFlagsAdapter : ListAdapter<JsonMap, FeatureFlagsAdapter.ViewHolder>
         private val parent: ViewGroup,
         private val binding: UaItemFeatureFlagBinding = UaItemFeatureFlagBinding.inflate(LayoutInflater.from(parent.context), parent, false)
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(featureFlag: JsonMap) = with(binding) {
-            setFeatureFlag(featureFlag)
+        fun bind(featureFlag: JsonMap): Unit = with(binding) {
+            featureFlagName = featureFlag.requireField<JsonMap>("flag").requireField<String>("name")
             root.setOnClickListener {
                 listener?.invoke(featureFlag)
             }
+
             executePendingBindings()
         }
     }

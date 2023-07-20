@@ -93,8 +93,16 @@
         android:name="com.urbanairship.debug.featureflags.FeatureFlagsListFragment"
         android:label="Feature Flags">
         <action
-            android:id="@+id/action_featureFlagsListFragment_to_jsonTreeFragment"
-            app:destination="@id/jsonTreeFragment" />
+            android:id="@+id/action_featureFlagsListFragment_to_featureFlagsDetailFragment"
+            app:destination="@id/featureFlagsDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/featureFlagsDetailFragment"
+        android:name="com.urbanairship.debug.featureflags.FeatureFlagsDetailFragment">
+        <argument
+            android:name="json"
+            app:argType="com.urbanairship.json.JsonValue" />
     </fragment>
 
     <fragment

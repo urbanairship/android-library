@@ -60,7 +60,9 @@ class JsonRecyclerView @JvmOverloads constructor(
     }
 }
 
-private class JsonRecyclerAdapter : ListAdapter<Item, ViewHolder>(DIFF_UTIL) {
+class JsonRecyclerAdapter(
+    private val showDividers: Boolean = true
+) : ListAdapter<Item, ViewHolder>(DIFF_UTIL) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
         ViewHolder(parent)
@@ -75,6 +77,7 @@ private class JsonRecyclerAdapter : ListAdapter<Item, ViewHolder>(DIFF_UTIL) {
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: Item): Unit = with(binding) {
             setItem(item)
+            showDividers = this@JsonRecyclerAdapter.showDividers
 
             // Hack to disable wrapping and allow horizontal scrolling when text overflows.
             jsonValue.movementMethod = ScrollingMovementMethod()
@@ -94,7 +97,7 @@ private class JsonRecyclerAdapter : ListAdapter<Item, ViewHolder>(DIFF_UTIL) {
 
     companion object {
         private val DIFF_UTIL = object : DiffUtil.ItemCallback<Item>() {
-            override fun areItemsTheSame(old: Item, new: Item) = old === new
+            override fun areItemsTheSame(old: Item, new: Item) = old.key == new.key
             override fun areContentsTheSame(old: Item, new: Item) = old == new
         }
     }

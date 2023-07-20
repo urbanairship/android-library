@@ -8,6 +8,9 @@
         <variable
             name="item"
             type="com.urbanairship.debug.json.JsonRecyclerView.Item" />
+        <variable
+            name="showDividers"
+            type="boolean" />
     </data>
 
     <LinearLayout
@@ -62,7 +65,7 @@
 
         <FrameLayout
             android:visibility="@{item.isExpanded ? View.VISIBLE : View.GONE}"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
@@ -79,5 +82,11 @@
                 tools:text="{\n  &quot;flag&quot;: &quot;value&quot;\n}" />
         </FrameLayout>
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:dividerHorizontal"
+            android:layout_gravity="bottom"
+            android:visibility="@{showDividers ? View.VISIBLE : View.GONE}" />
     </LinearLayout>
 </layout>

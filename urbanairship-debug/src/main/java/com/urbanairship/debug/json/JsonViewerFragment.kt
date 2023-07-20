@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.DividerItemDecoration
 import com.urbanairship.debug.R
 import com.urbanairship.debug.databinding.UaFragmentJsonViewerBinding
 import com.urbanairship.debug.extensions.setupToolbarWithNavController
@@ -46,7 +45,6 @@ class JsonViewerFragment : Fragment(R.layout.ua_fragment_json_viewer) {
         with(binding) {
             lifecycleOwner = this@JsonViewerFragment
 
-            list.addItemDecoration(DividerItemDecoration(context, DividerItemDecoration.VERTICAL))
             list.show(json)
         }
 

@@ -6,8 +6,8 @@
     <data>
         <import type="android.view.View" />
         <variable
-            name="featureFlag"
-            type="com.urbanairship.json.JsonMap" />
+            name="featureFlagName"
+            type="String" />
     </data>
 
     <LinearLayout
@@ -23,16 +23,8 @@
             android:id="@+id/title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@{featureFlag.get(`flag`).optMap().get(`name`).optString()}"
+            android:text="@{featureFlagName}"
             android:textAppearance="@style/AirshipDebug.ItemTitle"
             tools:text="flag name" />
-
-        <TextView
-            android:id="@+id/id"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="@style/AirshipDebug.ItemSubTitle"
-            android:text="@{featureFlag.get(`flag_id`).optString()}"
-            tools:text="flag id" />
     </LinearLayout>
 </layout>
