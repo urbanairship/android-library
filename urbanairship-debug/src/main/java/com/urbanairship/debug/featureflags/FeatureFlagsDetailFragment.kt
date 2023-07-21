@@ -20,7 +20,6 @@ import com.urbanairship.debug.extensions.toFormattedJsonString
 import com.urbanairship.debug.json.JsonRecyclerAdapter
 import com.urbanairship.debug.json.JsonRecyclerView
 import com.urbanairship.debug.utils.getParcelableCompat
-import com.urbanairship.featureflag.FeatureFlagException
 import com.urbanairship.featureflag.FeatureFlagManager
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -120,15 +119,17 @@ private class FeatureFlagsDetailAdapter(
             id = json.requireField<String>("flag_id")
 
             scope.launch {
-                try {
-                    val result = featureFlagManager.flag(flagName)
-                    eligible = result.isEligible.toString()
-                    exists = result.exists.toString()
-                } catch (e: FeatureFlagException) {
-                    UALog.e("Failed to evaluate flag: $flagName", e)
-                    eligible = "error"
-                    exists = "error"
-                }
+                featureFlagManager.flag(flagName).fold(
+                        onSuccess = { flag ->
+                            eligible = flag.isEligible.toString()
+                            exists = flag.exists.toString()
+                        },
+                        onFailure = {
+                            UALog.e("Failed to evaluate flag: $flagName", it)
+                            eligible = "error"
+                            exists = "error"
+                        }
+                )
             }
 
             resultRefreshButton.setOnClickListener {

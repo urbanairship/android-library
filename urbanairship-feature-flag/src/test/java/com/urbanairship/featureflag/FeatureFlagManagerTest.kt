@@ -97,7 +97,7 @@ class FeatureFlagManagerTest {
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
-        val flag = featureFlags.flag("test-ff")
+        val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag(isEligible = true, exists = true, variables = null)
         assert(expected == flag)
     }
@@ -118,7 +118,7 @@ class FeatureFlagManagerTest {
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
         coEvery { remoteData.payloads(payloadType) } returns listOf()
 
-        val flag = featureFlags.flag("delusional")
+        val flag = featureFlags.flag("delusional").getOrThrow()
 
         val expected = FeatureFlag(isEligible = false, exists = false, variables = null)
         assert(expected == flag)
@@ -135,7 +135,7 @@ class FeatureFlagManagerTest {
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
-        val flag = featureFlags.flag("no-audience-flag")
+        val flag = featureFlags.flag("no-audience-flag").getOrThrow()
         val expected = FeatureFlag(
             isEligible = true,
             exists = true,
@@ -157,7 +157,7 @@ class FeatureFlagManagerTest {
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
-        val flag = featureFlags.flag("unmatched")
+        val flag = featureFlags.flag("unmatched").getOrThrow()
         val expected = FeatureFlag(
             isEligible = false,
             exists = true,
@@ -187,7 +187,7 @@ class FeatureFlagManagerTest {
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
-        val flag = featureFlags.flag("same-name")
+        val flag = featureFlags.flag("same-name").getOrThrow()
         val expected = FeatureFlag(
             isEligible = true,
             exists = true,
@@ -216,7 +216,7 @@ class FeatureFlagManagerTest {
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
-        val flag = featureFlags.flag("same-name")
+        val flag = featureFlags.flag("same-name").getOrThrow()
 
         val expected = FeatureFlag(
             isEligible = true,
@@ -239,7 +239,7 @@ class FeatureFlagManagerTest {
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
-        val actual = featureFlags.flag("deferred")
+        val actual = featureFlags.flag("deferred").getOrThrow()
         val expected = FeatureFlag(isEligible = false, exists = false, variables = null)
         assert(expected == actual)
     }
@@ -263,17 +263,17 @@ class FeatureFlagManagerTest {
 
         // not started
         currentTime = 1
-        var flag = featureFlags.flag("timed")
+        var flag = featureFlags.flag("timed").getOrThrow()
         assert(FeatureFlag(isEligible = false, exists = false, variables = null) == flag)
 
         // started
         currentTime = 2
-        flag = featureFlags.flag("timed")
+        flag = featureFlags.flag("timed").getOrThrow()
         assert(FeatureFlag(isEligible = true, exists = true, variables = null) == flag)
 
         // outdated
         currentTime = 4
-        flag = featureFlags.flag("timed")
+        flag = featureFlags.flag("timed").getOrThrow()
         assert(FeatureFlag(isEligible = false, exists = false, variables = null) == flag)
     }
 
@@ -294,7 +294,7 @@ class FeatureFlagManagerTest {
         coEvery { remoteData.refresh(eq(RemoteDataSource.APP)) } returns true
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
-        val actual = featureFlags.flag("stale")
+        val actual = featureFlags.flag("stale").getOrThrow()
         assert(FeatureFlag(isEligible = true, exists = true, variables = null) == actual)
     }
 
@@ -316,7 +316,7 @@ class FeatureFlagManagerTest {
         coEvery { remoteData.refresh(eq(RemoteDataSource.APP)) } returns true
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
-        val actual = featureFlags.flag("stale")
+        val actual = featureFlags.flag("stale").getOrThrow()
         assert(FeatureFlag(isEligible = true, exists = true, variables = null) == actual)
     }
 
@@ -338,7 +338,7 @@ class FeatureFlagManagerTest {
         coEvery { remoteData.refresh(eq(RemoteDataSource.APP)) } returns true
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
-        featureFlags.flag("stale")
+        featureFlags.flag("stale").getOrThrow()
     }
 
     @Test(expected = FeatureFlagException::class)
@@ -364,7 +364,7 @@ class FeatureFlagManagerTest {
         coEvery { remoteData.refresh(eq(RemoteDataSource.APP)) } returns true
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
-        featureFlags.flag("stale")
+        featureFlags.flag("stale").getOrThrow()
     }
 
     @Test(expected = FeatureFlagException::class)
@@ -375,7 +375,7 @@ class FeatureFlagManagerTest {
         coEvery { remoteData.refresh(eq(RemoteDataSource.APP)) } returns true
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
-        featureFlags.flag("stale")
+        featureFlags.flag("stale").getOrThrow()
     }
 
     private fun generateAudience(isNewUser: Boolean): AudienceSelector {

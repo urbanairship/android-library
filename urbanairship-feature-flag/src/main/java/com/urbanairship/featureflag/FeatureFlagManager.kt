@@ -102,16 +102,15 @@ public class FeatureFlagManager
     }
 
     /**
-     * Gets and evaluates a feature flag and returns it as a PendingResult
+     * Gets and evaluates a feature flag and returns it as a PendingResult.
      * @param name The flag name
      * @return an instance of `PendingResult<FeatureFlag>`.
-     * @throws FeatureFlagException
      */
     @Throws(FeatureFlagException::class)
     fun flagAsPendingResult(name: String): PendingResult<FeatureFlag> {
         val result = PendingResult<FeatureFlag>()
         pendingResultScope.launch {
-            result.result = flag(name)
+            result.result = flag(name).getOrNull()
         }
         return result
     }
@@ -119,24 +118,21 @@ public class FeatureFlagManager
     /**
      * Gets and evaluates  a feature flag
      * @param name The flag name
-     * @return an instance of `FeatureFlag`.
-     * @throws FeatureFlagException
+     * @return an instance of `Result<FeatureFlag>`.
      */
-    @Throws(FeatureFlagException::class)
-    suspend fun flag(name: String): FeatureFlag {
-        val status = refreshIfNeeded()
-
-        return when (status) {
-            RemoteData.Status.UP_TO_DATE -> evaluate(fetchFlagInfos(name))
+    suspend fun flag(name: String): Result<FeatureFlag> {
+        return when (refreshIfNeeded()) {
+            RemoteData.Status.UP_TO_DATE -> Result.success(evaluate(fetchFlagInfos(name)))
             RemoteData.Status.STALE -> {
                 val items = fetchFlagInfos(name)
                 if (items.isEmpty() || !isStaleAllowed(items)) {
-                    throw FeatureFlagException("Unable to fetch data")
+                    Result.failure(FeatureFlagException("Unable to fetch data"))
+                } else {
+                    Result.success(evaluate(items))
                 }
-                evaluate(items)
             }
             RemoteData.Status.OUT_OF_DATE ->
-                throw FeatureFlagException("Unable to fetch data")
+                Result.failure(FeatureFlagException("Unable to fetch data"))
         }
     }
 
