@@ -5,10 +5,6 @@ plugins {
 
 description = "Airship Android Feature Flags extension."
 
-airshipModule {
-    published = false
-}
-
 dependencies {
     api project(':urbanairship-core')
 
