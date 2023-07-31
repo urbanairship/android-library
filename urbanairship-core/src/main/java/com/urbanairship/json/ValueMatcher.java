@@ -122,7 +122,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
             Double max = map.containsKey(NumberRangeMatcher.MAX_VALUE_KEY) ? map.opt(NumberRangeMatcher.MAX_VALUE_KEY).getDouble(0) : null;
             try {
                 return newNumberRangeMatcher(min, max);
-            } catch (IllegalArgumentException e) {
+            } catch (Exception e) {
                 throw new JsonException("Invalid range matcher: " + jsonValue, e);
             }
         }
@@ -136,7 +136,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
             try {
                 String constraint = map.opt(VersionMatcher.VERSION_KEY).optString();
                 return newVersionMatcher(constraint);
-            } catch (NumberFormatException e) {
+            } catch (Exception e) {
                 throw new JsonException("Invalid version constraint: " + map.opt(VersionMatcher.VERSION_KEY), e);
             }
         }
@@ -145,7 +145,7 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
             try {
                 String constraint = map.opt(VersionMatcher.ALTERNATE_VERSION_KEY).optString();
                 return newVersionMatcher(constraint);
-            } catch (NumberFormatException e) {
+            } catch (Exception e) {
                 throw new JsonException("Invalid version constraint: " + map.opt(VersionMatcher.ALTERNATE_VERSION_KEY), e);
             }
         }
