@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.1.0 July 31, 2023
+Minor release that adds support for global holdout groups in In-App experiences and support for feature flags.
+
+### Changes
+- Added new feature flag module `urbanairship-feature-flag`
+- Added support for global holdout groups
+
+
 ## Version 17.0.3, July 12, 2023
 Patch release that fixes a pair of issues with Scenes and Surveys, and adds a new `getPushProviderType()` method on `PushManager`. Apps that make use of Scenes or Surveys should update.
 
