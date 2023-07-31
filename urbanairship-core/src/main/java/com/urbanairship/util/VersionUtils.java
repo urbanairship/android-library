@@ -75,13 +75,27 @@ public class VersionUtils {
                             .build();
     }
 
-    /** Returns {@code} if the v1 version is newer than the v2 version. */
+    /**
+     * Returns {@code true} if the v1 version is newer than the v2 version.
+     * If either version is invalid, returns {@code false}.
+     */
     public static boolean isVersionNewer(String v1, String v2) {
-        return IvyVersionMatcher.newMatcher(String.format(IVY_PATTERN_GREATER_THAN, v1)).apply(v2);
+        try {
+            return IvyVersionMatcher.newMatcher(String.format(IVY_PATTERN_GREATER_THAN, v1)).apply(v2);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
-    /** Returns {@code} if the v1 version is newer than or equal to the v2 version. */
+    /**
+     * Returns {@code true} if the v1 version is newer than or equal to the v2 version.
+     * If either version is invalid, returns {@code false}.
+     */
     public static boolean isVersionNewerOrEqualTo(String v1, String v2) {
-        return IvyVersionMatcher.newMatcher(String.format(IVY_PATTERN_GREATER_THAN_OR_EQUAL_TO, v1)).apply(v2);
+        try {
+            return IvyVersionMatcher.newMatcher(String.format(IVY_PATTERN_GREATER_THAN_OR_EQUAL_TO, v1)).apply(v2);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
