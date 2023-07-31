@@ -247,7 +247,7 @@ public class InAppReportingEventTest {
                                                         .put("message_id", "schedule ID")
                                                         .build())
                                       .put("button_identifier", "button id")
-                                      .put("reporting_info", metadata)
+                                      .put("reporting_metadata", metadata)
                                       .build();
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_BUTTON_TAP, expectedData)));
@@ -308,7 +308,7 @@ public class InAppReportingEventTest {
                                                         .put("message_id", "schedule ID")
                                                         .build())
                                       .put("gesture_identifier", "gesture ID")
-                                      .put("reporting_info", metadata)
+                                      .put("reporting_metadata", metadata)
                                       .build();
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_PAGER_GESTURE, expectedData)));
@@ -326,7 +326,7 @@ public class InAppReportingEventTest {
                                                         .put("message_id", "schedule ID")
                                                         .build())
                                       .put("action_identifier", "action ID")
-                                      .put("reporting_info", metadata)
+                                      .put("reporting_metadata", metadata)
                                       .build();
 
         verify(mockAnalytics).addEvent(argThat(EventMatchers.event(InAppReportingEvent.TYPE_PAGER_ACTION, expectedData)));
