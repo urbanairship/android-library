@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 
 import com.urbanairship.android.layout.R;
+import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.android.layout.widget.ShapeDrawableWrapper;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -117,11 +118,15 @@ public abstract class Image {
             return drawable.resId;
         }
 
-        @Nullable
         public Drawable getDrawable(@NonNull Context context) {
+            return getDrawable(context, true);
+        }
+
+        @Nullable
+        public Drawable getDrawable(@NonNull Context context, boolean enabledState) {
             Drawable d = ContextCompat.getDrawable(context, getDrawableRes());
             if (d != null) {
-                DrawableCompat.setTint(d, tint.resolve(context));
+                DrawableCompat.setTint(d, enabledState ? tint.resolve(context) : LayoutUtils.generateDisabledColor(tint.resolve(context)));
                 return new ShapeDrawableWrapper(d, 1, scale);
             } else {
                 return null;

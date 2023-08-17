@@ -12,12 +12,14 @@ import android.util.StateSet;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.Image;
+import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.android.layout.widget.ShapeDrawableWrapper;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
 import java.util.List;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
@@ -31,6 +33,8 @@ import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Shape {
     private static final int[] CHECKED_STATE_SET = { android.R.attr.state_checked };
+    private static final int[] DISABLED_CHECKED_STATE_SET = { -android.R.attr.state_enabled, android.R.attr.state_checked };
+    private static final int[] DISABLED_UNCHECKED_STATE_SET = { -android.R.attr.state_enabled, -android.R.attr.state_checked };
     private static final int[] EMPTY_STATE_SET = StateSet.NOTHING;
 
     @NonNull
@@ -72,29 +76,17 @@ public class Shape {
         @Nullable Image.Icon uncheckedIcon
     ) {
         // Build layer drawables from checked shapes/icons
-        int checkedLayerCount = checkedShapes.size() + (checkedIcon != null ? 1 : 0);
-        Drawable[] checkedLayers = new Drawable[checkedLayerCount];
-        for (int i = 0; i < checkedShapes.size(); i++) {
-            checkedLayers[i] = checkedShapes.get(i).getDrawable(context);
-        }
-        if (checkedIcon != null) {
-            checkedLayers[checkedLayerCount - 1] = checkedIcon.getDrawable(context);
-        }
-        LayerDrawable checkedDrawable = new LayerDrawable(checkedLayers);
+        LayerDrawable checkedDrawable = buildLayerDrawable(context, checkedShapes, checkedIcon, true);
+        LayerDrawable disabledCheckedDrawable = buildLayerDrawable(context, checkedShapes, checkedIcon, false);
 
         // Build layer drawables from unchecked shapes/icons
-        int uncheckedLayerCount = uncheckedShapes.size() + (uncheckedIcon != null ? 1 : 0);
-        Drawable[] uncheckedLayers = new Drawable[uncheckedLayerCount];
-        for (int i = 0; i < uncheckedShapes.size(); i++) {
-            uncheckedLayers[i] = uncheckedShapes.get(i).getDrawable(context);
-        }
-        if (uncheckedIcon != null) {
-            uncheckedLayers[uncheckedLayerCount - 1] = uncheckedIcon.getDrawable(context);
-        }
-        LayerDrawable uncheckedDrawable = new LayerDrawable(uncheckedLayers);
+        LayerDrawable uncheckedDrawable = buildLayerDrawable(context, uncheckedShapes, uncheckedIcon, true);
+        LayerDrawable disabledUncheckedDrawable = buildLayerDrawable(context, uncheckedShapes, uncheckedIcon, false);
 
         // Combine layer drawables into a single state list drawable
         StateListDrawable drawable = new StateListDrawable();
+        drawable.addState(DISABLED_CHECKED_STATE_SET, disabledCheckedDrawable);
+        drawable.addState(DISABLED_UNCHECKED_STATE_SET, disabledUncheckedDrawable);
         drawable.addState(CHECKED_STATE_SET, checkedDrawable);
         drawable.addState(EMPTY_STATE_SET, uncheckedDrawable);
 
@@ -102,11 +94,30 @@ public class Shape {
     }
 
     @NonNull
+    private static LayerDrawable buildLayerDrawable(@NonNull Context context, @NonNull List<Shape> shapes, @Nullable Image.Icon icon, boolean enabledState) {
+        int layerCount = shapes.size() + (icon != null ? 1 : 0);
+        Drawable[] layers = new Drawable[layerCount];
+        for (int i = 0; i < shapes.size(); i++) {
+            layers[i] = shapes.get(i).getDrawable(context, enabledState);
+        }
+        if (icon != null) {
+            layers[layerCount - 1] = icon.getDrawable(context, enabledState);
+        }
+        return new LayerDrawable(layers);
+    }
+
+    @NonNull
     public Drawable getDrawable(@NonNull Context context) {
+        return getDrawable(context,true);
+    }
+
+    @NonNull
+    public Drawable getDrawable(@NonNull Context context, boolean enabledState) {
+        @ColorInt int drawableColor = color != null ? color.resolve(context) : Color.TRANSPARENT;
         int strokeWidth = border != null && border.getStrokeWidth() != null
             ? (int) dpToPx(context, border.getStrokeWidth())
             : 0;
-        int strokeColor = border != null && border.getStrokeColor() != null
+        @ColorInt int strokeColor = border != null && border.getStrokeColor() != null
             ? border.getStrokeColor().resolve(context)
             : 0;
         float radius = border != null && border.getRadius() != null
@@ -115,8 +126,8 @@ public class Shape {
 
         GradientDrawable drawable = new GradientDrawable();
         drawable.setShape(type.getDrawableShapeType());
-        drawable.setColor(color != null ? color.resolve(context) : Color.TRANSPARENT);
-        drawable.setStroke(strokeWidth, strokeColor);
+        drawable.setColor(enabledState ? drawableColor : LayoutUtils.generateDisabledColor(drawableColor));
+        drawable.setStroke(strokeWidth, enabledState ? strokeColor : LayoutUtils.generateDisabledColor(strokeColor));
         drawable.setCornerRadius(radius);
 
         return new ShapeDrawableWrapper(drawable, aspectRatio, scale);

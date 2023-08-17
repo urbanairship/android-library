@@ -97,11 +97,18 @@ public final class LayoutUtils {
             }
 
             if (border.getStrokeColor() != null) {
-                shapeDrawable.setStrokeColor(ColorStateList.valueOf(border.getStrokeColor().resolve(context)));
+                @ColorInt int strokeColor = border.getStrokeColor().resolve(context);
+                shapeDrawable.setStrokeColor(new ColorStateListBuilder()
+                        .add(generateDisabledColor(strokeColor), -android.R.attr.state_enabled)
+                        .add(strokeColor)
+                        .build());
             }
 
             @ColorInt int fillColor = backgroundColor != null ? backgroundColor.resolve(context) : Color.TRANSPARENT;
-            shapeDrawable.setFillColor(ColorStateList.valueOf(fillColor));
+            shapeDrawable.setFillColor(new ColorStateListBuilder()
+                    .add(generateDisabledColor(fillColor), -android.R.attr.state_enabled)
+                    .add(fillColor)
+                    .build());
 
             mergeBackground(view, shapeDrawable);
 
@@ -304,9 +311,11 @@ public final class LayoutUtils {
 
     private static ColorStateList checkedColorStateList(@ColorInt int checkedColor, @ColorInt int normalColor) {
         return new ColorStateListBuilder()
-            .add(checkedColor, android.R.attr.state_checked)
-            .add(normalColor)
-            .build();
+                .add(generateDisabledColor(checkedColor), android.R.attr.state_checked, -android.R.attr.state_enabled)
+                .add(generateDisabledColor(normalColor), -android.R.attr.state_checked, -android.R.attr.state_enabled)
+                .add(checkedColor, android.R.attr.state_checked)
+                .add(normalColor)
+                .build();
     }
 
     public static void dismissSoftKeyboard(@NonNull View view) {

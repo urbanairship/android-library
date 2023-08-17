@@ -71,7 +71,7 @@ internal class ImageButtonView(
             }
             Image.Type.ICON -> {
                 val icon = image as Image.Icon
-                setImageDrawable(icon.getDrawable(context))
+                setImageDrawable(icon.getDrawable(context, isEnabled))
                 @ColorInt val normalColor = icon.tint.resolve(context)
                 @ColorInt val pressedColor = LayoutUtils.generatePressedColor(normalColor)
                 @ColorInt val disabledColor = LayoutUtils.generateDisabledColor(normalColor)
