@@ -168,6 +168,7 @@ public class InAppAutomationTest {
 
         runLooperTasks();
     }
+
     @Test
     public void testAutoPauseEnabled() {
         config = AirshipConfigOptions.newBuilder().setAutoPauseInAppAutomationOnLaunch(true).build();
@@ -285,6 +286,7 @@ public class InAppAutomationTest {
 
         Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setBypassHoldoutGroups(true)
                                                   .build();
 
         when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
@@ -306,6 +308,7 @@ public class InAppAutomationTest {
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setBypassHoldoutGroups(true)
                                                             .build();
 
         InAppMessage message = InAppMessage.newBuilder()
@@ -355,6 +358,7 @@ public class InAppAutomationTest {
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setBypassHoldoutGroups(true)
                                                             .setAudience(AudienceSelector.Companion.newBuilder()
                                                                                                    .setMissBehavior(AudienceSelector.MissBehavior.SKIP)
                                                                                                    .build())
@@ -378,6 +382,7 @@ public class InAppAutomationTest {
 
         Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setBypassHoldoutGroups(true)
                                                   .build();
 
         when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
@@ -405,6 +410,7 @@ public class InAppAutomationTest {
         Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                                   .setFrequencyConstraintIds(Collections.singletonList("foo"))
+                                                  .setBypassHoldoutGroups(true)
                                                   .build();
 
         FrequencyChecker mockFrequencyChecker = mock(FrequencyChecker.class);
@@ -441,6 +447,7 @@ public class InAppAutomationTest {
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setBypassHoldoutGroups(true)
                                                             .build();
 
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
@@ -457,6 +464,7 @@ public class InAppAutomationTest {
     public void testOnCheckExecutionReadinessActions() {
         Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
                                              .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                             .setBypassHoldoutGroups(true)
                                              .build();
 
         when(mockObserver.isRemoteSchedule(schedule)).thenReturn(false);
@@ -483,6 +491,7 @@ public class InAppAutomationTest {
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setBypassHoldoutGroups(true)
                                                             .build();
 
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
@@ -509,6 +518,7 @@ public class InAppAutomationTest {
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), true, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setBypassHoldoutGroups(true)
                                                             .build();
 
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
@@ -532,6 +542,7 @@ public class InAppAutomationTest {
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setBypassHoldoutGroups(true)
                                                             .build();
 
         when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
@@ -565,8 +576,9 @@ public class InAppAutomationTest {
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
-                .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
-                .build();
+                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setBypassHoldoutGroups(true)
+                                                            .build();
 
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(409, null));
@@ -592,8 +604,9 @@ public class InAppAutomationTest {
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
-                .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
-                .build();
+                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setBypassHoldoutGroups(true)
+                                                            .build();
 
         Map<String, String> headers = new HashMap<String, String>() {{
             put("Location", "https://fakeLocation.com");
@@ -624,8 +637,9 @@ public class InAppAutomationTest {
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
-                .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
-                .build();
+                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setBypassHoldoutGroups(true)
+                                                            .build();
 
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(429, null))
@@ -647,8 +661,9 @@ public class InAppAutomationTest {
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
-                .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
-                .build();
+                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setBypassHoldoutGroups(true)
+                                                            .build();
 
         Map<String, String> headers = new HashMap<String, String>() {{
             put("Location", "https://fakeLocation.com");
@@ -680,8 +695,9 @@ public class InAppAutomationTest {
 
         Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
         Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
-                .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
-                .build();
+                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
+                                                            .setBypassHoldoutGroups(true)
+                                                            .build();
 
         when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
 
@@ -763,7 +779,6 @@ public class InAppAutomationTest {
                                                   .build();
 
         when(mockObserver.refreshAndCheckCurrentSync(any())).thenReturn(false);
-
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -892,6 +907,7 @@ public class InAppAutomationTest {
 
         Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setBypassHoldoutGroups(true)
                                                   .build();
 
         when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
@@ -957,8 +973,6 @@ public class InAppAutomationTest {
         InAppMessage message = InAppMessage.newBuilder()
                                            .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
                                            .build();
-
-
 
         List<FrequencyConstraint> constraints = new ArrayList<>();
         constraints.add(FrequencyConstraint.newBuilder()
@@ -1031,6 +1045,40 @@ public class InAppAutomationTest {
                 .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), nullable(String.class));
 
         doReturn(new RemoteDataInfo("url", null, RemoteDataSource.APP, null))
+                .when(mockObserver).parseRemoteDataInfo(eq(schedule));
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+
+        ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
+        verify(mockMessageScheduleDelegate, times(1)).onPrepareSchedule(eq(schedule), eq(schedule.getData()), eq(results), argumentCaptor.capture());
+        argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+    }
+
+    @Test
+    public void testEvaluateHoldoutGroupWithRemoteDataContactId() {
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .build();
+
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .setId("test-id")
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .build();
+
+        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+
+        MessageInfo expectedInfo = new MessageInfo("transactional", null);
+        ExperimentResult results = new ExperimentResult("cid", "coid", "eid", true, Collections.emptyList());
+
+        PendingResult<ExperimentResult> pendingResult = new PendingResult<>();
+        pendingResult.setResult(results);
+        doReturn(pendingResult)
+                .when(mockExperimentManager)
+                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq("some-contact-id"));
+
+        doReturn(new RemoteDataInfo("url", null, RemoteDataSource.APP, "some-contact-id"))
                 .when(mockObserver).parseRemoteDataInfo(eq(schedule));
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);

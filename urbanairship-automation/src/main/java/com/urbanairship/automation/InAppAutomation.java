@@ -632,8 +632,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         RemoteDataInfo remoteDataInfo = remoteDataSubscriber.parseRemoteDataInfo(schedule);
 
-        // Skip actions for now or anything that is not from remote-data
-        if (remoteDataInfo == null || schedule.getType().equals(Schedule.TYPE_ACTION)) {
+        // Skip actions for now
+        if (schedule.getType().equals(Schedule.TYPE_ACTION)) {
             return null;
         }
 
@@ -643,8 +643,12 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         MessageInfo messageInfo = new MessageInfo(schedule.getMessageType(), schedule.getCampaigns());
 
+
         return experimentManager
-                .evaluateGlobalHoldoutsPendingResult(messageInfo, null)
+                .evaluateGlobalHoldoutsPendingResult(
+                        messageInfo,
+                        remoteDataInfo == null ? null : remoteDataInfo.getContactId()
+                )
                 .get();
     }
 
