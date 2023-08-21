@@ -251,7 +251,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
      */
     @Test
     public void testWishlistEventBasic() throws JSONException {
-        CustomEvent event = RetailEventTemplate.newWishlishTemplate().createEvent();
+        CustomEvent event = RetailEventTemplate.newWishlistTemplate().createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.WISHLIST_EVENT);
         EventTestUtils.validateEventValue(event, "template_type", "retail");
@@ -265,7 +265,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
      */
     @Test
     public void testWishlistEvent() throws JSONException {
-        CustomEvent event = RetailEventTemplate.newWishlishTemplate("cool", "12345").createEvent();
+        CustomEvent event = RetailEventTemplate.newWishlistTemplate("cool", "12345").createEvent();
 
         EventTestUtils.validateEventValue(event, "event_name", RetailEventTemplate.WISHLIST_EVENT);
         EventTestUtils.validateEventValue(event, "template_type", "retail");

@@ -22,7 +22,7 @@ public class AdmHandlerJobBase extends ADMMessageHandlerJobBase {
 
     @Override
     protected void onRegistrationError(Context context, String errorId) {
-        UALog.e("An error occured during ADM Registration : " + errorId);
+        UALog.e("An error occurred during ADM Registration : " + errorId);
     }
 
     @Override

@@ -209,7 +209,10 @@ public class RetailEventTemplate {
      * Creates a wishlist event template.
      *
      * @return A RetailEventTemplate.
+     *
+     * @deprecated Use {@link #newWishlistTemplate()}. This method will be removed in a future release.
      */
+    @Deprecated
     @NonNull
     public static RetailEventTemplate newWishlishTemplate() {
         return new RetailEventTemplate(WISHLIST_EVENT);
@@ -221,9 +224,33 @@ public class RetailEventTemplate {
      * @param name The wishlist name.
      * @param id The wishlist ID.
      * @return A RetailEventTemplate.
+     *
+     * @deprecated Use {@link #newWishlistTemplate(String, String)}. This method will be removed in a future release.
      */
+    @Deprecated
     @NonNull
     public static RetailEventTemplate newWishlishTemplate(@Nullable String name, @Nullable String id) {
+        return new RetailEventTemplate(WISHLIST_EVENT, null, null, name, id);
+    }
+
+    /**
+     * Creates a wishlist event template.
+     *
+     * @return A RetailEventTemplate.
+     */
+    @NonNull
+    public static RetailEventTemplate newWishlistTemplate() {
+        return new RetailEventTemplate(WISHLIST_EVENT);
+    }
+    /**
+     * Creates a wishlist event template.
+     *
+     * @param name The wishlist name.
+     * @param id The wishlist ID.
+     * @return A RetailEventTemplate.
+     */
+    @NonNull
+    public static RetailEventTemplate newWishlistTemplate(@Nullable String name, @Nullable String id) {
         return new RetailEventTemplate(WISHLIST_EVENT, null, null, name, id);
     }
 

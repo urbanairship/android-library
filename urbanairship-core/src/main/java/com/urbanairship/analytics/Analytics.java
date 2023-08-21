@@ -135,7 +135,7 @@ public class Analytics extends AirshipComponent {
      * @hide
      */
     @NonNull
-    public static final String EXTENSION_TITANIUM = "titanum";
+    public static final String EXTENSION_TITANIUM = "titanium";
 
     /**
      * Minimum amount of delay when {@link #uploadEvents()} is called.

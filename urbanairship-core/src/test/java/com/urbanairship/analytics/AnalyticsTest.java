@@ -594,7 +594,7 @@ public class AnalyticsTest extends BaseTestCase {
         verify(mockEventManager).uploadEvents(any(), argumentCaptor.capture());
 
         Map<String, String> headers = argumentCaptor.getValue();
-        String expected = "cordova:1.0.0,unity:2.0.0,flutter:3.0.0,react-native:4.0.0,xamarin:5.0.0,titanum:6.0.0";
+        String expected = "cordova:1.0.0,unity:2.0.0,flutter:3.0.0,react-native:4.0.0,xamarin:5.0.0,titanium:6.0.0";
         assertEquals(expected, headers.get("X-UA-Frameworks"));
     }
 

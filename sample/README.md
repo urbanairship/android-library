@@ -4,7 +4,7 @@ Sample application for the Airship SDK.
 
 ## Setup
 
-Copy [airshipconfig.properties.sample](src/main/assets/airshipconfig.properties.sample) to `airshipconfig.properites` in
+Copy [airshipconfig.properties.sample](src/main/assets/airshipconfig.properties.sample) to `airshipconfig.properties` in
 the assets directory.
 
 Setup:

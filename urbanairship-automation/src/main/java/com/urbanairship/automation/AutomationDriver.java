@@ -71,7 +71,7 @@ public interface AutomationDriver {
     int READY_RESULT_INVALIDATE = -1;
 
     /**
-     * Schedule's limit is exceeded, so it should be skipped
+     * Schedule's limit is exceeded, so it should be skipped.
      */
     int READY_RESULT_SKIP = 2;
 

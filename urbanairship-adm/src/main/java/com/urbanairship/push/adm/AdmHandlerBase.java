@@ -29,7 +29,7 @@ public class AdmHandlerBase extends ADMMessageHandlerBase {
 
     @Override
     protected void onRegistrationError(String errorId) {
-        UALog.e("An error occured during ADM Registration : " + errorId);
+        UALog.e("An error occurred during ADM Registration : " + errorId);
     }
 
     @Override

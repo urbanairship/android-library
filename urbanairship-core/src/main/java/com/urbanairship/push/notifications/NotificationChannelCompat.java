@@ -134,7 +134,7 @@ public class NotificationChannelCompat implements JsonSerializable {
     /**
      * Indicates whether the channel can bypass do-not-disturb.
      *
-     * @return <code>true</code> if the channel can bypass do-not-distrub, <code>false</code> otherwise.
+     * @return <code>true</code> if the channel can bypass do-not-disturb, <code>false</code> otherwise.
      */
     public boolean getBypassDnd() {
         return this.bypassDnd;

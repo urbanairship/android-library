@@ -37,7 +37,7 @@ interface ScheduleDelegate<T extends ScheduleData> {
      *
      * @param schedule The schedule.
      * @param resolvedData The schedule data. Will be different than the data on the `schedule.data` if the schedule was deferred.
-     * @param experimentResult The experiment reuslts.
+     * @param experimentResult The experiment result.
      * @param callback The callback.
      */
     void onPrepareSchedule(

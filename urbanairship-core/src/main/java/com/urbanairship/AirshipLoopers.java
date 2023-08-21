@@ -7,7 +7,7 @@ import com.urbanairship.util.AirshipHandlerThread;
 import androidx.annotation.NonNull;
 
 /**
- * Shared SDK looopers.
+ * Shared SDK loopers.
  */
 public class AirshipLoopers {
 

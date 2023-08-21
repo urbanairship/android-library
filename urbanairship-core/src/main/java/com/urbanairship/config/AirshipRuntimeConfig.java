@@ -70,7 +70,7 @@ public class AirshipRuntimeConfig {
     }
 
     /**
-     * Gets the request ession.
+     * Gets the request session.
      * @return The request session.
      */
     @NonNull

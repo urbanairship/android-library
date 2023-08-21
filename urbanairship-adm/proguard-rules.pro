@@ -20,7 +20,7 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# ADM is compile time only depedency
+# ADM is compile time only dependency
 -dontwarn com.amazon.device.messaging.**
 -dontnote com.urbanairship.push.adm.AdmPushProvider
 

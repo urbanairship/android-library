@@ -831,7 +831,7 @@ public class AutomationEngine {
     }
 
     /**
-     * Processes a list of schedule entries and subscribes for state updates to any compound triggers
+     * Processes a list of schedule entries and subscribes for state updates to any compound triggers.
      *
      * @param entries The schedule entries.
      */
@@ -845,7 +845,7 @@ public class AutomationEngine {
     }
 
     /**
-     * Subscribes a schedule entry for state updates to any compound triggers
+     * Subscribes a schedule entry for state updates to any compound triggers.
      *
      * @param entry The schedule entry.
      * @param lastStateChangeTime A timestamp to filter out state triggers. Only state changes that happened
