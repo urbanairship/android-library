@@ -34,6 +34,7 @@ class PrefCentersViewModel(
                     }
                 }
             }.flatten()
+            .sortedBy { it.id }
         }.asLiveData(Dispatchers.Main)
 
     val prefCenters: LiveData<List<PrefCenter>> = prefCenterLiveData
