@@ -77,6 +77,7 @@ public class ScheduleTest {
                                                   .setLimit(3)
                                                   .setDelay(delay)
                                                   .setPriority(-4)
+                                                  .setTriggeredTime(100)
                                                   .setId("schedule id")
                                                   .setGroup("group")
                                                   .build();
@@ -89,6 +90,7 @@ public class ScheduleTest {
         assertEquals(delay, schedule.getDelay());
         assertEquals("group", schedule.getGroup());
         assertEquals(-4, schedule.getPriority());
+        assertEquals(100, schedule.getTriggeredTime());
         assertEquals(message, schedule.getData());
         assertEquals(Schedule.TYPE_IN_APP_MESSAGE, schedule.getType());
 

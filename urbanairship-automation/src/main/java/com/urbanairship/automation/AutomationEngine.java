@@ -9,19 +9,11 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.SparseArray;
 
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-import androidx.core.util.Consumer;
-
 import com.urbanairship.CancelableOperation;
-import com.urbanairship.UALog;
 import com.urbanairship.PendingResult;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.UALog;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AnalyticsListener;
 import com.urbanairship.analytics.CustomEvent;
@@ -59,6 +51,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -68,6 +61,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.core.util.Consumer;
 
 /**
  * Core automation engine.
@@ -81,15 +82,19 @@ public class AutomationEngine {
     private final List<Integer> COMPOUND_TRIGGER_TYPES = Arrays.asList(Trigger.ACTIVE_SESSION, Trigger.VERSION);
 
     /**
-     * Used to sort schedule priority.
+     * Used to sort schedule first by triggered time and then by priority.
      */
-    private final Comparator<FullSchedule> SCHEDULE_PRIORITY_COMPARATOR = new Comparator<FullSchedule>() {
+    private final Comparator<FullSchedule> SCHEDULE_COMPARATOR = new Comparator<FullSchedule>() {
         @Override
         public int compare(@NonNull FullSchedule lh, @NonNull FullSchedule rh) {
-            if (lh.schedule.priority == rh.schedule.priority) {
-                return 0;
+            if (lh.schedule.triggeredTime == rh.schedule.triggeredTime) {
+                if (lh.schedule.priority == rh.schedule.priority) {
+                    return 0;
+                }
+                return lh.schedule.priority > rh.schedule.priority ? 1 : -1;
+            } else {
+                return lh.schedule.triggeredTime > rh.schedule.triggeredTime ? 1 : -1;
             }
-            return lh.schedule.priority > rh.schedule.priority ? 1 : -1;
         }
     };
 
@@ -687,7 +692,7 @@ public class AutomationEngine {
                     return;
                 }
 
-                sortSchedulesByPriority(entries);
+                sortSchedules(entries);
                 for (FullSchedule entry : entries) {
                     attemptExecution(entry);
                 }
@@ -817,16 +822,16 @@ public class AutomationEngine {
     }
 
     /**
-     * Sorts a list of schedule entries by priority.
+     * Sorts a list of schedule entries first by trigger time and then by priority.
      *
      * @param entries The schedule entries.
      */
     @WorkerThread
-    private void sortSchedulesByPriority(@NonNull List<FullSchedule> entries) {
+    private void sortSchedules(@NonNull List<FullSchedule> entries) {
         // Collections.singletonList and Collections.emptyList will throw an UnsupportedOperationException
         // if you try to sort the entries. Make sure we have more than 1 element (ArrayList) before sorting.
         if (entries.size() > 1) {
-            Collections.sort(entries, SCHEDULE_PRIORITY_COMPARATOR);
+            Collections.sort(entries, SCHEDULE_COMPARATOR);
         }
     }
 
@@ -837,7 +842,7 @@ public class AutomationEngine {
      */
     @WorkerThread
     private void subscribeStateObservables(@NonNull List<FullSchedule> entries) {
-        sortSchedulesByPriority(entries);
+        sortSchedules(entries);
 
         for (final FullSchedule entity : entries) {
             subscribeStateObservables(entity, -1);
@@ -1223,7 +1228,7 @@ public class AutomationEngine {
             return;
         }
 
-        sortSchedulesByPriority(entries);
+        sortSchedules(entries);
         for (FullSchedule entry : entries) {
             Schedule<? extends ScheduleData> schedule = convert(entry);
             if (schedule == null) {
@@ -1366,6 +1371,7 @@ public class AutomationEngine {
                 latch.countDown();
 
                 if (AutomationDriver.READY_RESULT_CONTINUE == result && schedule != null) {
+                    entry.schedule.triggeredTime = new Date().getTime();
                     driver.onExecuteTriggeredSchedule(schedule, new ScheduleExecutorCallback(entry.schedule.scheduleId));
                 }
             }

@@ -29,6 +29,7 @@ public class ScheduleEntity {
     public JsonMap metadata;
     public int limit;
     public int priority;
+    public long triggeredTime;
     public long scheduleStart;
     public long scheduleEnd;
     public long editGracePeriod;
@@ -62,6 +63,7 @@ public class ScheduleEntity {
                 ", metadata=" + metadata +
                 ", limit=" + limit +
                 ", priority=" + priority +
+                ", triggeredTime=" + triggeredTime +
                 ", scheduleStart=" + scheduleStart +
                 ", scheduleEnd=" + scheduleEnd +
                 ", editGracePeriod=" + editGracePeriod +

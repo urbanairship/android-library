@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Pair;
 
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.CancelableOperation;
@@ -59,6 +60,7 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -449,24 +451,38 @@ public class AutomationEngineTest {
     }
 
     @Test
-    public void testPriority() throws Exception {
-        ArrayList<Schedule<? extends ScheduleData>> schedules = new ArrayList<>();
+    public void testSortSchedule() throws Exception {
+        Pair<Integer, Long>[] prioritiesAndTriggeredTimes = new Pair[] {
+                new Pair<>(5, 500L),
+                new Pair<>(2, 200L),
+                new Pair<>(4, 200L),
+                new Pair<>(6, 500L)
+        };
 
-        Integer[] addedPriorityLevels = new Integer[] { 5, 2, 1, 0, 0, 4, 3, 3, 2 };
-        ArrayList<Integer> expectedExecutionOrder = new ArrayList<>(Arrays.asList(addedPriorityLevels));
-        Collections.sort(expectedExecutionOrder);
+        ArrayList<Pair<Integer, Long>> expectedExecutionOrder = new ArrayList<>(Arrays.asList(prioritiesAndTriggeredTimes));
+        Collections.sort(expectedExecutionOrder, (o1, o2) -> {
+            if (o1.second.equals(o2.second)) {
+                if (o1.first.equals(o2.first)) {
+                    return 0;
+                } else {
+                    return o1.first > o2.first ? 1 : -1;
+                }
+            } else {
+                return o1.second > o2.second ? 1 : -1;
+            }
+        });
 
         // Add schedules out of order
-        for (int priority : addedPriorityLevels) {
+        for (Pair<Integer, Long> sortParameters : prioritiesAndTriggeredTimes) {
             final Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
                                                        .addTrigger(Triggers.newCustomEventTriggerBuilder()
                                                                            .setCountGoal(1)
                                                                            .setEventName("event")
                                                                            .build())
-                                                       .setPriority(priority)
+                                                       .setPriority(sortParameters.first)
+                                                       .setTriggeredTime(sortParameters.second)
                                                        .build();
 
-            schedules.add(schedule);
             schedule(schedule);
         }
 
@@ -477,8 +493,8 @@ public class AutomationEngineTest {
 
         runLooperTasks();
 
-        // Verify the schedules were executed in ascending priority order
-        assertEquals(expectedExecutionOrder, driver.priorityList);
+        // Verify the schedules were executed by triggered time and then priority order
+        assertEquals(expectedExecutionOrder, driver.priorityAndTriggeredTimeList);
     }
 
     @Test
@@ -576,7 +592,7 @@ public class AutomationEngineTest {
         runLooperTasks();
 
         // Verify the listener was called
-        verify(listener).onScheduleLimitReached(schedule);
+        verify(listener).onScheduleLimitReached(argThat(s -> schedule.getId().equals(s.getId())));
     }
 
     @Test
@@ -915,7 +931,7 @@ public class AutomationEngineTest {
         automationEngine.start(driver);
         runLooperTasks();
 
-        assertEquals(schedule, driver.interrupted.get(schedule.getId()));
+        assertEquals(schedule.getId(), driver.interrupted.get(schedule.getId()).getId());
         verifyState(schedule, ScheduleState.IDLE);
     }
 
@@ -1115,7 +1131,7 @@ public class AutomationEngineTest {
         Map<String, Schedule> preparedSchedulesMap = new HashMap<>();
         Map<String, TriggerContext> preparedTriggerContextMap = new HashMap<>();
         Map<String, Schedule> interrupted = new HashMap<>();
-        ArrayList<Integer> priorityList = new ArrayList<>();
+        ArrayList<Pair<Integer, Long>> priorityAndTriggeredTimeList = new ArrayList<>();
 
         int onCheckExecutionReadinessResult = READY_RESULT_CONTINUE;
 
@@ -1127,7 +1143,7 @@ public class AutomationEngineTest {
         @Override
         public void onPrepareSchedule(@NonNull Schedule schedule, @Nullable TriggerContext triggerContext, @NonNull PrepareScheduleCallback prepareCallback) {
             prepareCallbackMap.put(schedule.getId(), prepareCallback);
-            priorityList.add(schedule.getPriority());
+            priorityAndTriggeredTimeList.add(new Pair<>(schedule.getPriority(), schedule.getTriggeredTime()));
             preparedSchedulesMap.put(schedule.getId(), schedule);
             preparedTriggerContextMap.put(schedule.getId(), triggerContext);
         }

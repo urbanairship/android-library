@@ -4,16 +4,9 @@ package com.urbanairship.automation;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-import androidx.core.util.ObjectsCompat;
-
-import com.urbanairship.UALog;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.automation.actions.Actions;
@@ -42,6 +35,13 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Subscriber for {@link com.urbanairship.remotedata.RemoteData}.

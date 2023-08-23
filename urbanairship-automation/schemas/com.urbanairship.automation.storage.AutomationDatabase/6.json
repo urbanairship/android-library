@@ -1,0 +1,284 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 6,
+    "identityHash": "79c080bb2cc94348ebcb15fce911dd4b",
+    "entities": [
+      {
+        "tableName": "schedules",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `scheduleId` TEXT, `group` TEXT, `metadata` TEXT, `limit` INTEGER NOT NULL, `priority` INTEGER NOT NULL, `triggeredTime` INTEGER NOT NULL, `scheduleStart` INTEGER NOT NULL, `scheduleEnd` INTEGER NOT NULL, `editGracePeriod` INTEGER NOT NULL, `interval` INTEGER NOT NULL, `scheduleType` TEXT, `data` TEXT, `count` INTEGER NOT NULL, `executionState` INTEGER NOT NULL, `executionStateChangeDate` INTEGER NOT NULL, `triggerContext` TEXT, `appState` INTEGER NOT NULL, `screens` TEXT, `seconds` INTEGER NOT NULL, `regionId` TEXT, `audience` TEXT, `campaigns` TEXT, `reportingContext` TEXT, `frequencyConstraintIds` TEXT, `messageType` TEXT, `bypassHoldoutGroups` INTEGER NOT NULL, `newUserEvaluationDate` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scheduleId",
+            "columnName": "scheduleId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "group",
+            "columnName": "group",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "metadata",
+            "columnName": "metadata",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "limit",
+            "columnName": "limit",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "priority",
+            "columnName": "priority",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "triggeredTime",
+            "columnName": "triggeredTime",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scheduleStart",
+            "columnName": "scheduleStart",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scheduleEnd",
+            "columnName": "scheduleEnd",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "editGracePeriod",
+            "columnName": "editGracePeriod",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "interval",
+            "columnName": "interval",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scheduleType",
+            "columnName": "scheduleType",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "data",
+            "columnName": "data",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "count",
+            "columnName": "count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "executionState",
+            "columnName": "executionState",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "executionStateChangeDate",
+            "columnName": "executionStateChangeDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "triggerContext",
+            "columnName": "triggerContext",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "appState",
+            "columnName": "appState",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "screens",
+            "columnName": "screens",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "seconds",
+            "columnName": "seconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "regionId",
+            "columnName": "regionId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "audience",
+            "columnName": "audience",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "campaigns",
+            "columnName": "campaigns",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "reportingContext",
+            "columnName": "reportingContext",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "frequencyConstraintIds",
+            "columnName": "frequencyConstraintIds",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "messageType",
+            "columnName": "messageType",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "bypassHoldoutGroups",
+            "columnName": "bypassHoldoutGroups",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "newUserEvaluationDate",
+            "columnName": "newUserEvaluationDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_schedules_scheduleId",
+            "unique": true,
+            "columnNames": [
+              "scheduleId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_schedules_scheduleId` ON `${TABLE_NAME}` (`scheduleId`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "triggers",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `triggerType` INTEGER NOT NULL, `goal` REAL NOT NULL, `jsonPredicate` TEXT, `isCancellation` INTEGER NOT NULL, `progress` REAL NOT NULL, `parentScheduleId` TEXT, FOREIGN KEY(`parentScheduleId`) REFERENCES `schedules`(`scheduleId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "triggerType",
+            "columnName": "triggerType",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "goal",
+            "columnName": "goal",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jsonPredicate",
+            "columnName": "jsonPredicate",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isCancellation",
+            "columnName": "isCancellation",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "progress",
+            "columnName": "progress",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "parentScheduleId",
+            "columnName": "parentScheduleId",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_triggers_parentScheduleId",
+            "unique": false,
+            "columnNames": [
+              "parentScheduleId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_triggers_parentScheduleId` ON `${TABLE_NAME}` (`parentScheduleId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "schedules",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "parentScheduleId"
+            ],
+            "referencedColumns": [
+              "scheduleId"
+            ]
+          }
+        ]
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '79c080bb2cc94348ebcb15fce911dd4b')"
+    ]
+  }
+}

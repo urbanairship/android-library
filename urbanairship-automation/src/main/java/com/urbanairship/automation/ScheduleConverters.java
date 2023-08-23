@@ -44,6 +44,7 @@ class ScheduleConverters {
                                          .setStart(entry.schedule.scheduleStart)
                                          .setLimit(entry.schedule.limit)
                                          .setPriority(entry.schedule.priority)
+                                         .setTriggeredTime(entry.schedule.triggeredTime)
                                          .setInterval(entry.schedule.interval, TimeUnit.MILLISECONDS)
                                          .setEditGracePeriod(entry.schedule.editGracePeriod, TimeUnit.MILLISECONDS)
                                          .setAudience(entry.schedule.audience)
@@ -87,6 +88,7 @@ class ScheduleConverters {
         entity.scheduleStart = schedule.getStart();
         entity.limit = schedule.getLimit();
         entity.priority = schedule.getPriority();
+        entity.triggeredTime = schedule.getTriggeredTime();
         entity.interval = schedule.getInterval();
         entity.editGracePeriod = schedule.getEditGracePeriod();
         entity.audience = schedule.getAudienceSelector();

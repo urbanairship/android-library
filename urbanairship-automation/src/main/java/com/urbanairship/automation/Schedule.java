@@ -90,6 +90,7 @@ public final class Schedule<T extends ScheduleData> {
     private final List<Trigger> triggers;
     private final ScheduleDelay delay;
     private final int priority;
+    private final long triggeredTime;
     private final long editGracePeriod;
     private final long interval;
     private final String group;
@@ -119,6 +120,7 @@ public final class Schedule<T extends ScheduleData> {
         this.triggers = Collections.unmodifiableList(builder.triggers);
         this.delay = builder.delay == null ? ScheduleDelay.newBuilder().build() : builder.delay;
         this.priority = builder.priority;
+        this.triggeredTime = builder.triggeredTime;
         this.editGracePeriod = builder.editGracePeriod;
         this.interval = builder.interval;
         this.data = builder.data;
@@ -317,6 +319,15 @@ public final class Schedule<T extends ScheduleData> {
     }
 
     /**
+     * Gets the schedule triggered time in ms.
+     *
+     * @return The triggered time in ms.
+     */
+    public long getTriggeredTime() {
+        return triggeredTime;
+    }
+
+    /**
      * Gets the schedule group.
      *
      * @return The schedule group.
@@ -440,6 +451,7 @@ public final class Schedule<T extends ScheduleData> {
         if (start != schedule.start) return false;
         if (end != schedule.end) return false;
         if (priority != schedule.priority) return false;
+        if (triggeredTime != schedule.triggeredTime) return false;
         if (editGracePeriod != schedule.editGracePeriod) return false;
         if (interval != schedule.interval) return false;
         if (!id.equals(schedule.id)) return false;
@@ -482,6 +494,7 @@ public final class Schedule<T extends ScheduleData> {
         result = 31 * result + triggers.hashCode();
         result = 31 * result + (delay != null ? delay.hashCode() : 0);
         result = 31 * result + priority;
+        result = 31 * result + (int) (triggeredTime ^ (triggeredTime >>> 32));
         result = 31 * result + (int) (editGracePeriod ^ (editGracePeriod >>> 32));
         result = 31 * result + (int) (interval ^ (interval >>> 32));
         result = 31 * result + (group != null ? group.hashCode() : 0);
@@ -506,6 +519,7 @@ public final class Schedule<T extends ScheduleData> {
                 ", triggers=" + triggers +
                 ", delay=" + delay +
                 ", priority=" + priority +
+                ", triggeredTime=" + triggeredTime +
                 ", editGracePeriod=" + editGracePeriod +
                 ", interval=" + interval +
                 ", group='" + group + '\'' +
@@ -530,6 +544,7 @@ public final class Schedule<T extends ScheduleData> {
         private final List<Trigger> triggers = new ArrayList<>();
         private ScheduleDelay delay;
         private int priority;
+        private long triggeredTime = -1;
         private long editGracePeriod;
         private long interval;
         private T data;
@@ -557,6 +572,7 @@ public final class Schedule<T extends ScheduleData> {
             this.data = info.data;
             this.type = info.type;
             this.priority = info.priority;
+            this.triggeredTime = info.triggeredTime;
             this.editGracePeriod = info.editGracePeriod;
             this.interval = info.interval;
             this.audienceSelector = info.audience;
@@ -681,6 +697,20 @@ public final class Schedule<T extends ScheduleData> {
         @NonNull
         public Builder<T> setPriority(int priority) {
             this.priority = priority;
+            return this;
+        }
+
+        /**
+         * Sets the triggered time in ms.
+         *
+         * @param triggeredTime The triggered time in ms.
+         * @return The Builder instance.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder<T> setTriggeredTime(long triggeredTime) {
+            this.triggeredTime = triggeredTime;
             return this;
         }
 
