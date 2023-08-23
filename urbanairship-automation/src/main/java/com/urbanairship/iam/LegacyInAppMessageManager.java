@@ -41,7 +41,7 @@ import androidx.annotation.WorkerThread;
 public class LegacyInAppMessageManager extends AirshipComponent {
 
     // New ID key
-    private final static String PENDING_MESSAGE_ID =  "com.urbanairship.push.iam.PENDING_MESSAGE_ID";
+    private final static String PENDING_MESSAGE_ID = "com.urbanairship.push.iam.PENDING_MESSAGE_ID";
 
     /**
      * Default primary color.
@@ -280,7 +280,9 @@ public class LegacyInAppMessageManager extends AirshipComponent {
             Schedule.Builder<InAppMessage> builder = Schedule.newBuilder(createMessage(context, legacyInAppMessage))
                                                              .addTrigger(trigger)
                                                              .setEnd(legacyInAppMessage.getExpiry())
-                                                             .setId(legacyInAppMessage.getId());
+                                                             .setId(legacyInAppMessage.getId())
+                                                             .setCampaigns(legacyInAppMessage.getCampaigns())
+                                                             .setMessageType(legacyInAppMessage.getMessageType());
 
             ScheduleBuilderExtender builderExtender = this.scheduleBuilderExtender;
             if (builderExtender != null) {

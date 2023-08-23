@@ -14,6 +14,7 @@ import com.urbanairship.push.PushMessage;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +34,9 @@ public class LegacyInAppMessageTest {
             "\"alert\": \"Oh hi!\"}, \"actions\": {\"button_group\": \"ua_yes_no\"," +
             "\"button_actions\": {\"yes\": {\"^+t\": \"yes_tag\"}, \"no\": {\"^+t\": \"no_tag\"}}," +
             "\"on_click\": {\"^d\": \"someurl\"}}, \"expiry\": \"2015-12-12T12:00:00\", \"extra\":" +
-            "{\"wat\": 123, \"Tom\": \"Selleck\"}}";
+            "{\"wat\": 123, \"Tom\": \"Selleck\"}, \"message_type\":\"commercial\"," +
+            "\"campaigns\":{\"categories\":[\"cool\",\"cool_cool\"]}}";
+
 
     /**
      * Test building the in-app message.
@@ -114,6 +117,13 @@ public class LegacyInAppMessageTest {
         Map<String, JsonValue> noActionValues = message.getButtonActionValues("no");
         assertEquals(1, noActionValues.size());
         assertEquals("no_tag", noActionValues.get("^+t").getString());
+
+        // Verify campaigns
+        JsonValue campaigns = JsonMap.newBuilder().put("categories", JsonValue.wrap(Arrays.asList("cool", "cool_cool"))).build().toJsonValue();
+        assertEquals(campaigns, message.getCampaigns());
+
+        // Verify message type
+        assertEquals("commercial", message.getMessageType());
     }
 
     /**

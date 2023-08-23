@@ -42,6 +42,8 @@ public class LegacyInAppMessage {
     private static final String ON_CLICK_KEY = "on_click";
     private static final String BUTTON_GROUP_KEY = "button_group";
     private static final String BUTTON_ACTIONS_KEY = "button_actions";
+    private static final String MESSAGE_TYPE_KEY = "message_type";
+    private static final String CAMPAIGNS_KEY = "campaigns";
 
     private static final long DEFAULT_EXPIRY_MS = 2592000000L; // 30 days
     private static final String MESSAGE_CENTER_ACTION = "^mc";
@@ -53,6 +55,10 @@ public class LegacyInAppMessage {
     private final Integer secondaryColor;
     private final String buttonGroupId;
     private final String id;
+
+    private final String messageType;
+
+    private final JsonValue campigns;
 
     @BannerDisplayContent.Placement
     private final String placement;
@@ -72,6 +78,8 @@ public class LegacyInAppMessage {
         this.primaryColor = builder.primaryColor;
         this.secondaryColor = builder.secondaryColor;
         this.id = builder.id == null ? UUID.randomUUID().toString() : builder.id;
+        this.campigns = builder.campaigns;
+        this.messageType = builder.messageType;
     }
 
     /**
@@ -101,6 +109,16 @@ public class LegacyInAppMessage {
     @Nullable
     public String getAlert() {
         return alert;
+    }
+
+    @Nullable
+    String getMessageType() {
+        return messageType;
+    }
+
+    @Nullable
+    JsonValue getCampaigns() {
+        return campigns;
     }
 
     /**
@@ -213,7 +231,9 @@ public class LegacyInAppMessage {
         Builder builder = newBuilder();
 
         builder.setExtras(jsonValue.optMap().opt(EXTRA_KEY).optMap())
-               .setAlert(displayJson.opt(ALERT_KEY).getString());
+               .setAlert(displayJson.opt(ALERT_KEY).getString())
+               .setCampaigns(jsonValue.optMap().get(CAMPAIGNS_KEY))
+               .setMessageType(jsonValue.optMap().opt(MESSAGE_TYPE_KEY).getString());
 
         // Primary color
         if (displayJson.containsKey(PRIMARY_COLOR_KEY)) {
@@ -317,6 +337,10 @@ public class LegacyInAppMessage {
         @NonNull
         @BannerDisplayContent.Placement
         private String placement = BannerDisplayContent.PLACEMENT_BOTTOM;
+
+
+        private String messageType;
+        private JsonValue campaigns;
 
         /**
          * Default constructor.
@@ -456,6 +480,18 @@ public class LegacyInAppMessage {
         @NonNull
         public Builder setSecondaryColor(@Nullable Integer color) {
             this.secondaryColor = color;
+            return this;
+        }
+
+        @NonNull
+        Builder setMessageType(@Nullable String messageType) {
+            this.messageType = messageType;
+            return this;
+        }
+
+        @NonNull
+        Builder setCampaigns(@Nullable JsonValue campaigns) {
+            this.campaigns = campaigns;
             return this;
         }
 

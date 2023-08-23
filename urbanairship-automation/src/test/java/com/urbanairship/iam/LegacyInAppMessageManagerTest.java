@@ -14,6 +14,8 @@ import com.urbanairship.analytics.Event;
 import com.urbanairship.automation.InAppAutomation;
 import com.urbanairship.automation.Schedule;
 import com.urbanairship.iam.banner.BannerDisplayContent;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.InternalNotificationListener;
 import com.urbanairship.push.NotificationInfo;
 import com.urbanairship.push.PushListener;
@@ -75,6 +77,7 @@ public class LegacyInAppMessageManagerTest {
                 "\"on_click\": {\"^d\": \"someurl\"}}, \"expiry\": \"2015-12-12T12:00:00\", \"extra\":" +
                 "{\"wat\": 123, \"Tom\": \"Selleck\"}}";
 
+
         Bundle extras = new Bundle();
         extras.putString(PushMessage.EXTRA_IN_APP_MESSAGE, inAppJson);
         extras.putString(PushMessage.EXTRA_SEND_ID, "send id");
@@ -115,6 +118,46 @@ public class LegacyInAppMessageManagerTest {
             }
         }));
     }
+
+    @Test
+    public void testCampaigns() throws JsonException {
+        String inAppJson = "{\"actions\":{\"on_click\":{\"^+t\":\"in-app\"}}," +
+                "\"display\":{\"alert\":\"in-app message alert\"," +
+                "\"type\":\"banner\",\"position\":\"top\"},\"expiry\":\"2023-08-24T12:00:00\"," +
+                "\"message_type\":\"commercial\",\"campaigns\":{\"categories\":[\"cool\",\"cool_cool\"]}}";
+
+        Bundle extras = new Bundle();
+        extras.putString(PushMessage.EXTRA_IN_APP_MESSAGE, inAppJson);
+        extras.putString(PushMessage.EXTRA_SEND_ID, "send id");
+        PushMessage pushMessage = new PushMessage(extras);
+
+        pushListener.onPushReceived(pushMessage, true);
+
+        JsonValue campaigns  = JsonValue.parseString(inAppJson).requireMap().require("campaigns");
+        verify(inAppAutomation).schedule(argThat((ArgumentMatcher<Schedule<InAppMessage>>) schedule -> {
+            return schedule.getCampaigns().equals(campaigns);
+        }));
+    }
+
+    @Test
+    public void testMessageType() {
+        String inAppJson = "{\"actions\":{\"on_click\":{\"^+t\":\"in-app\"}}," +
+                "\"display\":{\"alert\":\"in-app message alert\"," +
+                "\"type\":\"banner\",\"position\":\"top\"},\"expiry\":\"2023-08-24T12:00:00\"," +
+                "\"message_type\":\"commercial\",\"campaigns\":{\"categories\":[\"cool\",\"cool_cool\"]}}";
+
+        Bundle extras = new Bundle();
+        extras.putString(PushMessage.EXTRA_IN_APP_MESSAGE, inAppJson);
+        extras.putString(PushMessage.EXTRA_SEND_ID, "send id");
+        PushMessage pushMessage = new PushMessage(extras);
+
+        pushListener.onPushReceived(pushMessage, true);
+
+        verify(inAppAutomation).schedule(argThat((ArgumentMatcher<Schedule<InAppMessage>>) schedule -> {
+            return schedule.getMessageType().equals("commercial");
+        }));
+    }
+
 
     @Test
     public void testPushReceivedCancelsPreviousIam() {
