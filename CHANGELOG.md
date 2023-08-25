@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.2.0 August 25, 2023
+Minor release that fixes a reporting issue with hold out groups and In-App Messaging. 17.2.0 will be the minimum version required for global hold out groups.
+
+### Changes
+- Fixed reporting issue with hold out groups and In-App Messaging
+
 ## Version 17.1.0 July 31, 2023
 Minor release that adds support for global holdout groups in In-App experiences and support for feature flags.
 
