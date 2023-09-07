@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.2.1 September 7, 2023
+Patch release that hardens the Analytics database against potential SQL crashes.
+
+### Changes
+- Hardened Analytics database against potential SQL crashes.
+
 ## Version 17.2.0 August 25, 2023
 Minor release that fixes a reporting issue with hold out groups and In-App Messaging. 17.2.0 will be the minimum version required for global hold out groups.
 
@@ -14,7 +20,6 @@ Minor release that adds support for global holdout groups in In-App experiences 
 ### Changes
 - Added new feature flag module `urbanairship-feature-flag`
 - Added support for global holdout groups
-
 
 ## Version 17.0.3, July 12, 2023
 Patch release that fixes a pair of issues with Scenes and Surveys, and adds a new `getPushProviderType()` method on `PushManager`. Apps that make use of Scenes or Surveys should update.
