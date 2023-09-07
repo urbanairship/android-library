@@ -1,6 +1,7 @@
 package com.urbanairship.analytics.data;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteException;
 
 import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
@@ -235,19 +236,24 @@ public class EventManager {
         int eventCount;
         List<EventEntity.EventIdAndData> events;
 
-        synchronized (eventLock) {
-            eventCount = eventDao.count();
+        try {
+            synchronized (eventLock) {
+                eventCount = eventDao.count();
 
-            if (eventCount <= 0) {
-                UALog.d("No events to send.");
-                return true;
+                if (eventCount <= 0) {
+                    UALog.d("No events to send.");
+                    return true;
+                }
+
+                final int avgSize = Math.max(1, eventDao.databaseSize() / eventCount);
+
+                //pull enough events to fill a batch (roughly)
+                int batchEventCount = Math.min(MAX_BATCH_EVENT_COUNT, preferenceDataStore.getInt(MAX_BATCH_SIZE_KEY, EventResponse.MAX_BATCH_SIZE_BYTES) / avgSize);
+                events = eventDao.getBatch(batchEventCount);
             }
-
-            final int avgSize = Math.max(1, eventDao.databaseSize() / eventCount);
-
-            //pull enough events to fill a batch (roughly)
-            int batchEventCount = Math.min(MAX_BATCH_EVENT_COUNT, preferenceDataStore.getInt(MAX_BATCH_SIZE_KEY, EventResponse.MAX_BATCH_SIZE_BYTES) / avgSize);
-            events = eventDao.getBatch(batchEventCount);
+        } catch (SQLiteException e) {
+            UALog.e(e, "EventManager - Failed to query batched events");
+            return false;
         }
 
         if (events.isEmpty()) {
