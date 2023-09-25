@@ -5,10 +5,13 @@ package com.urbanairship.remotedata
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.TestClock
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.util.Clock
 import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -32,7 +35,8 @@ public class RemoteDataProviderTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val provider = TestRemoteDataProvider(context)
+    private val clock: TestClock = TestClock()
+    private val provider = TestRemoteDataProvider(context, clock)
 
     @Before
     public fun setUp() {
@@ -377,12 +381,99 @@ public class RemoteDataProviderTest {
         provider.refresh("some token", Locale.CANADA_FRENCH, 100)
         assertEquals(2, requestCount)
     }
+
+    @Test
+    public fun testStatus(): TestResult = runTest {
+        val token = UUID.randomUUID().toString()
+        val locale = Locale.CANADA_FRENCH
+        val randomValue = 100
+
+        refreshRemoteData(token, locale, randomValue)
+
+        provider.isRemoteDataInfoUpToDateCallback = { _, _, _ ->
+            true
+        }
+        assertEquals(RemoteData.Status.UP_TO_DATE, provider.status(token, locale, randomValue))
+    }
+
+    @Test
+    public fun testStatusAfter3Days(): TestResult = runTest {
+        val token = UUID.randomUUID().toString()
+        val locale = Locale.CANADA_FRENCH
+        val randomValue = 100
+
+        refreshRemoteData(token, locale, randomValue)
+
+        provider.isRemoteDataInfoUpToDateCallback = { _, _, _ ->
+            true
+        }
+
+        clock.currentTimeMillis += TimeUnit.DAYS.toMillis(3) - 1
+        assertEquals(RemoteData.Status.UP_TO_DATE, provider.status(token, locale, randomValue + 1))
+
+        clock.currentTimeMillis += 1
+        assertEquals(RemoteData.Status.OUT_OF_DATE, provider.status(token, locale, randomValue + 1))
+    }
+
+    @Test
+    public fun testStatusNotCurrent(): TestResult = runTest {
+        val token = UUID.randomUUID().toString()
+        val locale = Locale.CANADA_FRENCH
+        val randomValue = 100
+
+        refreshRemoteData(token, locale, randomValue)
+
+        provider.isRemoteDataInfoUpToDateCallback = { _, _, _ ->
+            false
+        }
+        assertEquals(RemoteData.Status.OUT_OF_DATE, provider.status(token, locale, randomValue))
+    }
+
+    @Test
+    public fun testStatusNoData(): TestResult = runTest {
+        val token = UUID.randomUUID().toString()
+        val locale = Locale.CANADA_FRENCH
+        val randomValue = 100
+
+        // No data
+        assertEquals(RemoteData.Status.OUT_OF_DATE, provider.status(token, locale, randomValue))
+    }
+
+    private suspend fun refreshRemoteData(token: String, locale: Locale, randomValue: Int) {
+        val remoteDataInfo = RemoteDataInfo(
+            url = "example://",
+            lastModified = "some last modified",
+            source = RemoteDataSource.APP
+        )
+        provider.fetchRemoteDataCallback = { _, _, _ ->
+            val refreshResult = RemoteDataApiClient.Result(
+                remoteDataInfo,
+                payloads = setOf(
+                    RemoteDataPayload(
+                        type = "some type",
+                        timestamp = 1000,
+                        data = jsonMapOf("something" to "something"),
+                        remoteDataInfo = remoteDataInfo
+                    )
+                )
+            )
+            RequestResult(
+                status = 200,
+                value = refreshResult,
+                body = null,
+                headers = emptyMap()
+            )
+        }
+
+        provider.refresh(token, locale, randomValue)
+    }
 }
 
-internal class TestRemoteDataProvider(context: Context) : RemoteDataProvider(
+internal class TestRemoteDataProvider(context: Context, clock: Clock) : RemoteDataProvider(
     source = RemoteDataSource.APP,
     remoteDataStore = RemoteDataStore(context, "appKey", UUID.randomUUID().toString()),
-    preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
+    preferenceDataStore = PreferenceDataStore.inMemoryStore(context),
+    clock = clock
 ) {
     var isRemoteDataInfoUpToDateCallback: ((RemoteDataInfo, Locale, Int) -> Boolean)? = null
     var fetchRemoteDataCallback: ((Locale, Int, RemoteDataInfo?) -> RequestResult<RemoteDataApiClient.Result>)? = null

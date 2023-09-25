@@ -14,10 +14,10 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Clock
-import com.urbanairship.util.Network
-import kotlin.jvm.Throws
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 /**
@@ -72,12 +72,13 @@ public class FeatureFlagManager
     dataStore: PreferenceDataStore,
     private val remoteData: RemoteData,
     private val infoProvider: DeviceInfoProvider,
-    private val network: Network = Network.shared(),
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) : AirshipComponent(context, dataStore) {
 
     companion object {
         private const val PAYLOAD_TYPE = "feature_flags"
+
+        private val MAX_TIMEOUT_MILLIS: Long = TimeUnit.SECONDS.toMillis(15)
 
         /**
          * Gets the shared `FeatureFlagManager` instance.
@@ -121,31 +122,40 @@ public class FeatureFlagManager
      * @return an instance of `Result<FeatureFlag>`.
      */
     suspend fun flag(name: String): Result<FeatureFlag> {
-        return when (refreshIfNeeded()) {
-            RemoteData.Status.UP_TO_DATE -> Result.success(evaluate(fetchFlagInfos(name)))
+        return flag(name = name, allowRefresh = true)
+    }
+
+    private suspend fun flag(name: String, allowRefresh: Boolean): Result<FeatureFlag> {
+        return when (remoteData.status(RemoteDataSource.APP)) {
+            RemoteData.Status.UP_TO_DATE -> {
+                Result.success(evaluate(fetchFlagInfos(name)))
+            }
             RemoteData.Status.STALE -> {
                 val items = fetchFlagInfos(name)
                 if (items.isEmpty() || !isStaleAllowed(items)) {
-                    Result.failure(FeatureFlagException("Unable to fetch data"))
+                    if (allowRefresh) {
+                        waitForRemoteDataRefresh()
+                        flag(name = name, allowRefresh = false)
+                    } else {
+                        Result.failure(FeatureFlagException("Unable to fetch data"))
+                    }
                 } else {
                     Result.success(evaluate(items))
                 }
             }
-            RemoteData.Status.OUT_OF_DATE ->
-                Result.failure(FeatureFlagException("Unable to fetch data"))
+            RemoteData.Status.OUT_OF_DATE -> {
+                if (allowRefresh) {
+                    waitForRemoteDataRefresh()
+                    flag(name = name, allowRefresh = false)
+                } else {
+                    Result.failure(FeatureFlagException("Unable to fetch data"))
+                }
+            }
         }
     }
 
-    private suspend fun refreshIfNeeded(): RemoteData.Status {
-        val status = remoteData.status(RemoteDataSource.APP)
-        val hasNetwork = network.isConnected(context)
-
-        if (status == RemoteData.Status.UP_TO_DATE || !hasNetwork) {
-            return status
-        }
-
-        remoteData.refresh(RemoteDataSource.APP)
-        return remoteData.status(RemoteDataSource.APP)
+    private suspend fun waitForRemoteDataRefresh() {
+        remoteData.waitForRefresh(RemoteDataSource.APP, MAX_TIMEOUT_MILLIS)
     }
 
     private fun isStaleAllowed(flags: List<FeatureFlagInfo>): Boolean {

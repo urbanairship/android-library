@@ -16,11 +16,12 @@ import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Clock
-import com.urbanairship.util.Network
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -37,15 +38,11 @@ class FeatureFlagManagerTest {
     private val infoProvider: DeviceInfoProvider = mockk()
 
     private var currentTime = 2L
-    private var isNetworkConnected = true
     private var channelId = "test-channel"
     private var contactId = "contact-id"
 
     @Before
     fun setUp() {
-        val network: Network = mockk()
-        every { network.isConnected(any()) } answers { isNetworkConnected }
-
         val clock: Clock = mockk()
         every { clock.currentTimeMillis() } answers { currentTime }
 
@@ -54,7 +51,6 @@ class FeatureFlagManagerTest {
             dataStore = PreferenceDataStore.inMemoryStore(context),
             remoteData = remoteData,
             infoProvider = infoProvider,
-            network = network,
             clock = clock
         )
 
@@ -103,14 +99,14 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    public fun testFeatureFlagRefreshesRemoteData(): TestResult = runTest {
+    public fun testFeatureFlagWaitsToRefreshesRemoteData(): TestResult = runTest {
 
         nicelyMockStatusRefresh()
         coEvery { remoteData.payloads(payloadType) } returns listOf()
 
         featureFlags.flag("non-existing")
 
-        coVerify { remoteData.refresh(eq(RemoteDataSource.APP)) }
+        coVerify { remoteData.waitForRefresh(RemoteDataSource.APP, 15000) }
     }
 
     @Test
@@ -290,8 +286,8 @@ class FeatureFlagManagerTest {
             ))
         )
 
+        coEvery { remoteData.waitForRefresh(any(), any()) } just runs
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.STALE
-        coEvery { remoteData.refresh(eq(RemoteDataSource.APP)) } returns true
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
         val actual = featureFlags.flag("stale").getOrThrow()
@@ -313,7 +309,7 @@ class FeatureFlagManagerTest {
         )
 
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.STALE
-        coEvery { remoteData.refresh(eq(RemoteDataSource.APP)) } returns true
+        coEvery { remoteData.waitForRefresh(any(), any()) } just runs
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
         val actual = featureFlags.flag("stale").getOrThrow()
@@ -335,7 +331,7 @@ class FeatureFlagManagerTest {
         )
 
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.STALE
-        coEvery { remoteData.refresh(eq(RemoteDataSource.APP)) } returns true
+        coEvery { remoteData.waitForRefresh(any(), any()) } just runs
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
         featureFlags.flag("stale").getOrThrow()
@@ -361,7 +357,7 @@ class FeatureFlagManagerTest {
         )
 
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.STALE
-        coEvery { remoteData.refresh(eq(RemoteDataSource.APP)) } returns true
+        coEvery { remoteData.waitForRefresh(any(), any()) } just runs
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
         featureFlags.flag("stale").getOrThrow()
@@ -372,7 +368,7 @@ class FeatureFlagManagerTest {
         val data = RemoteDataPayload(type = payloadType, timestamp = 1L, data = jsonMapOf())
 
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.OUT_OF_DATE
-        coEvery { remoteData.refresh(eq(RemoteDataSource.APP)) } returns true
+        coEvery { remoteData.waitForRefresh(any(), any()) } just runs
         coEvery { remoteData.payloads(payloadType) } returns listOf(data)
 
         featureFlags.flag("stale").getOrThrow()
@@ -402,10 +398,7 @@ class FeatureFlagManagerTest {
             .toMutableMap()
 
         coEvery { remoteData.status(eq(RemoteDataSource.APP)) } answers { statuses[firstArg()]!! }
-        coEvery { remoteData.refresh(eq(RemoteDataSource.APP)) } answers {
-            statuses[firstArg()] = RemoteData.Status.UP_TO_DATE
-            true
-        }
+        coEvery { remoteData.waitForRefresh(eq(RemoteDataSource.APP), eq(15000)) } just runs
     }
 
     private fun generateFeatureFlagPayload(

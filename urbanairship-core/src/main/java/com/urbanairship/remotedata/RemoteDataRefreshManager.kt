@@ -18,7 +18,8 @@ import kotlinx.coroutines.withContext
 
 internal class RemoteDataRefreshManager(
     private val jobDispatcher: JobDispatcher,
-    private val privacyManager: PrivacyManager
+    private val privacyManager: PrivacyManager,
+    val providers: List<RemoteDataProvider>
 ) {
 
     // This is not really needed but helps prevent spam logs about canceling a task since
@@ -32,10 +33,8 @@ internal class RemoteDataRefreshManager(
         changeToken: String,
         locale: Locale,
         randomValue: Int,
-        providers: List<RemoteDataProvider>
     ): JobResult {
         refreshPending.set(false)
-
         return withContext(AirshipDispatchers.IO) {
             if (!privacyManager.isAnyFeatureEnabled) {
                 providers.forEach {

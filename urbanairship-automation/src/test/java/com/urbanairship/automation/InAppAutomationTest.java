@@ -289,7 +289,8 @@ public class InAppAutomationTest {
                                                   .setBypassHoldoutGroups(true)
                                                   .build();
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
@@ -298,6 +299,31 @@ public class InAppAutomationTest {
         argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
     }
+
+    @Test
+    public void testPrepareScheduleRequiresRefresh() {
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .build();
+
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setBypassHoldoutGroups(true)
+                                                  .build();
+
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(true);
+
+
+        doAnswer((Answer) invocation -> {
+            Runnable runnable = invocation.getArgument(1);
+            runnable.run();
+            return null;
+        }).when(mockObserver).waitFullRefresh(any(), any());
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+    }
+
 
     @Test
     public void testDeferredSchedules() throws RequestException {
@@ -328,7 +354,8 @@ public class InAppAutomationTest {
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", triggerContext, tagOverrides, attributeOverrides))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, message)));
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, triggerContext, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
@@ -366,7 +393,8 @@ public class InAppAutomationTest {
 
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", triggerContext, null, null))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(false, null)));
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, triggerContext, callback);
@@ -385,7 +413,8 @@ public class InAppAutomationTest {
                                                   .setBypassHoldoutGroups(true)
                                                   .build();
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         // Prepare schedule
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -421,7 +450,8 @@ public class InAppAutomationTest {
         when(mockFrequencyChecker.isOverLimit()).thenReturn(false);
 
         // Prepare schedule
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
@@ -453,7 +483,8 @@ public class InAppAutomationTest {
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
 
@@ -471,7 +502,8 @@ public class InAppAutomationTest {
         when(mockObserver.isScheduleValid(schedule)).thenReturn(false);
 
         // Prepare schedule
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
@@ -497,7 +529,8 @@ public class InAppAutomationTest {
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(400, null));
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
@@ -525,7 +558,8 @@ public class InAppAutomationTest {
                 .thenThrow(new RequestException("neat"))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
@@ -545,7 +579,8 @@ public class InAppAutomationTest {
                                                             .setBypassHoldoutGroups(true)
                                                             .build();
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenThrow(new RequestException("neat"));
@@ -564,7 +599,8 @@ public class InAppAutomationTest {
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .build();
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
         verifyNoInteractions(callback);
@@ -583,17 +619,16 @@ public class InAppAutomationTest {
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(409, null));
 
-        doAnswer((Answer) invocation -> {
-            Runnable runnable = invocation.getArgument(1);
-            runnable.run();
-            return null;
-        }).when(mockObserver).refreshOutdated(any(), any());
+
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
 
         runLooperTasks();
 
+        verify(mockObserver).notifyOutdated(any());
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
         verifyNoMoreInteractions(callback);
     }
@@ -616,7 +651,8 @@ public class InAppAutomationTest {
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(429, null, null, headers));
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
 
@@ -645,7 +681,8 @@ public class InAppAutomationTest {
                 .thenReturn(new Response<>(429, null))
                 .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
 
@@ -670,7 +707,8 @@ public class InAppAutomationTest {
             put("Retry-After", "60");
         }};
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(307, null, null, headers));
@@ -699,7 +737,8 @@ public class InAppAutomationTest {
                                                             .setBypassHoldoutGroups(true)
                                                             .build();
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
                 .thenReturn(new Response<>(307, null))
@@ -720,7 +759,8 @@ public class InAppAutomationTest {
                                              .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                              .build();
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         // Prepare schedule
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -778,7 +818,7 @@ public class InAppAutomationTest {
                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                                   .build();
 
-        when(mockObserver.refreshAndCheckCurrentSync(any())).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(any())).thenReturn(false);
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -827,7 +867,8 @@ public class InAppAutomationTest {
                                                   .build();
 
         // Start preparing
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, mockPrepareCallback);
 
@@ -851,7 +892,8 @@ public class InAppAutomationTest {
                                                   .build();
 
         // Start preparing
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, mockPrepareCallback);
 
@@ -871,7 +913,8 @@ public class InAppAutomationTest {
                                              .build();
 
         // Start preparing
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, mockPrepareCallback);
 
@@ -891,7 +934,8 @@ public class InAppAutomationTest {
                                              .build();
 
         // Start preparing
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, mockPrepareCallback);
 
@@ -910,7 +954,8 @@ public class InAppAutomationTest {
                                                   .setBypassHoldoutGroups(true)
                                                   .build();
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         // Prepare schedule
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -932,7 +977,8 @@ public class InAppAutomationTest {
                                              .build();
 
         // Prepare schedule
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
@@ -987,7 +1033,8 @@ public class InAppAutomationTest {
                                                   .build();
 
         // Start preparing
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
         AutomationDriver.PrepareScheduleCallback mockPrepareCallback = mock(AutomationDriver.PrepareScheduleCallback.class);
         remoteDataObserverDelegate.updateConstraints(constraints);
         driver.onPrepareSchedule(schedule, null, mockPrepareCallback);
@@ -1008,7 +1055,8 @@ public class InAppAutomationTest {
                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                                   .build();
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
@@ -1033,7 +1081,8 @@ public class InAppAutomationTest {
                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                                   .build();
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         MessageInfo expectedInfo = new MessageInfo("transactional", null);
         ExperimentResult results = new ExperimentResult("cid", "coid", "eid", true, Collections.emptyList());
@@ -1067,7 +1116,8 @@ public class InAppAutomationTest {
                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                                   .build();
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         MessageInfo expectedInfo = new MessageInfo("transactional", null);
         ExperimentResult results = new ExperimentResult("cid", "coid", "eid", true, Collections.emptyList());
@@ -1101,7 +1151,8 @@ public class InAppAutomationTest {
                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                                   .build();
 
-        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         MessageInfo expectedInfo = new MessageInfo("transactional", null);
         JsonMap experimentMetadata = JsonMap

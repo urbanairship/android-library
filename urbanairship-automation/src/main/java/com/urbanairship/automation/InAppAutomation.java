@@ -548,12 +548,19 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         };
 
         RetryingExecutor.Operation checkValid = () -> {
-            if (!remoteDataSubscriber.refreshAndCheckCurrentSync(schedule)) {
+            if (remoteDataSubscriber.requiresRefresh(schedule)) {
+                remoteDataSubscriber.waitFullRefresh(schedule, () -> {
+                    callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                });
+                return RetryingExecutor.cancelResult();
+            }
+
+            if (!remoteDataSubscriber.bestEffortRefresh(schedule)) {
                 callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
                 return RetryingExecutor.cancelResult();
-            } else {
-                return RetryingExecutor.finishedResult();
             }
+
+            return RetryingExecutor.finishedResult();
         };
 
         RetryingExecutor.Operation frequencyChecks = () -> {
@@ -730,10 +737,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                 return RetryingExecutor.retryResult();
 
             case 409:
-                remoteDataSubscriber.refreshOutdated(schedule, () -> {
-                    callback.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
-                });
-                return RetryingExecutor.finishedResult();
+                remoteDataSubscriber.notifyOutdated(schedule);
+                callback.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                return RetryingExecutor.cancelResult();
             case 429:
                 if (location != null) {
                     redirectURLs.put(schedule.getId(), location);

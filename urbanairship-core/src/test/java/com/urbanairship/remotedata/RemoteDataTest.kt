@@ -31,8 +31,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -45,7 +45,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 public class RemoteDataTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
 
     private val dataStore: PreferenceDataStore = PreferenceDataStore.inMemoryStore(
         ApplicationProvider.getApplicationContext()
@@ -107,13 +107,16 @@ public class RemoteDataTest {
     public fun testConfigChangeDispatchesUpdate(): TestResult = runTest {
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
         remoteData.onUrlConfigUpdated()
+        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
     }
 
     @Test
     public fun testPrivacyManagerChangesDispatchesUpdate(): TestResult = runTest {
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE)
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
         privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ANALYTICS)
+        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
     }
 
@@ -121,6 +124,7 @@ public class RemoteDataTest {
     public fun testLocalChangeDispatchesUpdate(): TestResult = runTest {
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
         localListener.forEach { it.onLocaleChanged(Locale.CANADA_FRENCH) }
+        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
     }
 
@@ -139,6 +143,7 @@ public class RemoteDataTest {
             every { this@mockk.isRemoteDataUpdate } returns true
         }
         pushListeners.forEach { it.onPushReceived(mockPush, false) }
+        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
     }
 
@@ -146,20 +151,24 @@ public class RemoteDataTest {
     public fun testForegroundDispatchesEveryInterval(): TestResult = runTest {
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
         testActivityMonitor.foreground()
+        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
 
         testActivityMonitor.background()
         testActivityMonitor.foreground()
+        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
 
         testClock.currentTimeMillis += remoteData.foregroundRefreshInterval - 1
         testActivityMonitor.background()
         testActivityMonitor.foreground()
+        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
 
         testClock.currentTimeMillis += 1
         testActivityMonitor.background()
         testActivityMonitor.foreground()
+        testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 3) { mockRefreshManager.dispatchRefreshJob() }
     }
 
@@ -297,7 +306,7 @@ public class RemoteDataTest {
     @Test
     public fun testNotifyOutdatedAppInfo(): TestResult = runTest {
         val appRemoteDataInfo = RemoteDataInfo("some url", "some modified", RemoteDataSource.APP)
-        every { mockAppRemoteDataProvider.notifyOutdated(appRemoteDataInfo) } just runs
+        every { mockAppRemoteDataProvider.notifyOutdated(appRemoteDataInfo) } returns true
         remoteData.notifyOutdated(appRemoteDataInfo)
         verify { mockAppRemoteDataProvider.notifyOutdated(appRemoteDataInfo) }
     }
@@ -305,35 +314,61 @@ public class RemoteDataTest {
     @Test
     public fun testNotifyOutdatedContactInfo(): TestResult = runTest {
         val contactRemoteDataInfo = RemoteDataInfo("some other url", "some modified", RemoteDataSource.CONTACT)
-        every { mockContactRemoteDataProvider.notifyOutdated(contactRemoteDataInfo) } just runs
+        every { mockContactRemoteDataProvider.notifyOutdated(contactRemoteDataInfo) } returns true
         remoteData.notifyOutdated(contactRemoteDataInfo)
         verify { mockContactRemoteDataProvider.notifyOutdated(contactRemoteDataInfo) }
     }
 
     @Test
     public fun testJobDispatchSuccess(): TestResult = runTest {
-        coEvery { mockRefreshManager.performRefresh(any(), any(), any(), any()) } returns JobResult.SUCCESS
+        coEvery { mockRefreshManager.performRefresh(any(), any(), any()) } returns JobResult.SUCCESS
         assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(mockk(), jobInfo))
     }
 
     @Test
     public fun testJobDispatchFailure(): TestResult = runTest {
-        coEvery { mockRefreshManager.performRefresh(any(), any(), any(), any()) } returns JobResult.FAILURE
+        coEvery { mockRefreshManager.performRefresh(any(), any(), any()) } returns JobResult.FAILURE
         assertEquals(JobResult.FAILURE, remoteData.onPerformJob(mockk(), jobInfo))
     }
 
     @Test
     public fun testRefresh(): TestResult = runTest {
-        coEvery { mockRefreshManager.performRefresh(any(), any(), any(), any()) } returns JobResult.SUCCESS
+        coEvery { mockRefreshManager.performRefresh(any(), any(), any()) } returns JobResult.SUCCESS
         assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(mockk(), jobInfo))
 
         coVerify {
             mockRefreshManager.performRefresh(
                 match { it.endsWith("412312") },
                 Locale.CANADA_FRENCH,
-                remoteData.randomValue,
-                listOf(mockAppRemoteDataProvider, mockContactRemoteDataProvider)
+                remoteData.randomValue
             )
+        }
+    }
+
+    @Test
+    public fun testRefreshStatusSuccess(): TestResult = runTest {
+        remoteData.refreshStatusFlow(RemoteDataSource.APP).test {
+            assertEquals(RemoteData.RefreshStatus.NONE, awaitItem())
+            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.NEW_DATA))
+            assertEquals(RemoteData.RefreshStatus.SUCCESS, awaitItem())
+        }
+    }
+
+    @Test
+    public fun testRefreshStatusFailed(): TestResult = runTest {
+        remoteData.refreshStatusFlow(RemoteDataSource.APP).test {
+            assertEquals(RemoteData.RefreshStatus.NONE, awaitItem())
+            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.FAILED))
+            assertEquals(RemoteData.RefreshStatus.FAILED, awaitItem())
+        }
+    }
+
+    @Test
+    public fun testRefreshStatusSkipped(): TestResult = runTest {
+        remoteData.refreshStatusFlow(RemoteDataSource.APP).test {
+            assertEquals(RemoteData.RefreshStatus.NONE, awaitItem())
+            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.SKIPPED))
+            assertEquals(RemoteData.RefreshStatus.SUCCESS, awaitItem())
         }
     }
 }

@@ -10,12 +10,13 @@ import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Network
 import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Test
@@ -27,129 +28,105 @@ import org.robolectric.RobolectricTestRunner
 public class RemoteDataAccessTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val remoteData: RemoteData = mockk()
+    private val remoteData: RemoteData = mockk(relaxed = true)
+
     private val network: Network = mockk()
     private val subject = RemoteDataAccess(
         context, remoteData, network, AirshipDispatchers.newSerialDispatcher()
     )
 
     @Test
-    public fun testRemoteDataCalledOncePerSource(): TestResult = runTest {
-        val statuses = RemoteDataSource
-            .values()
-            .associateWith { RemoteData.Status.OUT_OF_DATE }
-            .toMutableMap()
-
-        coEvery { network.isConnected(any()) } returns true
+    public fun testRequiresRefresh(): TestResult = runTest {
         coEvery { remoteData.isCurrent(any()) } returns true
-        coEvery { remoteData.refresh(any<RemoteDataSource>()) } answers {
-            statuses[firstArg()] = RemoteData.Status.UP_TO_DATE
-            true
-        }
-        coEvery { remoteData.status(any()) } answers { statuses[firstArg()]!! }
+        coEvery { remoteData.status(any()) } returns RemoteData.Status.UP_TO_DATE
 
-        val appSourceResponses = (1..5).map {
-            subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
-        }
-
-        val contactSourceResponses = (1..5).map {
-            subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.CONTACT))
-        }
-
-        Assert.assertTrue(appSourceResponses.all { it })
-        Assert.assertTrue(contactSourceResponses.all { it })
-
-        coVerify(exactly = 1) { remoteData.refresh(RemoteDataSource.APP) }
-        coVerify(exactly = 1) { remoteData.refresh(RemoteDataSource.CONTACT) }
+        Assert.assertFalse(
+            subject.requiresRefresh(makeRemoteDataInfo(RemoteDataSource.APP))
+        )
     }
 
     @Test
-    public fun testRemoteDataCalledOncePerSourceParallel(): TestResult = runTest {
-        val statuses = RemoteDataSource
-            .values()
-            .associateWith { RemoteData.Status.OUT_OF_DATE }
-            .toMutableMap()
-
-        coEvery { network.isConnected(any()) } returns true
+    public fun testRequiresRefreshStaleData(): TestResult = runTest {
         coEvery { remoteData.isCurrent(any()) } returns true
-        coEvery { remoteData.refresh(any<RemoteDataSource>()) } coAnswers {
-            val appSource: RemoteDataSource = firstArg()
-            statuses[appSource] = RemoteData.Status.UP_TO_DATE
-            true
-        }
-        coEvery { remoteData.status(any()) } answers { statuses[firstArg()]!! }
+        coEvery { remoteData.status(any()) } returns RemoteData.Status.STALE
 
-        val appSourceResponses = (1..5).map {
-            async { subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP)) }
-        }
-
-        Assert.assertTrue(appSourceResponses.all { it.await() })
-        coVerify(exactly = 1) { remoteData.refresh(RemoteDataSource.APP) }
+        Assert.assertFalse(
+            subject.requiresRefresh(makeRemoteDataInfo(RemoteDataSource.APP))
+        )
     }
 
     @Test
-    public fun testRefreshEachForeground(): TestResult = runTest {
-        var sourceStatus = RemoteData.Status.OUT_OF_DATE
-        coEvery { network.isConnected(any()) } returns true
-        coEvery { remoteData.isCurrent(any()) } returns true
-        coEvery { remoteData.refresh(any<RemoteDataSource>()) } returns true
-        coEvery { remoteData.status(any()) } answers { sourceStatus }
+    public fun testRequiresRefreshNotCurrent(): TestResult = runTest {
+        coEvery { remoteData.isCurrent(any()) } returns false
+        coEvery { remoteData.status(any()) } returns RemoteData.Status.OUT_OF_DATE
 
         Assert.assertTrue(
-            subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
+            subject.requiresRefresh(makeRemoteDataInfo(RemoteDataSource.APP))
         )
-
-        Assert.assertTrue(
-            subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
-        )
-        sourceStatus = RemoteData.Status.UP_TO_DATE
-
-        Assert.assertTrue(
-            subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
-        )
-
-        coVerify(exactly = 2) { remoteData.refresh(RemoteDataSource.APP) }
     }
 
     @Test
-    public fun testSkipRefreshNotConnected(): TestResult = runTest {
-        coEvery { network.isConnected(any()) } returns false
+    public fun testRequiresRefreshNoRemoteDataInfo(): TestResult = runTest {
+        Assert.assertTrue(
+            subject.requiresRefresh(null)
+        )
+    }
+
+    @Test
+    public fun testRequiresRefreshOutOfDate(): TestResult = runTest {
         coEvery { remoteData.isCurrent(any()) } returns true
         coEvery { remoteData.status(any()) } returns RemoteData.Status.OUT_OF_DATE
 
         Assert.assertTrue(
-            subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
+            subject.requiresRefresh(makeRemoteDataInfo(RemoteDataSource.APP))
         )
-
-        coVerify(exactly = 0) { remoteData.refresh(RemoteDataSource.APP) }
     }
 
     @Test
-    public fun testRequireRefreshNotCurrent(): TestResult = runTest {
+    public fun testBestEffort(): TestResult = runTest {
         coEvery { network.isConnected(any()) } returns false
-        coEvery { remoteData.isCurrent(any()) } returnsMany listOf(false, true)
-        coEvery { remoteData.refresh(any<RemoteDataSource>()) } returns true
+        coEvery { remoteData.isCurrent(any()) } returns false
+        coEvery { remoteData.status(any()) } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteData.waitForRefreshAttempt(any()) } just runs
+
+        Assert.assertFalse(
+            subject.bestEffortRefresh(makeRemoteDataInfo(RemoteDataSource.APP))
+        )
+    }
+
+    @Test
+    public fun testBestEffortRefreshSkipsNotConnected(): TestResult = runTest {
+        coEvery { network.isConnected(any()) } returns false
+        coEvery { remoteData.isCurrent(any()) } returns true
+        coEvery { remoteData.status(any()) } returns RemoteData.Status.STALE
 
         Assert.assertTrue(
-            subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
+            subject.bestEffortRefresh(makeRemoteDataInfo(RemoteDataSource.APP))
         )
-
-        coVerify(exactly = 1) { remoteData.refresh(RemoteDataSource.APP) }
     }
 
     @Test
-    public fun testFailToRefresh(): TestResult = runTest {
+    public fun testBestEffortFailToRefresh(): TestResult = runTest(UnconfinedTestDispatcher()) {
         coEvery { network.isConnected(any()) } returns true
-        coEvery { remoteData.isCurrent(any()) } returns false
-        coEvery { remoteData.refresh(any<RemoteDataSource>()) } returns false
+        coEvery { remoteData.isCurrent(any()) } returns true
+        coEvery { remoteData.status(any()) } returns RemoteData.Status.STALE
+        coEvery { remoteData.waitForRefreshAttempt(any()) } just runs
 
-        (1..5).forEach { _ ->
-            Assert.assertFalse(
-                subject.refreshAndCheckCurrentSync(makeRemoteDataInfo(RemoteDataSource.APP))
-            )
-        }
+        Assert.assertTrue(
+            subject.bestEffortRefresh(makeRemoteDataInfo(RemoteDataSource.APP))
+        )
+    }
 
-        coVerify(exactly = 5) { remoteData.refresh(RemoteDataSource.APP) }
+    @Test
+    public fun testBestEffortRefreshNoLongerCurrent(): TestResult = runTest(UnconfinedTestDispatcher()) {
+        coEvery { network.isConnected(any()) } returns true
+        coEvery { remoteData.isCurrent(any()) } returnsMany listOf(true, false)
+        coEvery { remoteData.status(any()) } returns RemoteData.Status.STALE
+        coEvery { remoteData.waitForRefreshAttempt(any()) } just runs
+
+        Assert.assertFalse(
+            subject.bestEffortRefresh(makeRemoteDataInfo(RemoteDataSource.APP))
+        )
     }
 
     private fun makeRemoteDataInfo(source: RemoteDataSource = RemoteDataSource.APP): RemoteDataInfo {

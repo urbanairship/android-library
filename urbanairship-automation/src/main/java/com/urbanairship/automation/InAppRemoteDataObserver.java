@@ -719,18 +719,35 @@ class InAppRemoteDataObserver {
         return false;
     }
 
-    public void refreshOutdated(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull Runnable onComplete) {
+
+    public boolean requiresRefresh(@NonNull Schedule<? extends ScheduleData> schedule) {
+        if (!isRemoteSchedule(schedule)) {
+            return false;
+        }
+
         RemoteDataInfo remoteDataInfo = parseRemoteDataInfo(schedule);
-        remoteData.refreshOutdated(remoteDataInfo, onComplete);
+        return remoteData.requiresRefresh(remoteDataInfo);
     }
 
     @WorkerThread
-    public boolean refreshAndCheckCurrentSync(@NonNull Schedule<? extends ScheduleData> schedule) {
+    public void waitFullRefresh(@NonNull Schedule<? extends ScheduleData> schedule, @NonNull Runnable runnable) {
+        RemoteDataInfo remoteDataInfo = parseRemoteDataInfo(schedule);
+        remoteData.waitFullRefresh(remoteDataInfo, runnable);
+    }
+
+    @WorkerThread
+    public void notifyOutdated(@NonNull Schedule<? extends ScheduleData> schedule) {
+        RemoteDataInfo remoteDataInfo = parseRemoteDataInfo(schedule);
+        remoteData.notifyOutdated(remoteDataInfo);
+    }
+
+    @WorkerThread
+    public boolean bestEffortRefresh(@NonNull Schedule<? extends ScheduleData> schedule) {
         if (!isRemoteSchedule(schedule)) {
             return true;
         }
 
         RemoteDataInfo remoteDataInfo = parseRemoteDataInfo(schedule);
-        return remoteData.refreshAndCheckCurrentSync(remoteDataInfo);
+        return remoteData.bestEffortRefresh(remoteDataInfo);
     }
 }

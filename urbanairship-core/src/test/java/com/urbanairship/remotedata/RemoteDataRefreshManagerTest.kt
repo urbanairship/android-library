@@ -36,7 +36,9 @@ public class RemoteDataRefreshManagerTest {
     }
 
     private val remoteDataRefreshManager = RemoteDataRefreshManager(
-        mockDispatcher, mockPrivacyManager
+        mockDispatcher,
+        mockPrivacyManager,
+        listOf(mockAppRemoteDataProvider, mockContactRemoteDataProvider)
     )
 
     @Test
@@ -63,8 +65,7 @@ public class RemoteDataRefreshManagerTest {
             val jobResult = remoteDataRefreshManager.performRefresh(
                 "some token",
                 Locale.CANADA,
-                100,
-                listOf(mockAppRemoteDataProvider, mockContactRemoteDataProvider)
+                100
             )
 
             assertEquals(JobResult.SUCCESS, jobResult)
@@ -92,8 +93,7 @@ public class RemoteDataRefreshManagerTest {
             val jobResult = remoteDataRefreshManager.performRefresh(
                 "some token",
                 Locale.CANADA,
-                100,
-                listOf(mockAppRemoteDataProvider, mockContactRemoteDataProvider)
+                100
             )
 
             assertEquals(JobResult.RETRY, jobResult)
@@ -119,8 +119,7 @@ public class RemoteDataRefreshManagerTest {
             val jobResult = remoteDataRefreshManager.performRefresh(
                 "some token",
                 Locale.CANADA,
-                100,
-                listOf(mockAppRemoteDataProvider, mockContactRemoteDataProvider)
+                100
             )
 
             assertEquals(JobResult.SUCCESS, jobResult)
