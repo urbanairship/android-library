@@ -79,6 +79,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
     private final Map<String, ScheduleDelegate<?>> scheduleDelegateMap = new HashMap<>();
     private final Map<String, FrequencyChecker> frequencyCheckerMap = new HashMap<>();
+    private final Map<String, RemoteDataInfo> remoteDataInfoMap = new HashMap<>();
 
     private final Map<String, Uri> redirectURLs = new HashMap<>();
 
@@ -543,6 +544,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         final AutomationDriver.PrepareScheduleCallback callbackWrapper = result -> {
             if (result != AutomationDriver.PREPARE_RESULT_CONTINUE) {
                 frequencyCheckerMap.remove(schedule.getId());
+                remoteDataInfoMap.remove(schedule.getId());
             }
             callback.onFinish(result);
         };
@@ -559,6 +561,12 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                 callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
                 return RetryingExecutor.cancelResult();
             }
+
+            RemoteDataInfo info = remoteDataSubscriber.parseRemoteDataInfo(schedule);
+            if (info != null) {
+                remoteDataInfoMap.put(schedule.getId(), info);
+            }
+
 
             return RetryingExecutor.finishedResult();
         };
@@ -765,7 +773,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return AutomationDriver.READY_RESULT_NOT_READY;
         }
 
-        if (!this.remoteDataSubscriber.isScheduleValid(schedule)) {
+        RemoteDataInfo info = remoteDataSubscriber.parseRemoteDataInfo(schedule);
+
+        if ((info != null && !info.equals(remoteDataInfoMap.get(schedule.getId()))) || !this.remoteDataSubscriber.isScheduleValid(schedule)) {
             ScheduleDelegate<?> delegate = scheduleDelegateMap.remove(schedule.getId());
             if (delegate != null) {
                 delegate.onExecutionInvalidated(schedule);
@@ -797,6 +807,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             ScheduleData> schedule, @NonNull AutomationDriver.ExecutionCallback callback) {
         UALog.v("onExecuteTriggeredSchedule schedule: %s", schedule.getId());
         frequencyCheckerMap.remove(schedule.getId());
+        remoteDataInfoMap.remove(schedule.getId());
 
         ScheduleDelegate<?> delegate = scheduleDelegateMap.remove(schedule.getId());
         if (delegate != null) {

@@ -1185,6 +1185,59 @@ public class InAppAutomationTest {
         verify(mockMessageScheduleDelegate).onExecute(schedule, executeCallback);
     }
 
+    @Test
+    public void testRemoteDataInfoChangesBeforeExecute() {
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .build();
+
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .setId("test-id")
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .build();
+
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
+        when(mockObserver.isScheduleValid(eq(schedule))).thenReturn(true);
+
+        MessageInfo expectedInfo = new MessageInfo("transactional", null);
+        JsonMap experimentMetadata = JsonMap
+                .newBuilder()
+                .put("report", "metadata")
+                .build();
+
+        List<JsonMap> metadata = Collections.singletonList(experimentMetadata);
+        ExperimentResult results = new ExperimentResult("cid", "coid", "eid", true, metadata);
+
+        PendingResult<ExperimentResult> pendingResult = new PendingResult<>();
+        pendingResult.setResult(results);
+        doReturn(pendingResult)
+                .when(mockExperimentManager)
+                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), nullable(String.class));
+
+        doReturn(new RemoteDataInfo("url", null, RemoteDataSource.APP, null))
+                .when(mockObserver).parseRemoteDataInfo(eq(schedule));
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+
+        ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
+        verify(mockMessageScheduleDelegate, times(1)).onPrepareSchedule(eq(schedule), eq(schedule.getData()), eq(results), argumentCaptor.capture());
+        argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+
+        // Verify its not invalid before the remote-data info changes
+        assertEquals(AutomationDriver.READY_RESULT_NOT_READY, driver.onCheckExecutionReadiness(schedule));
+
+        // Change remote data
+        doReturn(new RemoteDataInfo("some other url", null, RemoteDataSource.APP, null))
+                .when(mockObserver).parseRemoteDataInfo(eq(schedule));
+
+        // Should be invalid since the remote-data info is not longer the same as when it was prepared
+        assertEquals(AutomationDriver.READY_RESULT_INVALIDATE, driver.onCheckExecutionReadiness(schedule));
+
+    }
+
     /**
      * Helper method to run all the looper tasks.
      */
