@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.featureflag
 
 import android.content.Context
@@ -7,60 +9,18 @@ import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
+import com.urbanairship.analytics.Analytics
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.audience.DeviceInfoProvider
-import com.urbanairship.json.JsonMap
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Clock
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-
-/**
- * Airship Feature flag.
- */
-public class FeatureFlag(
-
-    /**
-     * Indicates whether the device is eligible or not for the flag.
-     */
-    val isEligible: Boolean,
-
-    /**
-     * Indicates whether the flag exists in the current flag listing or not
-     */
-    val exists: Boolean,
-
-    /**
-     * Optional variables associated with the flag
-     */
-    val variables: JsonMap?
-) {
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as FeatureFlag
-
-        if (isEligible != other.isEligible) return false
-        if (exists != other.exists) return false
-        if (variables != other.variables) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = isEligible.hashCode()
-        result = 31 * result + exists.hashCode()
-        result = 31 * result + (variables?.hashCode() ?: 0)
-        return result
-    }
-}
 
 /**
  * Airship Feature Flags manager.
@@ -71,11 +31,13 @@ public class FeatureFlagManager
     context: Context,
     dataStore: PreferenceDataStore,
     private val remoteData: RemoteData,
+    private val analytics: Analytics,
     private val infoProvider: DeviceInfoProvider,
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) : AirshipComponent(context, dataStore) {
 
     companion object {
+
         private const val PAYLOAD_TYPE = "feature_flags"
 
         private val MAX_TIMEOUT_MILLIS: Long = TimeUnit.SECONDS.toMillis(15)
@@ -128,7 +90,7 @@ public class FeatureFlagManager
     private suspend fun flag(name: String, allowRefresh: Boolean): Result<FeatureFlag> {
         return when (remoteData.status(RemoteDataSource.APP)) {
             RemoteData.Status.UP_TO_DATE -> {
-                Result.success(evaluate(fetchFlagInfos(name)))
+                Result.success(evaluate(name, fetchFlagInfos(name)))
             }
             RemoteData.Status.STALE -> {
                 val items = fetchFlagInfos(name)
@@ -140,7 +102,7 @@ public class FeatureFlagManager
                         Result.failure(FeatureFlagException("Unable to fetch data"))
                     }
                 } else {
-                    Result.success(evaluate(items))
+                    Result.success(evaluate(name, items))
                 }
             }
             RemoteData.Status.OUT_OF_DATE -> {
@@ -154,54 +116,81 @@ public class FeatureFlagManager
         }
     }
 
+    fun trackInteraction(flag: FeatureFlag) {
+        if (!flag.exists) {
+            UALog.e { "Flag does not exist, unable to track interaction: $flag" }
+            return
+        }
+
+        if (flag.reportingInfo == null) {
+            UALog.e { "Flag missing reporting info, unable to track interaction: $flag" }
+            return
+        }
+
+        try {
+            analytics.addEvent(FeatureFlagInteractionEvent(flag))
+        } catch (exception: Exception) {
+            UALog.e(exception) { "Unable to track interaction: $flag" }
+        }
+    }
+
     private suspend fun waitForRemoteDataRefresh() {
         remoteData.waitForRefresh(RemoteDataSource.APP, MAX_TIMEOUT_MILLIS)
     }
 
     private fun isStaleAllowed(flags: List<FeatureFlagInfo>): Boolean {
-        val explicitDisallow = flags.firstOrNull { it.evaluationOptions?.disallowStaleValues ?: false }
+        val explicitDisallow =
+            flags.firstOrNull { it.evaluationOptions?.disallowStaleValues ?: false }
         return explicitDisallow == null
     }
 
     private suspend fun fetchFlagInfos(name: String): List<FeatureFlagInfo> {
-        return remoteData
-            .payloads(PAYLOAD_TYPE)
-            .asSequence()
-            .mapNotNull { it.data.opt(PAYLOAD_TYPE).list?.list }
-            .flatten()
-            .map { it.optMap() }
-            .mapNotNull(FeatureFlagInfo::fromJson)
-            .filter { it.name == name }
-            .filter { it.timeCriteria?.meets(clock.currentTimeMillis()) ?: true }
-            .toList()
+        return remoteData.payloads(PAYLOAD_TYPE).asSequence()
+            .mapNotNull { it.data.opt(PAYLOAD_TYPE).list?.list }.flatten().map { it.optMap() }
+            .mapNotNull(FeatureFlagInfo::fromJson).filter { it.name == name }
+            .filter { it.timeCriteria?.meets(clock.currentTimeMillis()) ?: true }.toList()
     }
 
-    private suspend fun evaluate(flags: List<FeatureFlagInfo>): FeatureFlag {
+    private suspend fun evaluate(name: String, flags: List<FeatureFlagInfo>): FeatureFlag {
         if (flags.isEmpty()) {
-            return FeatureFlag(isEligible = false, exists = false, variables = null)
+            return FeatureFlag.createMissingFlag(
+                name = name
+            )
         }
 
         val deviceInfoSnapshot = infoProvider.snapshot(context)
 
-        var variables: VariablesVariant? = null
-
         for (info in flags) {
-            val audienceCheck = info.audience?.evaluate(context, info.created, deviceInfoSnapshot, null)
-                ?: true
+            val audienceCheck =
+                info.audience?.evaluate(context, info.created, deviceInfoSnapshot, null) ?: true
             if (!audienceCheck) {
                 continue
             }
 
-            variables = info.payload.evaluateVariables(context, info.created, deviceInfoSnapshot)
-            if (variables != null) {
-                break
-            }
+            val variables =
+                info.payload.evaluateVariables(context, info.created, deviceInfoSnapshot)
+
+            return FeatureFlag.createFlag(
+                name = name,
+                isEligible = true,
+                variables = variables?.data,
+                reportingInfo = FeatureFlag.ReportingInfo(
+                    reportingMetadata = variables?.reportingMetadata ?: info.reportingContext,
+                    channelId = deviceInfoSnapshot.channelId,
+                    contactId = deviceInfoSnapshot.getStableContactId()
+                )
+            )
         }
 
-        return FeatureFlag(
-            isEligible = variables != null,
-            exists = true,
-            variables = variables?.data
+        return FeatureFlag.createFlag(
+            name = name,
+            isEligible = false,
+            variables = null,
+            reportingInfo = FeatureFlag.ReportingInfo(
+                reportingMetadata = flags.last().reportingContext,
+                channelId = deviceInfoSnapshot.channelId,
+                contactId = deviceInfoSnapshot.getStableContactId(),
+            )
         )
     }
 }

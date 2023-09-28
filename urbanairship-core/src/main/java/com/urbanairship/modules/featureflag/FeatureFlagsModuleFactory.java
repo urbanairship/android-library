@@ -5,6 +5,7 @@ import android.content.Context;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.analytics.Analytics;
 import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.modules.Module;
 import com.urbanairship.remotedata.RemoteData;
@@ -25,6 +26,7 @@ public interface FeatureFlagsModuleFactory extends AirshipVersionInfo {
             @NonNull Context Context,
             @NonNull PreferenceDataStore dataStore,
             @NonNull RemoteData remoteData,
+            @NonNull Analytics analytics,
             @NonNull DeviceInfoProvider infoProvider
     );
 }

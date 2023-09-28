@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.featureflag
 
 import androidx.test.ext.junit.runners.AndroidJUnit4

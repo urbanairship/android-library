@@ -223,12 +223,13 @@ public class Modules {
             @NonNull Context context,
             @NonNull PreferenceDataStore dataStore,
             @NonNull RemoteData remoteData,
+            @NonNull Analytics analytics,
             @NonNull DeviceInfoProvider infoProvider) {
         try {
             FeatureFlagsModuleFactory moduleFactory =
                     createFactory(FEATURE_FLAGS_FACTORY, FeatureFlagsModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore, remoteData, infoProvider);
+                return moduleFactory.build(context, dataStore, remoteData, analytics, infoProvider);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Feature Flags module");

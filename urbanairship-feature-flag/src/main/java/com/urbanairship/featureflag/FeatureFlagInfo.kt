@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.featureflag
 
 import android.content.Context
@@ -275,7 +277,6 @@ internal class StaticPayload(
         infoProvider: DeviceInfoProvider
     ): VariablesVariant? {
         return variableVariants.evaluateVariables(context, newEvaluationDate, infoProvider)
-            ?: VariablesVariant.empty
     }
 }
 

@@ -20,6 +20,7 @@ import com.urbanairship.debug.extensions.toFormattedJsonString
 import com.urbanairship.debug.json.JsonRecyclerAdapter
 import com.urbanairship.debug.json.JsonRecyclerView
 import com.urbanairship.debug.utils.getParcelableCompat
+import com.urbanairship.featureflag.FeatureFlag
 import com.urbanairship.featureflag.FeatureFlagManager
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -78,6 +79,10 @@ class FeatureFlagsDetailFragment : Fragment(R.layout.ua_fragment_feature_flags_d
             )
         }
 
+        detailAdapter.onFlagInteracted = { flag ->
+            FeatureFlagManager.shared().trackInteraction(flag)
+        }
+
         with(binding) {
             lifecycleOwner = this@FeatureFlagsDetailFragment
             list.adapter = concatAdapter
@@ -100,6 +105,7 @@ private class FeatureFlagsDetailAdapter(
 
     var onRefreshResult: ((JsonMap) -> Unit)? = null
     var onSharePayload: ((JsonMap) -> Unit)? = null
+    var onFlagInteracted: ((FeatureFlag) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
         ViewHolder(parent)
@@ -119,17 +125,22 @@ private class FeatureFlagsDetailAdapter(
             id = json.requireField<String>("flag_id")
 
             scope.launch {
+                flag = null
                 featureFlagManager.flag(flagName).fold(
-                        onSuccess = { flag ->
-                            eligible = flag.isEligible.toString()
-                            exists = flag.exists.toString()
+                        onSuccess = {
+                            flag = it
                         },
                         onFailure = {
                             UALog.e("Failed to evaluate flag: $flagName", it)
-                            eligible = "error"
-                            exists = "error"
+                            error = it.message
                         }
                 )
+            }
+
+            trackInteraction.setOnClickListener {
+                flag?.let {
+                    onFlagInteracted?.invoke(it)
+                }
             }
 
             resultRefreshButton.setOnClickListener {

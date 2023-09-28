@@ -6,6 +6,7 @@
 
     <data>
         <import type="android.view.View" />
+        <import type="com.urbanairship.featureflag.FeatureFlag" />
         <variable
             name="name"
             type="String" />
@@ -13,10 +14,10 @@
             name="id"
             type="String" />
         <variable
-            name="eligible"
-            type="String" />
+            name="flag"
+            type="FeatureFlag" />
         <variable
-            name="exists"
+            name="error"
             type="String" />
     </data>
 
@@ -152,7 +153,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:text="@{eligible}"
+                    android:text='@{flag.eligible ? "true" : "false"}'
                     android:textAppearance="@style/AirshipDebug.ItemSubTitle"
                     tools:text="false" />
             </LinearLayout>
@@ -176,10 +177,33 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:text="@{exists}"
+                    android:text='@{flag.exists ? "true" : "false"}'
                     android:textAppearance="@style/AirshipDebug.ItemSubTitle"
                     tools:text="true" />
+
+                <TextView
+                    android:visibility="@{error == null ? View.GONE : View.VISIBLE}"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:text='@{error}'
+                    android:textAppearance="@style/AirshipDebug.ItemSubTitle"
+                    tools:text="Error" />
             </LinearLayout>
+
+            <!-- Refresh button -->
+            <Button
+                android:enabled="@{flag.exists, default=false}"
+                android:text="Track Interaction"
+                android:id="@+id/track_interaction"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:padding="8dp"
+                android:tint="@color/ua_blue" />
+
+
         </LinearLayout>
 
         <View

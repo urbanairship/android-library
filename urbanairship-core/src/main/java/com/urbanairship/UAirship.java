@@ -810,7 +810,7 @@ public class UAirship {
         processModule(liveUpdateManager);
 
         // Feature flags
-        Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, infoProvider);
+        Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, analytics, infoProvider);
         processModule(featureFlags);
 
         remoteAirshipUrlConfigProvider.addUrlConfigListener(() -> {
