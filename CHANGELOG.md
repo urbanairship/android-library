@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.3.0 September 28, 2023
+Minor release that improves refreshing the feeds for in-app experiences and feature flags, adds a new interaction event for feature flags, and fixes an issue that prevented displaying Live Updates during the initial app launch.
+
+### Changes
+- Improve refresh handling of remote-data for IAX and feature flags.
+- Added new method `trackInteraction(flag)` for Feature Flags.
+- Fixed a Live Update bug that prevented displaying Live Update notifications during the initial app launch.
+
 ## Version 17.2.1 September 7, 2023
 Patch release that hardens the Analytics database against potential SQL crashes.
 
