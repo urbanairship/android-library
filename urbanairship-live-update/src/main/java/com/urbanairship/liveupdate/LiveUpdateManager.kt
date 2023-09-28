@@ -16,7 +16,6 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonMap
 import com.urbanairship.liveupdate.data.LiveUpdateDatabase
 import com.urbanairship.liveupdate.notification.LiveUpdatePayload
-import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 
 /**
@@ -38,13 +37,7 @@ internal constructor(
 ) : AirshipComponent(context, dataStore) {
 
     private val isFeatureEnabled: Boolean
-        get() = privacyManager.isEnabled(FEATURE_PUSH) && channel.id != null
-
-    private val pushListener = PushListener { message, _ ->
-        message.liveUpdatePayload
-            ?.let { LiveUpdatePayload.fromJson(it) }
-            ?.let { registrar.onLiveUpdatePushReceived(message, it) }
-    }
+        get() = privacyManager.isEnabled(FEATURE_PUSH)
 
     public constructor(
         context: Context,
@@ -158,7 +151,15 @@ internal constructor(
     public override fun init() {
         super.init()
 
+        channel.addChannelListener { updateLiveActivityEnablement() }
         privacyManager.addListener { updateLiveActivityEnablement() }
+
+        pushManager.addPushListener { message, _ ->
+            message.liveUpdatePayload
+                ?.let { LiveUpdatePayload.fromJson(it) }
+                ?.let { registrar.onLiveUpdatePushReceived(message, it) }
+        }
+
         updateLiveActivityEnablement()
     }
 
@@ -169,8 +170,6 @@ internal constructor(
 
     private fun updateLiveActivityEnablement() {
         if (isFeatureEnabled) {
-            pushManager.addPushListener(pushListener)
-
             // Check for any active live Updates that have had their notifications cleared.
             // This makes sure we'll end the live update if the notification is dropped due
             // to an app upgrade or other cases where we don't get notified of the dismiss.
@@ -178,7 +177,6 @@ internal constructor(
         } else {
             // Clear all live updates.
             registrar.clearAll()
-            pushManager.removePushListener(pushListener)
         }
     }
 
