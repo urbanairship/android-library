@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.4.0 October 18, 2023
+Minor release that adds async live update notification handlers.
+
+### Changes
+- Added SuspendLiveUpdateNotificationHandler and CallbackLiveUpdateNotificationHandler
+- Deprecated LiveUpdateNotificationHandler
+
 ## Version 17.3.0 September 28, 2023
 Minor release that improves refreshing the feeds for in-app experiences and feature flags, adds a new interaction event for feature flags, and fixes an issue that prevented displaying Live Updates during the initial app launch.
 
