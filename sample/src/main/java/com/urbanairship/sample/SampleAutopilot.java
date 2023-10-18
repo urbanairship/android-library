@@ -54,6 +54,7 @@ public class SampleAutopilot extends Autopilot {
 
         // Register handlers for Live Updates.
         LiveUpdateManager.shared().register("sports", new SampleLiveUpdate());
+        LiveUpdateManager.shared().register("sports-async", new SampleAsyncLiveUpdate());
 
         MessageCenter.shared().setOnShowMessageCenterListener(messageId -> {
             // Use an implicit navigation deep link for now as explicit deep links are broken

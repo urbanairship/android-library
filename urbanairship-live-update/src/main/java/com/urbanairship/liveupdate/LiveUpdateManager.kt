@@ -59,6 +59,16 @@ internal constructor(
     }
 
     /**
+     * Registers a [handler] for the given [type].
+     *
+     * @param type The handler type.
+     * @param handler A [SuspendLiveUpdateHandler].
+     */
+    public fun register(type: String, handler: AsyncLiveUpdateNotificationHandler) {
+        registrar.register(type, handler)
+    }
+
+    /**
      * Starts tracking for a Live Update, with initial [content].
      *
      * @param name The Live Update name.

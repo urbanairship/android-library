@@ -11,6 +11,8 @@ import androidx.core.app.NotificationManagerCompat
 import com.urbanairship.UALog
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.json.JsonMap
+import com.urbanairship.liveupdate.CallbackLiveUpdateNotificationHandler.LiveUpdateResultCallback
+import com.urbanairship.liveupdate.CallbackLiveUpdateNotificationHandler.NotificationResult
 import com.urbanairship.liveupdate.LiveUpdateProcessor.HandlerCallback
 import com.urbanairship.liveupdate.LiveUpdateProcessor.Operation
 import com.urbanairship.liveupdate.data.LiveUpdateDao
@@ -45,7 +47,7 @@ internal class LiveUpdateRegistrar(
     private val job = SupervisorJob()
     private val scope: CoroutineScope = CoroutineScope(dispatcher + job)
     @VisibleForTesting
-    internal val handlers = ConcurrentHashMap<String, LiveUpdateHandler<*>>()
+    internal val handlers = ConcurrentHashMap<String, BaseLiveUpdateHandler>()
 
     init {
         // Handle callbacks from the processor.
@@ -65,6 +67,10 @@ internal class LiveUpdateRegistrar(
     }
 
     fun register(type: String, handler: LiveUpdateHandler<*>) {
+        handlers[type] = handler
+    }
+
+    fun register(type: String, handler: AsyncLiveUpdateNotificationHandler) {
         handlers[type] = handler
     }
 
@@ -153,8 +159,8 @@ internal class LiveUpdateRegistrar(
     suspend fun getAllActiveUpdates(): List<LiveUpdate> {
         return dao
             .getAllActive()
-            .mapNotNull { item ->
-                item.content?.let { LiveUpdate.from(item.state, it) }
+            .mapNotNull { (state, content) ->
+                content?.let { LiveUpdate.from(state, it) }
             }
     }
 
@@ -172,7 +178,12 @@ internal class LiveUpdateRegistrar(
                 dao.getAllActive()
                     // Filter out any LUs that use custom handlers or have active notifications
                     .filter { (update, _) ->
-                        handlers[update.type] is LiveUpdateNotificationHandler &&
+                        val isNotificationHandler =
+                            handlers[update.type] is LiveUpdateNotificationHandler
+                        val isAsyncNotificationHandler =
+                            handlers[update.type] is AsyncLiveUpdateNotificationHandler
+
+                        (isNotificationHandler || isAsyncNotificationHandler) &&
                                 notificationTag(update.type, update.name) !in activeNotifications
                     }
                     // End any Live Updates that are no longer displayed
@@ -192,26 +203,61 @@ internal class LiveUpdateRegistrar(
             return
         }
 
-        val result = withContext(Dispatchers.Main) {
-            handler.onUpdate(context, action, update)
+        when (handler) {
+            is LiveUpdateHandler<*> -> withContext(Dispatchers.Main) {
+                val result = handler.onUpdate(context, action, update)
+                handleResult(action, result, handler, update, message)
+            }
+            is SuspendLiveUpdateNotificationHandler -> withContext(Dispatchers.Default) {
+                val result = handler.onUpdate(context, action, update)
+                handleResult(action, result, handler, update, message)
+            }
+            is CallbackLiveUpdateNotificationHandler -> withContext(Dispatchers.Default) {
+                handler.onUpdate(context, action, update, object : LiveUpdateResultCallback {
+                    override fun ok(builder: NotificationCompat.Builder): NotificationResult? {
+                        val result = LiveUpdateResult.ok(builder)
+                        return handleResult(action, result, handler, update, message)
+                    }
+
+                    override fun cancel() {
+                        handleResult(action, LiveUpdateResult.cancel<Nothing>(), handler, update, message)
+                    }
+                })
+            }
         }
+    }
+
+    private fun handleResult(
+        action: LiveUpdateEvent,
+        result: LiveUpdateResult<*>,
+        handler: BaseLiveUpdateHandler,
+        update: LiveUpdate,
+        message: PushMessage?
+    ): NotificationResult? {
+        val isNotificationHandler = handler is LiveUpdateNotificationHandler ||
+                handler is AsyncLiveUpdateNotificationHandler
 
         when (result) {
-            is LiveUpdateResult.Ok -> if (handler is LiveUpdateNotificationHandler) {
-                if (result.value is NotificationCompat.Builder) {
-                    postNotification(context, update, result.value, message)
+            is LiveUpdateResult.Ok ->
+                if (isNotificationHandler && result.value is NotificationCompat.Builder) {
+                    return postNotification(context, update, result.value, result.extender, message)
                 }
+
+            is LiveUpdateResult.Cancel -> {
+                cancelNotification(update.notificationTag)
             }
-            is LiveUpdateResult.Cancel -> cancelNotification(update.notificationTag)
         }
+
+        return null
     }
 
     private fun postNotification(
         context: Context,
         update: LiveUpdate,
         builder: NotificationCompat.Builder,
-        message: PushMessage?
-    ) {
+        extender: LiveUpdateResult.NotificationExtender?,
+        message: PushMessage?,
+    ): NotificationResult? {
         // Set dismissal time on the notification, if the live update specifies one.
         update.dismissalTime?.let { dismissalTime ->
             notificationTimeoutCompat.setTimeoutAt(builder, dismissalTime, update.name)
@@ -249,10 +295,17 @@ internal class LiveUpdateRegistrar(
         UALog.d("Posting live update notification for: ${update.name}")
 
         try {
-            notificationManager.notify(update.notificationTag, NOTIFICATION_ID, notification)
+            val tag = update.notificationTag
+            extender?.extend(notification, NOTIFICATION_ID, tag)
+                ?.let { notificationManager.notify(tag, NOTIFICATION_ID, notification) }
+                ?: notificationManager.notify(tag, NOTIFICATION_ID, notification)
+
+            return NotificationResult(tag, NOTIFICATION_ID, notification)
         } catch (e: Exception) {
             UALog.e(e, "Failed to post live update notification for: ${update.name}")
         }
+
+        return null
     }
 
     private fun cancelNotification(tag: String) =

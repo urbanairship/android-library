@@ -12,10 +12,13 @@
         android:orientation="vertical">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/teamOneImage"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_gravity="center"
-            android:src="@drawable/foxes" />
+            android:scaleType="centerInside"
+            android:src="@drawable/foxes"
+            android:contentDescription="@null" />
     </LinearLayout>
 
     <LinearLayout
@@ -39,7 +42,6 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 style="@style/TextAppearance.Compat.Notification.Title"
-
                 tools:text="0" />
 
             <TextView
@@ -63,7 +65,6 @@
                 tools:text="400" />
 
         </LinearLayout>
-
     </LinearLayout>
 
     <LinearLayout
@@ -72,12 +73,13 @@
         android:orientation="vertical">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/teamTwoImage"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_gravity="center"
-            android:src="@drawable/tigers" />
-
+            android:scaleType="centerInside"
+            android:src="@drawable/tigers"
+            android:contentDescription="@null" />
     </LinearLayout>
-
 </LinearLayout>
 
