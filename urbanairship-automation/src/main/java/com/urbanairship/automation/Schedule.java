@@ -102,6 +102,8 @@ public final class Schedule<T extends ScheduleData> {
     private final boolean bypassHoldoutGroups;
     private final long newUserEvaluationDate;
 
+    private final String productId;
+
     @Type
     private final String type;
     private final T data;
@@ -133,6 +135,7 @@ public final class Schedule<T extends ScheduleData> {
         this.messageType = builder.messageType == null ? DEFAULT_MESSAGE_TYPE : builder.messageType;
         this.bypassHoldoutGroups = builder.bypassHoldoutGroups == null ? false : builder.bypassHoldoutGroups;
         this.newUserEvaluationDate = builder.newUserEvaluationDate;
+        this.productId = builder.productId;
     }
 
     /**
@@ -279,6 +282,18 @@ public final class Schedule<T extends ScheduleData> {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public long getNewUserEvaluationDate() {
         return newUserEvaluationDate;
+    }
+
+    /**
+     * The schedule display product id
+     *
+     * @return product id string.
+     * @hide
+     */
+    @Nullable
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public String getProductId() {
+        return productId;
     }
 
     /**
@@ -481,6 +496,10 @@ public final class Schedule<T extends ScheduleData> {
             return false;
         }
 
+        if (!ObjectsCompat.equals(productId, schedule.productId)) {
+            return false;
+        }
+
         return data.equals(schedule.data);
     }
 
@@ -504,6 +523,7 @@ public final class Schedule<T extends ScheduleData> {
         result = 31 * result + type.hashCode();
         result = 31 * result + data.hashCode();
         result = 31 * result + reportingContext.hashCode();
+        result = 31 * result + productId.hashCode();
         return result;
     }
 
@@ -530,6 +550,7 @@ public final class Schedule<T extends ScheduleData> {
                 ", reportingContext=" + reportingContext +
                 ", frequencyConstraintIds=" + frequencyConstraintIds +
                 ", newUserEvaluationDate=" + newUserEvaluationDate +
+                ", productId=" + productId +
                 '}';
     }
 
@@ -560,6 +581,7 @@ public final class Schedule<T extends ScheduleData> {
         private String messageType;
         private Boolean bypassHoldoutGroups = false;
         private long newUserEvaluationDate;
+        private String productId = null;
 
         private Builder(@NonNull Schedule<T> info) {
             this.id = info.id;
@@ -583,6 +605,7 @@ public final class Schedule<T extends ScheduleData> {
             this.messageType = info.messageType;
             this.bypassHoldoutGroups = info.bypassHoldoutGroups;
             this.newUserEvaluationDate = info.newUserEvaluationDate;
+            this.productId = info.productId;
         }
 
         private Builder(@NonNull @Type String type, @NonNull T data) {
@@ -872,6 +895,20 @@ public final class Schedule<T extends ScheduleData> {
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder<T> setNewUserEvaluationDate(long date) {
             this.newUserEvaluationDate = date;
+            return this;
+        }
+
+        /**
+         * Sets the product id for this schedule we can report it back in metered usage API
+         *
+         * @param productId The productId value.
+         * @return The Builder instance.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder<T> setProductId(@Nullable String productId) {
+            this.productId = productId;
             return this;
         }
 

@@ -5,6 +5,7 @@ package com.urbanairship.automation;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Looper;
+import android.text.TextUtils;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -15,6 +16,7 @@ import androidx.annotation.WorkerThread;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
+import com.urbanairship.AirshipExecutors;
 import com.urbanairship.UALog;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
@@ -40,8 +42,12 @@ import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
+import com.urbanairship.meteredusage.AirshipMeteredUsage;
+import com.urbanairship.meteredusage.MeteredUsageEventEntity;
+import com.urbanairship.meteredusage.MeteredUsageType;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.remotedata.RemoteDataInfo;
+import com.urbanairship.util.Clock;
 import com.urbanairship.util.RetryingExecutor;
 
 import java.util.Collection;
@@ -49,7 +55,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -74,6 +82,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private final FrequencyLimitManager frequencyLimitManager;
     private final PrivacyManager privacyManager;
 
+    private final AirshipMeteredUsage meteredUsage;
+
     private final ActionsScheduleDelegate actionScheduleDelegate;
     private final InAppMessageScheduleDelegate inAppMessageScheduleDelegate;
 
@@ -91,6 +101,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private final DeviceInfoProvider infoProvider;
 
     private final AirshipRuntimeConfig config;
+    private final Clock clock;
+    private final Executor backgroundExecutor;
 
     private final AutomationDriver driver = new AutomationDriver() {
         @Override
@@ -178,7 +190,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                            @NonNull AirshipChannel airshipChannel,
                            @NonNull AudienceOverridesProvider audienceOverridesProvider,
                            @NonNull ExperimentManager experimentManager,
-                           @NonNull DeviceInfoProvider infoProvider) {
+                           @NonNull DeviceInfoProvider infoProvider,
+                           @NonNull AirshipMeteredUsage meteredUsage) {
         super(context, preferenceDataStore);
         this.privacyManager = privacyManager;
         this.automationEngine = new AutomationEngine(context, runtimeConfig, analytics, preferenceDataStore);
@@ -194,6 +207,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.config = runtimeConfig;
         this.experimentManager = experimentManager;
         this.infoProvider = infoProvider;
+        this.meteredUsage = meteredUsage;
+        this.clock = Clock.DEFAULT_CLOCK;
+        this.backgroundExecutor = AirshipExecutors.newSerialExecutor();
     }
 
     @VisibleForTesting
@@ -212,7 +228,10 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull FrequencyLimitManager frequencyLimitManager,
                     @NonNull AudienceOverridesProvider audienceOverridesProvider,
                     @NonNull ExperimentManager experimentManager,
-                    @NonNull DeviceInfoProvider infoProvider) {
+                    @NonNull DeviceInfoProvider infoProvider,
+                    @NonNull AirshipMeteredUsage meteredUsage,
+                    @NonNull Clock clock,
+                    @NonNull Executor executor) {
 
         super(context, preferenceDataStore);
         this.privacyManager = privacyManager;
@@ -229,6 +248,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.config = runtimeConfig;
         this.experimentManager = experimentManager;
         this.infoProvider = infoProvider;
+        this.meteredUsage = meteredUsage;
+        this.clock = clock;
+        this.backgroundExecutor = executor;
     }
 
     /**
@@ -795,10 +817,24 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         ScheduleDelegate<?> delegate = scheduleDelegateMap.remove(schedule.getId());
         if (delegate != null) {
             delegate.onExecute(schedule, callback);
+            reportMeteredUsage(schedule);
         } else {
             UALog.e("Unexpected schedule type: %s", schedule.getType());
             callback.onFinish();
         }
+    }
+
+    private void reportMeteredUsage(Schedule<? extends ScheduleData> schedule) {
+        if (TextUtils.isEmpty(schedule.getProductId())) {
+            return;
+        }
+
+        final MeteredUsageEventEntity event = new MeteredUsageEventEntity(
+                UUID.randomUUID().toString(), schedule.getId(), MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
+                schedule.getProductId(), schedule.getReportingContext(), clock.currentTimeMillis(),
+                null);
+
+        backgroundExecutor.execute(() -> meteredUsage.addEvent(event));
     }
 
     private void onScheduleExecutionInterrupted(Schedule<? extends ScheduleData> schedule) {

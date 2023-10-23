@@ -1782,6 +1782,7 @@ public class AutomationEngine {
         scheduleEntity.messageType = edits.getMessageType() == null ? scheduleEntity.messageType : edits.getMessageType();
         scheduleEntity.bypassHoldoutGroups = edits.getBypassHoldoutGroup() == null ? scheduleEntity.bypassHoldoutGroups : edits.getBypassHoldoutGroup();
         scheduleEntity.newUserEvaluationDate = edits.getNewUserEvaluationDate();
+        scheduleEntity.productId = edits.getProductId();
     }
 
     private boolean isExpired(@NonNull FullSchedule entry) {

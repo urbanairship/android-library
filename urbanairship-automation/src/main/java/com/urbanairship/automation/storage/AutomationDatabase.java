@@ -25,7 +25,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities = { ScheduleEntity.class, TriggerEntity.class }, version = 6)
+@Database(entities = { ScheduleEntity.class, TriggerEntity.class }, version = 7)
 @TypeConverters({ Converters.class, JsonTypeConverters.class })
 public abstract class AutomationDatabase extends RoomDatabase {
 
@@ -76,11 +76,20 @@ public abstract class AutomationDatabase extends RoomDatabase {
         }
     };
 
+    private static final Migration MIGRATION_6_7 = new Migration(6, 7) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE schedules "
+                    + " ADD COLUMN productId TEXT");
+        }
+    };
+
     public static AutomationDatabase createDatabase(@NonNull Context context, @NonNull AirshipRuntimeConfig config) {
         String name = config.getConfigOptions().appKey + "_in-app-automation";
         String path = new File(ContextCompat.getNoBackupFilesDir(context), name).getAbsolutePath();
         return Room.databaseBuilder(context, AutomationDatabase.class, path)
-                   .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                   .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
+                           MIGRATION_6_7)
                    .fallbackToDestructiveMigrationOnDowngrade()
                    .build();
 

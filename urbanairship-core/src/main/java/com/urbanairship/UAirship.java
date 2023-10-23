@@ -32,6 +32,7 @@ import com.urbanairship.http.DefaultRequestSession;
 import com.urbanairship.images.DefaultImageLoader;
 import com.urbanairship.images.ImageLoader;
 import com.urbanairship.locale.LocaleManager;
+import com.urbanairship.meteredusage.AirshipMeteredUsage;
 import com.urbanairship.modules.Module;
 import com.urbanairship.modules.Modules;
 import com.urbanairship.modules.accengage.AccengageModule;
@@ -149,6 +150,8 @@ public class UAirship {
     UrlAllowList urlAllowList;
     RemoteData remoteData;
     RemoteConfigManager remoteConfigManager;
+
+    AirshipMeteredUsage meteredUsageManager;
     ChannelCapture channelCapture;
     ImageLoader imageLoader;
     AccengageNotificationHandler accengageNotificationHandler;
@@ -755,7 +758,12 @@ public class UAirship {
         this.remoteData = new RemoteData(application, runtimeConfig, preferenceDataStore, privacyManager, localeManager,  pushManager, pushProviders, contact);
         components.add(this.remoteData);
 
-        this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, runtimeConfig, privacyManager, remoteData);
+        this.meteredUsageManager = new AirshipMeteredUsage(application, preferenceDataStore, runtimeConfig,
+                GlobalActivityMonitor.shared(application), privacyManager);
+        components.add(this.meteredUsageManager);
+
+        this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore,
+                runtimeConfig, privacyManager, remoteData, meteredUsageManager);
         this.remoteConfigManager.addRemoteAirshipConfigListener(remoteAirshipUrlConfigProvider);
         components.add(this.remoteConfigManager);
 
@@ -790,7 +798,7 @@ public class UAirship {
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
                 privacyManager, channel, pushManager, analytics, remoteData, audienceOverridesProvider,
-                this.experimentManager, infoProvider);
+                this.experimentManager, infoProvider, meteredUsageManager);
         processModule(automationModule);
 
         // Ad Id

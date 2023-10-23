@@ -16,6 +16,8 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
+import com.urbanairship.meteredusage.AirshipMeteredUsage
+import com.urbanairship.meteredusage.Config
 import com.urbanairship.remotedata.RemoteData
 import java.util.concurrent.CopyOnWriteArraySet
 import kotlinx.coroutines.CoroutineDispatcher
@@ -38,6 +40,7 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
     private val privacyManager: PrivacyManager,
     private val remoteData: RemoteData,
     private val moduleAdapter: ModuleAdapter,
+    private val meteredUsage: AirshipMeteredUsage,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) : AirshipComponent(context, dataStore) {
 
@@ -46,8 +49,9 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
         dataStore: PreferenceDataStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
-        remoteData: RemoteData
-    ) : this(context, dataStore, runtimeConfig, privacyManager, remoteData, ModuleAdapter())
+        remoteData: RemoteData,
+        meteredUsage: AirshipMeteredUsage,
+    ) : this(context, dataStore, runtimeConfig, privacyManager, remoteData, ModuleAdapter(), meteredUsage)
 
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
@@ -99,6 +103,10 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
         var airshipConfig = JsonValue.NULL
         for (key in config.keySet()) {
             val value = config.opt(key)
+            if (METERED_USAGE_CONFIG_KEY == key) {
+                updateMeteredUsageConfig(value)
+                continue
+            }
             if (AIRSHIP_CONFIG_KEY == key) {
                 airshipConfig = value
                 continue
@@ -157,6 +165,10 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
         }
     }
 
+    private fun updateMeteredUsageConfig(value: JsonValue) {
+        meteredUsage.setConfig(Config.fromJson(value.optMap()))
+    }
+
     override fun tearDown() {
         super.tearDown()
         subscription?.cancel()
@@ -206,6 +218,7 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
 
         // Airship config key
         private const val AIRSHIP_CONFIG_KEY = "airship_config"
+        private const val METERED_USAGE_CONFIG_KEY = "metered_usage"
 
         private const val FETCH_CONTACT_REMOTE_DATA_KEY = "fetch_contact_remote_data"
     }

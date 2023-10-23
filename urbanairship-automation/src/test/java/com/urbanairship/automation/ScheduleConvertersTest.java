@@ -43,6 +43,7 @@ public class ScheduleConvertersTest {
                                                      .build())
                                  .setEditGracePeriod(1000, TimeUnit.DAYS)
                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                 .setProductId("product-id")
                                  .build());
 
         // Message schedule

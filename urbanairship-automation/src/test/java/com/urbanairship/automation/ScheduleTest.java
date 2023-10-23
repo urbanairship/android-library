@@ -80,6 +80,7 @@ public class ScheduleTest {
                                                   .setTriggeredTime(100)
                                                   .setId("schedule id")
                                                   .setGroup("group")
+                                                  .setProductId("product-id")
                                                   .build();
 
         assertEquals(1, schedule.getTriggers().size());
@@ -92,6 +93,7 @@ public class ScheduleTest {
         assertEquals(-4, schedule.getPriority());
         assertEquals(100, schedule.getTriggeredTime());
         assertEquals(message, schedule.getData());
+        assertEquals("product-id", schedule.getProductId());
         assertEquals(Schedule.TYPE_IN_APP_MESSAGE, schedule.getType());
 
     }

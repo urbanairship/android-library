@@ -9,6 +9,7 @@ import com.urbanairship.json.JsonValue;
 
 import java.util.List;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.room.Entity;
 import androidx.room.Index;
@@ -53,6 +54,7 @@ public class ScheduleEntity {
     public String messageType;
     public boolean bypassHoldoutGroups;
     public long newUserEvaluationDate;
+    @Nullable public String productId;
 
     @Override
     public String toString() {
@@ -85,6 +87,7 @@ public class ScheduleEntity {
                 ", messageType=" + messageType +
                 ", bypassHoldoutGroups=" + bypassHoldoutGroups +
                 ", newUserEvaluationDate=" + newUserEvaluationDate +
+                ", productId=" + productId +
                 '}';
     }
 

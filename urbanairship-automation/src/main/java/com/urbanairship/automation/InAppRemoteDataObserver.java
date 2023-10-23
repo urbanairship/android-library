@@ -84,6 +84,7 @@ class InAppRemoteDataObserver {
     private static final String FREQUENCY_CONSTRAINT_IDS_KEY = "frequency_constraint_ids";
     private static final String MESSAGE_TYPE_KEY = "message_type";
     private static final String BYPASS_HOLDOUT_GROUP_KEY = "bypass_holdout_groups";
+    private static final String PRODUCT_ID_KEY = "product_id";
 
     // Data store keys
     private static final String APP_LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP";
@@ -561,7 +562,8 @@ class InAppRemoteDataObserver {
                .setFrequencyConstraintIds(parseConstraintIds(jsonMap.opt(FREQUENCY_CONSTRAINT_IDS_KEY).optList()))
                .setMessageType(jsonMap.opt(MESSAGE_TYPE_KEY).getString())
                .setBypassHoldoutGroups(jsonMap.opt(BYPASS_HOLDOUT_GROUP_KEY).getBoolean())
-               .setNewUserEvaluationDate(createdDate);
+               .setNewUserEvaluationDate(createdDate)
+               .setProductId(jsonMap.opt(PRODUCT_ID_KEY).getString());
 
         for (JsonValue triggerJson : jsonMap.opt(TRIGGERS_KEY).optList()) {
             builder.addTrigger(Trigger.fromJson(triggerJson));

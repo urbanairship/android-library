@@ -53,7 +53,8 @@ class ScheduleConverters {
                                          .setFrequencyConstraintIds(entry.schedule.frequencyConstraintIds)
                                          .setMessageType(entry.schedule.messageType)
                                          .setBypassHoldoutGroups(entry.schedule.bypassHoldoutGroups)
-                                         .setNewUserEvaluationDate(entry.schedule.newUserEvaluationDate);
+                                         .setNewUserEvaluationDate(entry.schedule.newUserEvaluationDate)
+                                         .setProductId(entry.schedule.productId);
         ScheduleDelay.Builder delayBuilder = ScheduleDelay.newBuilder()
                                                           .setAppState(entry.schedule.appState)
                                                           .setRegionId(entry.schedule.regionId)
@@ -100,6 +101,7 @@ class ScheduleConverters {
         entity.messageType = schedule.getMessageType();
         entity.bypassHoldoutGroups = schedule.isBypassHoldoutGroups();
         entity.newUserEvaluationDate = schedule.getNewUserEvaluationDate();
+        entity.productId = schedule.getProductId();
 
         for (Trigger trigger : schedule.getTriggers()) {
             triggerEntities.add(convert(trigger, false, schedule.getId()));

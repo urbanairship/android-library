@@ -26,6 +26,7 @@ public class TestAirshipRuntimeConfig extends AirshipRuntimeConfig {
                                                      .setDeviceUrl(configOptions.deviceUrl)
                                                      .setWalletUrl(configOptions.walletUrl)
                                                      .setRemoteDataUrl(configOptions.remoteDataUrl)
+                                                     .setMeteredUsageUrl("https://test.metered.usage")
                                                      .build();
 
 

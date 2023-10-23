@@ -35,8 +35,11 @@ import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.meteredusage.AirshipMeteredUsage;
+import com.urbanairship.meteredusage.MeteredUsageEventEntity;
 import com.urbanairship.remotedata.RemoteDataInfo;
 import com.urbanairship.remotedata.RemoteDataSource;
+import com.urbanairship.util.Clock;
 import com.urbanairship.util.RetryingExecutor;
 
 import org.junit.Before;
@@ -55,6 +58,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -116,6 +121,9 @@ public class InAppAutomationTest {
 
     private DeviceInfoProvider mockInfoProvider = mock(DeviceInfoProvider.class);
 
+    private Clock mockClock = mock(Clock.class);
+    private AirshipMeteredUsage meteredUsage = mock(AirshipMeteredUsage.class);
+
     @Before
     public void setup() {
         when(mockRuntimeConfig.getConfigOptions()).thenAnswer((Answer<AirshipConfigOptions>) invocation -> config);
@@ -157,7 +165,8 @@ public class InAppAutomationTest {
         inAppAutomation = new InAppAutomation(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
                 mockRuntimeConfig, privacyManager, mockEngine, mockChannel, mockObserver, mockIamManager,
                 executor, mockDeferredScheduleClient, mockActionsScheduleDelegate, mockMessageScheduleDelegate,
-                mockFrequencyLimitManager, audienceOverridesProvider, mockExperimentManager, mockInfoProvider);
+                mockFrequencyLimitManager, audienceOverridesProvider, mockExperimentManager, mockInfoProvider,
+                meteredUsage, mockClock, executor);
 
         inAppAutomation.init();
         inAppAutomation.onAirshipReady(UAirship.shared());
@@ -908,9 +917,11 @@ public class InAppAutomationTest {
         Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
                                                   .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
                                                   .setBypassHoldoutGroups(true)
+                                                  .setProductId("test-product-id")
                                                   .build();
 
         when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockClock.currentTimeMillis()).thenReturn(2L);
 
         // Prepare schedule
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
@@ -922,14 +933,52 @@ public class InAppAutomationTest {
 
         AutomationDriver.ExecutionCallback executionCallback = mock(AutomationDriver.ExecutionCallback.class);
         driver.onExecuteTriggeredSchedule(schedule, executionCallback);
+
         verify(mockMessageScheduleDelegate).onExecute(schedule, executionCallback);
+
+        ArgumentCaptor<MeteredUsageEventEntity> eventCaptor = ArgumentCaptor.forClass(MeteredUsageEventEntity.class);
+        verify(meteredUsage).addEvent(eventCaptor.capture());
+
+        MeteredUsageEventEntity captured = eventCaptor.getValue();
+        assertEquals("test-product-id", captured.getProduct());
+        assertEquals(2L, (long) captured.getTimestamp());
+    }
+
+    @Test
+    public void testExecuteMessageIgnoreMeteredIfNoProductId() {
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .build();
+
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setBypassHoldoutGroups(true)
+                                                  .build();
+
+        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        when(mockClock.currentTimeMillis()).thenReturn(2L);
+
+        // Prepare schedule
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+        ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
+        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(message), any(), argumentCaptor.capture());
+        argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+
+        AutomationDriver.ExecutionCallback executionCallback = mock(AutomationDriver.ExecutionCallback.class);
+        driver.onExecuteTriggeredSchedule(schedule, executionCallback);
+
+        verify(meteredUsage, never()).addEvent(any());
     }
 
     @Test
     public void testExecuteActions() {
         Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
                                              .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                             .setProductId("action-product-id")
                                              .build();
+
+        when(mockClock.currentTimeMillis()).thenReturn(3L);
 
         // Prepare schedule
         when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
@@ -943,6 +992,37 @@ public class InAppAutomationTest {
         AutomationDriver.ExecutionCallback executionCallback = mock(AutomationDriver.ExecutionCallback.class);
         driver.onExecuteTriggeredSchedule(schedule, executionCallback);
         verify(mockActionsScheduleDelegate).onExecute(schedule, executionCallback);
+
+        ArgumentCaptor<MeteredUsageEventEntity> eventCaptor = ArgumentCaptor.forClass(MeteredUsageEventEntity.class);
+        verify(meteredUsage).addEvent(eventCaptor.capture());
+
+        MeteredUsageEventEntity captured = eventCaptor.getValue();
+        assertEquals("action-product-id", captured.getProduct());
+        assertEquals(3L, (long) captured.getTimestamp());
+    }
+
+    @Test
+    public void testExecuteActionsIgnoreMeteredUserForNoProduct() {
+        Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
+                                             .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                             .build();
+
+        when(mockClock.currentTimeMillis()).thenReturn(3L);
+
+        // Prepare schedule
+        when(mockObserver.refreshAndCheckCurrentSync(eq(schedule))).thenReturn(true);
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+        ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
+        verify(mockActionsScheduleDelegate).onPrepareSchedule(eq(schedule), eq(schedule.getData()), any(), argumentCaptor.capture());
+        argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+
+        AutomationDriver.ExecutionCallback executionCallback = mock(AutomationDriver.ExecutionCallback.class);
+        driver.onExecuteTriggeredSchedule(schedule, executionCallback);
+        verify(mockActionsScheduleDelegate).onExecute(schedule, executionCallback);
+
+        verify(meteredUsage, never()).addEvent(any());
     }
 
     @Test

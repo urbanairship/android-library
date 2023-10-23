@@ -24,6 +24,7 @@ public class AirshipUrlConfigTest extends BaseTestCase {
         assertNull(urlConfig.walletUrl().build());
         assertNull(urlConfig.analyticsUrl().build());
         assertNull(urlConfig.remoteDataUrl().build());
+        assertNull(urlConfig.meteredUsageUrl().build());
     }
 
     @Test
@@ -60,6 +61,15 @@ public class AirshipUrlConfigTest extends BaseTestCase {
                                                      .build();
 
         assertEquals(Uri.parse("https://test.example.com"), urlConfig.remoteDataUrl().build());
+    }
+
+    @Test
+    public void testMeteredUsageUrl() {
+        AirshipUrlConfig urlConfig = AirshipUrlConfig.newBuilder()
+                                                     .setMeteredUsageUrl("https://test.example.com")
+                                                     .build();
+
+        assertEquals(Uri.parse("https://test.example.com"), urlConfig.meteredUsageUrl().build());
     }
 
     @Test

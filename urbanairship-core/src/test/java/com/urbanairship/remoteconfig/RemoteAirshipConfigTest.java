@@ -20,6 +20,7 @@ public class RemoteAirshipConfigTest extends BaseTestCase {
                                 .putOpt("remote_data_url", "https://remote-data.examaple.com")
                                 .putOpt("wallet_url", "https://wallet-api.examaple.com")
                                 .putOpt("analytics_url", "https://analytics-api.examaple.com")
+                                .putOpt("metered_usage_url", "https://metere.usage.test")
                                 .build()
                                 .toJsonValue();
 
@@ -28,6 +29,7 @@ public class RemoteAirshipConfigTest extends BaseTestCase {
         assertEquals("https://remote-data.examaple.com", airshipConfig.getRemoteDataUrl());
         assertEquals("https://wallet-api.examaple.com", airshipConfig.getWalletUrl());
         assertEquals("https://analytics-api.examaple.com", airshipConfig.getAnalyticsUrl());
+        assertEquals("https://metere.usage.test", airshipConfig.getMeteredUsageUrl());
 
         assertEquals(json, airshipConfig.toJsonValue());
     }
@@ -39,5 +41,6 @@ public class RemoteAirshipConfigTest extends BaseTestCase {
         assertNull(airshipConfig.getRemoteDataUrl());
         assertNull(airshipConfig.getWalletUrl());
         assertNull(airshipConfig.getAnalyticsUrl());
+        assertNull(airshipConfig.getMeteredUsageUrl());
     }
 }

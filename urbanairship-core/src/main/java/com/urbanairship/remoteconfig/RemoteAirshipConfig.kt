@@ -17,7 +17,8 @@ public data class RemoteAirshipConfig @JvmOverloads internal constructor(
     public val remoteDataUrl: String? = null,
     public val deviceApiUrl: String? = null,
     public val walletUrl: String? = null,
-    public val analyticsUrl: String? = null
+    public val analyticsUrl: String? = null,
+    public val meteredUsageUrl: String? = null
 ) : JsonSerializable {
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
@@ -25,6 +26,7 @@ public data class RemoteAirshipConfig @JvmOverloads internal constructor(
         DEVICE_API_URL_KEY to deviceApiUrl,
         ANALYTICS_URL_KEY to analyticsUrl,
         WALLET_URL_KEY to walletUrl,
+        METERED_USAGE_URL_KEY to meteredUsageUrl
     ).toJsonValue()
 
     public constructor(jsonValue: JsonValue) : this(
@@ -32,6 +34,7 @@ public data class RemoteAirshipConfig @JvmOverloads internal constructor(
         deviceApiUrl = jsonValue.optMap().optionalField(DEVICE_API_URL_KEY),
         walletUrl = jsonValue.optMap().optionalField(WALLET_URL_KEY),
         analyticsUrl = jsonValue.optMap().optionalField(ANALYTICS_URL_KEY),
+        meteredUsageUrl = jsonValue.optMap().optionalField(METERED_USAGE_URL_KEY)
     )
 
     public companion object {
@@ -40,6 +43,7 @@ public data class RemoteAirshipConfig @JvmOverloads internal constructor(
         private const val DEVICE_API_URL_KEY = "device_api_url"
         private const val WALLET_URL_KEY = "wallet_url"
         private const val ANALYTICS_URL_KEY = "analytics_url"
+        private const val METERED_USAGE_URL_KEY = "metered_usage_url"
 
         @JvmStatic
         public fun fromJson(jsonValue: JsonValue): RemoteAirshipConfig {

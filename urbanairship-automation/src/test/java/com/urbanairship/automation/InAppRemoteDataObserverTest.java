@@ -112,6 +112,7 @@ public class InAppRemoteDataObserverTest {
                                                                             .build())
                                                      .setCampaigns(campaigns)
                                                      .setFrequencyConstraintIds(constraintIds)
+                                                     .setProductId("test-product-id")
                                                      .setId("foo")
                                                      .build();
 
@@ -562,6 +563,7 @@ public class InAppRemoteDataObserverTest {
                                                          .put("audience", schedule.getAudienceSelector())
                                                          .put("group", schedule.getGroup())
                                                          .put("delay", schedule.getDelay())
+                                                         .put("product_id", schedule.getProductId())
                                                          .put("message", messageJson);
 
             schedules.add(scheduleJsonBuilder.build().toJsonValue());
@@ -588,6 +590,7 @@ public class InAppRemoteDataObserverTest {
                                                          .put("group", schedule.getGroup())
                                                          .put("delay", schedule.getDelay())
                                                          .put("campaigns", schedule.getCampaigns())
+                                                         .put("product_id", schedule.getProductId())
                                                          .putOpt("frequency_constraint_ids", schedule.getFrequencyConstraintIds());
 
             switch (schedule.getType()) {

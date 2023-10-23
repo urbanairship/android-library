@@ -9,6 +9,8 @@ import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestApplication
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.meteredusage.AirshipMeteredUsage
+import com.urbanairship.meteredusage.Config
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
 import io.mockk.every
@@ -39,6 +41,8 @@ public class RemoteConfigManagerTest : BaseTestCase() {
         every { this@mockk.payloadFlow(listOf("app_config", "app_config:android")) } returns updates
     }
 
+    private var meteredUsage: AirshipMeteredUsage = mockk(relaxed = true)
+
     private var privacyManager: PrivacyManager = PrivacyManager(
         TestApplication.getApplication().preferenceDataStore,
         PrivacyManager.FEATURE_ALL
@@ -51,6 +55,7 @@ public class RemoteConfigManagerTest : BaseTestCase() {
         privacyManager,
         remoteData,
         testModuleAdapter,
+        meteredUsage,
         testDispatcher
     )
 
@@ -77,6 +82,7 @@ public class RemoteConfigManagerTest : BaseTestCase() {
                 "device_api_url" to "https://deivce-api.examaple.com",
                 "wallet_url" to "https://wallet-api.examaple.com",
                 "analytics_url" to "https://analytics-api.examaple.com",
+                "metered_usage_url" to "https://metered.usage.test"
             )
         )
 
@@ -84,6 +90,31 @@ public class RemoteConfigManagerTest : BaseTestCase() {
         updates.emit(listOf(remoteDataPayload))
         testDispatcher.scheduler.advanceUntilIdle()
         verify { listener.onRemoteConfigUpdated(RemoteAirshipConfig(json.require("airship_config"))) }
+        assertEquals("https://metered.usage.test", RemoteAirshipConfig(json.require("airship_config")).meteredUsageUrl)
+    }
+
+    @Test
+    public fun testMeteredUsageConfig(): TestResult = runTest {
+        updates.emit(listOf(createRemoteDataPayload("app_config", 0, JsonMap.EMPTY_MAP)))
+        testDispatcher.scheduler.advanceUntilIdle()
+        verify(exactly = 0) { meteredUsage.setConfig(any()) }
+
+        updates.emit(listOf(createRemoteDataPayload("app_config", 0, jsonMapOf("metered_usage" to JsonMap.EMPTY_MAP))))
+        testDispatcher.scheduler.advanceUntilIdle()
+        verify { meteredUsage.setConfig(Config.default()) }
+
+        val json = jsonMapOf(
+            "metered_usage" to jsonMapOf(
+                "isEnabled" to true,
+                "initialDelay" to 22L,
+                "interval" to 12L
+            )
+        )
+
+        val remoteDataPayload = createRemoteDataPayload("app_config", 0, json)
+        updates.emit(listOf(remoteDataPayload))
+        testDispatcher.scheduler.advanceUntilIdle()
+        verify { meteredUsage.setConfig(Config(true, 22, 12)) }
     }
 
     @Test

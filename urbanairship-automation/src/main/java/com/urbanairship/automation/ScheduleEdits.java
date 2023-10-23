@@ -40,6 +40,7 @@ public class ScheduleEdits<T extends ScheduleData> {
     private final String messageType;
     private final Boolean bypassHoldoutGroups;
     private final long newUserEvaluationDate;
+    private final String productId;
 
     private ScheduleEdits(@NonNull Builder<T> builder) {
         this.limit = builder.limit;
@@ -58,6 +59,7 @@ public class ScheduleEdits<T extends ScheduleData> {
         this.bypassHoldoutGroups = builder.bypassHoldoutGroups;
         this.audienceSelector = builder.audienceSelector;
         this.newUserEvaluationDate = builder.newUserEvaluationDate;
+        this.productId = builder.productId;
     }
 
     /**
@@ -240,6 +242,17 @@ public class ScheduleEdits<T extends ScheduleData> {
     }
 
     /**
+     * Get productId property.
+     *
+     * @return The productId value.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @Nullable public String getProductId() {
+        return productId;
+    }
+
+    /**
      * The message type.
      *
      * @return The message type.
@@ -328,6 +341,8 @@ public class ScheduleEdits<T extends ScheduleData> {
         private Boolean bypassHoldoutGroups;
         private long newUserEvaluationDate;
 
+        private String productId;
+
         @Schedule.Type
         private String type;
         private AudienceSelector audienceSelector;
@@ -356,6 +371,7 @@ public class ScheduleEdits<T extends ScheduleData> {
             this.messageType = edits.messageType;
             this.bypassHoldoutGroups = edits.bypassHoldoutGroups;
             this.newUserEvaluationDate = edits.newUserEvaluationDate;
+            this.productId = edits.productId;
         }
 
         /**
@@ -548,6 +564,20 @@ public class ScheduleEdits<T extends ScheduleData> {
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public Builder<T> setNewUserEvaluationDate(long date) {
             this.newUserEvaluationDate = date;
+            return this;
+        }
+
+        /**
+         * Sets the product id property.
+         *
+         * @param productId The productId property.
+         * @return The Builder instance.
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder<T> setProductId(@Nullable String productId) {
+            this.productId = productId;
             return this;
         }
 

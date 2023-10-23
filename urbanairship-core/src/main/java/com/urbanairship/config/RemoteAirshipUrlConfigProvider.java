@@ -57,11 +57,13 @@ public class RemoteAirshipUrlConfigProvider implements AirshipUrlConfigProvider,
         if (preferenceDataStore.getBoolean(DISABLE_URL_FALLBACK_KEY, configOptions.requireInitialRemoteConfigEnabled)) {
             urlConfigBuilder.setWalletUrl(remoteAirshipConfig.getWalletUrl())
                             .setAnalyticsUrl(remoteAirshipConfig.getAnalyticsUrl())
-                            .setDeviceUrl(remoteAirshipConfig.getDeviceApiUrl());
+                            .setDeviceUrl(remoteAirshipConfig.getDeviceApiUrl())
+                            .setMeteredUsageUrl(remoteAirshipConfig.getMeteredUsageUrl());
         } else {
             urlConfigBuilder.setWalletUrl(firstOrNull(remoteAirshipConfig.getWalletUrl(), configOptions.walletUrl))
                             .setAnalyticsUrl(firstOrNull(remoteAirshipConfig.getAnalyticsUrl(), configOptions.analyticsUrl))
-                            .setDeviceUrl(firstOrNull(remoteAirshipConfig.getDeviceApiUrl(), configOptions.deviceUrl));
+                            .setDeviceUrl(firstOrNull(remoteAirshipConfig.getDeviceApiUrl(), configOptions.deviceUrl))
+                            .setMeteredUsageUrl(remoteAirshipConfig.getMeteredUsageUrl());
         }
 
         AirshipUrlConfig config = urlConfigBuilder.build();

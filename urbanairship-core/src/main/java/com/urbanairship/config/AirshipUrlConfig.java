@@ -20,11 +20,14 @@ public class AirshipUrlConfig {
     private final String walletUrl;
     private final String remoteDataUrl;
 
+    private final String meteredUsageUrl;
+
     private AirshipUrlConfig(Builder builder) {
         this.deviceUrl = builder.deviceUrl;
         this.analyticsUrl = builder.analyticsUrl;
         this.walletUrl = builder.walletUrl;
         this.remoteDataUrl = builder.remoteDataUrl;
+        this.meteredUsageUrl = builder.meteredUsageUrl;
     }
 
     /**
@@ -88,6 +91,16 @@ public class AirshipUrlConfig {
     }
 
     /**
+     * Returns a new metered usage URL builder.
+     *
+     * @return A URL builder.
+     */
+    @NonNull
+    public UrlBuilder meteredUsageUrl() {
+        return new UrlBuilder(meteredUsageUrl);
+    }
+
+    /**
      * Checks if the deviceUrl is configured or not.
      * @return {@code true} if configured, otherwise {@code false}.
      */
@@ -104,6 +117,8 @@ public class AirshipUrlConfig {
         private String analyticsUrl;
         private String walletUrl;
         private String remoteDataUrl;
+
+        private String meteredUsageUrl;
 
 
         @NonNull
@@ -127,6 +142,12 @@ public class AirshipUrlConfig {
         @NonNull
         public Builder setAnalyticsUrl(@Nullable String url) {
             this.analyticsUrl = url;
+            return this;
+        }
+
+        @NonNull
+        public Builder setMeteredUsageUrl(@Nullable String url) {
+            this.meteredUsageUrl = url;
             return this;
         }
 
