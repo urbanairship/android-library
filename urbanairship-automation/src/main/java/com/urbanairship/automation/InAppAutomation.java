@@ -829,10 +829,13 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return;
         }
 
+        RemoteDataInfo info = remoteDataSubscriber.parseRemoteDataInfo(schedule);
+        String contactId = info == null ? null : info.getContactId();
+
         final MeteredUsageEventEntity event = new MeteredUsageEventEntity(
                 UUID.randomUUID().toString(), schedule.getId(), MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
                 schedule.getProductId(), schedule.getReportingContext(), clock.currentTimeMillis(),
-                null);
+                contactId);
 
         backgroundExecutor.execute(() -> meteredUsage.addEvent(event));
     }

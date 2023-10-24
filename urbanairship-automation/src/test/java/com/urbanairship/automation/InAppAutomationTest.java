@@ -931,6 +931,9 @@ public class InAppAutomationTest {
         argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
 
+        RemoteDataInfo info = new RemoteDataInfo("test-url", null, RemoteDataSource.APP, "test-contact-id");
+        when(mockObserver.parseRemoteDataInfo(eq(schedule))).thenReturn(info);
+
         AutomationDriver.ExecutionCallback executionCallback = mock(AutomationDriver.ExecutionCallback.class);
         driver.onExecuteTriggeredSchedule(schedule, executionCallback);
 
@@ -942,6 +945,7 @@ public class InAppAutomationTest {
         MeteredUsageEventEntity captured = eventCaptor.getValue();
         assertEquals("test-product-id", captured.getProduct());
         assertEquals(2L, (long) captured.getTimestamp());
+        assertEquals("test-contact-id", captured.getContactId());
     }
 
     @Test
