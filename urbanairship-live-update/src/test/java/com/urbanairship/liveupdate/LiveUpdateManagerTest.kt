@@ -13,6 +13,7 @@ import com.urbanairship.liveupdate.data.LiveUpdateDatabase
 import com.urbanairship.push.PushManager
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import junit.framework.TestCase.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -26,10 +27,8 @@ public class LiveUpdateManagerTest {
         every { platform } returns ANDROID_PLATFORM
         every { requestSession } returns TestRequestSession()
     }
-    private val pushManager: PushManager = mockk(relaxed = true)
-    private val channel: AirshipChannel = mockk {
-        every { id } returns "channelId"
-    }
+    private val pushManager: PushManager = mockk(relaxUnitFun = true)
+    private val channel: AirshipChannel = mockk(relaxed = true)
     private val dao: LiveUpdateDao = mockk()
     private val database: LiveUpdateDatabase = mockk {
         every { liveUpdateDao() } returns dao
@@ -62,5 +61,8 @@ public class LiveUpdateManagerTest {
     public fun testInit() {
         liveUpdateManager.init()
         assertTrue(liveUpdateManager.isComponentEnabled)
+
+        verify { pushManager.addPushListener(any()) }
+        verify { channel.addChannelListener(any()) }
     }
 }

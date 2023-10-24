@@ -13,13 +13,11 @@ import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Network
-import com.urbanairship.util.SerialQueue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.yield
 
 @OpenForTesting
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -30,12 +28,6 @@ public class RemoteDataAccess internal constructor(
     private val coroutineDispatcher: CoroutineDispatcher
 ) {
     public constructor(context: Context, remoteData: RemoteData) : this(context, remoteData, Network(), AirshipDispatchers.newSerialDispatcher())
-
-    private var lastRefreshState: MutableMap<RemoteDataSource, Long> = mutableMapOf()
-    private var serialQueues: Map<RemoteDataSource, SerialQueue> =
-        RemoteDataSource.values().associateWith {
-            SerialQueue()
-        }
 
     private val scope = CoroutineScope(coroutineDispatcher + SupervisorJob())
 
@@ -49,74 +41,61 @@ public class RemoteDataAccess internal constructor(
         return Cancelable { job.cancel() }
     }
 
-    public fun refreshOutdated(remoteDataInfo: RemoteDataInfo?, onComplete: Runnable) {
-        UALog.v { "Refreshing outdated remoteDataInfo $remoteDataInfo" }
-
-        val source = remoteDataInfo?.source ?: RemoteDataSource.APP
-
-        scope.launch {
-            refreshOutdated(remoteDataInfo, source)
-            yield()
-            onComplete.run()
+    public fun requiresRefresh(remoteDatInfo: RemoteDataInfo?): Boolean {
+        if (!isCurrent(remoteDatInfo)) {
+            return true
+        }
+        val source = remoteDatInfo?.source ?: RemoteDataSource.APP
+        return when (remoteData.status(source)) {
+            RemoteData.Status.UP_TO_DATE -> false
+            RemoteData.Status.STALE -> false
+            RemoteData.Status.OUT_OF_DATE -> true
         }
     }
 
-    public fun refreshAndCheckCurrentSync(remoteDataInfo: RemoteDataInfo?): Boolean {
+    public fun waitFullRefresh(remoteDataInfo: RemoteDataInfo?, runnable: Runnable) {
+        val source = remoteDataInfo?.source ?: RemoteDataSource.APP
+        scope.launch {
+            remoteData.waitForRefresh(source)
+            runnable.run()
+        }
+    }
+
+    public fun notifyOutdated(remoteDataInfo: RemoteDataInfo?) {
+        UALog.v { "Refreshing outdated remoteDataInfo $remoteDataInfo" }
+        if (remoteDataInfo == null) {
+            return
+        }
+
+        runBlocking(coroutineDispatcher) {
+            remoteData.notifyOutdated(remoteDataInfo)
+        }
+    }
+
+    public fun bestEffortRefresh(remoteDataInfo: RemoteDataInfo?): Boolean {
         val source = remoteDataInfo?.source ?: RemoteDataSource.APP
 
         return runBlocking(coroutineDispatcher) {
-            bestEffortRefresh(remoteDataInfo, source)
+            if (!isCurrent(remoteDataInfo)) {
+                return@runBlocking false
+            }
+
+            // No need to wait for update if we are current and status is up to date
+            if (remoteData.status(source) == RemoteData.Status.UP_TO_DATE) {
+                return@runBlocking true
+            }
+
+            // if we are connected wait for refresh
+            if (network.isConnected(context)) {
+                remoteData.waitForRefreshAttempt(source)
+            }
+
             isCurrent(remoteDataInfo)
         }
     }
 
     public fun isCurrent(remoteDataInfo: RemoteDataInfo?): Boolean {
         return remoteDataInfo != null && remoteData.isCurrent(remoteDataInfo)
-    }
-
-    private suspend fun refreshOutdated(
-        remoteDataInfo: RemoteDataInfo?,
-        source: RemoteDataSource
-    ) {
-        serialQueues[source].run {
-            if (!isCurrent(remoteDataInfo)) {
-                bestEffortRefresh(remoteDataInfo, source)
-                return
-            }
-
-            remoteDataInfo?.let {
-                remoteData.notifyOutdated(remoteDataInfo)
-            }
-
-            lastRefreshState.remove(source)
-            refresh(source)
-        }
-    }
-
-    private suspend fun bestEffortRefresh(
-        remoteDataInfo: RemoteDataInfo?,
-        source: RemoteDataSource
-    ) {
-        serialQueues[source].run {
-            if (isCurrent(remoteDataInfo)) {
-                if (remoteData.status(source) != RemoteData.Status.UP_TO_DATE &&
-                    network.isConnected(context)) {
-                    refresh(source)
-                }
-            } else {
-                refresh(source)
-            }
-        }
-    }
-
-    private suspend fun refresh(source: RemoteDataSource) {
-        UALog.v { "Attempting to refresh source $source" }
-
-        if (remoteData.refresh(source)) {
-            UALog.v { "Refreshed source $source" }
-        } else {
-            UALog.v { "Refreshed source $source failed" }
-        }
     }
 }
 

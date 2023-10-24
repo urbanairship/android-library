@@ -10,6 +10,7 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
@@ -29,6 +30,7 @@ import com.urbanairship.push.PushMessage
 import com.urbanairship.util.Clock
 import java.util.Random
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -36,15 +38,20 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * RemoteData top-level class.
@@ -72,6 +79,10 @@ public class RemoteData @VisibleForTesting internal constructor(
     private var lastForegroundDispatchTime: Long = 0
     private val changeTokenLock: Lock = ReentrantLock()
 
+    private val refreshStatusFlowMap = providers.associate {
+        it.source to MutableStateFlow(RefreshStatus.NONE)
+    }
+
     internal fun setContactSourceEnabled(enabled: Boolean) {
         val provider = this.providers.firstOrNull {
             it.source == RemoteDataSource.CONTACT
@@ -79,11 +90,12 @@ public class RemoteData @VisibleForTesting internal constructor(
 
         if (provider.isEnabled != enabled) {
             provider.isEnabled = enabled
-            dispatchRefreshJob()
+            dispatchRefreshJobAsync()
         }
     }
 
-    public constructor(
+    @JvmOverloads
+    internal constructor(
         context: Context,
         config: AirshipRuntimeConfig,
         preferenceDataStore: PreferenceDataStore,
@@ -92,6 +104,13 @@ public class RemoteData @VisibleForTesting internal constructor(
         pushManager: PushManager,
         pushProviders: Supplier<PushProviders>,
         contact: Contact,
+        providers: List<RemoteDataProvider> = createProviders(
+            context = context,
+            preferenceDataStore = preferenceDataStore,
+            config = config,
+            pushProviders = pushProviders,
+            contact = contact
+        )
     ) : this(
         context = context,
         preferenceDataStore = preferenceDataStore,
@@ -99,17 +118,12 @@ public class RemoteData @VisibleForTesting internal constructor(
         localeManager = localeManager,
         pushManager = pushManager,
         contact = contact,
-        providers = createProviders(
-            context = context,
-            preferenceDataStore = preferenceDataStore,
-            config = config,
-            pushProviders = pushProviders,
-            contact = contact
-        ),
+        providers = providers,
         appVersion = UAirship.getAppVersion(),
         refreshManager = RemoteDataRefreshManager(
             JobDispatcher.shared(context),
-            privacyManager
+            privacyManager,
+            providers
         )
     )
 
@@ -118,21 +132,29 @@ public class RemoteData @VisibleForTesting internal constructor(
             val now = clock.currentTimeMillis()
             if (now >= lastForegroundDispatchTime + foregroundRefreshInterval) {
                 updateChangeToken()
-                dispatchRefreshJob()
+                dispatchRefreshJobAsync()
                 lastForegroundDispatchTime = now
             }
         }
     }
 
-    private val localeChangedListener = LocaleChangedListener { dispatchRefreshJob() }
+    private val localeChangedListener = LocaleChangedListener { dispatchRefreshJobAsync() }
     private val pushListener = PushListener { message: PushMessage, _ ->
         if (message.isRemoteDataUpdate) {
             updateChangeToken()
-            dispatchRefreshJob()
+            dispatchRefreshJobAsync()
         }
     }
 
-    private val privacyListener = PrivacyManager.Listener { dispatchRefreshJob() }
+    private var isAnyFeatureEnabled = AtomicBoolean(privacyManager.isAnyFeatureEnabled)
+
+    private val privacyListener = PrivacyManager.Listener {
+        val newValue = privacyManager.isAnyFeatureEnabled
+
+        if (!isAnyFeatureEnabled.getAndSet(newValue) && newValue) {
+            dispatchRefreshJobAsync()
+        }
+    }
 
     init {
         activityMonitor.addApplicationListener(applicationListener)
@@ -143,6 +165,17 @@ public class RemoteData @VisibleForTesting internal constructor(
         scope.launch {
             contact.contactIdUpdateFlow.mapNotNull { it?.contactId }.distinctUntilChanged().collect {
                 dispatchRefreshJob()
+            }
+        }
+
+        scope.launch {
+            refreshManager.refreshFlow.collect {
+                val refreshStatus = when (it.second) {
+                    RemoteDataProvider.RefreshResult.SKIPPED -> RefreshStatus.SUCCESS
+                    RemoteDataProvider.RefreshResult.NEW_DATA -> RefreshStatus.SUCCESS
+                    RemoteDataProvider.RefreshResult.FAILED -> RefreshStatus.FAILED
+                }
+                refreshStatusFlowMap[it.first]?.emit(refreshStatus)
             }
         }
 
@@ -167,8 +200,7 @@ public class RemoteData @VisibleForTesting internal constructor(
                 refreshManager.performRefresh(
                     changeToken,
                     localeManager.locale,
-                    randomValue,
-                    providers
+                    randomValue
                 )
             }
         }
@@ -195,13 +227,22 @@ public class RemoteData @VisibleForTesting internal constructor(
             return randomValue
         }
 
-    private fun dispatchRefreshJob() {
+    private fun dispatchRefreshJobAsync() {
+        scope.launch {
+            dispatchRefreshJob()
+        }
+    }
+
+    private suspend fun dispatchRefreshJob() {
+        refreshStatusFlowMap.values.forEach { it.emit(RefreshStatus.NONE) }
         refreshManager.dispatchRefreshJob()
     }
 
-    public fun notifyOutdated(remoteDataInfo: RemoteDataInfo) {
-        providers.firstOrNull { it.source == remoteDataInfo.source }
-            ?.notifyOutdated(remoteDataInfo)
+    public suspend fun notifyOutdated(remoteDataInfo: RemoteDataInfo) {
+        val provider = providers.firstOrNull { it.source == remoteDataInfo.source }
+        if (provider?.notifyOutdated(remoteDataInfo) == true) {
+            dispatchRefreshJob()
+        }
     }
 
     public suspend fun payloads(types: List<String>): List<RemoteDataPayload> {
@@ -246,6 +287,10 @@ public class RemoteData @VisibleForTesting internal constructor(
             .first()
     }
 
+    public fun refreshStatusFlow(source: RemoteDataSource): StateFlow<RefreshStatus> {
+        return refreshStatusFlowMap[source]?.asStateFlow() ?: MutableStateFlow(RefreshStatus.NONE).asStateFlow()
+    }
+
     public fun payloadFlow(type: String): Flow<List<RemoteDataPayload>> {
         return payloadFlow(listOf(type))
     }
@@ -268,7 +313,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onUrlConfigUpdated() {
         updateChangeToken()
-        dispatchRefreshJob()
+        dispatchRefreshJobAsync()
     }
 
     private fun updateChangeToken() {
@@ -295,11 +340,44 @@ public class RemoteData @VisibleForTesting internal constructor(
             ?.isCurrent(localeManager.locale, randomValue) ?: false
     }
 
-    public suspend fun status(source: RemoteDataSource): Status {
+    public fun status(source: RemoteDataSource): Status {
         return providers
             .firstOrNull { it.source == source }
             ?.status(changeToken, localeManager.locale, randomValue)
             ?: Status.OUT_OF_DATE
+    }
+
+    /**
+     * Waits for remote-data `source` to successfully refresh up to the specified `maxTimeMillis`.
+     */
+    public suspend fun waitForRefresh(source: RemoteDataSource, maxTimeMillis: Long? = null) {
+        UALog.v { "Waiting for remote data to refresh successfully $source" }
+        waitForRefresh(source, maxTimeMillis) {
+            it == RefreshStatus.SUCCESS
+        }
+    }
+
+    /**
+     * Waits for remote-data `source` to try to refresh up to the specified `maxTimeMillis`.
+     */
+    public suspend fun waitForRefreshAttempt(source: RemoteDataSource, maxTimeMillis: Long? = null) {
+        UALog.v { "Waiting for remote data to refresh $source" }
+        waitForRefresh(source, maxTimeMillis) {
+            it != RefreshStatus.NONE
+        }
+    }
+
+    private suspend fun waitForRefresh(source: RemoteDataSource, maxTimeMillis: Long?, predicate: suspend (RefreshStatus) -> Boolean) {
+        val flow = refreshStatusFlow(source)
+        val refreshStatus: RefreshStatus = if (maxTimeMillis != null) {
+            withTimeoutOrNull(maxTimeMillis) {
+                flow.firstOrNull(predicate)
+            }
+        } else {
+            flow.firstOrNull(predicate)
+        } ?: flow.value
+
+        UALog.v { "Remote data refresh result: $source status: $refreshStatus" }
     }
 
     public companion object {
@@ -358,5 +436,9 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     public enum class Status {
         UP_TO_DATE, STALE, OUT_OF_DATE
+    }
+
+    public enum class RefreshStatus {
+        NONE, FAILED, SUCCESS
     }
 }

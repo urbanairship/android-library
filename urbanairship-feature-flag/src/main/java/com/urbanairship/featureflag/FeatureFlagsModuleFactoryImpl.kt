@@ -1,8 +1,11 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.featureflag
 
 import android.content.Context
 import com.urbanairship.BuildConfig
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.analytics.Analytics
 import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.featureflag.FeatureFlagsModuleFactory
@@ -15,12 +18,14 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
         context: Context,
         dataStore: PreferenceDataStore,
         remoteData: RemoteData,
+        analytics: Analytics,
         infoProvider: DeviceInfoProvider
     ): Module {
         val manager = FeatureFlagManager(
             context = context,
             dataStore = dataStore,
             remoteData = remoteData,
+            analytics = analytics,
             infoProvider = infoProvider,
             clock = Clock.DEFAULT_CLOCK
         )

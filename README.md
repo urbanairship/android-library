@@ -18,7 +18,7 @@ Airship SDK for Android.
 
 ```
    dependencies {
-     def airshipVersion = "17.0.3"
+     def airshipVersion = "17.3.0"
 
      // FCM push provider
      implementation "com.urbanairship.android:urbanairship-fcm:$airshipVersion"

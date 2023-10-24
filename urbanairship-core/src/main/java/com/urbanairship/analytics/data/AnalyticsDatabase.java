@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.urbanairship.UALog;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.db.RetryingSQLiteOpenHelper;
 import com.urbanairship.json.JsonTypeConverters;
 
 import java.io.File;
@@ -19,6 +20,7 @@ import androidx.room.TypeConverters;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
 
 /**
  * Analytics database.
@@ -114,13 +116,13 @@ public abstract class AnalyticsDatabase extends RoomDatabase {
         // Attempt to migrate an existing analytics db by moving it to the new location. The 1 -> 2
         // migration will handle updating the events schema and records when it runs.
         String path = migrateExistingDbIfExists(context, config);
+        RetryingSQLiteOpenHelper.Factory retryingOpenHelperFactory =
+                new RetryingSQLiteOpenHelper.Factory(new FrameworkSQLiteOpenHelperFactory(), true);
 
         return Room.databaseBuilder(context, AnalyticsDatabase.class, path)
-                   .addMigrations(
-                       MIGRATION_1_2,
-                       MIGRATION_2_3
-                   )
-                   .fallbackToDestructiveMigrationOnDowngrade()
+                   .openHelperFactory(retryingOpenHelperFactory)
+                   .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                   .fallbackToDestructiveMigration()
                    .build();
     }
 

@@ -29,7 +29,6 @@ import androidx.navigation.ui.NavigationUI;
  * Fragment that displays the channel ID.
  */
 public class HomeFragment extends Fragment {
-
     @NonNull
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -47,7 +46,84 @@ public class HomeFragment extends Fragment {
                             });
         });
 
+        bindSportsLiveUpdate(binding);
+        bindSportsLiveUpdateAsync(binding);
+
         return binding.getRoot();
+    }
+
+    public void bindSportsLiveUpdate(@NonNull FragmentHomeBinding binding) {
+        AtomicInteger score1 = new AtomicInteger(0);
+        AtomicInteger score2 = new AtomicInteger(0);
+
+        binding.luStart.setOnClickListener(v -> {
+            score1.set(0);
+            score2.set(0);
+
+            LiveUpdateManager.shared().start(
+                    "sports",
+                    "sports",
+                    JsonMap.newBuilder()
+                           .put("team_one_image", "https://content.sportslogos.net/logos/28/127/full/1458.gif")
+                           .put("team_one_score", score1.getAndIncrement())
+                           .put("team_two_image", "https://content.sportslogos.net/logos/28/116/full/1439.gif")
+                           .put("team_two_score", score2.getAndIncrement())
+                           .build()
+            );
+        });
+
+        binding.luUpdate.setOnClickListener(v -> {
+            LiveUpdateManager.shared().update(
+                    "sports",
+                    JsonMap.newBuilder()
+                           .put("team_one_image", "https://content.sportslogos.net/logos/28/127/full/1458.gif")
+                           .put("team_one_score", score1.getAndIncrement())
+                           .put("team_two_image", "https://content.sportslogos.net/logos/28/116/full/1439.gif")
+                           .put("team_two_score", score2.getAndIncrement())
+                           .build()
+            );
+        });
+
+        binding.luEnd.setOnClickListener(v -> {
+            LiveUpdateManager.shared().end("sports");
+        });
+    }
+
+    public void bindSportsLiveUpdateAsync(@NonNull FragmentHomeBinding binding) {
+        AtomicInteger score1 = new AtomicInteger(0);
+        AtomicInteger score2 = new AtomicInteger(0);
+
+        binding.luAsyncStart.setOnClickListener(v -> {
+            score1.set(0);
+            score2.set(0);
+
+            LiveUpdateManager.shared().start(
+                    "sports-async",
+                    "sports-async",
+                    JsonMap.newBuilder()
+                           .put("team_one_image", "https://content.sportslogos.net/logos/28/127/full/1458.gif")
+                           .put("team_one_score", score1.getAndIncrement())
+                           .put("team_two_image", "https://content.sportslogos.net/logos/28/116/full/1439.gif")
+                           .put("team_two_score", score2.getAndIncrement())
+                           .build()
+            );
+        });
+
+        binding.luAsyncUpdate.setOnClickListener(v -> {
+            LiveUpdateManager.shared().update(
+                    "sports-async",
+                    JsonMap.newBuilder()
+                           .put("team_one_image", "https://content.sportslogos.net/logos/28/116/full/1439.gif")
+                           .put("team_one_score", score1.getAndIncrement())
+                           .put("team_two_image", "https://content.sportslogos.net/logos/28/127/full/1458.gif")
+                           .put("team_two_score", score2.getAndIncrement())
+                           .build()
+            );
+        });
+
+        binding.luAsyncEnd.setOnClickListener(v -> {
+            LiveUpdateManager.shared().end("sports-async");
+        });
     }
 
     @Override

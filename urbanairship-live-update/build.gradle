@@ -11,7 +11,7 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
-        freeCompilerArgs = ["-Xexplicit-api=strict"]
+        freeCompilerArgs = ["-Xexplicit-api=strict", "-Xjvm-default=all-compatibility"]
     }
 }
 

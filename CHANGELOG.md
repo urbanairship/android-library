@@ -2,13 +2,39 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.4.0 October 18, 2023
+Minor release that adds async live update notification handlers.
+
+### Changes
+- Added SuspendLiveUpdateNotificationHandler and CallbackLiveUpdateNotificationHandler
+- Deprecated LiveUpdateNotificationHandler
+
+## Version 17.3.0 September 28, 2023
+Minor release that improves refreshing the feeds for in-app experiences and feature flags, adds a new interaction event for feature flags, and fixes an issue that prevented displaying Live Updates during the initial app launch.
+
+### Changes
+- Improve refresh handling of remote-data for IAX and feature flags.
+- Added new method `trackInteraction(flag)` for Feature Flags.
+- Fixed a Live Update bug that prevented displaying Live Update notifications during the initial app launch.
+
+## Version 17.2.1 September 7, 2023
+Patch release that hardens the Analytics database against potential SQL crashes.
+
+### Changes
+- Hardened Analytics database against potential SQL crashes.
+
+## Version 17.2.0 August 25, 2023
+Minor release that fixes a reporting issue with hold out groups and In-App Messaging. 17.2.0 will be the minimum version required for global hold out groups.
+
+### Changes
+- Fixed reporting issue with hold out groups and In-App Messaging
+
 ## Version 17.1.0 July 31, 2023
 Minor release that adds support for global holdout groups in In-App experiences and support for feature flags.
 
 ### Changes
 - Added new feature flag module `urbanairship-feature-flag`
 - Added support for global holdout groups
-
 
 ## Version 17.0.3, July 12, 2023
 Patch release that fixes a pair of issues with Scenes and Surveys, and adds a new `getPushProviderType()` method on `PushManager`. Apps that make use of Scenes or Surveys should update.
