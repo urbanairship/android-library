@@ -42,6 +42,7 @@ public class TriggerTest {
         typeArray.put(Trigger.SCREEN_VIEW, "screen");
         typeArray.put(Trigger.LIFE_CYCLE_APP_INIT, "app_init");
         typeArray.put(Trigger.ACTIVE_SESSION, "active_session");
+        typeArray.put(Trigger.FEATURE_FLAG_INTERACTED, "feature_flag_interaction");
         typeArray.put(Trigger.VERSION, "version");
 
         for (int i = 0; i < typeArray.size(); i++) {

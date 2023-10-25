@@ -17,6 +17,7 @@ import com.urbanairship.UALog;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.AnalyticsListener;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.analytics.Event;
 import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
@@ -162,6 +163,11 @@ public class AutomationEngine {
             if (eventValue != null) {
                 onEventAdded(customEvent.toJsonValue(), Trigger.CUSTOM_EVENT_VALUE, eventValue.doubleValue());
             }
+        }
+
+        @Override
+        public void onFeatureFlagInteractedEventAdded(@NonNull Event event) {
+            onEventAdded(event.getEventData(), Trigger.FEATURE_FLAG_INTERACTED, 1.00);
         }
 
         @Override
@@ -750,6 +756,7 @@ public class AutomationEngine {
             case Trigger.REGION_EXIT:
             case Trigger.SCREEN_VIEW:
             case Trigger.VERSION:
+            case Trigger.FEATURE_FLAG_INTERACTED:
             default:
                 return Observable.empty();
         }
@@ -776,6 +783,7 @@ public class AutomationEngine {
             case Trigger.REGION_ENTER:
             case Trigger.REGION_EXIT:
             case Trigger.SCREEN_VIEW:
+            case Trigger.FEATURE_FLAG_INTERACTED:
             default:
                 return Observable.empty();
         }

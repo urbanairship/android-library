@@ -144,6 +144,8 @@ public class Analytics extends AirshipComponent {
 
     private static final String ASSOCIATED_IDENTIFIERS_KEY = "com.urbanairship.analytics.ASSOCIATED_IDENTIFIERS";
 
+    private static final String EXTERNAL_EVENT_FEATURE_FLAG_INTERACTED = "feature_flag_interaction";
+
     private final ActivityMonitor activityMonitor;
     private final EventManager eventManager;
     private final ApplicationListener listener;
@@ -640,6 +642,9 @@ public class Analytics extends AirshipComponent {
                     if (event instanceof RegionEvent) {
                         listener.onRegionEventAdded((RegionEvent) event);
                     }
+                    break;
+                case EXTERNAL_EVENT_FEATURE_FLAG_INTERACTED:
+                    listener.onFeatureFlagInteractedEventAdded(event);
                     break;
                 default:
                     break;

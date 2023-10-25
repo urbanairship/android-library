@@ -20,6 +20,7 @@ fun Trigger.triggerTitle(context: Context): String {
         Trigger.LIFE_CYCLE_APP_INIT -> context.getString(R.string.ua_iaa_trigger_lifecycle_app_init)
         Trigger.ACTIVE_SESSION -> context.getString(R.string.ua_iaa_trigger_active_session)
         Trigger.VERSION -> context.getString(R.string.ua_iaa_trigger_version)
+        Trigger.FEATURE_FLAG_INTERACTED -> context.getString(R.string.ua_iaa_trigger_feature_flag_interacted_event_value)
         else -> context.getString(R.string.ua_iaa_trigger_unknown)
     }
 }

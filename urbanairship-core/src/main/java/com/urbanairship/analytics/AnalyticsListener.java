@@ -31,4 +31,11 @@ public interface AnalyticsListener {
      */
     void onRegionEventAdded(@NonNull RegionEvent event);
 
+    /**
+     * Called when a new feature flag interacted event is tracked.
+     *
+     * @param event The custom event.
+     */
+    void onFeatureFlagInteractedEventAdded(@NonNull Event event);
+
 }

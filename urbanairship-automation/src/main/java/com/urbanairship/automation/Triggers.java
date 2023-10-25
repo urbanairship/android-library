@@ -111,6 +111,16 @@ public class Triggers {
     }
 
     /**
+     * Create a new feature flag interacted trigger builder.
+     *
+     * @return The new version trigger builder.
+     */
+    @NonNull
+    public static FeatureFlagEventTriggerBuilder newFeatureFlagInteractedTriggerBuilder() {
+        return new FeatureFlagEventTriggerBuilder();
+    }
+
+    /**
      * Lifecycle trigger Builder class.
      */
     public static class LifeCycleTriggerBuilder {
@@ -413,4 +423,74 @@ public class Triggers {
 
     }
 
+    /**
+     * Feature flag interacted event trigger Builder class.
+     */
+    public static class FeatureFlagEventTriggerBuilder {
+
+        private double goal = 1;
+        private int type = Trigger.FEATURE_FLAG_INTERACTED;
+        private String flagName;
+
+        private FeatureFlagEventTriggerBuilder() {}
+
+        /**
+         * Sets the goal for {@link Trigger#FEATURE_FLAG_INTERACTED} triggers.
+         *
+         * @param goal The trigger goal.
+         * @return The Builder instance.
+         */
+        @NonNull
+        public FeatureFlagEventTriggerBuilder setCountGoal(double goal) {
+            this.type = Trigger.FEATURE_FLAG_INTERACTED;
+            this.goal = goal;
+            return this;
+        }
+
+        /**
+         * Sets the goal for {@link Trigger#FEATURE_FLAG_INTERACTED} triggers.
+         *
+         * @param goal The trigger goal.
+         * @return The Builder instance.
+         */
+        @NonNull
+        public FeatureFlagEventTriggerBuilder setValueGoal(double goal) {
+            this.type = Trigger.FEATURE_FLAG_INTERACTED;
+            this.goal = goal;
+            return this;
+        }
+
+        /**
+         * Sets the feature flag name to trigger off of.
+         *
+         * @param flagName The event name.
+         * @return The Builder instance.
+         */
+        @NonNull
+        public FeatureFlagEventTriggerBuilder setFeatureFlagName(@Nullable String flagName) {
+            this.flagName = flagName;
+            return this;
+        }
+
+        /**
+         * Builds the trigger instance.
+         *
+         * @return The trigger instance.
+         */
+        @NonNull
+        public Trigger build() {
+            if (UAStringUtil.isEmpty(flagName)) {
+                return new Trigger(type, goal, null);
+            }
+
+            JsonPredicate predicate = JsonPredicate.newBuilder()
+                                                   .setPredicateType(JsonPredicate.AND_PREDICATE_TYPE)
+                                                   .addMatcher(JsonMatcher.newBuilder()
+                                                                          .setKey("flag_name")
+                                                                          .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrap(flagName)))
+                                                                          .build())
+                                                   .build();
+            return new Trigger(type, goal, predicate);
+        }
+    }
 }

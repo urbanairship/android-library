@@ -261,6 +261,7 @@
     <string name="ua_iaa_trigger_region_exit">Region Exit Trigger</string>
     <string name="ua_iaa_trigger_custom_event_count">Custom Event Count Trigger</string>
     <string name="ua_iaa_trigger_custom_event_value">Custom Event Value Trigger</string>
+    <string name="ua_iaa_trigger_feature_flag_interacted_event_value">Feature Flag Interacted Event Trigger</string>
     <string name="ua_iaa_trigger_screen_view">Screen View Trigger</string>
     <string name="ua_iaa_trigger_lifecycle_app_init">Lifecycle App Init Trigger</string>
     <string name="ua_iaa_trigger_active_session">Active Session Trigger</string>

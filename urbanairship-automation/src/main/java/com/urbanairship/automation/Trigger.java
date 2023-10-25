@@ -40,10 +40,11 @@ public class Trigger implements Parcelable, JsonSerializable {
     private static final String REGION_EXIT_NAME = "region_exit";
     private static final String ACTIVE_SESSION_NAME = "active_session";
     private static final String VERSION_NAME = "version";
+    private static final String FEATURE_FLAG_INTERACTED_NAME = "feature_flag_interaction";
 
     @IntDef({ LIFE_CYCLE_FOREGROUND, LIFE_CYCLE_BACKGROUND, REGION_ENTER, REGION_EXIT,
             CUSTOM_EVENT_COUNT, CUSTOM_EVENT_VALUE, SCREEN_VIEW, LIFE_CYCLE_APP_INIT,
-            ACTIVE_SESSION, VERSION })
+            ACTIVE_SESSION, VERSION, FEATURE_FLAG_INTERACTED })
     @Retention(RetentionPolicy.SOURCE)
     public @interface TriggerType {}
 
@@ -110,6 +111,12 @@ public class Trigger implements Parcelable, JsonSerializable {
     public static final int VERSION = 10;
 
     /**
+     * Trigger type for feature flag interracted event. The triggers can be create with
+     * {@link Triggers#newFeatureFlagInteractedTriggerBuilder()}
+     */
+    public static final int FEATURE_FLAG_INTERACTED = 11;
+
+    /**
      * @hide
      */
     @NonNull
@@ -173,6 +180,9 @@ public class Trigger implements Parcelable, JsonSerializable {
                 break;
             case VERSION:
                 type = VERSION;
+                break;
+            case FEATURE_FLAG_INTERACTED:
+                type = FEATURE_FLAG_INTERACTED;
                 break;
             default:
                 throw new IllegalStateException("Invalid trigger type from parcel.");
@@ -318,6 +328,9 @@ public class Trigger implements Parcelable, JsonSerializable {
             case VERSION_NAME:
                 return VERSION;
 
+            case FEATURE_FLAG_INTERACTED_NAME:
+                return FEATURE_FLAG_INTERACTED;
+
             default:
                 throw new IllegalArgumentException("Invalid trigger type: " + typeString);
         }
@@ -366,6 +379,9 @@ public class Trigger implements Parcelable, JsonSerializable {
 
             case VERSION:
                 return VERSION_NAME;
+
+            case FEATURE_FLAG_INTERACTED:
+                return FEATURE_FLAG_INTERACTED_NAME;
 
             default:
                 throw new IllegalArgumentException("Invalid trigger type: " + type);
