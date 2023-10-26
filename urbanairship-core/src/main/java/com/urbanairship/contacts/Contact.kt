@@ -133,6 +133,13 @@ public class Contact internal constructor(
     internal val currentContactIdUpdate: ContactIdUpdate?
         get() = contactManager.currentContactIdUpdate
 
+    /**
+     * @hide
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public val lastContactId: String?
+        get() = contactManager.lastContactId
+
     internal suspend fun stableContactId(): String {
         return contactManager.stableContactId()
     }

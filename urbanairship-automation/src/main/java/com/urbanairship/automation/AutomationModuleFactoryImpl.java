@@ -48,11 +48,12 @@ public class AutomationModuleFactoryImpl implements AutomationModuleFactory {
                         @NonNull AudienceOverridesProvider audienceOverridesProvider,
                         @NonNull ExperimentManager experimentManager,
                         @NonNull DeviceInfoProvider infoProvider,
-                        @NonNull AirshipMeteredUsage meteredUsage) {
+                        @NonNull AirshipMeteredUsage meteredUsage,
+                        @NonNull Contact contact) {
 
         InAppAutomation inAppAutomation = new InAppAutomation(context, dataStore, runtimeConfig,
                 privacyManager, analytics, remoteData, airshipChannel, audienceOverridesProvider,
-                experimentManager, infoProvider, meteredUsage);
+                experimentManager, infoProvider, meteredUsage, contact);
         LegacyInAppMessageManager legacyInAppMessageManager = new LegacyInAppMessageManager(context, dataStore, inAppAutomation, analytics, pushManager);
 
         Collection<AirshipComponent> components = Arrays.asList(inAppAutomation, legacyInAppMessageManager);

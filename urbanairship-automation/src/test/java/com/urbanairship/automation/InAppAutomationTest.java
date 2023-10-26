@@ -25,6 +25,7 @@ import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.experiment.MessageInfo;
@@ -124,6 +125,8 @@ public class InAppAutomationTest {
     private Clock mockClock = mock(Clock.class);
     private AirshipMeteredUsage meteredUsage = mock(AirshipMeteredUsage.class);
 
+    private Contact mockContact = mock(Contact.class);
+
     @Before
     public void setup() {
         when(mockRuntimeConfig.getConfigOptions()).thenAnswer((Answer<AirshipConfigOptions>) invocation -> config);
@@ -166,7 +169,7 @@ public class InAppAutomationTest {
                 mockRuntimeConfig, privacyManager, mockEngine, mockChannel, mockObserver, mockIamManager,
                 executor, mockDeferredScheduleClient, mockActionsScheduleDelegate, mockMessageScheduleDelegate,
                 mockFrequencyLimitManager, audienceOverridesProvider, mockExperimentManager, mockInfoProvider,
-                meteredUsage, mockClock, executor);
+                meteredUsage, mockClock, executor, mockContact);
 
         inAppAutomation.init();
         inAppAutomation.onAirshipReady(UAirship.shared());
@@ -994,6 +997,8 @@ public class InAppAutomationTest {
         assertEquals("test-contact-id", captured.getContactId());
     }
 
+
+
     @Test
     public void testExecuteMessageIgnoreMeteredIfNoProductId() {
         InAppMessage message = InAppMessage.newBuilder()
@@ -1020,6 +1025,42 @@ public class InAppAutomationTest {
         driver.onExecuteTriggeredSchedule(schedule, executionCallback);
 
         verify(meteredUsage, never()).addEvent(any());
+    }
+
+    @Test
+    public void testExecuteMessageLastContactId() {
+        when(mockContact.getLastContactId()).thenReturn("last contact id");
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .build();
+
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setBypassHoldoutGroups(true)
+                                                  .setProductId("test-product-id")
+                                                  .build();
+
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
+        when(mockClock.currentTimeMillis()).thenReturn(2L);
+
+        // Prepare schedule
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+        ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
+        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(message), any(), argumentCaptor.capture());
+        argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+
+        AutomationDriver.ExecutionCallback executionCallback = mock(AutomationDriver.ExecutionCallback.class);
+        driver.onExecuteTriggeredSchedule(schedule, executionCallback);
+
+        ArgumentCaptor<MeteredUsageEventEntity> eventCaptor = ArgumentCaptor.forClass(MeteredUsageEventEntity.class);
+        verify(meteredUsage).addEvent(eventCaptor.capture());
+
+        MeteredUsageEventEntity captured = eventCaptor.getValue();
+        assertEquals("test-product-id", captured.getProduct());
+        assertEquals(2L, (long) captured.getTimestamp());
+        assertEquals("last contact id", captured.getContactId());
     }
 
     @Test

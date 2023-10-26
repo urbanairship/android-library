@@ -42,6 +42,7 @@ public interface AutomationModuleFactory extends AirshipVersionInfo {
                  @NonNull AudienceOverridesProvider audienceOverridesProvider,
                  @NonNull ExperimentManager experimentManager,
                  @NonNull DeviceInfoProvider infoProvider,
-                 @NonNull AirshipMeteredUsage meteredUsage);
+                 @NonNull AirshipMeteredUsage meteredUsage,
+                 @NonNull Contact contact);
 
     }

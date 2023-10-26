@@ -53,7 +53,6 @@ public class AirshipMeteredUsageTest {
             context = context,
             dataStore = PreferenceDataStore.inMemoryStore(context),
             config = TestAirshipRuntimeConfig.newTestConfig(),
-            activityMonitor = activityMonitor,
             privacyManager = privacyManager,
             store = eventsStore,
             client = apiClient,
@@ -114,21 +113,9 @@ public class AirshipMeteredUsageTest {
     }
 
     @Test
-    public fun testEventUploadOnAppBackground() {
+    public fun testAddEvent(): TestResult = runTest {
         manager.setConfig(Config(true, 1, 2))
 
-        val slot = slot<JobInfo>()
-        every { mockJobDispatcher.dispatch(capture(slot)) } returns Unit
-
-        activityMonitor.background()
-        assert(slot.isCaptured)
-        assert(!slot.isNull)
-        assertEquals(JobInfo.REPLACE, slot.captured.conflictStrategy)
-        assertEquals(0, slot.captured.minDelayMs)
-    }
-
-    @Test
-    public fun testAddEvent(): TestResult = runTest {
         var events = eventsStore.getAllEvents()
         assert(events.isEmpty())
 
@@ -163,6 +150,28 @@ public class AirshipMeteredUsageTest {
         assertNull(events.first().entityId)
         assertNull(events.first().reportingContext)
         assertNull(events.first().timestamp)
+    }
+
+    @Test
+    public fun testAddEventDisabledConfig(): TestResult = runTest {
+        every { privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS) } returns true
+        manager.setConfig(Config(false, 1, 2))
+
+        val event = MeteredUsageEventEntity(
+            eventId = "event-id",
+            entityId = "entity-id",
+            type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
+            product = "test-product",
+            reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
+            timestamp = 12,
+            contactId = "test-contact-id"
+        )
+
+        manager.addEvent(event)
+        verify(exactly = 0) { manager.scheduleUpload() }
+
+        eventsStore.getAllEvents()
+        assertEquals(0, eventsStore.getAllEvents().size)
     }
 
     @Test

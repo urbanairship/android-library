@@ -34,6 +34,7 @@ import com.urbanairship.automation.limits.FrequencyConstraint;
 import com.urbanairship.automation.limits.FrequencyLimitManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.contacts.Contact;
 import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.experiment.MessageInfo;
@@ -75,6 +76,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     // State
     private final InAppRemoteDataObserver remoteDataSubscriber;
     private final AirshipChannel airshipChannel;
+
+    private final Contact contact;
     private final AutomationEngine automationEngine;
     private final InAppMessageManager inAppMessageManager;
     private final RetryingExecutor retryingExecutor;
@@ -192,7 +195,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                            @NonNull AudienceOverridesProvider audienceOverridesProvider,
                            @NonNull ExperimentManager experimentManager,
                            @NonNull DeviceInfoProvider infoProvider,
-                           @NonNull AirshipMeteredUsage meteredUsage) {
+                           @NonNull AirshipMeteredUsage meteredUsage,
+                           @NonNull Contact contact) {
         super(context, preferenceDataStore);
         this.privacyManager = privacyManager;
         this.automationEngine = new AutomationEngine(context, runtimeConfig, analytics, preferenceDataStore);
@@ -211,6 +215,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.meteredUsage = meteredUsage;
         this.clock = Clock.DEFAULT_CLOCK;
         this.backgroundExecutor = AirshipExecutors.newSerialExecutor();
+        this.contact = contact;
     }
 
     @VisibleForTesting
@@ -232,7 +237,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull DeviceInfoProvider infoProvider,
                     @NonNull AirshipMeteredUsage meteredUsage,
                     @NonNull Clock clock,
-                    @NonNull Executor executor) {
+                    @NonNull Executor executor,
+                    @NonNull Contact contact) {
 
         super(context, preferenceDataStore);
         this.privacyManager = privacyManager;
@@ -252,6 +258,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.meteredUsage = meteredUsage;
         this.clock = clock;
         this.backgroundExecutor = executor;
+        this.contact = contact;
     }
 
     /**
@@ -848,6 +855,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         RemoteDataInfo info = remoteDataSubscriber.parseRemoteDataInfo(schedule);
         String contactId = info == null ? null : info.getContactId();
+        contactId = contactId == null ? contact.getLastContactId() : contactId;
 
         final MeteredUsageEventEntity event = new MeteredUsageEventEntity(
                 UUID.randomUUID().toString(), schedule.getId(), MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,

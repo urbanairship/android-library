@@ -758,8 +758,7 @@ public class UAirship {
         this.remoteData = new RemoteData(application, runtimeConfig, preferenceDataStore, privacyManager, localeManager,  pushManager, pushProviders, contact);
         components.add(this.remoteData);
 
-        this.meteredUsageManager = new AirshipMeteredUsage(application, preferenceDataStore, runtimeConfig,
-                GlobalActivityMonitor.shared(application), privacyManager);
+        this.meteredUsageManager = new AirshipMeteredUsage(application, preferenceDataStore, runtimeConfig, privacyManager);
         components.add(this.meteredUsageManager);
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore,
@@ -798,7 +797,7 @@ public class UAirship {
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
                 privacyManager, channel, pushManager, analytics, remoteData, audienceOverridesProvider,
-                this.experimentManager, infoProvider, meteredUsageManager);
+                this.experimentManager, infoProvider, meteredUsageManager, contact);
         processModule(automationModule);
 
         // Ad Id

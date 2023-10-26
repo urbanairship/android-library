@@ -63,14 +63,15 @@ public class MeteredUsageApiClientTest {
         client.uploadEvents(events, channelId)
 
         val request = requestSession.lastRequest
-        assertEquals("https://test.metered.usage/metered_usage", request.url.toString())
+        assertEquals("https://test.metered.usage/api/metered-usage", request.url.toString())
         assertEquals("POST", request.method)
         assertEquals(RequestAuth.GeneratedAppToken, request.auth)
         assertEquals(mapOf(
             "X-UA-Lib-Version" to UAirship.getVersion(),
             "X-UA-Device-Family" to "android",
             "Content-Type" to "application/json",
-            "X-UA-Channel-ID" to channelId
+            "X-UA-Channel-ID" to channelId,
+            "Accept" to "application/vnd.urbanairship+json; version=3;"
         ), request.headers)
 
         assertEquals(jsonMapOf(

@@ -11,8 +11,6 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UAirship
 import com.urbanairship.annotation.OpenForTesting
-import com.urbanairship.app.ActivityMonitor
-import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.RequestResult
 import com.urbanairship.job.JobDispatcher
@@ -33,7 +31,6 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     config: AirshipRuntimeConfig,
-    activityMonitor: ActivityMonitor,
     private val privacyManager: PrivacyManager,
     private val store: EventsDao = EventsDatabase.persistent(context).eventsDao(),
     private val client: MeteredUsageApiClient = MeteredUsageApiClient(config),
@@ -46,14 +43,6 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
     }
 
     private val config: AtomicReference<Config> = AtomicReference(Config.default())
-
-    init {
-        activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onBackground(milliseconds: Long) {
-                scheduleUpload(conflictStrategy = JobInfo.REPLACE)
-            }
-        })
-    }
 
     internal fun setConfig(config: Config) {
         val old = this.config.getAndSet(config)
@@ -87,6 +76,10 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
 
     @WorkerThread
     public fun addEvent(event: MeteredUsageEventEntity) {
+        if (!config.get().isEnabled) {
+            return
+        }
+
         val eventToStore = when (privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
             true -> event
             false -> event.withAnalyticsDisabled()
