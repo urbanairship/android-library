@@ -8,6 +8,7 @@ import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.util.DateUtils
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -80,8 +81,8 @@ public class MeteredUsageApiClientTest {
                     "product" to "product1",
                     "event_id" to "event1",
                     "reporting_context" to jsonMapOf("test" to "context"),
-                    "occurred" to 1,
-                    "type" to "iax_impression",
+                    "occurred" to DateUtils.createIso8601TimeStamp(1),
+                    "usage_type" to "iax_impression",
                     "entity_id" to "entity1",
                     "contact_id" to "test-contact-id"
                 ),
@@ -89,15 +90,15 @@ public class MeteredUsageApiClientTest {
                     "product" to "product2",
                     "event_id" to "event2",
                     "reporting_context" to jsonMapOf("test2" to "context2"),
-                    "occurred" to 11,
-                    "type" to "iax_impression",
+                    "occurred" to DateUtils.createIso8601TimeStamp(11),
+                    "usage_type" to "iax_impression",
                     "entity_id" to "entity2",
                     "contact_id" to "test-contact-id"
                 ),
                 jsonMapOf(
                     "product" to "product3",
                     "event_id" to "event3",
-                    "type" to "iax_impression",
+                    "usage_type" to "iax_impression",
                 ),
             )
         ).toString(), request.body?.content)

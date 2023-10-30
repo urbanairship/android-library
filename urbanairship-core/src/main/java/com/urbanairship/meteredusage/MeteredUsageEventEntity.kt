@@ -11,6 +11,7 @@ import androidx.room.TypeConverters
 import com.urbanairship.json.JsonTypeConverters
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.util.DateUtils
 
 /**
  * Entities stored in the metered usage database.\
@@ -44,10 +45,10 @@ public data class MeteredUsageEventEntity(
     internal fun toJson(): JsonValue {
         return jsonMapOf(
             "event_id" to eventId,
-            "type" to type.value,
+            "usage_type" to type.value,
             "product" to product,
             "reporting_context" to reportingContext,
-            "occurred" to timestamp,
+            "occurred" to timestamp?.let { DateUtils.createIso8601TimeStamp(it) },
             "entity_id" to entityId,
             "contact_id" to contactId
         ).toJsonValue()
