@@ -19,7 +19,7 @@ internal fun ImageView.loadImage(url: String, options: ImageRequestOptions.Build
 }
 
 internal fun ImageView.loadImageOrHide(url: String?, options: ImageRequestOptions.Builder.() -> Unit = {}) {
-    if (url != null) {
+    if (!url.isNullOrBlank()) {
         this.visibility = View.VISIBLE
         this.loadImage(url, options)
     } else {
