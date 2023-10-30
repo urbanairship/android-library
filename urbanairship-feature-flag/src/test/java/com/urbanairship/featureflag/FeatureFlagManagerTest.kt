@@ -67,6 +67,7 @@ class FeatureFlagManagerTest {
         every { infoProvider.channelId } answers { channelId }
         coEvery { infoProvider.getStableContactId() } answers { contactId }
         every { infoProvider.appVersion } returns 1
+        every { infoProvider.userCutOffDate(context) } returns 1
     }
 
     @Test

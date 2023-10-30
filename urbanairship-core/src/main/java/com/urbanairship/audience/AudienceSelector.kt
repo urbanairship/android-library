@@ -535,7 +535,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         if (!checkPermissions(permissions)) { return false }
         if (!checkLocationOptInStatus(permissions)) { return false }
         if (!checkVersion(infoProvider)) { return false }
-        if (!checkNewUser(infoProvider, newEvaluationDate)) { return false }
+        if (!checkNewUser(context, infoProvider, newEvaluationDate)) { return false }
         if (!checkHash(infoProvider, contactId)) { return false }
 
         return true
@@ -640,10 +640,10 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         return required.apply(version)
     }
 
-    private fun checkNewUser(infoProvider: DeviceInfoProvider, cutOffDate: Long): Boolean {
+    private fun checkNewUser(context: Context, infoProvider: DeviceInfoProvider, cutOffDate: Long): Boolean {
         val required = newUser ?: return true
 
-        return required == (infoProvider.appVersion >= cutOffDate)
+        return required == (infoProvider.userCutOffDate(context) >= cutOffDate)
     }
 
     private suspend fun checkHash(infoProvider: DeviceInfoProvider, contactId: String?): Boolean {
