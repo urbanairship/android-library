@@ -7,13 +7,13 @@ import com.urbanairship.json.optionalField
 
 internal data class Config(
     val isEnabled: Boolean,
-    val initialDelay: Long, // milliseconds
-    val interval: Long // milliseconds
+    val initialDelayMs: Long, // milliseconds
+    val intervalMs: Long // milliseconds
 ) {
     companion object {
-        private const val KEY_ENABLED = "isEnabled"
-        private const val KEY_INITIAL_DELAY = "initialDelay"
-        private const val KEY_INTERVAL = "interval"
+        private const val KEY_ENABLED = "enabled"
+        private const val KEY_INITIAL_DELAY = "initial_delay_ms"
+        private const val KEY_INTERVAL = "interval_ms"
 
         private const val DEFAULT_INITIAL_DELAY = 15L
         private const val DEFAULT_INTERVAL = 30L
@@ -21,8 +21,8 @@ internal data class Config(
         fun fromJson(json: JsonMap): Config {
             return Config(
                 isEnabled = json.optionalField(KEY_ENABLED) ?: false,
-                initialDelay = json.optionalField(KEY_INITIAL_DELAY) ?: DEFAULT_INITIAL_DELAY,
-                interval = json.optionalField(KEY_INTERVAL) ?: DEFAULT_INTERVAL
+                initialDelayMs = json.optionalField(KEY_INITIAL_DELAY) ?: DEFAULT_INITIAL_DELAY,
+                intervalMs = json.optionalField(KEY_INTERVAL) ?: DEFAULT_INTERVAL
             )
         }
 

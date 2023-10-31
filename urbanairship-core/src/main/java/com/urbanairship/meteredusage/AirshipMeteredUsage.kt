@@ -48,10 +48,10 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
         val old = this.config.getAndSet(config)
         if (old == config) { return }
 
-        jobDispatcher.setRateLimit(RATE_LIMIT_ID, 1, config.interval, TimeUnit.MILLISECONDS)
+        jobDispatcher.setRateLimit(RATE_LIMIT_ID, 1, config.intervalMs, TimeUnit.MILLISECONDS)
 
         if (!old.isEnabled && config.isEnabled) {
-            scheduleUpload(delay = config.initialDelay)
+            scheduleUpload(delay = config.initialDelayMs)
         }
     }
 

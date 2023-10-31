@@ -105,9 +105,9 @@ public class RemoteConfigManagerTest : BaseTestCase() {
 
         val json = jsonMapOf(
             "metered_usage" to jsonMapOf(
-                "isEnabled" to true,
-                "initialDelay" to 22L,
-                "interval" to 12L
+                "enabled" to true,
+                "initial_delay_ms" to 22L,
+                "interval_ms" to 12L
             )
         )
 

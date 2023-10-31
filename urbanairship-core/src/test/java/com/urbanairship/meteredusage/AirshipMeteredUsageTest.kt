@@ -71,18 +71,18 @@ public class AirshipMeteredUsageTest {
         val configWithRateLimit = Config(false, 0, 10)
         manager.setConfig(configWithRateLimit)
         verify { mockJobDispatcher.setRateLimit("MeteredUsage.rateLimit", 1,
-            configWithRateLimit.interval, TimeUnit.MILLISECONDS) }
+            configWithRateLimit.intervalMs, TimeUnit.MILLISECONDS) }
 
         val enabledConfig = Config(true, 15, 30)
         manager.setConfig(enabledConfig)
         verify { mockJobDispatcher.setRateLimit("MeteredUsage.rateLimit", 1,
-            enabledConfig.interval, TimeUnit.MILLISECONDS) }
-        verify { manager.scheduleUpload(enabledConfig.initialDelay) }
+            enabledConfig.intervalMs, TimeUnit.MILLISECONDS) }
+        verify { manager.scheduleUpload(enabledConfig.initialDelayMs) }
 
         val anotherEnabledConfig = Config(true, 10, 20)
         manager.setConfig(anotherEnabledConfig)
         verify { mockJobDispatcher.setRateLimit("MeteredUsage.rateLimit", 1,
-            anotherEnabledConfig.interval, TimeUnit.MILLISECONDS) }
+            anotherEnabledConfig.intervalMs, TimeUnit.MILLISECONDS) }
         verify(exactly = 0) { manager.scheduleUpload() }
     }
 
