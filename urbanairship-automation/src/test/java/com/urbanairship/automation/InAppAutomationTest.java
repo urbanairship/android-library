@@ -10,14 +10,15 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestRequestSession;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.automation.deferred.AutomationDeferredResult;
 import com.urbanairship.automation.deferred.Deferred;
-import com.urbanairship.automation.deferred.DeferredScheduleClient;
 import com.urbanairship.automation.limits.FrequencyChecker;
 import com.urbanairship.automation.limits.FrequencyConstraint;
 import com.urbanairship.automation.limits.FrequencyLimitManager;
@@ -26,6 +27,10 @@ import com.urbanairship.channel.AttributeMutation;
 import com.urbanairship.channel.TagGroupsMutation;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.contacts.Contact;
+import com.urbanairship.deferred.DeferredRequest;
+import com.urbanairship.deferred.DeferredResolver;
+import com.urbanairship.deferred.DeferredResult;
+import com.urbanairship.deferred.DeferredTriggerContext;
 import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.experiment.MessageInfo;
@@ -36,6 +41,7 @@ import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.custom.CustomDisplayContent;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
 import com.urbanairship.meteredusage.MeteredUsageEventEntity;
 import com.urbanairship.remotedata.RemoteDataInfo;
@@ -58,6 +64,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -108,7 +115,6 @@ public class InAppAutomationTest {
     private InAppRemoteDataObserver mockObserver;
     private InAppMessageManager mockIamManager;
     private AirshipChannel mockChannel;
-    private DeferredScheduleClient mockDeferredScheduleClient;
     private InAppMessageScheduleDelegate mockMessageScheduleDelegate;
     private ActionsScheduleDelegate mockActionsScheduleDelegate;
     private FrequencyLimitManager mockFrequencyLimitManager;
@@ -127,6 +133,9 @@ public class InAppAutomationTest {
 
     private Contact mockContact = mock(Contact.class);
 
+    private DeferredResolver deferredResolver;
+    private LocaleManager localeManager;
+
     @Before
     public void setup() {
         when(mockRuntimeConfig.getConfigOptions()).thenAnswer((Answer<AirshipConfigOptions>) invocation -> config);
@@ -134,8 +143,11 @@ public class InAppAutomationTest {
         mockIamManager = mock(InAppMessageManager.class);
         mockObserver = mock(InAppRemoteDataObserver.class);
         mockEngine = mock(AutomationEngine.class);
-        mockDeferredScheduleClient = mock(DeferredScheduleClient.class);
+        deferredResolver = mock(DeferredResolver.class);
         mockExperimentManager = mock(ExperimentManager.class);
+        localeManager = mock(LocaleManager.class);
+
+        when(localeManager.getLocale()).thenReturn(new Locale("test-language", "test-country"));
 
         doAnswer(new Answer<Void>() {
             @Override
@@ -167,9 +179,9 @@ public class InAppAutomationTest {
 
         inAppAutomation = new InAppAutomation(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
                 mockRuntimeConfig, privacyManager, mockEngine, mockChannel, mockObserver, mockIamManager,
-                executor, mockDeferredScheduleClient, mockActionsScheduleDelegate, mockMessageScheduleDelegate,
+                executor, mockActionsScheduleDelegate, mockMessageScheduleDelegate,
                 mockFrequencyLimitManager, audienceOverridesProvider, mockExperimentManager, mockInfoProvider,
-                meteredUsage, mockClock, executor, mockContact);
+                meteredUsage, mockClock, executor, mockContact, deferredResolver, localeManager);
 
         inAppAutomation.init();
         inAppAutomation.onAirshipReady(UAirship.shared());
@@ -363,8 +375,18 @@ public class InAppAutomationTest {
 
         audienceOverridesProvider.recordChannelUpdate("some channel", tagOverrides, attributeOverrides, null);
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", triggerContext, tagOverrides, attributeOverrides))
-                .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, message)));
+        DeferredTriggerContext deferredTriggerContext = new DeferredTriggerContext(triggerContext.getTrigger().getTriggerName(),
+                triggerContext.getTrigger().getGoal(), triggerContext.getEvent());
+
+        DeferredRequest request = new DeferredRequest(Uri.parse("https://neat"), "some channel",
+                null, deferredTriggerContext, localeManager.getLocale(), false);
+
+        doAnswer(invocation -> {
+            AutomationDeferredResult automationDeferredResult = new AutomationDeferredResult(true, message);
+            PendingResult<DeferredResult<Object>> deferredResultPendingResult = new PendingResult<>();
+            deferredResultPendingResult.setResult(new DeferredResult.Success<>(automationDeferredResult));
+            return deferredResultPendingResult;
+        }).when(deferredResolver).resolveAsPendingResult(eq(request), any());
 
         when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
         when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
@@ -403,8 +425,13 @@ public class InAppAutomationTest {
                                                                                                    .build())
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", triggerContext, null, null))
-                .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(false, null)));
+        doAnswer(invocation -> {
+            AutomationDeferredResult automationDeferredResult = new AutomationDeferredResult(false, null);
+            PendingResult<DeferredResult<Object>> deferredResultPendingResult = new PendingResult<>();
+            deferredResultPendingResult.setResult(new DeferredResult.Success<>(automationDeferredResult));
+            return deferredResultPendingResult;
+        }).when(deferredResolver).resolveAsPendingResult(any(), any());
+
         when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
         when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
@@ -491,9 +518,12 @@ public class InAppAutomationTest {
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .setBypassHoldoutGroups(true)
                                                             .build();
-
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
-                .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
+        doAnswer(invocation -> {
+            AutomationDeferredResult automationDeferredResult = new AutomationDeferredResult(true, null);
+            PendingResult<DeferredResult<Object>> deferredResultPendingResult = new PendingResult<>();
+            deferredResultPendingResult.setResult(new DeferredResult.Success<>(automationDeferredResult));
+            return deferredResultPendingResult;
+        }).when(deferredResolver).resolveAsPendingResult(any(), any());
 
         when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
         when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
@@ -537,9 +567,11 @@ public class InAppAutomationTest {
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .setBypassHoldoutGroups(true)
                                                             .build();
-
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
-                .thenReturn(new Response<>(400, null));
+        doAnswer(invocation -> {
+            PendingResult<DeferredResult<Object>> deferredResultPendingResult = new PendingResult<>();
+            deferredResultPendingResult.setResult(new DeferredResult.RetriableError<>());
+            return deferredResultPendingResult;
+        }).when(deferredResolver).resolveAsPendingResult(any(), any());
 
         when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
         when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
@@ -548,9 +580,13 @@ public class InAppAutomationTest {
         driver.onPrepareSchedule(schedule, null, callback);
 
         verifyNoInteractions(callback);
+        doAnswer(invocation -> {
+            AutomationDeferredResult automationDeferredResult = new AutomationDeferredResult(true, null);
+            PendingResult<DeferredResult<Object>> deferredResultPendingResult = new PendingResult<>();
+            deferredResultPendingResult.setResult(new DeferredResult.Success<>(automationDeferredResult));
+            return deferredResultPendingResult;
+        }).when(deferredResolver).resolveAsPendingResult(any(), any());
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
-                .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
         runLooperTasks();
 
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
@@ -566,9 +602,18 @@ public class InAppAutomationTest {
                                                             .setBypassHoldoutGroups(true)
                                                             .build();
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
-                .thenThrow(new RequestException("neat"))
-                .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
+        doAnswer(invocation -> {
+            PendingResult<DeferredResult<Object>> deferredResultPendingResult = new PendingResult<>();
+            deferredResultPendingResult.setResult(new DeferredResult.TimedOut<>());
+            return deferredResultPendingResult;
+        })
+        .doAnswer(invocation -> {
+            AutomationDeferredResult automationDeferredResult = new AutomationDeferredResult(true, null);
+            PendingResult<DeferredResult<Object>> deferredResultPendingResult = new PendingResult<>();
+            deferredResultPendingResult.setResult(new DeferredResult.Success<>(automationDeferredResult));
+            return deferredResultPendingResult;
+        })
+        .when(deferredResolver).resolveAsPendingResult(any(), any());
 
         when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
         when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
@@ -594,8 +639,11 @@ public class InAppAutomationTest {
         when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
         when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
-                .thenThrow(new RequestException("neat"));
+        doAnswer(invocation -> {
+            PendingResult<DeferredResult<Object>> deferredResultPendingResult = new PendingResult<>();
+            deferredResultPendingResult.setResult(new DeferredResult.TimedOut<>());
+            return deferredResultPendingResult;
+        }).when(deferredResolver).resolveAsPendingResult(any(), any());
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
         driver.onPrepareSchedule(schedule, null, callback);
@@ -627,10 +675,11 @@ public class InAppAutomationTest {
                                                             .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
                                                             .setBypassHoldoutGroups(true)
                                                             .build();
-
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
-                .thenReturn(new Response<>(409, null));
-
+        doAnswer(invocation -> {
+            PendingResult<DeferredResult<Object>> deferredResultPendingResult = new PendingResult<>();
+            deferredResultPendingResult.setResult(new DeferredResult.OutOfDate<>());
+            return deferredResultPendingResult;
+        }).when(deferredResolver).resolveAsPendingResult(any(), any());
 
         when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
         when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
@@ -642,126 +691,6 @@ public class InAppAutomationTest {
 
         verify(mockObserver).notifyOutdated(any());
         verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
-        verifyNoMoreInteractions(callback);
-    }
-
-    @Test
-    public void testPrepareDeferredSchedule429StatusCode() throws RequestException {
-        when(mockChannel.getId()).thenReturn("some channel");
-
-        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
-        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
-                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
-                                                            .setBypassHoldoutGroups(true)
-                                                            .build();
-
-        Map<String, String> headers = new HashMap<String, String>() {{
-            put("Location", "https://fakeLocation.com");
-            put("Retry-After", "60");
-        }};
-
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
-                .thenReturn(new Response<>(429, null, null, headers));
-
-        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
-        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
-        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        driver.onPrepareSchedule(schedule, null, callback);
-
-        verifyNoInteractions(callback);
-
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://fakeLocation.com"), "some channel", null, null, null))
-                .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
-
-        runLooperTasks();
-
-        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
-        verifyNoMoreInteractions(callback);
-    }
-
-    @Test
-    public void testPrepareDeferredSchedule429StatusCodeNoLocationNoRetryTime() throws RequestException {
-        when(mockChannel.getId()).thenReturn("some channel");
-
-        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
-        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
-                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
-                                                            .setBypassHoldoutGroups(true)
-                                                            .build();
-
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
-                .thenReturn(new Response<>(429, null))
-                .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
-
-        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
-        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
-        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        driver.onPrepareSchedule(schedule, null, callback);
-
-        runLooperTasks();
-
-        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
-        verifyNoMoreInteractions(callback);
-    }
-
-    @Test
-    public void testPrepareDeferredSchedule307StatusCode() throws RequestException {
-        when(mockChannel.getId()).thenReturn("some channel");
-
-        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
-        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
-                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
-                                                            .setBypassHoldoutGroups(true)
-                                                            .build();
-
-        Map<String, String> headers = new HashMap<String, String>() {{
-            put("Location", "https://fakeLocation.com");
-            put("Retry-After", "60");
-        }};
-
-        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
-        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
-
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
-                .thenReturn(new Response<>(307, null, null, headers));
-
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://fakeLocation.com"), "some channel", null, null, null))
-                .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
-
-        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        driver.onPrepareSchedule(schedule, null, callback);
-
-        verifyNoInteractions(callback);
-
-        runLooperTasks();
-
-        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
-        verifyNoMoreInteractions(callback);
-    }
-
-    @Test
-    public void testPrepareDeferredSchedule307StatusCodeNoLocationNoRetryTime() throws RequestException {
-        when(mockChannel.getId()).thenReturn("some channel");
-
-        Deferred deferredScheduleData = new Deferred(Uri.parse("https://neat"), false, Deferred.TYPE_IN_APP_MESSAGE);
-        Schedule<? extends ScheduleData> schedule = Schedule.newBuilder(deferredScheduleData)
-                                                            .addTrigger(Triggers.newCustomEventTriggerBuilder().build())
-                                                            .setBypassHoldoutGroups(true)
-                                                            .build();
-
-        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
-        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
-
-        when(mockDeferredScheduleClient.performRequest(Uri.parse("https://neat"), "some channel", null, null, null))
-                .thenReturn(new Response<>(307, null))
-                .thenReturn(new Response<>(200, new DeferredScheduleClient.Result(true, null)));
-
-        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        driver.onPrepareSchedule(schedule, null, callback);
-
-        runLooperTasks();
-
-        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
         verifyNoMoreInteractions(callback);
     }
 

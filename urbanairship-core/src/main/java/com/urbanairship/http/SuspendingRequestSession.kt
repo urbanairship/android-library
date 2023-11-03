@@ -2,12 +2,18 @@
 
 package com.urbanairship.http
 
+import android.net.Uri
 import android.util.Log
 import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
+import com.urbanairship.util.Clock
+import com.urbanairship.util.DateUtils
 import com.urbanairship.util.UAHttpStatusUtil
+import java.text.ParseException
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.withContext
 
 /**
@@ -95,6 +101,51 @@ public data class RequestResult<T>(
 
     public val isTooManyRequestsError: Boolean
         get() = status != null && status == 429
+
+    /**
+     * Returns the location header if set.
+     *
+     * @return The location header if set, otherwise null.
+     */
+    public val locationHeader: Uri?
+        get() {
+            val location = headers?.get("Location") ?: return null
+            return try {
+                Uri.parse(location)
+            } catch (e: Exception) {
+                UALog.e("Failed to parse location header.")
+                null
+            }
+        }
+
+    /**
+     * Returns the retry-after header if set.
+     *
+     * @param timeUnit The resulting time unit.
+     * @param defaultValue The default value.
+     * @return The retry-after in the time unit if set, otherwise the defaultValue.
+     */
+    public fun getRetryAfterHeader(timeUnit: TimeUnit, defaultValue: Long): Long {
+        return getRetryAfterHeader(timeUnit, defaultValue, Clock.DEFAULT_CLOCK)
+    }
+
+    @VisibleForTesting
+    public fun getRetryAfterHeader(timeUnit: TimeUnit, defaultValue: Long, clock: Clock): Long {
+        val retryAfter = headers?.get("Retry-After") ?: return defaultValue
+        try {
+            val retryDate = DateUtils.parseIso8601(retryAfter)
+            val milliseconds = retryDate - clock.currentTimeMillis()
+            return timeUnit.convert(milliseconds, TimeUnit.MILLISECONDS)
+        } catch (ignored: ParseException) {
+        }
+        try {
+            val seconds = retryAfter.toLong()
+            return timeUnit.convert(seconds, TimeUnit.SECONDS)
+        } catch (ignored: Exception) {
+        }
+        UALog.e("Invalid RetryAfter header %s", retryAfter)
+        return defaultValue
+    }
 }
 
 /**

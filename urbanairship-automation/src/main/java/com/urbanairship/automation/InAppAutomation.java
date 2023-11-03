@@ -7,42 +7,37 @@ import android.net.Uri;
 import android.os.Looper;
 import android.text.TextUtils;
 
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.UALog;
 import com.urbanairship.PendingResult;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.audience.AudienceOverrides;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.automation.actions.Actions;
+import com.urbanairship.automation.deferred.AutomationDeferredResult;
 import com.urbanairship.automation.deferred.Deferred;
-import com.urbanairship.automation.deferred.DeferredScheduleClient;
 import com.urbanairship.automation.limits.FrequencyChecker;
 import com.urbanairship.automation.limits.FrequencyConstraint;
 import com.urbanairship.automation.limits.FrequencyLimitManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.contacts.Contact;
+import com.urbanairship.deferred.DeferredRequest;
+import com.urbanairship.deferred.DeferredResolver;
+import com.urbanairship.deferred.DeferredResult;
 import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.experiment.MessageInfo;
-import com.urbanairship.http.RequestException;
-import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
+import com.urbanairship.json.JsonValue;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
 import com.urbanairship.meteredusage.MeteredUsageEventEntity;
 import com.urbanairship.meteredusage.MeteredUsageType;
@@ -60,8 +55,14 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * In-app automation.
@@ -81,11 +82,12 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private final AutomationEngine automationEngine;
     private final InAppMessageManager inAppMessageManager;
     private final RetryingExecutor retryingExecutor;
-    private final DeferredScheduleClient deferredScheduleClient;
     private final FrequencyLimitManager frequencyLimitManager;
     private final PrivacyManager privacyManager;
 
     private final AirshipMeteredUsage meteredUsage;
+    private final DeferredResolver deferredResolver;
+    private final LocaleManager localeManager;
 
     private final ActionsScheduleDelegate actionScheduleDelegate;
     private final InAppMessageScheduleDelegate inAppMessageScheduleDelegate;
@@ -100,7 +102,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
     private Cancelable subscription;
 
-    private final AudienceOverridesProvider audienceOverridesProvider;
     private final ExperimentManager experimentManager;
     private final DeviceInfoProvider infoProvider;
 
@@ -179,9 +180,12 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      * @param analytics Analytics instance.
      * @param remoteData Remote data.
      * @param airshipChannel The airship channel.
-     * @param audienceOverridesProvider The audience overrides provider.
      * @param experimentManager The experiment manager instance.
      * @param infoProvider The device info provider.
+     * @param meteredUsage The metered usage tracker.
+     * @param contact The current contact.
+     * @param deferredResolver The shared deferred resolver.
+     * @param localeManager The airship locale manager.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -192,11 +196,12 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                            @NonNull Analytics analytics,
                            @NonNull RemoteData remoteData,
                            @NonNull AirshipChannel airshipChannel,
-                           @NonNull AudienceOverridesProvider audienceOverridesProvider,
                            @NonNull ExperimentManager experimentManager,
                            @NonNull DeviceInfoProvider infoProvider,
                            @NonNull AirshipMeteredUsage meteredUsage,
-                           @NonNull Contact contact) {
+                           @NonNull Contact contact,
+                           @NonNull DeferredResolver deferredResolver,
+                           @NonNull LocaleManager localeManager) {
         super(context, preferenceDataStore);
         this.privacyManager = privacyManager;
         this.automationEngine = new AutomationEngine(context, runtimeConfig, analytics, preferenceDataStore);
@@ -204,11 +209,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.remoteDataSubscriber = new InAppRemoteDataObserver(context, preferenceDataStore, remoteData);
         this.inAppMessageManager = new InAppMessageManager(context, preferenceDataStore, analytics, automationEngine::checkPendingSchedules);
         this.retryingExecutor = RetryingExecutor.newSerialExecutor(Looper.getMainLooper());
-        this.deferredScheduleClient = new DeferredScheduleClient(runtimeConfig);
         this.actionScheduleDelegate = new ActionsScheduleDelegate();
         this.inAppMessageScheduleDelegate = new InAppMessageScheduleDelegate(inAppMessageManager);
         this.frequencyLimitManager = new FrequencyLimitManager(context, runtimeConfig);
-        this.audienceOverridesProvider = audienceOverridesProvider;
         this.config = runtimeConfig;
         this.experimentManager = experimentManager;
         this.infoProvider = infoProvider;
@@ -216,6 +219,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.clock = Clock.DEFAULT_CLOCK;
         this.backgroundExecutor = AirshipExecutors.newSerialExecutor();
         this.contact = contact;
+        this.deferredResolver = deferredResolver;
+        this.localeManager = localeManager;
     }
 
     @VisibleForTesting
@@ -228,7 +233,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull InAppRemoteDataObserver observer,
                     @NonNull InAppMessageManager inAppMessageManager,
                     @NonNull RetryingExecutor retryingExecutor,
-                    @NonNull DeferredScheduleClient deferredScheduleClient,
                     @NonNull ActionsScheduleDelegate actionsScheduleDelegate,
                     @NonNull InAppMessageScheduleDelegate inAppMessageScheduleDelegate,
                     @NonNull FrequencyLimitManager frequencyLimitManager,
@@ -238,7 +242,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull AirshipMeteredUsage meteredUsage,
                     @NonNull Clock clock,
                     @NonNull Executor executor,
-                    @NonNull Contact contact) {
+                    @NonNull Contact contact,
+                    @NonNull DeferredResolver deferredResolver,
+                    @NonNull LocaleManager localeManager) {
 
         super(context, preferenceDataStore);
         this.privacyManager = privacyManager;
@@ -247,11 +253,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.remoteDataSubscriber = observer;
         this.inAppMessageManager = inAppMessageManager;
         this.retryingExecutor = retryingExecutor;
-        this.deferredScheduleClient = deferredScheduleClient;
         this.actionScheduleDelegate = actionsScheduleDelegate;
         this.inAppMessageScheduleDelegate = inAppMessageScheduleDelegate;
         this.frequencyLimitManager = frequencyLimitManager;
-        this.audienceOverridesProvider = audienceOverridesProvider;
         this.config = runtimeConfig;
         this.experimentManager = experimentManager;
         this.infoProvider = infoProvider;
@@ -259,6 +263,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.clock = clock;
         this.backgroundExecutor = executor;
         this.contact = contact;
+        this.deferredResolver = deferredResolver;
+        this.localeManager = localeManager;
     }
 
     /**
@@ -716,80 +722,82 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                                                     final @Nullable ExperimentResult experimentResult,
                                                     final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
 
-        Deferred deferredScheduleData = schedule.coerceType();
-        Response<DeferredScheduleClient.Result> response;
-
         String channelId = airshipChannel.getId();
         if (channelId == null) {
             return RetryingExecutor.retryResult();
         }
 
-        Uri url = redirectURLs.containsKey(schedule.getId()) ? redirectURLs.get(schedule.getId()) : deferredScheduleData.getUrl();
-
-        AudienceOverrides.Channel channelOverrides = audienceOverridesProvider.channelOverridesSync(channelId);
+        Deferred scheduleData = schedule.coerceType();
+        DeferredResult<AutomationDeferredResult> result;
 
         try {
-            response = deferredScheduleClient.performRequest(url,
-                    channelId, triggerContext, channelOverrides.getTags(),
-                    channelOverrides.getAttributes());
-        } catch (RequestException e) {
-            if (deferredScheduleData.getRetryOnTimeout()) {
-                UALog.d(e, "Failed to resolve deferred schedule, will retry. Schedule: %s", schedule.getId());
+            DeferredRequest request = makeDeferredRequest(scheduleData, channelId, triggerContext);
+            result = deferredResolver
+                    .resolveAsPendingResult(request, AutomationDeferredResult::parse).get();
+
+        } catch (Exception ex) {
+            UALog.e(ex, "Failed to resolve deferred");
+            if (scheduleData.getRetryOnTimeout()) {
                 return RetryingExecutor.retryResult();
             } else {
-                UALog.d(e, "Failed to resolve deferred schedule. Schedule: %s", schedule.getId());
                 callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
                 return RetryingExecutor.cancelResult();
             }
         }
 
-        DeferredScheduleClient.Result apiResult = response.getResult();
-
-        // Success
-        if (response.isSuccessful() && response.getResult() != null) {
-            if (!apiResult.isAudienceMatch()) {
+        if (result instanceof DeferredResult.Success) {
+            DeferredResult.Success<AutomationDeferredResult> success = (DeferredResult.Success<AutomationDeferredResult>) result;
+            AutomationDeferredResult response = success.getResult();
+            if (!response.isAudienceMatched()) {
                 callback.onFinish(getPrepareResultMissedAudience(schedule));
                 return RetryingExecutor.cancelResult();
             }
 
-            InAppMessage message = apiResult.getMessage();
-            if (message != null) {
-                prepareSchedule(schedule, message, experimentResult, inAppMessageScheduleDelegate, callback);
-            } else {
+            if (response.getInAppMessage() == null) {
                 // Handled by backend, penalize to count towards limit
                 callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
             }
+            prepareSchedule(schedule, response.getInAppMessage(), experimentResult, inAppMessageScheduleDelegate, callback);
 
             return RetryingExecutor.finishedResult();
-        }
-
-        UALog.d("Failed to resolve deferred schedule. Schedule: %s, Response: %s", schedule.getId(), response.getResult());
-
-        Uri location = response.getLocationHeader();
-        long retryAfter = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, -1);
-
-        // Error
-        switch (response.getStatus()) {
-            case 401:
+        } else if (result instanceof DeferredResult.TimedOut) {
+            if (scheduleData.getRetryOnTimeout()) {
                 return RetryingExecutor.retryResult();
-
-            case 409:
-                remoteDataSubscriber.notifyOutdated(schedule);
-                callback.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+            } else {
+                callback.onFinish(AutomationDriver.PREPARE_RESULT_PENALIZE);
                 return RetryingExecutor.cancelResult();
-            case 429:
-                if (location != null) {
-                    redirectURLs.put(schedule.getId(), location);
-                }
-                return retryAfter >= 0 ? RetryingExecutor.retryResult(retryAfter) : RetryingExecutor.retryResult();
-            case 307:
-                if (location != null) {
-                    redirectURLs.put(schedule.getId(), location);
-                }
-                return retryAfter >= 0 ? RetryingExecutor.retryResult(retryAfter) : RetryingExecutor.retryResult(0);
-            default:
-                return RetryingExecutor.retryResult();
+            }
+        } else if (result instanceof DeferredResult.OutOfDate) {
+            remoteDataSubscriber.notifyOutdated(schedule);
+            callback.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+            return RetryingExecutor.cancelResult();
+        } else if (result instanceof DeferredResult.RetriableError) {
+            DeferredResult.RetriableError<?> retry = (DeferredResult.RetriableError<?>) result;
+            long backOff = retry.getRetryAfter() == null ? -1 : retry.getRetryAfter();
+            return RetryingExecutor.retryResult(backOff);
+        } else {
+            remoteDataSubscriber.notifyOutdated(schedule);
+            callback.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+            return RetryingExecutor.cancelResult();
         }
+    }
+
+    private DeferredRequest makeDeferredRequest(
+            @NonNull Deferred schedule,
+            @NonNull String channelId,
+            @Nullable TriggerContext triggerContext) throws ExecutionException, InterruptedException {
+        String triggerType = null;
+        JsonValue triggerEvent = null;
+        Double triggerGoal = 0.0;
+
+        if (triggerContext != null) {
+            triggerType = triggerContext.getTrigger().getTriggerName();
+            triggerEvent = triggerContext.getEvent();
+            triggerGoal = triggerContext.getTrigger().getGoal();
+        }
+
+        return DeferredRequest.automation(schedule.getUrl(), channelId, infoProvider,
+                triggerType, triggerEvent, triggerGoal, localeManager).get();
     }
 
     @MainThread

@@ -16,7 +16,9 @@ import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.contacts.Contact;
+import com.urbanairship.deferred.DeferredResolver;
 import com.urbanairship.experiment.ExperimentManager;
+import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
 import com.urbanairship.modules.aaid.AdIdModuleFactory;
 import com.urbanairship.modules.accengage.AccengageModule;
@@ -120,17 +122,18 @@ public class Modules {
                                     @NonNull PushManager pushManager,
                                     @NonNull Analytics analytics,
                                     @NonNull RemoteData remoteData,
-                                    @NonNull AudienceOverridesProvider audienceOverridesProvider,
                                     @NonNull ExperimentManager experimentManager,
                                     @NonNull DeviceInfoProvider infoProvider,
                                     @NonNull AirshipMeteredUsage meteredUsage,
-                                    @NonNull Contact contact) {
+                                    @NonNull Contact contact,
+                                    @NonNull DeferredResolver deferredResolver,
+                                    @NonNull LocaleManager localeManager) {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager,
-                        airshipChannel, pushManager, analytics, remoteData, audienceOverridesProvider,
-                        experimentManager, infoProvider, meteredUsage, contact);
+                        airshipChannel, pushManager, analytics, remoteData, experimentManager,
+                        infoProvider, meteredUsage, contact, deferredResolver, localeManager);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Automation module");

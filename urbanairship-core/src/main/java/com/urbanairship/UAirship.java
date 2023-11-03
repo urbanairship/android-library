@@ -27,6 +27,7 @@ import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
 import com.urbanairship.contacts.Contact;
+import com.urbanairship.deferred.DeferredResolver;
 import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.http.DefaultRequestSession;
 import com.urbanairship.images.DefaultImageLoader;
@@ -755,6 +756,8 @@ public class UAirship {
         components.add(this.contact);
         requestSession.setContactAuthTokenProvider(this.contact.getAuthTokenProvider());
 
+        DeferredResolver deferredResolver = new DeferredResolver(this.runtimeConfig, audienceOverridesProvider);
+
         this.remoteData = new RemoteData(application, runtimeConfig, preferenceDataStore, privacyManager, localeManager,  pushManager, pushProviders, contact);
         components.add(this.remoteData);
 
@@ -796,8 +799,8 @@ public class UAirship {
 
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
-                privacyManager, channel, pushManager, analytics, remoteData, audienceOverridesProvider,
-                this.experimentManager, infoProvider, meteredUsageManager, contact);
+                privacyManager, channel, pushManager, analytics, remoteData, this.experimentManager,
+                infoProvider, meteredUsageManager, contact, deferredResolver, localeManager);
         processModule(automationModule);
 
         // Ad Id
