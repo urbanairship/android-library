@@ -9,6 +9,7 @@ import androidx.annotation.WorkerThread
 import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -38,6 +39,7 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
 ) : AirshipComponent(context, dataStore) {
 
     internal companion object {
+
         private const val WORK_ID = "MeteredUsage.upload"
         private const val RATE_LIMIT_ID = "MeteredUsage.rateLimit"
     }
@@ -46,7 +48,9 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
 
     internal fun setConfig(config: Config) {
         val old = this.config.getAndSet(config)
-        if (old == config) { return }
+        if (old == config) {
+            return
+        }
 
         jobDispatcher.setRateLimit(RATE_LIMIT_ID, 1, config.intervalMs, TimeUnit.MILLISECONDS)
 
@@ -90,17 +94,24 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
     }
 
     override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
-        if (!config.get().isEnabled) { return JobResult.SUCCESS }
-        if (jobInfo.action != WORK_ID) { return JobResult.SUCCESS }
+        if (!config.get().isEnabled) {
+            UALog.v { "Config disabled, skipping upload." }
+            return JobResult.SUCCESS
+        }
 
         var events = store.getAllEvents()
-        if (events.isEmpty()) { return JobResult.SUCCESS }
+        if (events.isEmpty()) {
+            UALog.v { "No events, skipping upload." }
+            return JobResult.SUCCESS
+        }
 
         var channelId = airship.channel.id
         if (!privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
             channelId = null
             events = events.map { it.withAnalyticsDisabled() }
         }
+
+        UALog.v { "Uploading events" }
 
         val result = runBlocking {
             try {
@@ -110,7 +121,12 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
             }
         }
 
-        if (!result.isSuccessful) { return JobResult.FAILURE }
+        if (!result.isSuccessful) {
+            UALog.v { "Uploading failed" }
+            return JobResult.FAILURE
+        }
+
+        UALog.v { "Uploading success" }
 
         store.deleteAll(events.map { it.eventId }.toList())
 
