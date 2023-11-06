@@ -41,6 +41,6 @@ public class Position {
     }
 
     public int getGravity() {
-        return Gravity.CENTER |  horizontal.getGravity() | vertical.getGravity();
+        return Gravity.CENTER | horizontal.getGravity() | vertical.getGravity();
     }
 }
