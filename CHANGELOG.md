@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.4.1 November 6, 2023
+Patch release that improves modal rendering in Scenes and Surveys.
+
+### Changes
+- Improved modal size and position handling in Scenes and Surveys.
+
 ## Version 17.4.0 October 18, 2023
 Minor release that adds async live update notification handlers.
 

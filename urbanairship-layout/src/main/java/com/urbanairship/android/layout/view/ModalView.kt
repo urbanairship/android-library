@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.graphics.Rect
-import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -53,8 +52,14 @@ internal class ModalView(
 
         val container = model.createView(context, viewEnvironment).apply {
             layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
-                gravity = position?.gravity ?: Gravity.CENTER
-                margin?.let { setMargins(it.start, it.top, it.end, it.bottom) }
+                margin?.let {
+                    setMargins(
+                        ResourceUtils.dpToPx(context, it.start).toInt(),
+                        ResourceUtils.dpToPx(context, it.top).toInt(),
+                        ResourceUtils.dpToPx(context, it.end).toInt(),
+                        ResourceUtils.dpToPx(context, it.bottom).toInt()
+                    )
+                }
             }
         }
         containerView = container
@@ -65,8 +70,8 @@ internal class ModalView(
         val viewId = frame.id
         val constraints = ConstraintSetBuilder.newBuilder(context)
             .constrainWithinParent(viewId)
-            .size(size, viewId)
-            .margin(margin, viewId)
+            .size(size, placement.shouldIgnoreSafeArea(), viewId)
+            .position(position, viewId)
             .build()
 
         constraints.applyTo(this)

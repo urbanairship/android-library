@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.util;
 
 import android.content.Context;
 
+import com.urbanairship.android.layout.property.ConstrainedSize;
 import com.urbanairship.android.layout.property.Margin;
 import com.urbanairship.android.layout.property.Position;
 import com.urbanairship.android.layout.property.Size;
@@ -136,19 +137,98 @@ public final class ConstraintSetBuilder {
     }
 
     @NonNull
+    public ConstraintSetBuilder minWidth(int viewId, int minWidth) {
+        constraints.constrainMinWidth(viewId, (int) dpToPx(context, minWidth));
+        return this;
+    }
+
+    @NonNull
+    public ConstraintSetBuilder maxWidth(int viewId, int maxWidth) {
+        constraints.constrainMaxWidth(viewId, (int) dpToPx(context, maxWidth));
+        return this;
+    }
+
+    @NonNull
     public ConstraintSetBuilder minHeight(int viewId, int minHeight) {
         constraints.constrainMinHeight(viewId, (int) dpToPx(context, minHeight));
         return this;
     }
 
     @NonNull
-    public ConstraintSetBuilder size(@Nullable Size size, @IdRes int viewId) {
-        return size(size, viewId, ConstraintSet.WRAP_CONTENT);
+    public ConstraintSetBuilder maxHeight(int viewId, int maxHeight) {
+        constraints.constrainMaxHeight(viewId, (int) dpToPx(context, maxHeight));
+        return this;
     }
 
     @NonNull
-    public ConstraintSetBuilder size(@Nullable Size size, @IdRes int viewId, int autoValue) {
+    public ConstraintSetBuilder size(@Nullable Size size, @IdRes int viewId) {
+        return size(size, false, viewId);
+    }
+
+    @NonNull
+    public ConstraintSetBuilder size(@Nullable Size size, boolean ignoreSafeArea, @IdRes int viewId) {
+        return size(size, ignoreSafeArea, viewId, ConstraintSet.WRAP_CONTENT);
+    }
+
+    @NonNull
+    public ConstraintSetBuilder size(@Nullable Size size, boolean ignoreSafeArea, @IdRes int viewId, int autoValue) {
         if (size != null) {
+            if (size instanceof ConstrainedSize) {
+                ConstrainedSize constrainedSize = (ConstrainedSize) size;
+
+                ConstrainedSize.ConstrainedDimension minWidth = constrainedSize.getMinWidth();
+                if (minWidth != null) {
+                    switch (minWidth.getType()) {
+                        case PERCENT:
+                            float minPixelsWidth = minWidth.getFloat() * ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea);
+                            constraints.constrainMinWidth(viewId, (int) minPixelsWidth);
+                            break;
+                        case ABSOLUTE:
+                            constraints.constrainMinWidth(viewId, (int) dpToPx(context, minWidth.getInt()));
+                            break;
+                    }
+                }
+
+                ConstrainedSize.ConstrainedDimension maxWidth = constrainedSize.getMaxWidth();
+                if (maxWidth != null) {
+                    switch (maxWidth.getType()) {
+                        case PERCENT:
+                            float maxPixelsWidth = maxWidth.getFloat() * ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea);
+                            constraints.constrainMaxWidth(viewId, (int) maxPixelsWidth);
+                            break;
+                        case ABSOLUTE:
+                            constraints.constrainMaxWidth(viewId, (int) dpToPx(context, maxWidth.getInt()));
+                            break;
+                    }
+                }
+
+                ConstrainedSize.ConstrainedDimension minHeight = constrainedSize.getMinHeight();
+                if (minHeight != null) {
+                    switch (minHeight.getType()) {
+                        case PERCENT:
+                            float minPixelsHeight = minHeight.getFloat() * ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea);
+                            constraints.constrainMinHeight(viewId, (int) minPixelsHeight);
+                            break;
+                        case ABSOLUTE:
+                            constraints.constrainMinHeight(viewId, (int) dpToPx(context, minHeight.getInt()));
+                            break;
+                    }
+                }
+
+                ConstrainedSize.ConstrainedDimension maxHeight = constrainedSize.getMaxHeight();
+                if (maxHeight != null) {
+                    switch (maxHeight.getType()) {
+                        case PERCENT:
+                            float maxPixelsHeight = maxHeight.getFloat() * ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea);
+                            constraints.constrainMaxHeight(viewId, (int) maxPixelsHeight);
+                            break;
+                        case ABSOLUTE:
+                            constraints.constrainMaxHeight(viewId, (int) dpToPx(context, maxHeight.getInt()));
+                            break;
+                    }
+                }
+            }
+
             Size.Dimension width = size.getWidth();
             switch (width.getType()) {
                 case AUTO:
