@@ -16,6 +16,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteData
+import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Clock
@@ -40,6 +41,7 @@ class FeatureFlagManagerTest {
     private val context: Context = TestApplication.getApplication()
     private val remoteData: RemoteData = mockk()
     private val analytics: Analytics = mockk()
+    private val deferredResolver: FlagDeferredResolver = mockk()
 
     private lateinit var featureFlags: FeatureFlagManager
     private val infoProvider: DeviceInfoProvider = mockk()
@@ -59,6 +61,7 @@ class FeatureFlagManagerTest {
             remoteData = remoteData,
             analytics = analytics,
             infoProvider = infoProvider,
+            deferredResolver = deferredResolver,
             clock = clock
         )
 
@@ -96,16 +99,16 @@ class FeatureFlagManagerTest {
         )
 
         val data = RemoteDataPayload(
-            type = payloadType,
-            timestamp = 1L,
-            data = jsonMapOf(
+            type = payloadType, timestamp = 1L, data = jsonMapOf(
                 payloadType to jsonListOf(
                     generateFeatureFlagPayload(
-                        "test-id",
-                        "test-ff",
-                        audience = audience
+                        "test-id", "test-ff", audience = audience
                     )
                 )
+            ), remoteDataInfo = RemoteDataInfo(
+                url = "https://sample.url",
+                lastModified = null,
+                source = RemoteDataSource.APP,
             )
         )
 
@@ -143,15 +146,16 @@ class FeatureFlagManagerTest {
     @Test
     fun testFlagNoAudience(): TestResult = runTest {
         val data = RemoteDataPayload(
-            type = payloadType,
-            timestamp = 1L,
-            data = jsonMapOf(
+            type = payloadType, timestamp = 1L, data = jsonMapOf(
                 payloadType to jsonListOf(
                     generateFeatureFlagPayload(
-                        "test-id",
-                        "no-audience-flag"
+                        "test-id", "no-audience-flag"
                     )
                 )
+            ), remoteDataInfo = RemoteDataInfo(
+                url = "https://sample.url",
+                lastModified = null,
+                source = RemoteDataSource.APP,
             )
         )
 
@@ -169,16 +173,16 @@ class FeatureFlagManagerTest {
         val audience = generateAudience(true)
 
         val data = RemoteDataPayload(
-            type = payloadType,
-            timestamp = 1L,
-            data = jsonMapOf(
+            type = payloadType, timestamp = 1L, data = jsonMapOf(
                 payloadType to jsonListOf(
                     generateFeatureFlagPayload(
-                        "test-id",
-                        "unmatched",
-                        audience = audience
+                        "test-id", "unmatched", audience = audience
                     )
                 )
+            ), remoteDataInfo = RemoteDataInfo(
+                url = "https://sample.url",
+                lastModified = null,
+                source = RemoteDataSource.APP,
             )
         )
 
@@ -197,9 +201,7 @@ class FeatureFlagManagerTest {
             type = payloadType, timestamp = 1L, data = jsonMapOf(
                 payloadType to jsonListOf(
                     generateFeatureFlagPayload(
-                        "test-id",
-                        "same-name",
-                        audience = generateAudience(true)
+                        "test-id", "same-name", audience = generateAudience(true)
                     ), generateFeatureFlagPayload(
                         flagId = "test-id-2",
                         flagName = "same-name",
@@ -215,6 +217,10 @@ class FeatureFlagManagerTest {
                         )
                     )
                 )
+            ), remoteDataInfo = RemoteDataInfo(
+                url = "https://sample.url",
+                lastModified = null,
+                source = RemoteDataSource.APP,
             )
         )
 
@@ -259,6 +265,10 @@ class FeatureFlagManagerTest {
                         )
                     )
                 )
+            ), remoteDataInfo = RemoteDataInfo(
+                url = "https://sample.url",
+                lastModified = null,
+                source = RemoteDataSource.APP,
             )
         )
 
@@ -279,9 +289,7 @@ class FeatureFlagManagerTest {
             type = payloadType, timestamp = 1L, data = jsonMapOf(
                 payloadType to jsonListOf(
                     generateFeatureFlagPayload(
-                        "test-id",
-                        "same-name",
-                        audience = generateAudience(true)
+                        "test-id", "same-name", audience = generateAudience(true)
                     ), generateFeatureFlagPayload(
                         flagId = "test-id-2",
                         flagName = "same-name",
@@ -297,6 +305,10 @@ class FeatureFlagManagerTest {
                         )
                     )
                 )
+            ), remoteDataInfo = RemoteDataInfo(
+                url = "https://sample.url",
+                lastModified = null,
+                source = RemoteDataSource.APP,
             )
         )
 
@@ -317,9 +329,7 @@ class FeatureFlagManagerTest {
             type = payloadType, timestamp = 1L, data = jsonMapOf(
                 payloadType to jsonListOf(
                     generateFeatureFlagPayload(
-                        "test-id",
-                        "deferred",
-                        resolutionType = ResolutionType.DEFERRED
+                        "test-id", "deferred", resolutionType = ResolutionType.DEFERRED
                     ),
                 )
             )
@@ -342,6 +352,10 @@ class FeatureFlagManagerTest {
                         flagId = "test-id", flagName = "timed", timeCriteria = TimeCriteria(1, 3)
                     ),
                 )
+            ), remoteDataInfo = RemoteDataInfo(
+                url = "https://sample.url",
+                lastModified = null,
+                source = RemoteDataSource.APP,
             )
         )
 
@@ -382,6 +396,10 @@ class FeatureFlagManagerTest {
                         flagId = "test-id", flagName = "stale"
                     ),
                 )
+            ), remoteDataInfo = RemoteDataInfo(
+                url = "https://sample.url",
+                lastModified = null,
+                source = RemoteDataSource.APP,
             )
         )
 
@@ -406,6 +424,10 @@ class FeatureFlagManagerTest {
                         evaluationOptions = EvaluationOptions(false, null)
                     ),
                 )
+            ), remoteDataInfo = RemoteDataInfo(
+                url = "https://sample.url",
+                lastModified = null,
+                source = RemoteDataSource.APP,
             )
         )
 
@@ -566,6 +588,8 @@ class FeatureFlagManagerTest {
                 "time_criteria" to timeCriteria,
                 "variables" to jsonMapOf("type" to variablesType.jsonValue,
                     "variants" to variables?.map { it.toJsonValue() }?.let { JsonList(it) }),
-                "evaluation_options" to evaluationOptions))
+                "evaluation_options" to evaluationOptions
+            )
+        )
     }
 }

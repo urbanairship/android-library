@@ -14,7 +14,9 @@ import com.urbanairship.UAirship
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.audience.DeviceInfoProvider
+import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.remotedata.RemoteData
+import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Clock
 import java.util.concurrent.TimeUnit
@@ -33,6 +35,7 @@ public class FeatureFlagManager
     private val remoteData: RemoteData,
     private val analytics: Analytics,
     private val infoProvider: DeviceInfoProvider,
+    private val deferredResolver: FlagDeferredResolver,
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) : AirshipComponent(context, dataStore) {
 
@@ -88,31 +91,62 @@ public class FeatureFlagManager
     }
 
     private suspend fun flag(name: String, allowRefresh: Boolean): Result<FeatureFlag> {
-        return when (remoteData.status(RemoteDataSource.APP)) {
-            RemoteData.Status.UP_TO_DATE -> {
-                Result.success(evaluate(name, fetchFlagInfos(name)))
-            }
-            RemoteData.Status.STALE -> {
-                val items = fetchFlagInfos(name)
-                if (items.isEmpty() || !isStaleAllowed(items)) {
-                    if (allowRefresh) {
-                        waitForRemoteDataRefresh()
-                        flag(name = name, allowRefresh = false)
-                    } else {
-                        Result.failure(FeatureFlagException("Unable to fetch data"))
-                    }
-                } else {
-                    Result.success(evaluate(name, items))
+        if (!isComponentEnabled) {
+            throw FeatureFlagException.FailedToFetch()
+        }
+
+        val remoteDataInfo = fetchFlagRemoteInfo(name)
+        val result = evaluate(remoteDataInfo)
+        if (result.isSuccess) {
+            return result
+        }
+
+        return when (result.exceptionOrNull()) {
+            is FeatureFlagEvaluationException.OutOfDate -> {
+                remoteDataInfo.remoteDataInfo?.let {
+                    remoteData.notifyOutdated(it)
                 }
-            }
-            RemoteData.Status.OUT_OF_DATE -> {
+
                 if (allowRefresh) {
                     waitForRemoteDataRefresh()
                     flag(name = name, allowRefresh = false)
                 } else {
-                    Result.failure(FeatureFlagException("Unable to fetch data"))
+                    Result.failure(FeatureFlagException.FailedToFetch())
                 }
             }
+
+            is FeatureFlagEvaluationException.StaleNotAllowed -> {
+                if (allowRefresh) {
+                    waitForRemoteDataRefresh()
+                    flag(name = name, allowRefresh = false)
+                } else {
+                    Result.failure(FeatureFlagException.FailedToFetch())
+                }
+            }
+            else -> Result.failure(FeatureFlagException.FailedToFetch())
+        }
+    }
+
+    private fun remoteDataStatus(status: RemoteData.Status, remoteData: RemoteDataFeatureFlagInfo): Result<Unit> {
+        return when (status) {
+            RemoteData.Status.STALE -> {
+                if (remoteData.flagInfoList.isEmpty()) {
+                    return Result.failure(FeatureFlagEvaluationException.OutOfDate())
+                }
+
+                val disallowStale = remoteData
+                    .flagInfoList
+                    .firstOrNull { it.evaluationOptions?.disallowStaleValues == true } != null
+
+                if (disallowStale) {
+                    Result.failure(FeatureFlagEvaluationException.StaleNotAllowed())
+                } else {
+                    Result.success(Unit)
+                }
+            }
+            RemoteData.Status.OUT_OF_DATE -> Result.failure(FeatureFlagEvaluationException.OutOfDate())
+            RemoteData.Status.UP_TO_DATE -> Result.success(Unit)
+            else -> Result.success(Unit)
         }
     }
 
@@ -138,23 +172,38 @@ public class FeatureFlagManager
         remoteData.waitForRefresh(RemoteDataSource.APP, MAX_TIMEOUT_MILLIS)
     }
 
-    private fun isStaleAllowed(flags: List<FeatureFlagInfo>): Boolean {
-        val explicitDisallow =
-            flags.firstOrNull { it.evaluationOptions?.disallowStaleValues ?: false }
-        return explicitDisallow == null
-    }
+    private suspend fun fetchFlagRemoteInfo(name: String): RemoteDataFeatureFlagInfo {
+        val payloads = remoteData.payloads(PAYLOAD_TYPE)
+            .filter { it.remoteDataInfo?.source == RemoteDataSource.APP }
 
-    private suspend fun fetchFlagInfos(name: String): List<FeatureFlagInfo> {
-        return remoteData.payloads(PAYLOAD_TYPE).asSequence()
+        val flags = payloads
+            .asSequence()
             .mapNotNull { it.data.opt(PAYLOAD_TYPE).list?.list }.flatten().map { it.optMap() }
             .mapNotNull(FeatureFlagInfo::fromJson).filter { it.name == name }
-            .filter { it.timeCriteria?.meets(clock.currentTimeMillis()) ?: true }.toList()
+            .filter { it.timeCriteria?.meets(clock.currentTimeMillis()) ?: true }
+            .toList()
+
+        return RemoteDataFeatureFlagInfo(
+            name = name,
+            flagInfoList = flags,
+            remoteDataInfo = payloads.firstOrNull()?.remoteDataInfo
+        )
     }
 
-    private suspend fun evaluate(name: String, flags: List<FeatureFlagInfo>): FeatureFlag {
+    private suspend fun evaluate(remoteDataInfo: RemoteDataFeatureFlagInfo): Result<FeatureFlag> {
+        remoteDataStatus(remoteData.status(RemoteDataSource.APP), remoteDataInfo).let {
+            val error = it.exceptionOrNull()
+            if (error != null) {
+                return Result.failure(error)
+            }
+        }
+
+        val name = remoteDataInfo.name
+        val flags = remoteDataInfo.flagInfoList
+
         if (flags.isEmpty()) {
-            return FeatureFlag.createMissingFlag(
-                name = name
+            return Result.success(
+                FeatureFlag.createMissingFlag(name = name)
             )
         }
 
@@ -167,30 +216,59 @@ public class FeatureFlagManager
                 continue
             }
 
-            val variables =
-                info.payload.evaluateVariables(context, info.created, deviceInfoSnapshot)
+            return when (val payload = info.payload) {
+                is StaticPayload -> {
+                    val variables =
+                        info.payload.evaluateVariables(context, info.created, deviceInfoSnapshot)
 
-            return FeatureFlag.createFlag(
-                name = name,
-                isEligible = true,
-                variables = variables?.data,
-                reportingInfo = FeatureFlag.ReportingInfo(
-                    reportingMetadata = variables?.reportingMetadata ?: info.reportingContext,
-                    channelId = deviceInfoSnapshot.channelId,
-                    contactId = deviceInfoSnapshot.getStableContactId()
-                )
-            )
+                    Result.success(
+                        FeatureFlag.createFlag(
+                            name = name,
+                            isEligible = true,
+                            variables = variables?.data,
+                            reportingInfo = FeatureFlag.ReportingInfo(
+                                reportingMetadata = variables?.reportingMetadata ?: info.reportingContext,
+                                channelId = deviceInfoSnapshot.channelId,
+                                contactId = deviceInfoSnapshot.getStableContactId()
+                            )
+                        )
+                    )
+                }
+                is DeferredPayload -> {
+                    val contactId = deviceInfoSnapshot.getStableContactId()
+                    val chanelId = deviceInfoSnapshot.channelId ?: return Result.failure(FeatureFlagException.FailedToFetch())
+                    val locale = deviceInfoSnapshot.getUserLocals(context).get(0) ?: return Result.failure(FeatureFlagException.FailedToFetch())
+                    val request = DeferredRequest(
+                        uri = payload.url,
+                        channelID = chanelId,
+                        contactID = contactId,
+                        locale = locale,
+                        notificationOptIn = deviceInfoSnapshot.isNotificationsOptedIn
+                    )
+
+                    deferredResolver.resolve(request, info)
+                }
+                else -> Result.failure(FeatureFlagException.FailedToFetch())
+            }
         }
 
-        return FeatureFlag.createFlag(
-            name = name,
-            isEligible = false,
-            variables = null,
-            reportingInfo = FeatureFlag.ReportingInfo(
-                reportingMetadata = flags.last().reportingContext,
-                channelId = deviceInfoSnapshot.channelId,
-                contactId = deviceInfoSnapshot.getStableContactId(),
+        return Result.success(
+            FeatureFlag.createFlag(
+                name = name,
+                isEligible = false,
+                variables = null,
+                reportingInfo = FeatureFlag.ReportingInfo(
+                    reportingMetadata = flags.last().reportingContext,
+                    channelId = deviceInfoSnapshot.channelId,
+                    contactId = deviceInfoSnapshot.getStableContactId(),
+                )
             )
         )
     }
 }
+
+private data class RemoteDataFeatureFlagInfo(
+    val name: String,
+    val flagInfoList: List<FeatureFlagInfo>,
+    val remoteDataInfo: RemoteDataInfo?
+)

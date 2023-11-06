@@ -13,6 +13,7 @@ import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
+import com.urbanairship.cache.AirshipCache;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.contacts.Contact;
@@ -232,12 +233,15 @@ public class Modules {
             @NonNull PreferenceDataStore dataStore,
             @NonNull RemoteData remoteData,
             @NonNull Analytics analytics,
-            @NonNull DeviceInfoProvider infoProvider) {
+            @NonNull DeviceInfoProvider infoProvider,
+            @NonNull AirshipCache cache,
+            @NonNull DeferredResolver resolver) {
         try {
             FeatureFlagsModuleFactory moduleFactory =
                     createFactory(FEATURE_FLAGS_FACTORY, FeatureFlagsModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore, remoteData, analytics, infoProvider);
+                return moduleFactory.build(context, dataStore, remoteData, analytics, infoProvider,
+                        cache, resolver);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Feature Flags module");

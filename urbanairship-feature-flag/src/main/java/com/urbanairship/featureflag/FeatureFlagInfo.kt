@@ -3,6 +3,7 @@
 package com.urbanairship.featureflag
 
 import android.content.Context
+import android.net.Uri
 import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.audience.AudienceSelector
@@ -176,6 +177,7 @@ internal class FeatureFlagInfo(
 
         private const val KEY_TYPE = "type"
         private const val KEY_VARIABLES = "variables"
+        private const val KEY_DEFERRED = "deferred"
         private const val KEY_REPORTING_METADATA = "reporting_metadata"
         private const val KEY_AUDIENCE_SELECTOR = "audience_selector"
         private const val KEY_TIME_CRITERIA = "time_criteria"
@@ -217,28 +219,24 @@ internal class FeatureFlagInfo(
             val type = ResolutionType.from(json.requireField(KEY_TYPE))
                 ?: throw JsonException("can't parse type from $json")
 
-            val content = json.opt(KEY_VARIABLES).optMap()
-
             return when (type) {
-                ResolutionType.DEFERRED -> DeferredPayload.fromJson(content)
-                ResolutionType.STATIC -> StaticPayload.fromJson(content)
+                ResolutionType.DEFERRED -> DeferredPayload.fromJson(json.opt(KEY_DEFERRED).optMap())
+                ResolutionType.STATIC -> StaticPayload.fromJson(json.opt(KEY_VARIABLES).optMap())
             }
         }
     }
 }
 
 internal class DeferredPayload(
-    val url: String,
-    val retryOnTimeout: Boolean
+    val url: Uri,
 ) : FeatureFlagPayload {
     companion object {
         private const val KEY_URL = "url"
-        private const val KEY_RETRY = "retryOnTimeout"
 
         fun fromJson(json: JsonMap): DeferredPayload {
+
             return DeferredPayload(
-                url = json.requireField(KEY_URL),
-                retryOnTimeout = json.requireField(KEY_RETRY)
+                url = Uri.parse(json.require(KEY_URL).requireString()),
             )
         }
     }

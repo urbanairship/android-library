@@ -97,14 +97,14 @@ public class DeferredResolver internal constructor(
             409 -> return DeferredResult.OutOfDate()
             429 -> {
                 response.locationHeader?.let { locationMap.put(uri, it) }
-                return DeferredResult.RetriableError<T>(response.getRetryAfterHeader(TimeUnit.SECONDS, 0))
+                return DeferredResult.RetriableError<T>(response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0))
             }
             307 -> {
                 val redirect = response.locationHeader
-                    ?: return DeferredResult.RetriableError<T>(response.getRetryAfterHeader(TimeUnit.SECONDS, 0))
+                    ?: return DeferredResult.RetriableError<T>(response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0))
                 locationMap[uri] = redirect
 
-                val retryDelay = response.getRetryAfterHeader(TimeUnit.SECONDS, -1)
+                val retryDelay = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, -1)
                 if (retryDelay > 0) {
                     return DeferredResult.RetriableError<T>(retryDelay)
                 }

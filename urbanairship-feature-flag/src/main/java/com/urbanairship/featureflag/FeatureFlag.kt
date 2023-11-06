@@ -124,6 +124,7 @@ class FeatureFlag private constructor(
          * @throws `JsonException`
          */
         @Throws
+        @JvmStatic
         public fun fromJson(json: JsonValue): FeatureFlag {
             return FeatureFlag(
                 name = json.requireMap().requireField(KEY_NAME),

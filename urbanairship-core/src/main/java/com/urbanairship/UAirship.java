@@ -23,6 +23,7 @@ import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.audience.DeviceInfoProviderImpl;
 import com.urbanairship.base.Supplier;
+import com.urbanairship.cache.AirshipCache;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
@@ -820,7 +821,8 @@ public class UAirship {
         processModule(liveUpdateManager);
 
         // Feature flags
-        Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, analytics, infoProvider);
+        Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, analytics, infoProvider,
+                new AirshipCache(application, runtimeConfig), deferredResolver);
         processModule(featureFlags);
 
         remoteAirshipUrlConfigProvider.addUrlConfigListener(() -> {

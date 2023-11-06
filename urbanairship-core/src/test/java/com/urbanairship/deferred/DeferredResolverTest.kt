@@ -102,7 +102,7 @@ public class DeferredResolverTest {
         var result = resolver.resolve(originalRequest) { it } as? DeferredResult.RetriableError
         assertNotNull(result)
         assertEquals(requestSession.lastRequest.url, originalRequest.uri)
-        assertEquals(123L, result!!.retryAfter)
+        assertEquals(123000L, result!!.retryAfter)
 
         result = resolver.resolve(originalRequest) { it } as? DeferredResult.RetriableError
         assertNotNull(result)
@@ -138,7 +138,7 @@ public class DeferredResolverTest {
         assertNotNull(result)
         assertEquals(requestSession.lastRequest.url, originalRequest.uri)
         assertEquals(1, requestSession.requests.size)
-        assertEquals(123L, result!!.retryAfter)
+        assertEquals(123000L, result!!.retryAfter)
     }
 
     @Test
