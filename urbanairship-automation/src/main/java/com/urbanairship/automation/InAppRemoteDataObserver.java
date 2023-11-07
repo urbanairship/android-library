@@ -631,7 +631,8 @@ class InAppRemoteDataObserver {
                .setFrequencyConstraintIds(parseConstraintIds(jsonMap.opt(FREQUENCY_CONSTRAINT_IDS_KEY).optList()))
                .setMessageType(jsonMap.opt(MESSAGE_TYPE_KEY).getString())
                .setBypassHoldoutGroup(jsonMap.opt(BYPASS_HOLDOUT_GROUP_KEY).getBoolean())
-               .setNewUserEvaluationDate(createdDate);
+               .setNewUserEvaluationDate(createdDate)
+               .setProductId(jsonMap.opt(PRODUCT_ID_KEY).getString());
 
         return builder.build();
     }

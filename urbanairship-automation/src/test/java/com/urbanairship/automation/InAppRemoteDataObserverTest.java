@@ -365,7 +365,7 @@ public class InAppRemoteDataObserverTest {
                                      .build()
                                      .toJsonValue();
 
-        // Update "foo" as a different type
+        // Update "foo" as a different type and set a product id
         Schedule<Actions> newFooSchedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
                                                    .addTrigger(Triggers.newAppInitTriggerBuilder()
                                                                        .setGoal(1)
@@ -374,6 +374,7 @@ public class InAppRemoteDataObserverTest {
                                                    .setMetadata(expectedMetadata)
                                                    .setCampaigns(campaigns)
                                                    .setFrequencyConstraintIds(constraintIds)
+                                                   .setProductId("some product id")
                                                    .build();
 
         payload = new TestPayloadBuilder()
@@ -390,6 +391,8 @@ public class InAppRemoteDataObserverTest {
         assertEquals(Schedule.TYPE_ACTION, edits.getType());
         assertEquals(constraintIds, edits.getFrequencyConstraintIds());
         assertEquals(campaigns, edits.getCampaigns());
+        assertEquals("some product id", edits.getProductId());
+
     }
 
     @Test
