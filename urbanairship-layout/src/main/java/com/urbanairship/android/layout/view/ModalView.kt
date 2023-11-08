@@ -18,7 +18,9 @@ import com.urbanairship.android.layout.ModalPresentation
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
+import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.widget.ClippableFrameLayout
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
 
 internal class ModalView(
@@ -50,7 +52,7 @@ internal class ModalView(
         }
         modalFrame = frame
 
-        val container = model.createView(context, viewEnvironment).apply {
+        val container = ClippableFrameLayout(context).apply {
             layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
                 margin?.let {
                     setMargins(
@@ -62,6 +64,10 @@ internal class ModalView(
                 }
             }
         }
+
+        container.addView(model.createView(context, viewEnvironment))
+
+        LayoutUtils.applyBorderAndBackground(container, placement.border, placement.backgroundColor)
         containerView = container
 
         frame.addView(container)

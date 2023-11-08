@@ -20,16 +20,26 @@ public class BannerPlacement implements SafeAreaAware {
     private final Position position;
     private final boolean ignoreSafeArea;
 
+    @Nullable
+    private final Border border;
+
+    @Nullable
+    private final Color backgroundColor;
+
     public BannerPlacement(
         @NonNull ConstrainedSize size,
         @Nullable Margin margin,
         @Nullable Position position,
-        boolean ignoreSafeArea
+        boolean ignoreSafeArea,
+        @Nullable Border border,
+        @Nullable Color backgroundColor
     ) {
         this.size = size;
         this.margin = margin;
         this.position = position;
         this.ignoreSafeArea = ignoreSafeArea;
+        this.border = border;
+        this.backgroundColor = backgroundColor;
     }
 
     @NonNull
@@ -40,6 +50,8 @@ public class BannerPlacement implements SafeAreaAware {
         }
         String positionJson = json.opt("position").optString();
         JsonMap marginJson = json.opt("margin").optMap();
+        JsonMap borderJson = json.opt("border").optMap();
+        JsonMap backgroundJson = json.opt("background_color").optMap();
 
         ConstrainedSize size = ConstrainedSize.fromJson(sizeJson);
         Margin margin = marginJson.isEmpty() ? null : Margin.fromJson(marginJson);
@@ -49,7 +61,10 @@ public class BannerPlacement implements SafeAreaAware {
 
         boolean ignoreSafeArea = ignoreSafeAreaFromJson(json);
 
-        return new BannerPlacement(size, margin, position, ignoreSafeArea);
+        Border border = borderJson.isEmpty() ? null : Border.fromJson(borderJson);
+        Color backgroundColor = backgroundJson.isEmpty() ? null : Color.fromJson(backgroundJson);
+
+        return new BannerPlacement(size, margin, position, ignoreSafeArea, border, backgroundColor);
     }
 
     @Nullable
@@ -71,4 +86,15 @@ public class BannerPlacement implements SafeAreaAware {
     public boolean shouldIgnoreSafeArea() {
         return ignoreSafeArea;
     }
+
+    @Nullable
+    public Border getBorder() {
+        return border;
+    }
+
+    @Nullable
+    public Color getBackgroundColor() {
+        return backgroundColor;
+    }
+
 }

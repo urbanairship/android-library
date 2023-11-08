@@ -26,13 +26,21 @@ public class ModalPlacement implements SafeAreaAware {
     @Nullable
     private final Orientation orientationLock;
 
+    @Nullable
+    private final Border border;
+
+    @Nullable
+    private final Color backgroundColor;
+
     public ModalPlacement(
             @NonNull ConstrainedSize size,
             @Nullable Margin margin,
             @Nullable Position position,
             @Nullable Color shadeColor,
             boolean ignoreSafeArea,
-            @Nullable Orientation orientationLock
+            @Nullable Orientation orientationLock,
+            @Nullable Border border,
+            @Nullable Color backgroundColor
     ) {
         this.size = size;
         this.margin = margin;
@@ -40,6 +48,8 @@ public class ModalPlacement implements SafeAreaAware {
         this.shadeColor = shadeColor;
         this.ignoreSafeArea = ignoreSafeArea;
         this.orientationLock = orientationLock;
+        this.border = border;
+        this.backgroundColor = backgroundColor;
     }
 
     @NonNull
@@ -50,17 +60,22 @@ public class ModalPlacement implements SafeAreaAware {
         }
         JsonMap positionJson = json.opt("position").optMap();
         JsonMap marginJson = json.opt("margin").optMap();
+        JsonMap borderJson = json.opt("border").optMap();
+        JsonMap backgroundJson = json.opt("background_color").optMap();
 
         ConstrainedSize size = ConstrainedSize.fromJson(sizeJson);
         Margin margin = marginJson.isEmpty() ? null : Margin.fromJson(marginJson);
         Position position = positionJson.isEmpty() ? null : Position.fromJson(positionJson);
-        Color backgroundColor = Color.fromJsonField(json, "shade_color");
+        Color shadeColor = Color.fromJsonField(json, "shade_color");
         boolean ignoreSafeArea = ignoreSafeAreaFromJson(json);
 
         String orientationString = json.opt("device").optMap().opt("lock_orientation").optString();
         Orientation orientationLock = orientationString.isEmpty() ? null : Orientation.from(orientationString);
 
-        return new ModalPlacement(size, margin, position, backgroundColor, ignoreSafeArea, orientationLock);
+        Border border = borderJson.isEmpty() ? null : Border.fromJson(borderJson);
+        Color backgroundColor = backgroundJson.isEmpty() ? null : Color.fromJson(backgroundJson);
+
+        return new ModalPlacement(size, margin, position, shadeColor, ignoreSafeArea, orientationLock, border, backgroundColor);
     }
 
     @Nullable
@@ -91,5 +106,15 @@ public class ModalPlacement implements SafeAreaAware {
     @Override
     public boolean shouldIgnoreSafeArea() {
         return ignoreSafeArea;
+    }
+
+    @Nullable
+    public Border getBorder() {
+        return border;
+    }
+
+    @Nullable
+    public Color getBackgroundColor() {
+        return backgroundColor;
     }
 }

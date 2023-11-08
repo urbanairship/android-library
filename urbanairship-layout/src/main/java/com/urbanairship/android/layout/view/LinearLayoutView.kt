@@ -21,6 +21,8 @@ import com.urbanairship.android.layout.property.Size.DimensionType.AUTO
 import com.urbanairship.android.layout.property.Size.DimensionType.PERCENT
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
+import com.urbanairship.android.layout.widget.Clippable
+import com.urbanairship.android.layout.widget.ClippableViewDelegate
 import com.urbanairship.android.layout.widget.WeightlessLinearLayout
 import com.urbanairship.android.layout.widget.WeightlessLinearLayout.LayoutParams.WRAP_CONTENT
 
@@ -28,7 +30,9 @@ internal class LinearLayoutView(
     context: Context,
     model: LinearLayoutModel,
     private val viewEnvironment: ViewEnvironment
-) : WeightlessLinearLayout(context), BaseView {
+) : WeightlessLinearLayout(context), BaseView, Clippable {
+
+    private val clippableViewDelegate: ClippableViewDelegate = ClippableViewDelegate()
 
     init {
         clipChildren = false
@@ -100,5 +104,9 @@ internal class LinearLayoutView(
             }
         }
         return lp
+    }
+
+    override fun setClipPathBorderRadius(borderRadius: Float) {
+        clippableViewDelegate.setClipPathBorderRadius(this, borderRadius)
     }
 }

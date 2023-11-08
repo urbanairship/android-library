@@ -24,6 +24,7 @@ import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.property.ConstrainedSize
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
+import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.Timer
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
@@ -117,7 +118,7 @@ internal class ThomasBannerView(
     }
 
     private fun configureBanner() {
-        val placement = presentation.defaultPlacement
+        val placement = presentation.getResolvedPlacement(context)
         val size = placement.size
         val position = placement.position
         val margin = placement.margin
@@ -125,6 +126,7 @@ internal class ThomasBannerView(
         val containerView = model.createView(context, environment)
         frame.addView(containerView)
         addView(frame)
+        LayoutUtils.applyBorderAndBackground(frame, placement.border, placement.backgroundColor)
 
         val viewId = frame.id
         ConstraintSetBuilder.newBuilder(context)

@@ -71,7 +71,7 @@ public final class LayoutUtils {
         applyBorderAndBackground(view, model.getBorder(), model.getBackgroundColor());
     }
 
-    private static void applyBorderAndBackground(
+    public static void applyBorderAndBackground(
         @NonNull View view,
         @Nullable Border border,
         @Nullable Color backgroundColor
