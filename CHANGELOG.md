@@ -3,10 +3,11 @@
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
 ## Version 17.5.0 November 9, 2023
-Minor release that adds support for server side feature flag segmentation.
+Minor release that adds support for server side feature flag segmentation and impression billing.
 
 ### Changes
 - Added server side segmentation for feature flags
+- Added support for impression billing
 - Fixed IAX new user audience condition
 
 ## Version 17.4.1 November 6, 2023
