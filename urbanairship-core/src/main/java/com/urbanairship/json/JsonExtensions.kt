@@ -59,6 +59,7 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
         String::class -> field.optString() as T
         Boolean::class -> field.getBoolean(false) as T
         Long::class -> field.getLong(0) as T
+        ULong::class -> field.getLong(0).toULong() as T
         Double::class -> field.getDouble(0.0) as T
         Integer::class -> field.getInt(0) as T
         JsonList::class -> field.optList() as T

@@ -8,12 +8,10 @@ import com.urbanairship.json.optionalField
 
 internal data class EvaluationOptions(
     val disallowStaleValue: Boolean?,
-    val disallowStaleContact: Boolean?,
     val ttl: Int?
 ) {
     companion object {
         private const val KEY_DISALLOW_STALE_VALUE = "disallow_stale_value"
-        private const val KEY_DISALLOW_STALE_CONTACT = "disallow_stale_contact"
         private const val KEY_TTL = "ttl"
 
         /**
@@ -28,7 +26,6 @@ internal data class EvaluationOptions(
             try {
                 return EvaluationOptions(
                     disallowStaleValue = json.optionalField(KEY_DISALLOW_STALE_VALUE),
-                    disallowStaleContact = json.optionalField(KEY_DISALLOW_STALE_CONTACT),
                     ttl = json.optionalField(KEY_TTL)
                 )
             } catch (ex: JsonException) {

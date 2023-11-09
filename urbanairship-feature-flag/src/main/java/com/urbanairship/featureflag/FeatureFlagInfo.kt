@@ -288,19 +288,10 @@ internal class EvaluationOptions(
         private const val KEY_TTL = "ttl"
 
         fun fromJson(json: JsonMap): EvaluationOptions? {
-            val converted: (JsonValue) -> ULong? = {
-                if (it.isLong) { it.getLong(0).toULong() } else { null }
-            }
-
-            try {
-                return EvaluationOptions(
+            return EvaluationOptions(
                     disallowStaleValues = json.optionalField(KEY_STALE_DATA_FLAG),
-                    ttl = converted(json.opt(KEY_TTL))
-                )
-            } catch (ex: JsonException) {
-                UALog.e(ex) { "failed to parse Evaluation options from $json" }
-                return null
-            }
+                    ttl = json.optionalField(KEY_TTL)
+            )
         }
     }
 
