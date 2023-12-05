@@ -5,4 +5,6 @@
 
     <bool name="ua_iam_modal_allow_fullscreen_display">true</bool>
     <bool name="ua_iam_html_allow_fullscreen_display">true</bool>
+
+    <integer name="ua_iam_button_stroke_width_dps">2</integer>
 </resources>
