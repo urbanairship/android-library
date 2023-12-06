@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.6.0 December 6, 2023
+Minor release that adds a new method `Contact#notifyRemoteLogin()` that will refresh the local state on the device for named user associations that occur through the server instead of the SDK.
+
+### Changes
+- Added new `Contact#notifyRemoteLogin()` method
+
 ## Version 17.5.0 November 9, 2023
 Minor release that adds support for server side feature flag segmentation and impression billing.
 
