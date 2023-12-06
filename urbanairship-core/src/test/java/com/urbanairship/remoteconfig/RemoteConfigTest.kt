@@ -21,7 +21,7 @@ public class RemoteConfigTest {
     public fun testJson() {
         val json = """
             {
-               "metered_usage_config":{
+               "metered_usage":{
                   "initial_delay_ms":100,
                   "interval_ms":200,
                   "enabled":true

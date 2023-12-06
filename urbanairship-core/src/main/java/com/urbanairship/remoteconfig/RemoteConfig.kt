@@ -26,7 +26,7 @@ public data class RemoteConfig @JvmOverloads constructor(
 
     public companion object {
         private const val AIRSHIP_CONFIG_KEY = "airship_config"
-        private const val METERED_USAGE_CONFIG_KEY = "metered_usage_config"
+        private const val METERED_USAGE_CONFIG_KEY = "metered_usage"
         private const val FETCH_CONTACT_REMOTE_DATA_KEY = "fetch_contact_remote_data"
         private const val CONTACT_CONFIG_KEY = "contact_config"
 
