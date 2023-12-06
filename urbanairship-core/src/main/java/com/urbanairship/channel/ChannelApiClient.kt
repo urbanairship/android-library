@@ -26,7 +26,7 @@ internal class ChannelApiClient @VisibleForTesting constructor(
     suspend fun createChannel(channelPayload: ChannelRegistrationPayload): RequestResult<Channel> {
         UALog.d { "Creating channel with payload: $channelPayload" }
 
-        val builder = runtimeConfig.urlConfig.deviceUrl().appendEncodedPath(CHANNEL_API_PATH)
+        val builder = runtimeConfig.deviceUrl.appendEncodedPath(CHANNEL_API_PATH)
 
         val request = Request(
             url = builder.build(),
@@ -76,7 +76,7 @@ internal class ChannelApiClient @VisibleForTesting constructor(
     }
 
     internal fun createLocation(channelId: String): Uri? {
-        return runtimeConfig.urlConfig.deviceUrl().appendEncodedPath(CHANNEL_API_PATH)
+        return runtimeConfig.deviceUrl.appendEncodedPath(CHANNEL_API_PATH)
             .appendPath(channelId)
             .build()
     }

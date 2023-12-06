@@ -5,11 +5,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
 import com.urbanairship.UAirship
-import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
+import com.urbanairship.remoteconfig.RemoteAirshipConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -28,7 +29,14 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class ChannelBatchUpdateApiClientTest {
 
-    private val config = TestAirshipRuntimeConfig.newTestConfig()
+    private var config: TestAirshipRuntimeConfig = TestAirshipRuntimeConfig(
+        RemoteConfig(
+            airshipConfig = RemoteAirshipConfig(
+                deviceApiUrl = "https://example.com"
+            )
+        )
+    )
+
     private val requestSession = TestRequestSession()
     private val testDispatcher = StandardTestDispatcher()
 
@@ -38,7 +46,6 @@ public class ChannelBatchUpdateApiClientTest {
     @Before
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
-        config.urlConfig = AirshipUrlConfig.newBuilder().setDeviceUrl("https://example.com").build()
     }
 
     @After
@@ -165,7 +172,7 @@ public class ChannelBatchUpdateApiClientTest {
 
     @Test
     public fun testAndroidPlatform(): TestResult = runTest {
-        config.platform = UAirship.ANDROID_PLATFORM
+        config.setPlatform(UAirship.ANDROID_PLATFORM)
         requestSession.addResponse(200)
         client.update("someChannelId", emptyList(), emptyList(), emptyList(), emptyList())
         assertEquals(
@@ -175,7 +182,7 @@ public class ChannelBatchUpdateApiClientTest {
 
     @Test
     public fun testAmazonPlatform(): TestResult = runTest {
-        config.platform = UAirship.AMAZON_PLATFORM
+        config.setPlatform(UAirship.AMAZON_PLATFORM)
         requestSession.addResponse(200)
         client.update("someChannelId", emptyList(), emptyList(), emptyList(), emptyList())
         assertEquals(

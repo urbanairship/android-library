@@ -35,7 +35,7 @@ public class AppRemoteDataProviderTest {
     private val provider: AppRemoteDataProvider = AppRemoteDataProvider(
         context,
         PreferenceDataStore.inMemoryStore(context),
-        TestAirshipRuntimeConfig.newTestConfig(),
+        TestAirshipRuntimeConfig(),
         mockApiClient,
         mockUrlFactory
     )

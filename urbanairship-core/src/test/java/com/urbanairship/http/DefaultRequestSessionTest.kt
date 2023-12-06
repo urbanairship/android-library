@@ -26,7 +26,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 public class DefaultRequestSessionTest {
 
-    private val appConfig = TestAirshipRuntimeConfig.newTestConfig().configOptions
+    private val appConfig = TestAirshipRuntimeConfig().configOptions
     private val platform = UAirship.ANDROID_PLATFORM
     private val mockClient = mockk<HttpClient>()
     private val mockAuthProvider = mockk<AuthTokenProvider>()

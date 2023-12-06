@@ -6,12 +6,11 @@ import android.content.Context;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
-import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.cache.AirshipCache;
 import com.urbanairship.channel.AirshipChannel;
@@ -22,10 +21,7 @@ import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
 import com.urbanairship.modules.aaid.AdIdModuleFactory;
-import com.urbanairship.modules.accengage.AccengageModule;
-import com.urbanairship.modules.accengage.AccengageModuleFactory;
 import com.urbanairship.modules.automation.AutomationModuleFactory;
-import com.urbanairship.modules.chat.ChatModuleFactory;
 import com.urbanairship.modules.debug.DebugModuleFactory;
 import com.urbanairship.modules.featureflag.FeatureFlagsModuleFactory;
 import com.urbanairship.modules.liveupdate.LiveUpdateModuleFactory;
@@ -49,47 +45,27 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class Modules {
 
-    private static final String ACCENGAGE_MODULE_FACTORY = "com.urbanairship.accengage.AccengageModuleFactoryImpl";
     private static final String MESSAGE_CENTER_MODULE_FACTORY = "com.urbanairship.messagecenter.MessageCenterModuleFactoryImpl";
     private static final String LOCATION_MODULE_FACTORY = "com.urbanairship.location.LocationModuleFactoryImpl";
     private static final String AUTOMATION_MODULE_FACTORY = "com.urbanairship.automation.AutomationModuleFactoryImpl";
     private static final String DEBUG_MODULE_FACTORY = "com.urbanairship.debug.DebugModuleFactoryImpl";
     private static final String AD_ID_FACTORY = "com.urbanairship.aaid.AdIdModuleFactoryImpl";
-    private static final String CHAT_FACTORY = "com.urbanairship.chat.ChatModuleFactoryImpl";
     private static final String LIVE_UPDATE_FACTORY = "com.urbanairship.liveupdate.LiveUpdateModuleFactoryImpl";
     private static final String PREFERENCE_CENTER_FACTORY = "com.urbanairship.preferencecenter.PreferenceCenterModuleFactoryImpl";
     private static final String FEATURE_FLAGS_FACTORY = "com.urbanairship.featureflag.FeatureFlagsModuleFactoryImpl";
 
-    @Nullable
-    public static AccengageModule accengage(@NonNull Context context,
-                                            @NonNull AirshipConfigOptions configOptions,
-                                            @NonNull PreferenceDataStore preferenceDataStore,
-                                            @NonNull PrivacyManager privacyManager,
-                                            @NonNull AirshipChannel channel,
-                                            @NonNull PushManager pushManager) {
-        try {
-            AccengageModuleFactory moduleFactory = createFactory(ACCENGAGE_MODULE_FACTORY, AccengageModuleFactory.class);
-            if (moduleFactory != null) {
-                return moduleFactory.build(context, configOptions, preferenceDataStore, privacyManager, channel, pushManager);
-            }
-        } catch (Exception e) {
-            UALog.e(e, "Failed to build Accengage module");
-        }
-        return null;
-    }
 
     @Nullable
     public static Module messageCenter(@NonNull Context context,
                                        @NonNull PreferenceDataStore preferenceDataStore,
+                                       @NonNull AirshipRuntimeConfig config,
                                        @NonNull PrivacyManager privacyManager,
                                        @NonNull AirshipChannel channel,
-                                       @NonNull PushManager pushManager,
-                                       @NonNull AirshipConfigOptions configOptions) {
-
+                                       @NonNull PushManager pushManager) {
         try {
             MessageCenterModuleFactory moduleFactory = createFactory(MESSAGE_CENTER_MODULE_FACTORY, MessageCenterModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, preferenceDataStore, privacyManager, channel, pushManager, configOptions);
+                return moduleFactory.build(context, preferenceDataStore, config, privacyManager, channel, pushManager);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Message Center module");
@@ -173,23 +149,6 @@ public class Modules {
         return null;
     }
 
-    @Nullable
-    public static Module chat(@NonNull Context context,
-                              @NonNull PreferenceDataStore dataStore,
-                              @NonNull AirshipRuntimeConfig config,
-                              @NonNull PrivacyManager privacyManager,
-                              @NonNull AirshipChannel airshipChannel,
-                              @NonNull PushManager pushManager) {
-        try {
-            ChatModuleFactory moduleFactory = createFactory(CHAT_FACTORY, ChatModuleFactory.class);
-            if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore, config, privacyManager, airshipChannel, pushManager);
-            }
-        } catch (Exception e) {
-            UALog.e(e, "Failed to build Chat module");
-        }
-        return null;
-    }
 
     @Nullable
     public static Module preferenceCenter(@NonNull Context context,

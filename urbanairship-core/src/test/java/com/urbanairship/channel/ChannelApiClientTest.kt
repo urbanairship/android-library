@@ -4,10 +4,11 @@ package com.urbanairship.channel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
-import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.toSuspendingRequestSession
+import com.urbanairship.remoteconfig.RemoteAirshipConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -27,7 +28,7 @@ import org.junit.runner.RunWith
 public class ChannelApiClientTest {
 
     private val payload = ChannelRegistrationPayload.Builder().build()
-    private val config = TestAirshipRuntimeConfig.newTestConfig()
+    private val config = TestAirshipRuntimeConfig()
     private val requestSession = TestRequestSession()
     private val testDispatcher = StandardTestDispatcher()
 
@@ -36,7 +37,13 @@ public class ChannelApiClientTest {
     @Before
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
-        config.urlConfig = AirshipUrlConfig.newBuilder().setDeviceUrl("https://example.com").build()
+        config.updateRemoteConfig(
+            RemoteConfig(
+                airshipConfig = RemoteAirshipConfig(
+                    deviceApiUrl = "https://example.com"
+                )
+            )
+        )
     }
 
     @After
@@ -66,7 +73,7 @@ public class ChannelApiClientTest {
 
     @Test
     public fun testCreateNullUrl(): TestResult = runTest {
-        config.urlConfig = AirshipUrlConfig.newBuilder().setDeviceUrl(null).build()
+        config.updateRemoteConfig(RemoteConfig())
         requestSession.addResponse(200, "{ \"ok\": true, \"channel_id\": \"someChannelId\"}")
         val response = client.createChannel(payload)
         assertNotNull(response.exception)
@@ -94,7 +101,7 @@ public class ChannelApiClientTest {
 
     @Test
     public fun testUpdateNullUrl(): TestResult = runTest {
-        config.urlConfig = AirshipUrlConfig.newBuilder().setDeviceUrl(null).build()
+        config.updateRemoteConfig(RemoteConfig())
         requestSession.addResponse(200, "{ \"ok\": true, \"channel_id\": \"someChannelId\"}")
         val response = client.updateChannel("someChannelId", payload)
         assertNotNull(response.exception)

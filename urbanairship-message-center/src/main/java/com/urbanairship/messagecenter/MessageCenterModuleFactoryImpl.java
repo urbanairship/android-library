@@ -6,6 +6,7 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.modules.Module;
 import com.urbanairship.modules.messagecenter.MessageCenterModuleFactory;
 import com.urbanairship.push.PushManager;
@@ -26,11 +27,11 @@ public class MessageCenterModuleFactoryImpl implements MessageCenterModuleFactor
     public Module build(
             @NonNull Context context,
             @NonNull PreferenceDataStore dataStore,
+            @NonNull AirshipRuntimeConfig config,
             @NonNull PrivacyManager privacyManager,
             @NonNull AirshipChannel airshipChannel,
-            @NonNull PushManager pushManager,
-            @NonNull AirshipConfigOptions configOptions) {
-        MessageCenter messageCenter = new MessageCenter(context, dataStore, privacyManager, airshipChannel, pushManager, configOptions);
+            @NonNull PushManager pushManager) {
+        MessageCenter messageCenter = new MessageCenter(context, dataStore, config, privacyManager, airshipChannel, pushManager);
         return Module.singleComponent(messageCenter, R.xml.ua_message_center_actions);
     }
 

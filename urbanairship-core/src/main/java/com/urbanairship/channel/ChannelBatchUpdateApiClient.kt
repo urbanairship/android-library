@@ -55,7 +55,7 @@ internal class ChannelBatchUpdateApiClient(
     }
 
     private fun bulkUpdateUrl(channelId: String): Uri? {
-        val builder = config.urlConfig.deviceUrl()
+        val builder = config.deviceUrl
             .appendEncodedPath(CHANNEL_BULK_UPDATE_PATH)
             .appendPath(channelId)
 

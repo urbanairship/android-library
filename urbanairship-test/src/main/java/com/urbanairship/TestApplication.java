@@ -13,7 +13,6 @@ import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.contacts.Contact;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.locale.LocaleManager;
-import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.PushManager;
@@ -31,7 +30,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
     public ActivityLifecycleCallbacks callback;
     public PreferenceDataStore preferenceDataStore;
 
-    private TestAirshipRuntimeConfig testRuntimeConfig;
+    public TestAirshipRuntimeConfig testRuntimeConfig;
 
     public static com.urbanairship.TestApplication getApplication() {
         return (com.urbanairship.TestApplication) ApplicationProvider.getApplicationContext();
@@ -41,7 +40,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
     public void onCreate() {
         super.onCreate();
 
-        testRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        testRuntimeConfig = new TestAirshipRuntimeConfig();
         final AirshipConfigOptions airshipConfigOptions = testRuntimeConfig.getConfigOptions();
 
         this.preferenceDataStore = PreferenceDataStore.inMemoryStore(getApplicationContext());
@@ -103,10 +102,6 @@ public class TestApplication extends Application implements TestLifecycleApplica
 
     public void setOptions(AirshipConfigOptions options) {
         UAirship.shared().airshipConfigOptions = options;
-    }
-
-    public void setAccengageNotificationHandler(AccengageNotificationHandler notificationHandler) {
-        UAirship.shared().accengageNotificationHandler = notificationHandler;
     }
 
     @Override

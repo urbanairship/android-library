@@ -15,6 +15,8 @@ import com.urbanairship.job.JobResult;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.remoteconfig.RemoteAirshipConfig;
+import com.urbanairship.remoteconfig.RemoteConfig;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -66,7 +68,18 @@ public class InboxJobHandlerTest {
     public void setup() {
         Context context = ApplicationProvider.getApplicationContext();
         dataStore = PreferenceDataStore.inMemoryStore(context);
-        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        runtimeConfig = new TestAirshipRuntimeConfig(
+                new RemoteConfig(
+                        new RemoteAirshipConfig(
+                                "https://remote-data",
+                                "https://device",
+                                "https://wallet",
+                                "https://analytics",
+                                "https://metered-usage"
+                        )
+                )
+        );
+
         mockChannel = Mockito.mock(AirshipChannel.class);
         mockMessageDao = Mockito.mock(MessageDao.class);
 

@@ -23,7 +23,7 @@ internal class MeteredUsageApiClient(
         channelId: String?
     ): RequestResult<Unit> {
         val meteredUsageUrl =
-            config.urlConfig.meteredUsageUrl().appendEncodedPath("api/metered-usage").build()
+            config.meteredUsageUrl.appendEncodedPath("api/metered-usage").build()
                 ?: throw InvalidParameterException("Missing metered usage URL")
 
         val platform = when (config.platform) {

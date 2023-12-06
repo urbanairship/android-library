@@ -24,7 +24,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.ApplicationListener;
 import com.urbanairship.app.GlobalActivityMonitor;
-import com.urbanairship.base.Extender;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.AirshipChannelListener;
 import com.urbanairship.channel.ChannelRegistrationPayload;
@@ -86,7 +85,7 @@ public class Inbox {
     private final JobDispatcher jobDispatcher;
     private final ApplicationListener applicationListener;
     private final AirshipChannelListener channelListener;
-    private final Extender<ChannelRegistrationPayload.Builder> channelRegistrationPayloadExtender;
+    private final AirshipChannel.Extender channelRegistrationPayloadExtender;
     private final User.Listener userListener;
     private final ActivityMonitor activityMonitor;
     private final AirshipChannel airshipChannel;
@@ -158,11 +157,15 @@ public class Inbox {
 
         this.channelListener = channelId -> dispatchUpdateUserJob(true);
 
-        this.channelRegistrationPayloadExtender = builder -> {
-            if (privacyManager.isEnabled(PrivacyManager.FEATURE_MESSAGE_CENTER)) {
-                return builder.setUserId(getUser().getId());
-            } else {
-                return builder;
+        this.channelRegistrationPayloadExtender = new AirshipChannel.Extender.Blocking() {
+            @NonNull
+            @Override
+            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
+                if (privacyManager.isEnabled(PrivacyManager.FEATURE_MESSAGE_CENTER)) {
+                    return builder.setUserId(getUser().getId());
+                } else {
+                    return builder;
+                }
             }
         };
 
@@ -628,7 +631,7 @@ public class Inbox {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                ArrayList<String> messageIdsList = new ArrayList(messageIds);
+                ArrayList<String> messageIdsList = new ArrayList<>(messageIds);
                 messageDao.markMessagesDeleted(messageIdsList);
             }
         });
@@ -784,7 +787,7 @@ public class Inbox {
             if (rhs.getSentDateMS() == lhs.getSentDateMS()) {
                 return lhs.getMessageId().compareTo(rhs.getMessageId());
             } else {
-                return Long.valueOf(rhs.getSentDateMS()).compareTo(lhs.getSentDateMS());
+                return Long.compare(rhs.getSentDateMS(), lhs.getSentDateMS());
             }
         }
     }

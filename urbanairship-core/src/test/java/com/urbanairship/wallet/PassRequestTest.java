@@ -6,11 +6,15 @@ import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
+import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequestSession;
 import com.urbanairship.http.RequestBody;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.remoteconfig.RemoteAirshipConfig;
+import com.urbanairship.remoteconfig.RemoteConfig;
 import com.urbanairship.shadow.ShadowNotificationManagerExtension;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
@@ -32,6 +36,16 @@ public class PassRequestTest extends BaseTestCase {
 
     private TestRequestSession requestSession = new TestRequestSession();
 
+    @Before
+    public void setup() {
+        TestApplication.getApplication().testRuntimeConfig.updateRemoteConfig(
+                new RemoteConfig(
+                        new RemoteAirshipConfig(
+                                null, null, "https://wallet-api.urbanairship.com", null
+                        )
+                )
+        );
+    }
     @Test
     public void testDefaultUrl() {
         PassRequest request = PassRequest.newBuilder()

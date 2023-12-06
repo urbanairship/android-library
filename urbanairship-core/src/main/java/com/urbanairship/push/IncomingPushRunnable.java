@@ -28,7 +28,6 @@ import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.push.notifications.NotificationArguments;
 import com.urbanairship.push.notifications.NotificationChannelCompat;
 import com.urbanairship.push.notifications.NotificationChannelUtils;
@@ -260,13 +259,6 @@ class IncomingPushRunnable implements Runnable {
     private NotificationProvider getNotificationProvider(UAirship airship) {
         if (message.isAirshipPush()) {
             return airship.getPushManager().getNotificationProvider();
-        }
-
-        if (message.isAccengageVisiblePush()) {
-            AccengageNotificationHandler notificationHandler = airship.getAccengageNotificationHandler();
-            if (notificationHandler != null) {
-                return notificationHandler.getNotificationProvider();
-            }
         }
 
         return null;

@@ -312,7 +312,7 @@ public class PushManager extends AirshipComponent {
     @Override
     protected void init() {
         super.init();
-        airshipChannel.addChannelRegistrationPayloadExtender(this::extendChannelRegistrationPayload);
+        airshipChannel.addChannelRegistrationPayloadExtender(channelExtender);
         analytics.addHeaderDelegate(this::createAnalyticsHeaders);
         privacyManager.addListener(() -> {
             updateManagerEnablement();
@@ -483,27 +483,30 @@ public class PushManager extends AirshipComponent {
         return AirshipComponentGroups.PUSH;
     }
 
-    @NonNull
-    private ChannelRegistrationPayload.Builder extendChannelRegistrationPayload(@NonNull ChannelRegistrationPayload.Builder builder) {
-        if (!isComponentEnabled() || !privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)) {
-            return builder;
+    private final AirshipChannel.Extender channelExtender = new AirshipChannel.Extender.Blocking() {
+        @NonNull
+        @Override
+        public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
+            if (!isComponentEnabled() || !privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)) {
+                return builder;
+            }
+
+            if (getPushToken() == null) {
+                performPushRegistration(false);
+            }
+
+            String pushToken = getPushToken();
+            builder.setPushAddress(pushToken);
+            PushProvider provider = getPushProvider();
+
+            if (pushToken != null && provider != null && provider.getPlatform() == UAirship.ANDROID_PLATFORM) {
+                builder.setDeliveryType(provider.getDeliveryType());
+            }
+
+            return builder.setOptIn(isOptIn())
+                          .setBackgroundEnabled(isPushAvailable());
         }
-
-        if (getPushToken() == null) {
-            performPushRegistration(false);
-        }
-
-        String pushToken = getPushToken();
-        builder.setPushAddress(pushToken);
-        PushProvider provider = getPushProvider();
-
-        if (pushToken != null && provider != null && provider.getPlatform() == UAirship.ANDROID_PLATFORM) {
-            builder.setDeliveryType(provider.getDeliveryType());
-        }
-
-        return builder.setOptIn(isOptIn())
-                      .setBackgroundEnabled(isPushAvailable());
-    }
+    };
 
     /**
      * {@inheritDoc}

@@ -141,6 +141,9 @@ internal class ContactManager(
             val isStable = this.operations.firstOrNull {
                 when (it.operation) {
                     is ContactOperation.Reset -> true
+                    is ContactOperation.Verify -> {
+                        it.operation.required
+                    }
                     is ContactOperation.Identify -> {
                         it.operation.identifier != lastIdentity.namedUserId
                     }
@@ -148,7 +151,11 @@ internal class ContactManager(
                 }
             } == null
 
-            return ContactIdUpdate(lastIdentity.contactId, isStable)
+            return ContactIdUpdate(
+                    contactId = lastIdentity.contactId,
+                    isStable = isStable,
+                    resolveDateMs = lastIdentity.resolveDateMs ?: 0
+            )
         }
 
     internal val namedUserId: String?
@@ -190,7 +197,7 @@ internal class ContactManager(
         }
 
         audienceOverridesProvider.stableContactIdDelegate = {
-            stableContactId()
+            stableContactIdUpdate().contactId
         }
 
         jobDispatcher.setRateLimit(IDENTITY_RATE_LIMIT, 1, 5, TimeUnit.SECONDS)
@@ -199,8 +206,11 @@ internal class ContactManager(
         yieldContactUpdates()
     }
 
-    internal suspend fun stableContactId(): String {
-        return contactIdUpdates.mapNotNull { it }.first { it.isStable }.contactId
+    internal suspend fun stableContactIdUpdate(minResolveDate: Long = 0): ContactIdUpdate {
+        return contactIdUpdates.mapNotNull { it }
+                .first {
+                    it.isStable && it.resolveDateMs >= minResolveDate
+                }
     }
 
     internal fun addOperation(operation: ContactOperation) {
@@ -241,7 +251,10 @@ internal class ContactManager(
         identityLock.withLock {
             if (this.lastContactIdentity == null) {
                 this.lastContactIdentity = ContactIdentity(
-                    contactId = UUID.randomUUID().toString(), isAnonymous = true, namedUserId = null
+                        contactId = UUID.randomUUID().toString(),
+                        isAnonymous = true,
+                        namedUserId = null,
+                        resolveDateMs = this.clock.currentTimeMillis()
                 )
                 addOperation(ContactOperation.Resolve)
             }
@@ -470,6 +483,11 @@ internal class ContactManager(
                 return tokenIfValid() != null
             }
 
+            is ContactOperation.Verify -> {
+                val lastResolveDateMs = lastContactIdentity?.resolveDateMs
+                return lastResolveDateMs != null && operation.dateMs <= lastResolveDateMs
+            }
+
             else -> false
         }
     }
@@ -485,6 +503,7 @@ internal class ContactManager(
             is ContactOperation.Reset -> performReset(channelId)
             is ContactOperation.Identify -> performIdentify(channelId, operation)
             is ContactOperation.Resolve -> performResolve(channelId)
+            is ContactOperation.Verify -> performResolve(channelId)
             is ContactOperation.Update -> performUpdate(operation)
             is ContactOperation.AssociateChannel -> performAssociateChannel(operation)
             is ContactOperation.RegisterEmail -> performRegisterEmail(operation)
@@ -653,7 +672,10 @@ internal class ContactManager(
             }
 
             val contactIdentity = ContactIdentity(
-                result.contactId, result.isAnonymous, resolvedNamedUser
+                    contactId = result.contactId,
+                    isAnonymous = result.isAnonymous,
+                    namedUserId = resolvedNamedUser,
+                    resolveDateMs = this.clock.currentTimeMillis()
             )
 
             // Conflict

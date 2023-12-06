@@ -7,7 +7,8 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
-import com.urbanairship.base.Extender
+import com.urbanairship.channel.AirshipChannel.Extender.Blocking
+import com.urbanairship.channel.AirshipChannel.Extender.Suspending
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
@@ -44,13 +45,13 @@ internal class ChannelRegistrar(
         get() = dataStore.getString(CHANNEL_ID_KEY, null)
         private set(value) = dataStore.put(CHANNEL_ID_KEY, value)
 
-    private val channelRegistrationPayloadExtenders: MutableList<Extender<ChannelRegistrationPayload.Builder>> = CopyOnWriteArrayList()
+    private val channelRegistrationPayloadExtenders: MutableList<AirshipChannel.Extender> = CopyOnWriteArrayList()
 
-    internal fun addChannelRegistrationPayloadExtender(extender: Extender<ChannelRegistrationPayload.Builder>) {
+    internal fun addChannelRegistrationPayloadExtender(extender: AirshipChannel.Extender) {
         channelRegistrationPayloadExtenders.add(extender)
     }
 
-    internal fun removeChannelRegistrationPayloadExtender(extender: Extender<ChannelRegistrationPayload.Builder>) {
+    internal fun removeChannelRegistrationPayloadExtender(extender: AirshipChannel.Extender) {
         channelRegistrationPayloadExtenders.remove(extender)
     }
 
@@ -58,10 +59,13 @@ internal class ChannelRegistrar(
         return channelId?.let { updateChannel(it) } ?: createChannel()
     }
 
-    private fun buildCraPayload(): ChannelRegistrationPayload {
+    private suspend fun buildCraPayload(): ChannelRegistrationPayload {
         var builder = ChannelRegistrationPayload.Builder()
         for (extender in channelRegistrationPayloadExtenders) {
-            builder = extender.extend(builder)
+            builder = when (extender) {
+                is Suspending -> extender.extend(builder)
+                is Blocking -> extender.extend(builder)
+            }
         }
         return builder.build()
     }
@@ -105,19 +109,18 @@ internal class ChannelRegistrar(
         }
     }
 
-    private val isUpToDate: Boolean
-        get() {
-            val channelId = channelId
-            return if (channelId == null) {
-                false
-            } else {
-                !shouldUpdate(
+    private suspend fun isUpToDate(): Boolean {
+        val channelId = channelId
+        return if (channelId == null) {
+            false
+        } else {
+            !shouldUpdate(
                     buildCraPayload(),
                     lastChannelRegistrationInfo,
                     channelApiClient.createLocation(channelId).toString()
-                )
-            }
+            )
         }
+    }
 
     private var lastChannelRegistrationInfo: RegistrationInfo?
         get() = dataStore.optJsonValue(LAST_CHANNEL_REGISTRATION_INFO)?.tryParse {
@@ -141,7 +144,7 @@ internal class ChannelRegistrar(
             )
 
             _channelIdFlow.tryEmit(result.value.identifier)
-            if (isUpToDate) {
+            if (isUpToDate()) {
                 RegistrationResult.SUCCESS
             } else {
                 RegistrationResult.NEEDS_UPDATE
@@ -173,7 +176,7 @@ internal class ChannelRegistrar(
                 payload = payload,
                 location = result.value.location
             )
-            if (isUpToDate) {
+            if (isUpToDate()) {
                 RegistrationResult.SUCCESS
             } else {
                 RegistrationResult.NEEDS_UPDATE

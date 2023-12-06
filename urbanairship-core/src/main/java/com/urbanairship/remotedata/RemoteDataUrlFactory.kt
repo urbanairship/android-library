@@ -59,7 +59,7 @@ internal class RemoteDataUrlFactory(
 
     private fun createUrl(path: String, locale: Locale, randomValue: Int): Uri? {
         // {path}?sdk_version={version}&language={language}&country={country}&manufacturer={manufacturer}&push_providers={push_providers}
-        val builder: UrlBuilder = runtimeConfig.urlConfig.remoteDataUrl()
+        val builder: UrlBuilder = runtimeConfig.remoteDataUrl
             .appendEncodedPath(path)
             .appendQueryParameter(
                 SDK_VERSION_QUERY_PARAM,

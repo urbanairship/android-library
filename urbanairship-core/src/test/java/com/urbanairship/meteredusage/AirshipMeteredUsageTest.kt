@@ -5,7 +5,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
-import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.UAirship
 import com.urbanairship.channel.AirshipChannel
@@ -14,21 +13,19 @@ import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.remoteconfig.MeteredUsageConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
-import io.mockk.spyk
 import io.mockk.verify
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,7 +34,7 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalCoroutinesApi::class)
 public class AirshipMeteredUsageTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val activityMonitor = TestActivityMonitor()
+    private val testConfig: TestAirshipRuntimeConfig = TestAirshipRuntimeConfig()
     private val privacyManager: PrivacyManager = mockk()
     private val apiClient: MeteredUsageApiClient = mockk()
     private val mockJobDispatcher: JobDispatcher = mockk(relaxed = true)
@@ -49,72 +46,67 @@ public class AirshipMeteredUsageTest {
     public fun setUp() {
         eventsStore = EventsDatabase.inMemory(context).eventsDao()
 
-        manager = spyk(AirshipMeteredUsage(
+        manager = AirshipMeteredUsage(
             context = context,
             dataStore = PreferenceDataStore.inMemoryStore(context),
-            config = TestAirshipRuntimeConfig.newTestConfig(),
+            config = testConfig,
             privacyManager = privacyManager,
             store = eventsStore,
             client = apiClient,
             jobDispatcher = mockJobDispatcher
-        ), recordPrivateCalls = true)
+        )
+
+        verify(exactly = 1) { mockJobDispatcher.setRateLimit(any(), any(), any(), any()) }
     }
 
     @Test
     public fun testConfigUpdate(): TestResult = runTest {
-
         every { privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS) } returns true
 
-        manager.setConfig(Config.default())
-        verify(exactly = 0) { mockJobDispatcher.setRateLimit(any(), any(), any(), any()) }
+        testConfig.updateRemoteConfig(
+            RemoteConfig(
+                meteredUsageConfig = MeteredUsageConfig(false, 0, 10)
+            )
+        )
+        verify {
+            mockJobDispatcher.setRateLimit(
+                "MeteredUsage.rateLimit", 1, 10, TimeUnit.MILLISECONDS
+            )
+        }
 
-        val configWithRateLimit = Config(false, 0, 10)
-        manager.setConfig(configWithRateLimit)
-        verify { mockJobDispatcher.setRateLimit("MeteredUsage.rateLimit", 1,
-            configWithRateLimit.intervalMs, TimeUnit.MILLISECONDS) }
+        testConfig.updateRemoteConfig(
+            RemoteConfig(
+                meteredUsageConfig = MeteredUsageConfig(true, 15, 30)
+            )
+        )
+        verify {
+            mockJobDispatcher.setRateLimit(
+                "MeteredUsage.rateLimit", 1, 30, TimeUnit.MILLISECONDS
+            )
+        }
+        verify { mockJobDispatcher.dispatch(makeJobInfo(15)) }
 
-        val enabledConfig = Config(true, 15, 30)
-        manager.setConfig(enabledConfig)
-        verify { mockJobDispatcher.setRateLimit("MeteredUsage.rateLimit", 1,
-            enabledConfig.intervalMs, TimeUnit.MILLISECONDS) }
-        verify { manager.scheduleUpload(enabledConfig.initialDelayMs) }
+        testConfig.updateRemoteConfig(
+            RemoteConfig(
+                meteredUsageConfig = MeteredUsageConfig(true, 10, 20)
+            )
+        )
 
-        val anotherEnabledConfig = Config(true, 10, 20)
-        manager.setConfig(anotherEnabledConfig)
-        verify { mockJobDispatcher.setRateLimit("MeteredUsage.rateLimit", 1,
-            anotherEnabledConfig.intervalMs, TimeUnit.MILLISECONDS) }
-        verify(exactly = 0) { manager.scheduleUpload() }
-    }
-
-    @Test
-    public fun testScheduleUpload(): TestResult = runTest {
-        manager.scheduleUpload()
-        verify(exactly = 0) { mockJobDispatcher.dispatch(any()) }
-
-        val slot = slot<JobInfo>()
-        every { mockJobDispatcher.dispatch(capture(slot)) } returns Unit
-
-        manager.setConfig(Config(true, 10, 20))
-        manager.scheduleUpload()
-        verify { mockJobDispatcher.dispatch(any()) }
-        assertEquals(JobInfo.KEEP, slot.captured.conflictStrategy)
-
-        manager.scheduleUpload(conflictStrategy = JobInfo.REPLACE)
-        verify { mockJobDispatcher.dispatch(any()) }
-
-        assertTrue(slot.isCaptured)
-        assertFalse(slot.isNull)
-
-        assertEquals(AirshipMeteredUsage::class.java.name, slot.captured.airshipComponentName)
-        assertEquals("MeteredUsage.upload", slot.captured.action)
-        assertEquals(JobInfo.REPLACE, slot.captured.conflictStrategy)
-        assertTrue(slot.captured.isNetworkAccessRequired)
-        assertEquals(0, slot.captured.minDelayMs)
+        verify {
+            mockJobDispatcher.setRateLimit(
+                "MeteredUsage.rateLimit", 1, 20, TimeUnit.MILLISECONDS
+            )
+        }
+        verify(exactly = 0) { mockJobDispatcher.dispatch(makeJobInfo(10)) }
     }
 
     @Test
     public fun testAddEvent(): TestResult = runTest {
-        manager.setConfig(Config(true, 1, 2))
+        testConfig.updateRemoteConfig(
+            RemoteConfig(
+                meteredUsageConfig = MeteredUsageConfig(true, 1, 2)
+            )
+        )
 
         var events = eventsStore.getAllEvents()
         assert(events.isEmpty())
@@ -132,7 +124,7 @@ public class AirshipMeteredUsageTest {
         )
 
         manager.addEvent(event)
-        verify(exactly = 1) { manager.scheduleUpload() }
+        verify(exactly = 1) { mockJobDispatcher.dispatch(makeJobInfo(0)) }
 
         events = eventsStore.getAllEvents()
         assertEquals(1, events.size)
@@ -142,7 +134,8 @@ public class AirshipMeteredUsageTest {
 
         every { privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS) } returns false
         manager.addEvent(event)
-        verify(exactly = 2) { manager.scheduleUpload() }
+        verify(exactly = 2) { mockJobDispatcher.dispatch(makeJobInfo(0)) }
+
         events = eventsStore.getAllEvents()
         assertEquals(event.eventId, events.first().eventId)
         assertEquals(event.type, events.first().type)
@@ -155,7 +148,12 @@ public class AirshipMeteredUsageTest {
     @Test
     public fun testAddEventDisabledConfig(): TestResult = runTest {
         every { privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS) } returns true
-        manager.setConfig(Config(false, 1, 2))
+
+        testConfig.updateRemoteConfig(
+            RemoteConfig(
+                meteredUsageConfig = MeteredUsageConfig(false, 1, 2)
+            )
+        )
 
         val event = MeteredUsageEventEntity(
             eventId = "event-id",
@@ -168,7 +166,7 @@ public class AirshipMeteredUsageTest {
         )
 
         manager.addEvent(event)
-        verify(exactly = 0) { manager.scheduleUpload() }
+        verify(exactly = 0) { mockJobDispatcher.dispatch(any()) }
 
         eventsStore.getAllEvents()
         assertEquals(0, eventsStore.getAllEvents().size)
@@ -182,8 +180,13 @@ public class AirshipMeteredUsageTest {
         coVerify(exactly = 0) { apiClient.uploadEvents(any(), any()) }
         assertEquals(JobResult.SUCCESS, jobResult)
 
+        testConfig.updateRemoteConfig(
+            RemoteConfig(
+                meteredUsageConfig = MeteredUsageConfig(true, 1, 2)
+            )
+        )
+
         // invalid job id
-        manager.setConfig(Config(true, 1, 2))
         jobInfo = makeJobInfo(jobId = "invalid.job.id")
         jobResult = manager.onPerformJob(mockk(), jobInfo)
         coVerify(exactly = 0) { apiClient.uploadEvents(any(), any()) }
@@ -198,7 +201,11 @@ public class AirshipMeteredUsageTest {
 
     @Test
     public fun testPerformJobUploadsEvents(): TestResult = runTest {
-        manager.setConfig(Config(true, 1, 2))
+        testConfig.updateRemoteConfig(
+            RemoteConfig(
+                meteredUsageConfig = MeteredUsageConfig(true, 1, 2)
+            )
+        )
 
         val event = MeteredUsageEventEntity(
             eventId = "event-id",
@@ -228,7 +235,11 @@ public class AirshipMeteredUsageTest {
 
     @Test
     public fun testPerformJobStripsEventInfo(): TestResult = runTest {
-        manager.setConfig(Config(true, 1, 2))
+        testConfig.updateRemoteConfig(
+            RemoteConfig(
+                meteredUsageConfig = MeteredUsageConfig(true, 1, 2)
+            )
+        )
 
         val event = MeteredUsageEventEntity(
             eventId = "event-id",
@@ -258,7 +269,11 @@ public class AirshipMeteredUsageTest {
 
     @Test
     public fun testPerformJobKeepsEventsOnFailure(): TestResult = runTest {
-        manager.setConfig(Config(true, 1, 2))
+        testConfig.updateRemoteConfig(
+            RemoteConfig(
+                meteredUsageConfig = MeteredUsageConfig(true, 1, 2)
+            )
+        )
 
         val event = MeteredUsageEventEntity(
             eventId = "event-id",
@@ -288,13 +303,12 @@ public class AirshipMeteredUsageTest {
 
     private fun makeJobInfo(
         delay: Long = 0,
-        strategy: Int = JobInfo.KEEP,
         jobId: String = "MeteredUsage.upload"
     ): JobInfo {
         return JobInfo.newBuilder()
             .setAirshipComponent(AirshipMeteredUsage::class.java)
             .setAction(jobId)
-            .setConflictStrategy(strategy)
+            .setConflictStrategy(JobInfo.KEEP)
             .setNetworkAccessRequired(true)
             .setMinDelay(delay, TimeUnit.MILLISECONDS)
             .build()

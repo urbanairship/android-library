@@ -19,8 +19,7 @@ internal class ChannelAuthApiClient(
     private val clock: Clock = Clock.DEFAULT_CLOCK,
 ) {
     suspend fun getToken(channelId: String): RequestResult<AuthToken> {
-        val url: Uri? = runtimeConfig.urlConfig
-            .deviceUrl()
+        val url: Uri? = runtimeConfig.deviceUrl
             .appendEncodedPath("api/auth/device")
             .build()
 

@@ -11,13 +11,13 @@ import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.UAirship
-import com.urbanairship.base.Extender
-import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.locale.LocaleChangedListener
 import com.urbanairship.locale.LocaleManager
+import com.urbanairship.remoteconfig.RemoteAirshipConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -51,12 +51,17 @@ public class AirshipChannelTest {
     private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
 
     private val localeChangeListeners = mutableListOf<LocaleChangedListener>()
-    private val channelPayloadExtenders =
-        mutableListOf<Extender<ChannelRegistrationPayload.Builder>>()
+    private val channelPayloadExtenders = mutableListOf<AirshipChannel.Extender>()
 
     private val channelIdFlow = MutableStateFlow<String?>(null)
 
-    private val testConfig = TestAirshipRuntimeConfig.newTestConfig()
+    private var testConfig: TestAirshipRuntimeConfig = TestAirshipRuntimeConfig(
+        RemoteConfig(
+            airshipConfig = RemoteAirshipConfig(
+                deviceApiUrl = "https://example.com"
+            )
+        )
+    )
     private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL)
     private val testDispatcher = StandardTestDispatcher()
     private val mockLocaleManager = mockk<LocaleManager>() {
@@ -129,7 +134,9 @@ public class AirshipChannelTest {
 
     @Test
     public fun testUrlConfigUpdatedUpdatesRegistration(): TestResult = runTest {
-        channel.onUrlConfigUpdated()
+        testConfig.updateRemoteConfig(RemoteConfig(airshipConfig = RemoteAirshipConfig(
+            deviceApiUrl = "https://somethingelse.com"
+        )))
         verify { mockJobDispatcher.dispatch(keepJob) }
     }
 
@@ -346,14 +353,13 @@ public class AirshipChannelTest {
             .setIsActive(false)
             .build()
 
-        var builder = ChannelRegistrationPayload.Builder()
-        channelPayloadExtenders.forEach { builder = it.extend(builder) }
-        assertEquals(expectedPayload, builder.build())
+        val payload = buildCraPayload()
+        assertEquals(expectedPayload, payload)
     }
 
     @Test
     public fun testCraPayloadAmazon(): TestResult = runTest {
-        testConfig.platform = UAirship.AMAZON_PLATFORM
+        testConfig.setPlatform(UAirship.AMAZON_PLATFORM)
 
         every {
             mockLocaleManager.locale
@@ -376,9 +382,8 @@ public class AirshipChannelTest {
             .setIsActive(false)
             .build()
 
-        var builder = ChannelRegistrationPayload.Builder()
-        channelPayloadExtenders.forEach { builder = it.extend(builder) }
-        assertEquals(expectedPayload, builder.build())
+        val payload = buildCraPayload()
+        assertEquals(expectedPayload, payload)
     }
 
     @Test
@@ -401,9 +406,8 @@ public class AirshipChannelTest {
             .setIsActive(false)
             .build()
 
-        var builder = ChannelRegistrationPayload.Builder()
-        channelPayloadExtenders.forEach { builder = it.extend(builder) }
-        assertEquals(expectedPayload, builder.build())
+        val payload = buildCraPayload()
+        assertEquals(expectedPayload, payload)
     }
 
     @Test
@@ -420,9 +424,8 @@ public class AirshipChannelTest {
             .setIsActive(false)
             .build()
 
-        var builder = ChannelRegistrationPayload.Builder()
-        channelPayloadExtenders.forEach { builder = it.extend(builder) }
-        assertEquals(expectedPayload, builder.build())
+        val payload = buildCraPayload()
+        assertEquals(expectedPayload, payload)
     }
 
     @Test
@@ -450,14 +453,13 @@ public class AirshipChannelTest {
             .setSdkVersion(UAirship.getVersion())
             .build()
 
-        var builder = ChannelRegistrationPayload.Builder()
-        channelPayloadExtenders.forEach { builder = it.extend(builder) }
-        assertEquals(expectedPayload, builder.build())
+        val payload = buildCraPayload()
+        assertEquals(expectedPayload, payload)
     }
 
     @Test
     public fun testDispatchDeviceUrlNull(): TestResult = runTest {
-        testConfig.urlConfig = AirshipUrlConfig.newBuilder().build()
+        testConfig.updateRemoteConfig(RemoteConfig())
         channel.updateRegistration()
         verify(exactly = 0) { mockJobDispatcher.dispatch(any()) }
     }
@@ -527,5 +529,17 @@ public class AirshipChannelTest {
 
         coVerify { mockBatchUpdateManager.uploadPending("some channel id") }
         coVerify { mockRegistrar.updateRegistration() }
+    }
+
+    private suspend fun buildCraPayload(): ChannelRegistrationPayload {
+        var builder = ChannelRegistrationPayload.Builder()
+        channelPayloadExtenders.forEach {
+            builder = when (it) {
+                is AirshipChannel.Extender.Suspending -> it.extend(builder)
+                is AirshipChannel.Extender.Blocking -> it.extend(builder)
+                else -> { builder }
+            }
+        }
+        return builder.build()
     }
 }

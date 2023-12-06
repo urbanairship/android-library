@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class RemoteDataApiClientTest {
-    private val testConfig = TestAirshipRuntimeConfig.newTestConfig()
+    private val testConfig = TestAirshipRuntimeConfig()
     private val requestSession = TestRequestSession()
     private var client: RemoteDataApiClient = RemoteDataApiClient(testConfig, requestSession.toSuspendingRequestSession())
 

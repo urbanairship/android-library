@@ -5,13 +5,14 @@ package com.urbanairship.analytics.data;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequestSession;
-import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.RequestAuth;
 import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
 import com.urbanairship.http.Response;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.remoteconfig.RemoteAirshipConfig;
+import com.urbanairship.remoteconfig.RemoteConfig;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,11 +37,9 @@ public class EventApiClientTest extends BaseTestCase {
 
     @Before
     public void setUp() throws JsonException {
-        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
-        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder()
-                                                   .setAnalyticsUrl("http://example.com")
-                                                   .build());
-
+        runtimeConfig = new TestAirshipRuntimeConfig(new RemoteConfig(
+                new RemoteAirshipConfig(null, null, null, "http://example.com")
+        ));
         validEvent = JsonValue.parseString("{\"some\":\"json\"}");
         invalidEvent = JsonValue.NULL;
 
@@ -73,7 +72,7 @@ public class EventApiClientTest extends BaseTestCase {
      */
     @Test(expected = RequestException.class)
     public void testNullUrl() throws RequestException {
-        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
+        runtimeConfig = new TestAirshipRuntimeConfig(new RemoteConfig());
         client.sendEvents("some channel", events, Collections.<String, String>emptyMap());
     }
 
