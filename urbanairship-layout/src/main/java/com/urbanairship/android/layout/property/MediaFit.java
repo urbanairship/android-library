@@ -14,9 +14,12 @@ import com.urbanairship.json.JsonException;
  * Property that determines how an image should be scaled in an {@code ImageView}.
  */
 public enum MediaFit {
+    @Deprecated
     CENTER("center", ImageView.ScaleType.CENTER),
     CENTER_INSIDE("center_inside", ImageView.ScaleType.FIT_CENTER),
-    CENTER_CROP("center_crop", ImageView.ScaleType.CENTER_CROP);
+    @Deprecated
+    CENTER_CROP("center_crop", ImageView.ScaleType.CENTER_CROP),
+    FIT_CROP("fit_crop", ImageView.ScaleType.MATRIX);
 
     @NonNull
     private final String value;
@@ -36,11 +39,6 @@ public enum MediaFit {
             }
         }
         throw new JsonException("Unknown MediaFit value: " + value);
-    }
-
-    @NonNull
-    public static ImageView.ScaleType asScaleType(@NonNull String mediaFit) throws JsonException {
-        return MediaFit.from(mediaFit).getScaleType();
     }
 
     @NonNull
