@@ -19,7 +19,6 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
-import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.push.notifications.NotificationArguments;
 import com.urbanairship.push.notifications.NotificationChannelCompat;
 import com.urbanairship.push.notifications.NotificationChannelRegistry;
@@ -136,14 +135,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
                 .setProcessed(true)
                 .setActivityMonitor(activityMonitor)
                 .build();
-
-        TestApplication.getApplication().setAccengageNotificationHandler(new AccengageNotificationHandler() {
-            @NonNull
-            @Override
-            public NotificationProvider getNotificationProvider() {
-                return accengageNotificationProvider;
-            }
-        });
     }
 
     /**
@@ -388,30 +379,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         pushRunnable.run();
 
         verify(notificationManager).notify(null, TEST_NOTIFICATION_ID, notificationProvider.notification);
-        verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
-    }
-
-    @Test
-    public void testAccengageNotificationProvider() {
-        accengageNotificationProvider.notification = createNotification();
-
-        when(pushManager.isComponentEnabled()).thenReturn(true);
-        when(pushManager.isPushEnabled()).thenReturn(true);
-        when(pushManager.isOptIn()).thenReturn(true);
-        when(pushManager.isUniqueCanonicalId(null)).thenReturn(true);
-
-
-        IncomingPushRunnable pushRunnable = new IncomingPushRunnable.Builder(TestApplication.getApplication())
-                .setProviderClass(testPushProvider.getClass().toString())
-                .setMessage(accengageMessage)
-                .setNotificationManager(notificationManager)
-                .setLongRunning(true)
-                .setJobDispatcher(jobDispatcher)
-                .build();
-
-        pushRunnable.run();
-
-        verify(notificationManager).notify(null, TEST_NOTIFICATION_ID, accengageNotificationProvider.notification);
         verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
     }
 

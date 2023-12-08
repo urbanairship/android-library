@@ -6,7 +6,6 @@ import android.content.Context;
 import android.os.Build;
 
 import com.urbanairship.base.Supplier;
-import com.urbanairship.config.PlatformProvider;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.PlatformUtils;
@@ -18,7 +17,7 @@ import androidx.annotation.RestrictTo;
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class DeferredPlatformProvider implements PlatformProvider {
+class DeferredPlatformProvider implements Provider<Integer> {
 
     /**
      * Push provider class preference key.
@@ -41,7 +40,8 @@ class DeferredPlatformProvider implements PlatformProvider {
     }
 
     @UAirship.Platform
-    public int getPlatform() {
+    @Override
+    public Integer get() {
         @UAirship.Platform
         int existingPlatform = PlatformUtils.parsePlatform(dataStore.getInt(PLATFORM_KEY, UAirship.UNKNOWN_PLATFORM));
 

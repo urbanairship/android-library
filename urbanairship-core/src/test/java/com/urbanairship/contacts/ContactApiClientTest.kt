@@ -7,13 +7,14 @@ import com.urbanairship.TestClock
 import com.urbanairship.TestRequestSession
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.TagGroupsMutation
-import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.remoteconfig.RemoteAirshipConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import com.urbanairship.util.DateUtils
 import java.util.Date
 import java.util.Locale
@@ -44,10 +45,14 @@ public class ContactApiClientTest {
     private val fakeSenderId = "fake_sender_id"
 
     private val clock = TestClock()
-    private var runtimeConfig: TestAirshipRuntimeConfig =
-        TestAirshipRuntimeConfig.newTestConfig().also {
-            it.urlConfig = AirshipUrlConfig.newBuilder().setDeviceUrl("https://example.com").build()
-        }
+    private var runtimeConfig: TestAirshipRuntimeConfig = TestAirshipRuntimeConfig(
+        RemoteConfig(
+            airshipConfig = RemoteAirshipConfig(
+                deviceApiUrl = "https://example.com"
+            )
+        )
+    )
+
     private val requestSession = TestRequestSession()
 
     private var client: ContactApiClient = ContactApiClient(

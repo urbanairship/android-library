@@ -213,6 +213,62 @@ public class ContactManagerTest {
     }
 
     @Test
+    public fun testVerify(): TestResult = runTest {
+        assertNull(contactManager.lastContactId)
+        contactManager.addOperation(ContactOperation.Verify(testClock.currentTimeMillis, true))
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        val result = contactManager.performNextOperation()
+        assertEquals(true, result)
+        assertEquals(anonIdentityResult.contactId, contactManager.lastContactId)
+
+        contactManager.contactIdUpdates.test {
+            assertEquals(anonIdentityResult.contactId, this.awaitItem()?.contactId)
+        }
+    }
+
+    @Test
+    public fun testVerifyFailsClientError(): TestResult = runTest {
+        assertNull(contactManager.lastContactId)
+        contactManager.addOperation(ContactOperation.Verify(testClock.currentTimeMillis, true))
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 400, value = null, body = null, headers = emptyMap()
+        )
+
+        val result = contactManager.performNextOperation()
+        assertEquals(true, result)
+        assertNull(contactManager.lastContactId)
+    }
+
+    @Test
+    public fun testVerifyFailsServerError(): TestResult = runTest {
+        assertNull(contactManager.lastContactId)
+        contactManager.addOperation(ContactOperation.Verify(testClock.currentTimeMillis, true))
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 500, value = null, body = null, headers = emptyMap()
+        )
+
+        val result = contactManager.performNextOperation()
+        assertEquals(false, result)
+        assertNull(contactManager.lastContactId)
+    }
+
+    @Test
+    public fun testVerifyFailsException(): TestResult = runTest {
+        assertNull(contactManager.lastContactId)
+        contactManager.addOperation(ContactOperation.Verify(testClock.currentTimeMillis, true))
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            IllegalArgumentException("neat")
+        )
+
+        val result = contactManager.performNextOperation()
+        assertEquals(false, result)
+        assertNull(contactManager.lastContactId)
+    }
+
+    @Test
     public fun testIdentify(): TestResult = runTest {
         contactManager.addOperation(ContactOperation.Identify("some named user id"))
 
@@ -460,6 +516,32 @@ public class ContactManagerTest {
         contactManager.addOperation(ContactOperation.Identify("some named user"))
         contactManager.contactIdUpdates.test {
             assertEquals(false, awaitItem()?.isStable)
+        }
+    }
+
+    @Test
+    public fun testContactUnstablePendingRequiredVerify(): TestResult = runTest {
+        contactManager.generateDefaultContactIdIfNotSet()
+        contactManager.contactIdUpdates.test {
+            assertEquals(true, awaitItem()?.isStable)
+        }
+
+        contactManager.addOperation(ContactOperation.Verify(testClock.currentTimeMillis, true))
+        contactManager.contactIdUpdates.test {
+            assertEquals(false, awaitItem()?.isStable)
+        }
+    }
+
+    @Test
+    public fun testContactStablePendingNonRequiredVerify(): TestResult = runTest {
+        contactManager.generateDefaultContactIdIfNotSet()
+        contactManager.contactIdUpdates.test {
+            assertEquals(true, awaitItem()?.isStable)
+        }
+
+        contactManager.addOperation(ContactOperation.Verify(testClock.currentTimeMillis, false))
+        contactManager.contactIdUpdates.test {
+            assertEquals(true, awaitItem()?.isStable)
         }
     }
 

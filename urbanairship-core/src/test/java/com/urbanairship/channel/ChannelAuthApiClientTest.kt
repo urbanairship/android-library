@@ -6,11 +6,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.TestRequestSession
-import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.remoteconfig.RemoteAirshipConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,7 +28,7 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class ChannelAuthApiClientTest {
-    private val config = TestAirshipRuntimeConfig.newTestConfig()
+    private val config = TestAirshipRuntimeConfig()
     private val requestSession = TestRequestSession()
     private var clock = TestClock()
     private val testDispatcher = StandardTestDispatcher()
@@ -38,7 +39,13 @@ public class ChannelAuthApiClientTest {
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
         clock.currentTimeMillis = 100
-        config.urlConfig = AirshipUrlConfig.newBuilder().setDeviceUrl("https://example.com").build()
+        config.updateRemoteConfig(
+            RemoteConfig(
+                airshipConfig = RemoteAirshipConfig(
+                    deviceApiUrl = "https://example.com"
+                )
+            )
+        )
     }
 
     @After

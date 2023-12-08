@@ -22,7 +22,7 @@ internal class SubscriptionListApiClient constructor(
     private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
 ) {
     suspend fun getSubscriptionLists(channelId: String): RequestResult<Set<String>> {
-        val url = runtimeConfig.urlConfig.deviceUrl()
+        val url = runtimeConfig.deviceUrl
             .appendEncodedPath("api/subscription_lists/channels/$channelId")
             .build()
 

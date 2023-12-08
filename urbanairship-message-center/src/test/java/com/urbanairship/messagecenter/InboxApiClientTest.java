@@ -9,7 +9,6 @@ import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestRequestSession;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.http.RequestAuth;
 import com.urbanairship.http.RequestBody;
 import com.urbanairship.http.RequestException;
@@ -18,6 +17,8 @@ import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.remoteconfig.RemoteAirshipConfig;
+import com.urbanairship.remoteconfig.RemoteConfig;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,9 +27,7 @@ import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -59,10 +58,17 @@ public class InboxApiClientTest {
         // Set a valid user
         user.setUser("fakeUserId", "password");
 
-        runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
-        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder()
-                .setDeviceUrl("https://example.com")
-                .build());
+        runtimeConfig = new TestAirshipRuntimeConfig(
+                new RemoteConfig(
+                        new RemoteAirshipConfig(
+                                "https://remote-data",
+                                "https://example.com",
+                                "https://wallet",
+                                "https://analytics",
+                                "https://metered-usage"
+                        )
+                )
+        );
 
         inboxApiClient = new InboxApiClient(runtimeConfig, requestSession);
     }
@@ -96,7 +102,7 @@ public class InboxApiClientTest {
      */
     @Test(expected = RequestException.class)
     public void testNullUrlUpdateMessages() throws RequestException {
-        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
+        runtimeConfig.updateRemoteConfig(new RemoteConfig());
         inboxApiClient.fetchMessages(user, "channelId", null);
     }
 
@@ -124,7 +130,7 @@ public class InboxApiClientTest {
 
     @Test(expected = RequestException.class)
     public void testNullUrlSyncDeletedMessageState() throws RequestException {
-        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
+        runtimeConfig.updateRemoteConfig(new RemoteConfig());
         inboxApiClient.syncDeletedMessageState(user, "channelId", Collections.emptyList());
     }
 
@@ -152,7 +158,7 @@ public class InboxApiClientTest {
 
     @Test(expected = RequestException.class)
     public void testNullUrlSyncReadMessageState() throws RequestException {
-        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
+        runtimeConfig.updateRemoteConfig(new RemoteConfig());
         inboxApiClient.syncReadMessageState(user, "channelId", Collections.emptyList());
     }
 
@@ -196,7 +202,7 @@ public class InboxApiClientTest {
 
     @Test(expected = RequestException.class)
     public void testNullUrlCreateUser() throws RequestException {
-        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
+        runtimeConfig.updateRemoteConfig(new RemoteConfig());
         runtimeConfig.setPlatform(0);
         inboxApiClient.createUser("channelId");
     }
@@ -231,7 +237,7 @@ public class InboxApiClientTest {
 
     @Test(expected = RequestException.class)
     public void testNullUrlUpdateUser() throws RequestException {
-        runtimeConfig.setUrlConfig(AirshipUrlConfig.newBuilder().build());
+        runtimeConfig.updateRemoteConfig(new RemoteConfig());
         runtimeConfig.setPlatform(0);
         inboxApiClient.updateUser(user,"channelId");
     }

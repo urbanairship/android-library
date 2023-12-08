@@ -4,7 +4,6 @@ package com.urbanairship.meteredusage
 
 import android.content.Context
 import androidx.annotation.RestrictTo
-import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
@@ -17,6 +16,7 @@ import com.urbanairship.http.RequestResult
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
+import com.urbanairship.remoteconfig.MeteredUsageConfig
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.runBlocking
@@ -31,7 +31,7 @@ import kotlinx.coroutines.runBlocking
 public class AirshipMeteredUsage @JvmOverloads internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
-    config: AirshipRuntimeConfig,
+    private val config: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val store: EventsDao = EventsDatabase.persistent(context).eventsDao(),
     private val client: MeteredUsageApiClient = MeteredUsageApiClient(config),
@@ -39,15 +39,24 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
 ) : AirshipComponent(context, dataStore) {
 
     internal companion object {
-
         private const val WORK_ID = "MeteredUsage.upload"
         private const val RATE_LIMIT_ID = "MeteredUsage.rateLimit"
     }
 
-    private val config: AtomicReference<Config> = AtomicReference(Config.default())
+    private val usageConfig: AtomicReference<MeteredUsageConfig> = AtomicReference(MeteredUsageConfig.DEFAULT)
 
-    internal fun setConfig(config: Config) {
-        val old = this.config.getAndSet(config)
+    init {
+        jobDispatcher.setRateLimit(RATE_LIMIT_ID, 1, MeteredUsageConfig.DEFAULT.intervalMs, TimeUnit.MILLISECONDS)
+
+        config.addConfigListener {
+            updateConfig()
+        }
+        updateConfig()
+    }
+
+    private fun updateConfig() {
+        val config = config.remoteConfig.meteredUsageConfig ?: MeteredUsageConfig.DEFAULT
+        val old = this.usageConfig.getAndSet(config)
         if (old == config) {
             return
         }
@@ -55,23 +64,19 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
         jobDispatcher.setRateLimit(RATE_LIMIT_ID, 1, config.intervalMs, TimeUnit.MILLISECONDS)
 
         if (!old.isEnabled && config.isEnabled) {
-            scheduleUpload(delay = config.initialDelayMs)
+            scheduleUpload(config.initialDelayMs)
         }
     }
 
-    @VisibleForTesting
-    internal fun scheduleUpload(
-        delay: Long = 0L,
-        conflictStrategy: Int = JobInfo.KEEP
-    ) {
-        if (!config.get().isEnabled) {
+    private fun scheduleUpload(delay: Long) {
+        if (!usageConfig.get().isEnabled) {
             return
         }
 
         jobDispatcher.dispatch(JobInfo.newBuilder()
             .setAirshipComponent(AirshipMeteredUsage::class.java)
             .setAction(WORK_ID)
-            .setConflictStrategy(conflictStrategy)
+            .setConflictStrategy(JobInfo.KEEP)
             .setNetworkAccessRequired(true)
             .setMinDelay(delay, TimeUnit.MILLISECONDS)
             .build()
@@ -80,7 +85,7 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
 
     @WorkerThread
     public fun addEvent(event: MeteredUsageEventEntity) {
-        if (!config.get().isEnabled) {
+        if (!usageConfig.get().isEnabled) {
             return
         }
 
@@ -90,11 +95,11 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
         }
 
         store.addEvent(eventToStore)
-        scheduleUpload()
+        scheduleUpload(delay = 0)
     }
 
     override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
-        if (!config.get().isEnabled) {
+        if (!usageConfig.get().isEnabled) {
             UALog.v { "Config disabled, skipping upload." }
             return JobResult.SUCCESS
         }

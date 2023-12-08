@@ -37,19 +37,6 @@ class ModuleAdapter {
         }
     }
 
-    /**
-     * Notifies airship components that they have new config.
-     *
-     * @param module The module name.
-     * @param config The config
-     */
-    public void onNewConfig(@NonNull String module, @Nullable JsonMap config) {
-        for (AirshipComponent component : findAirshipComponents(module)) {
-            if (component.isComponentEnabled()) {
-                component.onNewConfig(config);
-            }
-        }
-    }
 
     /**
      * Maps the disable info module to airship components.

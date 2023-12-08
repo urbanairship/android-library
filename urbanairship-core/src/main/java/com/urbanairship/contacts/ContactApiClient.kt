@@ -88,7 +88,7 @@ internal class ContactApiClient constructor(
         options: EmailRegistrationOptions,
         locale: Locale
     ): RequestResult<AssociatedChannel> {
-        val url = runtimeConfig.urlConfig.deviceUrl().appendEncodedPath(EMAIL_PATH).build()
+        val url = runtimeConfig.deviceUrl.appendEncodedPath(EMAIL_PATH).build()
 
         val payload = jsonMapOf(
             CHANNEL_KEY to jsonMapOf(
@@ -132,7 +132,7 @@ internal class ContactApiClient constructor(
         options: SmsRegistrationOptions,
         locale: Locale
     ): RequestResult<AssociatedChannel> {
-        val url = runtimeConfig.urlConfig.deviceUrl().appendEncodedPath(SMS_PATH).build()
+        val url = runtimeConfig.deviceUrl.appendEncodedPath(SMS_PATH).build()
 
         val payload = jsonMapOf(
             MSISDN_KEY to msisdn,
@@ -152,7 +152,7 @@ internal class ContactApiClient constructor(
         options: OpenChannelRegistrationOptions,
         locale: Locale
     ): RequestResult<AssociatedChannel> {
-        val url = runtimeConfig.urlConfig.deviceUrl().appendEncodedPath(OPEN_CHANNEL_PATH).build()
+        val url = runtimeConfig.deviceUrl.appendEncodedPath(OPEN_CHANNEL_PATH).build()
 
         val payload = jsonMapOf(
             CHANNEL_KEY to jsonMapOf(
@@ -178,8 +178,7 @@ internal class ContactApiClient constructor(
         channelId: String,
         channelType: ChannelType
     ): RequestResult<AssociatedChannel> {
-        val url =
-            runtimeConfig.urlConfig.deviceUrl().appendEncodedPath(UPDATE_PATH + contactId).build()
+        val url = runtimeConfig.deviceUrl.appendEncodedPath(UPDATE_PATH + contactId).build()
 
         val payload = jsonMapOf(
             ASSOCIATE_KEY to listOf(
@@ -223,7 +222,7 @@ internal class ContactApiClient constructor(
         subscriptionListMutations: List<ScopedSubscriptionListMutation>?
     ): RequestResult<Unit> {
         val url =
-            runtimeConfig.urlConfig.deviceUrl().appendEncodedPath(UPDATE_PATH + contactId).build()
+            runtimeConfig.deviceUrl.appendEncodedPath(UPDATE_PATH + contactId).build()
 
         val payload = jsonMapOf(
             TAGS to tagGroupMutations?.tagsPayload(),
@@ -291,7 +290,7 @@ internal class ContactApiClient constructor(
         channelId: String,
         requestAction: JsonSerializable
     ): RequestResult<IdentityResult> {
-        val url = runtimeConfig.urlConfig.deviceUrl().appendEncodedPath(IDENTIFY_PATH).build()
+        val url = runtimeConfig.deviceUrl.appendEncodedPath(IDENTIFY_PATH).build()
 
         val payload = jsonMapOf(
             DEVICE_INFO to jsonMapOf(

@@ -3,9 +3,10 @@ package com.urbanairship.channel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
-import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.remoteconfig.RemoteAirshipConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -23,7 +24,14 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class SubscriptionListApiClientTest {
 
-    private val config = TestAirshipRuntimeConfig.newTestConfig()
+    private var config: TestAirshipRuntimeConfig = TestAirshipRuntimeConfig(
+        RemoteConfig(
+            airshipConfig = RemoteAirshipConfig(
+                deviceApiUrl = "https://test.urbanairship.com"
+            )
+        )
+    )
+
     private val requestSession = TestRequestSession()
     private val testDispatcher = StandardTestDispatcher()
 
@@ -35,7 +43,6 @@ public class SubscriptionListApiClientTest {
     @Before
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
-        config.urlConfig = AirshipUrlConfig.newBuilder().setDeviceUrl("https://test.urbanairship.com").build()
     }
 
     @After

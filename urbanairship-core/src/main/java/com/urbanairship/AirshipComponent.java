@@ -172,25 +172,6 @@ public abstract class AirshipComponent {
     }
 
     /**
-     * Called when a component gets new remote config.
-     *
-     * @param value The config.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void onNewConfig(@Nullable JsonMap value) {
-    }
-
-    /**
-     * Called when a component gets a new remote url config.
-     *
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void onUrlConfigUpdated() {
-    }
-
-    /**
      * The component group.
      *
      * @return The component group.

@@ -18,14 +18,17 @@ public class UrlBuilder {
 
     private Uri.Builder uriBuilder;
 
+    public final String baseUrl;
     /**
      * Default constructor.
      *
      * @param url The URL.
      */
     public UrlBuilder(@Nullable String url) {
+        this.baseUrl = url;
+
         if (url != null) {
-            uriBuilder = Uri.parse(url).buildUpon();
+            this.uriBuilder = Uri.parse(url).buildUpon();
         }
     }
 

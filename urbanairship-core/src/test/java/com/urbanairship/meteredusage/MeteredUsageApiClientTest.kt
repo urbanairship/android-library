@@ -8,6 +8,8 @@ import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.remoteconfig.RemoteAirshipConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import com.urbanairship.util.DateUtils
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.test.TestResult
@@ -18,7 +20,13 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 public class MeteredUsageApiClientTest {
-    private val testConfig = TestAirshipRuntimeConfig.newTestConfig()
+    private val testConfig = TestAirshipRuntimeConfig(
+        RemoteConfig(
+            airshipConfig = RemoteAirshipConfig(
+                meteredUsageUrl = "https://test.metered.usage"
+            )
+        )
+    )
     private val requestSession = TestRequestSession()
 
     private lateinit var client: MeteredUsageApiClient

@@ -7,6 +7,7 @@ import app.cash.turbine.test
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
+import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.contacts.Contact
 import com.urbanairship.contacts.ContactIdUpdate
@@ -18,6 +19,8 @@ import com.urbanairship.locale.LocaleManager
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
+import com.urbanairship.remoteconfig.RemoteAirshipConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -26,6 +29,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import java.util.Locale
+import java.util.UUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -47,6 +51,7 @@ public class RemoteDataTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
+    private var config: TestAirshipRuntimeConfig = TestAirshipRuntimeConfig()
     private val dataStore: PreferenceDataStore = PreferenceDataStore.inMemoryStore(
         ApplicationProvider.getApplicationContext()
     )
@@ -91,6 +96,7 @@ public class RemoteDataTest {
     private val remoteData = RemoteData(
         context = ApplicationProvider.getApplicationContext(),
         preferenceDataStore = dataStore,
+        config = config,
         privacyManager = privacyManager,
         localeManager = mockLocaleManager,
         pushManager = mockPushManager,
@@ -105,8 +111,16 @@ public class RemoteDataTest {
 
     @Test
     public fun testConfigChangeDispatchesUpdate(): TestResult = runTest {
+        every { mockContactRemoteDataProvider.isEnabled } returns false
+
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
-        remoteData.onUrlConfigUpdated()
+        config.updateRemoteConfig(
+            RemoteConfig(
+                airshipConfig = RemoteAirshipConfig(
+                    deviceApiUrl = UUID.randomUUID().toString()
+                )
+            )
+        )
         testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
     }
@@ -131,7 +145,7 @@ public class RemoteDataTest {
     @Test
     public fun testContactIDChangesDispatchesUpdate(): TestResult = runTest {
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
-        contactIdUpdates.emit(ContactIdUpdate("some contact", false))
+        contactIdUpdates.emit(ContactIdUpdate("some contact", false, 0))
         testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
     }

@@ -6,10 +6,10 @@ import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
+import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
-import com.urbanairship.base.Extender
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.channel.AttributeMutation
@@ -17,6 +17,8 @@ import com.urbanairship.channel.ChannelRegistrationPayload
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.JsonValue
+import com.urbanairship.remoteconfig.ContactConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
@@ -24,6 +26,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -46,6 +49,7 @@ import org.robolectric.RobolectricTestRunner
 public class ContactTest {
 
     private val testDispatcher = StandardTestDispatcher()
+    private val config = TestAirshipRuntimeConfig()
 
     private val mockChannel = mockk<AirshipChannel>(relaxed = true)
     private val mockSubscriptionListApiClient = mockk<SubscriptionListApiClient>()
@@ -72,6 +76,7 @@ public class ContactTest {
         Contact(
             context,
             preferenceDataStore,
+            config,
             privacyManager,
             mockChannel,
             mockAudienceOverridesProvider,
@@ -113,7 +118,7 @@ public class ContactTest {
 
     @Test
     public fun testExtendChannelRegistration(): TestResult = runTest {
-        val extenders = mutableListOf<Extender<ChannelRegistrationPayload.Builder>>()
+        val extenders = mutableListOf<AirshipChannel.Extender>()
         every {
             mockChannel.addChannelRegistrationPayloadExtender(capture(extenders))
         } just runs
@@ -121,16 +126,111 @@ public class ContactTest {
         // init
         contact
 
-        every {
-            mockContactManager.lastContactId
-        } returns "some contact id"
+        coEvery {
+            mockContactManager.stableContactIdUpdate()
+        } returns ContactIdUpdate("some stable not verified id", true, testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) - 1)
+
+        coEvery {
+            mockContactManager.stableContactIdUpdate(testClock.currentTimeMillis())
+        } returns ContactIdUpdate("some contact id", true, testClock.currentTimeMillis)
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
-            builder = it.extend(builder)
+            builder = when (it) {
+                is AirshipChannel.Extender.Suspending -> it.extend(builder)
+                is AirshipChannel.Extender.Blocking -> it.extend(builder)
+                else -> { builder }
+            }
         }
 
         assertEquals("some contact id", builder.build().contactId)
+    }
+
+    @Test
+    public fun testExtendChannelRegistrationAlreadyVerifiedContactId(): TestResult = runTest {
+        val extenders = mutableListOf<AirshipChannel.Extender>()
+        every {
+            mockChannel.addChannelRegistrationPayloadExtender(capture(extenders))
+        } just runs
+
+        // init
+        contact
+
+        coEvery {
+            mockContactManager.stableContactIdUpdate()
+        } returns ContactIdUpdate("some stable verified id", true, testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) + 1)
+
+        var builder = ChannelRegistrationPayload.Builder()
+        extenders.forEach {
+            builder = when (it) {
+                is AirshipChannel.Extender.Suspending -> it.extend(builder)
+                is AirshipChannel.Extender.Blocking -> it.extend(builder)
+                else -> { builder }
+            }
+        }
+
+        assertEquals("some stable verified id", builder.build().contactId)
+    }
+
+    @Test
+    public fun testExtendChannelRegistrationConfigurableResolve(): TestResult = runTest {
+        config.updateRemoteConfig(
+            RemoteConfig(
+                contactConfig = ContactConfig(channelRegistrationMaxResolveAgeMs = 99)
+            )
+        )
+
+        val extenders = mutableListOf<AirshipChannel.Extender>()
+        every {
+            mockChannel.addChannelRegistrationPayloadExtender(capture(extenders))
+        } just runs
+
+        // init
+        contact
+
+        coEvery {
+            mockContactManager.stableContactIdUpdate()
+        } returns ContactIdUpdate("some stable not verified id", true, testClock.currentTimeMillis() - 100)
+
+        coEvery {
+            mockContactManager.stableContactIdUpdate(testClock.currentTimeMillis())
+        } returns ContactIdUpdate("some stable verified id", true, testClock.currentTimeMillis)
+
+        var builder = ChannelRegistrationPayload.Builder()
+        extenders.forEach {
+            builder = when (it) {
+                is AirshipChannel.Extender.Suspending -> it.extend(builder)
+                is AirshipChannel.Extender.Blocking -> it.extend(builder)
+                else -> { builder }
+            }
+        }
+
+        assertEquals("some stable verified id", builder.build().contactId)
+    }
+
+    @Test
+    public fun testExtendNullChannelRegistration(): TestResult = runTest {
+        every { mockChannel.id } returns null
+        every { mockContactManager.lastContactId } returns "last contact id"
+
+        val extenders = mutableListOf<AirshipChannel.Extender>()
+        every {
+            mockChannel.addChannelRegistrationPayloadExtender(capture(extenders))
+        } just runs
+
+        // init
+        contact
+
+        var builder = ChannelRegistrationPayload.Builder()
+        extenders.forEach {
+            builder = when (it) {
+                is AirshipChannel.Extender.Suspending -> it.extend(builder)
+                is AirshipChannel.Extender.Blocking -> it.extend(builder)
+                else -> { builder }
+            }
+        }
+
+        assertEquals("last contact id", builder.build().contactId)
     }
 
     @Test
@@ -152,9 +252,46 @@ public class ContactTest {
 
         assertEquals(1, count)
 
-        // Almost 24 hours
-        testClock.currentTimeMillis += 24 * 60 * 60 * 1000 - 1
+        // Almost 1 hour
+        testClock.currentTimeMillis += 1 * 60 * 60 * 1000 - 1
 
+        testActivityMonitor.background()
+        testActivityMonitor.foreground()
+
+        assertEquals(1, count)
+
+        testClock.currentTimeMillis += 1
+        testActivityMonitor.foreground()
+
+        assertEquals(2, count)
+    }
+
+    @Test
+    public fun testForegroundResolvesRemoteConfig(): TestResult = runTest {
+        // init
+        contact
+
+        var count = 0
+        every { mockContactManager.addOperation(ContactOperation.Resolve) } answers {
+            count++
+        }
+
+        testActivityMonitor.foreground()
+
+        assertEquals(1, count)
+
+        testActivityMonitor.background()
+        testActivityMonitor.foreground()
+
+        assertEquals(1, count)
+
+        config.updateRemoteConfig(
+            RemoteConfig(
+                contactConfig = ContactConfig(foregroundIntervalMs = 100)
+            )
+        )
+
+        testClock.currentTimeMillis += 99
         testActivityMonitor.background()
         testActivityMonitor.foreground()
 
@@ -178,16 +315,16 @@ public class ContactTest {
         assertEquals(0, count)
         testDispatcher.scheduler.advanceUntilIdle()
 
-        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", true))
+        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", true, 0))
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(1, count)
 
         // Different update, same contact id
-        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", true))
+        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", true, 0))
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(1, count)
 
-        contactIdUpdates.tryEmit(ContactIdUpdate("some  other contact id", false))
+        contactIdUpdates.tryEmit(ContactIdUpdate("some  other contact id", false, 0))
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(2, count)
     }
@@ -222,6 +359,17 @@ public class ContactTest {
         privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
         contact.identify("some named user id")
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Identify("some named user id")) }
+    }
+
+    @Test
+    public fun testNotifyRemoteLogin(): TestResult = runTest {
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS)
+        contact.notifyRemoteLogin()
+        verify(exactly = 1) {
+            mockContactManager.addOperation(match<ContactOperation.Verify> {
+                it.required && it.dateMs == testClock.currentTimeMillis
+            })
+        }
     }
 
     @Test
@@ -593,8 +741,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptions(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactId() } returns "stable contact id"
-
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", true, 0)
         val networkResult = RequestResult(
             status = 200, value = mapOf(
                 "foo" to setOf(Scope.APP, Scope.SMS), "bar" to setOf(Scope.EMAIL)
@@ -609,7 +756,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionsCache(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactId() } returns "stable contact id"
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", true, 0)
 
         val networkResult = RequestResult(
             status = 200, value = mapOf(
@@ -626,7 +773,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionsError(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactId() } returns "stable contact id"
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", true, 0)
 
         val networkResult = RequestResult<Map<String, Set<Scope>>>(
             status = 404, value = null, body = null, headers = emptyMap()
@@ -638,7 +785,10 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionsIgnoresCacheContactIdChanges(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactId() } returnsMany listOf("first", "second")
+        coEvery { mockContactManager.stableContactIdUpdate() } returnsMany listOf(
+            ContactIdUpdate("first", true, 0),
+            ContactIdUpdate("second", true, 1)
+        )
 
         val firstResult = RequestResult(
             status = 200, value = mapOf(
@@ -660,7 +810,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionListCacheTime(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactId() } returns "some id"
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", true, 0)
 
         val firstResult = RequestResult(
             status = 200, value = mapOf(
@@ -717,7 +867,7 @@ public class ContactTest {
             )
         )
 
-        coEvery { mockContactManager.stableContactId() } returns "some id"
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", true, 0)
         coEvery { mockAudienceOverridesProvider.contactOverrides("some id") } returns overrides
 
         val networkResult = RequestResult(

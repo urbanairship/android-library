@@ -61,6 +61,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class RemoteData @VisibleForTesting internal constructor(
     context: Context,
+    private val config: AirshipRuntimeConfig,
     private val preferenceDataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,
     private val localeManager: LocaleManager,
@@ -87,10 +88,8 @@ public class RemoteData @VisibleForTesting internal constructor(
         val provider = this.providers.firstOrNull {
             it.source == RemoteDataSource.CONTACT
         } ?: return
-
         if (provider.isEnabled != enabled) {
             provider.isEnabled = enabled
-            dispatchRefreshJobAsync()
         }
     }
 
@@ -113,6 +112,7 @@ public class RemoteData @VisibleForTesting internal constructor(
         )
     ) : this(
         context = context,
+        config = config,
         preferenceDataStore = preferenceDataStore,
         privacyManager = privacyManager,
         localeManager = localeManager,
@@ -146,6 +146,12 @@ public class RemoteData @VisibleForTesting internal constructor(
         }
     }
 
+    private val configListener = AirshipRuntimeConfig.ConfigChangeListener {
+        setContactSourceEnabled(config.remoteConfig.fetchContactRemoteData ?: false)
+        updateChangeToken()
+        dispatchRefreshJobAsync()
+    }
+
     private var isAnyFeatureEnabled = AtomicBoolean(privacyManager.isAnyFeatureEnabled)
 
     private val privacyListener = PrivacyManager.Listener {
@@ -161,6 +167,7 @@ public class RemoteData @VisibleForTesting internal constructor(
         pushManager.addInternalPushListener(pushListener)
         localeManager.addListener(localeChangedListener)
         privacyManager.addListener(privacyListener)
+        config.addConfigListener(configListener)
 
         scope.launch {
             contact.contactIdUpdateFlow.mapNotNull { it?.contactId }.distinctUntilChanged().collect {
@@ -180,6 +187,10 @@ public class RemoteData @VisibleForTesting internal constructor(
         }
 
         refreshManager.dispatchRefreshJob()
+
+        if (activityMonitor.isAppForegrounded()) {
+            applicationListener.onForeground(clock.currentTimeMillis())
+        }
     }
 
     public override fun tearDown() {
@@ -187,6 +198,7 @@ public class RemoteData @VisibleForTesting internal constructor(
         activityMonitor.removeApplicationListener(applicationListener)
         localeManager.removeListener(localeChangedListener)
         privacyManager.removeListener(privacyListener)
+        config.removeRemoteConfigListener(configListener)
     }
 
     @WorkerThread
@@ -303,17 +315,6 @@ public class RemoteData @VisibleForTesting internal constructor(
             }.onStart {
                 emit(payloads(types))
             }
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onUrlConfigUpdated() {
-        updateChangeToken()
-        dispatchRefreshJobAsync()
     }
 
     private fun updateChangeToken() {

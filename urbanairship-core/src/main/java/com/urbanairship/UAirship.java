@@ -10,7 +10,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.provider.Settings;
@@ -26,7 +25,6 @@ import com.urbanairship.base.Supplier;
 import com.urbanairship.cache.AirshipCache;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
-import com.urbanairship.config.RemoteAirshipUrlConfigProvider;
 import com.urbanairship.contacts.Contact;
 import com.urbanairship.deferred.DeferredResolver;
 import com.urbanairship.experiment.ExperimentManager;
@@ -37,8 +35,6 @@ import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
 import com.urbanairship.modules.Module;
 import com.urbanairship.modules.Modules;
-import com.urbanairship.modules.accengage.AccengageModule;
-import com.urbanairship.modules.accengage.AccengageNotificationHandler;
 import com.urbanairship.modules.location.AirshipLocationClient;
 import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.permission.PermissionsManager;
@@ -64,7 +60,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.content.pm.PackageInfoCompat;
-import kotlin.Unit;
 
 /**
  * UAirship manages the shared state for all Airship
@@ -156,7 +151,6 @@ public class UAirship {
     AirshipMeteredUsage meteredUsageManager;
     ChannelCapture channelCapture;
     ImageLoader imageLoader;
-    AccengageNotificationHandler accengageNotificationHandler;
     AirshipRuntimeConfig runtimeConfig;
     LocaleManager localeManager;
     PrivacyManager privacyManager;
@@ -721,17 +715,11 @@ public class UAirship {
 
         AudienceOverridesProvider audienceOverridesProvider = new AudienceOverridesProvider();
         DeferredPlatformProvider platformProvider = new DeferredPlatformProvider(getApplicationContext(), preferenceDataStore, privacyManager, pushProviders);
-        DefaultRequestSession requestSession = new DefaultRequestSession(airshipConfigOptions, platformProvider.getPlatform());
+        DefaultRequestSession requestSession = new DefaultRequestSession(airshipConfigOptions, platformProvider.get());
 
-        RemoteAirshipUrlConfigProvider remoteAirshipUrlConfigProvider = new RemoteAirshipUrlConfigProvider(airshipConfigOptions, preferenceDataStore);
-        this.runtimeConfig = new AirshipRuntimeConfig(platformProvider, airshipConfigOptions, remoteAirshipUrlConfigProvider, requestSession);
-
+        this.runtimeConfig = new AirshipRuntimeConfig(() -> airshipConfigOptions, requestSession, preferenceDataStore, platformProvider);
         this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, localeManager, audienceOverridesProvider);
         requestSession.setChannelAuthTokenProvider(this.channel.getAuthTokenProvider());
-
-        if (channel.getId() == null && "huawei".equalsIgnoreCase(Build.MANUFACTURER)) {
-            remoteAirshipUrlConfigProvider.disableFallbackUrls();
-        }
 
         components.add(channel);
 
@@ -765,9 +753,7 @@ public class UAirship {
         this.meteredUsageManager = new AirshipMeteredUsage(application, preferenceDataStore, runtimeConfig, privacyManager);
         components.add(this.meteredUsageManager);
 
-        this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore,
-                runtimeConfig, privacyManager, remoteData, meteredUsageManager);
-        this.remoteConfigManager.addRemoteAirshipConfigListener(remoteAirshipUrlConfigProvider);
+        this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, runtimeConfig, privacyManager, remoteData);
         components.add(this.remoteConfigManager);
 
         DeviceInfoProvider infoProvider = new DeviceInfoProviderImpl(
@@ -784,13 +770,8 @@ public class UAirship {
         Module debugModule = Modules.debug(application, preferenceDataStore);
         processModule(debugModule);
 
-        // Accengage
-        AccengageModule accengageModule = Modules.accengage(application, airshipConfigOptions, preferenceDataStore, privacyManager, channel, pushManager);
-        processModule(accengageModule);
-        this.accengageNotificationHandler = accengageModule == null ? null : accengageModule.getAccengageNotificationHandler();
-
         // Message Center
-        Module messageCenterModule = Modules.messageCenter(application, preferenceDataStore, privacyManager, channel, pushManager, getAirshipConfigOptions());
+        Module messageCenterModule = Modules.messageCenter(application, preferenceDataStore, runtimeConfig, privacyManager, channel, pushManager);
         processModule(messageCenterModule);
 
         // Location
@@ -808,10 +789,6 @@ public class UAirship {
         Module adIdModule = Modules.adId(application, preferenceDataStore, runtimeConfig, privacyManager, analytics);
         processModule(adIdModule);
 
-        // Chat
-        Module chat = Modules.chat(application, preferenceDataStore, runtimeConfig, privacyManager, channel, pushManager);
-        processModule(chat);
-
         // Preference Center
         Module preferenceCenter = Modules.preferenceCenter(application, preferenceDataStore, privacyManager, remoteData);
         processModule(preferenceCenter);
@@ -824,12 +801,6 @@ public class UAirship {
         Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, analytics, infoProvider,
                 new AirshipCache(application, runtimeConfig), deferredResolver);
         processModule(featureFlags);
-
-        remoteAirshipUrlConfigProvider.addUrlConfigListener(() -> {
-            for (AirshipComponent component : components) {
-                component.onUrlConfigUpdated();
-            }
-        });
 
         for (AirshipComponent component : components) {
             component.init();
@@ -968,18 +939,6 @@ public class UAirship {
     @NonNull
     public ChannelCapture getChannelCapture() {
         return channelCapture;
-    }
-
-    /**
-     * Returns the Accengage instance if available.
-     *
-     * @return The Accengage instance.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @Nullable
-    public AccengageNotificationHandler getAccengageNotificationHandler() {
-        return accengageNotificationHandler;
     }
 
     /**

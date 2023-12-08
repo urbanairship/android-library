@@ -15,11 +15,7 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.optionalField
-import com.urbanairship.meteredusage.AirshipMeteredUsage
-import com.urbanairship.meteredusage.Config
 import com.urbanairship.remotedata.RemoteData
-import java.util.concurrent.CopyOnWriteArraySet
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -40,7 +36,6 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
     private val privacyManager: PrivacyManager,
     private val remoteData: RemoteData,
     private val moduleAdapter: ModuleAdapter,
-    private val meteredUsage: AirshipMeteredUsage,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) : AirshipComponent(context, dataStore) {
 
@@ -50,12 +45,10 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         remoteData: RemoteData,
-        meteredUsage: AirshipMeteredUsage,
-    ) : this(context, dataStore, runtimeConfig, privacyManager, remoteData, ModuleAdapter(), meteredUsage)
+    ) : this(context, dataStore, runtimeConfig, privacyManager, remoteData, ModuleAdapter())
 
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
-    private val listeners: MutableCollection<RemoteAirshipConfigListener> = CopyOnWriteArraySet()
     private val privacyManagerListener = PrivacyManager.Listener { updateSubscription() }
 
     private var subscription: Job? = null
@@ -75,7 +68,7 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
                         .collect { payloads ->
                             // combine the payloads, overwriting common config with platform-specific config
                             val combinedPayloadDataBuilder = JsonMap.newBuilder()
-                            for ((_, _, data) in payloads) {
+                            for ((_, _, data, _) in payloads) {
                                 combinedPayloadDataBuilder.putAll(data)
                             }
                             val config = combinedPayloadDataBuilder.build()
@@ -100,18 +93,17 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
     private fun processConfig(config: JsonMap) {
         val disableInfos: MutableList<DisableInfo> = ArrayList()
         val moduleConfigs: MutableMap<String, JsonValue> = HashMap()
-        var airshipConfig = JsonValue.NULL
+        val remoteConfig = RemoteConfig.fromJson(config)
+
         for (key in config.keySet()) {
-            val value = config.opt(key)
-            if (METERED_USAGE_CONFIG_KEY == key) {
-                updateMeteredUsageConfig(value)
-                continue
-            }
-            if (AIRSHIP_CONFIG_KEY == key) {
-                airshipConfig = value
+            // Skip over fields that we've already parsed into the RemoteConfig object.
+            if (key in RemoteConfig.TOP_LEVEL_KEYS) {
                 continue
             }
 
+            val value = config.opt(key)
+
+            // Handle disable info
             if (DISABLE_INFO_KEY == key) {
                 for (disableInfoJson in value.optList()) {
                     try {
@@ -123,50 +115,13 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
                 continue
             }
 
-            if (FETCH_CONTACT_REMOTE_DATA_KEY == key) {
-                continue
-            }
-
+            // Store module configs
             moduleConfigs[key] = value
         }
-        updateRemoteAirshipConfig(airshipConfig)
+
+        this.runtimeConfig.updateRemoteConfig(remoteConfig)
+
         apply(DisableInfo.filter(disableInfos, UAirship.getVersion(), UAirship.getAppVersion()))
-
-        // Notify new config
-        val modules: MutableSet<String> = HashSet(Modules.ALL_MODULES)
-        modules.addAll(moduleConfigs.keys)
-        for (module in modules) {
-            val moduleConfig = moduleConfigs[module]
-            if (moduleConfig == null) {
-                moduleAdapter.onNewConfig(module, null)
-            } else {
-                moduleAdapter.onNewConfig(module, moduleConfig.optMap())
-            }
-        }
-
-        // Remote data refresh interval
-        val contactEnabled = config.optionalField<Boolean>(FETCH_CONTACT_REMOTE_DATA_KEY) ?: false
-        remoteData.setContactSourceEnabled(contactEnabled)
-    }
-
-    /**
-     * Adds a listener for [RemoteAirshipConfig] changes.
-     *
-     * @param listener The listener.
-     */
-    public fun addRemoteAirshipConfigListener(listener: RemoteAirshipConfigListener) {
-        listeners.add(listener)
-    }
-
-    private fun updateRemoteAirshipConfig(value: JsonValue) {
-        val remoteAirshipConfig = RemoteAirshipConfig.fromJson(value)
-        for (listener in listeners) {
-            listener.onRemoteConfigUpdated(remoteAirshipConfig)
-        }
-    }
-
-    private fun updateMeteredUsageConfig(value: JsonValue) {
-        meteredUsage.setConfig(Config.fromJson(value.optMap()))
     }
 
     override fun tearDown() {
@@ -215,11 +170,5 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
 
         // Disable config key
         private const val DISABLE_INFO_KEY = "disable_features"
-
-        // Airship config key
-        private const val AIRSHIP_CONFIG_KEY = "airship_config"
-        private const val METERED_USAGE_CONFIG_KEY = "metered_usage"
-
-        private const val FETCH_CONTACT_REMOTE_DATA_KEY = "fetch_contact_remote_data"
     }
 }

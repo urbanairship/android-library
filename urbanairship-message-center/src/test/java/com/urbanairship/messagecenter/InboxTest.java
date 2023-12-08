@@ -145,11 +145,11 @@ public class InboxTest {
      */
     @Test
     public void testChannelRegistrationDisabledTokenRegistration() {
-        ArgumentCaptor<Extender<ChannelRegistrationPayload.Builder>> argument = ArgumentCaptor.forClass(Extender.class);
+        ArgumentCaptor<AirshipChannel.Extender.Blocking> argument = ArgumentCaptor.forClass(AirshipChannel.Extender.Blocking.class);
         inbox.init();
         verify(mockChannel).addChannelRegistrationPayloadExtender(argument.capture());
 
-        Extender<ChannelRegistrationPayload.Builder> extender = argument.getValue();
+        AirshipChannel.Extender.Blocking extender = argument.getValue();
         assertNotNull(extender);
 
         when(mockUser.getId()).thenReturn("cool");

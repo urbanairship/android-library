@@ -21,7 +21,6 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.audience.AudienceOverridesProvider
-import com.urbanairship.base.Extender
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.AuthTokenProvider
 import com.urbanairship.job.JobDispatcher
@@ -90,6 +89,12 @@ public class AirshipChannel internal constructor(
         )
     )
 
+    init {
+        this.runtimeConfig.addConfigListener {
+            updateRegistration()
+        }
+    }
+
     /**
      * @hide
      */
@@ -124,9 +129,9 @@ public class AirshipChannel internal constructor(
             }
         }
 
-        channelRegistrar.addChannelRegistrationPayloadExtender {
-            extendPayload(it)
-        }
+        channelRegistrar.addChannelRegistrationPayloadExtender(
+            Extender.Blocking { extendPayload(it) }
+        )
 
         _isChannelCreationDelayEnabled =
             channelRegistrar.channelId == null && runtimeConfig.configOptions.channelCreationDelayEnabled
@@ -185,7 +190,7 @@ public class AirshipChannel internal constructor(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun addChannelRegistrationPayloadExtender(extender: Extender<ChannelRegistrationPayload.Builder>) {
+    public fun addChannelRegistrationPayloadExtender(extender: Extender) {
         channelRegistrar.addChannelRegistrationPayloadExtender(extender)
     }
 
@@ -193,7 +198,7 @@ public class AirshipChannel internal constructor(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun removeChannelRegistrationPayloadExtender(extender: Extender<ChannelRegistrationPayload.Builder>) {
+    public fun removeChannelRegistrationPayloadExtender(extender: Extender) {
         channelRegistrar.removeChannelRegistrationPayloadExtender(extender)
     }
 
@@ -257,15 +262,6 @@ public class AirshipChannel internal constructor(
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public override fun onComponentEnableChange(isEnabled: Boolean) {
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @hide
-     */
-    override fun onUrlConfigUpdated() {
-        updateRegistration()
     }
 
     /**
@@ -511,7 +507,7 @@ public class AirshipChannel internal constructor(
     private fun dispatchUpdateJob(
         @ConflictStrategy conflictStrategy: Int
     ) {
-        if (!isRegistrationAllowed || !runtimeConfig.urlConfig.isDeviceUrlAvailable) {
+        if (!isRegistrationAllowed || !runtimeConfig.isDeviceUrlAvailable) {
             return
         }
 
@@ -557,6 +553,30 @@ public class AirshipChannel internal constructor(
         }
 
         return builder
+    }
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public sealed interface Extender {
+
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public fun interface Suspending : Extender {
+            public suspend fun extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder
+        }
+
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public fun interface Blocking : Extender {
+            public fun extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder
+        }
+    }
+
+    public suspend fun Extender.extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder {
+        return when (this) {
+            is Extender.Suspending -> extend(builder)
+            is Extender.Blocking -> extend(builder)
+        }
     }
 
     internal companion object {

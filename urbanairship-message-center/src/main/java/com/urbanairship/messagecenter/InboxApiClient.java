@@ -7,7 +7,6 @@ import android.net.Uri;
 import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.config.AirshipRuntimeConfig;
-import com.urbanairship.config.AirshipUrlConfig;
 import com.urbanairship.config.UrlBuilder;
 import com.urbanairship.http.Request;
 import com.urbanairship.http.RequestAuth;
@@ -60,7 +59,7 @@ public class InboxApiClient {
 
     @NonNull
     Response<JsonList> fetchMessages(@NonNull User user, @NonNull String channelId, @Nullable String ifModifiedSince) throws RequestException {
-        Uri url = getUserApiUrl(runtimeConfig.getUrlConfig(), user.getId(), MESSAGES_PATH);
+        Uri url = getUserApiUrl(user.getId(), MESSAGES_PATH);
 
         Map<String, String> headers = new HashMap<>();
         headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
@@ -87,8 +86,7 @@ public class InboxApiClient {
     }
 
     Response<Void> syncDeletedMessageState(@NonNull User user, @NonNull String channelId, @NonNull List<JsonValue> reportingsToDelete) throws RequestException {
-        AirshipUrlConfig urlConfig = runtimeConfig.getUrlConfig();
-        Uri url = getUserApiUrl(urlConfig, user.getId(), DELETE_MESSAGES_PATH);
+        Uri url = getUserApiUrl(user.getId(), DELETE_MESSAGES_PATH);
 
         JsonMap payload = JsonMap.newBuilder()
                                  .put(MESSAGES_REPORTINGS_KEY, JsonValue.wrapOpt(reportingsToDelete))
@@ -112,8 +110,7 @@ public class InboxApiClient {
     }
 
     Response<Void> syncReadMessageState(@NonNull User user, @NonNull String channelId, @NonNull List<JsonValue> reportingsToUpdate) throws RequestException {
-        AirshipUrlConfig urlConfig = runtimeConfig.getUrlConfig();
-        Uri url = getUserApiUrl(urlConfig, user.getId(), MARK_READ_MESSAGES_PATH);
+        Uri url = getUserApiUrl(user.getId(), MARK_READ_MESSAGES_PATH);
 
         JsonMap payload = JsonMap.newBuilder()
                                  .put(MESSAGES_REPORTINGS_KEY, JsonValue.wrapOpt(reportingsToUpdate))
@@ -137,7 +134,7 @@ public class InboxApiClient {
     }
 
     Response<UserCredentials> createUser(@NonNull String channelId) throws RequestException {
-        Uri url = getUserApiUrl(runtimeConfig.getUrlConfig());
+        Uri url = getUserApiUrl();
 
         JsonMap payload = JsonMap.newBuilder()
                                  .putOpt(getPayloadChannelsKey(), Collections.singletonList(channelId))
@@ -169,7 +166,7 @@ public class InboxApiClient {
     }
 
     Response<Void> updateUser(@NonNull User user, @NonNull String channelId) throws RequestException {
-        Uri url = getUserApiUrl(runtimeConfig.getUrlConfig(), user.getId());
+        Uri url = getUserApiUrl(user.getId());
 
         JsonMap payload = JsonMap.newBuilder()
                                  .putOpt(
@@ -200,13 +197,12 @@ public class InboxApiClient {
     /**
      * Gets the URL for inbox/user api calls
      *
-     * @param urlConfig The url config.
      * @param paths Additional paths.
      * @return The URL or null if an error occurred.
      */
     @Nullable
-    private Uri getUserApiUrl(@NonNull AirshipUrlConfig urlConfig, String... paths) {
-        UrlBuilder builder = urlConfig.deviceUrl().appendEncodedPath(USER_API_PATH);
+    private Uri getUserApiUrl(String... paths) {
+        UrlBuilder builder = runtimeConfig.getDeviceUrl().appendEncodedPath(USER_API_PATH);
 
         for (String path : paths) {
             if (!path.endsWith("/")) {

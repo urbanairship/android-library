@@ -22,7 +22,6 @@ import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.channel.AttributeMutation
-import com.urbanairship.channel.ChannelRegistrationPayload
 import com.urbanairship.channel.TagGroupsEditor
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -35,6 +34,7 @@ import com.urbanairship.locale.LocaleManager
 import com.urbanairship.util.CachedValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.SerialQueue
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -54,6 +54,7 @@ import kotlinx.coroutines.runBlocking
 public class Contact internal constructor(
     context: Context,
     private val preferenceDataStore: PreferenceDataStore,
+    private val config: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val airshipChannel: AirshipChannel,
     private val audienceOverridesProvider: AudienceOverridesProvider,
@@ -79,6 +80,7 @@ public class Contact internal constructor(
     ) : this(
         context,
         preferenceDataStore,
+        config,
         privacyManager,
         airshipChannel,
         audienceOverridesProvider,
@@ -130,6 +132,14 @@ public class Contact internal constructor(
         get() = preferenceDataStore.getLong(LAST_RESOLVED_DATE_KEY, -1)
         set(newValue) = preferenceDataStore.put(LAST_RESOLVED_DATE_KEY, newValue)
 
+    /** The foreground resolve interval from remote config, or the default [FOREGROUND_INTERVAL] if not available. */
+    private val foregroundResolveInterval: Long
+        get() = config.remoteConfig.contactConfig?.foregroundIntervalMs ?: FOREGROUND_INTERVAL
+
+    /** The CRA max age from remote config, or the default [CRA_MAX_AGE] if not available. */
+    private val channelRegistrationMaxResolveAge: Long
+        get() = config.remoteConfig.contactConfig?.channelRegistrationMaxResolveAgeMs ?: CRA_MAX_AGE
+
     internal val currentContactIdUpdate: ContactIdUpdate?
         get() = contactManager.currentContactIdUpdate
 
@@ -141,14 +151,38 @@ public class Contact internal constructor(
         get() = contactManager.lastContactId
 
     internal suspend fun stableContactId(): String {
-        return contactManager.stableContactId()
+        return contactManager.stableContactIdUpdate().contactId
+    }
+
+    private suspend fun stableVerifiedContactId(): String {
+        val stable = contactManager.stableContactIdUpdate()
+        val age = this.clock.currentTimeMillis() - stable.resolveDateMs
+
+        if (age <= channelRegistrationMaxResolveAge) {
+            return stable.contactId
+        }
+
+        val now = this.clock.currentTimeMillis()
+        contactManager.addOperation(ContactOperation.Verify(now))
+        return contactManager.stableContactIdUpdate(now).contactId
+    }
+
+    private val channelExtender = AirshipChannel.Extender.Suspending { builder ->
+        if (privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+            if (airshipChannel.id != null) {
+                builder.setContactId(stableVerifiedContactId())
+            } else {
+                builder.setContactId(contactManager.lastContactId)
+            }
+        }
+        builder
     }
 
     init {
         migrateNamedUser()
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
             override fun onForeground(time: Long) {
-                if (clock.currentTimeMillis() >= lastResolvedDate + FOREGROUND_RESOLVE_INTERVAL) {
+                if (clock.currentTimeMillis() >= lastResolvedDate + foregroundResolveInterval) {
                     if (privacyManager.isContactsEnabled) {
                         contactManager.addOperation(ContactOperation.Resolve)
                     }
@@ -179,12 +213,7 @@ public class Contact internal constructor(
                 }
         }
 
-        airshipChannel.addChannelRegistrationPayloadExtender { builder: ChannelRegistrationPayload.Builder ->
-            if (privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
-                builder.setContactId(contactManager.lastContactId)
-            }
-            builder
-        }
+        airshipChannel.addChannelRegistrationPayloadExtender(channelExtender)
 
         privacyManager.addListener { checkPrivacyManager() }
         checkPrivacyManager()
@@ -262,6 +291,20 @@ public class Contact internal constructor(
             return
         }
         contactManager.addOperation(ContactOperation.Identify(externalId))
+    }
+
+    public fun notifyRemoteLogin() {
+        if (!privacyManager.isContactsEnabled) {
+            UALog.d { "Contacts is disabled, ignoring contact remote-login request." }
+            return
+        }
+
+        contactManager.addOperation(
+                ContactOperation.Verify(
+                        dateMs = this.clock.currentTimeMillis(),
+                        required = true
+                )
+        )
     }
 
     /**
@@ -421,7 +464,7 @@ public class Contact internal constructor(
             )
         }
 
-        val contactId = contactManager.stableContactId()
+        val contactId = stableContactId()
 
         // Get the subscription lists from the in-memory cache, if available.
         val result = fetchContactSubscriptionList(contactId)
@@ -479,7 +522,7 @@ public class Contact internal constructor(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public suspend fun getStableContactId(): String = contactManager.stableContactId()
+    public suspend fun getStableContactId(): String = stableContactId()
 
     private suspend fun fetchContactSubscriptionList(contactId: String): Result<Map<String, Set<Scope>>> {
         return subscriptionFetchQueue.run {
@@ -515,12 +558,16 @@ public class Contact internal constructor(
         @VisibleForTesting
         internal val ACTION_UPDATE_CONTACT = "ACTION_UPDATE_CONTACT"
 
-        /**
-         * Max age for the contact subscription listing cache.
-         */
-        private const val SUBSCRIPTION_CACHE_LIFETIME_MS: Long = 10 * 60 * 1000 // 10M
         private const val LAST_RESOLVED_DATE_KEY = "com.urbanairship.contacts.LAST_RESOLVED_DATE_KEY"
-        private const val FOREGROUND_RESOLVE_INTERVAL: Long = 24 * 60 * 60 * 1000 // 24 hours
+
+        /** Max age for the contact subscription listing cache. */
+        private val SUBSCRIPTION_CACHE_LIFETIME_MS = TimeUnit.MINUTES.toMillis(10)
+
+        /** Default foreground refresh interval. */
+        private val FOREGROUND_INTERVAL = TimeUnit.MINUTES.toMillis(60)
+
+        /** Default CRA max age. */
+        private val CRA_MAX_AGE = TimeUnit.MINUTES.toMillis(10)
     }
 
     private data class Subscriptions(

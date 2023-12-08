@@ -27,7 +27,7 @@ internal class SubscriptionListApiClient constructor(
      * @throws RequestException
      */
     suspend fun getSubscriptionLists(contactId: String): RequestResult<Map<String, Set<Scope>>> {
-        val url = runtimeConfig.urlConfig.deviceUrl()
+        val url = runtimeConfig.deviceUrl
             .appendEncodedPath(SUBSCRIPTION_LIST_PATH + contactId).build()
 
         val headers = mapOf(

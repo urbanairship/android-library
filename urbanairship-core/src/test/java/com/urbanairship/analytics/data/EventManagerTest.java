@@ -51,7 +51,7 @@ public class EventManagerTest extends BaseTestCase {
         mockDispatcher = mock(JobDispatcher.class);
         mockEventDao = mock(EventDao.class);
 
-        testAirshipRuntimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+        testAirshipRuntimeConfig = new TestAirshipRuntimeConfig();
 
         mockClient = mock(EventApiClient.class);
         mockActivityMonitor = mock(ActivityMonitor.class);

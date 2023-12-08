@@ -74,7 +74,7 @@ public class AnalyticsTest extends BaseTestCase {
     private PreferenceDataStore dataStore = TestApplication.getApplication().preferenceDataStore;
     private LocaleManager localeManager = new LocaleManager(context, dataStore);
     private Executor executor = Runnable::run;
-    private TestAirshipRuntimeConfig runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+    private TestAirshipRuntimeConfig runtimeConfig = new TestAirshipRuntimeConfig();
     private TestActivityMonitor activityMonitor = new TestActivityMonitor();
     private PrivacyManager privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
 

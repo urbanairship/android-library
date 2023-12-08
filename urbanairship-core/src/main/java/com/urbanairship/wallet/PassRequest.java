@@ -219,10 +219,8 @@ public class PassRequest {
      */
     @Nullable
     Uri getPassUrl() {
-        UrlBuilder urlBuilder = UAirship.shared()
-                                        .getRuntimeConfig()
-                                        .getUrlConfig()
-                                        .walletUrl()
+        UrlBuilder urlBuilder = UAirship.shared().getRuntimeConfig()
+                                        .getWalletUrl()
                                         .appendEncodedPath(PASS_PATH)
                                         .appendEncodedPath(templateId);
 

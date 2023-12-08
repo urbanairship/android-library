@@ -20,7 +20,7 @@ import org.robolectric.shadows.ShadowBuild
 @RunWith(RobolectricTestRunner::class)
 public class RemoteDataUrlFactoryTest {
 
-    private val runtimeConfig = TestAirshipRuntimeConfig.newTestConfig()
+    private val runtimeConfig = TestAirshipRuntimeConfig()
     private val availableProviders: MutableList<PushProvider> = mutableListOf()
 
     private val pushProviders: PushProviders = mockk {

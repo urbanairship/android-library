@@ -2,4 +2,4 @@
 
 package com.urbanairship.contacts
 
-internal data class ContactIdUpdate(val contactId: String, val isStable: Boolean)
+internal data class ContactIdUpdate(val contactId: String, val isStable: Boolean, val resolveDateMs: Long)

@@ -26,6 +26,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.job.JobInfo;
@@ -33,6 +34,8 @@ import com.urbanairship.job.JobResult;
 import com.urbanairship.push.PushListener;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
+import com.urbanairship.remoteconfig.RemoteAirshipConfig;
+import com.urbanairship.remoteconfig.RemoteConfig;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +66,7 @@ public class MessageCenterTest {
     MessageCenter.OnShowMessageCenterListener onShowMessageCenterListener = mock(MessageCenter.OnShowMessageCenterListener.class);
 
 
+    private TestAirshipRuntimeConfig config = new TestAirshipRuntimeConfig();
     @Before
     public void setup() {
         context = ApplicationProvider.getApplicationContext();
@@ -72,7 +76,7 @@ public class MessageCenterTest {
         channel = mock(AirshipChannel.class);
         inbox = mock(Inbox.class);
         pushManager = mock(PushManager.class);
-        this.messageCenter = new MessageCenter(context, dataStore, privacyManager, inbox, pushManager);
+        this.messageCenter = new MessageCenter(context, dataStore, config, privacyManager, inbox, pushManager);
         shadowApplication = shadowOf((Application) context);
 
         when(privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)).thenReturn(true);
@@ -194,7 +198,17 @@ public class MessageCenterTest {
 
     @Test
     public void testUrlConfigUpdateCallback() {
-        messageCenter.onUrlConfigUpdated();
+        RemoteAirshipConfig remoteAirshipConfig = new RemoteAirshipConfig(
+                "https://remote-data",
+                "https://device",
+                "https://wallet",
+                "https://analytics",
+                "https://metered-usage"
+        );
+
+        RemoteConfig remoteConfig = new RemoteConfig(remoteAirshipConfig);
+
+        config.updateRemoteConfig(remoteConfig);
 
         verify(inbox).dispatchUpdateUserJob(true);
     }

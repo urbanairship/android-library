@@ -24,11 +24,11 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.job.JobResult;
 import com.urbanairship.push.PushListener;
 import com.urbanairship.push.PushManager;
-import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.UAStringUtil;
 
 import java.util.List;
@@ -86,6 +86,7 @@ public class MessageCenter extends AirshipComponent {
     private final Inbox inbox;
     private OnShowMessageCenterListener onShowMessageCenterListener;
     private final PushListener pushListener;
+    private final AirshipRuntimeConfig config;
 
     private AtomicBoolean isStarted = new AtomicBoolean(false);
 
@@ -110,11 +111,11 @@ public class MessageCenter extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public MessageCenter(@NonNull Context context,
                          @NonNull PreferenceDataStore dataStore,
+                         @NonNull AirshipRuntimeConfig config,
                          @NonNull PrivacyManager privacyManager,
                          @NonNull AirshipChannel channel,
-                         @NonNull PushManager pushManager,
-                         @NonNull AirshipConfigOptions configOptions) {
-        this(context, dataStore, privacyManager, new Inbox(context, dataStore, channel, configOptions, privacyManager), pushManager);
+                         @NonNull PushManager pushManager) {
+        this(context, dataStore, config, privacyManager, new Inbox(context, dataStore, channel, config.getConfigOptions(), privacyManager), pushManager);
     }
 
     /**
@@ -130,6 +131,7 @@ public class MessageCenter extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     MessageCenter(@NonNull Context context,
                   @NonNull PreferenceDataStore dataStore,
+                  @NonNull AirshipRuntimeConfig config,
                   @NonNull PrivacyManager privacyManager,
                   @NonNull Inbox inbox,
                   @NonNull PushManager pushManager) {
@@ -137,15 +139,11 @@ public class MessageCenter extends AirshipComponent {
         this.privacyManager = privacyManager;
         this.pushManager = pushManager;
         this.inbox = inbox;
-
-        this.pushListener = new PushListener() {
-            @WorkerThread
-            @Override
-            public void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
-                if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && getInbox().getMessage(message.getRichPushMessageId()) == null) {
-                    UALog.d("Received a Rich Push.");
-                    getInbox().fetchMessages();
-                }
+        this.config = config;
+        this.pushListener = (message, notificationPosted) -> {
+            if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && getInbox().getMessage(message.getRichPushMessageId()) == null) {
+                UALog.d("Received a Rich Push.");
+                getInbox().fetchMessages();
             }
         };
     }
@@ -158,18 +156,8 @@ public class MessageCenter extends AirshipComponent {
     protected void init() {
         super.init();
 
-        privacyManager.addListener(new PrivacyManager.Listener() {
-            @Override
-            public void onEnabledFeaturesChanged() {
-                AirshipExecutors.newSerialExecutor().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateInboxEnabledState();
-                    }
-                });
-            }
-        });
-
+        privacyManager.addListener(() -> AirshipExecutors.newSerialExecutor().execute(this::updateInboxEnabledState));
+        config.addConfigListener(() -> getInbox().dispatchUpdateUserJob(true));
         updateInboxEnabledState();
     }
 
@@ -206,17 +194,6 @@ public class MessageCenter extends AirshipComponent {
         return AirshipComponentGroups.MESSAGE_CENTER;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @hide
-     */
-    @Override
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void onUrlConfigUpdated() {
-        // Update inbox user when notified of new URL config.
-        getInbox().dispatchUpdateUserJob(true);
-    }
 
     /**
      * @hide

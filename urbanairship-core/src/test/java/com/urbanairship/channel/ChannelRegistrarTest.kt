@@ -84,9 +84,11 @@ public class ChannelRegistrarTest {
         assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
 
         // Modify the payload so it will update
-        registrar.addChannelRegistrationPayloadExtender {
-            it.setContactId("some contact id")
-        }
+        registrar.addChannelRegistrationPayloadExtender(
+            AirshipChannel.Extender.Suspending {
+                it.setContactId("some contact id")
+            }
+        )
 
         val expectedPayload = ChannelRegistrationPayload.Builder()
             .setContactId("some contact id")
@@ -105,9 +107,11 @@ public class ChannelRegistrarTest {
     @Test
     public fun testRegistrationPayloadOutOfDate(): TestResult = runTest {
         // Make the payload unique every time
-        registrar.addChannelRegistrationPayloadExtender {
-            it.setContactId(UUID.randomUUID().toString())
-        }
+        registrar.addChannelRegistrationPayloadExtender(
+            AirshipChannel.Extender.Suspending {
+                it.setContactId(UUID.randomUUID().toString())
+            }
+        )
 
         // Create
         coEvery {
@@ -154,9 +158,11 @@ public class ChannelRegistrarTest {
         assertEquals("some id", registrar.channelId)
 
         // Modify the payload so it will update
-        registrar.addChannelRegistrationPayloadExtender {
-            it.setContactId("some contact id")
-        }
+        registrar.addChannelRegistrationPayloadExtender(
+            AirshipChannel.Extender.Suspending {
+                it.setContactId("some contact id")
+            }
+        )
 
         // Update
         coEvery {
@@ -205,9 +211,11 @@ public class ChannelRegistrarTest {
     }
 
     public fun testUpdateMinimizedPayload(): TestResult = runTest {
-        registrar.addChannelRegistrationPayloadExtender {
-            it.setCarrier("some thing").setTimezone("neat time zone")
-        }
+        registrar.addChannelRegistrationPayloadExtender(
+            AirshipChannel.Extender.Suspending {
+                it.setCarrier("some thing").setTimezone("neat time zone")
+            }
+        )
 
         val expectedPayload = ChannelRegistrationPayload.Builder()
             .setCarrier("some thing")
@@ -238,9 +246,11 @@ public class ChannelRegistrarTest {
 
     @Test
     public fun testUpdateLocationChangeUsesFullPayload(): TestResult = runTest {
-        registrar.addChannelRegistrationPayloadExtender {
-            it.setCarrier("some thing").setTimezone("neat time zone")
-        }
+        registrar.addChannelRegistrationPayloadExtender(
+            AirshipChannel.Extender.Suspending {
+                it.setCarrier("some thing").setTimezone("neat time zone")
+            }
+        )
 
         val expectedPayload = ChannelRegistrationPayload.Builder()
             .setCarrier("some thing")

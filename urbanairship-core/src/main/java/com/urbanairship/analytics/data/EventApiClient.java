@@ -71,8 +71,7 @@ public class EventApiClient {
         Map<String, String> requestHeaders = new HashMap<>(headers);
         requestHeaders.put("X-UA-Sent-At", String.format(Locale.US, "%.3f", sentAt));
 
-        Uri url = runtimeConfig.getUrlConfig()
-                               .analyticsUrl()
+        Uri url = runtimeConfig.getAnalyticsUrl()
                                .appendEncodedPath(WARP9_PATH)
                                .build();
 

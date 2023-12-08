@@ -67,7 +67,7 @@ public class PushManagerTest extends BaseTestCase {
     private PreferenceDataStore preferenceDataStore;
     private PrivacyManager privacyManager;
 
-    private final TestAirshipRuntimeConfig runtimeConfig = TestAirshipRuntimeConfig.newTestConfig();
+    private final TestAirshipRuntimeConfig runtimeConfig = new TestAirshipRuntimeConfig();
     private final PushProviders mockPushProviders = mock(PushProviders.class);
     private final JobDispatcher mockDispatcher = mock(JobDispatcher.class);
     private final AirshipChannel mockAirshipChannel = mock(AirshipChannel.class);
@@ -258,11 +258,11 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testChannelRegistrationExtenderOptedIn() throws PushProvider.RegistrationException {
-        ArgumentCaptor<Extender<ChannelRegistrationPayload.Builder>> argument = ArgumentCaptor.forClass(Extender.class);
+        ArgumentCaptor<AirshipChannel.Extender.Blocking> argument = ArgumentCaptor.forClass(AirshipChannel.Extender.Blocking.class);
         pushManager.init();
         verify(mockAirshipChannel).addChannelRegistrationPayloadExtender(argument.capture());
 
-        Extender<ChannelRegistrationPayload.Builder> extender = argument.getValue();
+        AirshipChannel.Extender.Blocking extender = argument.getValue();
         assertNotNull(extender);
 
         when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
@@ -289,11 +289,11 @@ public class PushManagerTest extends BaseTestCase {
      */
     @Test
     public void testChannelRegistrationExtenderOptedOut() {
-        ArgumentCaptor<Extender<ChannelRegistrationPayload.Builder>> argument = ArgumentCaptor.forClass(Extender.class);
+        ArgumentCaptor<AirshipChannel.Extender.Blocking> argument = ArgumentCaptor.forClass(AirshipChannel.Extender.Blocking.class);
         pushManager.init();
         verify(mockAirshipChannel).addChannelRegistrationPayloadExtender(argument.capture());
 
-        Extender<ChannelRegistrationPayload.Builder> extender = argument.getValue();
+        AirshipChannel.Extender.Blocking extender = argument.getValue();
         assertNotNull(extender);
 
         ChannelRegistrationPayload.Builder builder = new ChannelRegistrationPayload.Builder();
@@ -320,11 +320,11 @@ public class PushManagerTest extends BaseTestCase {
 
     @Test
     public void testDeliveryTypeAndroidPlatform() throws PushProvider.RegistrationException {
-        ArgumentCaptor<Extender<ChannelRegistrationPayload.Builder>> argument = ArgumentCaptor.forClass(Extender.class);
+        ArgumentCaptor<AirshipChannel.Extender.Blocking> argument = ArgumentCaptor.forClass(AirshipChannel.Extender.Blocking.class);
         pushManager.init();
         verify(mockAirshipChannel).addChannelRegistrationPayloadExtender(argument.capture());
 
-        Extender<ChannelRegistrationPayload.Builder> extender = argument.getValue();
+        AirshipChannel.Extender.Blocking extender = argument.getValue();
         assertNotNull(extender);
 
         when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);

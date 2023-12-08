@@ -4,10 +4,11 @@ package com.urbanairship.contacts
 import android.net.Uri
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
-import com.urbanairship.config.AirshipUrlConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.toSuspendingRequestSession
+import com.urbanairship.remoteconfig.RemoteAirshipConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import java.util.TimeZone
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
@@ -27,10 +28,14 @@ public class SubscriptionListApiClientTest {
 
     private val testDispatcher = StandardTestDispatcher()
 
-    private var runtimeConfig: TestAirshipRuntimeConfig =
-        TestAirshipRuntimeConfig.newTestConfig().also {
-            it.urlConfig = AirshipUrlConfig.newBuilder().setDeviceUrl("https://example.com").build()
-        }
+    private var runtimeConfig: TestAirshipRuntimeConfig = TestAirshipRuntimeConfig(
+        RemoteConfig(
+            airshipConfig = RemoteAirshipConfig(
+                deviceApiUrl = "https://example.com"
+            )
+        )
+    )
+
     private val requestSession = TestRequestSession()
 
     private var client = SubscriptionListApiClient(
