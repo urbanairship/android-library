@@ -7,4 +7,5 @@
     <string name="appcompat_activity_title">androidx.appcompat.app.AppCompatActivity</string>
     <string name="fragment_activity_title">androidx.fragment.app.FragmentActivity</string>
     <string name="activity_finish">finish activity</string>
+
 </resources>

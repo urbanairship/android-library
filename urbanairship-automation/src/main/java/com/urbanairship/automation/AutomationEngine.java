@@ -79,7 +79,7 @@ import androidx.core.util.Consumer;
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public class AutomationEngine {
 
-    private long SCHEDULE_LIMIT = 1000;
+    private final long SCHEDULE_LIMIT = 1000;
     private final List<Integer> COMPOUND_TRIGGER_TYPES = Arrays.asList(Trigger.ACTIVE_SESSION, Trigger.VERSION);
 
     /**
@@ -186,7 +186,7 @@ public class AutomationEngine {
 
     private final PausedManager pausedManager;
 
-    class PausedManager {
+    static class PausedManager {
         private final AtomicBoolean isPaused = new AtomicBoolean(false);
         private final List<Consumer<Boolean>> consumers = new CopyOnWriteArrayList<>();
 
@@ -1481,7 +1481,7 @@ public class AutomationEngine {
     private void notifyNewSchedule(@NonNull final Collection<Schedule<? extends ScheduleData>> schedules) {
         notifyHelper(schedules, new NotifySchedule() {
             @Override
-            public void notify(@NonNull ScheduleListener listener, @NonNull Schedule schedule) {
+            public void notify(@NonNull ScheduleListener listener, @NonNull Schedule<?> schedule) {
                 listener.onNewSchedule(schedule);
             }
         });
@@ -1772,7 +1772,7 @@ public class AutomationEngine {
      *
      * @param edits The schedule edits.
      */
-    public void applyEdits(@NonNull FullSchedule entry, @NonNull ScheduleEdits edits) {
+    public void applyEdits(@NonNull FullSchedule entry, @NonNull ScheduleEdits<?> edits) {
         ScheduleEntity scheduleEntity = entry.schedule;
         scheduleEntity.scheduleStart = edits.getStart() == null ? scheduleEntity.scheduleStart : edits.getStart();
         scheduleEntity.scheduleEnd = edits.getEnd() == null ? scheduleEntity.scheduleEnd : edits.getEnd();

@@ -27,6 +27,13 @@
                 android:value="true"/>
         </activity>
 
+        <activity android:name=".embedded.EmbeddedActivity"
+            android:exported="false">
+            <meta-data
+                android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
+                android:value="true" />
+        </activity>
+
         <activity
             android:name=".OtherAndroidActivity"
             android:exported="false" />

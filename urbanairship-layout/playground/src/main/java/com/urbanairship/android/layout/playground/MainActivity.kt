@@ -22,6 +22,7 @@ import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.ThomasListener
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
+import com.urbanairship.android.layout.playground.embedded.EmbeddedActivity
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
@@ -99,6 +100,10 @@ class MainActivity : AppCompatActivity() {
             v.isEnabled = false
             displayLayout(binding.layoutSpinnerText.text.toString())
             v.postDelayed({ v.isEnabled = true }, 150)
+        }
+
+        binding.startEmbeddedActivity.setOnClickListener {
+            startActivity(Intent(this, EmbeddedActivity::class.java))
         }
 
         binding.startAndroidActivity.setOnClickListener {
@@ -183,7 +188,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        override fun onRunActions(actions: MutableMap<String, JsonValue>, state: LayoutData) {
+        override fun onRunActions(actions: Map<String, JsonValue>, state: LayoutData) {
             "onRunActions(actions: $actions, state: $state)".let {
                 events.add(it)
                 UALog.d(it)

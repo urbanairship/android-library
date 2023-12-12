@@ -13,4 +13,8 @@
         <attr name="maxPercentWidth" format="float"/>
         <attr name="maxPercentHeight" format="float" />
     </declare-styleable>
+
+    <declare-styleable name="AirshipEmbeddedView">
+        <attr name="layout_id" format="string"/>
+    </declare-styleable>
 </resources>

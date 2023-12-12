@@ -2,4 +2,5 @@
 
 <resources>
     <public name="UrbanAirship.Layout" type="style" />
+    <public name="layout_id" type="attr" />
 </resources>

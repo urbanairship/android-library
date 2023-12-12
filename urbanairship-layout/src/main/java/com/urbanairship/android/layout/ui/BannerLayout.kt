@@ -53,7 +53,7 @@ private object BannerViewModelStoreOwner : ViewModelStoreOwner {
     override fun getViewModelStore(): ViewModelStore = BannerViewModelStore
 }
 
-internal class LayoutBanner(
+internal class BannerLayout(
     private val context: Context,
     args: DisplayArgs
 ) {
@@ -86,19 +86,19 @@ internal class LayoutBanner(
     private val activityListener: ActivityListener = object : SimpleActivityListener() {
         override fun onActivityStopped(activity: Activity) {
             if (activityPredicate.apply(activity)) {
-                this@LayoutBanner.onActivityStopped(activity)
+                this@BannerLayout.onActivityStopped(activity)
             }
         }
 
         override fun onActivityResumed(activity: Activity) {
             if (activityPredicate.apply(activity)) {
-                this@LayoutBanner.onActivityResumed(activity)
+                this@BannerLayout.onActivityResumed(activity)
             }
         }
 
         override fun onActivityPaused(activity: Activity) {
             if (activityPredicate.apply(activity)) {
-                this@LayoutBanner.onActivityPaused(activity)
+                this@BannerLayout.onActivityPaused(activity)
             }
         }
     }

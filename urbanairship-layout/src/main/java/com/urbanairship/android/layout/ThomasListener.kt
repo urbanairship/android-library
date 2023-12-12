@@ -1,22 +1,14 @@
 /* Copyright Airship and Contributors */
+package com.urbanairship.android.layout
 
-package com.urbanairship.android.layout;
+import androidx.annotation.RestrictTo
+import com.urbanairship.android.layout.reporting.FormData.BaseForm
+import com.urbanairship.android.layout.reporting.FormInfo
+import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.android.layout.reporting.PagerData
+import com.urbanairship.json.JsonValue
 
-import com.urbanairship.android.layout.reporting.FormData;
-import com.urbanairship.android.layout.reporting.FormInfo;
-import com.urbanairship.android.layout.reporting.LayoutData;
-import com.urbanairship.android.layout.reporting.PagerData;
-import com.urbanairship.json.JsonValue;
-
-import java.util.Map;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-
-/**
- * Thomas listener.
- */
+/** Thomas listener. */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface ThomasListener {
 
@@ -25,9 +17,9 @@ public interface ThomasListener {
      *
      * @param pagerData The pager data.
      * @param state The layout state.
-     * @param displayedAt A timestamp from {@code DisplayTimer}.
+     * @param displayedAt A timestamp from `DisplayTimer`.
      */
-    void onPageView(@NonNull PagerData pagerData, @NonNull LayoutData state, long displayedAt);
+    public fun onPageView(pagerData: PagerData, state: LayoutData, displayedAt: Long)
 
     /**
      * Called when a pager changes its page due to a swipe gesture.
@@ -39,12 +31,14 @@ public interface ThomasListener {
      * @param fromPageId The page Id that the swipe originated on.
      * @param state The layout state.
      */
-    void onPageSwipe(@NonNull PagerData pagerData,
-                     int toPageIndex,
-                     @NonNull String toPageId,
-                     int fromPageIndex,
-                     @NonNull String fromPageId,
-                     @NonNull LayoutData state);
+    public fun onPageSwipe(
+        pagerData: PagerData,
+        toPageIndex: Int,
+        toPageId: String,
+        fromPageIndex: Int,
+        fromPageId: String,
+        state: LayoutData
+    )
 
     /**
      * Called when a button is tapped.
@@ -53,17 +47,14 @@ public interface ThomasListener {
      * @param reportingMetadata Optional reporting metadata.
      * @param state The layout state.
      */
-    void onButtonTap(
-            @NonNull String buttonId,
-            @Nullable JsonValue reportingMetadata,
-            @NonNull LayoutData state);
+    public fun onButtonTap(buttonId: String, reportingMetadata: JsonValue?, state: LayoutData)
 
     /**
      * Called when the view is dismissed from outside the view.
      *
      * @param displayTime The total display time in milliseconds.
      */
-    void onDismiss(long displayTime);
+    public fun onDismiss(displayTime: Long)
 
     /**
      * Called when the view is dismissed from a button.
@@ -74,11 +65,13 @@ public interface ThomasListener {
      * @param displayTime The total display time in milliseconds.
      * @param state The layout state.
      */
-    void onDismiss(@NonNull String buttonId,
-                   @Nullable String buttonDescription,
-                   boolean cancel,
-                   long displayTime,
-                   @NonNull LayoutData state);
+    public fun onDismiss(
+        buttonId: String,
+        buttonDescription: String?,
+        cancel: Boolean,
+        displayTime: Long,
+        state: LayoutData
+    )
 
     /**
      * Called when a form is submitted.
@@ -86,7 +79,7 @@ public interface ThomasListener {
      * @param formData The form data.
      * @param state The layout state.
      */
-    void onFormResult(@NonNull FormData.BaseForm formData, @NonNull LayoutData state);
+    public fun onFormResult(formData: BaseForm, state: LayoutData)
 
     /**
      * Called when a form is displayed.
@@ -94,7 +87,7 @@ public interface ThomasListener {
      * @param formInfo The form info.
      * @param state The layout state.
      */
-    void onFormDisplay(@NonNull FormInfo formInfo, @NonNull LayoutData state);
+    public fun onFormDisplay(formInfo: FormInfo, state: LayoutData)
 
     /**
      * Called when actions should be run.
@@ -102,7 +95,7 @@ public interface ThomasListener {
      * @param actions The actions payload.
      * @param state The layout sate.
      */
-    void onRunActions(@NonNull Map<String, JsonValue> actions, @NonNull LayoutData state);
+    public fun onRunActions(actions: Map<String, @JvmSuppressWildcards JsonValue>, state: LayoutData)
 
     /**
      * Called when a pager changes its page due to a tap.
@@ -111,9 +104,7 @@ public interface ThomasListener {
      * @param reportingMetadata Optional reporting metadata.
      * @param state The layout state.
      */
-    void onPagerGesture(@NonNull String gestureId,
-                     @Nullable JsonValue reportingMetadata,
-                     @NonNull LayoutData state);
+    public fun onPagerGesture(gestureId: String, reportingMetadata: JsonValue?, state: LayoutData)
 
     /**
      * Called when a pager changes its page due to a swipe.
@@ -122,7 +113,9 @@ public interface ThomasListener {
      * @param reportingMetadata Optional reporting metadata.
      * @param state The layout state.
      */
-    void onPagerAutomatedAction(@NonNull String actionId,
-                       @Nullable JsonValue reportingMetadata,
-                       @NonNull LayoutData state);
+    public fun onPagerAutomatedAction(
+        actionId: String,
+        reportingMetadata: JsonValue?,
+        state: LayoutData
+    )
 }
