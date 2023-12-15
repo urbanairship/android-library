@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+
+## Version 17.7.0 December 13, 2023
+Minor release that adds support for customizing the stroke/border width for In App Message buttons.
+
+### Changes
+- Added new `ua_iam_button_stroke_width_dps` dimen for customizing the stroke/border for In App Message buttons.
+
+
 ## Version 17.6.0 December 6, 2023
 Minor release that adds a new method `Contact#notifyRemoteLogin()` that will refresh the local state on the device for named user associations that occur through the server instead of the SDK.
 

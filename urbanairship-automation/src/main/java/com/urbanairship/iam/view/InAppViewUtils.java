@@ -26,6 +26,7 @@ import android.widget.TextView;
 
 import com.urbanairship.Fonts;
 import com.urbanairship.UALog;
+import com.urbanairship.automation.R;
 import com.urbanairship.iam.ButtonInfo;
 import com.urbanairship.iam.MediaInfo;
 import com.urbanairship.iam.TextInfo;
@@ -57,7 +58,6 @@ import androidx.core.view.ViewCompat;
 public class InAppViewUtils {
 
     private static final float PRESSED_ALPHA_PERCENT = .2f;
-    private static final int DEFAULT_STROKE_WIDTH_DPS = 2;
     private static final float DEFAULT_BORDER_RADIUS = 0;
 
     /**
@@ -66,8 +66,9 @@ public class InAppViewUtils {
      * @param button The button view.
      * @param buttonInfo The button info.
      * @param borderRadiusFlag The border radius flag.
+     * @param strokeWidthInDps The stroke width in dps.
      */
-    public static void applyButtonInfo(@NonNull Button button, @NonNull ButtonInfo buttonInfo, @BorderRadius.BorderRadiusFlag int borderRadiusFlag) {
+    public static void applyButtonInfo(@NonNull Button button, @NonNull ButtonInfo buttonInfo, @BorderRadius.BorderRadiusFlag int borderRadiusFlag, int strokeWidthInDps) {
         applyButtonTextInfo(button, buttonInfo.getLabel());
 
         int textColor = buttonInfo.getLabel().getColor() == null ? button.getCurrentTextColor() : buttonInfo.getLabel().getColor();
@@ -82,10 +83,22 @@ public class InAppViewUtils {
                 .setBorderRadius(borderRadius, borderRadiusFlag)
                 .setPressedColor(pressedColor)
                 .setStrokeColor(strokeColor)
-                .setStrokeWidth(DEFAULT_STROKE_WIDTH_DPS)
+                .setStrokeWidth(strokeWidthInDps)
                 .build();
 
         ViewCompat.setBackground(button, background);
+    }
+
+    /**
+     * Applies button info to a button.
+     *
+     * @param button The button view.
+     * @param buttonInfo The button info.
+     * @param borderRadiusFlag The border radius flag.
+     */
+    public static void applyButtonInfo(@NonNull Button button, @NonNull ButtonInfo buttonInfo, @BorderRadius.BorderRadiusFlag int borderRadiusFlag) {
+        int strokeWidth = button.getContext().getResources().getInteger(R.integer.ua_iam_button_stroke_width_dps);
+        applyButtonInfo(button, buttonInfo, borderRadiusFlag, strokeWidth);
     }
 
     /**
