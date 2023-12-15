@@ -33,8 +33,9 @@ public class SinglePermissionDelegate implements PermissionDelegate {
         try {
             if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
                 callback.accept(PermissionStatus.GRANTED);
+            } else {
+                callback.accept(PermissionStatus.DENIED);
             }
-            callback.accept(PermissionStatus.DENIED);
         } catch (Exception e) {
             UALog.e(e, "Failed to get permission status.");
             callback.accept(PermissionStatus.NOT_DETERMINED);
