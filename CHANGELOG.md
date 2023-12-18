@@ -3,6 +3,12 @@
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
 
+## Version 17.7.1 December 18, 2023
+Patch release that fixes location permission opt-in. Apps that make use of `SinglePermissionDelegate` for requesting runtime permissions should update.
+
+### Changes
+- Fixes location permission opt-in.
+
 ## Version 17.7.0 December 13, 2023
 Minor release that adds support for customizing the stroke/border width for In App Message buttons.
 
