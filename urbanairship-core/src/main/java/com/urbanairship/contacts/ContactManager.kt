@@ -26,10 +26,6 @@ import com.urbanairship.locale.LocaleManager
 import com.urbanairship.util.CachedValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.SerialQueue
-import java.util.UUID
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -41,6 +37,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 @OpenForTesting
 internal class ContactManager(
@@ -509,6 +509,7 @@ internal class ContactManager(
             is ContactOperation.RegisterEmail -> performRegisterEmail(operation)
             is ContactOperation.RegisterSms -> performRegisterSms(operation)
             is ContactOperation.RegisterOpen -> performRegisterOpen(operation)
+            is ContactOperation.OptinCheck -> performOptinCheck(channelId)
         }
     }
 
@@ -652,6 +653,12 @@ internal class ContactManager(
         }
 
         return response.isSuccessful || response.isClientError
+    }
+
+    private suspend fun performOptinCheck(channelId: String): Boolean {
+        //TODO complete this method with correct requests
+        val response = contactApiClient.performOptinCheck(channelId)
+        return true
     }
 
     private fun updateContactIdentity(
