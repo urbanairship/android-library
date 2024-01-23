@@ -328,8 +328,8 @@ internal class ContactApiClient constructor(
 
     @Throws(RequestException::class)
     suspend fun performOptinCheck(channelId: String): List<OptinCheckResult> {
-        //TODO : Execute request and get Optin status for Emails and SMS
-        //STUB value
+        // TODO : Execute request and get Optin status for Emails and SMS
+        // STUB value
         val jsonResult = "{ type: email, id: j****@gmail.com, commercial: out, transactional: in, channelId: abcd-efgh }lId: a123-efgh }"
         return listOf(OptinCheckResult(JsonValue.wrap(jsonResult).map!!))
     }

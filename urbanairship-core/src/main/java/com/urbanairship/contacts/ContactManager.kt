@@ -26,6 +26,10 @@ import com.urbanairship.locale.LocaleManager
 import com.urbanairship.util.CachedValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.SerialQueue
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -37,10 +41,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
-import java.util.UUID
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 @OpenForTesting
 internal class ContactManager(
@@ -656,7 +656,7 @@ internal class ContactManager(
     }
 
     private suspend fun performOptinCheck(channelId: String): Boolean {
-        //TODO complete this method with correct requests
+        // TODO complete this method with correct requests
         val response = contactApiClient.performOptinCheck(channelId)
         return true
     }
