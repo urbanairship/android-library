@@ -2,7 +2,6 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
-import android.widget.ImageView
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.MediaInfo
@@ -11,7 +10,9 @@ import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
+import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
+import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasTapHandler
@@ -21,7 +22,8 @@ import kotlinx.coroutines.launch
 internal class MediaModel(
     val url: String,
     val mediaType: MediaType,
-    val scaleType: ImageView.ScaleType,
+    val mediaFit: MediaFit,
+    val position: Position,
     val contentDescription: String? = null,
     val video: Video?,
     backgroundColor: Color? = null,
@@ -44,7 +46,8 @@ internal class MediaModel(
     constructor(info: MediaInfo, env: ModelEnvironment, props: ModelProperties) : this(
         url = info.url,
         mediaType = info.mediaType,
-        scaleType = info.scaleType,
+        mediaFit = info.mediaFit,
+        position = info.position,
         contentDescription = info.contentDescription,
         video = info.video,
         backgroundColor = info.backgroundColor,

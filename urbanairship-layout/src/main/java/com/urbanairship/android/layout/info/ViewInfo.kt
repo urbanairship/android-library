@@ -1,6 +1,5 @@
 package com.urbanairship.android.layout.info
 
-import android.widget.ImageView.ScaleType
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.AttributeValue
@@ -296,7 +295,9 @@ internal class MediaInfo(
 ) : ViewInfo(), View by view(json), Accessible by accessible(json) {
     val url: String = json.requireField("url")
     val mediaType: MediaType = MediaType.from(json.requireField("media_type"))
-    val scaleType: ScaleType = MediaFit.asScaleType(json.requireField("media_fit"))
+    val mediaFit: MediaFit = MediaFit.from(json.requireField("media_fit"))
+    val position: Position = json.optionalField<JsonMap>("position")
+        ?.let { Position.fromJson(it) } ?: Position.CENTER
     val video: Video? = json.optionalField<JsonMap>("video")?.let { Video.fromJson(it) }
 }
 

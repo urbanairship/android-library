@@ -10,6 +10,10 @@ import com.urbanairship.json.JsonMap;
 import androidx.annotation.NonNull;
 
 public class Position {
+
+    @NonNull
+    public static final Position CENTER =
+            new Position(HorizontalPosition.CENTER, VerticalPosition.CENTER);
     @NonNull
     private final HorizontalPosition horizontal;
     @NonNull

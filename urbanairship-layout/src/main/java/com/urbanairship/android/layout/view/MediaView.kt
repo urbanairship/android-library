@@ -22,6 +22,7 @@ import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.MediaModel
+import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
 import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.util.LayoutUtils
@@ -29,6 +30,7 @@ import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
+import com.urbanairship.android.layout.widget.CropImageView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.android.layout.widget.TouchAwareWebView
 import com.urbanairship.app.FilteredActivityListener
@@ -118,10 +120,20 @@ internal class MediaView(
             return
         }
 
-        val iv = ImageView(context).apply {
+        val parentLayoutParams = layoutParams
+
+        val iv = CropImageView(context).apply {
             layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
             adjustViewBounds = true
-            scaleType = model.scaleType
+
+            if (model.mediaFit == MediaFit.FIT_CROP) {
+                // Use parent size and a matrix to crop the image.
+                setParentLayoutParams(parentLayoutParams)
+                setImagePosition(model.position)
+            } else {
+                // Use ImageView scaleType to fit the image.
+                scaleType = model.mediaFit.scaleType
+            }
 
             importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
             model.contentDescription.ifNotEmpty {

@@ -8,6 +8,7 @@ import android.graphics.drawable.TransitionDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
@@ -15,6 +16,8 @@ import com.urbanairship.AirshipExecutors;
 import com.urbanairship.CancelableOperation;
 import com.urbanairship.UALog;
 import com.urbanairship.util.ImageUtils;
+
+import android.view.View.OnAttachStateChangeListener;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -87,6 +90,35 @@ abstract class ImageRequest {
         pendingRequest.cancel();
     }
 
+    private void restartAnimation(ImageView imageView) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return;
+        }
+
+        Drawable drawable = imageView.getDrawable();
+        // If there's a transition restart that too
+        if (drawable instanceof TransitionDrawable) {
+            drawable = ((TransitionDrawable) drawable).getDrawable(1);
+        }
+
+        if (drawable instanceof AnimatedImageDrawable) {
+            ((AnimatedImageDrawable) drawable).stop();
+            ((AnimatedImageDrawable) drawable).start();
+        }
+    }
+
+    private void stopAnimation(ImageView imageView) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return;
+        }
+        if (imageView != null && imageView.getVisibility() != View.VISIBLE) {
+            Drawable drawable = imageView.getDrawable();
+            if (drawable instanceof AnimatedImageDrawable) {
+                ((AnimatedImageDrawable) drawable).stop();
+            }
+        }
+    }
+
     /**
      * Executes the request.
      */
@@ -132,6 +164,20 @@ abstract class ImageRequest {
             imageView.getViewTreeObserver().addOnPreDrawListener(preDrawListener);
             return;
         }
+
+
+        // Attach state change listener for starting and stopping GIF animations
+        imageView.addOnAttachStateChangeListener(new OnAttachStateChangeListener() {
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+                stopAnimation((ImageView) v);
+            }
+
+            @Override
+            public void onViewAttachedToWindow(View v) {
+                restartAnimation((ImageView) v);
+            }
+        });
 
         Drawable cachedEntry = imageCache.getDrawable(getCacheKey());
 

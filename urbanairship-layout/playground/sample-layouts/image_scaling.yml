@@ -103,7 +103,7 @@ view:
         media_fit: center_crop
         media_type: image
         type: media
-        url: https://dl-staging.urbanairship.com/binary/public/Vl0wyG8kSyCyOUW98Wj4xg/a0c60499-2a05-48c8-9002-9e68f322a25d
+        url: https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Great_Wave_off_Kanagawa2.jpg/2560px-Great_Wave_off_Kanagawa2.jpg
 
     - margin:
         top: 8
@@ -137,7 +137,7 @@ view:
               alpha: 1
         media_type: image
         type: media
-        url: https://dl-staging.urbanairship.com/binary/public/Vl0wyG8kSyCyOUW98Wj4xg/a0c60499-2a05-48c8-9002-9e68f322a25d
+        url: https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Great_Wave_off_Kanagawa2.jpg/2560px-Great_Wave_off_Kanagawa2.jpg
 
         #
         # FIXED WIDTH x AUTO HEIGHT
@@ -189,7 +189,7 @@ view:
         media_fit: center_crop
         media_type: image
         type: media
-        url: https://dl-staging.urbanairship.com/binary/public/Vl0wyG8kSyCyOUW98Wj4xg/a0c60499-2a05-48c8-9002-9e68f322a25d
+        url: https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Great_Wave_off_Kanagawa2.jpg/2560px-Great_Wave_off_Kanagawa2.jpg
 
     - margin:
         top: 8
@@ -223,7 +223,7 @@ view:
               alpha: 1
         media_type: image
         type: media
-        url: https://dl-staging.urbanairship.com/binary/public/Vl0wyG8kSyCyOUW98Wj4xg/a0c60499-2a05-48c8-9002-9e68f322a25d
+        url: https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Great_Wave_off_Kanagawa2.jpg/2560px-Great_Wave_off_Kanagawa2.jpg
 
         #
         # AUTO WIDTH x FIXED HEIGHT
@@ -275,7 +275,7 @@ view:
         media_fit: center_crop
         media_type: image
         type: media
-        url: https://dl-staging.urbanairship.com/binary/public/Vl0wyG8kSyCyOUW98Wj4xg/a0c60499-2a05-48c8-9002-9e68f322a25d
+        url: https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Great_Wave_off_Kanagawa2.jpg/2560px-Great_Wave_off_Kanagawa2.jpg
 
     - margin:
         top: 8
@@ -309,4 +309,4 @@ view:
               alpha: 1
         media_type: image
         type: media
-        url: https://dl-staging.urbanairship.com/binary/public/Vl0wyG8kSyCyOUW98Wj4xg/a0c60499-2a05-48c8-9002-9e68f322a25d
+        url: https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Great_Wave_off_Kanagawa2.jpg/2560px-Great_Wave_off_Kanagawa2.jpg
