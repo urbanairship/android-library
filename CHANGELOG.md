@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 16.11.2, Jan 29, 2024
+Patch release that fixes an issue with message limits not being respected in certain cases. Apps on SDK v16 that make use of limits should update to this version or the latest 17.x release.
+
+### Changes
+- Fixed message limits not being respected in certain cases.
+
 ## Version 16.11.1, June 14, 2023
 Patch release that fixes app deep links that use the `uairship://` prefix. Any `uairship://` deep links that are not handled by Airship directly will now be delivered to the `DeepLinkListener`.
 
