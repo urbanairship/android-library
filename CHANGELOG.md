@@ -2,6 +2,18 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.7.2, Jan 29, 2024
+Patch release that fixes an issue with message limits not being respected in certain cases. Apps that make use of limits should update to this version or later.
+
+### Changes
+- Fixed message limits not being respected in certain cases.
+- Improvements for images and GIFs in Surveys and Scenes.
+
+## Version 16.11.2, Jan 29, 2024
+Patch release that fixes an issue with message limits not being respected in certain cases. Apps on SDK v16 that make use of limits should update to this version or the latest 17.x release.
+
+### Changes
+- Fixed message limits not being respected in certain cases.
 
 ## Version 17.7.1 December 18, 2023
 Patch release that fixes location permission opt-in. Apps that make use of `SinglePermissionDelegate` for requesting runtime permissions should update.
