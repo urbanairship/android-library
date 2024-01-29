@@ -19,16 +19,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 
@@ -39,21 +35,12 @@ import androidx.annotation.VisibleForTesting;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class FrequencyLimitManager {
-
-    /*
-     * A frequency checker will have a strong reference to the list of constraints entities. Once
-     * the checker is cleaned up this should remove the values from the map.
-     */
-    private final Map<ConstraintEntity, List<OccurrenceEntity>> occurrencesMap = new WeakHashMap<>();
-
-    /*
-     * List of pending occurrences to write to the database.
-     */
+    private final Map<String, List<OccurrenceEntity>> occurrencesMap = new HashMap<>();
+    private final Map<String, ConstraintEntity> constraintEntityMap = new HashMap<>();
     private final List<OccurrenceEntity> pendingOccurrences = new ArrayList<>();
-
+    private final Clock clock;
     private final Object lock = new Object();
     private final FrequencyLimitDao dao;
-    private final Clock clock;
     private final Executor executor;
 
     public FrequencyLimitManager(@NonNull Context context, @NonNull AirshipRuntimeConfig config) {
@@ -77,30 +64,40 @@ public class FrequencyLimitManager {
      * @return A future for the checker.
      */
     @NonNull
-    public Future<FrequencyChecker> getFrequencyChecker(@Nullable final Collection<String> constraintIds) {
+    public Future<FrequencyChecker> getFrequencyChecker(@NonNull final Collection<String> constraintIds) {
         final PendingResult<FrequencyChecker> pendingResult = new PendingResult<>();
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final Collection<ConstraintEntity> constraints = fetchConstraints(constraintIds);
-                    FrequencyChecker checker = new FrequencyChecker() {
-                        @Override
-                        public boolean isOverLimit() {
-                            return FrequencyLimitManager.this.isOverLimit(constraints);
-                        }
+        executor.execute(() -> {
+            for (String constraintId : constraintIds) {
+                synchronized (lock) {
+                    if (constraintEntityMap.containsKey(constraintId)) {
+                        continue;
+                    }
+                }
 
-                        @Override
-                        public boolean checkAndIncrement() {
-                            return FrequencyLimitManager.this.checkAndIncrement(constraints);
-                        }
-                    };
-                    pendingResult.setResult(checker);
-                } catch (Exception e) {
-                    Logger.error("Failed to fetch constraints.");
+                List<OccurrenceEntity> occurrenceEntities = dao.getOccurrences(constraintId);
+                List<ConstraintEntity> constraintEntities = dao.getConstraints(Collections.singletonList(constraintId));
+                if (constraintEntities.size() != 1) {
                     pendingResult.setResult(null);
+                    return;
+                }
+
+                synchronized (lock) {
+                    constraintEntityMap.put(constraintId, constraintEntities.get(0));
+                    occurrencesMap.put(constraintId, occurrenceEntities);
                 }
             }
+
+            pendingResult.setResult(new FrequencyChecker() {
+                @Override
+                public boolean isOverLimit() {
+                    return FrequencyLimitManager.this.isOverLimit(constraintIds);
+                }
+
+                @Override
+                public boolean checkAndIncrement() {
+                    return FrequencyLimitManager.this.checkAndIncrement(constraintIds);
+                }
+            });
         });
 
         return pendingResult;
@@ -113,70 +110,81 @@ public class FrequencyLimitManager {
      */
     public Future<Boolean> updateConstraints(@NonNull final Collection<FrequencyConstraint> constraints) {
         final PendingResult<Boolean> pendingResult = new PendingResult<>();
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Collection<ConstraintEntity> constraintEntities = dao.getConstraints();
+        executor.execute(() -> {
+            try {
+                Collection<ConstraintEntity> constraintEntities = dao.getConstraints();
 
-                    Map<String, ConstraintEntity> constraintEntityMap = new HashMap<>();
-                    for (ConstraintEntity entity : constraintEntities) {
-                        constraintEntityMap.put(entity.constraintId, entity);
-                    }
+                Map<String, ConstraintEntity> entityMap = new HashMap<>();
+                for (ConstraintEntity entity : constraintEntities) {
+                    entityMap.put(entity.constraintId, entity);
+                }
 
-                    for (FrequencyConstraint constraint : constraints) {
-                        ConstraintEntity entity = new ConstraintEntity();
-                        entity.constraintId = constraint.getId();
-                        entity.count = constraint.getCount();
-                        entity.range = constraint.getRange();
+                for (FrequencyConstraint constraint : constraints) {
+                    ConstraintEntity entity = new ConstraintEntity();
+                    entity.constraintId = constraint.getId();
+                    entity.count = constraint.getCount();
+                    entity.range = constraint.getRange();
 
-                        ConstraintEntity existing = constraintEntityMap.remove(constraint.getId());
-                        if (existing != null) {
-                            if (existing.range != entity.range) {
-                                dao.delete(existing);
-                                dao.insert(entity);
-                            } else {
-                                dao.update(entity);
+                    ConstraintEntity existing = entityMap.remove(constraint.getId());
+                    if (existing != null) {
+                        if (existing.range != entity.range) {
+                            dao.delete(existing);
+                            dao.insert(entity);
+
+                            synchronized(lock) {
+                                occurrencesMap.put(constraint.getId(), new ArrayList<>());
+
+                                if (entityMap.containsKey(constraint.getId())) {
+                                    constraintEntityMap.put(constraint.getId(), entity);
+                                }
                             }
                         } else {
-                            dao.insert(entity);
-                        }
-                    }
+                            dao.update(entity);
 
-                    dao.delete(constraintEntityMap.keySet());
-                    pendingResult.setResult(true);
-                } catch (Exception e) {
-                    Logger.error(e, "Failed to update constraints");
-                    pendingResult.setResult(false);
+                            synchronized(lock) {
+                                if (entityMap.containsKey(constraint.getId())) {
+                                    constraintEntityMap.put(constraint.getId(), entity);
+                                }
+                            }
+                        }
+                    } else {
+                        dao.insert(entity);
+                    }
                 }
+
+                dao.delete(entityMap.keySet());
+                pendingResult.setResult(true);
+            } catch (Exception e) {
+                Logger.error(e, "Failed to update constraints");
+                pendingResult.setResult(false);
             }
         });
 
         return pendingResult;
     }
 
-    private boolean checkAndIncrement(@NonNull Collection<ConstraintEntity> constraints) {
-        if (constraints.isEmpty()) {
+    private boolean checkAndIncrement(@NonNull Collection<String> constraintIds) {
+        if (constraintIds.isEmpty()) {
             return true;
         }
 
         synchronized (lock) {
-            if (isOverLimit(constraints)) {
+            if (isOverLimit(constraintIds)) {
                 return false;
             }
-            recordOccurrence(getConstraintIds(constraints));
+            recordOccurrence(constraintIds);
             return true;
         }
     }
 
-    private boolean isOverLimit(@NonNull Collection<ConstraintEntity> constraints) {
-        if (constraints.isEmpty()) {
+    private boolean isOverLimit(@NonNull Collection<String> constraintIds) {
+        if (constraintIds.isEmpty()) {
             return false;
         }
 
         synchronized (lock) {
-            for (ConstraintEntity constraint : constraints) {
-                if (isConstraintOverLimit(constraint)) {
+            for (String constraintId : constraintIds) {
+                if (isConstraintOverLimit(constraintId)) {
                     return true;
                 }
             }
@@ -184,59 +192,30 @@ public class FrequencyLimitManager {
         }
     }
 
-    private void recordOccurrence(@NonNull Set<String> constraintIds) {
+    private void recordOccurrence(@NonNull Collection<String> constraintIds) {
         if (constraintIds.isEmpty()) {
             return;
         }
 
         long timeMillis = clock.currentTimeMillis();
 
-        for (String id : constraintIds) {
-            OccurrenceEntity occurrence = new OccurrenceEntity();
-            occurrence.parentConstraintId = id;
-            occurrence.timeStamp = timeMillis;
+        synchronized (lock) {
+            for (String id : constraintIds) {
+                OccurrenceEntity occurrence = new OccurrenceEntity();
+                occurrence.parentConstraintId = id;
+                occurrence.timeStamp = timeMillis;
 
-            pendingOccurrences.add(occurrence);
+                pendingOccurrences.add(occurrence);
 
-            // Update any constraints that are still active
-            for (Map.Entry<ConstraintEntity, List<OccurrenceEntity>> entry : occurrencesMap.entrySet()) {
-                ConstraintEntity constraint = entry.getKey();
-                if (constraint != null && id.equals(constraint.constraintId)) {
-                    entry.getValue().add(occurrence);
+                if (occurrencesMap.get(id) == null) {
+                    occurrencesMap.put(id, new ArrayList<>());
                 }
+                occurrencesMap.get(id).add(occurrence);
             }
         }
 
         // Save to database
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                writePendingOccurrences();
-            }
-        });
-    }
-
-    @NonNull
-    private Collection<ConstraintEntity> fetchConstraints(@Nullable Collection<String> constraintIds) {
-        if (constraintIds == null || constraintIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        Collection<ConstraintEntity> constraints = dao.getConstraints(constraintIds);
-
-        for (ConstraintEntity constraint : constraints) {
-            List<OccurrenceEntity> occurrences = dao.getOccurrences(constraint.constraintId);
-            synchronized (lock) {
-                for (OccurrenceEntity entity : pendingOccurrences) {
-                    if (entity.parentConstraintId.equals(constraint.constraintId)) {
-                        occurrences.add(entity);
-                    }
-                }
-                occurrencesMap.put(constraint, occurrences);
-            }
-        }
-
-        return constraints;
+        executor.execute(this::writePendingOccurrences);
     }
 
     private void writePendingOccurrences() {
@@ -251,28 +230,26 @@ public class FrequencyLimitManager {
                 dao.insert(occurrence);
             } catch (SQLiteException e) {
                 Logger.verbose(e);
+                synchronized (lock) {
+                    pendingOccurrences.add(occurrence);
+                }
             }
         }
     }
 
-    private boolean isConstraintOverLimit(@NonNull ConstraintEntity constraint) {
-        List<OccurrenceEntity> occurrences = occurrencesMap.get(constraint);
+    private boolean isConstraintOverLimit(@NonNull String constraintId) {
+        synchronized (lock) {
+            List<OccurrenceEntity> occurrences = occurrencesMap.get(constraintId);
+            ConstraintEntity constraint = constraintEntityMap.get(constraintId);
 
-        if (occurrences == null || occurrences.size() < constraint.count) {
-            return false;
+            if (constraint == null || occurrences == null || occurrences.size() < constraint.count) {
+                return false;
+            }
+
+            // Sort the occurrences by timestamp
+            Collections.sort(occurrences, new OccurrenceEntity.Comparator());
+            long timeSinceOccurrence = clock.currentTimeMillis() - occurrences.get(occurrences.size() - constraint.count).timeStamp;
+            return timeSinceOccurrence <= constraint.range;
         }
-
-        long timeSinceOccurrence = clock.currentTimeMillis() - occurrences.get(occurrences.size() - constraint.count).timeStamp;
-        return timeSinceOccurrence <= constraint.range;
     }
-
-    @NonNull
-    private Set<String> getConstraintIds(@NonNull Collection<ConstraintEntity> constraints) {
-        Set<String> constraintIds = new HashSet<>();
-        for (ConstraintEntity constraint : constraints) {
-            constraintIds.add(constraint.constraintId);
-        }
-        return constraintIds;
-    }
-
 }

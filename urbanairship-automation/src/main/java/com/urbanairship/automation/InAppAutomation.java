@@ -535,12 +535,16 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             if (!schedule.getFrequencyConstraintIds().isEmpty()) {
                 FrequencyChecker frequencyChecker = getFrequencyChecker(schedule);
                 if (frequencyChecker == null) {
-                    return RetryingExecutor.retryResult();
+                    remoteDataSubscriber.attemptRefresh(true, () -> {
+                        callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                    });
+                    return RetryingExecutor.cancelResult();
                 }
                 frequencyCheckerMap.put(schedule.getId(), frequencyChecker);
                 if (frequencyChecker.isOverLimit()) {
                     // The frequency constraint is exceeded, skip
                     callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_SKIP);
+                    return RetryingExecutor.cancelResult();
                 }
             }
 
