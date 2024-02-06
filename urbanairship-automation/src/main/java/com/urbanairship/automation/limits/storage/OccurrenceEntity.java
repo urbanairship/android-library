@@ -23,4 +23,13 @@ public class OccurrenceEntity {
 
     public String parentConstraintId;
     public long timeStamp;
+
+    /** @hide **/
+    public static class Comparator implements java.util.Comparator<OccurrenceEntity> {
+        @Override
+        public int compare(OccurrenceEntity self, OccurrenceEntity other) {
+            return Long.compare(self.timeStamp, other.timeStamp);
+        }
+    }
+
 }

@@ -263,11 +263,13 @@ class InAppRemoteDataObserver {
         List<Schedule<? extends ScheduleData>> newSchedules = new ArrayList<>();
         List<String> incomingScheduleIds = new ArrayList<>();
         Set<String> scheduledRemoteIds = filterRemoteSchedules(delegate.getSchedules().get(), source);
-        Collection<FrequencyConstraint> constraints = parseConstraints(payload.getData().opt(CONSTRAINTS_JSON_KEY).optList());
 
-        // Update constraints
-        if (!delegate.updateConstraints(constraints).get()) {
-            return false;
+        if (source == RemoteDataSource.APP) {
+            Collection<FrequencyConstraint> constraints = parseConstraints(payload.getData().opt(CONSTRAINTS_JSON_KEY).optList());
+            // Update constraints
+            if (!delegate.updateConstraints(constraints).get()) {
+                return false;
+            }
         }
 
 
