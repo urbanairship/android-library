@@ -40,6 +40,7 @@ public object Thomas {
         return when (payload.presentation) {
             is ModalPresentation -> true
             is BannerPresentation -> true
+            is EmbeddedPresentation -> true
             else -> false
         }
     }
@@ -66,6 +67,11 @@ public object Thomas {
                 DisplayRequest(payload) { context: Context, args: DisplayArgs ->
                     val layoutBanner = BannerLayout(context, args)
                     layoutBanner.display()
+                }
+            }
+            is EmbeddedPresentation -> {
+                DisplayRequest(payload) { _: Context, args: DisplayArgs ->
+                   DefaultEmbeddedViewManager.addPending(args)
                 }
             }
             else -> {

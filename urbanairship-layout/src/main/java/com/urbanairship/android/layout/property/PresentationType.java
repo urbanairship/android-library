@@ -2,18 +2,20 @@
 
 package com.urbanairship.android.layout.property;
 
-import java.util.Locale;
-
 import androidx.annotation.NonNull;
 
 import com.urbanairship.json.JsonException;
+
+import java.util.Locale;
 
 /**
  * Defines how a layout should be presented.
  */
 public enum PresentationType {
     BANNER("banner"),
-    MODAL("modal");
+    MODAL("modal"),
+
+    EMBEDDED("embedded");
 
     @NonNull
     private final String value;

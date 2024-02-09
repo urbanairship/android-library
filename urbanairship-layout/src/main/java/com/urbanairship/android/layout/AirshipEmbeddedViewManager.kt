@@ -30,7 +30,11 @@ public interface AirshipEmbeddedViewManager {
     public fun displayRequests(embeddedViewId: String): Flow<EmbeddedDisplayRequest?>
 }
 
-/** Wrapper for pending embedded layout data. */
+/**
+ * Wrapper for pending embedded layout data.
+ *
+ * @hide
+ */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class EmbeddedDisplayRequest(
     val embeddedViewId: String,
@@ -57,6 +61,7 @@ public data class EmbeddedDisplayRequest(
 internal typealias LayoutInfoProvider = () -> LayoutInfo?
 internal typealias DisplayArgsProvider = () -> DisplayArgs
 
+/* @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public object DefaultEmbeddedViewManager : AirshipEmbeddedViewManager {
 
@@ -90,20 +95,38 @@ public object DefaultEmbeddedViewManager : AirshipEmbeddedViewManager {
         viewsFlow.tryEmit(pending.toMap())
     }
 
+    internal fun addPending(
+        args: DisplayArgs
+    ) {
+        val payload = args.payload
+        val embeddedViewId = (payload.presentation as? EmbeddedPresentation)?.embeddedId ?: run {
+            UALog.e { "Failed to add pending embedded view. Required embedded view ID is null!" }
+            return
+        }
+        val viewInstanceId = payload.hashCode().toString()
+
+        addPending(
+            embeddedViewId,
+            viewInstanceId,
+            { payload },
+            { args }
+        )
+    }
+
     override fun dismiss(embeddedViewId: String) {
         val pendingForView = pending[embeddedViewId] ?: return
 
         // Pop the first request off the list of pending requests
         pending[embeddedViewId] = pendingForView.drop(1)
 
-        UALog.v { "Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
+        UALog.v { "--- Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
 
         viewsFlow.tryEmit(pending.toMap())
     }
 
     override fun dismissAll(embeddedViewId: String) {
         pending[embeddedViewId] = emptyList()
-        UALog.v { "Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
+        UALog.v { "--- Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
 
         viewsFlow.tryEmit(pending.toMap())
     }

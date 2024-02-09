@@ -9,18 +9,18 @@ import androidx.annotation.AnimatorRes
 import androidx.annotation.MainThread
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
+import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.property.ConstrainedSize
-import com.urbanairship.android.layout.property.HorizontalPosition
-import com.urbanairship.android.layout.property.Position
-import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
+import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
 
 internal class ThomasEmbeddedView(
     context: Context,
     private val model: AnyModel,
+    private val presentation: EmbeddedPresentation,
     private val environment: ViewEnvironment
 ) : ConstraintLayout(context) {
 
@@ -36,12 +36,11 @@ internal class ThomasEmbeddedView(
     internal var listener: Listener? = null
 
     /**
-     * Banner view listener.
+     * Embedded view listener.
      */
     interface Listener {
         /**
-         * Called when a child view was dismissed from a swipe. It is up to the listener to remove
-         * or hide the view from the parent.
+         * Called when an embedded child view was dismissed.
          */
         fun onDismissed()
     }
@@ -52,27 +51,33 @@ internal class ThomasEmbeddedView(
     }
 
     private fun configure() {
-        // HACK: make the layout fill the embedded view size, regardless of what may be set in the
-        // modal presentation. We will probably want to add a new presentation type for embedded?
-        val size = ConstrainedSize("100%", "100%", null, null, null, null)
-        val position = Position(HorizontalPosition.CENTER, VerticalPosition.CENTER)
-        val margin = null
+        // Determine embedded view placement
+        val placement = presentation.getResolvedPlacement(context)
+        val size = placement.size
+        val position = placement.position
+        val margin = placement.margin
 
-        val containerView = model.createView(context, environment)
+        // Create the layout view
+        val layoutView = model.createView(context, environment)
 
+        // Make a frame to display the layout in
         val viewId = makeFrame(size).let { f ->
             this@ThomasEmbeddedView.frame = f
 
-            f.addView(containerView)
+            LayoutUtils.applyBorderAndBackground(f, placement.border, placement.backgroundColor)
+
+            f.addView(layoutView)
             this@ThomasEmbeddedView.addView(f)
 
             f.id
         }
 
+        // Apply constraints
         ConstraintSetBuilder.newBuilder(context)
-            .position(position, viewId)
+            .constrainWithinParent(viewId)
             .size(size, viewId)
             .margin(margin, viewId)
+            .position(position, viewId)
             .build()
             .applyTo(this)
     }

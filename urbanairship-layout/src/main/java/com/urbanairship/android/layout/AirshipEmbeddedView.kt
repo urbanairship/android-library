@@ -16,7 +16,8 @@ public class AirshipEmbeddedView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0,
-    private val manager: AirshipEmbeddedViewManager = DefaultEmbeddedViewManager
+    embeddedViewId: String? = null,
+    private val manager: AirshipEmbeddedViewManager = DefaultEmbeddedViewManager,
 ) : FrameLayout(context, attrs, defStyle) {
 
     public interface Listener {
@@ -27,20 +28,20 @@ public class AirshipEmbeddedView @JvmOverloads constructor(
     private val viewJob = SupervisorJob()
     private val viewScope = CoroutineScope(Dispatchers.Main.immediate + viewJob)
 
-    private val embeddedViewId: String
+    private val embeddedViewId: String = embeddedViewId ?: run {
+        val a = context.obtainStyledAttributes(attrs, R.styleable.AirshipEmbeddedView, defStyle, 0)
+        requireNotNull(a.getString(R.styleable.AirshipEmbeddedView_layout_id)) {
+            "AirshipEmbeddedView requires a layout_id!"
+        }.also {
+            a.recycle()
+        }
+    }
 
     private var displayedLayout: EmbeddedLayout? = null
 
-    public var listener: Listener? = null
-
-    init {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.AirshipEmbeddedView, defStyle, 0)
-
-        embeddedViewId = requireNotNull(a.getString(R.styleable.AirshipEmbeddedView_layout_id)) {
-            "AirshipEmbeddedView requires a layout_id!"
-        }
-
-        a.recycle()
+    public var listener: Listener? = object : Listener {
+        override fun onAvailable(): Boolean = true
+        override fun onEmpty() {}
     }
 
     override fun onAttachedToWindow() {
@@ -52,7 +53,7 @@ public class AirshipEmbeddedView @JvmOverloads constructor(
                     val displayArgs = request?.displayArgsProvider?.invoke() ?: return@map null
                     EmbeddedLayout(context, embeddedViewId, displayArgs)
                 }
-                .collect { layout -> update(layout) }
+                .collect(::update)
         }
     }
 

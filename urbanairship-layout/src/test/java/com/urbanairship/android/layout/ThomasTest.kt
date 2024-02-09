@@ -104,15 +104,27 @@ public class ThomasTest {
         assertEquals(1, valid.version.toLong())
 
         for (i in Thomas.MIN_SUPPORTED_VERSION until Thomas.MAX_SUPPORTED_VERSION) {
-            val layout = LayoutInfo(i, valid.presentation, valid.view)
+            val layout = LayoutInfo(i, valid.presentation, valid.view, 0)
             assertTrue(Thomas.isValid(layout))
         }
 
-        val invalidMin = LayoutInfo(Thomas.MIN_SUPPORTED_VERSION - 1, valid.presentation, valid.view)
+        val invalidMin = LayoutInfo(Thomas.MIN_SUPPORTED_VERSION - 1, valid.presentation, valid.view, 0)
         assertFalse(Thomas.isValid(invalidMin))
 
-        val invalidMax = LayoutInfo(Thomas.MAX_SUPPORTED_VERSION + 1, valid.presentation, valid.view)
+        val invalidMax = LayoutInfo(Thomas.MAX_SUPPORTED_VERSION + 1, valid.presentation, valid.view, 0)
         assertFalse(Thomas.isValid(invalidMax))
+    }
+
+    @Test
+    @Throws(JsonException::class)
+    public fun testEqualsAndHashcode() {
+        val valid = LayoutInfo(json = readJsonMapResource("modal.json"))
+
+        val info1 = LayoutInfo(1, valid.presentation, valid.view, 0)
+        val info2 = LayoutInfo(1, valid.presentation, valid.view, 0)
+        assertEquals(info1, info2)
+        assertEquals(info1.hashCode(), info2.hashCode())
+        assertEquals(info1.hash, info2.hash)
     }
 
     @Test

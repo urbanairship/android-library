@@ -2,11 +2,11 @@
 
 package com.urbanairship.android.layout;
 
+import androidx.annotation.NonNull;
+
 import com.urbanairship.android.layout.property.PresentationType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
-
-import androidx.annotation.NonNull;
 
 public abstract class BasePresentation {
     @NonNull
@@ -24,6 +24,8 @@ public abstract class BasePresentation {
                 return BannerPresentation.fromJson(json);
             case MODAL:
                 return ModalPresentation.fromJson(json);
+            case EMBEDDED:
+                return EmbeddedPresentation.fromJson(json);
         }
         throw new JsonException("Failed to parse presentation! Unknown type: " + typeString);
     }

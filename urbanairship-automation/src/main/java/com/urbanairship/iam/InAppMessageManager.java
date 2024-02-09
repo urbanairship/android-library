@@ -609,22 +609,7 @@ public class InAppMessageManager {
                 adapter = factory.createAdapter(message);
             }
 
-            OnRequestDisplayCoordinatorCallback displayCoordinatorCallback = this.displayCoordinatorCallback;
-            if (displayCoordinatorCallback != null) {
-                coordinator = displayCoordinatorCallback.onRequestDisplayCoordinator(message);
-            }
-
-            if (coordinator == null) {
-                switch (message.getDisplayBehavior()) {
-                    case InAppMessage.DISPLAY_BEHAVIOR_IMMEDIATE:
-                        coordinator = this.immediateDisplayCoordinator;
-                        break;
-                    case InAppMessage.DISPLAY_BEHAVIOR_DEFAULT:
-                    default:
-                        coordinator = this.defaultCoordinator;
-                        break;
-                }
-            }
+            coordinator = getDisplayCoordinator(message);
         } catch (Exception e) {
             UALog.e(e, "InAppMessageManager - Failed to create in-app message adapter.");
             return null;
@@ -638,6 +623,30 @@ public class InAppMessageManager {
         coordinator.setDisplayReadyCallback(displayReadyCallback);
         return new AdapterWrapper(scheduleId, campaigns, reportingContext, message,
                 adapter, coordinator, experimentResult);
+    }
+
+    /**
+     * Gets the display coordinator for the given message.
+     * @param message an InAppMessage
+     * @return a DisplayCoordinator
+     */
+    private DisplayCoordinator getDisplayCoordinator(@NonNull InAppMessage message) {
+        OnRequestDisplayCoordinatorCallback displayCoordinatorCallback = this.displayCoordinatorCallback;
+        if (displayCoordinatorCallback != null) {
+            return displayCoordinatorCallback.onRequestDisplayCoordinator(message);
+        }
+
+        if (message.isEmbedded()) {
+            return this.immediateDisplayCoordinator;
+        }
+
+        switch (message.getDisplayBehavior()) {
+            case InAppMessage.DISPLAY_BEHAVIOR_IMMEDIATE:
+                return this.immediateDisplayCoordinator;
+            case InAppMessage.DISPLAY_BEHAVIOR_DEFAULT:
+            default:
+                return this.defaultCoordinator;
+        }
     }
 
     /**

@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.DefaultEmbeddedViewManager
+import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.ThomasListener
 import com.urbanairship.android.layout.display.DisplayArgs
@@ -74,13 +75,22 @@ public class EmbeddedLayout(
      */
     public fun displayIn(
         parent: ViewGroup,
-        // TODO(embedded): wrap content? can we, or will that potentially mess up the UI if too big?
         widthSpec: Int = ViewGroup.LayoutParams.MATCH_PARENT,
         heightSpec: Int = ViewGroup.LayoutParams.MATCH_PARENT
     ) {
-        val activity = context.getActivity() ?: return
+        val activity = context.getActivity()
+        if (activity == null) {
+            UALog.e { "Airship Embedded Views must be hosted by an Activity! Current Activity is null." }
+            return
+        }
         if (activity !is LifecycleOwner) {
             UALog.e { "Airship Embedded Views must be hosted by an Activity that implements LifecycleOwner!" }
+            return
+        }
+
+        val presentation = (payload.presentation as? EmbeddedPresentation)
+        if (presentation == null) {
+            UALog.e { "EmbeddedLayout requires an EmbeddedPresentation!" }
             return
         }
 
@@ -123,9 +133,9 @@ public class EmbeddedLayout(
             val embeddedView = ThomasEmbeddedView(
                 context = context,
                 model = model,
+                presentation = presentation,
                 environment = viewEnvironment
             ).apply {
-                // TODO(embedded): respect layout placement
                 layoutParams = ConstraintLayout.LayoutParams(widthSpec, heightSpec)
             }
 
@@ -171,5 +181,23 @@ public class EmbeddedLayout(
 
     private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) {
         reporter.report(ReportingEvent.DismissFromOutside(displayTimer?.time ?: 0), state)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as EmbeddedLayout
+
+        if (embeddedViewId != other.embeddedViewId) return false
+        if (viewInstanceId != other.viewInstanceId) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = embeddedViewId.hashCode()
+        result = 31 * result + viewInstanceId.hashCode()
+        return result
     }
 }

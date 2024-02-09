@@ -260,6 +260,16 @@ public class InAppMessage implements Parcelable, ScheduleData {
     }
 
     /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public boolean isEmbedded() {
+        return type.equals(TYPE_AIRSHIP_LAYOUT) &&
+                getDisplayContent() instanceof AirshipLayoutDisplayContent &&
+                ((AirshipLayoutDisplayContent) getDisplayContent()).getPayload().isEmbedded();
+    }
+
+    /**
      * Gets the display behavior.
      *
      * @return The in-app message display behavior.

@@ -26,6 +26,7 @@ public class AirshipLayoutDisplayContent implements DisplayContent {
         this.json = json;
         this.payload = basePayload;
     }
+
     /**
      * Parses HTML display JSON.
      *
@@ -40,6 +41,15 @@ public class AirshipLayoutDisplayContent implements DisplayContent {
             throw new JsonException("Invalid payload.");
         }
         return new AirshipLayoutDisplayContent(value, basePayload);
+    }
+
+    /**
+     * Whether the payload presentation specifies an embedded layout.
+     *
+     * @return {@code true} if embedded, otherwise {@code false}.
+     */
+    public boolean isEmbedded() {
+        return payload.isEmbedded();
     }
 
     @NonNull
