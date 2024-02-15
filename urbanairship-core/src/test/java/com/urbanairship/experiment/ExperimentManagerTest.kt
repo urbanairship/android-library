@@ -55,7 +55,8 @@ public class ExperimentManagerTest {
             versionFetcher = { 1 },
             permissionsManager = permissionManager,
             contactIdFetcher = { contactId },
-            platform = "android"
+            platform = "android",
+            mockk()
         )
 
         val clock: Clock = mockk()

@@ -14,6 +14,7 @@ import com.urbanairship.json.JsonMatcher
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
+import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
@@ -22,10 +23,10 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import java.util.Arrays
+import java.util.Locale
 import junit.framework.TestCase
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
-import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -71,9 +72,12 @@ public class AudienceSelectorTest {
             result
         }
 
+        val localeManager: LocaleManager = mockk()
+        every { localeManager.locale } answers { Locale.US }
+
         infoProvider = DeviceInfoProviderImpl(
             { notificationStatus }, { privacyFeatures[it] ?: false }, { channelTags },
-            { channelId }, { version }, permissionManager, contactIdGetter, "android")
+            { channelId }, { version }, permissionManager, contactIdGetter, "android", localeManager)
     }
 
     @Test

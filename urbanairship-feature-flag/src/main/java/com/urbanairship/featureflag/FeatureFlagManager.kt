@@ -237,7 +237,7 @@ public class FeatureFlagManager
                 is DeferredPayload -> {
                     val contactId = deviceInfoSnapshot.getStableContactId()
                     val chanelId = deviceInfoSnapshot.channelId ?: return Result.failure(FeatureFlagException.FailedToFetch())
-                    val locale = deviceInfoSnapshot.getUserLocals(context).get(0) ?: return Result.failure(FeatureFlagException.FailedToFetch())
+                    val locale = deviceInfoSnapshot.getUserLocale(context)
                     val request = DeferredRequest(
                         uri = payload.url,
                         channelID = chanelId,
