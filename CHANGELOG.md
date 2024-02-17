@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.7.3, Feb 16, 2024
+Patch release that adjusts locale targeting behavior for In-App Automation and messaging. The SDK will now check the device's primary language against the target locale, instead of checking whether any user selected languages match the target locale.
+
+### Changes
+- Adjust locale targeting behavior to only consider the primary locale selection.
+
 ## Version 17.7.2, Jan 29, 2024
 Patch release that fixes an issue with message limits not being respected in certain cases. Apps that make use of limits should update to this version or later.
 
