@@ -2,6 +2,8 @@
 package com.urbanairship.android.layout
 
 import android.content.Context
+import com.urbanairship.android.layout.property.EmbeddedPlacement
+import com.urbanairship.android.layout.property.EmbeddedPlacementSelector
 import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.property.ModalPlacementSelector
 import com.urbanairship.android.layout.property.PresentationType
@@ -10,13 +12,12 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 
 internal class EmbeddedPresentation(
-    // TODO: embedded placement and embedded placement selector
-    private val defaultPlacement: ModalPlacement,
-    private val placementSelectors: List<ModalPlacementSelector>?,
+    private val defaultPlacement: EmbeddedPlacement,
+    private val placementSelectors: List<EmbeddedPlacementSelector>?,
     internal val embeddedId: String
 ) : BasePresentation(PresentationType.EMBEDDED) {
 
-    fun getResolvedPlacement(context: Context): ModalPlacement {
+    fun getResolvedPlacement(context: Context): EmbeddedPlacement {
         if (placementSelectors.isNullOrEmpty()) {
             return defaultPlacement
         }
@@ -42,26 +43,20 @@ internal class EmbeddedPresentation(
         @JvmStatic
         @Throws(JsonException::class)
         fun fromJson(json: JsonMap): EmbeddedPresentation {
-            val embeddedId = json.opt("embedded_id").optString()
-
-            val defaultPlacementJson = json.opt("default_placement").optMap()
-            if (defaultPlacementJson.isEmpty) {
-                throw JsonException("Failed to parse EmbeddedPresentation! Field 'default_placement' is required.")
-            }
-            val placementSelectorsJson = json.opt("placement_selectors").optList()
-            // TODO(embedded): embedded placement!
-            val defaultPlacement = ModalPlacement.fromJson(defaultPlacementJson)
-            val placementSelectors =
-                // TODO(embedded): embedded placement selectors!
-                if (placementSelectorsJson.isEmpty) null else ModalPlacementSelector.fromJsonList(
-                    placementSelectorsJson
-                )
-
-            return EmbeddedPresentation(
-                defaultPlacement,
-                placementSelectors,
-                embeddedId
+            val embeddedId = json.opt("embedded_id").string ?: throw JsonException(
+                "Failed to parse EmbeddedPresentation! Field 'embedded_id' is required."
             )
+            val defaultPlacementJson = json.opt("default_placement").map ?: throw JsonException(
+                "Failed to parse EmbeddedPresentation! Field 'default_placement' is required."
+            )
+            val placementSelectorsJson = json.opt("placement_selectors").list
+
+            val defaultPlacement = EmbeddedPlacement.fromJson(defaultPlacementJson)
+            val placementSelectors = placementSelectorsJson?.let {
+                EmbeddedPlacementSelector.fromJsonList(it)
+            }
+
+            return EmbeddedPresentation(defaultPlacement, placementSelectors, embeddedId)
         }
     }
 }

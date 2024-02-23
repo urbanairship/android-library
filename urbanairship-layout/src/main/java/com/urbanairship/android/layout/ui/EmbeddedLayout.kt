@@ -15,6 +15,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.DefaultEmbeddedViewManager
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.ModelFactoryException
+import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.ThomasListener
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment
@@ -24,6 +25,8 @@ import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.LayoutInfo
+import com.urbanairship.android.layout.property.EmbeddedPlacement
+import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.Factory
@@ -71,13 +74,19 @@ public class EmbeddedLayout(
     private var currentView: WeakReference<ThomasEmbeddedView>? = null
     private var displayTimer: DisplayTimer? = null
 
+    public fun getPlacement(): EmbeddedPlacement? {
+        val presentation = (payload.presentation as? EmbeddedPresentation)
+        return presentation?.getResolvedPlacement(context)
+    }
+
     /**
      * Attempts to display the banner.
      */
     public fun displayIn(
         parent: ViewGroup,
         widthSpec: Int = ViewGroup.LayoutParams.MATCH_PARENT,
-        heightSpec: Int = ViewGroup.LayoutParams.MATCH_PARENT
+        heightSpec: Int = ViewGroup.LayoutParams.MATCH_PARENT,
+        animate: Boolean = true
     ) {
         val activity = context.getActivity()
         if (activity == null) {
@@ -116,7 +125,7 @@ public class EmbeddedLayout(
         // Try to use the parent view's lifecycle owner, with a
         // fallback to out ActivityMonitor if there isn't one.
         val timer = parent.findViewTreeLifecycleOwner()
-            ?.let { DisplayTimer(it, 0) }
+            ?.let { DisplayTimer(it, 0) } // TODO: restore display time?
             // TODO(embedded): do we even want to fallback, or should we just return and log and error?
             ?: DisplayTimer(activityMonitor, null, 0)
         displayTimer = timer
@@ -153,7 +162,7 @@ public class EmbeddedLayout(
 
             if (embeddedView.parent == null) {
                 parent.addView(embeddedView)
-                embeddedView.showAnimated()
+                embeddedView.show(animate)
                 currentView = WeakReference(embeddedView)
             }
         } catch (e: ModelFactoryException) {

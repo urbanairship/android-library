@@ -5,33 +5,33 @@ import android.animation.AnimatorInflater
 import android.animation.AnimatorListenerAdapter
 import android.content.Context
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.annotation.AnimatorRes
 import androidx.annotation.MainThread
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
 import com.urbanairship.android.layout.EmbeddedPresentation
+import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.property.ConstrainedSize
+import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.widget.ClippableFrameLayout
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
 
 internal class ThomasEmbeddedView(
     context: Context,
     private val model: AnyModel,
     private val presentation: EmbeddedPresentation,
-    private val environment: ViewEnvironment
+    private val environment: ViewEnvironment,
+    @AnimatorRes private val animationIn: Int = android.R.animator.fade_in,
+    @AnimatorRes private val animationOut: Int = android.R.animator.fade_out,
 ) : ConstraintLayout(context) {
 
     private var frame: ConstrainedFrameLayout? = null
-
-    // TODO: view attrs?
-    @AnimatorRes
-    internal var animationIn = android.R.animator.fade_in
-
-    @AnimatorRes
-    internal var animationOut = android.R.animator.fade_out
 
     internal var listener: Listener? = null
 
@@ -54,48 +54,54 @@ internal class ThomasEmbeddedView(
         // Determine embedded view placement
         val placement = presentation.getResolvedPlacement(context)
         val size = placement.size
-        val position = placement.position
         val margin = placement.margin
 
-        // Create the layout view
-        val layoutView = model.createView(context, environment)
+        // Layout container (Frame -> Container -> Model view)
+        val container = ClippableFrameLayout(context).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT
+            )
+        }
 
         // Make a frame to display the layout in
-        val viewId = makeFrame(size).let { f ->
-            this@ThomasEmbeddedView.frame = f
+        val viewId = makeFrame(size, margin).let { frame ->
+            this@ThomasEmbeddedView.frame = frame
 
-            LayoutUtils.applyBorderAndBackground(f, placement.border, placement.backgroundColor)
+            LayoutUtils.applyBorderAndBackground(container, placement.border, placement.backgroundColor)
 
-            f.addView(layoutView)
-            this@ThomasEmbeddedView.addView(f)
+            container.addView(model.createView(context, environment))
+            frame.addView(container)
 
-            f.id
+            this@ThomasEmbeddedView.addView(frame)
+
+            frame.id
         }
 
         // Apply constraints
         ConstraintSetBuilder.newBuilder(context)
-            .constrainWithinParent(viewId)
+            .constrainWithinParent(viewId, margin)
             .size(size, viewId)
-            .margin(margin, viewId)
-            .position(position, viewId)
             .build()
             .applyTo(this)
     }
 
-    private fun makeFrame(size: ConstrainedSize) =
+    private fun makeFrame(size: ConstrainedSize, margin: Margin?) =
         ConstrainedFrameLayout(context, size).apply {
             id = generateViewId()
             layoutParams = LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT)
         }
 
     @MainThread
-    fun showAnimated() {
-        if (animationIn != 0) {
+    fun show(animate: Boolean) {
+        if (animate && animationIn != 0) {
             clearAnimation()
             val animator = AnimatorInflater.loadAnimator(context, animationIn)
             animator.setDuration(300)
             animator.setTarget(frame)
             animator.start()
+        } else {
+            frame?.alpha = 1f
         }
     }
 
