@@ -35,7 +35,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version: '17'
 
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
@@ -73,7 +73,6 @@ jobs:
           urbanairship-automation:publishProductionPublicationToSonatypeRepository
           urbanairship-message-center:publishProductionPublicationToSonatypeRepository
           urbanairship-live-update:publishProductionPublicationToSonatypeRepository
-          urbanairship-ads-identifier:publishProductionPublicationToSonatypeRepository
           urbanairship-fcm:publishProductionPublicationToSonatypeRepository
           urbanairship-adm:publishProductionPublicationToSonatypeRepository
           urbanairship-hms:publishProductionPublicationToSonatypeRepository

@@ -10,6 +10,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Fragment that lists all the debug entries. Entries are defined in `xml/ua_debug_entries.xmlxml`.
+ * Fragment that lists all the debug entries. Entries are defined in `xml/ua_debug_entries.xml`.
  */
 open class DebugFragment : androidx.fragment.app.Fragment() {
 
@@ -30,7 +31,8 @@ open class DebugFragment : androidx.fragment.app.Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val dataBinding = DataBindingUtil.inflate<UaFragmentDebugBinding>(inflater, R.layout.ua_fragment_debug, container, false)
 
-        GlobalScope.launch(Dispatchers.IO) {
+
+        lifecycleScope.launch(Dispatchers.IO) {
             val entries = DebugEntry.parse(requireContext(), R.xml.ua_debug_entries)
             withContext(Dispatchers.Main) {
                 debugScreenEntryLiveData.value = entries
@@ -67,15 +69,14 @@ open class DebugFragment : androidx.fragment.app.Fragment() {
 
         // Add a back button if the fragment is opened from Goat settings
         if (activity?.intent?.extras?.getBoolean("includeBackButton") == true) {
-            var toolbar: Toolbar?
-            view.let { view ->
-                toolbar = view.findViewById(R.id.toolbar)
-                val appBarConfiguration = AppBarConfiguration.Builder(emptySet())
-                    .setFallbackOnNavigateUpListener(fallbackListener)
-                    .build()
-                toolbar?.let {
-                    NavigationUI.setupWithNavController(it, Navigation.findNavController(view), appBarConfiguration)
-                }
+
+            val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
+            val appBarConfiguration = AppBarConfiguration.Builder(emptySet())
+                .setFallbackOnNavigateUpListener(fallbackListener)
+                .build()
+            toolbar?.let {t ->
+                val navController = Navigation.findNavController(t)
+                NavigationUI.setupWithNavController(t, navController, appBarConfiguration)
             }
         } else {
             setupToolbarWithNavController(R.id.toolbar)

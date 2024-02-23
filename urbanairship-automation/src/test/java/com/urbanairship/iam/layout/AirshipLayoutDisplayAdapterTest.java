@@ -16,7 +16,9 @@ import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.android.layout.util.ImageCache;
+import com.urbanairship.automation.test.ShadowInAppActivityMonitor;
 import com.urbanairship.iam.DisplayHandler;
+import com.urbanairship.iam.InAppActivityMonitor;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.InAppMessageWebViewClient;
@@ -32,22 +34,27 @@ import com.urbanairship.webkit.AirshipWebViewClient;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.stubbing.Answer;
 import org.robolectric.annotation.Config;
 import org.robolectric.annotation.LooperMode;
+import org.robolectric.shadow.api.Shadow;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 import androidx.lifecycle.Lifecycle;
+import androidx.test.InstrumentationRegistry;
 import androidx.test.core.app.ActivityScenario;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static org.junit.Assert.assertEquals;
@@ -67,16 +74,17 @@ import static org.mockito.Mockito.when;
  */
 @Config(
     sdk = 28,
-    shadows = { ShadowAirshipExecutorsLegacy.class },
+    shadows = { ShadowAirshipExecutorsLegacy.class, ShadowInAppActivityMonitor.class },
     application = TestApplication.class
 )
 @LooperMode(LooperMode.Mode.LEGACY)
-@RunWith(AndroidJUnit4.class)public class AirshipLayoutDisplayAdapterTest extends BaseTestCase {
+@RunWith(AndroidJUnit4.class)
+public class AirshipLayoutDisplayAdapterTest extends BaseTestCase {
 
     private AirshipLayoutDisplayAdapter adapter;
     private AirshipLayoutDisplayContent displayContent;
 
-    private Context context = mock(Context.class);
+    private Context context = ApplicationProvider.getApplicationContext();
     private Assets assets = mock(Assets.class);
     private UrlAllowList allowList = mock(UrlAllowList.class);
     private DisplayHandler displayHandler = mock(DisplayHandler.class);
@@ -84,7 +92,7 @@ import static org.mockito.Mockito.when;
     private TestCallback testCallback = new TestCallback();
     private Network network = mock(Network.class);
 
-    private boolean isConnected = false;
+    private ShadowInAppActivityMonitor inAppActivityMonitor = Shadow.extract(InAppActivityMonitor.shared(context));
 
     private InAppMessage message;
 
@@ -180,7 +188,6 @@ import static org.mockito.Mockito.when;
                               .setName("layout name")
                               .build();
 
-        when(network.isConnected(any(Context.class))).then((Answer<Boolean>) invocation -> isConnected);
         adapter = new AirshipLayoutDisplayAdapter(message, displayContent, testCallback, allowList, network);
 
         when(displayHandler.getScheduleId()).thenReturn(scheduleId);
@@ -189,14 +196,15 @@ import static org.mockito.Mockito.when;
 
     @Test
     public void testPrepareDisplayException() {
-        isConnected = true;
+        when(network.isConnected(any(Context.class))).then((Answer<Boolean>) invocation -> true);
+
         testCallback.exception = new DisplayException("nope");
         assertEquals(InAppMessageAdapter.CANCEL, adapter.onPrepare(context, assets));
     }
 
     @Test
     public void testPrepareRejectUrls() {
-        isConnected = true;
+        when(network.isConnected(any(Context.class))).then((Answer<Boolean>) invocation -> true);
         when(allowList.isAllowed(anyString(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(false);
         assertEquals(InAppMessageAdapter.CANCEL, adapter.onPrepare(context, assets));
     }
@@ -210,34 +218,29 @@ import static org.mockito.Mockito.when;
 
     @Test
     public void testIsReadyConnectedNotCachedActivityStarted() {
-        isConnected = true;
+        when(network.isConnected(any(Context.class))).then((Answer<Boolean>) invocation -> true);
         when(allowList.isAllowed(anyString(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
 
-        try(ActivityScenario<TestActivity> scenario = ActivityScenario.launch(TestActivity.class)) {
-            scenario.onActivity(activity -> {
-                assertEquals(InAppMessageAdapter.OK, adapter.onPrepare(activity, assets));
-                assertTrue(adapter.isReady(activity));
-            });
-        }
+        inAppActivityMonitor.hasResumedActivities = true;
+
+        assertEquals(InAppMessageAdapter.OK, adapter.onPrepare(context, assets));
+        assertTrue(adapter.isReady(context));
     }
 
     @Test
     public void testIsReadyConnectedNotCachedActivityStopped() {
-        isConnected = true;
+        when(network.isConnected(any(Context.class))).then((Answer<Boolean>) invocation -> true);
         when(allowList.isAllowed(anyString(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
 
-        try(ActivityScenario<TestActivity> scenario = ActivityScenario.launch(TestActivity.class)) {
-            scenario.moveToState(Lifecycle.State.CREATED);
-            scenario.onActivity(activity -> {
-                assertEquals(InAppMessageAdapter.OK, adapter.onPrepare(activity, assets));
-                assertFalse(adapter.isReady(activity));
-            });
-        }
+        inAppActivityMonitor.hasResumedActivities = false;
+
+        assertEquals(InAppMessageAdapter.OK, adapter.onPrepare(context, assets));
+        assertFalse(adapter.isReady(context));
     }
 
     @Test
     public void testImageCache() {
-        isConnected = true;
+        when(network.isConnected(any(Context.class))).then((Answer<Boolean>) invocation -> true);
         File mockImageButtonFile = mock(File.class);
         when(mockImageButtonFile.exists()).thenReturn(true);
         when(mockImageButtonFile.getAbsolutePath()).thenReturn("button-image");
@@ -260,7 +263,7 @@ import static org.mockito.Mockito.when;
 
     @Test
     public void testExtendedWebViewClient() {
-        isConnected = true;
+        when(network.isConnected(any(Context.class))).then((Answer<Boolean>) invocation -> true);
         when(allowList.isAllowed(anyString(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
         assertEquals(InAppMessageAdapter.OK, adapter.onPrepare(context, assets));
 
@@ -272,7 +275,7 @@ import static org.mockito.Mockito.when;
 
     @Test
     public void testDisplay() {
-        isConnected = true;
+        when(network.isConnected(any(Context.class))).then((Answer<Boolean>) invocation -> true);
         when(allowList.isAllowed(anyString(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
 
         assertEquals(InAppMessageAdapter.OK, adapter.onPrepare(context, assets));
@@ -479,7 +482,7 @@ import static org.mockito.Mockito.when;
     }
 
     private ThomasListener prepareListenerTest() {
-        isConnected = true;
+        when(network.isConnected(any(Context.class))).then((Answer<Boolean>) invocation -> true);
         when(allowList.isAllowed(anyString(), eq(UrlAllowList.SCOPE_OPEN_URL))).thenReturn(true);
 
         assertEquals(InAppMessageAdapter.OK, adapter.onPrepare(context, assets));

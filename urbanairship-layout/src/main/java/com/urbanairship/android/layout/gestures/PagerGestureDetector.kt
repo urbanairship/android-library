@@ -53,10 +53,7 @@ internal class PagerGestureDetector(
     }
 
     override fun onFling(
-        e1: MotionEvent,
-        e2: MotionEvent,
-        velocityX: Float,
-        velocityY: Float
+        e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float
     ): Boolean {
         gestureMapper.mapSwipe(e1, e2, velocityX, velocityY)?.let {
             onGestureDetected(Swipe(it))

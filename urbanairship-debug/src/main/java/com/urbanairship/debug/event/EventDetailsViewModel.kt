@@ -4,8 +4,8 @@ package com.urbanairship.debug.event
 
 import androidx.annotation.RestrictTo
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.map
 import com.urbanairship.debug.event.persistence.EventEntity
 import org.json.JSONObject
 
@@ -19,7 +19,7 @@ class EventDetailsViewModel(repository: EventRepository, eventId: String) : View
     private val eventEntity: LiveData<EventEntity?> = repository.getEvent(eventId)
 
     fun eventData(): LiveData<String> {
-        return Transformations.map(eventEntity) {
+        return eventEntity.map {
             if (it == null) {
                 "event not found"
             } else {

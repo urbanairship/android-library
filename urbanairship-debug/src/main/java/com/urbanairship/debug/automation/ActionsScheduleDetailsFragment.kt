@@ -1,7 +1,7 @@
 package com.urbanairship.debug.automation
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
+import androidx.lifecycle.map
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.Schedule
 import com.urbanairship.automation.actions.Actions
@@ -18,7 +18,7 @@ class ActionsScheduleDetailsFragment : AutomationDetailsFragment() {
     override fun createDetails(): LiveData<List<AutomationDetail>> {
         val scheduleId = requireArguments().getString(ARGUMENT_SCHEDULE_ID)!!
         val scheduleLiveData = PendingResultLiveData<Schedule<Actions>>(InAppAutomation.shared().getActionSchedule(scheduleId))
-        return Transformations.map(scheduleLiveData) { schedule ->
+        return scheduleLiveData.map { schedule ->
             detailsForSchedule(schedule)
         }
     }

@@ -15,7 +15,7 @@ dependencyResolutionManagement {
 }
 
 include ':urbanairship-adm',
-        ':urbanairship-ads-identifier',
+        ':urbanairship-ads-identifier', // TODO(SDK18): remove for SDK 18.0.0
         ':urbanairship-automation',
         ':urbanairship-core',
         ':urbanairship-debug',

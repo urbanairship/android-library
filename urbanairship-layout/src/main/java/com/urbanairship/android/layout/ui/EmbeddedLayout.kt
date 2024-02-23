@@ -46,7 +46,8 @@ import kotlinx.coroutines.launch
 private object EmbeddedViewModelStore : ViewModelStore()
 // TODO(embedded): this too...
 private object EmbeddedViewModelStoreOwner : ViewModelStoreOwner {
-    override fun getViewModelStore(): ViewModelStore = EmbeddedViewModelStore
+    override val viewModelStore: ViewModelStore
+        get() = EmbeddedViewModelStore
 }
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

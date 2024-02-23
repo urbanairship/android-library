@@ -31,6 +31,7 @@ import com.urbanairship.util.VersionUtils;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Shadows;
@@ -707,6 +708,7 @@ public class AutomationEngineTest {
                                                        .build();
 
         schedule(scheduleInfo);
+        runLooperTasks();
 
         // Verify its idle
         verifyState(scheduleInfo, ScheduleState.IDLE);

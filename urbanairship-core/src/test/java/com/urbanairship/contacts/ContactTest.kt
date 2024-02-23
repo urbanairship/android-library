@@ -619,7 +619,7 @@ public class ContactTest {
 
     @Test
     public fun testConflicts(): TestResult = runTest {
-        val mockConflictListener = mockk<ContactConflictListener>()
+        val mockConflictListener = mockk<ContactConflictListener>(relaxed = true)
         contact.contactConflictListener = mockConflictListener
         testDispatcher.scheduler.advanceUntilIdle()
 

@@ -1,63 +1,63 @@
 [versions]
 
 # Gradle plugins
-androidGradlePlugin = '7.3.0'
-googleServicesPlugin = '4.3.13'
-spotlessPlugin = '6.4.2'
+androidGradlePlugin = '8.2.2'
+googleServicesPlugin = '4.4.1'
+spotlessPlugin = '6.25.0'
 nexusPublishPlugin = '1.1.0'
 gradle-versions =  '0.41.0'
 
 # Spotless plugins
-ktlint = '0.41.0'
+ktlint = '1.1.1'
 
 # Dependencies
 
 # Kotlin
-kotlin = '1.7.10'
-kotlinx-coroutines = '1.6.4'
+kotlin = '1.9.21'
+kotlinx-coroutines = '1.7.3'
 
 # Androidx
-androidx-annotation = '1.5.0'
+androidx-annotation = '1.7.1'
 androidx-appcompat = '1.6.1'
 androidx-concurrentfutures = '1.1.0'
 androidx-constraintlayout = '2.1.4'
-androidx-core = '1.9.0'
+androidx-core = '1.12.0'
 androidx-customview = '1.1.0'
-androidx-fragment = '1.5.5'
-androidx-lifecycle = '2.5.1'
-androidx-navigation = '2.5.3'
+androidx-fragment = '1.6.2'
+androidx-lifecycle = '2.7.0'
+androidx-navigation = '2.7.7'
 
 androidx-paging = '2.1.2'
 
-androidx-preference = '1.2.0'
-androidx-recyclerview = "1.2.1"
-androidx-room = '2.5.1'
+androidx-preference = '1.2.1'
+androidx-recyclerview = "1.3.2"
+androidx-room = '2.6.1'
 androidx-startup = '1.1.1'
 androidx-swiperefreshlayout = '1.1.0'
-androidx-test-core = '1.4.0'
-androidx-test-espresso = '3.4.0'
-androidx-test-junit = '1.1.3'
-androidx-test-rules = '1.4.0'
-androidx-test-runner = '1.4.0'
-androidx-test-truth = '1.4.0'
+androidx-test-core = '1.5.0'
+androidx-test-espresso = '3.5.1'
+androidx-test-junit = '1.1.5'
+androidx-test-rules = '1.5.0'
+androidx-test-runner = '1.5.2'
+androidx-test-truth = '1.5.0'
 androidx-vectordrawable = '1.1.0'
-androidx-webkit = '1.6.0'
-androidx-work = '2.8.0'
+androidx-webkit = '1.10.0'
+androidx-work = '2.9.0'
 
 # Material
-google-material = '1.6.1'
+google-material = '1.11.0'
 
 # Google Play Services
 playservices-adsidentifier = '18.0.1'
-playservices-base = '18.1.0'
+playservices-base = '18.3.0'
 playservices-instantapps = '18.0.1'
-playservices-location = '20.0.0'
+playservices-location = '21.1.0'
 
 # Firebase
-firebase-messaging = '23.1.1'
+firebase-messaging = '23.4.1'
 
 # OkHttp (for WebSocket support in airship-chat)
-okhttp = '4.10.0'
+okhttp = '4.12.0'
 
 # LeakCanary (for dev/debug builds)
 leakcanary = '2.9.1'
@@ -67,7 +67,7 @@ google-truth = '1.1.3'
 junit = '4.13.2'
 mockito = '4.6.1'
 mockito-kotlin = '4.0.0'
-robolectric = '4.9.2'
+robolectric = '4.11.1'
 turbine = '0.10.0'
 mockk = '1.13.5'
 

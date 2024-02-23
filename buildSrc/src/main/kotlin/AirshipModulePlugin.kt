@@ -54,12 +54,15 @@ class AirshipModulePlugin : Plugin<Project> {
 
             defaultConfig {
                 minSdk = minSdkVersion
-                targetSdk = targetSdkVersion
 
                 buildConfigField("String", "AIRSHIP_VERSION", "\"${getMavenVersion()}\"")
                 buildConfigField("String", "SDK_VERSION", "\"${getSdkVersionString()}\"")
 
                 consumerProguardFiles("proguard-rules.pro")
+
+                buildFeatures {
+                    buildConfig = true
+                }
 
                 javaCompileOptions {
                     annotationProcessorOptions {
@@ -71,6 +74,10 @@ class AirshipModulePlugin : Plugin<Project> {
                 }
 
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+            }
+
+            testOptions {
+                targetSdk = targetSdkVersion
             }
 
             sourceSets.getByName("androidTest") {

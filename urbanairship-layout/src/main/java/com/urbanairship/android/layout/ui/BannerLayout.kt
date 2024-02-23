@@ -50,7 +50,8 @@ import kotlinx.coroutines.launch
 private object BannerViewModelStore : ViewModelStore()
 
 private object BannerViewModelStoreOwner : ViewModelStoreOwner {
-    override fun getViewModelStore(): ViewModelStore = BannerViewModelStore
+    override val viewModelStore: ViewModelStore
+        get() = BannerViewModelStore
 }
 
 internal class BannerLayout(

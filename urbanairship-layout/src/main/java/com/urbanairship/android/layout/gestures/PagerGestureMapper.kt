@@ -52,11 +52,14 @@ internal class PagerGestureMapper(
     }
 
     fun mapSwipe(
-        e1: MotionEvent,
+        e1: MotionEvent?,
         e2: MotionEvent,
         velocityX: Float,
         velocityY: Float
     ): GestureDirection? {
+        // Ignore null start events. A null event indicates an incomplete event stream or error state.
+        if (e1 == null) return null
+
         UALog.w("PagerGestureMapper - mapSwipe: $e1, $e2, $velocityX, $velocityY")
 
         // Ignore multi-pointer gestures.

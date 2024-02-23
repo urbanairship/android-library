@@ -25,12 +25,12 @@ plugins {
 group = "com.urbanairship.android"
 
 android {
-    compileSdk 33
+    compileSdk rootProject.compileSdkVersion
 
     defaultConfig {
         applicationId "com.urbanairship.android.layout.playground"
-        minSdkVersion rootProject.minSdkVersion
-        targetSdkVersion 33
+        minSdk rootProject.minSdkVersion
+        targetSdk rootProject.targetSdkVersion
         versionCode 1
         versionName "1.0"
 
@@ -122,8 +122,27 @@ task generateSampleLayouts {
     }
 }
 
-android.applicationVariants.all { variant ->
-    variant.getMergeAssetsProvider().configure {
-        dependsOn generateSampleLayouts
+// Workaround lint/gradle task issues with the generated assets
+afterEvaluate {
+    android.applicationVariants.configureEach { variant ->
+        def targetName = variant.name.capitalize()
+        def lintVitalAnalyzeTask = tasks.findByName("lintVitalAnalyze${targetName}")
+        if (lintVitalAnalyzeTask != null) {
+            lintVitalAnalyzeTask.dependsOn generateSampleLayouts
+        }
+        def lintAnalyzeTask = tasks.findByName("lintAnalyze${targetName}")
+        if (lintAnalyzeTask != null) {
+            lintAnalyzeTask.dependsOn generateSampleLayouts
+        }
+        def generateLintReportModelTask = tasks.findByName("generate${targetName}LintReportModel")
+        if (generateLintReportModelTask != null) {
+            generateLintReportModelTask.dependsOn generateSampleLayouts
+        }
+        def generateLintVitalReportModelTask = tasks.findByName("generate${targetName}LintVitalReportModel")
+        if (generateLintVitalReportModelTask != null) {
+            generateLintVitalReportModelTask.dependsOn generateSampleLayouts
+        }
+        def generateAssetsTask = tasks.findByName("generate${targetName}Assets")
+        generateAssetsTask.dependsOn(generateSampleLayouts)
     }
 }

@@ -3,8 +3,8 @@
 package com.urbanairship.debug.automation
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.map
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.Schedule
 import com.urbanairship.automation.ScheduleData
@@ -17,7 +17,7 @@ class ScheduleListViewModel : ViewModel() {
 
     init {
         val pendingResultLiveData = PendingResultLiveData(InAppAutomation.shared().schedules)
-        schedules = Transformations.map(pendingResultLiveData) { collection ->
+        schedules = pendingResultLiveData.map { collection ->
             collection.toList()
         }
     }

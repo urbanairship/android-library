@@ -5,8 +5,8 @@ package com.urbanairship.debug.event
 import androidx.annotation.RestrictTo
 import androidx.databinding.Observable
 import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.switchMap
 import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import com.urbanairship.debug.event.persistence.EventEntity
@@ -51,7 +51,7 @@ class EventListViewModel(repository: EventRepository) : ViewModel() {
 
         activeFiltersLiveData.value = activeFilters
 
-        val filteredEvents = Transformations.switchMap(activeFiltersLiveData) {
+        val filteredEvents = activeFiltersLiveData.switchMap {
             if (it.isEmpty()) {
                 LivePagedListBuilder(repository.getEvents(), pageListConfig).build()
             } else {

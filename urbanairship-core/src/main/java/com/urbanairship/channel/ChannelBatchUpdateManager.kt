@@ -2,7 +2,7 @@
 
 package com.urbanairship.channel
 
-import com.google.android.gms.common.util.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider

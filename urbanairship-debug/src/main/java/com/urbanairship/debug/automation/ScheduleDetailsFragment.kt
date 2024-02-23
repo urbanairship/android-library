@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.text.format.DateFormat
 import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
+import androidx.lifecycle.map
 import androidx.navigation.Navigation
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.automation.InAppAutomation
@@ -62,7 +62,7 @@ class ScheduleDetailsFragment : AutomationDetailsFragment() {
     override fun createDetails(): LiveData<List<AutomationDetail>> {
         val scheduleId = requireArguments().getString(ARGUMENT_SCHEDULE_ID)!!
         val scheduleLiveData = PendingResultLiveData<Schedule<out ScheduleData>>(InAppAutomation.shared().getSchedule(scheduleId))
-        return Transformations.map(scheduleLiveData) { schedule ->
+        return scheduleLiveData.map { schedule ->
             detailsForSchedule(schedule)
         }
     }

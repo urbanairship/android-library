@@ -174,7 +174,7 @@ public class StyleNotificationExtender implements NotificationCompat.Extender {
         style.bigPicture(bitmap);
 
         // Clear the large icon when the big picture is expanded
-        style.bigLargeIcon(null);
+        style.bigLargeIcon((Bitmap) null);
 
         // Set the image as the large icon to show the image when collapsed
         builder.setLargeIcon(bitmap);
