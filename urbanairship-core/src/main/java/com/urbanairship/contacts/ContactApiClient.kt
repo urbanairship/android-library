@@ -19,6 +19,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
@@ -323,6 +324,33 @@ internal class ContactApiClient constructor(
         }.also { result ->
             result.log { "Identifying contact for channel $channelId result: $result" }
         }
+    }
+
+    @Throws(RequestException::class)
+    suspend fun performOptinCheck(channelId: String): List<OptinCheckResult> {
+        // TODO : Execute request and get Optin status for Emails and SMS
+        // STUB value
+        val jsonResult = "{ type: email, id: j****@gmail.com, commercial: out, transactional: in, channelId: abcd-efgh }lId: a123-efgh }"
+        return listOf(OptinCheckResult(JsonValue.wrap(jsonResult).map!!))
+    }
+
+    internal data class OptinCheckResult(
+        val type: String,
+        val id: String,
+        val sender: String?,
+        val commercial: Boolean,
+        val transactional: Boolean,
+        val channelId: String
+    ) {
+
+        constructor(jsonMap: JsonMap) : this(
+            type = jsonMap.requireField("type"),
+            sender = jsonMap.optionalField("sender"),
+            id = jsonMap.requireField("id"),
+            commercial = jsonMap.requireField("commercial"),
+            transactional = jsonMap.requireField("transactional"),
+            channelId = jsonMap.requireField("channelId")
+        )
     }
 
     private companion object {

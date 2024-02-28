@@ -21,6 +21,7 @@ internal sealed class ContactOperation(
 
     object Resolve : ContactOperation(Type.RESOLVE, null)
     object Reset : ContactOperation(Type.RESET, null)
+    object OptinCheck : ContactOperation(Type.OPTIN_CHECK, null)
 
     data class Verify(
         val dateMs: Long,
@@ -134,7 +135,7 @@ internal sealed class ContactOperation(
 
     enum class Type {
         UPDATE, IDENTIFY, RESOLVE, RESET, REGISTER_EMAIL, REGISTER_SMS, REGISTER_OPEN_CHANNEL,
-        ASSOCIATE_CHANNEL, VERIFY
+        ASSOCIATE_CHANNEL, VERIFY, OPTIN_CHECK
     }
 
     internal companion object {
@@ -157,6 +158,7 @@ internal sealed class ContactOperation(
                 Type.REGISTER_OPEN_CHANNEL -> RegisterOpen(map.requireField(PAYLOAD_KEY))
                 Type.REGISTER_SMS -> RegisterSms(map.requireField(PAYLOAD_KEY))
                 Type.VERIFY -> Verify(map.requireField<JsonMap>(PAYLOAD_KEY))
+                Type.OPTIN_CHECK -> OptinCheck
             }
         }
 

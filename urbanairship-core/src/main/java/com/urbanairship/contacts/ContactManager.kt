@@ -509,6 +509,7 @@ internal class ContactManager(
             is ContactOperation.RegisterEmail -> performRegisterEmail(operation)
             is ContactOperation.RegisterSms -> performRegisterSms(operation)
             is ContactOperation.RegisterOpen -> performRegisterOpen(operation)
+            is ContactOperation.OptinCheck -> performOptinCheck(channelId)
         }
     }
 
@@ -652,6 +653,12 @@ internal class ContactManager(
         }
 
         return response.isSuccessful || response.isClientError
+    }
+
+    private suspend fun performOptinCheck(channelId: String): Boolean {
+        // TODO complete this method with correct requests
+        val response = contactApiClient.performOptinCheck(channelId)
+        return true
     }
 
     private fun updateContactIdentity(
