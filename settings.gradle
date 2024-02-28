@@ -30,4 +30,5 @@ include ':urbanairship-adm',
         ':urbanairship-preference-center',
         ':urbanairship-feature-flag',
         ':urbanairship-test',
-        ":sample"
+        ":sample",
+        ":a11y"

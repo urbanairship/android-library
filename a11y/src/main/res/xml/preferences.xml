@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.preference.PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="@string/airship_preference_category_title">
+
+        <com.urbanairship.preference.ChannelIdPreference
+            app:persistent="false"
+            app:iconSpaceReserved="false"
+            app:title="@string/channel_id_preference_title" />
+
+        <com.urbanairship.preference.DataCollectionEnabledPreference
+            app:key="data_enabled"
+            app:persistent="true"
+            app:iconSpaceReserved="false"
+            app:title="@string/data_collection_enabled_setting" />
+
+
+        <com.urbanairship.preference.PushEnablePreference
+            app:dependency="data_enabled"
+            app:key="push_preference"
+            app:persistent="false"
+            app:iconSpaceReserved="false"
+            app:title="@string/push_preference_title" />
+
+        <com.urbanairship.preference.AnalyticsEnablePreference
+            app:dependency="data_enabled"
+            app:key="analytics_preference"
+            app:persistent="false"
+            app:iconSpaceReserved="false"
+            app:title="@string/analytics_preference_title" />
+
+        <com.urbanairship.sample.preference.EnableAdvertisingIdPreference
+            app:dependency="data_enabled"
+            app:persistent="false"
+            app:iconSpaceReserved="false"
+            app:title="@string/analytics_ad_id_preference_title" />
+
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        app:dependency="data_enabled"
+        app:iconSpaceReserved="false"
+        app:title="@string/user_preference_category_title">
+
+        <com.urbanairship.sample.preference.NamedUserPreference
+            app:key="named user"
+            app:iconSpaceReserved="false"
+            app:persistent="false"
+            app:title="@string/set_named_user_preference_title" />
+
+        <androidx.preference.Preference
+            app:key="tags"
+            app:iconSpaceReserved="false"
+            app:persistent="false"
+            app:title="@string/add_tags_preference_title" />
+
+    </androidx.preference.PreferenceCategory>
+
+
+</androidx.preference.PreferenceScreen>
