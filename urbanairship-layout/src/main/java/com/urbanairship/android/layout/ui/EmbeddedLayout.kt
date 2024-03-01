@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.ui
 
 import android.content.Context
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
@@ -69,7 +70,8 @@ public class EmbeddedLayout(
     private val externalListener: ThomasListener = args.listener
     private val viewModelKey: String = args.hashCode().toString()
     private val reporter: Reporter = ExternalReporter(externalListener)
-    private val viewInstanceId: String = payload.hashCode().toString()
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public val viewInstanceId: String = payload.hashCode().toString()
 
     private var currentView: WeakReference<ThomasEmbeddedView>? = null
     private var displayTimer: DisplayTimer? = null
@@ -79,29 +81,24 @@ public class EmbeddedLayout(
         return presentation?.getResolvedPlacement(context)
     }
 
-    /**
-     * Attempts to display the banner.
-     */
-    public fun displayIn(
-        parent: ViewGroup,
-        widthSpec: Int = ViewGroup.LayoutParams.MATCH_PARENT,
-        heightSpec: Int = ViewGroup.LayoutParams.MATCH_PARENT,
-        animate: Boolean = true
-    ) {
+    /** Builds the embedded layout view. */
+    public fun makeView(): View? {
         val activity = context.getActivity()
         if (activity == null) {
             UALog.e { "Airship Embedded Views must be hosted by an Activity! Current Activity is null." }
-            return
+            return null
         }
         if (activity !is LifecycleOwner) {
             UALog.e { "Airship Embedded Views must be hosted by an Activity that implements LifecycleOwner!" }
-            return
+            return null
         }
+
+        val timer = DisplayTimer(activity, 0)
 
         val presentation = (payload.presentation as? EmbeddedPresentation)
         if (presentation == null) {
             UALog.e { "EmbeddedLayout requires an EmbeddedPresentation!" }
-            return
+            return null
         }
 
         activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
@@ -122,12 +119,6 @@ public class EmbeddedLayout(
         val viewModelProvider = ViewModelProvider(EmbeddedViewModelStoreOwner)
         val viewModel = viewModelProvider[viewModelKey, LayoutViewModel::class.java]
 
-        // Try to use the parent view's lifecycle owner, with a
-        // fallback to out ActivityMonitor if there isn't one.
-        val timer = parent.findViewTreeLifecycleOwner()
-            ?.let { DisplayTimer(it, 0) } // TODO: restore display time?
-            // TODO(embedded): do we even want to fallback, or should we just return and log and error?
-            ?: DisplayTimer(activityMonitor, null, 0)
         displayTimer = timer
 
         try {
@@ -145,9 +136,7 @@ public class EmbeddedLayout(
                 model = model,
                 presentation = presentation,
                 environment = viewEnvironment
-            ).apply {
-                layoutParams = ConstraintLayout.LayoutParams(widthSpec, heightSpec)
-            }
+            )
 
             observeLayoutEvents(modelEnvironment.layoutEvents)
 
@@ -160,13 +149,11 @@ public class EmbeddedLayout(
                 }
             }
 
-            if (embeddedView.parent == null) {
-                parent.addView(embeddedView)
-                embeddedView.show(animate)
-                currentView = WeakReference(embeddedView)
-            }
+            currentView = WeakReference(embeddedView)
+            return embeddedView
         } catch (e: ModelFactoryException) {
             UALog.e("Failed to load model!", e)
+            return null
         }
     }
 

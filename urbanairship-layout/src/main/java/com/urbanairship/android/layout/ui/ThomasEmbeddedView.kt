@@ -16,6 +16,7 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.property.ConstrainedSize
 import com.urbanairship.android.layout.property.Margin
+import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -56,11 +57,20 @@ internal class ThomasEmbeddedView(
         val size = placement.size
         val margin = placement.margin
 
+        val widthSpec = when (size.width.type) {
+            Size.DimensionType.AUTO -> FrameLayout.LayoutParams.WRAP_CONTENT
+            else -> FrameLayout.LayoutParams.MATCH_PARENT
+        }
+        val heightSpec = when (size.height.type) {
+            Size.DimensionType.AUTO -> FrameLayout.LayoutParams.WRAP_CONTENT
+            else -> FrameLayout.LayoutParams.MATCH_PARENT
+        }
+
         // Layout container (Frame -> Container -> Model view)
         val container = ClippableFrameLayout(context).apply {
             layoutParams = FrameLayout.LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.MATCH_PARENT
+                widthSpec,
+                heightSpec
             )
         }
 

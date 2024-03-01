@@ -19,6 +19,7 @@ android {
 
     buildFeatures {
         dataBinding = true
+        buildConfig = true
     }
 
     buildTypes {
@@ -32,6 +33,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     lint {
         abortOnError false
         disable 'MissingTranslation', 'AppCompatResource'
@@ -63,8 +65,7 @@ dependencies {
     implementation project(':urbanairship-automation')
 }
 
-
-def googleServicesFile = rootProject.file('sample/google-services.json')
+def googleServicesFile = rootProject.file('a11y/google-services.json')
 if (googleServicesFile.exists()) {
     apply plugin: 'com.google.gms.google-services'  // Google Play services Gradle plugin
 }
