@@ -3,6 +3,7 @@
 package com.urbanairship.android.layout.widget;
 
 import android.content.Context;
+import android.util.DisplayMetrics;
 import android.view.View;
 
 import com.urbanairship.android.layout.environment.ViewEnvironment;
@@ -139,6 +140,13 @@ public class PagerRecyclerView extends RecyclerView {
         public LayoutParams generateDefaultLayoutParams() {
             return new RecyclerView.LayoutParams(MATCH_PARENT, MATCH_PARENT);
         }
+
+        @Override
+        public void smoothScrollToPosition(RecyclerView recyclerView, State state, int position) {
+            LinearSmoothScroller smoothScroller = new ThomasSmoothScroller(recyclerView.getContext());
+            smoothScroller.setTargetPosition(position);
+            startSmoothScroll(smoothScroller);
+        }
     }
 
     /**
@@ -162,7 +170,7 @@ public class PagerRecyclerView extends RecyclerView {
         }
 
         /** Custom {@code LinearSmoothScroller} with overrides to remain functional when touch swipes are disabled. */
-        private static class SwipeDisabledSmoothScroller extends LinearSmoothScroller {
+        private static class SwipeDisabledSmoothScroller extends ThomasSmoothScroller {
             public SwipeDisabledSmoothScroller(Context context) {
                 super(context);
             }
@@ -180,6 +188,20 @@ public class PagerRecyclerView extends RecyclerView {
                 final int end = layoutManager.getWidth() - layoutManager.getPaddingRight();
                 return calculateDtToFit(left, right, start, end, snapPreference);
             }
+        }
+    }
+
+    /** Custom {@code LinearSmoothScroller} with overrides to customize the animation speed. */
+    private static class ThomasSmoothScroller extends LinearSmoothScroller {
+        private static final float MILLISECONDS_PER_INCH = 65f;
+
+        public ThomasSmoothScroller(Context context) {
+            super(context);
+        }
+
+        @Override
+        protected float calculateSpeedPerPixel(DisplayMetrics displayMetrics) {
+            return MILLISECONDS_PER_INCH / displayMetrics.densityDpi;
         }
     }
 
