@@ -575,8 +575,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
             return true
         }
 
-        val locale = dataProvider.getUserLocals(context).getFirstMatch(languageTags.toTypedArray())
-            ?: return false
+        val locale = dataProvider.getUserLocale(context)
 
         // getFirstMatch will return the default language if none of the specified locales are found,
         // so we still have to verify the locale exists in the audience conditions

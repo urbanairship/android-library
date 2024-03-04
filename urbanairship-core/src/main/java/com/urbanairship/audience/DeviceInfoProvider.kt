@@ -4,14 +4,14 @@ package com.urbanairship.audience
 
 import android.content.Context
 import androidx.annotation.RestrictTo
-import androidx.core.os.ConfigurationCompat
-import androidx.core.os.LocaleListCompat
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UAirship
+import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.PlatformUtils
+import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.sync.Mutex
@@ -23,7 +23,7 @@ import kotlinx.coroutines.sync.withLock
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface DeviceInfoProvider {
     public fun userCutOffDate(context: Context): Long
-    public fun getUserLocals(context: Context): LocaleListCompat
+    public fun getUserLocale(context: Context): Locale
     public fun isFeatureEnabled(@PrivacyManager.Feature feature: Int): Boolean
     public suspend fun getPermissionStatuses(): Map<Permission, PermissionStatus>
     public suspend fun getStableContactId(): String
@@ -45,7 +45,8 @@ public interface DeviceInfoProvider {
             versionFetcher = UAirship.shared().applicationMetrics::getCurrentAppVersion,
             permissionsManager = UAirship.shared().permissionsManager,
             contactIdFetcher = UAirship.shared().contact::stableContactId,
-            platform = PlatformUtils.asString(UAirship.shared().platformType)
+            platform = PlatformUtils.asString(UAirship.shared().platformType),
+            localeManager = UAirship.shared().localeManager
         )
     }
 }
@@ -58,7 +59,8 @@ internal class DeviceInfoProviderImpl(
     private val versionFetcher: () -> Long,
     private val permissionsManager: PermissionsManager,
     private val contactIdFetcher: suspend () -> String,
-    override val platform: String
+    override val platform: String,
+    private val localeManager: LocaleManager
 ) : DeviceInfoProvider {
 
     override fun userCutOffDate(context: Context): Long {
@@ -82,8 +84,8 @@ internal class DeviceInfoProviderImpl(
         return privacyFeatureFetcher.invoke(feature)
     }
 
-    override fun getUserLocals(context: Context): LocaleListCompat {
-        return ConfigurationCompat.getLocales(context.resources.configuration)
+    override fun getUserLocale(context: Context): Locale {
+        return localeManager.locale
     }
 
     override suspend fun getPermissionStatuses(): Map<Permission, PermissionStatus> {
@@ -102,7 +104,7 @@ internal class DeviceInfoProviderImpl(
     override suspend fun snapshot(context: Context): DeviceInfoProvider {
         return CachedDeviceInfoProvider(
             cutOffTime = OneTimeValue { userCutOffDate(context) },
-            localeList = OneTimeValue { getUserLocals(context) },
+            locale = OneTimeValue { getUserLocale(context) },
             privacyFeatureFetcher = privacyFeatureFetcher,
             permissionStatuses = OneTimeValueSus { getPermissionStatuses() },
             stableContactId = OneTimeValueSus { getStableContactId() },
@@ -117,7 +119,7 @@ internal class DeviceInfoProviderImpl(
 
 internal class CachedDeviceInfoProvider(
     private val cutOffTime: OneTimeValue<Long>,
-    private val localeList: OneTimeValue<LocaleListCompat>,
+    private val locale: OneTimeValue<Locale>,
     private val privacyFeatureFetcher: (Int) -> Boolean,
     private val permissionStatuses: OneTimeValueSus<Map<Permission, PermissionStatus>>,
     private val stableContactId: OneTimeValueSus<String>,
@@ -128,7 +130,7 @@ internal class CachedDeviceInfoProvider(
     cachedPlatform: OneTimeValue<String>
 ) : DeviceInfoProvider {
     override fun userCutOffDate(context: Context): Long = cutOffTime.getValue()
-    override fun getUserLocals(context: Context): LocaleListCompat = localeList.getValue()
+    override fun getUserLocale(context: Context): Locale = locale.getValue()
     override fun isFeatureEnabled(feature: Int): Boolean = privacyFeatureFetcher(feature)
     override suspend fun getPermissionStatuses(): Map<Permission, PermissionStatus> = permissionStatuses.getValue()
     override suspend fun getStableContactId(): String = stableContactId.getValue()

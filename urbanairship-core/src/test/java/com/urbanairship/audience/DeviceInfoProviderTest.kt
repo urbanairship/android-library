@@ -30,7 +30,7 @@ public class DeviceInfoProviderTest {
     public fun setUp() {
         infoProvider = DeviceInfoProviderImpl(
             { true }, { true }, { emptySet() },
-            { "channel-id" }, { 1 }, mockk(), { "contact-id" }, "android"
+            { "channel-id" }, { 1 }, mockk(), { "contact-id" }, "android", mockk()
         )
     }
 

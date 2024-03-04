@@ -757,9 +757,9 @@ public class UAirship {
         components.add(this.remoteConfigManager);
 
         DeviceInfoProvider infoProvider = new DeviceInfoProviderImpl(
-                pushManager::areNotificationsOptedIn, privacyManager::isEnabled,
-                channel::getTags, channel::getId, applicationMetrics::getCurrentAppVersion,
-                permissionsManager, contact::getStableContactId, PlatformUtils.asString(getPlatformType()));
+                pushManager::areNotificationsOptedIn, privacyManager::isEnabled, channel::getTags,
+                channel::getId, applicationMetrics::getCurrentAppVersion, permissionsManager,
+                contact::getStableContactId, PlatformUtils.asString(getPlatformType()), localeManager);
 
         // Experiments
         this.experimentManager = new ExperimentManager(application, preferenceDataStore,
