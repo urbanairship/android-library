@@ -3,6 +3,8 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
@@ -26,6 +28,7 @@ internal class MediaModel(
     val position: Position,
     val contentDescription: String? = null,
     val video: Video?,
+    val pagerState: SharedState<State.Pager>?,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -43,7 +46,7 @@ internal class MediaModel(
     environment = environment,
     properties = properties
 ) {
-    constructor(info: MediaInfo, env: ModelEnvironment, props: ModelProperties) : this(
+    constructor(info: MediaInfo, pagerState: SharedState<State.Pager>?, env: ModelEnvironment, props: ModelProperties) : this(
         url = info.url,
         mediaType = info.mediaType,
         mediaFit = info.mediaFit,
@@ -55,6 +58,7 @@ internal class MediaModel(
         visibility = info.visibility,
         eventHandlers = info.eventHandlers,
         enableBehaviors = info.enableBehaviors,
+        pagerState = pagerState,
         environment = env,
         properties = props
     )

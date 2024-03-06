@@ -64,6 +64,16 @@ internal class MediaView(
         }
     }
 
+    internal class WebViewListener(model: MediaModel) {
+        val model = model
+
+        fun onVideoReady() {
+            model.pagerState?.update { state ->
+                state.copyWithMediaPaused(false)
+            }
+        }
+    }
+
     private val filteredActivityListener =
         FilteredActivityListener(activityListener, viewEnvironment.hostingActivityPredicate())
 
@@ -74,6 +84,12 @@ internal class MediaView(
 
     init {
         LayoutUtils.applyBorderAndBackground(this, model)
+
+        if (model.mediaType == MediaType.VIDEO) {
+            model.pagerState?.update { state ->
+                state.copyWithMediaPaused(true)
+            }
+        }
 
         when (model.mediaType) {
             MediaType.IMAGE -> configureImageView(model)
@@ -185,10 +201,13 @@ internal class MediaView(
     private fun configureWebView(model: MediaModel) {
         viewEnvironment.activityMonitor().addActivityListener(filteredActivityListener)
 
-        val wv = TouchAwareWebView(context)
+        val webViewListener = WebViewListener(model)
+
+        val wv = TouchAwareWebView(context, webViewListener)
         webView = wv
 
         wv.webChromeClient = viewEnvironment.webChromeClientFactory().create()
+        wv.addJavascriptInterface(wv.getJavascriptInterface(), "VideoListenerInterface")
 
         val frameLayout = when (model.mediaType) {
             // Adjust the aspect ratio of the WebView if the media is video or youtube.
@@ -380,6 +399,9 @@ internal class MediaView(
                 <video id="video" playsinline %s %s %s %s height="100%%" width="100%%" src="%s"></video>
                 <script>
                     let videoElement = document.getElementById("video");
+                    videoElement.addEventListener("canplay", (event) => {
+                        VideoListenerInterface.onVideoReady();
+                    });
                 </script>
             </body>
             """.trimIndent()

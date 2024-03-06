@@ -126,16 +126,22 @@ internal class PagerModel(
                 .filter {
                     // If current and last are both 0, we're initializing the pager.
                     // Otherwise, we only want to act on changes to the pageIndex.
+
                     (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex) && it.progress == 0
                 }
                 .collect {
                     // Clear any automated actions scheduled for the previous page.
                     clearAutomatedActions()
                     UALog.v { "cleared automated actions for page: ${it.lastPageIndex}" }
-
                     // Handle any actions defined for the current page.
                     items[it.pageIndex].run {
                         handlePageActions(displayActions, automatedActions)
+                        // Pause the story if the video is not ready
+                        if (!it.isMediaPaused) {
+                            resumeStory()
+                        } else {
+                            pauseStory()
+                        }
                     }
                 }
         }
@@ -276,7 +282,6 @@ internal class PagerModel(
                     //  If delay is zero run immediately
                     action.behaviors?.let { evaluateClickBehaviors(it) }
                     action.actions?.let { runActions(it) }
-
                     reportAutomatedAction(action, pagerState.changes.value)
                 } else {
                     // otherwise schedule the action
