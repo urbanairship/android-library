@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.Flow
 internal class LabelButtonView(
     context: Context,
     model: LabelButtonModel
-) : MaterialButton(context, null, R.attr.borderlessButtonStyle), BaseView, TappableView {
+) : MaterialButton(context, null, androidx.appcompat.R.attr.borderlessButtonStyle), BaseView, TappableView {
 
     init {
         isAllCaps = false

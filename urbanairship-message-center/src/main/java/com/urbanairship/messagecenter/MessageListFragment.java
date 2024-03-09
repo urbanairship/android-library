@@ -60,7 +60,7 @@ public class MessageListFragment extends Fragment {
     private final List<OnListViewReadyCallback> pendingCallbacks = new ArrayList<>();
 
     @DrawableRes
-    private int placeHolder = R.drawable.ua_ic_image_placeholder;
+    private int placeHolder = com.urbanairship.R.drawable.ua_ic_image_placeholder;
 
     private final InboxListener inboxListener = this::updateAdapterMessages;
 

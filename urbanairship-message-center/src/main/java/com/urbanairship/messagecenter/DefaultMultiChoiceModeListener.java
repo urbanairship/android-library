@@ -40,7 +40,7 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
         }
 
         int count = messageListFragment.getAbsListView().getCheckedItemCount();
-        mode.setTitle(messageListFragment.getResources().getQuantityString(R.plurals.ua_selected_count, count, count));
+        mode.setTitle(messageListFragment.getResources().getQuantityString(com.urbanairship.R.plurals.ua_selected_count, count, count));
         if (messageListFragment.getAdapter() != null) {
             messageListFragment.getAdapter().notifyDataSetChanged();
         }
@@ -55,7 +55,7 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
 
         mode.getMenuInflater().inflate(R.menu.ua_mc_action_mode, menu);
         int count = messageListFragment.getAbsListView().getCheckedItemCount();
-        mode.setTitle(messageListFragment.getResources().getQuantityString(R.plurals.ua_selected_count, count, count));
+        mode.setTitle(messageListFragment.getResources().getQuantityString(com.urbanairship.R.plurals.ua_selected_count, count, count));
 
         boolean containsUnreadMessage = false;
         final SparseBooleanArray checked = messageListFragment.getAbsListView().getCheckedItemPositions();

@@ -210,7 +210,7 @@ private class SectionDividerDecoration(
 ) : RecyclerView.ItemDecoration() {
     private val drawable = run {
         val dividerAttr = TypedValue()
-        context.theme.resolveAttribute(R.attr.dividerHorizontal, dividerAttr, true)
+        context.theme.resolveAttribute(androidx.appcompat.R.attr.dividerHorizontal, dividerAttr, true)
         ContextCompat.getDrawable(context, dividerAttr.resourceId)
             ?: throw Resources.NotFoundException("Failed to resolve attr 'dividerHorizontal' from theme!")
     }

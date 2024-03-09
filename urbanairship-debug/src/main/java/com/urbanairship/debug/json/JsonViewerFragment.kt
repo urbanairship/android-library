@@ -60,7 +60,7 @@ class JsonViewerFragment : Fragment(R.layout.ua_fragment_json_viewer) {
                             .putExtra(Intent.EXTRA_TEXT, json.toFormattedJsonString())
 
                         startActivity(
-                            Intent.createChooser(intent, getString(R.string.ua_share_dialog_title))
+                            Intent.createChooser(intent, getString(com.urbanairship.R.string.ua_share_dialog_title))
                                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 
                         true

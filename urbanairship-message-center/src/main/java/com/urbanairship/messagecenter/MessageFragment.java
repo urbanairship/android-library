@@ -278,7 +278,7 @@ public class MessageFragment extends Fragment {
                     }
 
                     if (errorMessage != null) {
-                        errorMessage.setText(R.string.ua_mc_no_longer_available);
+                        errorMessage.setText(com.urbanairship.R.string.ua_mc_no_longer_available);
                     }
 
                     break;
@@ -290,7 +290,7 @@ public class MessageFragment extends Fragment {
                     }
 
                     if (errorMessage != null) {
-                        errorMessage.setText(R.string.ua_mc_failed_to_load);
+                        errorMessage.setText(com.urbanairship.R.string.ua_mc_failed_to_load);
                     }
 
                     break;

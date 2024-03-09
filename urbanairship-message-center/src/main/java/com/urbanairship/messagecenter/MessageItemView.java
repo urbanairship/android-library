@@ -33,7 +33,7 @@ import androidx.core.view.ViewCompat;
  */
 public class MessageItemView extends FrameLayout {
 
-    private static final int[] STATE_HIGHLIGHTED = { R.attr.ua_state_highlighted };
+    private static final int[] STATE_HIGHLIGHTED = { com.urbanairship.R.attr.ua_state_highlighted };
 
     private View contentView;
     private TextView titleView;
