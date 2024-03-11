@@ -25,6 +25,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.turbine)
 }
 
 android {
