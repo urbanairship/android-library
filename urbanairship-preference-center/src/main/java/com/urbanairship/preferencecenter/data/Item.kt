@@ -3,6 +3,7 @@ package com.urbanairship.preferencecenter.data
 import com.urbanairship.contacts.Scope
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
@@ -122,11 +123,86 @@ sealed class Item(private val type: String) {
                 .build()
     }
 
+    /**
+     * Channel Opt-In Prompt item
+     */
+    data class AddChannelPrompt(
+        val title: String,
+        val description: String,
+        val footer: String,
+        val submitButton: String,
+        val cancelButton: String,
+        val onSuccess: ActionableMessage,
+    )
+
+    data class ActionableMessage(
+        val title: String,
+        val body: String,
+        val button: String
+    )
+
+    data class SmsChannelManagementItem(
+        val prompt: AddChannelPrompt,
+        val emptyChannelPlaceholder: ActionableMessage,
+        val senders: List<SMSSender>,
+        override val id: String,
+        override val conditions: Conditions
+    ) : Item(TYPE_SMS_OPTIN) {
+        override val hasChannelSubscriptions = false
+        override val hasContactSubscriptions = false
+        override val display = CommonDisplay(emptyChannelPlaceholder.title, emptyChannelPlaceholder.body)
+        override fun toJson(): JsonMap {
+            TODO("Not yet implemented")
+        }
+    }
+
+    data class EmailChannelManagementItem(
+        val prompt: AddChannelPrompt,
+        val emptyChannelPlaceholder: ActionableMessage,
+        val addButton: String,
+        override val id: String,
+        override val conditions: Conditions,
+        val optinTypes: Set<OptinType>
+    ) : Item(TYPE_EMAIL_OPTIN) {
+        override val hasChannelSubscriptions = false
+        override val hasContactSubscriptions = false
+        override val display = CommonDisplay(emptyChannelPlaceholder.title, emptyChannelPlaceholder.body)
+        override fun toJson(): JsonMap {
+            TODO("Not yet implemented")
+        }
+    }
+
+    data class SMSSender(
+        val senderId: String,
+        val countryCode: Int = 1,
+        val name: String = "US +1"
+    )
+
+    enum class OptinType(private val value: String) : JsonSerializable {
+        TRANSACTIONAL("transactional"),
+        COMMERCIAL("commercial");
+        override fun toJsonValue(): JsonValue = JsonValue.wrap(value)
+
+        companion object {
+            fun fromJson(jsonValue: JsonValue): OptinType {
+                val valueString = jsonValue.optString()
+                for (optinType in OptinType.values()) {
+                    if (optinType.value.equals(valueString, true)) {
+                        return optinType
+                    }
+                }
+                throw JsonException("Invalid optinType: $valueString")
+            }
+        }
+    }
+
     companion object {
         private const val TYPE_CHANNEL_SUBSCRIPTION = "channel_subscription"
         private const val TYPE_CONTACT_SUBSCRIPTION = "contact_subscription"
         private const val TYPE_CONTACT_SUBSCRIPTION_GROUP = "contact_subscription_group"
         private const val TYPE_ALERT = "alert"
+        private const val TYPE_SMS_OPTIN = "sms_optin"
+        private const val TYPE_EMAIL_OPTIN = "email_optin"
 
         private const val KEY_TYPE = "type"
         private const val KEY_ID = "id"
@@ -179,6 +255,17 @@ sealed class Item(private val type: String) {
                     button = Button.parse(json.optionalField(KEY_BUTTON)),
                     conditions = Condition.parse(json.get(KEY_CONDITIONS))
                 )
+                /*TYPE_SMS_OPTIN -> SmsOptinPrompt(
+                    id = id,
+                    title = json.requireField(KEY_TITLE),
+                    description = json.requireField(KEY_DESCRIPTION),
+                    buttonText = json.requireField(KEY_BUTTON),
+                    placeholder = json.optionalField(KEY_PLACEHOLDER),
+                    smsConfirmation = json.requireField(KEY_SMS_CONFIRMATION),
+                    smsSenders = json.requireField(KEY_SMS_SENDERS),
+                    conditions = Condition.parse(json.get(KEY_CONDITIONS)),
+                    optinTypes = json.opt(KEY_OPTIN_TYPES).optList().map(OptinType::fromJson).toSet()
+                )*/
                 else -> throw JsonException("Unknown Preference Center Item type: '$type'")
             }
         }

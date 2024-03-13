@@ -1,15 +1,20 @@
 package com.urbanairship.preferencecenter.ui
 
 import android.content.Context
+import android.content.DialogInterface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.LayoutRes
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.AppCompatSpinner
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -25,11 +30,13 @@ import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.ChannelSubscriptionItem
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_ALERT
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_DESCRIPTION
+import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_EMAIL_OPTIN
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_PREF_CHANNEL_SUBSCRIPTION
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_PREF_CONTACT_SUBSCRIPTION
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_PREF_CONTACT_SUBSCRIPTION_GROUP
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_SECTION
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_SECTION_BREAK
+import com.urbanairship.preferencecenter.ui.PrefCenterItem.Companion.TYPE_SMS_OPTIN
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.ContactSubscriptionGroupItem
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.ContactSubscriptionItem
 import com.urbanairship.preferencecenter.ui.PrefCenterItem.DescriptionItem
@@ -52,6 +59,15 @@ internal class PreferenceCenterAdapter(
 ) : ListAdapter<PrefCenterItem, PrefCenterViewHolder<*>>(DIFF_CALLBACK) {
 
     companion object {
+        fun censorPhoneNumber(number: String): String {
+            return number.replace(".(?=(?:\\D*\\d){3})".toRegex(), "*")
+        }
+        fun censorEmail(email: String): String {
+            val p = """^([^@]{1})([^@]+)""".toRegex()
+            return email.replace(p) {
+                it.groupValues[1] + "*".repeat(it.groupValues[2].length)
+            }
+        }
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<PrefCenterItem>() {
             override fun areItemsTheSame(oldItem: PrefCenterItem, newItem: PrefCenterItem): Boolean =
                 oldItem.areItemsTheSame(newItem)
@@ -126,6 +142,10 @@ internal class PreferenceCenterAdapter(
                 parent = parent,
                 onClick = ::emitActions
             )
+        TYPE_SMS_OPTIN ->
+            PrefCenterItem.SmsChannelManagementItem.createViewHolder(parent)
+        TYPE_EMAIL_OPTIN ->
+            PrefCenterItem.EmailChannelManagementItem.createViewHolder(parent)
         else -> throw IllegalArgumentException("Unsupported view type: $viewType")
     }
 
@@ -265,6 +285,8 @@ internal sealed class PrefCenterItem(val type: Int) {
         const val TYPE_PREF_CONTACT_SUBSCRIPTION = 4
         const val TYPE_PREF_CONTACT_SUBSCRIPTION_GROUP = 5
         const val TYPE_ALERT = 6
+        const val TYPE_SMS_OPTIN = 7
+        const val TYPE_EMAIL_OPTIN = 8
     }
 
     abstract val id: String
@@ -273,7 +295,8 @@ internal sealed class PrefCenterItem(val type: Int) {
     abstract fun areItemsTheSame(otherItem: PrefCenterItem): Boolean
     abstract fun areContentsTheSame(otherItem: PrefCenterItem): Boolean
 
-    internal data class DescriptionItem(val title: String?, val description: String?) : PrefCenterItem(TYPE_DESCRIPTION) {
+    internal data class DescriptionItem(val title: String?, val description: String?) :
+        PrefCenterItem(TYPE_DESCRIPTION) {
         companion object {
             @LayoutRes
             val LAYOUT: Int = R.layout.ua_item_preference_description
@@ -352,7 +375,8 @@ internal sealed class PrefCenterItem(val type: Int) {
         }
     }
 
-    internal data class SectionBreakItem(val section: Section.SectionBreak) : PrefCenterItem(TYPE_SECTION_BREAK) {
+    internal data class SectionBreakItem(val section: Section.SectionBreak) :
+        PrefCenterItem(TYPE_SECTION_BREAK) {
         companion object {
             @LayoutRes
             val LAYOUT: Int = R.layout.ua_item_preference_section_break
@@ -384,7 +408,8 @@ internal sealed class PrefCenterItem(val type: Int) {
         }
 
         class ViewHolder(itemView: View) : PrefCenterViewHolder<SectionBreakItem>(itemView) {
-            private val chipView: Chip = itemView.findViewById(R.id.ua_pref_chip)
+            private val chipView: Chip =
+                itemView.findViewById(R.id.ua_pref_chip)
 
             override fun bind(item: SectionBreakItem) {
                 chipView.text = item.label
@@ -392,7 +417,8 @@ internal sealed class PrefCenterItem(val type: Int) {
         }
     }
 
-    internal data class ChannelSubscriptionItem(val item: Item.ChannelSubscription) : PrefCenterItem(TYPE_PREF_CHANNEL_SUBSCRIPTION) {
+    internal data class ChannelSubscriptionItem(val item: Item.ChannelSubscription) :
+        PrefCenterItem(TYPE_PREF_CHANNEL_SUBSCRIPTION) {
         companion object {
             @LayoutRes
             val LAYOUT: Int = R.layout.ua_item_preference
@@ -407,10 +433,11 @@ internal sealed class PrefCenterItem(val type: Int) {
                 onCheckedChange: (position: Int, isChecked: Boolean) -> Unit
             ): ViewHolder {
                 val view = inflater.inflate(LAYOUT, parent, false)
-                view.findViewById<LinearLayout>(R.id.ua_pref_widget)?.let { widgetRoot ->
-                    inflater.inflate(WIDGET, widgetRoot)
-                    widgetRoot.visibility = View.VISIBLE
-                }
+                view.findViewById<LinearLayout>(R.id.ua_pref_widget)
+                    ?.let { widgetRoot ->
+                        inflater.inflate(WIDGET, widgetRoot)
+                        widgetRoot.visibility = View.VISIBLE
+                    }
                 return ViewHolder(view, isChecked, onCheckedChange)
             }
         }
@@ -440,7 +467,8 @@ internal sealed class PrefCenterItem(val type: Int) {
             private val isChecked: (id: String) -> Boolean,
             private val onCheckedChange: (position: Int, isChecked: Boolean) -> Unit,
         ) : CommonViewHolder<ChannelSubscriptionItem>(itemView) {
-            private val switch: SwitchMaterial = itemView.findViewById(R.id.ua_pref_widget_switch)
+            private val switch: SwitchMaterial =
+                itemView.findViewById(R.id.ua_pref_widget_switch)
 
             override fun bind(item: ChannelSubscriptionItem) {
                 titleView.setTextOrHide(item.title)
@@ -466,31 +494,42 @@ internal sealed class PrefCenterItem(val type: Int) {
                     }
                 }
 
-                updateAccessibilityDescription(itemView.context, item, isChecked(item.subscriptionId))
+                updateAccessibilityDescription(
+                    itemView.context,
+                    item,
+                    isChecked(item.subscriptionId)
+                )
             }
 
-            private fun updateAccessibilityDescription(context: Context, item: ChannelSubscriptionItem, isChecked: Boolean) {
+            private fun updateAccessibilityDescription(
+                context: Context,
+                item: ChannelSubscriptionItem,
+                isChecked: Boolean
+            ) {
                 itemView.contentDescription = context.getString(
-                    R.string.ua_preference_center_subscription_item_description,
+                    com.urbanairship.preferencecenter.R.string.ua_preference_center_subscription_item_description,
                     item.title,
                     item.subtitle,
                     if (isChecked) {
-                        R.string.ua_preference_center_subscribed_description
+                        com.urbanairship.preferencecenter.R.string.ua_preference_center_subscribed_description
                     } else {
-                        R.string.ua_preference_center_unsubscribed_description
+                        com.urbanairship.preferencecenter.R.string.ua_preference_center_unsubscribed_description
                     }.let(context::getString)
                 )
 
-                AccessibilityUtils.setClickActionLabel(itemView, if (isChecked) {
-                    R.string.ua_preference_center_action_unsubscribe
-                } else {
-                    R.string.ua_preference_center_action_subscribe
-                })
+                AccessibilityUtils.setClickActionLabel(
+                    itemView, if (isChecked) {
+                        com.urbanairship.preferencecenter.R.string.ua_preference_center_action_unsubscribe
+                    } else {
+                        com.urbanairship.preferencecenter.R.string.ua_preference_center_action_subscribe
+                    }
+                )
             }
         }
     }
 
-    internal data class ContactSubscriptionItem(val item: Item.ContactSubscription) : PrefCenterItem(TYPE_PREF_CONTACT_SUBSCRIPTION) {
+    internal data class ContactSubscriptionItem(val item: Item.ContactSubscription) :
+        PrefCenterItem(TYPE_PREF_CONTACT_SUBSCRIPTION) {
         companion object {
             @LayoutRes
             val LAYOUT: Int = R.layout.ua_item_preference
@@ -505,10 +544,11 @@ internal sealed class PrefCenterItem(val type: Int) {
                 onCheckedChange: (position: Int, scopes: Set<Scope>, isChecked: Boolean) -> Unit
             ): ViewHolder {
                 val view = inflater.inflate(LAYOUT, parent, false)
-                view.findViewById<LinearLayout>(R.id.ua_pref_widget)?.let { widgetRoot ->
-                    inflater.inflate(WIDGET, widgetRoot)
-                    widgetRoot.visibility = View.VISIBLE
-                }
+                view.findViewById<LinearLayout>(R.id.ua_pref_widget)
+                    ?.let { widgetRoot ->
+                        inflater.inflate(WIDGET, widgetRoot)
+                        widgetRoot.visibility = View.VISIBLE
+                    }
                 return ViewHolder(view, isChecked, onCheckedChange)
             }
         }
@@ -532,7 +572,7 @@ internal sealed class PrefCenterItem(val type: Int) {
             if (javaClass != otherItem.javaClass) return false
             otherItem as ContactSubscriptionItem
             return title == otherItem.title && subtitle == otherItem.subtitle && subscriptionId == otherItem.subscriptionId &&
-                scopes == otherItem.scopes
+                    scopes == otherItem.scopes
         }
 
         class ViewHolder(
@@ -540,7 +580,8 @@ internal sealed class PrefCenterItem(val type: Int) {
             private val isChecked: (id: String, scopes: Set<Scope>) -> Boolean,
             private val onCheckedChange: (position: Int, scopes: Set<Scope>, isChecked: Boolean) -> Unit,
         ) : CommonViewHolder<ContactSubscriptionItem>(itemView) {
-            private val switch: SwitchMaterial = itemView.findViewById(R.id.ua_pref_widget_switch)
+            private val switch: SwitchMaterial =
+                itemView.findViewById(R.id.ua_pref_widget_switch)
 
             override fun bind(item: ContactSubscriptionItem) {
                 titleView.setTextOrHide(item.title)
@@ -566,31 +607,42 @@ internal sealed class PrefCenterItem(val type: Int) {
                     }
                 }
 
-                updateAccessibilityDescription(itemView.context, item, isChecked(item.subscriptionId, item.scopes))
+                updateAccessibilityDescription(
+                    itemView.context,
+                    item,
+                    isChecked(item.subscriptionId, item.scopes)
+                )
             }
 
-            private fun updateAccessibilityDescription(context: Context, item: ContactSubscriptionItem, isChecked: Boolean) {
+            private fun updateAccessibilityDescription(
+                context: Context,
+                item: ContactSubscriptionItem,
+                isChecked: Boolean
+            ) {
                 itemView.contentDescription = context.getString(
-                    R.string.ua_preference_center_subscription_item_description,
+                    com.urbanairship.preferencecenter.R.string.ua_preference_center_subscription_item_description,
                     item.title,
                     item.subtitle,
                     if (isChecked) {
-                        R.string.ua_preference_center_subscribed_description
+                        com.urbanairship.preferencecenter.R.string.ua_preference_center_subscribed_description
                     } else {
-                        R.string.ua_preference_center_unsubscribed_description
+                        com.urbanairship.preferencecenter.R.string.ua_preference_center_unsubscribed_description
                     }.let(context::getString)
                 )
 
-                AccessibilityUtils.setClickActionLabel(itemView, if (isChecked) {
-                    R.string.ua_preference_center_action_unsubscribe
-                } else {
-                    R.string.ua_preference_center_action_subscribe
-                })
+                AccessibilityUtils.setClickActionLabel(
+                    itemView, if (isChecked) {
+                        com.urbanairship.preferencecenter.R.string.ua_preference_center_action_unsubscribe
+                    } else {
+                        com.urbanairship.preferencecenter.R.string.ua_preference_center_action_subscribe
+                    }
+                )
             }
         }
     }
 
-    internal data class ContactSubscriptionGroupItem(val item: Item.ContactSubscriptionGroup) : PrefCenterItem(TYPE_PREF_CONTACT_SUBSCRIPTION_GROUP) {
+    internal data class ContactSubscriptionGroupItem(val item: Item.ContactSubscriptionGroup) :
+        PrefCenterItem(TYPE_PREF_CONTACT_SUBSCRIPTION_GROUP) {
         companion object {
             @LayoutRes
             val LAYOUT: Int = R.layout.ua_item_preference_contact_subscription_group
@@ -632,7 +684,8 @@ internal sealed class PrefCenterItem(val type: Int) {
             private val isChecked: (id: String, scopes: Set<Scope>) -> Boolean,
             private val onCheckedChange: (position: Int, scopes: Set<Scope>, isChecked: Boolean) -> Unit,
         ) : CommonViewHolder<ContactSubscriptionGroupItem>(itemView) {
-            private val chipGroup: ChipGroup = itemView.findViewById(R.id.ua_pref_chip_group)
+            private val chipGroup: ChipGroup =
+                itemView.findViewById(R.id.ua_pref_chip_group)
 
             override fun bind(item: ContactSubscriptionGroupItem) {
                 titleView.setTextOrHide(item.title)
@@ -661,7 +714,7 @@ internal sealed class PrefCenterItem(val type: Int) {
 
     internal data class AlertItem(val item: Item.Alert) : PrefCenterItem(TYPE_ALERT) {
         companion object {
-             @LayoutRes
+            @LayoutRes
             val LAYOUT: Int = R.layout.ua_item_alert
 
             fun createViewHolder(
@@ -700,8 +753,10 @@ internal sealed class PrefCenterItem(val type: Int) {
             itemView: View,
             private val onClick: (actions: ActionsMap) -> Unit
         ) : CommonViewHolder<AlertItem>(itemView) {
-            private val iconView: ImageView = itemView.findViewById(R.id.ua_pref_icon)
-            private val buttonView: Button = itemView.findViewById(R.id.ua_pref_button)
+            private val iconView: ImageView =
+                itemView.findViewById(R.id.ua_pref_icon)
+            private val buttonView: Button =
+                itemView.findViewById(R.id.ua_pref_button)
 
             override fun bind(item: AlertItem) {
                 titleView.setTextOrHide(item.title)
@@ -714,6 +769,205 @@ internal sealed class PrefCenterItem(val type: Int) {
                         contentDescription = button.contentDescription
                         isVisible = true
                         setOnClickListener { onClick(button.actions) }
+                    }
+                }
+            }
+        }
+    }
+
+    internal data class SmsChannelManagementItem(val item: Item.SmsChannelManagementItem) :
+        PrefCenterItem(TYPE_SMS_OPTIN) {
+        companion object {
+            @LayoutRes
+            val LAYOUT: Int = R.layout.ua_item_sms_prompt
+
+            fun createViewHolder(
+                parent: ViewGroup,
+                inflater: LayoutInflater = LayoutInflater.from(parent.context)
+            ): ViewHolder {
+                val view = inflater.inflate(LAYOUT, parent, false)
+                return ViewHolder(view, parent.context)
+            }
+        }
+
+        override val id: String = item.id
+        override val conditions: Conditions = item.conditions
+        val title = item.emptyChannelPlaceholder.title
+        val description = item.emptyChannelPlaceholder.body
+        val buttonText = item.emptyChannelPlaceholder.button
+        val channelPrompt = item.prompt
+        val senders = item.senders
+
+        override fun areItemsTheSame(otherItem: PrefCenterItem): Boolean {
+            if (this === otherItem) return true
+            if (javaClass != otherItem.javaClass) return false
+            otherItem as SmsChannelManagementItem
+            return id == otherItem.id
+        }
+
+        override fun areContentsTheSame(otherItem: PrefCenterItem): Boolean {
+            if (javaClass != otherItem.javaClass) return false
+            otherItem as SmsChannelManagementItem
+            return title == otherItem.title && description == otherItem.description
+        }
+
+        class ViewHolder(
+            itemView: View,
+            context: Context
+        ) : CommonViewHolder<SmsChannelManagementItem>(itemView) {
+            private val addButtonView: Button =
+                itemView.findViewById(R.id.ua_sms_add_button)
+
+            override fun bind(item: SmsChannelManagementItem) {
+                // TODO check the optin status to display the correct text
+                titleView.setTextOrHide(item.title)
+                descriptionView.setTextOrHide(item.description)
+
+                addButtonView.run {
+                    text = item.buttonText
+                    setOnClickListener {
+                        val builder: AlertDialog.Builder = AlertDialog.Builder(context)
+                        builder.setTitle(item.channelPrompt.title)
+
+                        val inflater: LayoutInflater = LayoutInflater.from(context)
+                        val customLayout: View = inflater.inflate(
+                            R.layout.ua_dialog_sms,
+                            null
+                        )
+                        builder.setView(customLayout)
+
+                        val alertBody: TextView =
+                            customLayout.findViewById(R.id.ua_dialog_sms_body)
+                        alertBody.setTextOrHide(item.channelPrompt.description)
+
+                        val indicatorsList = ArrayList<String>()
+                        for (smsSender in item.senders) {
+                            indicatorsList.add(smsSender.name)
+                        }
+                        val phoneIndicatorSpinner: AppCompatSpinner =
+                            customLayout.findViewById(R.id.ua_dialog_sms_spinner)
+                        val indicatorAdapter = ArrayAdapter(
+                            context,
+                            android.R.layout.simple_spinner_item,
+                            indicatorsList
+                        )
+                        indicatorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                        phoneIndicatorSpinner.adapter = indicatorAdapter
+
+                        val successMessageText: TextView =
+                            customLayout.findViewById(R.id.ua_dialog_sms_success_message)
+                        val emailEditText: EditText =
+                            customLayout.findViewById(R.id.ua_dialog_sms_edit_text)
+
+                        builder.setNegativeButton(item.channelPrompt.cancelButton) { dialog: DialogInterface?, _: Int ->
+                            dialog?.cancel()
+                        }
+
+                        builder.setPositiveButton(item.channelPrompt.submitButton) { dialog: DialogInterface?, which: Int -> }
+                        val dialog: AlertDialog = builder.create()
+                        dialog.show()
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                            dialog.setTitle(item.channelPrompt.onSuccess.title)
+                            successMessageText.text = item.channelPrompt.onSuccess.body
+                            successMessageText.visibility = View.VISIBLE
+                            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).text =
+                                item.channelPrompt.onSuccess.button
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).visibility = View.GONE
+                            // TODO send the OptinRequest
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    internal data class EmailChannelManagementItem(val item: Item.EmailChannelManagementItem) :
+        PrefCenterItem(TYPE_EMAIL_OPTIN) {
+        companion object {
+            @LayoutRes
+            val LAYOUT: Int = R.layout.ua_item_email_prompt
+
+            fun createViewHolder(
+                parent: ViewGroup,
+                inflater: LayoutInflater = LayoutInflater.from(parent.context)
+            ): ViewHolder {
+                val view = inflater.inflate(LAYOUT, parent, false)
+                return ViewHolder(view, parent.context)
+            }
+        }
+
+        override val id: String = item.id
+        override val conditions: Conditions = item.conditions
+        val title = item.emptyChannelPlaceholder.title
+        val description = item.emptyChannelPlaceholder.body
+        val buttonText = item.emptyChannelPlaceholder.button
+        val optinTypes = item.optinTypes
+        val channelPrompt = item.prompt
+
+        override fun areItemsTheSame(otherItem: PrefCenterItem): Boolean {
+            if (this === otherItem) return true
+            if (javaClass != otherItem.javaClass) return false
+            otherItem as EmailChannelManagementItem
+            return id == otherItem.id
+        }
+
+        override fun areContentsTheSame(otherItem: PrefCenterItem): Boolean {
+            if (javaClass != otherItem.javaClass) return false
+            otherItem as EmailChannelManagementItem
+            return title == otherItem.title && description == otherItem.description
+        }
+
+        class ViewHolder(
+            itemView: View,
+            context: Context
+        ) : CommonViewHolder<EmailChannelManagementItem>(itemView) {
+            private val buttonView: Button =
+                itemView.findViewById(com.urbanairship.preferencecenter.R.id.ua_email_optin_button)
+
+            override fun bind(item: EmailChannelManagementItem) {
+
+                // TODO check the optin status to display the correct text
+                titleView.setTextOrHide(item.title)
+                descriptionView.setTextOrHide(item.description)
+
+                buttonView.run {
+                    text = item.buttonText
+                    setOnClickListener {
+                        val builder: AlertDialog.Builder = AlertDialog.Builder(context)
+                        builder.setTitle(item.channelPrompt.title)
+
+                        val inflater: LayoutInflater = LayoutInflater.from(context)
+                        val customLayout: View = inflater.inflate(
+                            R.layout.ua_dialog_email,
+                            null
+                        )
+                        builder.setView(customLayout)
+
+                        val alertBody: TextView =
+                            customLayout.findViewById(R.id.ua_dialog_email_body)
+                        alertBody.setTextOrHide(item.channelPrompt.description)
+
+                        val successMessageText: TextView =
+                            customLayout.findViewById(R.id.ua_dialog_email_success_message)
+                        val emailEditText: EditText =
+                            customLayout.findViewById(R.id.ua_dialog_email_edit_text)
+
+                        builder.setNegativeButton(item.channelPrompt.cancelButton) { dialog: DialogInterface?, _: Int ->
+                            dialog?.cancel()
+                        }
+
+                        builder.setPositiveButton(item.channelPrompt.submitButton) { dialog: DialogInterface?, which: Int -> }
+                        val dialog: AlertDialog = builder.create()
+                        dialog.show()
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                            dialog.setTitle(item.channelPrompt.onSuccess.title)
+                            successMessageText.text = item.channelPrompt.onSuccess.body
+                            successMessageText.visibility = View.VISIBLE
+                            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).text =
+                                item.channelPrompt.onSuccess.button
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).visibility = View.GONE
+                            // TODO send the OptinRequest
+                        }
                     }
                 }
             }

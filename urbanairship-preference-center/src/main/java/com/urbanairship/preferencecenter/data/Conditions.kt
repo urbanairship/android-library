@@ -61,6 +61,8 @@ sealed class Condition(private val type: String) {
 
     companion object {
         private const val TYPE_NOTIFICATION_OPT_IN = "notification_opt_in"
+        private const val TYPE_SMS_OPT_IN = "sms_opt_in"
+        private const val TYPE_EMAIL_OPT_IN = "email_opt_in"
 
         private const val KEY_TYPE = "type"
         private const val KEY_STATUS = "when_status"
@@ -68,6 +70,12 @@ sealed class Condition(private val type: String) {
         internal fun parse(json: JsonMap): Condition {
             return when (val type = json.get(KEY_TYPE)?.string) {
                 TYPE_NOTIFICATION_OPT_IN -> NotificationOptIn(
+                    status = json.requireField<String>(KEY_STATUS).let { Status.parse(it) }
+                )
+                TYPE_SMS_OPT_IN -> NotificationOptIn(
+                    status = json.requireField<String>(KEY_STATUS).let { Status.parse(it) }
+                )
+                TYPE_EMAIL_OPT_IN -> NotificationOptIn(
                     status = json.requireField<String>(KEY_STATUS).let { Status.parse(it) }
                 )
                 else -> throw JsonException("Unknown Condition type: '$type'")

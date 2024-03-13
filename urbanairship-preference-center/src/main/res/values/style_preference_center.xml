@@ -224,6 +224,9 @@
         <item name="textAllCaps">false</item>
     </style>
 
+    <!-- Preference Center SMS Opt-in prompt phone number box -->
+    <style name="UrbanAirship.PreferenceCenter.Item.EditText" parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox" />
+
     <!-- Preference Center list item widget base style -->
     <style name="UrbanAirship.PreferenceCenter.Item.Widget" parent="">
         <item name="android:gravity">end|center_vertical</item>

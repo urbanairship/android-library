@@ -276,6 +276,8 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 emit(Change.UpdateScopedSubscriptions(subscriptionId, scopes, isEnabled))
             }
             is Item.Alert -> {} // No-op.
+            is Item.EmailChannelManagementItem -> {}
+            is Item.SmsChannelManagementItem -> {}
         }
     }
 
@@ -369,6 +371,10 @@ internal fun PreferenceCenterConfig.asPrefCenterItems(): List<PrefCenterItem> =
                             PrefCenterItem.ContactSubscriptionGroupItem(item)
                         is Item.Alert ->
                             PrefCenterItem.AlertItem(item)
+                        is Item.SmsChannelManagementItem ->
+                            PrefCenterItem.SmsChannelManagementItem(item)
+                        is Item.EmailChannelManagementItem ->
+                            PrefCenterItem.EmailChannelManagementItem(item)
                     }
                 }
             }
