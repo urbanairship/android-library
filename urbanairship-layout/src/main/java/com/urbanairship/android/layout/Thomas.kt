@@ -47,7 +47,7 @@ public object Thomas {
 
     @JvmStatic
     @Throws(DisplayException::class)
-    public fun prepareDisplay(payload: LayoutInfo): DisplayRequest {
+    public fun prepareDisplay(payload: LayoutInfo, embeddedViewManager: AirshipEmbeddedViewManager): DisplayRequest {
         if (!isValid(payload)) {
             throw DisplayException("Payload is not valid: " + payload.presentation)
         }
@@ -71,7 +71,7 @@ public object Thomas {
             }
             is EmbeddedPresentation -> {
                 DisplayRequest(payload) { _: Context, args: DisplayArgs ->
-                   DefaultEmbeddedViewManager.addPending(args)
+                    embeddedViewManager.addPending(args)
                 }
             }
             else -> {

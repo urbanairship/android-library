@@ -19,6 +19,7 @@ import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.actions.PermissionResultReceiver;
 import com.urbanairship.actions.PromptPermissionAction;
+import com.urbanairship.android.layout.AirshipEmbeddedViewManager;
 import com.urbanairship.android.layout.Thomas;
 import com.urbanairship.android.layout.ThomasListener;
 import com.urbanairship.android.layout.display.DisplayException;
@@ -39,6 +40,7 @@ import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.InAppMessageWebViewClient;
 import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.iam.assets.Assets;
+import com.urbanairship.embedded.DefaultEmbeddedViewManager;
 import com.urbanairship.iam.events.InAppReportingEvent;
 import com.urbanairship.iam.events.InAppReportingEvent.PageViewSummary;
 import com.urbanairship.UrlAllowList;
@@ -78,8 +80,10 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
     @VisibleForTesting
     interface DisplayRequestCallback {
 
-        DisplayRequest prepareDisplay(@NonNull LayoutInfo payload) throws DisplayException;
-
+        DisplayRequest prepareDisplay(
+                @NonNull LayoutInfo payload,
+                @NonNull AirshipEmbeddedViewManager embeddedViewManager
+        ) throws DisplayException;
     }
 
     private static final DisplayRequestCallback DEFAULT_CALLBACK = Thomas::prepareDisplay;
@@ -149,7 +153,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         }
 
         try {
-            this.displayRequest = this.prepareDisplayCallback.prepareDisplay(displayContent.getPayload());
+            this.displayRequest = this.prepareDisplayCallback.prepareDisplay(displayContent.getPayload(), DefaultEmbeddedViewManager.INSTANCE);
         } catch (DisplayException e) {
             UALog.e("Unable to display layout", e);
             return InAppMessageAdapter.CANCEL;

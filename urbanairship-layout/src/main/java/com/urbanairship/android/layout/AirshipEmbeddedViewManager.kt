@@ -4,13 +4,20 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
-import java.util.Objects
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import java.util.Objects
 
+/** @hide */
+public typealias LayoutInfoProvider = () -> LayoutInfo?
+
+/** @hide */
+public typealias DisplayArgsProvider = () -> DisplayArgs
+
+/**
+ * Manager interface for Airship Embedded Views.
+ */
 public interface AirshipEmbeddedViewManager {
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun addPending(
         embeddedViewId: String,
@@ -19,13 +26,33 @@ public interface AirshipEmbeddedViewManager {
         displayArgsProvider: DisplayArgsProvider
     )
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun addPending(args: DisplayArgs) {
+        val payload = args.payload
+        val embeddedViewId = (payload.presentation as? EmbeddedPresentation)?.embeddedId ?: run {
+            UALog.e { "Failed to add pending embedded view. Required embedded view ID is null!" }
+            return
+        }
+        val viewInstanceId = payload.hashCode().toString()
+
+        addPending(
+            embeddedViewId,
+            viewInstanceId,
+            { payload },
+            { args }
+        )
+    }
+
     // TODO: maybe don't need these?
     public fun dismiss(embeddedViewId: String)
     public fun dismissAll(embeddedViewId: String)
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun dismiss(embeddedViewId: String, viewInstanceId: String)
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun displayRequests(embeddedViewId: String): Flow<EmbeddedDisplayRequest?>
 }
@@ -55,93 +82,5 @@ public data class EmbeddedDisplayRequest(
 
     override fun hashCode(): Int {
         return Objects.hash(embeddedViewId, viewInstanceId)
-    }
-}
-
-internal typealias LayoutInfoProvider = () -> LayoutInfo?
-internal typealias DisplayArgsProvider = () -> DisplayArgs
-
-/* @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public object DefaultEmbeddedViewManager : AirshipEmbeddedViewManager {
-
-    private val pending: MutableMap<String, List<EmbeddedDisplayRequest>> = mutableMapOf()
-
-    private val viewsFlow = MutableStateFlow<Map<String, List<EmbeddedDisplayRequest>>>(emptyMap())
-
-    public override fun addPending(
-        embeddedViewId: String,
-        viewInstanceId: String,
-        layoutInfoProvider: LayoutInfoProvider,
-        displayArgsProvider: DisplayArgsProvider
-    ) {
-        val pendingForView = pending[embeddedViewId]
-
-        val request = EmbeddedDisplayRequest(
-            embeddedViewId = embeddedViewId,
-            viewInstanceId = viewInstanceId,
-            layoutInfoProvider = layoutInfoProvider,
-            displayArgsProvider = displayArgsProvider
-        )
-
-        if (pendingForView.isNullOrEmpty()) {
-            pending[embeddedViewId] = listOf(request)
-        } else {
-            pending[embeddedViewId] = pendingForView + request
-        }
-
-        UALog.v { "Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
-
-        viewsFlow.tryEmit(pending.toMap())
-    }
-
-    internal fun addPending(
-        args: DisplayArgs
-    ) {
-        val payload = args.payload
-        val embeddedViewId = (payload.presentation as? EmbeddedPresentation)?.embeddedId ?: run {
-            UALog.e { "Failed to add pending embedded view. Required embedded view ID is null!" }
-            return
-        }
-        val viewInstanceId = payload.hashCode().toString()
-
-        addPending(
-            embeddedViewId,
-            viewInstanceId,
-            { payload },
-            { args }
-        )
-    }
-
-    override fun dismiss(embeddedViewId: String) {
-        val pendingForView = pending[embeddedViewId] ?: return
-
-        // Pop the first request off the list of pending requests
-        pending[embeddedViewId] = pendingForView.drop(1)
-
-        UALog.v { "--- Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
-
-        viewsFlow.tryEmit(pending.toMap())
-    }
-
-    override fun dismissAll(embeddedViewId: String) {
-        pending[embeddedViewId] = emptyList()
-        UALog.v { "--- Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
-
-        viewsFlow.tryEmit(pending.toMap())
-    }
-
-    override fun dismiss(embeddedViewId: String, viewInstanceId: String) {
-        val pendingForView = pending[embeddedViewId] ?: return
-
-        // Remove the request for the given view instance ID from the list of pending requests
-        pending[embeddedViewId] = pendingForView.filterNot { it.viewInstanceId == viewInstanceId }
-        UALog.v { "Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
-
-        viewsFlow.tryEmit(pending.toMap())
-    }
-
-    override fun displayRequests(embeddedViewId: String): Flow<EmbeddedDisplayRequest?> {
-        return viewsFlow.map { it[embeddedViewId]?.firstOrNull() }.distinctUntilChanged()
     }
 }

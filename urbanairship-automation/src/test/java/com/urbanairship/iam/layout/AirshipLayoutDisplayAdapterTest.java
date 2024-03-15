@@ -6,6 +6,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestActivity;
 import com.urbanairship.TestApplication;
+import com.urbanairship.android.layout.AirshipEmbeddedViewManager;
 import com.urbanairship.android.layout.ThomasListener;
 import com.urbanairship.android.layout.display.DisplayArgs;
 import com.urbanairship.android.layout.display.DisplayException;
@@ -497,7 +498,10 @@ public class AirshipLayoutDisplayAdapterTest extends BaseTestCase {
         DisplayException exception;
 
         @Override
-        public DisplayRequest prepareDisplay(@NonNull LayoutInfo layoutInfo) throws DisplayException {
+        public DisplayRequest prepareDisplay(
+                @NonNull LayoutInfo layoutInfo,
+                @NonNull AirshipEmbeddedViewManager embeddedViewManager
+        ) throws DisplayException {
             if (exception != null) {
                 throw exception;
             }

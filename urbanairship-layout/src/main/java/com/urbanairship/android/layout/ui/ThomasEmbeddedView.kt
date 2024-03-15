@@ -30,6 +30,8 @@ internal class ThomasEmbeddedView(
     private val environment: ViewEnvironment,
     @AnimatorRes private val animationIn: Int = android.R.animator.fade_in,
     @AnimatorRes private val animationOut: Int = android.R.animator.fade_out,
+    private val fillHeight: Boolean = false,
+    private val fillWidth: Boolean = false
 ) : ConstraintLayout(context) {
 
     private var frame: ConstrainedFrameLayout? = null
@@ -91,7 +93,17 @@ internal class ThomasEmbeddedView(
         // Apply constraints
         ConstraintSetBuilder.newBuilder(context)
             .constrainWithinParent(viewId, margin)
-            .size(size, viewId)
+            .apply {
+                if (fillHeight && fillWidth) {
+                    matchConstraintWidth(viewId).matchConstraintHeight(viewId)
+                } else if (fillHeight) {
+                    width(size, viewId).matchConstraintHeight(viewId)
+                } else if (fillWidth) {
+                    matchConstraintWidth(viewId).height(size, viewId)
+                } else {
+                    size(size, viewId)
+                }
+            }
             .build()
             .applyTo(this)
     }

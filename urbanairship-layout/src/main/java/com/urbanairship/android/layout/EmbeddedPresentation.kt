@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.property.EmbeddedPlacement
 import com.urbanairship.android.layout.property.EmbeddedPlacementSelector
 import com.urbanairship.android.layout.property.ModalPlacement
@@ -11,13 +12,16 @@ import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 
-internal class EmbeddedPresentation(
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class EmbeddedPresentation(
     private val defaultPlacement: EmbeddedPlacement,
     private val placementSelectors: List<EmbeddedPlacementSelector>?,
-    internal val embeddedId: String
+    public val embeddedId: String
 ) : BasePresentation(PresentationType.EMBEDDED) {
 
-    fun getResolvedPlacement(context: Context): EmbeddedPlacement {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun getResolvedPlacement(context: Context): EmbeddedPlacement {
         if (placementSelectors.isNullOrEmpty()) {
             return defaultPlacement
         }
@@ -39,7 +43,7 @@ internal class EmbeddedPresentation(
         return defaultPlacement
     }
 
-    companion object {
+    internal companion object {
         @JvmStatic
         @Throws(JsonException::class)
         fun fromJson(json: JsonMap): EmbeddedPresentation {

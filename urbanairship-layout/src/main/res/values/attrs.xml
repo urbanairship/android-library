@@ -17,7 +17,7 @@
     <declare-styleable name="AirshipEmbeddedView">
         <attr name="layout_id" format="string"/>
         <attr name="placeholder" format="reference"/>
-        <attr name="inAnimation" format="reference"/>
-        <attr name="outAnimation" format="reference"/>
+        <attr name="in_animation" format="reference"/>
+        <attr name="out_animation" format="reference"/>
     </declare-styleable>
 </resources>

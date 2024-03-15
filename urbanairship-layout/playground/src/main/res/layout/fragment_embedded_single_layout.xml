@@ -7,7 +7,7 @@
     tools:context=".embedded.EmbeddedSingleLayoutFragment"
     android:animateLayoutChanges="true">
 
-    <com.urbanairship.android.layout.AirshipEmbeddedView
+    <com.urbanairship.embedded.AirshipEmbeddedView
         android:id="@+id/layout_container"
         android:layout_width="0dp"
         android:layout_height="48dp"
@@ -16,7 +16,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_id="single_layout">
-    </com.urbanairship.android.layout.AirshipEmbeddedView>
+    </com.urbanairship.embedded.AirshipEmbeddedView>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/show_button"

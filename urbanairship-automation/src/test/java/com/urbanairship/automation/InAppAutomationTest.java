@@ -13,6 +13,7 @@ import com.urbanairship.TestApplication;
 import com.urbanairship.TestRequestSession;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.android.layout.AirshipEmbeddedViewManager;
 import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
@@ -133,6 +134,8 @@ public class InAppAutomationTest {
 
     private Contact mockContact = mock(Contact.class);
 
+    private AirshipEmbeddedViewManager mockEmbeddedManager = mock(AirshipEmbeddedViewManager.class);
+
     private DeferredResolver deferredResolver;
     private LocaleManager localeManager;
 
@@ -180,7 +183,7 @@ public class InAppAutomationTest {
         inAppAutomation = new InAppAutomation(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
                 mockRuntimeConfig, privacyManager, mockEngine, mockChannel, mockObserver, mockIamManager,
                 executor, mockActionsScheduleDelegate, mockMessageScheduleDelegate,
-                mockFrequencyLimitManager, audienceOverridesProvider, mockExperimentManager, mockInfoProvider,
+                mockFrequencyLimitManager, audienceOverridesProvider, mockExperimentManager, mockEmbeddedManager, mockInfoProvider,
                 meteredUsage, mockClock, executor, mockContact, deferredResolver, localeManager);
 
         inAppAutomation.init();

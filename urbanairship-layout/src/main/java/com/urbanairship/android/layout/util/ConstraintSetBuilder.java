@@ -172,6 +172,23 @@ public final class ConstraintSetBuilder {
 
     @NonNull
     public ConstraintSetBuilder size(@Nullable Size size, boolean ignoreSafeArea, @IdRes int viewId, int autoValue) {
+       width(size, ignoreSafeArea, viewId, autoValue);
+       height(size, ignoreSafeArea, viewId, autoValue);
+       return this;
+    }
+
+    @NonNull
+    public ConstraintSetBuilder width(@Nullable Size size, @IdRes int viewId) {
+        return width(size, false, viewId);
+    }
+
+    @NonNull
+    public ConstraintSetBuilder width(@Nullable Size size, boolean ignoreSafeArea, @IdRes int viewId) {
+        return size(size, ignoreSafeArea, viewId, ConstraintSet.WRAP_CONTENT);
+    }
+
+    @NonNull
+    public ConstraintSetBuilder width(@Nullable Size size, boolean ignoreSafeArea, @IdRes int viewId, int autoValue) {
         if (size != null) {
             if (size instanceof ConstrainedSize) {
                 ConstrainedSize constrainedSize = (ConstrainedSize) size;
@@ -201,6 +218,43 @@ public final class ConstraintSetBuilder {
                             break;
                     }
                 }
+            }
+
+            Size.Dimension width = size.getWidth();
+            switch (width.getType()) {
+                case AUTO:
+                    constraints.constrainWidth(viewId, autoValue);
+                    break;
+                case PERCENT:
+                    if (width.getFloat() == 1f) {
+                        constraints.constrainWidth(viewId, ConstraintSet.MATCH_CONSTRAINT);
+                    } else {
+                        constraints.constrainPercentWidth(viewId, width.getFloat());
+                    }
+                    break;
+                case ABSOLUTE:
+                    constraints.constrainWidth(viewId, (int) dpToPx(context, width.getInt()));
+                    break;
+            }
+        }
+        return this;
+    }
+
+    @NonNull
+    public ConstraintSetBuilder height(@Nullable Size size, @IdRes int viewId) {
+        return height(size, false, viewId);
+    }
+
+    @NonNull
+    public ConstraintSetBuilder height(@Nullable Size size, boolean ignoreSafeArea, @IdRes int viewId) {
+        return height(size, ignoreSafeArea, viewId, ConstraintSet.WRAP_CONTENT);
+    }
+
+    @NonNull
+    public ConstraintSetBuilder height(@Nullable Size size, boolean ignoreSafeArea, @IdRes int viewId, int autoValue) {
+        if (size != null) {
+            if (size instanceof ConstrainedSize) {
+                ConstrainedSize constrainedSize = (ConstrainedSize) size;
 
                 ConstrainedSize.ConstrainedDimension minHeight = constrainedSize.getMinHeight();
                 if (minHeight != null) {
@@ -229,23 +283,6 @@ public final class ConstraintSetBuilder {
                 }
             }
 
-            Size.Dimension width = size.getWidth();
-            switch (width.getType()) {
-                case AUTO:
-                    constraints.constrainWidth(viewId, autoValue);
-                    break;
-                case PERCENT:
-                    if (width.getFloat() == 1f) {
-                        constraints.constrainWidth(viewId, ConstraintSet.MATCH_CONSTRAINT);
-                    } else {
-                        constraints.constrainPercentWidth(viewId, width.getFloat());
-                    }
-                    break;
-                case ABSOLUTE:
-                    constraints.constrainWidth(viewId, (int) dpToPx(context, width.getInt()));
-                    break;
-            }
-
             Size.Dimension height = size.getHeight();
             switch (height.getType()) {
                 case AUTO:
@@ -263,6 +300,18 @@ public final class ConstraintSetBuilder {
                     break;
             }
         }
+        return this;
+    }
+
+    @NonNull
+    public ConstraintSetBuilder matchConstraintWidth(int viewId) {
+        constraints.constrainWidth(viewId, ConstraintSet.MATCH_CONSTRAINT);
+        return this;
+    }
+
+    @NonNull
+    public ConstraintSetBuilder matchConstraintHeight(int viewId) {
+        constraints.constrainHeight(viewId, ConstraintSet.MATCH_CONSTRAINT);
         return this;
     }
 

@@ -2,21 +2,17 @@ package com.urbanairship.android.layout.ui
 
 import android.content.Context
 import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.urbanairship.UALog
-import com.urbanairship.android.layout.DefaultEmbeddedViewManager
+import com.urbanairship.android.layout.AirshipEmbeddedViewManager
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.ModelFactoryException
-import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.ThomasListener
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment
@@ -27,7 +23,6 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.property.EmbeddedPlacement
-import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.Factory
@@ -44,6 +39,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
+import java.io.ObjectStreamException
+import java.util.Objects
 
 // TODO(embedded): make this better, or share with the banner model store if there isn't anything
 //    nicer we can do...
@@ -54,11 +51,13 @@ private object EmbeddedViewModelStoreOwner : ViewModelStoreOwner {
         get() = EmbeddedViewModelStore
 }
 
+// TODO: we maybe need to make this public because of the compose transition scope generic type :-/
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class EmbeddedLayout(
     private val context: Context,
-    private val embeddedViewId: String,
+    public val embeddedViewId: String,
     args: DisplayArgs,
+    private val embeddedViewManager: AirshipEmbeddedViewManager
 ) {
     private val viewJob = SupervisorJob()
     private val layoutScope = CoroutineScope(Dispatchers.Main.immediate + viewJob)
@@ -68,21 +67,28 @@ public class EmbeddedLayout(
     private val imageCache: ImageCache? = args.imageCache
     private val payload: LayoutInfo = args.payload
     private val externalListener: ThomasListener = args.listener
-    private val viewModelKey: String = args.hashCode().toString()
+    private val viewModelKey: String = payload.hash.toString()
     private val reporter: Reporter = ExternalReporter(externalListener)
+    /** @hide **/
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public val viewInstanceId: String = payload.hashCode().toString()
+    public val viewInstanceId: String =  payload.hash.toString()
 
     private var currentView: WeakReference<ThomasEmbeddedView>? = null
     private var displayTimer: DisplayTimer? = null
 
+    /** @hide **/
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun getPlacement(): EmbeddedPlacement? {
         val presentation = (payload.presentation as? EmbeddedPresentation)
         return presentation?.getResolvedPlacement(context)
     }
 
-    /** Builds the embedded layout view. */
-    public fun makeView(): View? {
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun makeView(
+        fillWidth: Boolean = false,
+        fillHeight: Boolean = false
+    ): View? {
         val activity = context.getActivity()
         if (activity == null) {
             UALog.e { "Airship Embedded Views must be hosted by an Activity! Current Activity is null." }
@@ -135,7 +141,9 @@ public class EmbeddedLayout(
                 context = context,
                 model = model,
                 presentation = presentation,
-                environment = viewEnvironment
+                environment = viewEnvironment,
+                fillWidth = fillWidth,
+                fillHeight = fillHeight
             )
 
             observeLayoutEvents(modelEnvironment.layoutEvents)
@@ -144,7 +152,7 @@ public class EmbeddedLayout(
                 override fun onDismissed() {
                     UALog.v("EmbeddedLayout dismissed! $embeddedViewId")
                     // Dismiss the view via the manager. This will update the AirshipEmbeddedView.
-                    DefaultEmbeddedViewManager.dismiss(embeddedViewId, viewInstanceId)
+                    embeddedViewManager.dismiss(embeddedViewId, viewInstanceId)
                     reportDismissFromOutside()
                 }
             }
@@ -157,7 +165,7 @@ public class EmbeddedLayout(
         }
     }
 
-    public fun dismiss(animate: Boolean = true, isInternal: Boolean = false) {
+    private fun dismiss(animate: Boolean = true, isInternal: Boolean = false) {
         currentView?.get()?.dismiss(animate, isInternal)
     }
 
@@ -185,16 +193,11 @@ public class EmbeddedLayout(
         if (javaClass != other?.javaClass) return false
 
         other as EmbeddedLayout
-
         if (embeddedViewId != other.embeddedViewId) return false
         if (viewInstanceId != other.viewInstanceId) return false
 
         return true
     }
 
-    override fun hashCode(): Int {
-        var result = embeddedViewId.hashCode()
-        result = 31 * result + viewInstanceId.hashCode()
-        return result
-    }
+    override fun hashCode(): Int = Objects.hash(embeddedViewId, viewInstanceId)
 }

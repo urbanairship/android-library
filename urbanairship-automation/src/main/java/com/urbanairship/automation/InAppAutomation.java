@@ -16,6 +16,7 @@ import com.urbanairship.PrivacyManager;
 import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.android.layout.AirshipEmbeddedViewManager;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.automation.actions.Actions;
@@ -36,6 +37,7 @@ import com.urbanairship.experiment.MessageInfo;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
+import com.urbanairship.embedded.DefaultEmbeddedViewManager;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
@@ -103,6 +105,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private Cancelable subscription;
 
     private final ExperimentManager experimentManager;
+
+    private final AirshipEmbeddedViewManager embeddedViewManager;
+
     private final DeviceInfoProvider infoProvider;
 
     private final AirshipRuntimeConfig config;
@@ -214,6 +219,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.frequencyLimitManager = new FrequencyLimitManager(context, runtimeConfig);
         this.config = runtimeConfig;
         this.experimentManager = experimentManager;
+        this.embeddedViewManager = DefaultEmbeddedViewManager.INSTANCE;
         this.infoProvider = infoProvider;
         this.meteredUsage = meteredUsage;
         this.clock = Clock.DEFAULT_CLOCK;
@@ -238,6 +244,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull FrequencyLimitManager frequencyLimitManager,
                     @NonNull AudienceOverridesProvider audienceOverridesProvider,
                     @NonNull ExperimentManager experimentManager,
+                    @NonNull AirshipEmbeddedViewManager embeddedViewManager,
                     @NonNull DeviceInfoProvider infoProvider,
                     @NonNull AirshipMeteredUsage meteredUsage,
                     @NonNull Clock clock,
@@ -258,6 +265,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.frequencyLimitManager = frequencyLimitManager;
         this.config = runtimeConfig;
         this.experimentManager = experimentManager;
+        this.embeddedViewManager = embeddedViewManager;
         this.infoProvider = infoProvider;
         this.meteredUsage = meteredUsage;
         this.clock = clock;
@@ -365,6 +373,16 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     public InAppMessageManager getInAppMessageManager() {
         return inAppMessageManager;
     }
+
+    /**
+     * Gets the embedded view manager.
+     *
+     * @return The embedded view manager.
+     */
+    public AirshipEmbeddedViewManager getEmbeddedViewManager() {
+        return embeddedViewManager;
+    }
+
 
     /**
      * {@inheritDoc}

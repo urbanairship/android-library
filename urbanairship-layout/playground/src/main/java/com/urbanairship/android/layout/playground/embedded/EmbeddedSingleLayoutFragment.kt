@@ -8,14 +8,14 @@ import androidx.core.view.isGone
 import androidx.fragment.app.Fragment
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
-import com.urbanairship.android.layout.AirshipEmbeddedView
-import com.urbanairship.android.layout.DefaultEmbeddedViewManager
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.playground.R
 import com.urbanairship.android.layout.playground.databinding.FragmentEmbeddedSingleLayoutBinding
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.app.GlobalActivityMonitor
+import com.urbanairship.automation.InAppAutomation
+import com.urbanairship.embedded.AirshipEmbeddedView
 
 class EmbeddedSingleLayoutFragment : Fragment(R.layout.fragment_embedded_single_layout) {
 
@@ -51,7 +51,7 @@ class EmbeddedSingleLayoutFragment : Fragment(R.layout.fragment_embedded_single_
             }
 
             dismissButton.setOnClickListener {
-                DefaultEmbeddedViewManager.dismiss(layoutId)
+                InAppAutomation.shared().embeddedViewManager.dismiss(layoutId)
             }
         }
 
@@ -60,7 +60,7 @@ class EmbeddedSingleLayoutFragment : Fragment(R.layout.fragment_embedded_single_
 
     @Suppress("SameParameterValue")
     private fun setupTestLayouts(embeddedViewId: String) {
-        val manager = DefaultEmbeddedViewManager
+        val manager = InAppAutomation.shared().embeddedViewManager
 
         singleLayouts.forEach { layoutFile ->
             val layoutInfo = loadLayoutInfo(layoutFile) ?: return

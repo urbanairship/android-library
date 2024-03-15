@@ -6,14 +6,14 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
-import com.urbanairship.android.layout.AirshipEmbeddedView
-import com.urbanairship.android.layout.DefaultEmbeddedViewManager
+import com.urbanairship.embedded.AirshipEmbeddedView
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.playground.R
 import com.urbanairship.android.layout.playground.databinding.FragmentEmbeddedStackedLayoutBinding
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.app.GlobalActivityMonitor
+import com.urbanairship.automation.InAppAutomation
 
 class EmbeddedStackedLayoutFragment : Fragment(R.layout.fragment_embedded_stacked_layout) {
 
@@ -48,7 +48,7 @@ class EmbeddedStackedLayoutFragment : Fragment(R.layout.fragment_embedded_stacke
             }
 
             dismissButton.setOnClickListener {
-                DefaultEmbeddedViewManager.dismiss(layoutId)
+                InAppAutomation.shared().embeddedViewManager.dismiss(layoutId)
             }
         }
 
@@ -57,7 +57,7 @@ class EmbeddedStackedLayoutFragment : Fragment(R.layout.fragment_embedded_stacke
 
     @Suppress("SameParameterValue")
     private fun setupTestLayouts(embeddedViewId: String) {
-        val manager = DefaultEmbeddedViewManager
+        val manager = InAppAutomation.shared().embeddedViewManager
 
         layouts.forEach { layoutFile ->
             val layoutInfo = loadLayoutInfo(layoutFile) ?: return
