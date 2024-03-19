@@ -425,7 +425,11 @@ internal class ThomasModelFactory : ModelFactory {
         }
         is EmptyInfo -> EmptyModel(info = info, env = environment, props = properties)
         is WebViewInfo -> WebViewModel(info = info, env = environment, props = properties)
-        is MediaInfo -> MediaModel(info = info, env = environment, props = properties)
+        is MediaInfo -> MediaModel(
+            info = info,
+            pagerState = environment.layoutState.pager,
+            env = environment,
+            props = properties)
         is LabelInfo -> LabelModel(info = info, env = environment, props = properties)
         is LabelButtonInfo -> LabelButtonModel(
             info = info,
