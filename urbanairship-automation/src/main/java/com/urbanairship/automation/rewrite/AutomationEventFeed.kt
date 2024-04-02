@@ -48,7 +48,6 @@ internal class AutomationEventFeed(
     private val stream = MutableSharedFlow<AutomationEvent>()
     private val appSessionState = TriggerableState()
     private var subscription: Cancellable? = null
-    private val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
     private var isFirstAttach = false
 
     val feed: Flow<AutomationEvent> = stream

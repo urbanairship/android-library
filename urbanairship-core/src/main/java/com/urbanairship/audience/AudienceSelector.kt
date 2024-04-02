@@ -81,7 +81,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
             .put(FetchDeviceInfoAction.TAGS_KEY, tagSelector)
             .put(HASH_KEY, hashSelector?.toJsonValue())
             .put(APP_VERSION_KEY, versionPredicate)
-            .put(MISS_BEHAVIOR_KEY, missBehavior.value)
+            .put(MISS_BEHAVIOR_KEY, missBehavior)
             .put(PERMISSIONS_KEY, permissionsPredicate)
             .putOpt(DEVICE_TYPES_KEY, deviceTypes)
             .build()
@@ -240,7 +240,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         }
     }
 
-    public enum class MissBehavior(public val value: String) {
+    public enum class MissBehavior(public val value: String) : JsonSerializable {
         /**
          * Cancel the message's schedule when the audience check fails.
          */
@@ -259,9 +259,11 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public companion object {
             public fun parse(input: String): MissBehavior? {
-                return MissBehavior.values().firstOrNull { it.value == input }
+                return entries.firstOrNull { it.value == input }
             }
         }
+
+        override fun toJsonValue(): JsonValue = JsonValue.wrap(value)
     }
 
     override fun toString(): String {

@@ -5,6 +5,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.http.RequestSession
+import com.urbanairship.http.SuspendingRequestSession
 import com.urbanairship.remoteconfig.RemoteConfig
 
 @SuppressLint("VisibleForTests")
@@ -13,18 +15,20 @@ public class TestAirshipRuntimeConfig private constructor(
     dataStore: PreferenceDataStore,
     private val platformProvider: SettableProvider<Int>,
     remoteConfig: RemoteConfig?,
+    session: RequestSession? = null
 ) : AirshipRuntimeConfig(
-    configProvider, TestRequestSession(), dataStore, platformProvider
+    configProvider, session ?: TestRequestSession(), dataStore, platformProvider
 ) {
 
     @JvmOverloads
-    public constructor(remoteConfig: RemoteConfig? = null) : this(
+    public constructor(remoteConfig: RemoteConfig? = null, session: RequestSession? = null) : this(
         SettableProvider(
             AirshipConfigOptions.Builder().setAppKey("appKey").setAppSecret("appSecret").build()
         ),
         PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext<Context>()),
         SettableProvider(UAirship.ANDROID_PLATFORM),
-        remoteConfig
+        remoteConfig,
+        session
     )
 
     init {

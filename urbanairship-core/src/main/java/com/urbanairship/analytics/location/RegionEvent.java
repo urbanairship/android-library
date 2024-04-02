@@ -197,6 +197,15 @@ public class RegionEvent extends Event implements JsonSerializable {
      * @hide
      */
     @NonNull
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public String getRegionId() {
+        return regionId;
+    }
+
+    /**
+     * @hide
+     */
+    @NonNull
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public final JsonMap getEventData() {

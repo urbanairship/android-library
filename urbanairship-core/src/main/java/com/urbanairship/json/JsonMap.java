@@ -9,6 +9,8 @@ import org.json.JSONStringer;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -207,9 +209,19 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
     @NonNull
     @Override
     public String toString() {
+        return toString(false);
+    }
+
+    /**
+     * Returns the JsonMap as a JSON encoded String with sorted keys.
+     *
+     * @return The value as a JSON encoded String.
+     */
+    @NonNull
+    public String toString(@NonNull Boolean sortKeys) {
         try {
             JSONStringer stringer = new JSONStringer();
-            write(stringer);
+            write(stringer, sortKeys);
             return stringer.toString();
         } catch (JSONException | StringIndexOutOfBoundsException e) {
             // Should never happen
@@ -224,11 +236,25 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
      * @param stringer The JSONStringer object.
      * @throws org.json.JSONException If the value is unable to be written as JSON.
      */
-    void write(@NonNull JSONStringer stringer) throws JSONException {
+    void write(@NonNull JSONStringer stringer, @Nullable Boolean sortKeys) throws JSONException {
         stringer.object();
-        for (Map.Entry<String, JsonValue> entry : entrySet()) {
+
+        Collection<Map.Entry<String, JsonValue>> entries = entrySet();
+
+        if (sortKeys) {
+            ArrayList<Map.Entry<String, JsonValue>> sortedEntries = new ArrayList<>(entrySet());
+            Collections.sort(sortedEntries, new Comparator<Map.Entry<String, JsonValue>>() {
+                @Override
+                public int compare(Map.Entry<String, JsonValue> t1, Map.Entry<String, JsonValue> t2) {
+                    return t1.getKey().compareTo(t2.getKey());
+                }
+            });
+            entries = sortedEntries;
+        }
+
+        for (Map.Entry<String, JsonValue> entry : entries) {
             stringer.key(entry.getKey());
-            entry.getValue().write(stringer);
+            entry.getValue().write(stringer, sortKeys);
         }
         stringer.endObject();
     }

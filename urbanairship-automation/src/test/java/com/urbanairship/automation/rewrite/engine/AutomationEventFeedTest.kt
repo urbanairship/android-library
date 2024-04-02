@@ -1,4 +1,4 @@
-package com.urbanairship.automation
+package com.urbanairship.automation.rewrite.engine
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider

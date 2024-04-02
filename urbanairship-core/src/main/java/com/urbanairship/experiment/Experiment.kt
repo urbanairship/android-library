@@ -12,6 +12,7 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalFieldConverted
 import com.urbanairship.json.requireField
 import com.urbanairship.util.DateUtils
+import java.util.Objects
 
 internal enum class ExperimentType(val jsonValue: String) {
     HOLDOUT_GROUP("holdout");
@@ -41,7 +42,7 @@ public enum class ResolutionType(public val jsonValue: String) {
 public class ExperimentResult(
     public val channelId: String,
     public val contactId: String,
-    public val matchedExperimentId: String?,
+    public val matchedExperimentId: String? = null,
     public val isMatching: Boolean,
     public val allEvaluatedExperimentsMetadata: List<JsonMap>
 ) : JsonSerializable {
@@ -92,6 +93,23 @@ public class ExperimentResult(
             .put(KEY_REPORTING_METADATA, evaluatedExperimentsDataAsJsonValue())
             .build()
             .toJsonValue()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ExperimentResult
+
+        if (channelId != other.channelId) return false
+        if (contactId != other.contactId) return false
+        if (matchedExperimentId != other.matchedExperimentId) return false
+        if (isMatching != other.isMatching) return false
+        return allEvaluatedExperimentsMetadata == other.allEvaluatedExperimentsMetadata
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(channelId, contactId, matchedExperimentId, isMatching, allEvaluatedExperimentsMetadata)
     }
 }
 

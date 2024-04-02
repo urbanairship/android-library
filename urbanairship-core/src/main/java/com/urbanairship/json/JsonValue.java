@@ -423,6 +423,8 @@ public class JsonValue implements Parcelable, JsonSerializable {
         return value instanceof Integer;
     }
 
+
+
     /**
      * Checks if the value is a Double.
      *
@@ -552,6 +554,16 @@ public class JsonValue implements Parcelable, JsonSerializable {
     @NonNull
     @Override
     public String toString() {
+        return toString(false);
+    }
+
+    /**
+     * Returns the JsonValue as a JSON encoded String with sorted keys.
+     *
+     * @return The value as a JSON encoded String.
+     */
+    @NonNull
+    public String toString(Boolean sortKeys) {
         if (isNull()) {
             return "null";
         }
@@ -565,8 +577,12 @@ public class JsonValue implements Parcelable, JsonSerializable {
                 return JSONObject.numberToString((Number) value);
             }
 
-            if (value instanceof JsonMap || value instanceof JsonList) {
-                return value.toString();
+            if (value instanceof JsonMap) {
+                return ((JsonMap) value).toString(sortKeys);
+            }
+
+            if (value instanceof JsonList) {
+                return ((JsonList) value).toString();
             }
 
             return String.valueOf(value);
@@ -583,16 +599,16 @@ public class JsonValue implements Parcelable, JsonSerializable {
      * @param stringer The JSONStringer object.
      * @throws JSONException If the value is unable to be written as JSON.
      */
-    void write(@NonNull JSONStringer stringer) throws JSONException {
+    void write(@NonNull JSONStringer stringer, Boolean sortKeys) throws JSONException {
         if (isNull()) {
             stringer.value(null);
             return;
         }
 
         if (value instanceof JsonList) {
-            ((JsonList) value).write(stringer);
+            ((JsonList) value).write(stringer, sortKeys);
         } else if (value instanceof JsonMap) {
-            ((JsonMap) value).write(stringer);
+            ((JsonMap) value).write(stringer, sortKeys);
         } else {
             stringer.value(value);
         }

@@ -152,7 +152,7 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
     public String toString() {
         try {
             JSONStringer stringer = new JSONStringer();
-            write(stringer);
+            write(stringer, false);
             return stringer.toString();
         } catch (JSONException | StringIndexOutOfBoundsException e) {
             // Should never happen
@@ -167,10 +167,10 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
      * @param stringer The JSONStringer object.
      * @throws org.json.JSONException If the value is unable to be written as JSON.
      */
-    void write(@NonNull JSONStringer stringer) throws JSONException {
+    void write(@NonNull JSONStringer stringer, Boolean sortKeys) throws JSONException {
         stringer.array();
         for (JsonValue actionValue : this) {
-            actionValue.write(stringer);
+            actionValue.write(stringer, sortKeys);
         }
         stringer.endArray();
     }

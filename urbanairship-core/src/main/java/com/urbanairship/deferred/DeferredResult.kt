@@ -6,11 +6,14 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.UAirship
 import com.urbanairship.audience.DeviceInfoProvider
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireField
 import com.urbanairship.locale.LocaleManager
 import java.util.Locale
+import kotlin.jvm.Throws
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
@@ -37,10 +40,21 @@ public data class DeferredTriggerContext(
     val event: JsonValue
 ) : JsonSerializable {
 
-    private companion object {
-        const val KEY_TYPE = "type"
-        const val KEY_GOAL = "goal"
-        const val KEY_EVENT = "event"
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public companion object {
+        private const val KEY_TYPE = "type"
+        private const val KEY_GOAL = "goal"
+        private const val KEY_EVENT = "event"
+
+        @Throws(JsonException::class)
+        public fun fromJson(value: JsonValue): DeferredTriggerContext {
+            val content = value.requireMap()
+            return DeferredTriggerContext(
+                type = content.requireField(KEY_TYPE),
+                goal = content.requireField(KEY_GOAL),
+                event = content.require(KEY_EVENT)
+            )
+        }
     }
 
     override fun toJsonValue(): JsonValue {

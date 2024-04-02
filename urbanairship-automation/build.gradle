@@ -2,6 +2,7 @@ plugins {
     id 'airship-module'
     id 'kotlin-android'
     id 'kotlin-allopen'
+    id 'kotlin-kapt'
 }
 
 description = "Airship Android SDK Automation module"
@@ -13,7 +14,11 @@ dependencies {
     implementation(libs.androidx.customview)
 
     implementation(libs.androidx.room.runtime)
-    annotationProcessor(libs.androidx.room.compiler)
+
+    // AndroidX
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.runtime)
 
     // Tests
     testImplementation project(':urbanairship-test')
@@ -26,6 +31,8 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.turbine)
+
+    testImplementation(libs.androidx.room.testing)
 }
 
 android {

@@ -2,6 +2,7 @@ package com.urbanairship.deferred
 
 import android.net.Uri
 import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.UALog
