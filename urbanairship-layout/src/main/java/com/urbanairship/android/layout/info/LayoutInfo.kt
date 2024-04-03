@@ -1,11 +1,14 @@
 package com.urbanairship.android.layout.info
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.BasePresentation
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.requireField
 
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class LayoutInfo(
     public val version: Int,
     public val presentation: BasePresentation,

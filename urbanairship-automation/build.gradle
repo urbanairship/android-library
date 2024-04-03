@@ -9,7 +9,7 @@ description = "Airship Android SDK Automation module"
 
 dependencies {
     api project(':urbanairship-core')
-    implementation project(':urbanairship-layout')
+    api project(':urbanairship-layout')
 
     implementation(libs.androidx.customview)
 

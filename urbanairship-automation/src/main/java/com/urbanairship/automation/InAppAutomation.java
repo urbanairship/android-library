@@ -37,7 +37,7 @@ import com.urbanairship.experiment.MessageInfo;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
-import com.urbanairship.embedded.DefaultEmbeddedViewManager;
+import com.urbanairship.embedded.EmbeddedViewManager;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
@@ -219,7 +219,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.frequencyLimitManager = new FrequencyLimitManager(context, runtimeConfig);
         this.config = runtimeConfig;
         this.experimentManager = experimentManager;
-        this.embeddedViewManager = DefaultEmbeddedViewManager.INSTANCE;
+        this.embeddedViewManager = EmbeddedViewManager.INSTANCE;
         this.infoProvider = infoProvider;
         this.meteredUsage = meteredUsage;
         this.clock = Clock.DEFAULT_CLOCK;

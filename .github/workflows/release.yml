@@ -73,6 +73,7 @@ jobs:
           urbanairship-core:publishProductionPublicationToSonatypeRepository
           urbanairship-layout:publishProductionPublicationToSonatypeRepository
           urbanairship-automation:publishProductionPublicationToSonatypeRepository
+          urbanairship-automation-compose:publishProductionPublicationToSonatypeRepository
           urbanairship-message-center:publishProductionPublicationToSonatypeRepository
           urbanairship-live-update:publishProductionPublicationToSonatypeRepository
           urbanairship-fcm:publishProductionPublicationToSonatypeRepository

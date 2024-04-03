@@ -9,7 +9,9 @@ import com.urbanairship.android.layout.info.WebViewInfo;
 import com.urbanairship.android.layout.property.Image;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import androidx.annotation.NonNull;
 
@@ -42,8 +44,8 @@ public class UrlInfo {
     }
 
     @NonNull
-    public static List<UrlInfo> from(@NonNull ViewInfo info) {
-        List<UrlInfo> urlInfos = new ArrayList<>();
+    public static Set<UrlInfo> from(@NonNull ViewInfo info) {
+        Set<UrlInfo> urlInfos = new HashSet<>();
 
         switch (info.getType()) {
             case MEDIA:

@@ -1,21 +1,25 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.embedded
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
-import com.urbanairship.android.layout.EmbeddedPresentation
-import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.AirshipEmbeddedViewManager
 import com.urbanairship.android.layout.DisplayArgsProvider
 import com.urbanairship.android.layout.EmbeddedDisplayRequest
 import com.urbanairship.android.layout.LayoutInfoProvider
+import com.urbanairship.json.JsonMap
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public object DefaultEmbeddedViewManager : AirshipEmbeddedViewManager {
+public object EmbeddedViewManager : AirshipEmbeddedViewManager {
 
     private val pending: MutableMap<String, List<EmbeddedDisplayRequest>> = mutableMapOf()
 
@@ -24,6 +28,7 @@ public object DefaultEmbeddedViewManager : AirshipEmbeddedViewManager {
     public override fun addPending(
         embeddedViewId: String,
         viewInstanceId: String,
+        extras: JsonMap,
         layoutInfoProvider: LayoutInfoProvider,
         displayArgsProvider: DisplayArgsProvider
     ) {
@@ -32,6 +37,7 @@ public object DefaultEmbeddedViewManager : AirshipEmbeddedViewManager {
         val request = EmbeddedDisplayRequest(
             embeddedViewId = embeddedViewId,
             viewInstanceId = viewInstanceId,
+            extras = extras,
             layoutInfoProvider = layoutInfoProvider,
             displayArgsProvider = displayArgsProvider
         )
@@ -65,8 +71,6 @@ public object DefaultEmbeddedViewManager : AirshipEmbeddedViewManager {
         viewsFlow.tryEmit(pending.toMap())
     }
 
-    /** @hide */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun dismiss(embeddedViewId: String, viewInstanceId: String) {
         val pendingForView = pending[embeddedViewId] ?: return
 
@@ -75,6 +79,15 @@ public object DefaultEmbeddedViewManager : AirshipEmbeddedViewManager {
         UALog.v { "Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
 
         viewsFlow.tryEmit(pending.toMap())
+    }
+
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    override fun allPending(): Flow<List<EmbeddedDisplayRequest>> {
+        @OptIn(ExperimentalCoroutinesApi::class)
+        return viewsFlow.flatMapConcat {
+            flowOf(it.values.flatten())
+        }
     }
 
     /** @hide */

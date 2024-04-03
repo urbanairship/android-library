@@ -16,6 +16,7 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
+import androidx.core.view.doOnAttach
 import androidx.core.view.isGone
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
@@ -64,9 +65,7 @@ internal class MediaView(
         }
     }
 
-    internal class WebViewListener(model: MediaModel) {
-        val model = model
-
+    internal class WebViewListener(private val model: MediaModel) {
         fun onVideoReady() {
             model.pagerState?.update { state ->
                 state.copyWithMediaPaused(false)
@@ -83,6 +82,8 @@ internal class MediaView(
     private var imageView: ImageView? = null
 
     init {
+        id = model.viewId
+
         LayoutUtils.applyBorderAndBackground(this, model)
 
         if (model.mediaType == MediaType.VIDEO) {
@@ -139,6 +140,7 @@ internal class MediaView(
         val parentLayoutParams = layoutParams
 
         val iv = CropImageView(context).apply {
+            id = model.mediaViewId
             layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
             adjustViewBounds = true
 
@@ -189,7 +191,9 @@ internal class MediaView(
             UAirship.shared().imageLoader.load(context, iv, options)
         }
 
-        loadImage(url)
+        doOnAttach {
+            loadImage(url)
+        }
     }
 
     /**
@@ -203,7 +207,9 @@ internal class MediaView(
 
         val webViewListener = WebViewListener(model)
 
-        val wv = TouchAwareWebView(context, webViewListener)
+        val wv = TouchAwareWebView(context, webViewListener).apply {
+            id = model.mediaViewId
+        }
         webView = wv
 
         wv.webChromeClient = viewEnvironment.webChromeClientFactory().create()

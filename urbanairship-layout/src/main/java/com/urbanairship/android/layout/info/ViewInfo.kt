@@ -1,5 +1,6 @@
 package com.urbanairship.android.layout.info
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.AttributeValue
@@ -62,6 +63,8 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public sealed class ViewInfo : View {
 
     public companion object {

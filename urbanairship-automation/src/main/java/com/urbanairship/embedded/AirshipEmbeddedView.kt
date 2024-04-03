@@ -3,7 +3,6 @@ package com.urbanairship.embedded
 import android.animation.AnimatorInflater
 import android.animation.LayoutTransition
 import android.content.Context
-import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -12,19 +11,15 @@ import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import androidx.annotation.AnimatorRes
 import androidx.annotation.LayoutRes
-import com.urbanairship.UALog
 import com.urbanairship.android.layout.AirshipEmbeddedViewManager
 import com.urbanairship.android.layout.R
-import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.Size.DimensionType.AUTO
 import com.urbanairship.android.layout.property.Size.DimensionType.PERCENT
 import com.urbanairship.android.layout.ui.EmbeddedLayout
-import com.urbanairship.android.layout.util.LayoutUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -37,7 +32,7 @@ public class AirshipEmbeddedView @JvmOverloads constructor(
     @LayoutRes placeholderLayout: Int? = null,
     @AnimatorRes inAnimation: Int = android.R.animator.fade_in,
     @AnimatorRes outAnimation: Int = android.R.animator.fade_out,
-    private val manager: AirshipEmbeddedViewManager = DefaultEmbeddedViewManager,
+    private val manager: AirshipEmbeddedViewManager = EmbeddedViewManager,
 ) : RelativeLayout(context, attrs, defStyle) {
 
     public interface Listener {

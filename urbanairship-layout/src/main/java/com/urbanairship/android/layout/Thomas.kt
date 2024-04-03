@@ -12,6 +12,8 @@ import com.urbanairship.android.layout.display.DisplayRequest
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.ui.BannerLayout
 import com.urbanairship.android.layout.ui.ModalActivity
+import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonValue
 
 /**
  * Entry point and related helper methods for rendering layouts based on our internal DSL.
@@ -47,7 +49,11 @@ public object Thomas {
 
     @JvmStatic
     @Throws(DisplayException::class)
-    public fun prepareDisplay(payload: LayoutInfo, embeddedViewManager: AirshipEmbeddedViewManager): DisplayRequest {
+    public fun prepareDisplay(
+        payload: LayoutInfo,
+        extras: JsonMap,
+        embeddedViewManager: AirshipEmbeddedViewManager,
+    ): DisplayRequest {
         if (!isValid(payload)) {
             throw DisplayException("Payload is not valid: " + payload.presentation)
         }
@@ -71,7 +77,7 @@ public object Thomas {
             }
             is EmbeddedPresentation -> {
                 DisplayRequest(payload) { _: Context, args: DisplayArgs ->
-                    embeddedViewManager.addPending(args)
+                    embeddedViewManager.addPending(args, extras)
                 }
             }
             else -> {

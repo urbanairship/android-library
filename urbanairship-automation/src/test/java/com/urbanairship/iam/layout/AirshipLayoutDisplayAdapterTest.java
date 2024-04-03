@@ -500,6 +500,7 @@ public class AirshipLayoutDisplayAdapterTest extends BaseTestCase {
         @Override
         public DisplayRequest prepareDisplay(
                 @NonNull LayoutInfo layoutInfo,
+                @NonNull JsonMap extras,
                 @NonNull AirshipEmbeddedViewManager embeddedViewManager
         ) throws DisplayException {
             if (exception != null) {

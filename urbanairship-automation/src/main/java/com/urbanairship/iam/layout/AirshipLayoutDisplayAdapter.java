@@ -31,6 +31,8 @@ import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.android.layout.util.ImageCache;
 import com.urbanairship.android.layout.util.UrlInfo;
+import com.urbanairship.automation.InAppAutomation;
+import com.urbanairship.embedded.EmbeddedViewManager;
 import com.urbanairship.iam.DisplayHandler;
 import com.urbanairship.iam.ForegroundDisplayAdapter;
 import com.urbanairship.iam.InAppActionUtils;
@@ -40,10 +42,10 @@ import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.InAppMessageWebViewClient;
 import com.urbanairship.iam.ResolutionInfo;
 import com.urbanairship.iam.assets.Assets;
-import com.urbanairship.embedded.DefaultEmbeddedViewManager;
 import com.urbanairship.iam.events.InAppReportingEvent;
 import com.urbanairship.iam.events.InAppReportingEvent.PageViewSummary;
 import com.urbanairship.UrlAllowList;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
 import com.urbanairship.permission.PermissionStatus;
@@ -82,6 +84,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
 
         DisplayRequest prepareDisplay(
                 @NonNull LayoutInfo payload,
+                @NonNull JsonMap extras,
                 @NonNull AirshipEmbeddedViewManager embeddedViewManager
         ) throws DisplayException;
     }
@@ -93,8 +96,9 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
     private final DisplayRequestCallback prepareDisplayCallback;
     private final Network network;
     private final UrlAllowList urlAllowList;
-    private final List<UrlInfo> urlInfoList;
+    private final Set<UrlInfo> urlInfoList;
     private final Map<String, String> assetCacheMap = new HashMap<>();
+    private final AirshipEmbeddedViewManager embeddedViewManager;
     private DisplayRequest displayRequest;
 
     @VisibleForTesting
@@ -110,6 +114,7 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         this.urlAllowList = urlAllowList;
         this.network = network;
         this.urlInfoList = UrlInfo.from(displayContent.getPayload().getView());
+        this.embeddedViewManager = EmbeddedViewManager.INSTANCE;
     }
 
     /**
@@ -153,7 +158,11 @@ public class AirshipLayoutDisplayAdapter extends ForegroundDisplayAdapter {
         }
 
         try {
-            this.displayRequest = this.prepareDisplayCallback.prepareDisplay(displayContent.getPayload(), DefaultEmbeddedViewManager.INSTANCE);
+            displayRequest = prepareDisplayCallback.prepareDisplay(
+                    displayContent.getPayload(),
+                    message.getExtras(),
+                    embeddedViewManager
+            );
         } catch (DisplayException e) {
             UALog.e("Unable to display layout", e);
             return InAppMessageAdapter.CANCEL;

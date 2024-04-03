@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
+import android.view.View
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
@@ -62,6 +63,8 @@ internal class MediaModel(
         environment = env,
         properties = props
     )
+
+    val mediaViewId: Int = View.generateViewId()
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
         MediaView(context, this, viewEnvironment).apply {

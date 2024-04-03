@@ -80,3 +80,9 @@ internal inline fun <reified T> JsonMap.optionalFieldConverted(key: String, buil
     }
     return result
 }
+
+/** Convenience method to create an empty [JsonMap]. */
+public fun emptyJsonMap(): JsonMap = JsonMap.EMPTY_MAP
+
+/** Convenience method to create an empty [JsonList]. */
+public fun emptyJsonList(): JsonList = JsonList.EMPTY_LIST

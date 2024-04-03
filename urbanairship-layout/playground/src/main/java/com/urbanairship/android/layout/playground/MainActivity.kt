@@ -31,7 +31,9 @@ import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.iam.InAppActionUtils
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.emptyJsonMap
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
 
@@ -125,7 +127,7 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             val payload = LayoutInfo(jsonMap)
-            Thomas.prepareDisplay(payload, InAppAutomation.shared().embeddedViewManager)
+            Thomas.prepareDisplay(payload, emptyJsonMap(), InAppAutomation.shared().embeddedViewManager)
                 .setInAppActivityMonitor(GlobalActivityMonitor.shared(applicationContext))
                 .setListener(thomasListener)
                 .display(this)
