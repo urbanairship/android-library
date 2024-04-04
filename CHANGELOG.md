@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.7.4, March 27, 2024
+Patch release that fixes channel ID creation delay after enabling a feature when none was enabled. The SDK will new create the channel ID without having to relaunch the app. Apps that have no features enabled at launch should update to this version or later.
+
+### Changes
+- Fixed channel ID creation delay after enabling a feature when none was enabled.
+
 ## Version 17.7.3, Feb 16, 2024
 Patch release that adjusts locale targeting behavior for In-App Automation and messaging. The SDK will now check the device's primary language against the target locale, instead of checking whether any user selected languages match the target locale.
 
