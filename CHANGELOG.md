@@ -2,26 +2,27 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
-## Version 17.7.4, March 27, 2024
-Patch release that fixes channel ID creation delay after enabling a feature when none was enabled. The SDK will new create the channel ID without having to relaunch the app. Apps that have no features enabled at launch should update to this version or later.
+## Version 17.7.4, April 5, 2024
+Patch release that fixes a potential crash on Android 13 (API 33) channel ID creation delay after enabling a feature when none was enabled. The SDK will new create the channel ID without having to relaunch the app. Apps that have no features enabled at launch should update to this version or later.
 
 ### Changes
 - Fixed channel ID creation delay after enabling a feature when none was enabled.
+- Fixed a potential NPE when reading from intent extras on API 33.
 
-## Version 17.7.3, Feb 16, 2024
+## Version 17.7.3, February 16, 2024
 Patch release that adjusts locale targeting behavior for In-App Automation and messaging. The SDK will now check the device's primary language against the target locale, instead of checking whether any user selected languages match the target locale.
 
 ### Changes
 - Adjust locale targeting behavior to only consider the primary locale selection.
 
-## Version 17.7.2, Jan 29, 2024
+## Version 17.7.2, January 29, 2024
 Patch release that fixes an issue with message limits not being respected in certain cases. Apps that make use of limits should update to this version or later.
 
 ### Changes
 - Fixed message limits not being respected in certain cases.
 - Improvements for images and GIFs in Surveys and Scenes.
 
-## Version 16.11.2, Jan 29, 2024
+## Version 16.11.2, January 29, 2024
 Patch release that fixes an issue with message limits not being respected in certain cases. Apps on SDK v16 that make use of limits should update to this version or the latest 17.x release.
 
 ### Changes
