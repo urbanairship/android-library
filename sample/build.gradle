@@ -1,5 +1,7 @@
 plugins {
     id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
 }
 
 android {
@@ -32,6 +34,11 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+        freeCompilerArgs = ["-Xexplicit-api=strict"]
     }
 
     lint {
@@ -77,7 +84,7 @@ dependencies {
     implementation project(':urbanairship-feature-flag')
 
     // Airship Debug: Normally this is a debug only dependency but we embed the view in sample app
-    implementation project(':urbanairship-debug')
+    implementation project(':urbanairship-debug-ng')
 
     implementation 'com.github.bumptech.glide:glide:4.16.0'
 

@@ -6,6 +6,7 @@ googleServicesPlugin = '4.4.1'
 spotlessPlugin = '6.25.0'
 nexusPublishPlugin = '1.1.0'
 gradle-versions =  '0.41.0'
+kspPlugin = '1.9.23-1.0.20'
 
 # Spotless plugins
 ktlint = '1.1.1'
@@ -13,14 +14,14 @@ ktlint = '1.1.1'
 # Dependencies
 
 # Kotlin
-kotlin = '1.9.21'
+kotlin = '1.9.23'
 kotlinx-coroutines = '1.7.3'
 
 # Compose
-compose-bom = '2024.02.02'
+compose-bom = '2024.04.00'
 # compose compiler must be updated along with kotlin version
 # see: https://developer.android.com/jetpack/androidx/releases/compose-kotlin
-compose-compiler = '1.5.7'
+compose-compiler = '1.5.11'
 
 # Androidx
 androidx-annotation = '1.7.1'
@@ -65,9 +66,6 @@ playservices-location = '21.1.0'
 # Firebase
 firebase-messaging = '23.4.1'
 
-# OkHttp (for WebSocket support in airship-chat)
-okhttp = '4.12.0'
-
 # LeakCanary (for dev/debug builds)
 leakcanary = '2.9.1'
 
@@ -88,6 +86,7 @@ dokka = '1.4.32'
 
 android-application = { id = 'com.android.application', version.ref = "androidGradlePlugin" }
 android-library = { id = 'com.android.library', version.ref = "androidGradlePlugin" }
+ksp = { id = 'com.google.devtools.ksp', version.ref = "kspPlugin" }
 kotlin-allopen = { id = 'org.jetbrains.kotlin.plugin.allopen', version.ref = "kotlin" }
 google-services = { id = 'com.google.gms.google-services', version.ref = "googleServicesPlugin" }
 spotless = { id = 'com.diffplug.spotless', version.ref = "spotlessPlugin" }
@@ -104,6 +103,7 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 # Compose
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
+androidx-compose-foundation-layout = { module = "androidx.compose.foundation:foundation-layout" }
 compose-runtime = { module = "androidx.compose.runtime:runtime" }
 compose-animation = { module = "androidx.compose.animation:animation" }
 compose-ui = { module = "androidx.compose.ui:ui" }
@@ -113,6 +113,8 @@ compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview"
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
+compose-materialicons-extended = { module = "androidx.compose.material:material-icons-extended" }
+compose-googlefonts = { module = "androidx.compose.ui:ui-text-google-fonts" }
 
 # Androidx
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
@@ -125,18 +127,19 @@ androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-corektx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-customview = { module = "androidx.customview:customview", version.ref = "androidx-customview" }
 androidx-fragment-fragment = { module = "androidx.fragment:fragment", version.ref = "androidx-fragment" }
-androidx-fragment-fragmentktx = { module = "androidx.fragment:fragment-ktx", version.ref = "androidx-fragment" }
 androidx-fragment-testing = { module = "androidx.fragment:fragment-testing", version.ref = "androidx-fragment" }
 androidx-lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8", version.ref="androidx-lifecycle" }
-androidx-lifecycle-livedataktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref="androidx-lifecycle" }
+androidx-lifecycle-livedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref="androidx-lifecycle" }
 androidx-lifecycle-runtimektx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref="androidx-lifecycle" }
+androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref="androidx-lifecycle" }
 androidx-lifecycle-viewmodelktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref="androidx-lifecycle" }
 androidx-navigation-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "androidx-navigation" }
 androidx-navigation-fragmentktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidx-navigation" }
 androidx-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "androidx-navigation" }
 androidx-navigation-ui = { module = "androidx.navigation:navigation-ui", version.ref = "androidx-navigation" }
-androidx-navigation-uiktx = { module = "androidx.navigation:navigation-ui", version.ref = "androidx-navigation" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
+
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "androidx-paging" }
 androidx-paging-runtimektx = { module = "androidx.paging:paging-runtime-ktx", version.ref = "androidx-paging" }
 androidx-preference = { module = "androidx.preference:preference", version.ref = "androidx-preference" }
@@ -176,8 +179,6 @@ playservices-adsidentifier = { module = "com.google.android.gms:play-services-ad
 
 # Firebase
 firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebase-messaging"}
-
-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary"}
 

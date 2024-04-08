@@ -47,7 +47,7 @@ dependencies {
 
     // Navigation
     implementation(libs.androidx.navigation.fragmentktx)
-    implementation(libs.androidx.navigation.uiktx)
+    implementation(libs.androidx.navigation.ui)
 
     // Constraint layout
     implementation(libs.androidx.constraintlayout)
@@ -56,7 +56,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.common.java8)
     implementation(libs.androidx.lifecycle.runtimektx)
     implementation(libs.androidx.lifecycle.viewmodelktx)
-    implementation(libs.androidx.lifecycle.livedataktx)
+    implementation(libs.androidx.lifecycle.livedata)
 
     // Paging
     implementation(libs.androidx.paging.runtimektx)

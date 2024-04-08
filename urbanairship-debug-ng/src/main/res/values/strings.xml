@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ua_debug_label">Airship Debug</string>
+
+    //
+    // Top-level screens
+    //
+    <string name="ua_debug_device_info_title">Device info</string>
+    <string name="ua_debug_device_info_desc">View device info and settings</string>
+
+    <string name="ua_debug_events_title">Events</string>
+    <string name="ua_debug_events_desc">Search and filter a list of recent events</string>
+
+    <string name="ua_debug_automations_title">In-App Automation</string>
+    <string name="ua_debug_automations_desc">View scheduled messages</string>
+
+    <string name="ua_debug_feature_flags_title">Feature Flags</string>
+    <string name="ua_debug_feature_flags_desc">View feature flags</string>
+
+    <string name="ua_debug_pushes_title">Received Pushes</string>
+    <string name="ua_debug_pushes_desc">View a list of received push messages</string>
+
+    <string name="ua_debug_pref_centers_title">Preference Centers</string>
+    <string name="ua_debug_pref_centers_desc">View and launch Preference Centers</string>
+
+    <string name="ua_debug_contacts_title">Contacts</string>
+    <string name="ua_debug_contacts_desc">Register platforms to the contact</string>
+
+    //
+    // Device info screens
+    //
+
+    <string name="ua_debug_named_user_title">Named User</string>
+    <string name="ua_debug_attributes_title">Attributes</string>
+    <string name="ua_debug_tags_title">Tags</string>
+    <string name="ua_debug_tag_groups_title">Tag Groups</string>
+    <string name="ua_debug_associated_identifiers_title">Associated Identifiers</string>
+
+</resources>

@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
         add(R.id.homeFragment);
         add(R.id.inboxFragment);
         add(R.id.settingsFragment);
-        add(com.urbanairship.debug.R.id.debugFragment);
+        add(R.id.debugFragment);
     }};
 
     private final InboxListener inboxListener = this::showMessageCenterIndicator;

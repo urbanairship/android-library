@@ -17,7 +17,7 @@
         android:title="@string/settings" />
 
     <item
-        android:id="@+id/ua_debug"
+        android:id="@+id/debug"
         android:icon="@drawable/ic_debug"
         android:title="@string/debug" />
 
