@@ -68,6 +68,9 @@ firebase-messaging = '23.4.1'
 # OkHttp (for WebSocket support in airship-chat)
 okhttp = '4.12.0'
 
+# Glide (image loader)
+glide = '4.16.0'
+
 # LeakCanary (for dev/debug builds)
 leakcanary = '2.9.1'
 
@@ -136,7 +139,6 @@ androidx-navigation-fragment = { module = "androidx.navigation:navigation-fragme
 androidx-navigation-fragmentktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidx-navigation" }
 androidx-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "androidx-navigation" }
 androidx-navigation-ui = { module = "androidx.navigation:navigation-ui", version.ref = "androidx-navigation" }
-androidx-navigation-uiktx = { module = "androidx.navigation:navigation-ui", version.ref = "androidx-navigation" }
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "androidx-paging" }
 androidx-paging-runtimektx = { module = "androidx.paging:paging-runtime-ktx", version.ref = "androidx-paging" }
 androidx-preference = { module = "androidx.preference:preference", version.ref = "androidx-preference" }
@@ -178,6 +180,8 @@ playservices-adsidentifier = { module = "com.google.android.gms:play-services-ad
 firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebase-messaging"}
 
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary"}
 

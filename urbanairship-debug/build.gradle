@@ -47,7 +47,7 @@ dependencies {
 
     // Navigation
     implementation(libs.androidx.navigation.fragmentktx)
-    implementation(libs.androidx.navigation.uiktx)
+    implementation(libs.androidx.navigation.ui)
 
     // Constraint layout
     implementation(libs.androidx.constraintlayout)

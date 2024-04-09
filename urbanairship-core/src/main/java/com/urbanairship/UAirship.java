@@ -29,7 +29,7 @@ import com.urbanairship.contacts.Contact;
 import com.urbanairship.deferred.DeferredResolver;
 import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.http.DefaultRequestSession;
-import com.urbanairship.images.DefaultImageLoader;
+import com.urbanairship.images.AirshipGlideImageLoader;
 import com.urbanairship.images.ImageLoader;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
@@ -659,7 +659,7 @@ public class UAirship {
     @NonNull
     public ImageLoader getImageLoader() {
         if (imageLoader == null) {
-            imageLoader = new DefaultImageLoader(getApplicationContext());
+            imageLoader = AirshipGlideImageLoader.INSTANCE;
         }
         return imageLoader;
     }
@@ -674,15 +674,6 @@ public class UAirship {
     @NonNull
     public AirshipRuntimeConfig getRuntimeConfig() {
         return runtimeConfig;
-    }
-
-    /**
-     * Sets the image loader.
-     *
-     * @param imageLoader The image loader.
-     */
-    public void setImageLoader(@NonNull ImageLoader imageLoader) {
-        this.imageLoader = imageLoader;
     }
 
     /**

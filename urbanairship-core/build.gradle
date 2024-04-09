@@ -45,6 +45,8 @@ dependencies {
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.room.runtime)
 
+    implementation(libs.glide)
+
     compileOnly(libs.playservices.base)
 
     // Unit Tests
