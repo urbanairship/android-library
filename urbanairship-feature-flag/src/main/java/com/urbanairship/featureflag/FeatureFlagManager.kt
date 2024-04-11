@@ -72,7 +72,6 @@ public class FeatureFlagManager
      * @param name The flag name
      * @return an instance of `PendingResult<FeatureFlag>`.
      */
-    @Throws(FeatureFlagException::class)
     fun flagAsPendingResult(name: String): PendingResult<FeatureFlag> {
         val result = PendingResult<FeatureFlag>()
         pendingResultScope.launch {
@@ -92,7 +91,7 @@ public class FeatureFlagManager
 
     private suspend fun flag(name: String, allowRefresh: Boolean): Result<FeatureFlag> {
         if (!isComponentEnabled) {
-            throw FeatureFlagException.FailedToFetch()
+            return Result.failure(FeatureFlagException.FailedToFetch())
         }
 
         val remoteDataInfo = fetchFlagRemoteInfo(name)
@@ -123,6 +122,7 @@ public class FeatureFlagManager
                     Result.failure(FeatureFlagException.FailedToFetch())
                 }
             }
+
             else -> Result.failure(FeatureFlagException.FailedToFetch())
         }
     }

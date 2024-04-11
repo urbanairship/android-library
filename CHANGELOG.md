@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.8.0, April 11, 2024
+Minor release that fixes potential crashes when evaluating experiments before a Channel ID has been created. Apps that make use of experiments or holdout groups should update to this version or later.
+
+### Changes
+- Avoid NPE in `ExperimentManager` when evaluating experiments before a Channel ID has been created.
+
 ## Version 17.7.4, April 5, 2024
 Patch release that fixes a potential crash on Android 13 (API 33) channel ID creation delay after enabling a feature when none was enabled. The SDK will new create the channel ID without having to relaunch the app. Apps that have no features enabled at launch should update to this version or later.
 

@@ -12,6 +12,7 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalFieldConverted
 import com.urbanairship.json.requireField
 import com.urbanairship.util.DateUtils
+import java.text.ParseException
 
 internal enum class ExperimentType(val jsonValue: String) {
     HOLDOUT_GROUP("holdout");
@@ -177,6 +178,9 @@ internal data class Experiment(
                     timeCriteria = TimeCriteria.fromJson(definition.opt(KEY_TIME_CRITERIA).optMap())
                 )
             } catch (ex: JsonException) {
+                UALog.e { "failed to parse Experiment from json $json" }
+                return null
+            } catch (ex: ParseException) {
                 UALog.e { "failed to parse Experiment from json $json" }
                 return null
             }
