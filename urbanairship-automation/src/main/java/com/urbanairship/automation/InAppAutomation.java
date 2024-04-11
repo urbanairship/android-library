@@ -644,6 +644,15 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             return RetryingExecutor.finishedResult();
         };
 
+        // Start date check
+        RetryingExecutor.Operation checkStartDate = () -> {
+            if (automationEngine.isAheadStartDate(schedule)) {
+                callbackWrapper.onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+                return RetryingExecutor.cancelResult();
+            }
+            return RetryingExecutor.finishedResult();
+        };
+
         // Audience checks
         RetryingExecutor.Operation audienceChecks = () -> {
             if (schedule.getAudienceSelector() == null) {
@@ -693,6 +702,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         RetryingExecutor.Operation[] operations = new RetryingExecutor.Operation[] {
                 checkValid,
                 frequencyChecks,
+                checkStartDate,
                 audienceChecks,
                 evaluateExperiments,
                 prepareSchedule };
@@ -834,7 +844,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
         RemoteDataInfo info = remoteDataSubscriber.parseRemoteDataInfo(schedule);
 
-        if ((info != null && !info.equals(remoteDataInfoMap.get(schedule.getId()))) || !this.remoteDataSubscriber.isScheduleValid(schedule)) {
+        if ((info != null && !info.equals(remoteDataInfoMap.get(schedule.getId())))
+                || !this.remoteDataSubscriber.isScheduleValid(schedule)
+                || automationEngine.isAheadStartDate(schedule)) {
             ScheduleDelegate<?> delegate = scheduleDelegateMap.remove(schedule.getId());
             if (delegate != null) {
                 delegate.onExecutionInvalidated(schedule);

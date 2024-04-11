@@ -10,7 +10,6 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
-import com.urbanairship.TestRequestSession;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.android.layout.AirshipEmbeddedViewManager;
@@ -36,7 +35,6 @@ import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.experiment.MessageInfo;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.custom.CustomDisplayContent;
@@ -63,12 +61,8 @@ import org.robolectric.annotation.LooperMode;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
@@ -339,7 +333,8 @@ public class InAppAutomationTest {
                                                   .build();
 
         when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(true);
-
+        when(mockObserver.bestEffortRefresh(any())).thenReturn(true);
+        when(mockEngine.isAheadStartDate(eq(schedule))).thenReturn(false);
 
         doAnswer((Answer) invocation -> {
             Runnable runnable = invocation.getArgument(1);
@@ -745,6 +740,7 @@ public class InAppAutomationTest {
                                                   .build();
 
         when(mockObserver.isScheduleValid(eq(schedule))).thenReturn(false);
+        when(mockEngine.isAheadStartDate(eq(schedule))).thenReturn(false);
 
         // Verify it returns an invalidate result
         assertEquals(AutomationDriver.READY_RESULT_INVALIDATE, driver.onCheckExecutionReadiness(schedule));
@@ -763,6 +759,56 @@ public class InAppAutomationTest {
                                                   .build();
 
         when(mockObserver.bestEffortRefresh(any())).thenReturn(false);
+        when(mockEngine.isAheadStartDate(eq(schedule))).thenReturn(false);
+
+        // Prepare the schedule
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+
+        runLooperTasks();
+
+        // Verify the schedule is invalidated
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_INVALIDATE);
+    }
+
+    @Test
+    public void testScheduleIsAheadStartDateOnExecution() {
+        JsonMap metadata = JsonMap.newBuilder()
+                                  .putOpt("cool", "story")
+                                  .build();
+
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setSource(InAppMessage.SOURCE_REMOTE_DATA)
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .addAction("action_name", JsonValue.wrap("action_value"))
+                                           .build();
+
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setMetadata(metadata)
+                                                  .build();
+
+        when(mockObserver.isScheduleValid(eq(schedule))).thenReturn(true);
+        when(mockEngine.isAheadStartDate(eq(schedule))).thenReturn(true);
+
+        // Verify it returns an invalidate result
+        assertEquals(AutomationDriver.READY_RESULT_INVALIDATE, driver.onCheckExecutionReadiness(schedule));
+    }
+
+    @Test
+    public void testScheduleIsAheadStartDateOnPrepare() {
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setSource(InAppMessage.SOURCE_REMOTE_DATA)
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .addAction("action_name", JsonValue.wrap("action_value"))
+                                           .build();
+
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .build();
+
+        when(mockObserver.bestEffortRefresh(any())).thenReturn(true);
+        when(mockEngine.isAheadStartDate(eq(schedule))).thenReturn(true);
 
         // Prepare the schedule
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);

@@ -31,7 +31,6 @@ import com.urbanairship.util.VersionUtils;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Shadows;
@@ -523,6 +522,35 @@ public class AutomationEngineTest {
 
         // Verify the listener was called
         verify(expiryListener).onScheduleExpired(schedule);
+    }
+
+    @Test
+    public void testIsAheadStartDate() throws ExecutionException, InterruptedException {
+        Schedule<Actions> schedule = Schedule.newBuilder(new Actions(JsonMap.EMPTY_MAP))
+                                             .addTrigger(Triggers.newCustomEventTriggerBuilder()
+                                                                 .setCountGoal(1)
+                                                                 .setEventName("name")
+                                                                 .build())
+                                             .setStart(System.currentTimeMillis())
+                                             .build();
+
+        // Schedule edits to increase the start date of 24 hours
+        ScheduleEdits<? extends ScheduleData> edits = ScheduleEdits.newBuilder().setStart(System.currentTimeMillis() + 1000 * 60 * 60 * 24).build();
+
+        // Schedule it
+        schedule(schedule);
+
+        // Edits it
+        PendingResult<Boolean> future = automationEngine.editSchedule(schedule.getId(), edits);
+        runLooperTasks();
+        assertEquals(Boolean.TRUE, future.get());
+
+        // Gets the updated schedule
+        Future<Schedule<Actions>> updatedFuture = automationEngine.getSchedule(schedule.getId(), Schedule.TYPE_ACTION);
+        runLooperTasks();
+        Schedule<Actions> updated = updatedFuture.get();
+
+        assertTrue(automationEngine.isAheadStartDate(updated));
     }
 
     @Test
@@ -1123,7 +1151,7 @@ public class AutomationEngineTest {
     }
 
     private void verifyState(Schedule<?> schedule, int state) {
-        assertEquals(dao.getSchedule(schedule.getId()).schedule.executionState, state);
+        assertEquals(state, dao.getSchedule(schedule.getId()).schedule.executionState);
     }
 
     private static class TestDriver implements AutomationDriver {

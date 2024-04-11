@@ -1195,6 +1195,11 @@ public class AutomationEngine {
 
             entry.schedule.triggerContext = triggerContextMap.get(entry.schedule.scheduleId);
 
+            // Check for ahead start date schedules
+            if (isAheadStartDate(entry)) {
+                continue;
+            }
+
             // Expired schedules
             if (isExpired(entry)) {
                 expiredSchedules.add(entry);
@@ -1791,6 +1796,14 @@ public class AutomationEngine {
         scheduleEntity.bypassHoldoutGroups = edits.getBypassHoldoutGroup() == null ? scheduleEntity.bypassHoldoutGroups : edits.getBypassHoldoutGroup();
         scheduleEntity.newUserEvaluationDate = edits.getNewUserEvaluationDate();
         scheduleEntity.productId = edits.getProductId();
+    }
+
+    private boolean isAheadStartDate(@NonNull FullSchedule entry) {
+        return entry.schedule.scheduleStart >= 0 && entry.schedule.scheduleStart > System.currentTimeMillis();
+    }
+
+    boolean isAheadStartDate(@NonNull Schedule<? extends ScheduleData> schedule) {
+        return schedule.getStart() >= 0 && schedule.getStart() > System.currentTimeMillis();
     }
 
     private boolean isExpired(@NonNull FullSchedule entry) {
