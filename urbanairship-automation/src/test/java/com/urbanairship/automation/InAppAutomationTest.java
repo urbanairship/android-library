@@ -10,6 +10,8 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
+import com.urbanairship.TestDeviceInfoProvider;
+import com.urbanairship.TestRequestSession;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.android.layout.AirshipEmbeddedViewManager;
@@ -74,6 +76,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.atLeastOnce;
@@ -136,6 +139,9 @@ public class InAppAutomationTest {
     @Before
     public void setup() {
         when(mockRuntimeConfig.getConfigOptions()).thenAnswer((Answer<AirshipConfigOptions>) invocation -> config);
+
+        when(mockInfoProvider.getChannelId()).thenReturn("channel-id");
+
         mockChannel = mock(AirshipChannel.class);
         mockIamManager = mock(InAppMessageManager.class);
         mockObserver = mock(InAppRemoteDataObserver.class);
@@ -314,6 +320,38 @@ public class InAppAutomationTest {
         when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+        ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
+        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(schedule.getData()), any(), argumentCaptor.capture());
+        argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
+    }
+
+
+    @Test
+    public void testPrepareScheduleNoChannelId() {
+        when(mockInfoProvider.getChannelId()).thenReturn(null);
+
+        InAppMessage message = InAppMessage.newBuilder()
+                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
+                                           .build();
+
+        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
+                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
+                                                  .setBypassHoldoutGroups(true)
+                                                  .build();
+
+        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
+        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
+
+        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
+        driver.onPrepareSchedule(schedule, null, callback);
+        verify(mockMessageScheduleDelegate, never()).onPrepareSchedule(eq(schedule), eq(schedule.getData()), any(), any());
+        verify(callback, never()).onFinish(anyInt());
+
+        // Sanity check: we should be able to prepare a schedule once we do have a channel ID.
+        when(mockInfoProvider.getChannelId()).thenReturn("channel-id");
+
         driver.onPrepareSchedule(schedule, null, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
         verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(schedule.getData()), any(), argumentCaptor.capture());

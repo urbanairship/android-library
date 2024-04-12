@@ -360,6 +360,19 @@ public class RemoteDataTest {
     }
 
     @Test
+    public fun testRefreshWithPrivacyManager(): TestResult = runTest {
+        coEvery { mockRefreshManager.performRefresh(any(), any(), any()) } returns JobResult.SUCCESS
+
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE)
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(mockk(), jobInfo))
+
+        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ANALYTICS)
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(mockk(), jobInfo))
+
+        coVerify(exactly = 2) { mockRefreshManager.performRefresh(any(), any(), any()) }
+    }
+
+    @Test
     public fun testRefreshStatusSuccess(): TestResult = runTest {
         remoteData.refreshStatusFlow(RemoteDataSource.APP).test {
             assertEquals(RemoteData.RefreshStatus.NONE, awaitItem())

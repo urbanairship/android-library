@@ -204,9 +204,6 @@ public class RemoteData @VisibleForTesting internal constructor(
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
-        if (!privacyManager.isAnyFeatureEnabled) {
-            return JobResult.SUCCESS
-        }
         if (ACTION_REFRESH == jobInfo.action) {
             return runBlocking {
                 refreshManager.performRefresh(

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.urbanairship.experiment
 
 import android.content.Context
@@ -20,6 +22,7 @@ import io.mockk.every
 import io.mockk.mockk
 import java.util.Date
 import junit.framework.Assert.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -182,6 +185,28 @@ public class ExperimentManagerTest {
         assertEquals(channelId, result.channelId)
 
         assert(result.allEvaluatedExperimentsMetadata.contains(extractReportingMetadata(experimentJson)))
+    }
+
+    @Test
+    public fun testHoldoutGroupEvaluationNoChannelId(): TestResult = runTest {
+        channelId = null
+        contactId = "some-contact-id"
+
+        val experimentJson = generateExperimentsPayload(
+            id = "fake-id",
+            hashIdentifier = "channel")
+            .build()
+
+        val data = RemoteDataPayload(
+            type = PAYLOAD_TYPE,
+            timestamp = 1L,
+            data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson))
+        )
+
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
+
+        val result = subject.evaluateExperiments(messageInfo)
+        assertNull(result)
     }
 
     @Test

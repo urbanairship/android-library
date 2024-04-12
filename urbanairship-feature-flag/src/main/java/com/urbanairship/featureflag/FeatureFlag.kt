@@ -2,6 +2,7 @@
 
 package com.urbanairship.featureflag
 
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -123,15 +124,15 @@ class FeatureFlag private constructor(
          * Parses a `JsonValue` as a `FeatureFlag`.
          * @throws `JsonException`
          */
-        @Throws
         @JvmStatic
+        @Throws(JsonException::class)
         public fun fromJson(json: JsonValue): FeatureFlag {
             return FeatureFlag(
                 name = json.requireMap().requireField(KEY_NAME),
                 isEligible = json.requireMap().requireField(KEY_IS_ELIGIBLE),
                 exists = json.requireMap().requireField(KEY_EXISTS),
                 reportingInfo = json.requireMap().get(KEY_REPORTING_INFO)?.let {
-                    ReportingInfo.fromJson(it)
+                        ReportingInfo.fromJson(it)
                 },
                 variables = json.requireMap().optionalField(KEY_VARIABLES),
             )
@@ -149,7 +150,7 @@ class FeatureFlag private constructor(
             private const val KEY_CHANNEL_ID = "channel_id"
             private const val KEY_CONTACT_ID = "contact_id"
 
-            @Throws
+            @Throws(JsonException::class)
             fun fromJson(json: JsonValue): ReportingInfo {
                 return ReportingInfo(
                     reportingMetadata = json.requireMap().requireField(KEY_REPORTING_METADATA),

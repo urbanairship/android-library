@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -65,6 +66,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
+
+import static com.urbanairship.util.Checks.checkNotNull;
 
 /**
  * In-app automation.
@@ -675,6 +678,10 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         PendingResult<ExperimentResult> experimentResults = new PendingResult<>();
         RetryingExecutor.Operation evaluateExperiments = () -> {
             try {
+                // Ensure we have a channel ID available. Otherwise, throw so that we'll retry.
+                Objects.requireNonNull(infoProvider.getChannelId(),
+                        "Channel ID must be available to evaluate experiments.");
+
                 ExperimentResult result = evaluateExperiments(schedule);
                 experimentResults.setResult(result);
                 return RetryingExecutor.finishedResult();

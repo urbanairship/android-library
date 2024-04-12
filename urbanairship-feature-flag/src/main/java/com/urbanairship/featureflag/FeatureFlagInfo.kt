@@ -18,6 +18,7 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.util.DateUtils
+import java.text.ParseException
 import kotlin.jvm.Throws
 
 internal enum class FeatureFlagVariablesType(val jsonValue: String) {
@@ -211,6 +212,9 @@ internal class FeatureFlagInfo(
             } catch (ex: JsonException) {
                 UALog.e { "failed to parse FeatureFlagInfo from json $json" }
                 return null
+            } catch (ex: ParseException) {
+                UALog.e { "failed to parse FeatureFlagInfo from json $json" }
+                return null
             }
         }
 
@@ -233,6 +237,7 @@ internal class DeferredPayload(
     companion object {
         private const val KEY_URL = "url"
 
+        @Throws(JsonException::class)
         fun fromJson(json: JsonMap): DeferredPayload {
 
             return DeferredPayload(
@@ -256,11 +261,12 @@ internal class StaticPayload(
 ) : FeatureFlagPayload {
 
     companion object {
+
+        @Throws(JsonException::class)
         fun fromJson(json: JsonMap): StaticPayload {
             if (json.isEmpty) {
                 val variables = FeatureFlagVariables(
-                    type = FeatureFlagVariablesType.FIXED,
-                    variants = listOf(VariablesVariant.empty)
+                    type = FeatureFlagVariablesType.FIXED, variants = listOf(VariablesVariant.empty)
                 )
                 return StaticPayload(variables)
             }

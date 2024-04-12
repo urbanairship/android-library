@@ -16,7 +16,6 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.util.Clock
-import kotlin.jvm.Throws
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
@@ -47,6 +46,7 @@ public class ExperimentManager internal constructor(
     /**
      * Returns an optional Experiment with the given [id].
      *
+     * @param messageInfo The message info.
      * @param id The ID of the Experiment.
      */
     internal suspend fun getExperimentWithId(messageInfo: MessageInfo, id: String): Experiment? {
@@ -56,11 +56,12 @@ public class ExperimentManager internal constructor(
 
     /**
      * Checks if the channel and/or contact is part of a global holdout or not.
+     * @hide
+     *
+     * @param messageInfo The message info.
      * @param contactId The contact ID. If not provided, the stable contact ID will be used.
      * @return The experiments result. If no experiment matches, null is returned.
      */
-    /** @hide */
-    @Throws(NullPointerException::class)
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public suspend fun evaluateExperiments(messageInfo: MessageInfo, contactId: String? = null): ExperimentResult? {
 
@@ -70,7 +71,10 @@ public class ExperimentManager internal constructor(
         }
 
         val channelId = infoProvider.channelId
-            ?: throw NullPointerException("Channel ID missing, unable to evaluate hold out groups.")
+        if (channelId == null) {
+            UALog.d("Channel ID not available, unable to evaluate hold out groups.")
+            return null
+        }
 
         val evaluationContactId = contactId ?: infoProvider.getStableContactId()
 
