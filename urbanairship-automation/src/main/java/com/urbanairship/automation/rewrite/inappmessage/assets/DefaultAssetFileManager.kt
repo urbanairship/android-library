@@ -1,6 +1,7 @@
 package com.urbanairship.automation.rewrite.inappmessage.assets
 
 import android.content.Context
+import android.os.Build
 import android.os.storage.StorageManager
 import com.urbanairship.util.FileUtils
 import java.io.File
@@ -8,7 +9,6 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.net.URI
-import kotlin.jvm.Throws
 
 internal class DefaultAssetFileManager(
     context: Context,
@@ -33,7 +33,9 @@ internal class DefaultAssetFileManager(
             }
         }
 
-        storageManager.setCacheBehaviorGroup(file, true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            storageManager.setCacheBehaviorGroup(file, true)
+        }
         return file.toURI()
     }
 
