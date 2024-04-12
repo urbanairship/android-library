@@ -9,13 +9,20 @@ import com.urbanairship.android.layout.DisplayArgsProvider
 import com.urbanairship.android.layout.EmbeddedDisplayRequest
 import com.urbanairship.android.layout.LayoutInfoProvider
 import com.urbanairship.json.JsonMap
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -92,7 +99,10 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun displayRequests(embeddedViewId: String): Flow<EmbeddedDisplayRequest?> {
-        return viewsFlow.map { it[embeddedViewId]?.firstOrNull() }.distinctUntilChanged()
+    override fun displayRequests(embeddedViewId: String, scope: CoroutineScope): Flow<EmbeddedDisplayRequest?> {
+        return viewsFlow
+            .map { it[embeddedViewId]?.firstOrNull() }
+            .distinctUntilChanged()
+            .shareIn(scope, replay = 1, started = WhileSubscribed())
     }
 }

@@ -2,6 +2,7 @@
 
 package com.urbanairship.embedded
 
+import com.urbanairship.android.layout.EmbeddedDisplayRequest
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.emptyJsonMap
 
@@ -17,6 +18,14 @@ public class AirshipEmbeddedInfo(
     public val embeddedId: String,
     public val extras: JsonMap = emptyJsonMap()
 ) {
+
+    /** Creates an an [AirshipEmbeddedInfo] from an [EmbeddedDisplayRequest]. */
+    internal constructor(embeddedInfo: EmbeddedDisplayRequest) : this(
+        instanceId = embeddedInfo.viewInstanceId,
+        embeddedId = embeddedInfo.embeddedViewId,
+        extras = embeddedInfo.extras
+    )
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

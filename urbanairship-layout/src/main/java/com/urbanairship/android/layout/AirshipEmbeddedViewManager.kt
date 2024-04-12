@@ -3,10 +3,13 @@
 package com.urbanairship.android.layout
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.AirshipScopes
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.json.JsonMap
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.Flow
 
 /** @hide */
@@ -73,5 +76,8 @@ public interface AirshipEmbeddedViewManager {
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun displayRequests(embeddedViewId: String): Flow<EmbeddedDisplayRequest?>
+    public fun displayRequests(
+        embeddedViewId: String,
+        scope: CoroutineScope = AirshipScopes.AppForegroundScope,
+    ): Flow<EmbeddedDisplayRequest?>
 }
