@@ -11,10 +11,9 @@ import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 
-internal class TouchAwareWebView(context: Context, webViewListener: MediaView.WebViewListener?) : WebView(context) {
+internal class TouchAwareWebView(context: Context, val webViewListener: MediaView.WebViewListener?) : WebView(context) {
 
     private val touchesChannel = Channel<MotionEvent>(UNLIMITED)
-    val webViewListener = webViewListener
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         event?.let { touchesChannel.trySend(it) }

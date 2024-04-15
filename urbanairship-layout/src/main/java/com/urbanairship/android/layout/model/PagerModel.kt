@@ -400,6 +400,9 @@ internal class PagerModel(
         for (timer in automatedActionsTimers) {
             timer.stop()
         }
+        pagerState.update {
+            it.copyWithStoryPaused(true)
+        }
     }
 
     private fun resumeStory() {
@@ -407,6 +410,9 @@ internal class PagerModel(
         navigationActionTimer?.start()
         for (timer in automatedActionsTimers) {
             timer.start()
+        }
+        pagerState.update {
+            it.copyWithStoryPaused(false)
         }
     }
 
