@@ -1,5 +1,6 @@
 package com.urbanairship.automation.rewrite
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.automation.rewrite.engine.PreparedSchedule
 import com.urbanairship.automation.rewrite.engine.PreparedScheduleData
@@ -8,23 +9,31 @@ import com.urbanairship.automation.rewrite.inappmessage.PreparedInAppMessageData
 import com.urbanairship.automation.rewrite.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.json.JsonValue
 
-internal enum class ScheduleReadyResult {
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public enum class ScheduleReadyResult {
     READY, INVALIDATE, NOT_READY, SKIP
 }
 
-internal enum class ScheduleExecuteResult {
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public enum class ScheduleExecuteResult {
     CANCEL, FINISHED, RETRY
 }
 
-internal enum class InterruptedBehavior {
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public enum class InterruptedBehavior {
     RETRY, FINISH
 }
 
-internal interface AutomationExecutorInterface {
-    suspend fun isReadyPrecheck(schedule: AutomationSchedule): ScheduleReadyResult
-    suspend fun isReady(preparedSchedule: PreparedSchedule): ScheduleReadyResult
-    suspend fun execute(preparedSchedule: PreparedSchedule): ScheduleExecuteResult
-    suspend fun interrupted(
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public interface AutomationExecutorInterface {
+    public suspend fun isReadyPrecheck(schedule: AutomationSchedule): ScheduleReadyResult
+    public suspend fun isReady(preparedSchedule: PreparedSchedule): ScheduleReadyResult
+    public suspend fun execute(preparedSchedule: PreparedSchedule): ScheduleExecuteResult
+    public suspend fun interrupted(
         schedule: AutomationSchedule,
         preparedScheduleInfo: PreparedScheduleInfo
     ) : InterruptedBehavior
@@ -37,9 +46,9 @@ internal interface AutomationExecutorDelegate<ExecutionData> {
 }
 
 internal class AutomationExecutor(
-    val actionExecutor: AutomationExecutorDelegate<JsonValue>,
-    val messageExecutor: AutomationExecutorDelegate<PreparedInAppMessageData>,
-    val remoteDataAccess: AutomationRemoteDataAccess
+    private val actionExecutor: AutomationExecutorDelegate<JsonValue>,
+    private val messageExecutor: AutomationExecutorDelegate<PreparedInAppMessageData>,
+    private val remoteDataAccess: AutomationRemoteDataAccess
 ) : AutomationExecutorInterface {
 
     override suspend fun isReadyPrecheck(schedule: AutomationSchedule): ScheduleReadyResult {

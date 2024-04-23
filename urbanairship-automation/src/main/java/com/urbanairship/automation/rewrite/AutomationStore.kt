@@ -1,6 +1,7 @@
 package com.urbanairship.automation.rewrite
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import androidx.core.content.ContextCompat
 import androidx.room.Dao
 import androidx.room.Database
@@ -12,20 +13,16 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.Room.databaseBuilder
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.Update
+import com.urbanairship.UALog
 import com.urbanairship.automation.rewrite.engine.AutomationScheduleState
 import com.urbanairship.automation.rewrite.engine.PreparedScheduleInfo
 import com.urbanairship.automation.rewrite.engine.TriggeringInfo
-import com.urbanairship.automation.rewrite.limits.storage.ConstraintEntity
-import com.urbanairship.automation.rewrite.limits.storage.OccurrenceEntity
 import com.urbanairship.config.AirshipRuntimeConfig
-import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonTypeConverters
 import com.urbanairship.json.JsonValue
 import java.io.File
-import kotlin.jvm.Throws
 import org.jetbrains.annotations.VisibleForTesting
 
 internal interface ScheduleStoreInterface {
@@ -46,11 +43,12 @@ internal interface ScheduleStoreInterface {
     suspend fun getSchedules(ids: List<String>): List<AutomationScheduleData>
 }
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Database(entities = [ScheduleEntity::class], version = 1)
-internal abstract class AutomationStore : RoomDatabase(), ScheduleStoreInterface {
-    abstract val dao: AutomationDao
+public abstract class AutomationStore : RoomDatabase(), ScheduleStoreInterface {
+    internal abstract val dao: AutomationDao
 
-    companion object {
+    internal companion object {
         fun createDatabase(context: Context, config: AirshipRuntimeConfig): AutomationStore {
             val name = config.configOptions.appKey + "_automation_store"
             val path = File(ContextCompat.getNoBackupFilesDir(context), name).absolutePath
@@ -69,24 +67,24 @@ internal abstract class AutomationStore : RoomDatabase(), ScheduleStoreInterface
     }
 
     override suspend fun getSchedules(): List<AutomationScheduleData> {
-        return dao.getAllSchedules()?.map { it.toScheduleData() } ?: listOf()
+        return dao.getAllSchedules()?.mapNotNull { it.toScheduleData() } ?: listOf()
     }
 
     override suspend fun getSchedules(group: String): List<AutomationScheduleData> {
-        return dao.getSchedules(group)?.map { it.toScheduleData() } ?: listOf()
+        return dao.getSchedules(group)?.mapNotNull { it.toScheduleData() } ?: listOf()
     }
 
     override suspend fun getSchedules(ids: List<String>): List<AutomationScheduleData> {
-        return dao.getSchedules(ids)?.map { it.toScheduleData() } ?: listOf()
+        return dao.getSchedules(ids)?.mapNotNull { it.toScheduleData() } ?: listOf()
     }
 
     override suspend fun updateSchedule(
         id: String, closure: (AutomationScheduleData) -> AutomationScheduleData
     ): AutomationScheduleData? {
 
-        val current = dao.getSchedule(id) ?: return null
+        val current = dao.getSchedule(id)?.toScheduleData() ?: return null
 
-        val updated = closure(current.toScheduleData())
+        val updated = closure(current)
         dao.update(ScheduleEntity.fromScheduleData(updated))
 
         return updated
@@ -97,7 +95,7 @@ internal abstract class AutomationStore : RoomDatabase(), ScheduleStoreInterface
     ): List<AutomationScheduleData> {
 
         val current = dao.getSchedules(ids)
-            ?.map { it.toScheduleData() }
+            ?.mapNotNull { it.toScheduleData() }
             ?.associateBy { it.schedule.identifier } ?: mapOf()
 
         val result = mutableListOf<AutomationScheduleData>()
@@ -180,15 +178,19 @@ internal class ScheduleEntity(
         }
     }
 
-    @Throws(JsonException::class, IllegalArgumentException::class)
-    fun toScheduleData(): AutomationScheduleData {
-        return AutomationScheduleData(
-            schedule = AutomationSchedule.fromJson(schedule),
-            scheduleState = AutomationScheduleState.fromString(scheduleState),
-            scheduleStateChangeDate = scheduleStateChangeDate,
-            executionCount = executionCount,
-            triggerInfo = triggerInfo?.let(TriggeringInfo::fromJson),
-            preparedScheduleInfo = preparedScheduleInfo?.let(PreparedScheduleInfo::fromJson)
-        )
+    fun toScheduleData(): AutomationScheduleData? {
+        return try {
+            AutomationScheduleData(
+                schedule = AutomationSchedule.fromJson(schedule),
+                scheduleState = AutomationScheduleState.fromString(scheduleState),
+                scheduleStateChangeDate = scheduleStateChangeDate,
+                executionCount = executionCount,
+                triggerInfo = triggerInfo?.let(TriggeringInfo::fromJson),
+                preparedScheduleInfo = preparedScheduleInfo?.let(PreparedScheduleInfo::fromJson)
+            )
+        } catch (ex: Exception) {
+            UALog.e(ex) { "Failed to convert schedule entity to schedule data $this" }
+            null
+        }
     }
 }

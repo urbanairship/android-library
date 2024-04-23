@@ -1,6 +1,6 @@
 package com.urbanairship.automation.rewrite
 
-import com.urbanairship.AirshipDispatchers
+import androidx.annotation.RestrictTo
 import com.urbanairship.ApplicationMetrics
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.AnalyticsListener
@@ -11,12 +11,8 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.json.JsonValue
 import java.util.UUID
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 internal data class TriggerableState(
@@ -24,23 +20,27 @@ internal data class TriggerableState(
     var versionUpdated: String? = null
 )
 
-internal sealed class AutomationEvent {
-    data object Foreground : AutomationEvent()
-    data object Background : AutomationEvent()
-    data object AppInit : AutomationEvent()
-    data class ScreenView(val name: String?): AutomationEvent()
-    data class StateChanged(val state: TriggerableState) : AutomationEvent()
-    data class RegionEnter(val data: JsonValue) : AutomationEvent()
-    data class RegionExit(val data: JsonValue) : AutomationEvent()
-    data class CustomEvent(val data: JsonValue, val count: Double?) : AutomationEvent()
-    data class FeatureFlagInteracted(val data: JsonValue) : AutomationEvent()
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public sealed class AutomationEvent {
+    internal data object Foreground : AutomationEvent()
+    internal data object Background : AutomationEvent()
+    internal data object AppInit : AutomationEvent()
+    internal data class ScreenView(val name: String?): AutomationEvent()
+    internal data class StateChanged(val state: TriggerableState) : AutomationEvent()
+    internal data class RegionEnter(val data: JsonValue) : AutomationEvent()
+    internal data class RegionExit(val data: JsonValue) : AutomationEvent()
+    internal data class CustomEvent(val data: JsonValue, val count: Double?) : AutomationEvent()
+    internal data class FeatureFlagInteracted(val data: JsonValue) : AutomationEvent()
 }
 
 private interface Cancellable {
     fun cancel()
 }
 
-internal class AutomationEventFeed(
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class AutomationEventFeed(
     private val applicationMetrics: ApplicationMetrics,
     private val activityMonitor: ActivityMonitor,
     private val analytics: Analytics
@@ -50,9 +50,9 @@ internal class AutomationEventFeed(
     private var subscription: Cancellable? = null
     private var isFirstAttach = false
 
-    val feed: Flow<AutomationEvent> = stream
+    internal val feed: Flow<AutomationEvent> = stream
 
-    fun attach() {
+    internal fun attach() {
         if (subscription != null) { return }
 
         if (!isFirstAttach) {
@@ -68,7 +68,7 @@ internal class AutomationEventFeed(
         subscription = startListeningForEvents()
     }
 
-    fun detach() {
+    internal fun detach() {
         subscription?.cancel()
     }
 

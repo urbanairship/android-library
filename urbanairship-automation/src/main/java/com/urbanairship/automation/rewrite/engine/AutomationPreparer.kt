@@ -2,6 +2,7 @@ package com.urbanairship.automation.rewrite.engine
 
 import android.content.Context
 import android.os.Looper
+import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
@@ -29,9 +30,10 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.runBlocking
 
-internal interface AutomationPreparerInterface {
-    suspend fun prepare(context: Context, schedule: AutomationSchedule, defferedContext: DeferredTriggerContext?): SchedulePrepareResult
-    suspend fun cancelled(schedule: AutomationSchedule)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public interface AutomationPreparerInterface {
+    public suspend fun prepare(context: Context, schedule: AutomationSchedule, deferredContext: DeferredTriggerContext?): SchedulePrepareResult
+    public suspend fun cancelled(schedule: AutomationSchedule)
 }
 
 internal interface AutomationPreparerDelegate<DataIn, DataOut> {
@@ -67,7 +69,7 @@ internal class AutomationPreparer internal constructor(
     override suspend fun prepare(
         context: Context,
         schedule: AutomationSchedule,
-        defferedContext: DeferredTriggerContext?
+        deferredContext: DeferredTriggerContext?
     ): SchedulePrepareResult {
         UALog.v { "Preparing ${schedule.identifier}" }
 
@@ -108,7 +110,7 @@ internal class AutomationPreparer internal constructor(
                         return@Operation RetryingExecutor.finishedResult()
                     }
 
-                    schedule.audience?.let { audience ->
+                    schedule.audience?.let { _ ->
                         val match = runBlocking {
                             audienceChecker.evaluate(
                                 context = context,
@@ -148,7 +150,7 @@ internal class AutomationPreparer internal constructor(
                     return@Operation runBlocking { prepareData(
                         context = context,
                         data = schedule.data,
-                        triggerContext = defferedContext,
+                        triggerContext = deferredContext,
                         deviceInfoProvider = deviceInfoProvider,
                         scheduleInfo = scheduleInfo,
                         frequencyChecker = frequencyChecker,
@@ -265,7 +267,7 @@ internal class AutomationPreparer internal constructor(
          */
 
         val result = deferredResolver.resolve(request, DeferredScheduleResult::fromJson)
-        UALog.v { "Deferred result ${schedule.identifier} ${result}" }
+        UALog.v { "Deferred result ${schedule.identifier} $result" }
 
         when(result) {
             is DeferredResult.NotFound -> {
@@ -343,10 +345,10 @@ internal class Queues(
 
         fun makeAndSaveExecutor(): RetryingExecutor {
             val result = RetryingExecutor.newSerialExecutor(Looper.getMainLooper())
-            queues.put(executorName, result)
+            queues[executorName] = result
             return result
         }
 
-        return queues.get(executorName) ?: makeAndSaveExecutor()
+        return queues[executorName] ?: makeAndSaveExecutor()
     }
 }

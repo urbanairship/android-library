@@ -2,17 +2,20 @@ package com.urbanairship.automation.rewrite.inappmessage.displayadapter
 
 import android.content.Context
 import androidx.annotation.MainThread
+import androidx.annotation.RestrictTo
 import com.urbanairship.automation.rewrite.inappmessage.analytics.InAppMessageAnalyticsInterface
 
-internal interface DisplayAdapterInterface {
-    @MainThread
-    suspend fun getIsReady() : Boolean
-    suspend fun waitForReady()
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public interface DisplayAdapterInterface {
+
+    public fun getIsReady() : Boolean
+    public suspend fun waitForReady()
 
     @MainThread
-    suspend fun display(context: Context, analytics: InAppMessageAnalyticsInterface): DisplayResult
+    public suspend fun display(context: Context, analytics: InAppMessageAnalyticsInterface): DisplayResult
 }
 
-internal enum class DisplayResult {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public enum class DisplayResult {
     CANCEL, FINISHED
 }

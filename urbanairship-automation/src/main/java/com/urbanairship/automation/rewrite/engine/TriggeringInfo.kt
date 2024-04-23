@@ -1,18 +1,20 @@
 package com.urbanairship.automation.rewrite.engine
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
-import kotlin.jvm.Throws
 
-internal data class TriggeringInfo(
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class TriggeringInfo(
     val context: DeferredTriggerContext?,
     val date: Long
 ) : JsonSerializable {
-    companion object {
+    internal companion object {
         private const val CONTEXT = "context"
         private const val DATE = "date"
 

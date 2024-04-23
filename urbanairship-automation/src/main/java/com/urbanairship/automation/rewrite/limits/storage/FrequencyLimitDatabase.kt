@@ -10,8 +10,6 @@ import androidx.room.Room.databaseBuilder
 import androidx.room.RoomDatabase
 import com.urbanairship.config.AirshipRuntimeConfig
 import java.io.File
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.asExecutor
 
 /**
  * @hide

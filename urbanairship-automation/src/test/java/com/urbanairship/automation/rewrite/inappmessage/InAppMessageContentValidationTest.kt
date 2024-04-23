@@ -201,8 +201,8 @@ public class InAppMessageContentValidationTest {
     public fun testHTML() {
         val valid = HTML(
             url = validURL,
-            height = 100F,
-            width = 100F,
+            height = 100,
+            width = 100,
             aspectLock = true,
             requiresConnectivity = true,
             dismissButtonColor = validColor,
@@ -218,8 +218,8 @@ public class InAppMessageContentValidationTest {
     public fun testInvalidHTML() {
         val emptyURL = HTML(
             url = "",
-            height = 100F,
-            width = 100F,
+            height = 100,
+            width = 100,
             aspectLock = true,
             requiresConnectivity = true,
             dismissButtonColor = validColor,

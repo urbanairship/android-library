@@ -64,15 +64,15 @@ public class AutomationScheduleDataTest {
         assertTrue(data.isActive(current.toLong()))
 
         // ends in the past
-        data.schedule.endDate = (clock.currentTimeMillis - 1).toULong()
+        data.updateEndDate((clock.currentTimeMillis - 1).toULong())
         assertFalse(data.isActive(clock.currentTimeMillis))
 
         // ends now
-        data.schedule.endDate = clock.currentTimeMillis.toULong()
+        data.updateEndDate(clock.currentTimeMillis.toULong())
         assertFalse(data.isActive(clock.currentTimeMillis))
 
         // ends in the future
-        data.schedule.endDate = (clock.currentTimeMillis + 1).toULong()
+        data.updateEndDate((clock.currentTimeMillis + 1).toULong())
         assertTrue(data.isActive(clock.currentTimeMillis))
     }
 
@@ -83,15 +83,15 @@ public class AutomationScheduleDataTest {
         assertFalse(data.isExpired(clock.currentTimeMillis))
 
         // ends in the past
-        data.schedule.endDate = (clock.currentTimeMillis - 1).toULong()
+        data.updateEndDate((clock.currentTimeMillis - 1).toULong())
         assertTrue(data.isExpired(clock.currentTimeMillis))
 
         // ends now
-        data.schedule.endDate = (clock.currentTimeMillis).toULong()
+        data.updateEndDate((clock.currentTimeMillis).toULong())
         assertTrue(data.isExpired(clock.currentTimeMillis))
 
         // ends in the future
-        data.schedule.endDate = (clock.currentTimeMillis + 1).toULong()
+        data.updateEndDate((clock.currentTimeMillis + 1).toULong())
         assertFalse(data.isExpired(clock.currentTimeMillis))
     }
 
@@ -198,7 +198,7 @@ public class AutomationScheduleDataTest {
     @Test
     public fun testUpdateStateExpired() {
         val data = makeData()
-        data.schedule.endDate = clock.currentTimeMillis.toULong()
+        data.updateEndDate(clock.currentTimeMillis.toULong())
 
         data.updateState(clock.currentTimeMillis + 100)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
@@ -256,7 +256,7 @@ public class AutomationScheduleDataTest {
     @Test
     public fun testPrepareCancelledExpired() {
         val data = makeData(limit = 2U, scheduleState = AutomationScheduleState.TRIGGERED)
-        data.schedule.endDate = clock.currentTimeMillis.toULong()
+        data.updateEndDate(clock.currentTimeMillis.toULong())
 
         data.prepareCancelled(clock.currentTimeMillis + 100, penalize = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
@@ -297,7 +297,7 @@ public class AutomationScheduleDataTest {
     @Test
     public fun testPrepareInterruptedExpired() {
         val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
-        data.schedule.endDate = clock.currentTimeMillis.toULong()
+        data.updateEndDate(clock.currentTimeMillis.toULong())
 
         data.prepareInterrupted(clock.currentTimeMillis + 100)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
@@ -681,5 +681,9 @@ public class AutomationScheduleDataTest {
             triggerInfo = triggeringInfo,
             preparedScheduleInfo = preparedScheduleInfo
         )
+    }
+
+    private fun AutomationScheduleData.updateEndDate(endDate: ULong?) {
+        setSchedule(schedule.copyWith(endDate = endDate))
     }
 }

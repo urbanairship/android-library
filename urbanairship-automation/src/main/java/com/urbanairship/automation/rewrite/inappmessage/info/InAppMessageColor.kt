@@ -1,19 +1,21 @@
 package com.urbanairship.automation.rewrite.inappmessage.info
 
 import android.graphics.Color
+import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.ColorUtils
-import kotlin.jvm.Throws
 
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class InAppMessageColor internal constructor(
-    private val color: Int
+    internal val color: Int
 ) : JsonSerializable {
 
     internal companion object {
 
-        @Throws(JsonException::class, RuntimeException::class)
+        @Throws(JsonException::class)
         fun fromJson(value: JsonValue): InAppMessageColor {
             val content = value.requireString()
             return InAppMessageColor(Color.parseColor(content))

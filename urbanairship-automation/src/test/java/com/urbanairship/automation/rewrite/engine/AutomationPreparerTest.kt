@@ -132,10 +132,10 @@ public class AutomationPreparerTest {
         coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
 
         coEvery { frequencyLimitManager.getFrequencyChecker(any()) } answers  {
-            val constraints = firstArg<List<String>>()
+            val frequencyConstraints = firstArg<List<String>>()
             object : FrequencyCheckerInterface {
-                override suspend fun isOverLimit(): Boolean = frequencyLimitManager.isOverLimit(constraints)
-                override suspend fun checkAndIncrement(): Boolean = frequencyLimitManager.checkAndIncrement(constraints)
+                override suspend fun isOverLimit(): Boolean = frequencyLimitManager.isOverLimit(frequencyConstraints)
+                override suspend fun checkAndIncrement(): Boolean = frequencyLimitManager.checkAndIncrement(frequencyConstraints)
             }
         }
         coEvery { frequencyLimitManager.isOverLimit(any()) } answers {
@@ -318,11 +318,8 @@ public class AutomationPreparerTest {
                 heading = null,
                 body = null,
                 media = null,
-                buttons = null,
                 buttonLayoutType = InAppMessageButtonLayoutType.STACKED,
                 template = Banner.Template.MEDIA_LEFT,
-                backgroundColor = null,
-                dismissButtonColor = null,
                 borderRadius = 5F,
                 duration = 100L,
                 placement = Banner.Placement.TOP
@@ -439,7 +436,7 @@ public class AutomationPreparerTest {
 
             assertEquals(request.uri, Uri.parse("https://sample.url"))
             assertEquals(request.channelID, "channel-id")
-            assertNull(request.contactID) //TODO: is that correct. do we ignore contact id fo deferred?
+            assertNull(request.contactID) //TODO: is that correct. do we ignore contact id for deferred?
             assertEquals(request.triggerContext, triggerContext)
 
             return@answers DeferredResult.Success(
@@ -516,7 +513,7 @@ public class AutomationPreparerTest {
 
             assertEquals(request.uri, Uri.parse("https://sample.url"))
             assertEquals(request.channelID, "channel-id")
-            assertNull(request.contactID) //TODO: is that correct. do we ignore contact id fo deferred?
+            assertNull(request.contactID) //TODO: is that correct. do we ignore contact id for deferred?
             assertEquals(request.triggerContext, triggerContext)
 
             return@answers DeferredResult.Success(

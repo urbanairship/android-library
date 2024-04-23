@@ -9,11 +9,11 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.json.matchers.VersionMatcher
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonList
 import com.urbanairship.util.DateUtils
+import com.urbanairship.util.VersionUtils
 import java.util.Objects
 import org.jetbrains.annotations.VisibleForTesting
 
@@ -32,7 +32,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     /**
      * The schedule group.
      */
-    public var group: String? = null,
+    public val group: String? = null,
     /**
      * The priority level.
      */
@@ -48,7 +48,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     /**
      * The schedule end time in ms.
      */
-    endDate: ULong? = null,
+    public val endDate: ULong? = null,
     /**
      * The audience.
      */
@@ -75,7 +75,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
      */
     public val editGracePeriodDays: ULong? = null,
 
-    metadata: JsonValue? = null,
+    internal val metadata: JsonValue? = null,
     internal val frequencyConstraintIDs: List<String>? = null,
     internal val messageType: String? = null,
     internal val campaigns: JsonValue? = null,
@@ -86,10 +86,16 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     internal val queue: String? = null
 ) : JsonSerializable {
 
-    internal var metadata: JsonValue? = metadata
-
-    public var endDate: ULong? = endDate
-        internal set
+    internal fun copyWith(
+        group: String? = null,
+        endDate: ULong? = null,
+        metadata: JsonValue? = null): AutomationSchedule {
+        return AutomationSchedule(identifier, triggers, group ?: this.group, priority, limit,
+            startDate, endDate ?: this.endDate, audience, delay, interval, data,
+            bypassHoldoutGroups, editGracePeriodDays, metadata ?: this.metadata,
+            frequencyConstraintIDs, messageType, campaigns, reportingContext, productID,
+            minSDKVersion, created)
+    }
 
     /**
      * Schedule data
@@ -135,12 +141,12 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         }
     }
 
-    internal enum class ScheduleType(val json: String) : JsonSerializable {
+    public enum class ScheduleType(internal val json: String) : JsonSerializable {
         ACTIONS("actions"),
         IN_APP_MESSAGE("in_app_message"),
         DEFERRED("deferred");
 
-        companion object {
+        internal companion object {
 
             @Throws(JsonException::class)
             fun fromJson(value: JsonValue): ScheduleType {
@@ -321,6 +327,9 @@ internal fun AutomationSchedule.isNewSchedule(sinceDate: Long, lastSDKVersion: S
 
     // If we do not have a last SDK version, then we are coming from an SDK older than
     // 16.2.0. Check for a min SDK version newer or equal to 16.2.0.
-    val constraint = lastSDKVersion?.let { "]$it,)" } ?: "[16.2.0,)"
-    return VersionMatcher.newVersionMatcher(constraint).apply(JsonValue.wrap(constraint))
+    return if (lastSDKVersion == null) {
+        VersionUtils.isVersionNewerOrEqualTo("16.2.0", minSDKVersion)
+    } else {
+        VersionUtils.isVersionNewer(lastSDKVersion, minSDKVersion)
+    }
 }

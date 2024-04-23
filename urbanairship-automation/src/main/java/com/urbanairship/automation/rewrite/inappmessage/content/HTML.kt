@@ -10,9 +10,7 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import org.jetbrains.annotations.VisibleForTesting
 
-/**
- * Display content for a [com.urbanairship.automation.rewrite.inappmessage.InAppMessage#TYPE_HTML] in-app message.
- */
+/** Display content for an HTML in-app message. */
 public class HTML @VisibleForTesting internal constructor(
     /**
      * The url.
@@ -21,11 +19,11 @@ public class HTML @VisibleForTesting internal constructor(
     /**
      * The desired height when displaying the message as a dialog.
      */
-    public val height: Float? = null,
+    public val height: Long = 0,
     /**
      * The desired width when displaying the message as a dialog.
      */
-    public val width: Float? = null,
+    public val width: Long = 0,
     /**
      * The aspect lock when displaying the message as a dialog.
      */
@@ -37,18 +35,17 @@ public class HTML @VisibleForTesting internal constructor(
     /**
      * The optional banner background color.
      */
-    public val backgroundColor: InAppMessageColor?,
+    public val backgroundColor: InAppMessageColor = InAppMessageColor(Color.WHITE),
     /**
      * The optional banner dismiss button color.
      */
-    public val dismissButtonColor: InAppMessageColor?,
+    public val dismissButtonColor: InAppMessageColor = InAppMessageColor(Color.BLACK),
     /**
      * The optional border radius in dps.
      */
-    public val borderRadius: Float?,
+    public val borderRadius: Float = 0f,
     /**
-     * Returns `true` if the modal dialog is allowed to be displayed as fullscreen, otherwise
-     * `false`
+     * A flag indicating whether the dialog is allowed to be displayed as fullscreen.
      */
     public val allowFullscreenDisplay: Boolean
 ) : JsonSerializable {
@@ -76,13 +73,15 @@ public class HTML @VisibleForTesting internal constructor(
             val content = value.requireMap()
             return HTML(
                 url = content.requireField(URL_KEY),
-                width = content.optionalField(WIDTH_KEY),
-                height = content.optionalField(HEIGHT_KEY),
+                width = content.optionalField(WIDTH_KEY) ?: 0L,
+                height = content.optionalField(HEIGHT_KEY) ?: 0L,
                 aspectLock = content.optionalField(ASPECT_LOCK_KEY),
                 requiresConnectivity = content.optionalField(REQUIRE_CONNECTIVITY),
-                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson),
+                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                    ?: InAppMessageColor(Color.WHITE),
                 borderRadius = content.opt(BORDER_RADIUS_KEY).getFloat(0F),
-                dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson),
+                dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                    ?: InAppMessageColor(Color.BLACK),
                 allowFullscreenDisplay = content.optionalField(ALLOW_FULLSCREEN_DISPLAY_KEY) ?: false
             )
         }
@@ -123,13 +122,13 @@ public class HTML @VisibleForTesting internal constructor(
 
     override fun hashCode(): Int {
         var result = url.hashCode()
-        result = 31 * result + (height?.hashCode() ?: 0)
-        result = 31 * result + (width?.hashCode() ?: 0)
+        result = 31 * result + height.hashCode()
+        result = 31 * result + width.hashCode()
         result = 31 * result + (aspectLock?.hashCode() ?: 0)
         result = 31 * result + (requiresConnectivity?.hashCode() ?: 0)
-        result = 31 * result + (backgroundColor?.hashCode() ?: 0)
-        result = 31 * result + (dismissButtonColor?.hashCode() ?: 0)
-        result = 31 * result + (borderRadius?.hashCode() ?: 0)
+        result = 31 * result + backgroundColor.hashCode()
+        result = 31 * result + dismissButtonColor.hashCode()
+        result = 31 * result + borderRadius.hashCode()
         result = 31 * result + allowFullscreenDisplay.hashCode()
         return result
     }

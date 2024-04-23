@@ -12,10 +12,10 @@ import com.urbanairship.automation.rewrite.utils.ActiveTimer
  *  Wraps a custom display adapter as a DisplayAdapter
  */
 internal class CustomDisplayAdapterWrapper (
-    private val adapter: CustomDisplayAdapterInterface
+    val adapter: CustomDisplayAdapterInterface
 ) : DisplayAdapterInterface {
 
-    override suspend fun getIsReady(): Boolean = adapter.getIsReady()
+    override fun getIsReady(): Boolean = adapter.getIsReady()
     override suspend fun waitForReady() = adapter.waitForReady()
 
     override suspend fun display(context: Context, analytics: InAppMessageAnalyticsInterface): DisplayResult {

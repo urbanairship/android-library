@@ -1,20 +1,21 @@
 package com.urbanairship.automation.rewrite.utils
 
+import androidx.annotation.RestrictTo
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-internal class ScheduleConditionsChangedNotifier {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class ScheduleConditionsChangedNotifier {
     private val waitingList = mutableListOf<Continuation<Unit>>()
-    private val lock = Object()
 
-    fun notifyChanged() {
-        synchronized(lock) { waitingList.forEach { it.resume(Unit) } }
+    internal fun notifyChanged() {
+        synchronized(waitingList) { waitingList.forEach { it.resume(Unit) } }
     }
 
-    suspend fun wait() {
+    internal suspend fun wait() {
         suspendCoroutine<Unit> {
-            synchronized(lock) { waitingList.add(it) }
+            synchronized(waitingList) { waitingList.add(it) }
         }
     }
 }

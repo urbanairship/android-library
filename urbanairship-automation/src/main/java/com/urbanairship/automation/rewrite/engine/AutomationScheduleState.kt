@@ -1,6 +1,9 @@
 package com.urbanairship.automation.rewrite.engine
 
-internal enum class AutomationScheduleState(val json: String) {
+import androidx.annotation.RestrictTo
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public enum class AutomationScheduleState(internal val json: String) {
     IDLE("idle"),
     TRIGGERED("triggered"),
     PREPARED("prepared"),
@@ -10,7 +13,7 @@ internal enum class AutomationScheduleState(val json: String) {
     // waiting to be cleaned up after grace period
     FINISHED("finished");
 
-    companion object {
+    internal companion object {
 
         @Throws(IllegalArgumentException::class)
         fun fromString(value: String): AutomationScheduleState {

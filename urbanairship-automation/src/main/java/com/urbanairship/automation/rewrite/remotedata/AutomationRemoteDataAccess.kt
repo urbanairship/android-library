@@ -16,12 +16,13 @@ import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Network
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 /**
  * Remote data access for automation
  */
 internal interface AutomationRemoteDataAccessInterface {
-    val updatesFlow: Flow<List<RemoteDataPayload>>
+    val updatesFlow: Flow<InAppRemoteData>
     suspend fun isCurrent(schedule: AutomationSchedule): Boolean
     suspend fun requiredUpdate(schedule: AutomationSchedule): Boolean
     suspend fun waitForFullRefresh(schedule: AutomationSchedule)
@@ -40,7 +41,9 @@ internal class AutomationRemoteDataAccess(
         private val REMOTE_DATA_TYPES = listOf("in_app_messages")
     }
 
-    override val updatesFlow: Flow<List<RemoteDataPayload>> = remoteData.payloadFlow(REMOTE_DATA_TYPES)
+    override val updatesFlow: Flow<InAppRemoteData> = remoteData
+        .payloadFlow(REMOTE_DATA_TYPES)
+        .map(InAppRemoteData::fromPayloads)
 
     override suspend fun isCurrent(schedule: AutomationSchedule): Boolean {
         if (!isRemote(schedule)) {
@@ -172,12 +175,19 @@ internal class InAppRemoteData(
                 )
             }
         }
+
+        fun copyWithUpdateSchedules(updateBlock: (AutomationSchedule) -> AutomationSchedule): Data {
+            return Data(
+                schedules = this.schedules.map(updateBlock),
+                constraints = this.constraints
+            )
+        }
     }
 
     data class Payload(
         val data: Data,
         val timestamp: Long,
-        val remoteDataInfo: RemoteDataInfo?
+        val remoteDataInfo: RemoteDataInfo? = null
     )
 
     companion object {
@@ -199,26 +209,27 @@ internal class InAppRemoteData(
                 REMOTE_INFO_METADATA_KEY to payload.remoteDataInfo
             ).toJsonValue()
 
-            val data = Data.fromJson(payload.data)
+            val data = Data.fromJson(payload.data).copyWithUpdateSchedules { local ->
+                val result = local.copyWith(metadata = metadata)
 
-            data.schedules.forEach { schedule ->
-                schedule.metadata = metadata
-
-                when(schedule.data) {
+                when(result.data) {
                     is AutomationSchedule.ScheduleData.InAppMessageData ->  {
-                        schedule.data.message.source = InAppMessage.InAppMessageSource.REMOTE_DATA
+                        result.data.message.source = InAppMessage.InAppMessageSource.REMOTE_DATA
                     }
                     else -> {}
                 }
 
-                schedule.triggers.forEach { trigger ->
-                    if (!trigger.shouldBackfill) { return@forEach }
-                    trigger.backfilledIdentifier(TriggerExecutionType.EXECUTION)
+                result.triggers.forEach { trigger ->
+                    if (trigger.shouldBackfill) {
+                        trigger.backfilledIdentifier(TriggerExecutionType.EXECUTION)
+                    }
                 }
 
-                schedule.delay?.cancellationTriggers?.forEach { trigger ->
+                result.delay?.cancellationTriggers?.forEach { trigger ->
                     trigger.backfilledIdentifier(TriggerExecutionType.DELAY_CANCELLATION)
                 }
+
+                result
             }
 
             return Payload(

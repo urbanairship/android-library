@@ -1,5 +1,6 @@
 package com.urbanairship.automation.rewrite.engine
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.AnalyticsListener
@@ -20,9 +21,11 @@ import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.yield
 
-internal interface AutomationDelayProcessorInterface {
-    suspend fun process(delay: AutomationDelay?, triggerDate: Long)
-    suspend fun areConditionsMet(delay: AutomationDelay?): Boolean
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public interface AutomationDelayProcessorInterface {
+    public suspend fun process(delay: AutomationDelay?, triggerDate: Long)
+    public suspend fun areConditionsMet(delay: AutomationDelay?): Boolean
 }
 
 internal class AutomationDelayProcessor(
@@ -32,11 +35,7 @@ internal class AutomationDelayProcessor(
     private val sleeper: TaskSleeper = TaskSleeper.default
 ) : AutomationDelayProcessorInterface {
 
-    private val tracker: StateTracker
-
-    init {
-        tracker = StateTracker(analytics, appStateTracker)
-    }
+    private val tracker: StateTracker = StateTracker(analytics, appStateTracker)
 
     override suspend fun process(delay: AutomationDelay?, triggerDate: Long) {
         if (delay == null) {

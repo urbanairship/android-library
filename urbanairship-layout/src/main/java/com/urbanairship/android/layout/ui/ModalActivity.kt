@@ -31,8 +31,8 @@ import com.urbanairship.android.layout.property.Orientation
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.FullScreenAdjustResizeWorkaround.Companion.applyAdjustResizeWorkaround
-import com.urbanairship.android.layout.util.parcelableExtra
 import com.urbanairship.android.layout.view.ModalView
+import com.urbanairship.util.parcelableExtra
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch

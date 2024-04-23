@@ -1,5 +1,6 @@
 package com.urbanairship.automation.rewrite.engine
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.automation.rewrite.inappmessage.PreparedInAppMessageData
 import com.urbanairship.automation.rewrite.limits.FrequencyCheckerInterface
 import com.urbanairship.experiment.ExperimentResult
@@ -9,29 +10,33 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
-import java.util.Objects
-import kotlin.jvm.Throws
 
-internal data class PreparedSchedule(
-    val info: PreparedScheduleInfo,
-    val data: PreparedScheduleData,
-    val frequencyChecker: FrequencyCheckerInterface?
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class PreparedSchedule(
+    internal val info: PreparedScheduleInfo,
+    internal val data: PreparedScheduleData,
+    internal val frequencyChecker: FrequencyCheckerInterface?
 )
 
-internal sealed class PreparedScheduleData {
-    data class InAppMessage(val message: PreparedInAppMessageData) : PreparedScheduleData()
-    data class Action(val json: JsonValue) : PreparedScheduleData()
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public sealed class PreparedScheduleData {
+    public data class InAppMessage(val message: PreparedInAppMessageData) : PreparedScheduleData()
+    public data class Action(val json: JsonValue) : PreparedScheduleData()
 }
 
-internal data class PreparedScheduleInfo(
-    val scheduleID: String,
-    val productID: String? = null,
-    val campaigns: JsonValue? = null,
-    val contactID: String? = null,
-    val experimentResult: ExperimentResult? = null,
-    val reportingContext: JsonValue? = null
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class PreparedScheduleInfo(
+    internal val scheduleID: String,
+    internal val productID: String? = null,
+    internal val campaigns: JsonValue? = null,
+    internal val contactID: String? = null,
+    internal val experimentResult: ExperimentResult? = null,
+    internal val reportingContext: JsonValue? = null
 ) : JsonSerializable {
-    companion object {
+    internal companion object {
         private const val SCHEDULE_ID = "schedule_id"
         private const val PRODUCT_ID = "product_id"
         private const val CAMPAIGNS = "campaigns"

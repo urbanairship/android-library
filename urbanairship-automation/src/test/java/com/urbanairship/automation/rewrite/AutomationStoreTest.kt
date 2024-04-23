@@ -97,7 +97,7 @@ public class AutomationStoreTest {
             data.paused(date)
             data.setExecutionCount(100)
             data.setTrigerringInfo(triggerInfo)
-            data.schedule.group = "bar"
+            data.setSchedule(data.schedule.copyWith(group = "bar"))
             data.setPreparedScheduleInfo(preparedInfo)
             return@updateSchedule data
         }

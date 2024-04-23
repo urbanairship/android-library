@@ -29,7 +29,7 @@ public class AirshipLayout private constructor(
             val json = value.requireMap()
             return AirshipLayout(
                 layoutInfo = LayoutInfo(json.require(LAYOUT_KEY).requireMap()),
-                jsonValue = json.toJsonValue()
+                jsonValue = value
             )
         }
     }

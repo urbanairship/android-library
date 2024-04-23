@@ -4,10 +4,9 @@ import android.content.Context
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.util.FileUtils
 import java.io.File
-import java.io.IOException
 import java.net.URI
 import java.net.URL
-import kotlin.jvm.Throws
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
@@ -15,12 +14,12 @@ import kotlinx.coroutines.async
 
 internal class DefaultAssetDownloader(
     context: Context,
-    private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ): AssetDownloaderInterface {
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     private val cacheFolder: File = context.cacheDir
 
-    @Throws(IOException::class)
     override fun downloadAsset(remoteURL: URL): Deferred<URI> {
         return scope.async {
             val tmpCacheFile = File(cacheFolder, lastPathComponent(remoteURL))

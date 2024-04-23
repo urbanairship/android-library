@@ -3,8 +3,6 @@ package com.urbanairship.automation.rewrite.inappmessage.content
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.jsonMapOf
-import com.urbanairship.json.requireField
 import org.jetbrains.annotations.VisibleForTesting
 
 public class Custom @VisibleForTesting internal constructor(

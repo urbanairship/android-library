@@ -1,6 +1,7 @@
 package com.urbanairship.automation.rewrite.inappmessage.content
 
 import android.graphics.Color
+import com.urbanairship.automation.rewrite.inappmessage.content.Modal.Template
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonInfo
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonLayoutType
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageColor
@@ -11,25 +12,22 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
-import com.urbanairship.util.ColorUtils
 import org.jetbrains.annotations.VisibleForTesting
 
-/**
- * Display content for a [com.urbanairship.automation.rewrite.inappmessage.InAppMessage#TYPE_MODAL] in-app message.
- */
+/** Display content for a modal in-app message. */
 public class Modal @VisibleForTesting internal constructor(
     /**
      * The optional heading [InAppMessageTextInfo].
      */
-    public val heading: InAppMessageTextInfo?,
+    public val heading: InAppMessageTextInfo? = null,
     /**
      * The optional body [InAppMessageTextInfo].
      */
-    public val body: InAppMessageTextInfo?,
+    public val body: InAppMessageTextInfo? = null,
     /**
      * The optional media [InAppMessageMediaInfo].
      */
-    public val media: InAppMessageMediaInfo?,
+    public val media: InAppMessageMediaInfo? = null,
     /**
      * The optional footer button [InAppMessageButtonInfo].
      */
@@ -37,28 +35,27 @@ public class Modal @VisibleForTesting internal constructor(
     /**
      * The list of optional buttons.
      */
-    public val buttons: List<InAppMessageButtonInfo>?,
+    public val buttons: List<InAppMessageButtonInfo>,
     /**
      * The optional button layout.
      */
-    public val buttonLayoutType: InAppMessageButtonLayoutType?,
+    public val buttonLayoutType: InAppMessageButtonLayoutType = InAppMessageButtonLayoutType.SEPARATE,
     /**
-     * The optional banner template. [Template]
+     * The optional banner [Template].
      */
-    public val template: Template?,
+    public val template: Template,
     /**
      * The optional banner background color.
      */
-    public val backgroundColor: InAppMessageColor?,
+    public val backgroundColor: InAppMessageColor = InAppMessageColor(Color.WHITE),
     /**
      * The optional banner dismiss button color.
      */
-    public val dismissButtonColor: InAppMessageColor?,
+    public val dismissButtonColor: InAppMessageColor = InAppMessageColor(Color.BLACK),
     /**
-     * Returns `true` if the modal dialog is allowed to be displayed as fullscreen, otherwise
-     * `false`
+     * A flag indicating whether the dialog is allowed to be displayed as fullscreen.
      */
-    public val allowFullscreenDisplay: Boolean
+    public val allowFullscreenDisplay: Boolean = false
 ) : JsonSerializable {
 
     public enum class Template(internal val json: String) : JsonSerializable {
@@ -122,12 +119,18 @@ public class Modal @VisibleForTesting internal constructor(
                 body = content.get(BODY_KEY)?.let(InAppMessageTextInfo::fromJson),
                 media = content.get(MEDIA_KEY)?.let(InAppMessageMediaInfo::fromJson),
                 footer = content.get(FOOTER_KEY)?.let(InAppMessageButtonInfo::fromJson),
-                buttons = content.get(BUTTONS_KEY)?.requireList()?.map(InAppMessageButtonInfo::fromJson),
-                buttonLayoutType = content.get(BUTTON_LAYOUT_KEY)?.let(InAppMessageButtonLayoutType::fromJson),
-                template = content.get(TEMPLATE_KEY)?.let(Template.Companion::fromJson),
-                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson) ?: InAppMessageColor(Color.WHITE),
-                dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson) ?: InAppMessageColor(Color.BLACK),
-                allowFullscreenDisplay = content.optionalField(ALLOW_FULLSCREEN_DISPLAY_KEY) ?: false
+                buttons = content.get(BUTTONS_KEY)?.requireList()?.map(InAppMessageButtonInfo::fromJson)
+                    ?: emptyList(),
+                buttonLayoutType = content.get(BUTTON_LAYOUT_KEY)?.let(InAppMessageButtonLayoutType::fromJson)
+                    ?: InAppMessageButtonLayoutType.SEPARATE,
+                template = content.get(TEMPLATE_KEY)?.let(Template.Companion::fromJson)
+                    ?: Template.HEADER_MEDIA_BODY,
+                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                    ?: InAppMessageColor(Color.WHITE),
+                dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                    ?: InAppMessageColor(Color.BLACK),
+                allowFullscreenDisplay = content.optionalField(ALLOW_FULLSCREEN_DISPLAY_KEY)
+                    ?: false
             )
         }
     }
@@ -174,11 +177,11 @@ public class Modal @VisibleForTesting internal constructor(
         result = 31 * result + (body?.hashCode() ?: 0)
         result = 31 * result + (media?.hashCode() ?: 0)
         result = 31 * result + (footer?.hashCode() ?: 0)
-        result = 31 * result + (buttons?.hashCode() ?: 0)
-        result = 31 * result + (buttonLayoutType?.hashCode() ?: 0)
-        result = 31 * result + (template?.hashCode() ?: 0)
-        result = 31 * result + (backgroundColor?.hashCode() ?: 0)
-        result = 31 * result + (dismissButtonColor?.hashCode() ?: 0)
+        result = 31 * result + buttons.hashCode()
+        result = 31 * result + buttonLayoutType.hashCode()
+        result = 31 * result + template.hashCode()
+        result = 31 * result + backgroundColor.hashCode()
+        result = 31 * result + dismissButtonColor.hashCode()
         result = 31 * result + allowFullscreenDisplay.hashCode()
         return result
     }

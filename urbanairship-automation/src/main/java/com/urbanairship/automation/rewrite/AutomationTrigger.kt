@@ -2,7 +2,6 @@ package com.urbanairship.automation.rewrite
 
 import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue

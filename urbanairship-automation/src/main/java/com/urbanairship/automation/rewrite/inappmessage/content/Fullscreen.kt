@@ -1,6 +1,7 @@
 package com.urbanairship.automation.rewrite.inappmessage.content
 
 import android.graphics.Color
+import com.urbanairship.automation.rewrite.inappmessage.content.Fullscreen.Template
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonInfo
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonLayoutType
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageColor
@@ -10,49 +11,47 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.util.ColorUtils
+import java.util.Objects
 import org.jetbrains.annotations.VisibleForTesting
 
-/**
- * Display content for a [com.urbanairship.automation.rewrite.inappmessage.InAppMessage#TYPE_FULLSCREEN] in-app message.
- */
+/** Display content for a full screen in-app message. */
 public class Fullscreen @VisibleForTesting internal constructor(
     /**
      * The optional heading [InAppMessageTextInfo].
      */
-    public val heading: InAppMessageTextInfo?,
+    public val heading: InAppMessageTextInfo? = null,
     /**
      * The optional body [InAppMessageTextInfo].
      */
-    public val body: InAppMessageTextInfo?,
+    public val body: InAppMessageTextInfo? = null,
     /**
      * The optional media [InAppMessageMediaInfo].
      */
-    public val media: InAppMessageMediaInfo?,
+    public val media: InAppMessageMediaInfo? = null,
     /**
      * The optional footer button [InAppMessageButtonInfo].
      */
-    public val footer: InAppMessageButtonInfo?,
+    public val footer: InAppMessageButtonInfo? = null,
     /**
      * The list of optional buttons.
      */
-    public val buttons: List<InAppMessageButtonInfo>?,
+    public val buttons: List<InAppMessageButtonInfo> = emptyList(),
     /**
      * The optional button layout.
      */
-    public val buttonLayoutType: InAppMessageButtonLayoutType?,
+    public val buttonLayoutType: InAppMessageButtonLayoutType = InAppMessageButtonLayoutType.SEPARATE,
     /**
-     * The optional banner template. [Template]
+     * The optional full screen [Template].
      */
-    public val template: Template?,
+    public val template: Template,
     /**
      * The optional banner background color.
      */
-    public val backgroundColor: InAppMessageColor?,
+    public val backgroundColor: InAppMessageColor = InAppMessageColor(Color.WHITE),
     /**
      * The optional banner dismiss button color.
      */
-    public val dismissButtonColor: InAppMessageColor?,
+    public val dismissButtonColor: InAppMessageColor = InAppMessageColor(Color.BLACK),
 ) : JsonSerializable {
     public enum class Template(internal val json: String) : JsonSerializable {
         /**
@@ -110,10 +109,11 @@ public class Fullscreen @VisibleForTesting internal constructor(
         public fun fromJson(value: JsonValue): Fullscreen {
             val content = value.requireMap()
             val buttons = content.get(BUTTONS_KEY)?.requireList()?.map(InAppMessageButtonInfo::fromJson) ?: listOf()
-            val buttonType = if (buttons.count() > 2) {
+            val buttonType = if (buttons.size > 2) {
                 InAppMessageButtonLayoutType.STACKED
             } else {
                 content.get(BUTTON_LAYOUT_KEY)?.let(InAppMessageButtonLayoutType::fromJson)
+                    ?: InAppMessageButtonLayoutType.SEPARATE
             }
 
             return Fullscreen(
@@ -123,9 +123,11 @@ public class Fullscreen @VisibleForTesting internal constructor(
                 buttons = buttons,
                 buttonLayoutType = buttonType,
                 footer = content.get(FOOTER_KEY)?.let(InAppMessageButtonInfo::fromJson),
-                template = content.get(TEMPLATE_KEY)?.let(Template::fromJson),
-                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson),
-                dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson),
+                template = content.get(TEMPLATE_KEY)?.let(Template::fromJson) ?: Template.HEADER_MEDIA_BODY,
+                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                    ?: InAppMessageColor(Color.WHITE),
+                dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                    ?: InAppMessageColor(Color.BLACK),
             )
         }
     }
@@ -166,16 +168,8 @@ public class Fullscreen @VisibleForTesting internal constructor(
     }
 
     override fun hashCode(): Int {
-        var result = heading?.hashCode() ?: 0
-        result = 31 * result + (body?.hashCode() ?: 0)
-        result = 31 * result + (media?.hashCode() ?: 0)
-        result = 31 * result + (footer?.hashCode() ?: 0)
-        result = 31 * result + (buttons?.hashCode() ?: 0)
-        result = 31 * result + (buttonLayoutType?.hashCode() ?: 0)
-        result = 31 * result + (template?.hashCode() ?: 0)
-        result = 31 * result + (backgroundColor?.hashCode() ?: 0)
-        result = 31 * result + (dismissButtonColor?.hashCode() ?: 0)
-        return result
+        return Objects.hash(heading, body, media, footer,buttons, buttonLayoutType,
+            template, backgroundColor, dismissButtonColor)
     }
 
 }

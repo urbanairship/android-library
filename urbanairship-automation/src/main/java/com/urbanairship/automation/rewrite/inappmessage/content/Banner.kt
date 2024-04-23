@@ -1,6 +1,8 @@
 package com.urbanairship.automation.rewrite.inappmessage.content
 
 import android.graphics.Color
+import com.urbanairship.automation.rewrite.inappmessage.content.Banner.Placement
+import com.urbanairship.automation.rewrite.inappmessage.content.Banner.Template
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonInfo
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonLayoutType
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageColor
@@ -10,46 +12,46 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.util.ColorUtils
 import org.jetbrains.annotations.VisibleForTesting
 
+/** Display content for banner in-app message. */
 public class Banner @VisibleForTesting internal constructor(
     /**
      * The optional heading [InAppMessageTextInfo].
      */
-    public val heading: InAppMessageTextInfo?,
+    public val heading: InAppMessageTextInfo? = null,
     /**
      * The optional body [InAppMessageTextInfo].
      */
-    public val body: InAppMessageTextInfo?,
+    public val body: InAppMessageTextInfo? = null,
     /**
      * The optional media [InAppMessageMediaInfo].
      */
-    public val media: InAppMessageMediaInfo?,
+    public val media: InAppMessageMediaInfo? = null,
     /**
      * The list of optional buttons.
      */
-    public val buttons: List<InAppMessageButtonInfo>?,
+    public val buttons: List<InAppMessageButtonInfo> = emptyList(),
     /**
      * The optional button layout.
      */
-    public val buttonLayoutType: InAppMessageButtonLayoutType?,
+    public val buttonLayoutType: InAppMessageButtonLayoutType = InAppMessageButtonLayoutType.SEPARATE,
     /**
-     * The optional banner template. [Template]
+     * The optional banner [Template].
      */
-    public val template: Template?,
+    public val template: Template,
     /**
      * The optional banner background color.
      */
-    public val backgroundColor: InAppMessageColor?,
+    public val backgroundColor: InAppMessageColor = InAppMessageColor(Color.WHITE),
     /**
      * The optional banner dismiss button color.
      */
-    public val dismissButtonColor: InAppMessageColor?,
+    public val dismissButtonColor: InAppMessageColor = InAppMessageColor(Color.BLACK),
     /**
      * The optional border radius in dps.
      */
-    public val borderRadius: Float?,
+    public val borderRadius: Float = 0f,
     /**
      * The banner display duration. Default to 15 seconds
      */
@@ -57,7 +59,7 @@ public class Banner @VisibleForTesting internal constructor(
     /**
      * The optional banner placement. [Placement]
      */
-    public val placement: Placement?,
+    public val placement: Placement,
     /**
      * The action names and values to be run when the banner is clicked.
      */
@@ -149,13 +151,18 @@ public class Banner @VisibleForTesting internal constructor(
                 heading = content.get(HEADING_KEY)?.let(InAppMessageTextInfo::fromJson),
                 body = content.get(BODY_KEY)?.let(InAppMessageTextInfo::fromJson),
                 media = content.get(MEDIA_KEY)?.let(InAppMessageMediaInfo::fromJson),
-                buttons = content.get(BUTTONS_KEY)?.requireList()?.map(InAppMessageButtonInfo::fromJson),
-                buttonLayoutType = content.get(BUTTON_LAYOUT_KEY)?.let(InAppMessageButtonLayoutType::fromJson),
-                placement = content.get(PLACEMENT_KEY)?.let(Placement::fromJson),
-                template = content.get(TEMPLATE_KEY)?.let(Template::fromJson),
+                buttons = content.get(BUTTONS_KEY)?.requireList()?.map(InAppMessageButtonInfo::fromJson)
+                    ?: emptyList(),
+                buttonLayoutType = content.get(BUTTON_LAYOUT_KEY)?.let(InAppMessageButtonLayoutType::fromJson)
+                    ?: InAppMessageButtonLayoutType.SEPARATE,
+                placement = content.get(PLACEMENT_KEY)?.let(Placement::fromJson) ?: Placement.BOTTOM,
+                template = content.get(TEMPLATE_KEY)?.let(Template::fromJson)
+                    ?: Template.MEDIA_LEFT,
                 duration = content.opt(DURATION_KEY).getLong(DEFAULT_DURATION_MS),
-                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson),
-                dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson),
+                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                    ?: InAppMessageColor(Color.WHITE),
+                dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                    ?: InAppMessageColor(Color.BLACK),
                 borderRadius = content.opt(BORDER_RADIUS_KEY).getFloat(0F),
                 actions = content.opt(ACTIONS_KEY).optMap().map
             )
@@ -167,7 +174,7 @@ public class Banner @VisibleForTesting internal constructor(
             return false
         }
 
-        if ((buttons?.count() ?: 0) > MAX_BUTTONS) {
+        if (buttons.size > MAX_BUTTONS) {
             return false
         }
         return true
@@ -214,16 +221,15 @@ public class Banner @VisibleForTesting internal constructor(
         var result = heading?.hashCode() ?: 0
         result = 31 * result + (body?.hashCode() ?: 0)
         result = 31 * result + (media?.hashCode() ?: 0)
-        result = 31 * result + (buttons?.hashCode() ?: 0)
-        result = 31 * result + (buttonLayoutType?.hashCode() ?: 0)
-        result = 31 * result + (template?.hashCode() ?: 0)
-        result = 31 * result + (backgroundColor?.hashCode() ?: 0)
-        result = 31 * result + (dismissButtonColor?.hashCode() ?: 0)
-        result = 31 * result + (borderRadius?.hashCode() ?: 0)
+        result = 31 * result + buttons.hashCode()
+        result = 31 * result + buttonLayoutType.hashCode()
+        result = 31 * result + template.hashCode()
+        result = 31 * result + backgroundColor.hashCode()
+        result = 31 * result + dismissButtonColor.hashCode()
+        result = 31 * result + borderRadius.hashCode()
         result = 31 * result + duration.hashCode()
-        result = 31 * result + (placement?.hashCode() ?: 0)
+        result = 31 * result + placement.hashCode()
         result = 31 * result + actions.hashCode()
         return result
     }
-
 }

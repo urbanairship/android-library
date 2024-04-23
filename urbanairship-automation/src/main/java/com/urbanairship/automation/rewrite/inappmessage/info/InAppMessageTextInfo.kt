@@ -1,7 +1,6 @@
 package com.urbanairship.automation.rewrite.inappmessage.info
 
 import android.content.Context
-import android.graphics.Color
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
@@ -9,7 +8,6 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
-import com.urbanairship.util.ColorUtils
 import java.util.Locale
 import java.util.Objects
 

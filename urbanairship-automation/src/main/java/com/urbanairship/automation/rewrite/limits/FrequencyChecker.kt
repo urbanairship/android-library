@@ -1,8 +1,11 @@
 package com.urbanairship.automation.rewrite.limits
 
-internal interface FrequencyCheckerInterface {
-    suspend fun isOverLimit(): Boolean
-    suspend fun checkAndIncrement(): Boolean
+import androidx.annotation.RestrictTo
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public interface FrequencyCheckerInterface {
+    public suspend fun isOverLimit(): Boolean
+    public suspend fun checkAndIncrement(): Boolean
 }
 
 internal class FrequencyChecker(

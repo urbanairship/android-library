@@ -3,10 +3,9 @@ package com.urbanairship.automation.rewrite.inappmessage.assets
 import android.content.Context
 import android.os.Build
 import android.os.storage.StorageManager
+import com.urbanairship.UALog
 import com.urbanairship.util.FileUtils
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
 import java.net.URI
 
@@ -44,7 +43,7 @@ internal class DefaultAssetFileManager(
         return File(cacheURI.path).exists()
     }
 
-    @Throws(IOException::class)
+    @Throws(IOException::class, SecurityException::class)
     override fun moveAsset(from: URI, to: URI) {
         val fromFile = File(from.path)
         if (!fromFile.exists()) {
@@ -62,7 +61,6 @@ internal class DefaultAssetFileManager(
         }
     }
 
-    @Throws(IOException::class)
     override fun clearAssets(identifier: String) {
         FileUtils.deleteRecursively(File(rootFolder, identifier))
     }
@@ -79,21 +77,10 @@ internal class DefaultAssetFileManager(
     }
 
     private fun copy(from: File, to: File) {
-        val source = FileInputStream(from)
-        val destination = FileOutputStream(to)
-
-        val buffer = ByteArray(8192)
-        source.use { input ->
-            destination.use { fileOut ->
-
-                while (true) {
-                    val length = input.read(buffer)
-                    if (length <= 0)
-                        break
-                    fileOut.write(buffer, 0, length)
-                }
-                fileOut.flush()
-            }
+        try {
+            from.copyTo(to, overwrite = true)
+        } catch (e: Exception) {
+            UALog.e(e) { "Failed to copy asset file from '$from' to '$to'" }
         }
     }
 

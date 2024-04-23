@@ -1,13 +1,16 @@
 package com.urbanairship.automation.rewrite.engine.triggerprocessor
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 
-internal enum class TriggerExecutionType(val value: String) {
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public enum class TriggerExecutionType(internal val value: String) {
     EXECUTION("execution"),
     DELAY_CANCELLATION("delay_cancellation");
 
-    companion object {
+    internal companion object {
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): TriggerExecutionType {
             val content = value.requireString()

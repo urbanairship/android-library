@@ -1,23 +1,22 @@
 package com.urbanairship.automation.rewrite.inappmessage.analytics
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.automation.rewrite.engine.PreparedScheduleData
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
 import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppEvent
 import com.urbanairship.experiment.ExperimentResult
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.meteredusage.MeteredUsageEventEntity
 import com.urbanairship.meteredusage.MeteredUsageType
 import com.urbanairship.util.Clock
-import java.util.Date
 import java.util.UUID
 
-internal interface InAppMessageAnalyticsInterface {
-    fun recordEvent(event: InAppEvent, layoutContext: LayoutData?)
-    suspend fun recordImpression()
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public interface InAppMessageAnalyticsInterface {
+    public fun recordEvent(event: InAppEvent, layoutContext: LayoutData?)
+    public suspend fun recordImpression()
 }
 
 internal sealed class LoggingInAppMessageAnalytics: InAppMessageAnalyticsInterface {

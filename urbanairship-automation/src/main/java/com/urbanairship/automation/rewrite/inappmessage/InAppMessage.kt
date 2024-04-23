@@ -1,6 +1,8 @@
 package com.urbanairship.automation.rewrite.inappmessage
 
+import com.urbanairship.android.layout.util.UrlInfo
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
+import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageMediaInfo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
@@ -10,10 +12,13 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import java.util.Objects
 
+/**
+ * Defines an in-app message.
+ */
 public class InAppMessage internal constructor(
     public val name: String,
     public val displayContent: InAppMessageDisplayContent,
-    source: InAppMessageSource?,
+    internal var source: InAppMessageSource?,
     public val extras: JsonMap? = null,
     public val actions: Map<String, JsonValue>? = null,
     public val isReportingEnabled: Boolean? = null,
@@ -21,8 +26,7 @@ public class InAppMessage internal constructor(
     public val renderedLocale: Map<String, JsonValue>? = null
 ) : JsonSerializable {
 
-    internal var source: InAppMessageSource? = source
-
+    /** The in-app message display behavior. */
     public enum class DisplayBehavior(internal val json: String) : JsonSerializable {
         /**
          * The in-app message should be displayed ASAP.
@@ -111,7 +115,7 @@ public class InAppMessage internal constructor(
         /**
          * Parses a json value.
          *
-         * @param jsonValue The json value.
+         * @param value The json value.
          * @return The parsed [InAppMessage].
          * @throws JsonException If the json is invalid.
          */
@@ -191,5 +195,28 @@ public class InAppMessage internal constructor(
     override fun hashCode(): Int {
         return Objects.hash(name, displayContent, source, extras, actions, isReportingEnabled,
             displayContent, renderedLocale)
+    }
+}
+
+internal fun InAppMessage.getUrlInfos(): List<UrlInfo> {
+
+    fun convert(media: InAppMessageMediaInfo?): List<UrlInfo> {
+        val content = media ?: return emptyList()
+        return when(content.type) {
+            InAppMessageMediaInfo.MediaType.YOUTUBE -> listOf(UrlInfo(UrlInfo.UrlType.VIDEO, content.url))
+            InAppMessageMediaInfo.MediaType.VIDEO -> listOf(UrlInfo(UrlInfo.UrlType.VIDEO, content.url))
+            InAppMessageMediaInfo.MediaType.IMAGE -> listOf(UrlInfo(UrlInfo.UrlType.IMAGE, content.url))
+        }
+    }
+
+    return when(displayContent) {
+        is InAppMessageDisplayContent.AirshipLayoutContent -> UrlInfo.from(displayContent.layout.layoutInfo.view).toList()
+        is InAppMessageDisplayContent.BannerContent -> convert(displayContent.banner.media)
+        is InAppMessageDisplayContent.CustomContent -> emptyList()
+        is InAppMessageDisplayContent.FullscreenContent -> convert(displayContent.fullscreen.media)
+        is InAppMessageDisplayContent.HTMLContent -> {
+            listOf(UrlInfo(UrlInfo.UrlType.WEB_PAGE, displayContent.html.url, displayContent.html.requiresConnectivity != false))
+        }
+        is InAppMessageDisplayContent.ModalContent -> convert(displayContent.modal.media)
     }
 }

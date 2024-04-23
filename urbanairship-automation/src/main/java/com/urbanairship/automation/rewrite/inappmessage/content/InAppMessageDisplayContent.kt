@@ -1,13 +1,17 @@
 package com.urbanairship.automation.rewrite.inappmessage.content
 
+import android.os.Parcel
+import android.os.Parcelable
+import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 
 /**
  * In-App message display content
  */
-public sealed class InAppMessageDisplayContent : JsonSerializable {
+public sealed class InAppMessageDisplayContent : JsonSerializable, Parcelable {
 
     public abstract fun validate(): Boolean
     public open fun isEmbedded(): Boolean = false
@@ -112,7 +116,10 @@ public sealed class InAppMessageDisplayContent : JsonSerializable {
         override fun toJsonValue(): JsonValue = JsonValue.wrap(json)
     }
 
-    internal companion object {
+    internal companion object CREATOR : Parcelable.Creator<InAppMessageDisplayContent> {
+
+        private const val PARCEL_CONTENT = "content"
+        private const val PARCEL_DISPLAY_TYPE = "display_type"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue, type: DisplayType): InAppMessageDisplayContent {
@@ -125,5 +132,31 @@ public sealed class InAppMessageDisplayContent : JsonSerializable {
                 DisplayType.LAYOUT -> AirshipLayoutContent(AirshipLayout.fromJson(value))
             }
         }
+
+        override fun createFromParcel(parcel: Parcel): InAppMessageDisplayContent? {
+            try {
+                val content = parcel.readString()?.let(JsonValue::parseString)?.requireMap() ?: return null
+                val type = DisplayType.fromJson(content.require(PARCEL_DISPLAY_TYPE))
+
+                return fromJson(content.require(PARCEL_CONTENT), type)
+            } catch (ex: Exception) {
+                UALog.e(ex) { "Failed to restore message display content" }
+                return null
+            }
+        }
+
+        override fun newArray(size: Int): Array<InAppMessageDisplayContent?> = arrayOfNulls(size)
     }
+
+
+    override fun writeToParcel(destination: Parcel, flags: Int) {
+        val json = jsonMapOf(
+            PARCEL_DISPLAY_TYPE to displayType,
+            PARCEL_CONTENT to toJsonValue()
+        ).toJsonValue()
+
+        destination.writeString(json.toString())
+    }
+
+    override fun describeContents(): Int = 0
 }

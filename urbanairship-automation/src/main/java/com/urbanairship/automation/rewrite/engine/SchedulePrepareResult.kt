@@ -1,9 +1,13 @@
 package com.urbanairship.automation.rewrite.engine
 
-internal sealed class SchedulePrepareResult {
-    data class Prepared(val schedule: PreparedSchedule) : SchedulePrepareResult()
-    data object Cancel : SchedulePrepareResult()
-    data object Invalidate : SchedulePrepareResult()
-    data object Skip : SchedulePrepareResult()
-    data object Penalize : SchedulePrepareResult()
+import androidx.annotation.RestrictTo
+
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public sealed class SchedulePrepareResult {
+    internal data class Prepared(val schedule: PreparedSchedule) : SchedulePrepareResult()
+    internal data object Cancel : SchedulePrepareResult()
+    internal data object Invalidate : SchedulePrepareResult()
+    internal data object Skip : SchedulePrepareResult()
+    internal data object Penalize : SchedulePrepareResult()
 }

@@ -2,10 +2,10 @@ package com.urbanairship.automation.rewrite.inappmessage.assets
 
 import android.content.Context
 import com.urbanairship.AirshipDispatchers
+import com.urbanairship.UALog
 import java.io.IOException
 import java.net.URI
 import java.net.URL
-import kotlin.jvm.Throws
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
@@ -21,7 +21,6 @@ internal interface AssetDownloaderInterface {
     /**
      * Downloads the asset from a remote URL and returns its temporary local URI
      */
-    @Throws(IOException::class)
     fun downloadAsset(remoteURL: URL): Deferred<URI>
 }
 
@@ -70,7 +69,7 @@ internal interface AssetCacheManagerInterface {
      * @param assets: An array of remote URL paths for the assets associated with the provided identifier
      * @return [AirshipCachedAssetsInterface]
      */
-    suspend fun cacheAsset(identifier: String, assets: List<String>): AirshipCachedAssetsInterface
+    suspend fun cacheAsset(identifier: String, assets: List<String>): AirshipCachedAssetsInterface?
 
     /**
      * Clears the cache directory associated with the identifier
@@ -89,38 +88,43 @@ internal class AssetCacheManager(
     private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
 ) : AssetCacheManagerInterface {
 
-    private val tasks = mutableMapOf<String, Deferred<AirshipCachedAssets>>()
+    private val tasks = mutableMapOf<String, Deferred<AirshipCachedAssets?>>()
     private val lock = Object()
 
     override suspend fun cacheAsset(
         identifier: String, assets: List<String>
-    ): AirshipCachedAssetsInterface {
+    ): AirshipCachedAssetsInterface? {
         val running = synchronized(lock) { tasks[identifier] }
         if (running != null) {
             return running.await()
         }
 
         val task = scope.async {
-            val directory = fileManager.ensureCacheDirectory(identifier)
-            val cached = AirshipCachedAssets(directory, fileManager)
+            val cached = try {
+                val directory = fileManager.ensureCacheDirectory(identifier)
+                AirshipCachedAssets(directory, fileManager)
+            } catch (ex: Exception) {
+                UALog.e(ex) { "Failed to cache asset" }
+                return@async null
+            }
 
-            assets
-                .map { URL(it) }
-                .forEach {
-                    val tempURI = downloader.downloadAsset(it).await()
-                    if (cached.isCached(it)) { return@forEach }
+            assets.forEach {
+                try {
+                    val url = convertToUrl(it) ?: return@forEach
+                    val tempURI = downloader.downloadAsset(url).await()
+                    if (!cached.isCached(it)) {
+                        yield()
+                        if (!isActive) { return@async cached }
 
-                    yield()
-
-                    if (!isActive) {
-                        return@async cached
+                        cached.cacheURL(it)?.let { cacheURI ->
+                            fileManager.moveAsset(tempURI, cacheURI.toURI())
+                            cached.generateAndStoreMetadata(it)
+                        }
                     }
-
-                    val cacheURI = cached.cacheURL(it)
-                    if (cacheURI != null) {
-                        fileManager.moveAsset(tempURI, cacheURI.toURI())
-                    }
+                } catch (ex: Exception) {
+                    UALog.e(ex) { "Failed to cache asset: $it" }
                 }
+            }
 
             return@async cached
         }
@@ -131,6 +135,19 @@ internal class AssetCacheManager(
 
     override suspend fun clearCache(identifier: String) {
         tasks.remove(identifier)?.cancel()
-        fileManager.clearAssets(identifier)
+        try {
+            fileManager.clearAssets(identifier)
+        } catch (ex: Exception) {
+            UALog.e(ex) { "Failed to clear cache" }
+        }
+    }
+
+    private fun convertToUrl(string: String): URL? {
+        return try {
+            URL(string)
+        } catch (ex: Exception) {
+            UALog.e(ex) { "Failed to convert string $string to url" }
+            null
+        }
     }
 }

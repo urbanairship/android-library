@@ -1,14 +1,11 @@
 package com.urbanairship.automation.rewrite.inappmessage.info
 
-import android.graphics.Color
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
-import com.urbanairship.util.ColorUtils
 import java.util.Objects
 
 /**
@@ -35,11 +32,11 @@ public class InAppMessageButtonInfo(
     /**
      * The button's background color.
      */
-    public val backgroundColor: InAppMessageColor?,
+    public val backgroundColor: InAppMessageColor? = null,
     /**
      * The button's border color.
      */
-    public val borderColor: InAppMessageColor?,
+    public val borderColor: InAppMessageColor? = null,
     /**
      * The border radius in dps.
      */

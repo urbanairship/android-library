@@ -42,11 +42,6 @@ public class AutomationEngineTest {
             clock = clock,
             sleeper = TaskSleeper.default
         )
-
-        /*
-    private val processingScope: CoroutineScope = CoroutineScope(AirshipDispatchers.newSerialDispatcher() + SupervisorJob()),
-    private val secondaryScope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
-         */
     }
 
     @Test

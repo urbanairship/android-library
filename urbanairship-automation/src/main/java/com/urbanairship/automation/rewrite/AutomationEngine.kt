@@ -1,6 +1,7 @@
 package com.urbanairship.automation.rewrite
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.automation.rewrite.engine.AutomationDelayProcessorInterface
@@ -21,7 +22,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -29,9 +29,9 @@ import kotlinx.coroutines.yield
 import org.jetbrains.annotations.VisibleForTesting
 
 internal interface AutomationEngineInterface {
-    suspend fun setEnginePaused(paused: Boolean)
-    suspend fun setExecutionPaused(paused: Boolean)
-    suspend fun start()
+    fun setEnginePaused(paused: Boolean)
+    fun setExecutionPaused(paused: Boolean)
+    fun start()
 
     suspend fun upsertSchedules(schedules: List<AutomationSchedule>)
     suspend fun stopSchedules(identifiers: List<String>)
@@ -44,27 +44,30 @@ internal interface AutomationEngineInterface {
 }
 
 //TODO: replace with the implementation from APK
-internal data class TriggerResult(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class TriggerResult(
     val scheduleID: String,
     val executionType: TriggerExecutionType,
     val info: TriggeringInfo
 )
 
-internal interface AutomationTriggerProcessorInterface {
-    suspend fun setPaused(paused: Boolean)
-    suspend fun getTriggerResults(): Flow<TriggerResult>
-    suspend fun processEvent(event: AutomationEvent)
-    suspend fun restoreSchedules(data: List<AutomationScheduleData>)
-    suspend fun updateSchedules(data: List<AutomationScheduleData>)
-    suspend fun updateScheduleState(scheduleID: String, state: AutomationScheduleState)
-    suspend fun cancel(scheduleIDs: List<String>)
-    suspend fun cancel(group: String)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public interface AutomationTriggerProcessorInterface {
+    public suspend fun setPaused(paused: Boolean)
+    public suspend fun getTriggerResults(): Flow<TriggerResult>
+    public suspend fun processEvent(event: AutomationEvent)
+    public suspend fun restoreSchedules(data: List<AutomationScheduleData>)
+    public suspend fun updateSchedules(data: List<AutomationScheduleData>)
+    public suspend fun updateScheduleState(scheduleID: String, state: AutomationScheduleState)
+    public suspend fun cancel(scheduleIDs: List<String>)
+    public suspend fun cancel(group: String)
 }
 
 //TODO: END
 
 //TODO: check multithreading and processing threads
-internal class AutomationEngine(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class AutomationEngine(
     private val context: Context,
     private val store: AutomationStore,
     private val executor: AutomationExecutorInterface,
@@ -83,42 +86,44 @@ internal class AutomationEngine(
     private var isExecutionPaused = MutableStateFlow(false)
     private var startTask: Deferred<Unit>? = null
 
-    override suspend fun setEnginePaused(paused: Boolean) {
+    override fun setEnginePaused(paused: Boolean) {
         isPaused.update { paused }
     }
 
-    override suspend fun setExecutionPaused(paused: Boolean) {
+    override fun setExecutionPaused(paused: Boolean) {
         isExecutionPaused.update { paused }
     }
 
-    override suspend fun start() {
+    override fun start() {
         startTask = processingScope.async { restoreSchedules() }
 
-        triggerProcessor.getTriggerResults().onEach {
-            processingScope.launch {
+        processingScope.launch {
+            triggerProcessor.getTriggerResults().collect {
                 yield()
                 processTriggerResult(it)
             }
         }
 
-        eventsFeed.feed.onEach {
-            yield()
-            processingScope.launch { triggerProcessor.processEvent(it) }
+        processingScope.launch {
+            eventsFeed.feed.collect {
+                yield()
+                processingScope.launch { triggerProcessor.processEvent(it) }
+            }
         }
     }
 
-    fun stop() {
+    public fun stop() {
         startTask?.cancel()
         processingScope.cancel()
     }
 
     override suspend fun stopSchedules(identifiers: List<String>) {
-        UALog.d { "Stopping schedules ${identifiers}" }
+        UALog.d { "Stopping schedules $identifiers" }
         startTask?.await()
         val timestamp = clock.currentTimeMillis()
         for (item in identifiers) {
             updateState(item) { data ->
-                data.schedule.endDate = timestamp.toULong()
+                data.setSchedule(data.schedule.copyWith(endDate = timestamp.toULong()))
                 data.finished(timestamp)
             }
         }
@@ -246,7 +251,7 @@ internal class AutomationEngine(
                 }
             }
         } catch (ex: Exception) {
-            UALog.e(ex) { "Failed to process trigger result ${result}" }
+            UALog.e(ex) { "Failed to process trigger result $result" }
         }
     }
 
@@ -291,7 +296,7 @@ internal class AutomationEngine(
                 handleInterval(remaining, data.schedule.identifier)
             }
 
-        /// Delete finished schedules
+        // Delete finished schedules
         val toDelete = schedules
             .filter { it.shouldDelete(now) }
             .map { it.schedule.identifier }
@@ -428,7 +433,7 @@ internal class AutomationEngine(
         // in the data, schedule was cancelled, or if a delay cancellation trigger
         // was fired.
         val stored = store.getSchedule(data.schedule.identifier)
-        if (stored?.scheduleState != AutomationScheduleState.PREPARED || stored?.schedule != data.schedule) {
+        if (stored?.scheduleState != AutomationScheduleState.PREPARED || stored.schedule != data.schedule) {
             UALog.v { "Schedule no longer valid, invalidating $data" }
             return ScheduleReadyResult.INVALIDATE
         }
