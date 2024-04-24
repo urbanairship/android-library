@@ -6,6 +6,9 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 
+/**
+ * Represents the app foreground/background state.
+ */
 public enum class AutomationAppState(internal val json: String): JsonSerializable {
     /**
      * Type representing the foreground app state.

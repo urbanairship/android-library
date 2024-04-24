@@ -232,4 +232,5 @@ public class Banner @VisibleForTesting internal constructor(
         result = 31 * result + actions.hashCode()
         return result
     }
+
 }

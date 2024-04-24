@@ -13,13 +13,17 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.Room.databaseBuilder
 import androidx.room.RoomDatabase
+import androidx.room.Transaction
 import androidx.room.TypeConverters
 import androidx.room.Update
+import androidx.room.Upsert
 import com.urbanairship.UALog
 import com.urbanairship.automation.rewrite.engine.AutomationScheduleState
 import com.urbanairship.automation.rewrite.engine.PreparedScheduleInfo
 import com.urbanairship.automation.rewrite.engine.TriggeringInfo
+import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerData
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonTypeConverters
 import com.urbanairship.json.JsonValue
 import java.io.File
@@ -43,9 +47,18 @@ internal interface ScheduleStoreInterface {
     suspend fun getSchedules(ids: List<String>): List<AutomationScheduleData>
 }
 
+internal interface TriggerStoreInterface {
+    @Throws(JsonException::class)
+    suspend fun getTrigger(scheduleID: String, triggerID: String): TriggerData?
+    suspend fun upsertTriggers(triggers: List<TriggerData>)
+    suspend fun deleteTriggersExcluding(scheduleIDs: List<String>)
+    suspend fun deleteTriggers(scheduleIDs: List<String>)
+    suspend fun deleteTriggers(scheduleID: String, triggerIDs: Set<String>)
+}
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities = [ScheduleEntity::class], version = 1)
-public abstract class AutomationStore : RoomDatabase(), ScheduleStoreInterface {
+@Database(entities = [ScheduleEntity::class, TriggerEntity::class], version = 1)
+public abstract class AutomationStore : RoomDatabase(), ScheduleStoreInterface, TriggerStoreInterface {
     internal abstract val dao: AutomationDao
 
     internal companion object {
@@ -120,6 +133,26 @@ public abstract class AutomationStore : RoomDatabase(), ScheduleStoreInterface {
     override suspend fun getSchedule(id: String): AutomationScheduleData? {
         return dao.getSchedule(id)?.toScheduleData()
     }
+
+    override suspend fun getTrigger(scheduleID: String, triggerID: String): TriggerData? {
+        return dao.getTrigger(scheduleID, triggerID)?.toTriggerData()
+    }
+
+    override suspend fun upsertTriggers(triggers: List<TriggerData>) {
+        dao.upsert(triggers.map { TriggerEntity(it) })
+    }
+
+    override suspend fun deleteTriggersExcluding(scheduleIDs: List<String>) {
+        dao.deleteTriggersExcluding(scheduleIDs)
+    }
+
+    override suspend fun deleteTriggers(scheduleIDs: List<String>) {
+        dao.deleteTriggers(scheduleIDs)
+    }
+
+    override suspend fun deleteTriggers(scheduleID: String, triggerIDs: Set<String>) {
+        dao.deleteTriggers(scheduleID, triggerIDs)
+    }
 }
 
 @Dao
@@ -148,6 +181,30 @@ internal interface AutomationDao {
 
     @Query("DELETE FROM schedules WHERE `group` = :group")
     suspend fun deleteSchedules(group: String)
+
+    @Transaction
+    @Upsert
+    suspend fun upsert(triggers: List<TriggerEntity>)
+
+    @Transaction
+    @Query("SELECT * FROM automation_trigger_data WHERE scheduleId = :scheduleId AND triggerId = :triggerId LIMIT 1")
+    suspend fun getTrigger(scheduleId: String, triggerId: String): TriggerEntity?
+
+    @Transaction
+    @Query("DELETE FROM automation_trigger_data WHERE scheduleId = :scheduleId AND triggerId = :triggerId")
+    suspend fun deleteTrigger(scheduleId: String, triggerId: String)
+
+    @Transaction
+    @Query("DELETE FROM automation_trigger_data WHERE scheduleId IN (:scheduleIds)")
+    suspend fun deleteTriggers(scheduleIds: List<String>)
+
+    @Transaction
+    @Query("DELETE FROM automation_trigger_data WHERE NOT (scheduleId  IN (:scheduleIds))")
+    suspend fun deleteTriggersExcluding(scheduleIds: List<String>)
+
+    @Transaction
+    @Query("DELETE FROM automation_trigger_data WHERE scheduleId = :scheduleIds AND triggerId IN (:triggerIds) ")
+    suspend fun deleteTriggers(scheduleIds: String, triggerIds: Set<String>)
 }
 
 @Entity(tableName = "schedules")
@@ -163,6 +220,7 @@ internal class ScheduleEntity(
     var scheduleStateChangeDate: Long,
     var triggerInfo: JsonValue?
 ) {
+
     companion object {
         fun fromScheduleData(data: AutomationScheduleData): ScheduleEntity {
             return ScheduleEntity(
@@ -193,4 +251,24 @@ internal class ScheduleEntity(
             null
         }
     }
+}
+
+@Entity(tableName = "automation_trigger_data")
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+@TypeConverters(JsonTypeConverters::class)
+internal data class TriggerEntity(
+    @PrimaryKey
+    val triggerId: String,
+    val scheduleId: String,
+    val state: JsonValue
+) {
+
+    constructor(triggerData: TriggerData) : this(
+        triggerId = triggerData.triggerID,
+        scheduleId = triggerData.scheduleID,
+        state = triggerData.toJsonValue()
+    )
+
+    @Throws(JsonException::class)
+    fun toTriggerData(): TriggerData = TriggerData.fromJson(state)
 }

@@ -8,6 +8,7 @@ import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
 import com.urbanairship.automation.rewrite.limits.FrequencyConstraint
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteData

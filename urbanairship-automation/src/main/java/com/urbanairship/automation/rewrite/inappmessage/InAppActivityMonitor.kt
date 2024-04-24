@@ -3,6 +3,7 @@ package com.urbanairship.automation.rewrite.inappmessage
 
 import android.app.Activity
 import android.content.Context
+import android.os.Bundle
 import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Predicate

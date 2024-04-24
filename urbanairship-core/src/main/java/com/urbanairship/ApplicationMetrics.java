@@ -11,12 +11,14 @@ import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.app.SimpleApplicationListener;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 /**
  * ApplicationMetrics stores metric information about the application.
- * @Deprecated This class will be internal in SDK 15.
+ *
+ * @hide
  */
-@Deprecated
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ApplicationMetrics extends AirshipComponent {
 
     private static final String LAST_OPEN_KEY = "com.urbanairship.application.metrics.LAST_OPEN";

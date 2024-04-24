@@ -16,6 +16,7 @@ import com.urbanairship.util.Clock
 import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
 import kotlinx.coroutines.channels.ReceiveChannel

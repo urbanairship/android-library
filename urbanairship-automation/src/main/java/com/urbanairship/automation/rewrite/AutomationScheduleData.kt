@@ -271,7 +271,7 @@ public class AutomationScheduleData(
     }
 
     @VisibleForTesting
-    internal fun setTrigerringInfo(info: TriggeringInfo) {
+    internal fun setTriggeringInfo(info: TriggeringInfo) {
         triggerInfo = info
     }
 

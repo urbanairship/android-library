@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "402ca4815dfac730df61cfbe071d6e44",
+    "identityHash": "30f427763e0b6d17950e3ba7b035a045",
     "entities": [
       {
         "tableName": "schedules",
@@ -65,12 +65,44 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "automation_trigger_data",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`triggerId` TEXT NOT NULL, `scheduleId` TEXT NOT NULL, `state` TEXT NOT NULL, PRIMARY KEY(`triggerId`))",
+        "fields": [
+          {
+            "fieldPath": "triggerId",
+            "columnName": "triggerId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scheduleId",
+            "columnName": "scheduleId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "triggerId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '402ca4815dfac730df61cfbe071d6e44')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '30f427763e0b6d17950e3ba7b035a045')"
     ]
   }
 }

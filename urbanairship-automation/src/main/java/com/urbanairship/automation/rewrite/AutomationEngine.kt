@@ -9,18 +9,19 @@ import com.urbanairship.automation.rewrite.engine.AutomationPreparerInterface
 import com.urbanairship.automation.rewrite.engine.AutomationScheduleState
 import com.urbanairship.automation.rewrite.engine.PreparedSchedule
 import com.urbanairship.automation.rewrite.engine.SchedulePrepareResult
-import com.urbanairship.automation.rewrite.engine.TriggeringInfo
+import com.urbanairship.automation.rewrite.engine.triggerprocessor.AutomationTriggerProcessorInterface
 import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerExecutionType
+import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.rewrite.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.automation.rewrite.utils.TaskSleeper
 import com.urbanairship.util.Clock
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -43,28 +44,6 @@ internal interface AutomationEngineInterface {
     suspend fun getSchedules(group: String): List<AutomationSchedule>
 }
 
-//TODO: replace with the implementation from APK
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class TriggerResult(
-    val scheduleID: String,
-    val executionType: TriggerExecutionType,
-    val info: TriggeringInfo
-)
-
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface AutomationTriggerProcessorInterface {
-    public suspend fun setPaused(paused: Boolean)
-    public suspend fun getTriggerResults(): Flow<TriggerResult>
-    public suspend fun processEvent(event: AutomationEvent)
-    public suspend fun restoreSchedules(data: List<AutomationScheduleData>)
-    public suspend fun updateSchedules(data: List<AutomationScheduleData>)
-    public suspend fun updateScheduleState(scheduleID: String, state: AutomationScheduleState)
-    public suspend fun cancel(scheduleIDs: List<String>)
-    public suspend fun cancel(group: String)
-}
-
-//TODO: END
-
 //TODO: check multithreading and processing threads
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AutomationEngine(
@@ -78,9 +57,12 @@ public class AutomationEngine(
     private val delayProcessor: AutomationDelayProcessorInterface,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val sleeper: TaskSleeper = TaskSleeper.default,
-    private val processingScope: CoroutineScope = CoroutineScope(AirshipDispatchers.newSerialDispatcher() + SupervisorJob()),
-    private val secondaryScope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
+    private val processingDispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
+    private val secondaryDispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) : AutomationEngineInterface {
+
+    private val processingScope = CoroutineScope(processingDispatcher + SupervisorJob())
+    private val secondaryScope = CoroutineScope(secondaryDispatcher + SupervisorJob())
 
     private var isPaused = MutableStateFlow(false)
     private var isExecutionPaused = MutableStateFlow(false)
@@ -240,14 +222,14 @@ public class AutomationEngine(
         val date = clock.currentTimeMillis()
 
         try {
-            when(result.executionType) {
+            when(result.triggerExecutionType) {
                 TriggerExecutionType.DELAY_CANCELLATION -> {
-                    val data = updateState(result.scheduleID) { it.executionCancelled(date) }
+                    val data = updateState(result.scheduleId) { it.executionCancelled(date) }
                     data?.let { preparer.cancelled(it.schedule) }
                 }
                 TriggerExecutionType.EXECUTION -> {
-                    updateState(result.scheduleID) { it.triggered(result.info.context, date)}
-                    startTaskToProcessTriggeredSchedule(result.scheduleID)
+                    updateState(result.scheduleId) { it.triggered(result.triggerInfo.context, date)}
+                    startTaskToProcessTriggeredSchedule(result.scheduleId)
                 }
             }
         } catch (ex: Exception) {

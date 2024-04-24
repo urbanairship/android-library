@@ -96,7 +96,7 @@ public class AutomationStoreTest {
         val result = store.updateSchedule("foo") { data ->
             data.paused(date)
             data.setExecutionCount(100)
-            data.setTrigerringInfo(triggerInfo)
+            data.setTriggeringInfo(triggerInfo)
             data.setSchedule(data.schedule.copyWith(group = "bar"))
             data.setPreparedScheduleInfo(preparedInfo)
             return@updateSchedule data
@@ -118,7 +118,7 @@ public class AutomationStoreTest {
     @Test
     public fun testUpsertFullData(): TestResult = runTest {
         val schedule = makeSchedule("full")
-        schedule.setTrigerringInfo(
+        schedule.setTriggeringInfo(
             TriggeringInfo(
                 context = DeferredTriggerContext("foo", 10.0, JsonValue.wrap("event")),
                 date = 1

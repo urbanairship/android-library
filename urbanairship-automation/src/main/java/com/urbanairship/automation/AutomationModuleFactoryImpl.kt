@@ -64,7 +64,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         val legacyInAppMessageManager =
             LegacyInAppMessageManager(context, dataStore, inAppAutomation, analytics, pushManager)
         val components: Collection<AirshipComponent> =
-            Arrays.asList(inAppAutomation, legacyInAppMessageManager)
+            listOf(inAppAutomation, legacyInAppMessageManager)
+
         return Module.multipleComponents(components, R.xml.ua_automation_actions)
     }
 

@@ -78,7 +78,6 @@ internal object InAppViewUtils {
                 .setStrokeColor(strokeColor)
                 .setStrokeWidth(strokeWidthInDps)
                 .build()
-
         ViewCompat.setBackground(button, background)
     }
 

@@ -77,7 +77,6 @@ internal class BannerAdapter(
     }
     private var lastActivity: WeakReference<Activity>? = null
     private var currentView: WeakReference<BannerView>? = null
-
     private var analyticsListener: InAppMessageDisplayListener? = null
     private var continuation: CancellableContinuation<DisplayResult>? = null
 
@@ -235,7 +234,6 @@ internal class BannerAdapter(
                 container.addView(view)
             }
         }
-
         lastActivity = WeakReference(activity)
         currentView = WeakReference(view)
     }

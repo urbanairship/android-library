@@ -1,5 +1,7 @@
 package com.urbanairship.automation.rewrite
 
+import com.urbanairship.automation.rewrite.engine.triggerprocessor.MatchResult
+import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonPredicate
@@ -99,6 +101,34 @@ public sealed class AutomationTrigger(
         override fun toJsonValue(): JsonValue = trigger.toJsonValue()
     }
 
+    internal fun matchEvent(
+        event: AutomationEvent,
+        data: TriggerData,
+        resetOnTrigger: Boolean): MatchResult? {
+
+        val result = when(this) {
+            is Compound -> trigger.matchEvent(event, data)
+            is Event -> trigger.matchEvent(event, data)
+        }
+
+        if (resetOnTrigger && result?.isTriggered == true) {
+            data.resetCounter()
+        }
+
+        return result
+    }
+
+    internal fun isTriggered(data: TriggerData): Boolean {
+        return data.count >= this.goal
+    }
+
+    internal fun removeStaleChildData(data: TriggerData) {
+        when(this) {
+            is Compound -> trigger.removeStaleChildData(data)
+            is Event -> {}
+        }
+    }
+
     internal companion object {
         private const val KEY_TYPE = "type"
 
@@ -149,13 +179,12 @@ public sealed class AutomationTrigger(
 
 public class EventAutomationTrigger internal constructor(
     public val type: EventAutomationTriggerType,
-    public val goal: Double,
+    public var goal: Double,
     public val predicate: JsonPredicate?,
-    id: String,
+    public var id: String,
     allowBackfill: Boolean = false
 ) : JsonSerializable {
 
-    internal var id: String = id
     internal var allowBackfill: Boolean = allowBackfill
 
     public constructor(
@@ -194,6 +223,140 @@ public class EventAutomationTrigger internal constructor(
                 allowBackfill = id == null
             )
         }
+    }
+
+    internal fun matchEvent(event: AutomationEvent, data: TriggerData): MatchResult? {
+        return when(event) {
+            is AutomationEvent.StateChanged -> stateTriggerMatch(event.state, data)
+
+            AutomationEvent.AppInit -> {
+                if (this.type != EventAutomationTriggerType.APP_INIT) {
+                    return null
+                }
+                evaluateResults(data, 1.0)
+            }
+
+            AutomationEvent.Background -> {
+                if (this.type != EventAutomationTriggerType.BACKGROUND) {
+                    return null
+                }
+                evaluateResults(data, 1.0)
+            }
+
+            is AutomationEvent.CustomEvent -> {
+                customEvenTriggerMatch(event.data, event.count, data)
+            }
+
+            is AutomationEvent.FeatureFlagInteracted -> {
+                if (this.type != EventAutomationTriggerType.FEATURE_FLAG_INTERACTION) {
+                    return null
+                }
+                if (!isPredicatedMatching(event.data)) {
+                    return null
+                }
+
+                evaluateResults(data, 1.0)
+            }
+
+            AutomationEvent.Foreground -> {
+                if (this.type != EventAutomationTriggerType.FOREGROUND) {
+                    return null
+                }
+                evaluateResults(data, 1.0)
+            }
+
+            is AutomationEvent.RegionEnter -> {
+                if (this.type != EventAutomationTriggerType.REGION_ENTER) {
+                    return null
+                }
+                if (!isPredicatedMatching(event.data)) {
+                    return null
+                }
+
+                evaluateResults(data, 1.0)
+            }
+
+            is AutomationEvent.RegionExit -> {
+                if (this.type != EventAutomationTriggerType.REGION_EXIT) {
+                    return null
+                }
+                if (!isPredicatedMatching(event.data)) {
+                    return null
+                }
+
+                evaluateResults(data, 1.0)
+            }
+
+            is AutomationEvent.ScreenView -> {
+                if (this.type != EventAutomationTriggerType.SCREEN) {
+                    return null
+                }
+                if (!isPredicatedMatching(JsonValue.wrap(event.name))) {
+                    return null
+                }
+
+                evaluateResults(data, 1.0)
+            }
+        }
+    }
+
+    private fun customEvenTriggerMatch(eventData: JsonValue, value: Double?, data: TriggerData): MatchResult? {
+        return when(this.type) {
+            EventAutomationTriggerType.CUSTOM_EVENT_COUNT -> {
+                return if (isPredicatedMatching(eventData)) {
+                    evaluateResults(data, 1.0)
+                } else {
+                    null
+                }
+            }
+
+            EventAutomationTriggerType.CUSTOM_EVENT_VALUE -> {
+                return if (isPredicatedMatching(eventData)) {
+                    evaluateResults(data, value ?: 1.0)
+                } else {
+                    null
+                }
+            }
+
+            else -> null
+        }
+    }
+
+    private fun stateTriggerMatch(state:TriggerableState, data: TriggerData): MatchResult? {
+        return when(this.type) {
+            EventAutomationTriggerType.VERSION -> {
+                val updatedVersion = state.versionUpdated ?: return null
+                if (updatedVersion == data.lastTriggerableState?.versionUpdated) {
+                    return null
+                }
+
+                if (!isPredicatedMatching(JsonValue.wrap(updatedVersion))) {
+                    return null
+                }
+
+                data.lastTriggerableState = state
+                evaluateResults(data, 1.0)
+            }
+            EventAutomationTriggerType.ACTIVE_SESSION -> {
+                val session = state.appSessionID ?: return null
+                if (session == data.lastTriggerableState?.appSessionID) {
+                    return null
+                }
+
+                data.lastTriggerableState = state
+                evaluateResults(data, 1.0)
+            }
+            else -> null
+        }
+    }
+
+    private fun isPredicatedMatching(value: JsonSerializable): Boolean {
+        return this.predicate?.apply(value) ?: true
+    }
+
+    private fun evaluateResults(data: TriggerData, increment: Double): MatchResult {
+        data.incrementCount(increment)
+        return MatchResult(this.id, data.count >= this.goal)
     }
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
@@ -251,6 +414,89 @@ public class CompoundAutomationTrigger internal constructor(
         ).toJsonValue()
     }
 
+    internal fun matchEvent(event: AutomationEvent, data: TriggerData): MatchResult? {
+        val triggeredChildren = triggeredChildrendCount(data)
+
+        var childResults = matchChildren(event, data)
+
+        //resend state event if children is triggered for chain triggers
+        val state = data.lastTriggerableState
+        if (this.type == CompoundAutomationTriggerType.CHAIN &&
+            state != null && !event.isStateEvent() &&
+            triggeredChildren != triggeredChildrendCount(data)) {
+
+            childResults = matchChildren(AutomationEvent.StateChanged(state), data)
+        } else if (event is AutomationEvent.StateChanged) {
+            data.lastTriggerableState = event.state
+        }
+
+        when(this.type) {
+            CompoundAutomationTriggerType.AND, CompoundAutomationTriggerType.CHAIN -> {
+                val shouldIncrement = childResults.all { it.isTriggered }
+
+                if (shouldIncrement) {
+                    children.forEach { child ->
+                        if (child.isSticky != true) {
+                            data.childDate(child.trigger.id).resetCounter()
+                        }
+                    }
+                    data.incrementCount(1.0)
+                }
+            }
+
+            CompoundAutomationTriggerType.OR -> {
+                val shouldIncrement = childResults.any { it.isTriggered }
+                if (shouldIncrement) {
+                    children.forEach { child ->
+                        val childData = data.childDate(child.trigger.id)
+
+                        // Reset the child if it reached the goal or if we are resetting it
+                        // on increment
+                        if (childData.count >= child.trigger.goal || child.resetOnIncrement == true) {
+                            childData.resetCounter()
+                        }
+                    }
+                    data.incrementCount(1.0)
+                }
+            }
+        }
+
+        return MatchResult(triggerId = this.id, isTriggered = data.count >= goal)
+    }
+
+    private fun matchChildren(event: AutomationEvent, data: TriggerData): List<MatchResult> {
+        var evaluateRemaining = true
+
+        return children.map { child ->
+            val childData = data.childDate(child.trigger.id)
+
+            var matchResult: MatchResult? = null
+            if (evaluateRemaining) {
+                // Match the child without resetting it on trigger. We will process resets
+                // after we get all the child results
+                matchResult = child.trigger.matchEvent(event, childData, false)
+            }
+
+            val result = matchResult
+                ?: MatchResult(
+                    triggerId = child.trigger.id,
+                    isTriggered = child.trigger.isTriggered(childData))
+
+            if (this.type == CompoundAutomationTriggerType.CHAIN && evaluateRemaining && !result.isTriggered) {
+                evaluateRemaining = false
+            }
+
+            result
+        }
+    }
+
+    private fun triggeredChildrendCount(data: TriggerData): Int {
+        return children.filter { child ->
+            val state = data.children[child.trigger.id] ?: return@filter false
+            return@filter child.trigger.isTriggered(state)
+        }.size
+    }
+
     internal companion object {
         private const val KEY_ID = "id"
         private const val KEY_TYPE = "type"
@@ -279,4 +525,17 @@ public class CompoundAutomationTrigger internal constructor(
         KEY_GOAL to goal,
         KEY_CHILDREN to children
     ).toJsonValue()
+
+    internal fun removeStaleChildData(data: TriggerData) {
+        if (children.isEmpty()) {
+            return
+        }
+
+        data.resetChildrenData()
+
+        children.forEach {
+            val childData = data.childDate(it.trigger.id)
+            it.trigger.removeStaleChildData(childData)
+        }
+    }
 }

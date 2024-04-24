@@ -12,25 +12,25 @@ public interface InAppMessageDisplayDelegate {
      * every message that is pending display whenever a display condition changes. Use `notifyDisplayConditionsChanged`
      * to notify whenever a condition changes to reevaluate the pending In-App messages.
      * @param message: The message
-     * @param scheduleID: The schedule ID
+     * @param scheduleId: The schedule ID
      * @return: `true` if the message is ready to display, `false` otherwise.
      */
     @MainThread
-    public fun isMessageReadyToDisplay(message: InAppMessage, scheduleID: String): Boolean
+    public fun isMessageReadyToDisplay(message: InAppMessage, scheduleId: String): Boolean
 
     /**
      * Called when a message will be displayed.
      * @param message: The message
-     * @param scheduleID: The schedule ID
+     * @param scheduleId: The schedule ID
      */
     @MainThread
-    public fun messageWillDisplay(message: InAppMessage, scheduleID: String)
+    public fun messageWillDisplay(message: InAppMessage, scheduleId: String)
 
     /**
      * Called when a message finished displaying
      * @param message: The message
-     * @param scheduleID: The schedule ID
+     * @param scheduleId: The schedule ID
      */
     @MainThread
-    public fun messageFinishedDisplaying(message: InAppMessage, scheduleID: String)
+    public fun messageFinishedDisplaying(message: InAppMessage, scheduleId: String)
 }

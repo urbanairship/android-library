@@ -49,7 +49,6 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
     override fun onCreateMessage(savedInstanceState: Bundle?) {
         val displayContent = displayContent ?: return
         val html = displayContent.html
-
         var borderRadius = 0f
         if (isFullScreen(displayContent)) {
             setTheme(R.style.UrbanAirship_InAppHtml_Activity_Fullscreen)

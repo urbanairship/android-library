@@ -17,13 +17,14 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import com.urbanairship.UAirship
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageMediaInfo
+import com.urbanairship.iam.MediaInfo
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
 import java.util.Locale
 
 /**
- * Media view.
+ * Media View
  */
 internal class MediaView @JvmOverloads constructor(
     context: Context,

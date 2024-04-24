@@ -9,16 +9,42 @@ import com.urbanairship.analytics.Event
 import com.urbanairship.analytics.location.RegionEvent
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
+import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalField
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.runBlocking
 
-internal data class TriggerableState(
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class TriggerableState(
     var appSessionID: String? = null,
     var versionUpdated: String? = null
-)
+) : JsonSerializable {
+    internal companion object {
+        private const val APP_SESSION_ID = "appSessionID"
+        private const val VERSION_UPDATED = "versionUpdated"
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): TriggerableState {
+            val content = value.requireMap()
+            return TriggerableState(
+                appSessionID = content.optionalField(APP_SESSION_ID),
+                versionUpdated = content.optionalField(VERSION_UPDATED)
+            )
+        }
+    }
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        APP_SESSION_ID to appSessionID,
+        VERSION_UPDATED to versionUpdated
+    ).toJsonValue()
+
+}
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -32,6 +58,24 @@ public sealed class AutomationEvent {
     internal data class RegionExit(val data: JsonValue) : AutomationEvent()
     internal data class CustomEvent(val data: JsonValue, val count: Double?) : AutomationEvent()
     internal data class FeatureFlagInteracted(val data: JsonValue) : AutomationEvent()
+
+    internal fun reportPayload(): JsonValue? {
+        return when(this) {
+            Foreground, Background, AppInit, is StateChanged -> null
+            is ScreenView -> JsonValue.wrap(name)
+            is CustomEvent -> data
+            is FeatureFlagInteracted -> data
+            is RegionEnter -> data
+            is RegionExit -> data
+        }
+    }
+
+    internal fun isStateEvent(): Boolean {
+        return when(this) {
+            is StateChanged -> true
+            else -> false
+        }
+    }
 }
 
 private interface Cancellable {

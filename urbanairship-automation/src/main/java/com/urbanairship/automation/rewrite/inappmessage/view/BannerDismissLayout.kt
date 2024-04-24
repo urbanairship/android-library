@@ -60,6 +60,7 @@ internal class BannerDismissLayout @JvmOverloads constructor(
         set(value) {
             // The view's height is only populated after the view has been laid out.
             // We can workaround this by adding a OnPreDrawListener and set the yFraction.
+
             if (visibility == VISIBLE && height == 0) {
                 val preDrawListener: ViewTreeObserver.OnPreDrawListener =
                     object : ViewTreeObserver.OnPreDrawListener {

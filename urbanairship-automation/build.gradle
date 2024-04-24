@@ -17,6 +17,7 @@ dependencies {
 
     // AndroidX
     implementation(libs.androidx.room.ktx)
+    implementation libs.androidx.test.ext.junitktx
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.room.runtime)
 
