@@ -1,46 +1,39 @@
 package com.urbanairship.automation.rewrite.engine
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.UALog
 import com.urbanairship.analytics.Analytics
-import com.urbanairship.analytics.AnalyticsListener
-import com.urbanairship.analytics.CustomEvent
-import com.urbanairship.analytics.Event
-import com.urbanairship.analytics.location.RegionEvent
 import com.urbanairship.app.ActivityMonitor
-import com.urbanairship.app.ApplicationListener
 import com.urbanairship.automation.rewrite.AutomationAppState
 import com.urbanairship.automation.rewrite.AutomationDelay
 import com.urbanairship.automation.rewrite.utils.TaskSleeper
 import com.urbanairship.util.Clock
-import java.util.concurrent.CancellationException
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
-import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface AutomationDelayProcessorInterface {
     public suspend fun process(delay: AutomationDelay?, triggerDate: Long)
-    public suspend fun areConditionsMet(delay: AutomationDelay?): Boolean
+    public fun areConditionsMet(delay: AutomationDelay?): Boolean
 }
 
 internal class AutomationDelayProcessor(
-    analytics: Analytics,
-    appStateTracker: ActivityMonitor,
+    private val analytics: Analytics,
+    private val activityMonitor: ActivityMonitor,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val sleeper: TaskSleeper = TaskSleeper.default
 ) : AutomationDelayProcessorInterface {
 
-    private val tracker: StateTracker = StateTracker(analytics, appStateTracker)
 
-    override suspend fun process(delay: AutomationDelay?, triggerDate: Long) {
+    override suspend fun process(delay: AutomationDelay?, triggerDate: Long) = withContext(Dispatchers.Main.immediate) {
         if (delay == null) {
-            return
+            return@withContext
         }
 
         val wait = remainingSeconds(delay, triggerDate)
@@ -48,158 +41,56 @@ internal class AutomationDelayProcessor(
             sleeper.sleep(wait)
         }
 
-        while (!isCancelled() && !areConditionsMet(delay)) {
-            if (delay.appState != null && delay.appState != tracker.currentAppState) {
-                for (state in tracker.stateUpdates) {
-                    if (isCancelled() || state == delay.appState) {
-                        break
-                    }
-                }
-            }
-
-            if (isCancelled()) { break }
-
-            if (delay.screens != null && !delay.screens.contains(tracker.currentScreen)) {
-                for (screen in tracker.screensUpdate) {
-                    if (isCancelled() || delay.screens.contains(screen)) {
-                        break
-                    }
-                }
-            }
-
-            if (isCancelled()) { break }
-
-            if (delay.regionID != null && !tracker.regionIDs.contains(delay.regionID)) {
-                for (update in tracker.regionUpdate) {
-                    if (isCancelled() || update.contains(delay.regionID)) {
-                        break
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun isCancelled(): Boolean {
-        try {
+        while (isActive && !areConditionsMet(delay)) {
             yield()
-            return false
-        } catch (ex: CancellationException) {
-            finalize()
-            return true
+
+            if (!isAppStateMatch(delay)) {
+                activityMonitor.foregroundState.filter {
+                    it == (delay.appState == AutomationAppState.FOREGROUND)
+                }.first()
+            }
+
+            if (!isActive) { break }
+
+            if (!isScreenMatch(delay)) {
+                analytics.screenState.filter {
+                    delay.screens?.contains(it) ?: true
+                }.first()
+            }
+
+            if (!isActive) { break }
+
+            if (!isRegionMatch(delay)) {
+                analytics.regionState.filter {
+                    it.contains(delay.regionID)
+                }.first()
+            }
         }
     }
 
-    private fun finalize() {
-        tracker.unsubscribe()
+    override fun areConditionsMet(delay: AutomationDelay?): Boolean {
+        if (delay == null) {  return true  }
+        return isAppStateMatch(delay) && isScreenMatch(delay) && isRegionMatch(delay)
     }
 
-    override suspend fun areConditionsMet(delay: AutomationDelay?): Boolean {
-        if (delay == null) {
-            return true
-        }
+    private fun isAppStateMatch(delay: AutomationDelay): Boolean {
+        if (delay.appState == null) { return true }
+        return (delay.appState == AutomationAppState.FOREGROUND) == activityMonitor.foregroundState.value
+    }
 
-        if (delay.appState != null && delay.appState != tracker.currentAppState) {
-            return false
-        }
+    private fun isScreenMatch(delay: AutomationDelay): Boolean {
+        if (delay.screens.isNullOrEmpty()) { return true }
+        return delay.screens.contains(analytics.screenState.value)
+    }
 
-        if (!delay.screens.isNullOrEmpty()) {
-            if (tracker.currentScreen == null || !delay.screens.contains(tracker.currentScreen)) {
-                return false
-            }
-        }
-
-        if (delay.regionID != null) {
-            if (!tracker.regionIDs.contains(delay.regionID)) {
-                return false
-            }
-        }
-
-        return true
+    private fun isRegionMatch(delay: AutomationDelay): Boolean {
+        if (delay.regionID.isNullOrEmpty()) { return true }
+        return analytics.regionState.value.contains(delay.regionID)
     }
 
     private fun remainingSeconds(delay: AutomationDelay, triggerDate: Long): Long {
         val seconds = delay.seconds ?: return 0
         val remaining = seconds - TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis() - triggerDate)
         return max(0, remaining)
-    }
-}
-
-private class StateTracker(
-    private val analytics: Analytics,
-    private val monitor: ActivityMonitor
-) {
-    var currentScreen: String? = null
-        private set
-
-    private val screens = Channel<String>(CONFLATED)
-    val screensUpdate: ReceiveChannel<String> = screens
-
-    var currentAppState: AutomationAppState
-        private set
-    private val state = Channel<AutomationAppState>(CONFLATED)
-    val stateUpdates: ReceiveChannel<AutomationAppState> = state
-
-    val regionIDs = mutableSetOf<String>()
-    private val regions = Channel<Set<String>>(CONFLATED)
-    val regionUpdate: ReceiveChannel<Set<String>> = regions
-
-    val unsubscribe: () -> Unit
-
-    init {
-        val analyticsListener = object : AnalyticsListener {
-            override fun onScreenTracked(screenName: String) {
-                currentScreen = screenName
-                if (!screens.trySend(screenName).isSuccess) {
-                    UALog.e { "Failed to send screen name" }
-                }
-            }
-
-            override fun onRegionEventAdded(event: RegionEvent) {
-                if (event.boundaryEvent == RegionEvent.BOUNDARY_EVENT_ENTER) {
-                    regionIDs.add(event.regionId)
-                } else {
-                    regionIDs.remove(event.regionId)
-                }
-                if (!regions.trySend(regionIDs).isSuccess) {
-                    UALog.e { "Failed to send region updates" }
-                }
-            }
-
-            override fun onCustomEventAdded(event: CustomEvent) {}
-            override fun onFeatureFlagInteractedEventAdded(event: Event) {}
-        }
-
-        analytics.addAnalyticsListener(analyticsListener)
-
-        currentAppState = if (monitor.isAppForegrounded) {
-            AutomationAppState.FOREGROUND
-        } else {
-            AutomationAppState.BACKGROUND
-        }
-
-        val stateListener = object : ApplicationListener {
-            override fun onForeground(milliseconds: Long) {
-                currentAppState = AutomationAppState.FOREGROUND
-                if (!state.trySend(currentAppState).isSuccess) {
-                    UALog.e { "Failed to send app state update" }
-                }
-            }
-
-            override fun onBackground(milliseconds: Long) {
-                currentAppState = AutomationAppState.BACKGROUND
-                if (!state.trySend(currentAppState).isSuccess) {
-                    UALog.e { "Failed to send app state update" }
-                }
-            }
-        }
-        monitor.addApplicationListener(stateListener)
-
-        unsubscribe = {
-            monitor.removeApplicationListener(stateListener)
-            analytics.removeAnalyticsListener(analyticsListener)
-            regions.close()
-            state.close()
-            regions.close()
-        }
     }
 }

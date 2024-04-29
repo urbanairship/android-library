@@ -16,14 +16,18 @@ import com.urbanairship.app.ForwardingActivityListener
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.util.ManifestUtils
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
  * Activity monitor that filters out any activities with `EXCLUDE_FROM_AUTO_SHOW` metadata.
  */
-internal class InAppActivityMonitor @VisibleForTesting internal constructor(
-    private val globalActivityMonitor: ActivityMonitor
+public class InAppActivityMonitor(
+    private val activityMonitor: ActivityMonitor
 ) : ActivityMonitor {
+
+    public override val foregroundState: StateFlow<Boolean>
+        get() = activityMonitor.foregroundState
 
     private val allowedActivities = mutableSetOf<Class<*>>()
     private val ignoredActivities = mutableSetOf<Class<*>>()
@@ -49,7 +53,7 @@ internal class InAppActivityMonitor @VisibleForTesting internal constructor(
 
     @VisibleForTesting
     internal fun init() {
-        globalActivityMonitor.addActivityListener(filteredActivityListener)
+        activityMonitor.addActivityListener(filteredActivityListener)
     }
 
     override fun addActivityListener(listener: ActivityListener) {
@@ -61,25 +65,22 @@ internal class InAppActivityMonitor @VisibleForTesting internal constructor(
     }
 
     override fun addApplicationListener(listener: ApplicationListener) {
-        globalActivityMonitor.addApplicationListener(listener)
+        activityMonitor.addApplicationListener(listener)
     }
 
     override fun removeApplicationListener(listener: ApplicationListener) {
-        globalActivityMonitor.removeApplicationListener(listener)
+        activityMonitor.removeApplicationListener(listener)
     }
 
-    override fun isAppForegrounded(): Boolean {
-        return globalActivityMonitor.isAppForegrounded
-    }
+    override val isAppForegrounded: Boolean
+        get() = activityMonitor.isAppForegrounded
 
-    @MainThread
-    override fun getResumedActivities(): List<Activity> {
-        return globalActivityMonitor.getResumedActivities(activityPredicate)
-    }
+    override val resumedActivities: List<Activity>
+        get() = activityMonitor.getResumedActivities(activityPredicate)
 
     @MainThread
     override fun getResumedActivities(filter: Predicate<Activity>): List<Activity> {
-        return globalActivityMonitor.getResumedActivities { activity ->
+        return activityMonitor.getResumedActivities { activity ->
             activityPredicate.apply(activity) && filter.apply(activity)
         }
     }
@@ -119,11 +120,11 @@ internal class InAppActivityMonitor @VisibleForTesting internal constructor(
         return false
     }
 
-    companion object {
+    public companion object {
         /**
          * Metadata an app can use to prevent an in-app message from showing on a specific activity.
          */
-        const val EXCLUDE_FROM_AUTO_SHOW = "com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
+        public const val EXCLUDE_FROM_AUTO_SHOW: String = "com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
         private var shared: InAppActivityMonitor? = null
 
         /**
@@ -132,10 +133,14 @@ internal class InAppActivityMonitor @VisibleForTesting internal constructor(
          * @param context The application context.
          * @return The shared in-app activity monitor instance.
          */
-        fun shared(context: Context): InAppActivityMonitor {
+        @JvmStatic
+        public fun shared(context: Context): InAppActivityMonitor {
             return shared ?:
                 synchronized(InAppActivityMonitor::class.java) {
-                    shared ?: InAppActivityMonitor(GlobalActivityMonitor.shared(context)).also { it.init() }
+                    shared ?: InAppActivityMonitor(GlobalActivityMonitor.shared(context)).also {
+                        shared = it
+                        it.init()
+                    }
                 }
         }
     }

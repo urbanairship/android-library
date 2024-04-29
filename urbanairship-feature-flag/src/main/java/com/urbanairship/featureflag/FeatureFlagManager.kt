@@ -12,6 +12,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.analytics.Analytics
+import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.deferred.DeferredRequest
@@ -36,6 +37,7 @@ public class FeatureFlagManager
     private val analytics: Analytics,
     private val infoProvider: DeviceInfoProvider,
     private val deferredResolver: FlagDeferredResolver,
+    private val eventFeed: AirshipEventFeed,
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) : AirshipComponent(context, dataStore) {
 
@@ -162,10 +164,15 @@ public class FeatureFlagManager
         }
 
         try {
-            analytics.addEvent(FeatureFlagInteractionEvent(flag))
+            val event = FeatureFlagInteractionEvent(flag)
+
+            analytics.addEvent(event)
+            eventFeed.emit(AirshipEventFeed.Event.FeatureFlagInteracted(event.data))
         } catch (exception: Exception) {
             UALog.e(exception) { "Unable to track interaction: $flag" }
         }
+
+
     }
 
     private suspend fun waitForRemoteDataRefresh() {

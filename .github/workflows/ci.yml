@@ -31,7 +31,7 @@ jobs:
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
         
-      - name: Build and Spot SDK
+      - name: Test
         run: bash ./gradlew spotlessCheck assembleDebug testDebugUnitTest --info --stacktrace
 
       - name: Publish unit test reports

@@ -4,7 +4,6 @@ import android.content.Context;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
-import com.urbanairship.TestActivity;
 import com.urbanairship.TestApplication;
 import com.urbanairship.android.layout.AirshipEmbeddedViewManager;
 import com.urbanairship.android.layout.ThomasListener;
@@ -17,9 +16,9 @@ import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.android.layout.util.ImageCache;
+import com.urbanairship.automation.rewrite.inappmessage.InAppActivityMonitor;
 import com.urbanairship.automation.test.ShadowInAppActivityMonitor;
 import com.urbanairship.iam.DisplayHandler;
-import com.urbanairship.iam.InAppActivityMonitor;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageAdapter;
 import com.urbanairship.iam.InAppMessageWebViewClient;
@@ -35,7 +34,6 @@ import com.urbanairship.webkit.AirshipWebViewClient;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.stubbing.Answer;
@@ -45,16 +43,11 @@ import org.robolectric.shadow.api.Shadow;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
-import androidx.lifecycle.Lifecycle;
-import androidx.test.InstrumentationRegistry;
-import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 

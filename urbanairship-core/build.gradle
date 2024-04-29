@@ -59,6 +59,9 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockito.inline)
+    testImplementation(libs.google.truth)
+    testImplementation(libs.androidx.test.ext.truth)
 
     // Instrumentation Test
     androidTestImplementation(libs.androidx.test.core)

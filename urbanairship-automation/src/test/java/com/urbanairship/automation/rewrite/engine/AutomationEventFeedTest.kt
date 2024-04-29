@@ -1,190 +1,163 @@
 package com.urbanairship.automation.rewrite.engine
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.ApplicationMetrics
-import com.urbanairship.PreferenceDataStore
-import com.urbanairship.PrivacyManager
-import com.urbanairship.TestActivityMonitor
-import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.analytics.Analytics
-import com.urbanairship.analytics.CustomEvent
-import com.urbanairship.analytics.Event
-import com.urbanairship.analytics.location.RegionEvent
+import com.urbanairship.analytics.AirshipEventFeed
+import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.AutomationEvent
 import com.urbanairship.automation.rewrite.AutomationEventFeed
 import com.urbanairship.automation.rewrite.TriggerableState
-import com.urbanairship.json.JsonMap
-import com.urbanairship.locale.LocaleManager
+import com.urbanairship.json.jsonMapOf
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class AutomationEventFeedTest {
-    private val metrics: ApplicationMetrics = mockk()
-    private val activityMonitor = TestActivityMonitor()
-    private lateinit var analytics: Analytics
-    private lateinit var subject: AutomationEventFeed
+    private val metrics: ApplicationMetrics = mockk() {
+        every { this@mockk.appVersionUpdated } returns true
+        every { this@mockk.currentAppVersion } returns 123L
+    }
+
+    private val foregroundState = MutableStateFlow(false)
+
+    private val activityMonitor: ActivityMonitor = mockk() {
+        every { this@mockk.foregroundState } returns this@AutomationEventFeedTest.foregroundState
+    }
+
+    private val events = MutableSharedFlow<AirshipEventFeed.Event>()
+    private val airshipEventFeed: AirshipEventFeed = mockk() {
+        every { this@mockk.events } returns this@AutomationEventFeedTest.events
+    }
+    private val testDispatcher = StandardTestDispatcher()
+
+    private val subject = AutomationEventFeed(metrics, activityMonitor, airshipEventFeed, testDispatcher)
 
     @Before
     public fun setup() {
-        every { metrics.appVersionUpdated } returns true
-        every { metrics.currentAppVersion } returns 123L
+        Dispatchers.setMain(testDispatcher)
+    }
 
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val dataStore = PreferenceDataStore.inMemoryStore(context)
-
-        analytics = Analytics(
-            context,
-            dataStore,
-            TestAirshipRuntimeConfig(),
-            PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL),
-            mockk(),
-            LocaleManager(context, dataStore),
-            mockk()
-        )
-
-        subject = AutomationEventFeed(metrics, activityMonitor, analytics)
+    @After
+    public fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
-    public fun firstAttachProducesInitAndVersionUpdated(): TestResult = runTest {
+    public fun testFirstAttachInBackground(): TestResult = runTest {
+
         subject.feed.test {
             subject.attach()
 
             assertEquals(AutomationEvent.AppInit, awaitItem())
 
             val expectedState = TriggerableState(versionUpdated = "123")
-            val state = (awaitItem() as? AutomationEvent.StateChanged)?.state
-            assertEquals(expectedState, state)
+            assertEquals(AutomationEvent.StateChanged(expectedState), awaitItem())
+
+            assertEquals(AutomationEvent.Background, awaitItem())
         }
     }
 
     @Test
-    public fun subsequentAttachEmitsNoEvents(): TestResult = runTest {
+    public fun testFirstAttachInForeground(): TestResult = runTest {
+        foregroundState.value = true
+        subject.attach()
         subject.feed.test {
-            subject.attach()
-            skipItems(2)
+            assertEquals(AutomationEvent.AppInit, awaitItem())
+            assertEquals(AutomationEvent.StateChanged(TriggerableState(versionUpdated = "123")), awaitItem())
+            assertEquals(AutomationEvent.Foreground, awaitItem())
+        }
+    }
 
-            subject.attach()
-            expectNoEvents()
+    @Test
+    public fun testSubsequentAttach(): TestResult = runTest {
+        subject.attach()
+        subject.feed.test {
+            skipItems(3)
+        }
 
-            subject.detach()
-            expectNoEvents()
+        subject.attach()
+        subject.detach()
+        subject.attach()
+
+        // Expect get state and background events again
+        subject.feed.test {
+            val expectedState = TriggerableState(versionUpdated = "123")
+            assertEquals(AutomationEvent.StateChanged(expectedState), awaitItem())
+            assertEquals(AutomationEvent.Background, awaitItem())
         }
     }
 
     @Test
     public fun testSupportedEvents(): TestResult = runTest {
+        subject.attach()
+
         subject.feed.test {
-            subject.attach()
-            skipItems(2)
+            /// First attach events
+            skipItems(3)
 
-            activityMonitor.foreground()
+            // Foreground - foreground and app state
+            foregroundState.value = true
             assertEquals(AutomationEvent.Foreground, awaitItem())
+            var stateEvent = awaitItem() as AutomationEvent.StateChanged
+            assertNotNull(stateEvent.state.appSessionID)
 
-            var state = (awaitItem() as? AutomationEvent.StateChanged)?.state
-            assertNotNull(state?.appSessionID)
-
-            activityMonitor.background()
+            // Background - background and app state
+            foregroundState.value = false
             assertEquals(AutomationEvent.Background, awaitItem())
+            stateEvent = awaitItem() as AutomationEvent.StateChanged
+            assertNull(stateEvent.state.appSessionID)
 
-            state = (awaitItem() as? AutomationEvent.StateChanged)?.state
-            assertNotNull(state)
-            assertNull(state?.appSessionID)
-
-            analytics.trackScreen("test-screen")
-            val screenView = (awaitItem() as? AutomationEvent.ScreenView)
-            assertEquals("test-screen", screenView?.name)
-
-            val regionEnter = RegionEvent
-                .newBuilder()
-                .setRegionId("enter-reg-id")
-                .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_ENTER)
-                .setSource("test")
-                .build()
-
-            analytics.addEvent(regionEnter)
-
-            val regEnter = (awaitItem() as? AutomationEvent.RegionEnter)
-            assertEquals(JsonMap.newBuilder()
-                .put("region_id", "enter-reg-id")
-                .put("action", "enter")
-                .put("source", "test")
-                .build().toJsonValue() , regEnter?.data)
-
-            val regionExit = RegionEvent
-                .newBuilder()
-                .setRegionId("exit-reg-id")
-                .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_EXIT)
-                .setSource("test2")
-                .build()
-
-            analytics.addEvent(regionExit)
-
-            val regExit = (awaitItem() as? AutomationEvent.RegionExit)
-            assertEquals(JsonMap.newBuilder()
-                .put("region_id", "exit-reg-id")
-                .put("action", "exit")
-                .put("source", "test2")
-                .build().toJsonValue() , regExit?.data)
-
-            val customEventAnalytic = CustomEvent
-                .newBuilder("test-custom")
-                .setEventValue(223)
-                .setProperties(JsonMap.newBuilder().put("event", "property").build())
-                .build()
-            analytics.addEvent(customEventAnalytic)
-
-            val customEvent = awaitItem() as? AutomationEvent.CustomEvent
-            assertEquals(223.0, customEvent?.count)
-            assertEquals(JsonMap.newBuilder().put("event", "property").build().toJsonValue(), customEvent?.data)
-
-            analytics.addEvent(object : Event() {
-                override fun getType(): String = "feature_flag_interaction"
-
-                override fun getEventData(): JsonMap {
-                    return JsonMap.newBuilder().put("ff", "property").build()
-                }
-            })
-
-            val ffEvent = awaitItem() as? AutomationEvent.FeatureFlagInteracted
-            assertEquals(JsonMap.newBuilder().put("ff", "property").build().toJsonValue(), ffEvent?.data)
+            // Core events
+            listOf(
+                AirshipEventFeed.Event.ScreenTracked("test-screen"),
+                AirshipEventFeed.Event.RegionEnter(jsonMapOf("region" to "enter")),
+                AirshipEventFeed.Event.RegionExit(jsonMapOf("region" to "exit")),
+                AirshipEventFeed.Event.CustomEvent(jsonMapOf("custom" to "event"), 100.0),
+                AirshipEventFeed.Event.FeatureFlagInteracted(jsonMapOf("ff" to "flag"))
+            ).forEach {
+                events.emit(it)
+                assertEquals(AutomationEvent.CoreEvent(it), awaitItem())
+            }
         }
     }
 
     @Test
     public fun testNoEventsIfNotAttached(): TestResult = runTest {
+        events.emit(AirshipEventFeed.Event.ScreenTracked("test-screen"))
         subject.feed.test {
-            expectNoEvents()
-            analytics.trackScreen("test")
             expectNoEvents()
         }
     }
 
     @Test
     public fun testNoEventsAfterDetach(): TestResult = runTest {
+        subject.attach()
         subject.feed.test {
-            subject.attach()
-            skipItems(2)
-
-            analytics.trackScreen("test")
-            awaitItem()
-
-            subject.detach()
-            analytics.trackScreen("test")
+            skipItems(3)
+        }
+        subject.detach()
+        events.emit(AirshipEventFeed.Event.ScreenTracked("test-screen"))
+        subject.feed.test {
             expectNoEvents()
         }
     }
+
 }

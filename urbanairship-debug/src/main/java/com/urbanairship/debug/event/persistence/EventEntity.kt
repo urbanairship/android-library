@@ -5,6 +5,7 @@ package com.urbanairship.debug.event.persistence
 import androidx.annotation.RestrictTo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.urbanairship.analytics.AirshipEventData
 import com.urbanairship.analytics.Event
 
 /**
@@ -23,11 +24,12 @@ data class EventEntity(
     val type: String
 ) {
 
-    constructor(event: Event, session: String) : this(
-            0,
-            event.eventId,
-            session,
-            event.createEventPayload(session),
-            (event.time.toDouble() * 1000).toLong(),
-            event.type)
+    constructor(event: AirshipEventData) : this(
+        id = 0,
+        eventId = event.id,
+        session = event.sessionId,
+        payload = event.body.toString(),
+        time = event.timeMs,
+        type = event.type
+    )
 }

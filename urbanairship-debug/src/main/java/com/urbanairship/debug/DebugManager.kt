@@ -10,8 +10,12 @@ import com.urbanairship.UAirship
 import com.urbanairship.debug.event.EventListFragment
 import com.urbanairship.debug.event.persistence.EventEntity
 import com.urbanairship.debug.push.persistence.PushEntity
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -19,7 +23,13 @@ import kotlinx.coroutines.launch
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class DebugManager(context: Context, preferenceDataStore: PreferenceDataStore) : AirshipComponent(context, preferenceDataStore) {
+class DebugManager(
+    context: Context,
+    preferenceDataStore: PreferenceDataStore,
+    dispatcher: CoroutineDispatcher = Dispatchers.IO
+) : AirshipComponent(context, preferenceDataStore) {
+
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     companion object {
         const val TRIM_PUSHES_COUNT = 50L
@@ -29,12 +39,12 @@ class DebugManager(context: Context, preferenceDataStore: PreferenceDataStore) :
         super.onAirshipReady(airship)
 
         airship.pushManager.addInternalPushListener { message, _ ->
-            GlobalScope.launch(Dispatchers.IO) {
+            scope.launch {
                 ServiceLocator.shared(context).getPushDao().insertPush(PushEntity(message))
             }
         }
 
-        GlobalScope.launch(Dispatchers.IO) {
+        scope.launch {
             val storageDays = ServiceLocator.shared(context)
                     .sharedPreferences.getInt(EventListFragment.STORAGE_DAYS_KEY, EventListFragment.DEFAULT_STORAGE_DAYS)
 
@@ -47,11 +57,12 @@ class DebugManager(context: Context, preferenceDataStore: PreferenceDataStore) :
                     .trimPushes(TRIM_PUSHES_COUNT)
         }
 
-        airship.analytics.addEventListener { event, session ->
-            GlobalScope.launch(Dispatchers.IO) {
+
+        scope.launch {
+            airship.analytics.events.collectLatest {
                 ServiceLocator.shared(context)
-                        .getEventDao()
-                        .insertEvent(EventEntity(event, session))
+                    .getEventDao()
+                    .insertEvent(EventEntity(it))
             }
         }
     }

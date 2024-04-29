@@ -1,71 +1,71 @@
 package com.urbanairship.automation.rewrite.engine
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
-import com.urbanairship.PrivacyManager
-import com.urbanairship.TestActivityMonitor
-import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.analytics.Analytics
-import com.urbanairship.analytics.location.RegionEvent
+import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.AutomationAppState
 import com.urbanairship.automation.rewrite.AutomationDelay
 import com.urbanairship.automation.rewrite.utils.TaskSleeper
-import com.urbanairship.locale.LocaleManager
-import kotlin.time.Duration
-import io.mockk.coEvery
+import app.cash.turbine.test
+import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
-import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.yield
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 public class AutomationDelayProcessorTest {
-    private val context: Context = ApplicationProvider.getApplicationContext()
-    private val clock = TestClock()
-    private val activityMonitor = TestActivityMonitor()
-    private val sleeper: TaskSleeper = mockk()
-    private lateinit var analytics: Analytics
-    private lateinit var processor: AutomationDelayProcessor
-    private val sleepIntervals = mutableListOf<Long>()
+    private val foregroundState = MutableStateFlow(false)
+
+    private val activityMonitor: ActivityMonitor = mockk() {
+        every { this@mockk.foregroundState } returns this@AutomationDelayProcessorTest.foregroundState
+    }
+
+    private val screenState = MutableStateFlow<String?>(null)
+    private val regionState = MutableStateFlow<Set<String>>(emptySet())
+
+    private val analytics: Analytics = mockk() {
+        every { this@mockk.screenState } returns this@AutomationDelayProcessorTest.screenState
+        every { this@mockk.regionState } returns this@AutomationDelayProcessorTest.regionState
+    }
+
+    private val sleeper: TaskSleeper = mockk(relaxed = true)
+
+    private val testDispatcher = StandardTestDispatcher()
+    private val clock = TestClock().apply {
+        currentTimeMillis = 0
+    }
+
+    private val processor =  AutomationDelayProcessor(
+        analytics = analytics,
+        activityMonitor = activityMonitor,
+        clock = clock,
+        sleeper = sleeper
+    )
 
     @Before
     public fun setup() {
-        val dataStore = PreferenceDataStore.inMemoryStore(context)
-        analytics = Analytics(
-            context,
-            dataStore,
-            TestAirshipRuntimeConfig(),
-            PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL),
-            mockk(),
-            LocaleManager(context, dataStore),
-            mockk()
-        )
+        Dispatchers.setMain(testDispatcher)
+    }
 
-        processor = AutomationDelayProcessor(
-            analytics = analytics,
-            appStateTracker = activityMonitor,
-            clock = clock,
-            sleeper = sleeper
-        )
-
-        clock.currentTimeMillis = 0
-        coEvery { sleeper.sleep(any()) } coAnswers {
-            sleepIntervals.add(firstArg())
-        }
+    @After
+    public fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
@@ -77,66 +77,76 @@ public class AutomationDelayProcessorTest {
             appState = AutomationAppState.FOREGROUND
         )
 
-        val job = startProcessing(delay, this)
+        startProcessing(delay, this).test {
+            assertFalse(awaitItem())
+            screenState.value = "screen1"
+            expectNoEvents()
+            regionState.value = setOf("region1")
+            expectNoEvents()
+            foregroundState.value = true
+            assertTrue(awaitItem())
+        }
 
-        assertTrue(job.isActive)
-        assertFalse(job.isCompleted)
-
-        analytics.trackScreen("screen1")
-        trackRegionEnter("region1")
-        activityMonitor.foreground()
-
-        job.await()
-        assertEquals(listOf(100L), sleepIntervals)
+        coVerify { sleeper.sleep(100L) }
     }
 
     @Test
     public fun testTaskSleep(): TestResult = runTest {
         val delay = AutomationDelay(seconds = 100L)
 
-        val job = startProcessing(delay, this)
+        startProcessing(delay, this).test {
+            assertFalse(awaitItem())
+            assertTrue(awaitItem())
+        }
 
-        job.await()
-        assertEquals(listOf(100L), sleepIntervals)
+        coVerify { sleeper.sleep(100L) }
     }
 
     @Test
-    public fun testRemainingSleep(): TestResult = runTest(timeout = Duration.INFINITE) {
+    public fun testRemainingSleep(): TestResult = runTest {
         val delay = AutomationDelay(seconds = 100L)
 
         clock.currentTimeMillis = 100 * 1000
-        val job = startProcessing(delay, this, triggerTime = 50 * 1000)
+        startProcessing(delay, this, triggerTime = 50 * 1000).test {
+            assertFalse(awaitItem())
+            assertTrue(awaitItem())
+        }
 
-        job.await()
-        assertEquals(listOf(50L), sleepIntervals)
+        coVerify { sleeper.sleep(50L) }
     }
 
     @Test
     public fun testSkipSleep(): TestResult = runTest {
         val delay = AutomationDelay(seconds = 100L)
         clock.currentTimeMillis = 100 * 1000
-        val job = startProcessing(delay, this, triggerTime = 0)
+        startProcessing(delay, this, triggerTime = 0).test {
+            assertFalse(awaitItem())
+            assertTrue(awaitItem())
+        }
 
-        job.await()
-        assertTrue(sleepIntervals.isEmpty())
+        coVerify(exactly = 0) { sleeper.sleep(any()) }
     }
 
     @Test
     public fun testEmptyDelay(): TestResult = runTest {
         val delay = AutomationDelay()
 
-        val job = startProcessing(delay, this)
-        job.await()
+        startProcessing(delay, this).test {
+            assertFalse(awaitItem())
+            assertTrue(awaitItem())
+        }
 
-        assertTrue(sleepIntervals.isEmpty())
+        coVerify(exactly = 0) { sleeper.sleep(any()) }
         assertTrue(processor.areConditionsMet(delay))
     }
 
     @Test
     public fun testNilDelay(): TestResult = runTest {
-        val job = startProcessing(null, this)
-        job.await()
-        assertTrue(sleepIntervals.isEmpty())
+        startProcessing(null, this).test {
+            assertFalse(awaitItem())
+            assertTrue(awaitItem())
+        }
+        coVerify(exactly = 0) { sleeper.sleep(any()) }
         assertTrue(processor.areConditionsMet(null))
     }
 
@@ -146,10 +156,10 @@ public class AutomationDelayProcessorTest {
 
         assertFalse(processor.areConditionsMet(delay))
 
-        analytics.trackScreen("screen1")
+        screenState.value = "screen1"
         assertTrue(processor.areConditionsMet(delay))
 
-        analytics.trackScreen("screen3")
+        screenState.value = "screen3"
         assertFalse(processor.areConditionsMet(delay))
     }
 
@@ -158,11 +168,10 @@ public class AutomationDelayProcessorTest {
         val delay = AutomationDelay(regionID = "foo")
         assertFalse(processor.areConditionsMet(delay))
 
-        trackRegionEnter("foo")
+        regionState.value = setOf("foo")
         assertTrue(processor.areConditionsMet(delay))
 
-        trackRegionExit("foo")
-        trackRegionEnter("bar")
+        regionState.value = setOf("bar")
         assertFalse(processor.areConditionsMet(delay))
     }
 
@@ -170,10 +179,10 @@ public class AutomationDelayProcessorTest {
     public fun testForegroundAppState(): TestResult = runTest {
         val delay = AutomationDelay(appState = AutomationAppState.FOREGROUND)
 
-        activityMonitor.background()
+        foregroundState.value = false
         assertFalse(processor.areConditionsMet(delay))
 
-        activityMonitor.foreground()
+        foregroundState.value = true
         assertTrue(processor.areConditionsMet(delay))
     }
 
@@ -181,48 +190,25 @@ public class AutomationDelayProcessorTest {
     public fun testBackgroundAppState(): TestResult = runTest {
         val delay = AutomationDelay(appState = AutomationAppState.BACKGROUND)
 
-        activityMonitor.background()
+        foregroundState.value = false
         assertTrue(processor.areConditionsMet(delay))
 
-        activityMonitor.foreground()
+        foregroundState.value = true
         assertFalse(processor.areConditionsMet(delay))
     }
 
-    private suspend fun startProcessing(
+    private fun startProcessing(
         delay: AutomationDelay?,
         scope: TestScope,
         triggerTime: Long = clock.currentTimeMillis()
-        ): Deferred<Unit> {
+    ): StateFlow<Boolean> {
 
-        val started = CompletableDeferred<Unit>()
-        val otherDispatcher = StandardTestDispatcher(scope.testScheduler, "Processor Dispatcher")
-        val result = scope.async(otherDispatcher) {
-            started.complete(Unit)
+        val flow = MutableStateFlow(false)
+        scope.async(Dispatchers.IO) {
             processor.process(delay, triggerDate = triggerTime)
+            flow.value = true
         }
-
-        started.await()
-        yield()
-
-        return result
+        return flow
     }
 
-    private fun trackRegionEnter(regionId: String) {
-        trackRegionEvent(regionId, RegionEvent.BOUNDARY_EVENT_ENTER)
-    }
-
-    private fun trackRegionExit(regionId: String) {
-        trackRegionEvent(regionId, RegionEvent.BOUNDARY_EVENT_EXIT)
-    }
-
-    private fun trackRegionEvent(id: String, type: Int) {
-        val regionEnter = RegionEvent
-            .newBuilder()
-            .setRegionId(id)
-            .setBoundaryEvent(type)
-            .setSource("test")
-            .build()
-
-        analytics.addEvent(regionEnter)
-    }
 }

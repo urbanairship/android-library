@@ -2,6 +2,8 @@ package com.urbanairship.iam;
 
 import android.content.Context;
 
+import com.urbanairship.automation.rewrite.inappmessage.InAppActivityMonitor;
+
 import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 

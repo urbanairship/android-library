@@ -6,6 +6,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
+import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.channel.AirshipChannel
@@ -44,7 +45,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         meteredUsage: AirshipMeteredUsage,
         contact: Contact,
         deferredResolver: DeferredResolver,
-        localeManager: LocaleManager
+        localeManager: LocaleManager,
+        eventFeed: AirshipEventFeed
     ): Module {
         val inAppAutomation = InAppAutomation(
             context,

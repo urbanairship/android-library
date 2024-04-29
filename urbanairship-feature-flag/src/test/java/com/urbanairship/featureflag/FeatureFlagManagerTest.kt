@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestApplication
+import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
@@ -41,6 +42,8 @@ class FeatureFlagManagerTest {
     private val context: Context = TestApplication.getApplication()
     private val remoteData: RemoteData = mockk()
     private val analytics: Analytics = mockk()
+    private val eventFeed: AirshipEventFeed = mockk()
+
     private val deferredResolver: FlagDeferredResolver = mockk()
 
     private lateinit var featureFlags: FeatureFlagManager
@@ -62,6 +65,7 @@ class FeatureFlagManagerTest {
             analytics = analytics,
             infoProvider = infoProvider,
             deferredResolver = deferredResolver,
+            eventFeed = eventFeed,
             clock = clock
         )
 
@@ -501,7 +505,7 @@ class FeatureFlagManagerTest {
 
     @Test
     fun testTrackInteraction(): TestResult = runTest {
-        every { analytics.addEvent(any()) } just runs
+        every { analytics.addEvent(any()) } returns true
 
         val flag = FeatureFlag.createFlag("some-flag", true, createReportingInfo())
         featureFlags.trackInteraction(flag)
@@ -511,6 +515,10 @@ class FeatureFlagManagerTest {
                 // The event has a different time stamp so we are just comparing the data
                 assert(it.eventData == FeatureFlagInteractionEvent(flag).data)
             })
+
+            eventFeed.emit(
+                AirshipEventFeed.Event.FeatureFlagInteracted(FeatureFlagInteractionEvent(flag).data)
+            )
         }
     }
 

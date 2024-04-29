@@ -340,7 +340,7 @@ public class CustomEvent extends Event implements JsonSerializable {
      */
     @NonNull
     public CustomEvent track() {
-        UAirship.shared().getAnalytics().addEvent(this);
+        UAirship.shared().getAnalytics().recordCustomEvent(this);
         return this;
     }
 

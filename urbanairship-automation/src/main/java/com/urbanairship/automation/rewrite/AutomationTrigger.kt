@@ -1,5 +1,6 @@
 package com.urbanairship.automation.rewrite
 
+import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.automation.rewrite.engine.triggerprocessor.MatchResult
 import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerExecutionType
@@ -243,21 +244,6 @@ public class EventAutomationTrigger internal constructor(
                 evaluateResults(data, 1.0)
             }
 
-            is AutomationEvent.CustomEvent -> {
-                customEvenTriggerMatch(event.data, event.count, data)
-            }
-
-            is AutomationEvent.FeatureFlagInteracted -> {
-                if (this.type != EventAutomationTriggerType.FEATURE_FLAG_INTERACTION) {
-                    return null
-                }
-                if (!isPredicatedMatching(event.data)) {
-                    return null
-                }
-
-                evaluateResults(data, 1.0)
-            }
-
             AutomationEvent.Foreground -> {
                 if (this.type != EventAutomationTriggerType.FOREGROUND) {
                     return null
@@ -265,37 +251,56 @@ public class EventAutomationTrigger internal constructor(
                 evaluateResults(data, 1.0)
             }
 
-            is AutomationEvent.RegionEnter -> {
-                if (this.type != EventAutomationTriggerType.REGION_ENTER) {
-                    return null
-                }
-                if (!isPredicatedMatching(event.data)) {
-                    return null
-                }
+            is AutomationEvent.CoreEvent -> {
+                when (event.airshipEvent) {
+                    is AirshipEventFeed.Event.CustomEvent -> {
+                        customEvenTriggerMatch(
+                            event.airshipEvent.data.toJsonValue(),
+                            event.airshipEvent.value,
+                            data
+                        )
+                    }
+                    is AirshipEventFeed.Event.FeatureFlagInteracted -> {
+                        if (this.type != EventAutomationTriggerType.FEATURE_FLAG_INTERACTION) {
+                            return null
+                        }
+                        if (!isPredicatedMatching(event.airshipEvent.data)) {
+                            return null
+                        }
 
-                evaluateResults(data, 1.0)
-            }
+                        evaluateResults(data, 1.0)
+                    }
+                    is AirshipEventFeed.Event.RegionEnter -> {
+                        if (this.type != EventAutomationTriggerType.REGION_ENTER) {
+                            return null
+                        }
+                        if (!isPredicatedMatching(event.airshipEvent.data)) {
+                            return null
+                        }
 
-            is AutomationEvent.RegionExit -> {
-                if (this.type != EventAutomationTriggerType.REGION_EXIT) {
-                    return null
-                }
-                if (!isPredicatedMatching(event.data)) {
-                    return null
-                }
+                        evaluateResults(data, 1.0)
+                    }
+                    is AirshipEventFeed.Event.RegionExit -> {
+                        if (this.type != EventAutomationTriggerType.REGION_EXIT) {
+                            return null
+                        }
+                        if (!isPredicatedMatching(event.airshipEvent.data)) {
+                            return null
+                        }
 
-                evaluateResults(data, 1.0)
-            }
+                        evaluateResults(data, 1.0)
+                    }
+                    is AirshipEventFeed.Event.ScreenTracked -> {
+                        if (this.type != EventAutomationTriggerType.SCREEN) {
+                            return null
+                        }
+                        if (!isPredicatedMatching(JsonValue.wrap(event.airshipEvent.name))) {
+                            return null
+                        }
 
-            is AutomationEvent.ScreenView -> {
-                if (this.type != EventAutomationTriggerType.SCREEN) {
-                    return null
+                        evaluateResults(data, 1.0)
+                    }
                 }
-                if (!isPredicatedMatching(JsonValue.wrap(event.name))) {
-                    return null
-                }
-
-                evaluateResults(data, 1.0)
             }
         }
     }

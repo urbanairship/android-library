@@ -1,0 +1,137 @@
+/* Copyright Airship and Contributors */
+package com.urbanairship
+
+import android.app.Activity
+import com.urbanairship.app.ActivityListener
+import com.urbanairship.app.ActivityMonitor
+import com.urbanairship.app.ApplicationListener
+import com.urbanairship.app.ForwardingActivityListener
+import com.urbanairship.app.ForwardingApplicationListener
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+/**
+ * Test Activity Monitor.
+ */
+class TestActivityMonitor : ActivityMonitor {
+
+    private val _foregroundState = MutableStateFlow(false)
+    override val foregroundState: StateFlow<Boolean> = _foregroundState.asStateFlow()
+
+    private var startedActivities = 0
+    private val applicationListener = ForwardingApplicationListener()
+    private val activityListener: ForwardingActivityListener =
+        object : ForwardingActivityListener() {
+            override fun onActivityResumed(activity: Activity) {
+                _resumedActivities.add(activity)
+                super.onActivityResumed(activity)
+            }
+
+            override fun onActivityPaused(activity: Activity) {
+                _resumedActivities.remove(activity)
+                super.onActivityPaused(activity)
+            }
+
+            override fun onActivityStarted(activity: Activity) {
+                startedActivities++
+                if (!isAppForegrounded) {
+                    isAppForegrounded = true
+                    _foregroundState.value = true
+                    applicationListener.onForeground(System.currentTimeMillis())
+                }
+                super.onActivityStarted(activity)
+            }
+
+            override fun onActivityStopped(activity: Activity) {
+                if (startedActivities > 0) {
+                    startedActivities--
+                }
+                if (startedActivities == 0 && isAppForegrounded) {
+                    isAppForegrounded = false
+                    applicationListener.onBackground(System.currentTimeMillis())
+                }
+                super.onActivityStopped(activity)
+            }
+        }
+    override var isAppForegrounded = false
+        private set
+
+    private var _resumedActivities: MutableList<Activity> = mutableListOf()
+    public override val resumedActivities: List<Activity>
+        get() = _resumedActivities
+
+    /**
+     * Starts an activity.
+     */
+    fun startActivity() {
+        val activity = Activity()
+        startActivity(activity)
+    }
+
+    /**
+     * Stops an activity.
+     */
+    fun stopActivity() {
+        val activity = Activity()
+        stopActivity(activity)
+    }
+
+    fun foreground(timeStamp: Long) {
+        applicationListener.onForeground(timeStamp)
+    }
+
+    fun foreground() {
+        isAppForegrounded = true
+        _foregroundState.value = true
+        applicationListener.onForeground(0)
+    }
+
+    fun background() {
+        isAppForegrounded = false
+        _foregroundState.value = false
+        applicationListener.onBackground(0)
+    }
+
+    fun startActivity(activity: Activity?) {
+        activityListener.onActivityStarted(activity!!)
+    }
+
+    fun resumeActivity(activity: Activity?) {
+        activityListener.onActivityResumed(activity!!)
+    }
+
+    fun pauseActivity(activity: Activity?) {
+        activityListener.onActivityPaused(activity!!)
+    }
+
+    fun stopActivity(activity: Activity?) {
+        activityListener.onActivityStopped(activity!!)
+    }
+
+    override fun addActivityListener(listener: ActivityListener) {
+        activityListener.addListener(listener)
+    }
+
+    override fun removeActivityListener(listener: ActivityListener) {
+        activityListener.removeListener(listener)
+    }
+
+    override fun addApplicationListener(listener: ApplicationListener) {
+        applicationListener.addListener(listener)
+    }
+
+    override fun removeApplicationListener(listener: ApplicationListener) {
+        applicationListener.removeListener(listener)
+    }
+
+    override fun getResumedActivities(filter: Predicate<Activity>): List<Activity> {
+        val activities: MutableList<Activity> = ArrayList()
+        for (activity in resumedActivities) {
+            if (filter.apply(activity)) {
+                activities.add(activity)
+            }
+        }
+        return activities
+    }
+}

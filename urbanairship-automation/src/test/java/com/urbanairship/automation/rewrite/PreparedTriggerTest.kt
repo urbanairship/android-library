@@ -2,30 +2,24 @@ package com.urbanairship.automation.rewrite
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.BaseTestCase
-import com.urbanairship.ShadowAirshipExecutorsLegacy
-import com.urbanairship.TestApplication
 import com.urbanairship.TestClock
+import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.automation.rewrite.engine.triggerprocessor.PreparedTrigger
 import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.json.JsonValue
-import com.urbanairship.util.Clock
-import java.util.Date
+import com.urbanairship.json.jsonMapOf
 import kotlin.time.Duration
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.annotation.Config
-import org.robolectric.annotation.LooperMode
 
 @RunWith(AndroidJUnit4::class)
 public class PreparedTriggerTest: BaseTestCase() {
@@ -149,17 +143,18 @@ public class PreparedTriggerTest: BaseTestCase() {
         assertEquals(1.0, check(EventAutomationTriggerType.FOREGROUND, AutomationEvent.Foreground)?.count)
         assertEquals(1.0, check(EventAutomationTriggerType.BACKGROUND, AutomationEvent.Background)?.count)
         assertEquals(1.0, check(EventAutomationTriggerType.APP_INIT, AutomationEvent.AppInit)?.count)
-        assertEquals(1.0, check(EventAutomationTriggerType.SCREEN, AutomationEvent.ScreenView(null))?.count)
-        assertEquals(1.0, check(EventAutomationTriggerType.REGION_ENTER, AutomationEvent.RegionEnter(
-            JsonValue.wrap("regionid")))?.count)
-        assertEquals(1.0, check(EventAutomationTriggerType.REGION_EXIT, AutomationEvent.RegionExit(
-            JsonValue.wrap("regionid")))?.count)
-        assertEquals(1.0, check(EventAutomationTriggerType.FEATURE_FLAG_INTERACTION, AutomationEvent.FeatureFlagInteracted(
-            JsonValue.NULL))?.count)
-        assertEquals(2.0, check(EventAutomationTriggerType.CUSTOM_EVENT_VALUE, AutomationEvent.CustomEvent(
-            data = JsonValue.NULL, count = 2.0))?.count)
-        assertEquals(1.0, check(EventAutomationTriggerType.CUSTOM_EVENT_COUNT, AutomationEvent.CustomEvent(
-            data = JsonValue.NULL, count = 2.0))?.count)
+        assertEquals(1.0, check(EventAutomationTriggerType.SCREEN,
+            AutomationEvent.CoreEvent(AirshipEventFeed.Event.ScreenTracked("FOO")))?.count)
+        assertEquals(1.0, check(EventAutomationTriggerType.REGION_ENTER,
+            AutomationEvent.CoreEvent(AirshipEventFeed.Event.RegionEnter(jsonMapOf())))?.count)
+        assertEquals(1.0, check(EventAutomationTriggerType.REGION_EXIT,
+            AutomationEvent.CoreEvent(AirshipEventFeed.Event.RegionExit(jsonMapOf())))?.count)
+        assertEquals(1.0, check(EventAutomationTriggerType.FEATURE_FLAG_INTERACTION,
+            AutomationEvent.CoreEvent(AirshipEventFeed.Event.FeatureFlagInteracted(jsonMapOf())))?.count)
+        assertEquals(2.0, check(EventAutomationTriggerType.CUSTOM_EVENT_VALUE,
+            AutomationEvent.CoreEvent(AirshipEventFeed.Event.CustomEvent(jsonMapOf(), 2.0)))?.count)
+        assertEquals(1.0, check(EventAutomationTriggerType.CUSTOM_EVENT_COUNT,
+            AutomationEvent.CoreEvent(AirshipEventFeed.Event.CustomEvent(jsonMapOf(), 2.0)))?.count)
 
         assertNull(check(EventAutomationTriggerType.VERSION, AutomationEvent.StateChanged(state = TriggerableState())))
         assertEquals(1.0,
@@ -579,9 +574,7 @@ public class PreparedTriggerTest: BaseTestCase() {
         var state = instance.process(AutomationEvent.StateChanged(TriggerableState("test")))
         assertNull(state?.triggerResult)
 
-        state = instance.process(AutomationEvent.CustomEvent(
-            data = JsonValue.NULL,
-            count = 1.0))
+        state = instance.process(AutomationEvent.CoreEvent(AirshipEventFeed.Event.CustomEvent(jsonMapOf(), 1.0)))
         assertNotNull(state?.triggerResult)
     }
 
@@ -774,7 +767,7 @@ public class PreparedTriggerTest: BaseTestCase() {
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
 
-        state = instance.process(AutomationEvent.ScreenView("screen"))
+        state = instance.process(AutomationEvent.CoreEvent(AirshipEventFeed.Event.ScreenTracked("screen")))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
 

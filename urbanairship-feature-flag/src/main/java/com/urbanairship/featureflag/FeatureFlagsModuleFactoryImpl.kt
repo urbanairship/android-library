@@ -5,6 +5,7 @@ package com.urbanairship.featureflag
 import android.content.Context
 import com.urbanairship.BuildConfig
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.cache.AirshipCache
@@ -23,7 +24,8 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
         analytics: Analytics,
         infoProvider: DeviceInfoProvider,
         cache: AirshipCache,
-        resolver: DeferredResolver
+        resolver: DeferredResolver,
+        eventFeed: AirshipEventFeed
     ): Module {
         val manager = FeatureFlagManager(
             context = context,
@@ -32,7 +34,8 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
             analytics = analytics,
             infoProvider = infoProvider,
             clock = Clock.DEFAULT_CLOCK,
-            deferredResolver = FlagDeferredResolver(cache, resolver)
+            deferredResolver = FlagDeferredResolver(cache, resolver),
+            eventFeed = eventFeed
         )
         return Module.singleComponent(manager, 0)
     }

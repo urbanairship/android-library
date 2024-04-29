@@ -16,6 +16,7 @@ import android.provider.Settings;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
+import com.urbanairship.analytics.AirshipEventFeed;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.audience.AudienceOverridesProvider;
@@ -718,8 +719,10 @@ public class UAirship {
         this.actionRegistry = new ActionRegistry();
         this.actionRegistry.registerDefaultActions(getApplicationContext());
 
+        AirshipEventFeed eventFeed = new AirshipEventFeed(privacyManager, airshipConfigOptions.analyticsEnabled);
+
         // Airship components
-        this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, permissionsManager);
+        this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, permissionsManager, eventFeed);
         components.add(this.analytics);
 
         //noinspection deprecation
@@ -773,7 +776,7 @@ public class UAirship {
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
                 privacyManager, channel, pushManager, analytics, remoteData, this.experimentManager,
-                infoProvider, meteredUsageManager, contact, deferredResolver, localeManager);
+                infoProvider, meteredUsageManager, contact, deferredResolver, localeManager, eventFeed);
         processModule(automationModule);
 
         // Ad Id
@@ -790,7 +793,7 @@ public class UAirship {
 
         // Feature flags
         Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, analytics, infoProvider,
-                new AirshipCache(application, runtimeConfig), deferredResolver);
+                new AirshipCache(application, runtimeConfig), deferredResolver, eventFeed);
         processModule(featureFlags);
 
         for (AirshipComponent component : components) {

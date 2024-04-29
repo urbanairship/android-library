@@ -6,6 +6,7 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 
 import com.urbanairship.actions.ActionRegistry;
+import com.urbanairship.analytics.AirshipEventFeed;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.base.Supplier;
@@ -65,7 +66,10 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.permissionsManager = PermissionsManager.newPermissionsManager(this);
         UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, privacyManager, UAirship.sharedAirship.localeManager, audienceOverridesProvider);
 
-        UAirship.sharedAirship.analytics = new Analytics(this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.channel, UAirship.sharedAirship.localeManager, UAirship.sharedAirship.permissionsManager);
+        UAirship.sharedAirship.analytics = new Analytics(
+                this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.channel, UAirship.sharedAirship.localeManager, UAirship.sharedAirship.permissionsManager,
+                new AirshipEventFeed(privacyManager, true)
+        );
         UAirship.sharedAirship.applicationMetrics = new ApplicationMetrics(this, preferenceDataStore, privacyManager, new TestActivityMonitor());
         UAirship.sharedAirship.pushManager = new PushManager(this, preferenceDataStore, testRuntimeConfig, privacyManager, pushProviders, UAirship.sharedAirship.channel, UAirship.sharedAirship.analytics, UAirship.sharedAirship.permissionsManager);
         UAirship.sharedAirship.channelCapture = new ChannelCapture(this, airshipConfigOptions, UAirship.sharedAirship.channel, preferenceDataStore, new TestActivityMonitor());

@@ -10,6 +10,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
+import com.urbanairship.analytics.AirshipEventFeed;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.cache.AirshipCache;
@@ -91,26 +92,30 @@ public class Modules {
     }
 
     @Nullable
-    public static Module automation(@NonNull Context context,
-                                    @NonNull PreferenceDataStore dataStore,
-                                    @NonNull AirshipRuntimeConfig runtimeConfig,
-                                    @NonNull PrivacyManager privacyManager,
-                                    @NonNull AirshipChannel airshipChannel,
-                                    @NonNull PushManager pushManager,
-                                    @NonNull Analytics analytics,
-                                    @NonNull RemoteData remoteData,
-                                    @NonNull ExperimentManager experimentManager,
-                                    @NonNull DeviceInfoProvider infoProvider,
-                                    @NonNull AirshipMeteredUsage meteredUsage,
-                                    @NonNull Contact contact,
-                                    @NonNull DeferredResolver deferredResolver,
-                                    @NonNull LocaleManager localeManager) {
+    public static Module automation(
+            @NonNull Context context,
+            @NonNull PreferenceDataStore dataStore,
+            @NonNull AirshipRuntimeConfig runtimeConfig,
+            @NonNull PrivacyManager privacyManager,
+            @NonNull AirshipChannel airshipChannel,
+            @NonNull PushManager pushManager,
+            @NonNull Analytics analytics,
+            @NonNull RemoteData remoteData,
+            @NonNull ExperimentManager experimentManager,
+            @NonNull DeviceInfoProvider infoProvider,
+            @NonNull AirshipMeteredUsage meteredUsage,
+            @NonNull Contact contact,
+            @NonNull DeferredResolver deferredResolver,
+            @NonNull LocaleManager localeManager,
+            @NonNull AirshipEventFeed eventFeed
+    ) {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager,
                         airshipChannel, pushManager, analytics, remoteData, experimentManager,
-                        infoProvider, meteredUsage, contact, deferredResolver, localeManager);
+                        infoProvider, meteredUsage, contact, deferredResolver, localeManager,
+                        eventFeed);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Automation module");
@@ -194,13 +199,15 @@ public class Modules {
             @NonNull Analytics analytics,
             @NonNull DeviceInfoProvider infoProvider,
             @NonNull AirshipCache cache,
-            @NonNull DeferredResolver resolver) {
+            @NonNull DeferredResolver resolver,
+            @NonNull AirshipEventFeed eventFeed
+    ) {
         try {
             FeatureFlagsModuleFactory moduleFactory =
                     createFactory(FEATURE_FLAGS_FACTORY, FeatureFlagsModuleFactory.class);
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, remoteData, analytics, infoProvider,
-                        cache, resolver);
+                        cache, resolver, eventFeed);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Feature Flags module");

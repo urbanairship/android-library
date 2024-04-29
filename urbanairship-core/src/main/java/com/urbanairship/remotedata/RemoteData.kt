@@ -188,7 +188,7 @@ public class RemoteData @VisibleForTesting internal constructor(
 
         refreshManager.dispatchRefreshJob()
 
-        if (activityMonitor.isAppForegrounded()) {
+        if (activityMonitor.isAppForegrounded) {
             applicationListener.onForeground(clock.currentTimeMillis())
         }
     }

@@ -7,6 +7,7 @@ import android.content.Context;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.analytics.AirshipEventFeed;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
@@ -46,6 +47,7 @@ public interface AutomationModuleFactory extends AirshipVersionInfo {
                  @NonNull AirshipMeteredUsage meteredUsage,
                  @NonNull Contact contact,
                  @NonNull DeferredResolver deferredResolver,
-                 @NonNull LocaleManager localeManager);
+                 @NonNull LocaleManager localeManager,
+                 @NonNull AirshipEventFeed eventFeed);
 
     }
