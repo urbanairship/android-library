@@ -13,7 +13,7 @@ import com.urbanairship.automation.rewrite.deferred.DeferredScheduleResult
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
 import com.urbanairship.automation.rewrite.inappmessage.PreparedInAppMessageData
 import com.urbanairship.automation.rewrite.isInAppMessageType
-import com.urbanairship.automation.rewrite.limits.FrequencyCheckerInterface
+import com.urbanairship.automation.rewrite.limits.FrequencyChecker
 import com.urbanairship.automation.rewrite.limits.FrequencyLimitManager
 import com.urbanairship.automation.rewrite.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.deferred.DeferredRequest
@@ -91,22 +91,19 @@ internal class AutomationPreparer internal constructor(
                         return@Operation RetryingExecutor.finishedResult()
                     }
 
-                    val frequencyChecker: FrequencyCheckerInterface
-                    try {
-                        frequencyChecker = runBlocking {
-                            frequencyLimitManager.getFrequencyChecker(
-                                constraintIDs = schedule.frequencyConstraintIDs
-                            )
-                        }
-                        if (runBlocking { frequencyChecker.isOverLimit() }) {
-                            UALog.v { "Frequency limits exceeded ${schedule.identifier}" }
-                            it.resume(SchedulePrepareResult.Skip)
-                            return@Operation RetryingExecutor.finishedResult()
-                        }
-                    } catch (ex: Exception) {
+                    val frequencyCheckerResult = runBlocking {
+                        frequencyLimitManager.getFrequencyChecker(schedule.frequencyConstraintIds)
+                    }
+
+                    val frequencyChecker = frequencyCheckerResult.getOrElse { ex ->
                         UALog.e(ex) { "Failed to fetch frequency checker for schedule ${schedule.identifier}" }
-                        runBlocking { remoteDataAccess.notifyOutdated(schedule) }
                         it.resume(SchedulePrepareResult.Invalidate)
+                        return@Operation RetryingExecutor.finishedResult()
+                    }
+
+                    if (frequencyChecker?.isOverLimit() == true) {
+                        UALog.v { "Frequency limits exceeded ${schedule.identifier}" }
+                        it.resume(SchedulePrepareResult.Skip)
                         return@Operation RetryingExecutor.finishedResult()
                     }
 
@@ -172,7 +169,7 @@ internal class AutomationPreparer internal constructor(
         triggerContext: DeferredTriggerContext?,
         deviceInfoProvider: DeviceInfoProvider,
         scheduleInfo: PreparedScheduleInfo,
-        frequencyChecker: FrequencyCheckerInterface,
+        frequencyChecker: FrequencyChecker?,
         schedule: AutomationSchedule,
         continuation: Continuation<SchedulePrepareResult>
     ): RetryingExecutor.Result {
@@ -210,7 +207,6 @@ internal class AutomationPreparer internal constructor(
                     triggerContext = triggerContext,
                     deviceInfoProvider = deviceInfoProvider,
                     schedule = schedule,
-                    frequencyChecker = frequencyChecker,
                     continuation = continuation,
                     onResult = {
                         prepareData(
@@ -237,7 +233,6 @@ internal class AutomationPreparer internal constructor(
         triggerContext: DeferredTriggerContext?,
         deviceInfoProvider: DeviceInfoProvider,
         schedule: AutomationSchedule,
-        frequencyChecker: FrequencyCheckerInterface,
         continuation: Continuation<SchedulePrepareResult>,
         onResult: suspend (AutomationSchedule.ScheduleData) -> RetryingExecutor.Result
     ): RetryingExecutor.Result {

@@ -11,7 +11,7 @@ import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
 import com.urbanairship.automation.rewrite.inappmessage.PreparedInAppMessageData
 import com.urbanairship.automation.rewrite.inappmessage.content.Custom
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
-import com.urbanairship.automation.rewrite.limits.FrequencyCheckerInterface
+import com.urbanairship.automation.rewrite.limits.FrequencyChecker
 import com.urbanairship.automation.rewrite.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.json.JsonValue
 import io.mockk.coEvery
@@ -82,7 +82,7 @@ public class AutomationExecutorTest {
 
     @Test
     public fun testFrequencyCheckerCheckFailed(): TestResult = runTest {
-        val frequencyChecker: FrequencyCheckerInterface = mockk()
+        val frequencyChecker: FrequencyChecker = mockk()
         coEvery { frequencyChecker.checkAndIncrement() } returns false
 
         val schedule = makeSchedule(checker = frequencyChecker)
@@ -93,7 +93,7 @@ public class AutomationExecutorTest {
 
     @Test
     public fun testFrequencyCheckerCheckSuccess(): TestResult = runTest {
-        val frequencyChecker: FrequencyCheckerInterface = mockk()
+        val frequencyChecker: FrequencyChecker = mockk()
         coEvery { frequencyChecker.checkAndIncrement() } returns true
 
         coEvery { actionExecutor.isReady(any(), any()) } returns ScheduleReadyResult.READY
@@ -240,7 +240,7 @@ public class AutomationExecutorTest {
         coVerify { messageExecutor.interrupted(eq(schedule), eq(preparedScheduleInfo)) }
     }
 
-    private fun makeSchedule(data: PreparedScheduleData? = null, checker: FrequencyCheckerInterface? = null): PreparedSchedule {
+    private fun makeSchedule(data: PreparedScheduleData? = null, checker: FrequencyChecker? = null): PreparedSchedule {
         val scheduleData = data ?: PreparedScheduleData.Action(JsonValue.wrap("neat"))
 
         return PreparedSchedule(

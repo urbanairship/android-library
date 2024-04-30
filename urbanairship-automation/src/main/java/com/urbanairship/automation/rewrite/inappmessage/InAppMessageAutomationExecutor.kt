@@ -17,8 +17,10 @@ import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayRe
 import com.urbanairship.automation.rewrite.utils.ScheduleConditionsChangedNotifier
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal class InAppMessageAutomationExecutor(
     private val context: Context,
@@ -35,7 +37,7 @@ internal class InAppMessageAutomationExecutor(
         get() { synchronized(this) { return field } }
         set(value) { synchronized(this) { field = value } }
 
-    override suspend fun isReady(
+    override fun isReady(
         data: PreparedInAppMessageData,
         preparedScheduleInfo: PreparedScheduleInfo
     ): ScheduleReadyResult {
@@ -71,7 +73,7 @@ internal class InAppMessageAutomationExecutor(
     override suspend fun execute(
         data: PreparedInAppMessageData,
         preparedScheduleInfo: PreparedScheduleInfo
-    ): ScheduleExecuteResult {
+    ): ScheduleExecuteResult = withContext(Dispatchers.Main.immediate) {
         // Display
         displayDelegate?.messageWillDisplay(data.message, preparedScheduleInfo.scheduleID)
         data.displayCoordinator.messageWillDisplay(data.message)
@@ -113,7 +115,7 @@ internal class InAppMessageAutomationExecutor(
             assetManager.clearCache(preparedScheduleInfo.scheduleID)
         }
 
-        return result
+        return@withContext result
     }
 
     override suspend fun interrupted(

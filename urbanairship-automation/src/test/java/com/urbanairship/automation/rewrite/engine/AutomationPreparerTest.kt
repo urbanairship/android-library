@@ -17,7 +17,7 @@ import com.urbanairship.automation.rewrite.inappmessage.content.Banner
 import com.urbanairship.automation.rewrite.inappmessage.content.Custom
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonLayoutType
-import com.urbanairship.automation.rewrite.limits.FrequencyCheckerInterface
+import com.urbanairship.automation.rewrite.limits.FrequencyChecker
 import com.urbanairship.automation.rewrite.limits.FrequencyLimitManager
 import com.urbanairship.automation.rewrite.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.deferred.DeferredRequest
@@ -35,6 +35,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.verify
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.fail
@@ -53,7 +54,11 @@ public class AutomationPreparerTest {
     private val actionPreparer: AutomationPreparerDelegate<JsonValue, JsonValue> = mockk()
     private val messagePreparer: AutomationPreparerDelegate<InAppMessage, PreparedInAppMessageData> = mockk()
     private val deferredResolver: DeferredResolver = mockk()
-    private val frequencyLimitManager: FrequencyLimitManager = mockk()
+
+    private val frequencyLimitManager: FrequencyLimitManager = mockk {
+        coEvery { getFrequencyChecker(any()) } returns Result.success(null)
+    }
+
     private val audienceSelector: AudienceSelector = mockk()
     private val experimentManager: ExperimentManager = mockk()
     private val remoteDataAccess: AutomationRemoteDataAccess = mockk(relaxed = true)
@@ -126,25 +131,22 @@ public class AutomationPreparerTest {
     @Test
     public fun testFrequencyLimitOverLimit(): TestResult = runTest {
         val constraints = listOf("constraint")
+
+
+        val frequencyChecker: FrequencyChecker = mockk() {
+            every { isOverLimit() } returns true
+        }
+        coEvery { frequencyLimitManager.getFrequencyChecker(constraints) } returns Result.success(frequencyChecker)
+
         val schedule = makeSchedule(constraints = constraints)
 
         coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
 
-        coEvery { frequencyLimitManager.getFrequencyChecker(any()) } answers  {
-            val frequencyConstraints = firstArg<List<String>>()
-            object : FrequencyCheckerInterface {
-                override suspend fun isOverLimit(): Boolean = frequencyLimitManager.isOverLimit(frequencyConstraints)
-                override suspend fun checkAndIncrement(): Boolean = frequencyLimitManager.checkAndIncrement(frequencyConstraints)
-            }
-        }
-        coEvery { frequencyLimitManager.isOverLimit(any()) } answers {
-            schedule.frequencyConstraintIDs == firstArg()
-        }
-
         assertEquals(SchedulePrepareResult.Skip, preparer.prepare(context, schedule, triggerContext))
 
-        coVerify { frequencyLimitManager.isOverLimit(eq(listOf("constraint"))) }
+        verify { frequencyChecker.isOverLimit() }
+        coVerify { frequencyLimitManager.getFrequencyChecker(constraints) }
     }
 
     @Test
@@ -170,8 +172,6 @@ public class AutomationPreparerTest {
             assertNull(args[3])
             false
         }
-
-        mockFrequencyLimits()
 
         assertEquals(SchedulePrepareResult.Skip, preparer.prepare(context, schedule, triggerContext))
 
@@ -202,8 +202,6 @@ public class AutomationPreparerTest {
             false
         }
 
-        mockFrequencyLimits()
-
         assertEquals(SchedulePrepareResult.Penalize, preparer.prepare(context, schedule, triggerContext))
 
         coVerify { audienceSelector.evaluate(any(), any(), any(), any()) }
@@ -233,8 +231,6 @@ public class AutomationPreparerTest {
             false
         }
 
-        mockFrequencyLimits()
-
         assertEquals(SchedulePrepareResult.Cancel, preparer.prepare(context, schedule, triggerContext))
 
         coVerify { audienceSelector.evaluate(any(), any(), any(), any()) }
@@ -263,8 +259,6 @@ public class AutomationPreparerTest {
             false
         }
 
-        mockFrequencyLimits()
-
         assertEquals(SchedulePrepareResult.Penalize, preparer.prepare(context, schedule, triggerContext))
 
         coVerify { audienceSelector.evaluate(any(), any(), any(), any()) }
@@ -287,7 +281,6 @@ public class AutomationPreparerTest {
         coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
         coEvery { audienceSelector.evaluate(any(), any(), any(), any()) } returns true
 
-        mockFrequencyLimits()
         mockExperimentsManager()
 
         coEvery { messagePreparer.prepare(any(), any()) } answers  {
@@ -341,7 +334,6 @@ public class AutomationPreparerTest {
         coEvery { audienceSelector.evaluate(any(), any(), any(), any()) } returns true
         coEvery { deviceInfoProvider.getStableContactId() } returns "contact id"
 
-        mockFrequencyLimits()
         mockExperimentsManager()
 
         coEvery { messagePreparer.prepare(any(), any()) } answers  {
@@ -375,7 +367,6 @@ public class AutomationPreparerTest {
         coEvery { audienceSelector.evaluate(any(), any(), any(), any()) } returns true
         coEvery { deviceInfoProvider.getStableContactId() } returns "contact id"
 
-        mockFrequencyLimits()
         mockExperimentsManager()
 
         coEvery { actionPreparer.prepare(any(), any()) } answers {
@@ -428,7 +419,6 @@ public class AutomationPreparerTest {
         coEvery { deviceInfoProvider.getUserLocale(any()) } returns Locale.US
         coEvery { deviceInfoProvider.isNotificationsOptedIn } returns true
 
-        mockFrequencyLimits()
         mockExperimentsManager()
 
         coEvery { deferredResolver.resolve<DeferredScheduleResult>(any(), any()) } answers {
@@ -505,7 +495,6 @@ public class AutomationPreparerTest {
         coEvery { deviceInfoProvider.getUserLocale(any()) } returns Locale.US
         coEvery { deviceInfoProvider.isNotificationsOptedIn } returns true
 
-        mockFrequencyLimits()
         mockExperimentsManager()
 
         coEvery { deferredResolver.resolve<DeferredScheduleResult>(any(), any()) } answers {
@@ -589,7 +578,6 @@ public class AutomationPreparerTest {
         coEvery { deviceInfoProvider.getUserLocale(any()) } returns Locale.US
         coEvery { deviceInfoProvider.isNotificationsOptedIn } returns true
 
-        mockFrequencyLimits()
         mockExperimentsManager()
 
         coEvery { deferredResolver.resolve<DeferredScheduleResult>(any(), any()) } answers {
@@ -626,8 +614,6 @@ public class AutomationPreparerTest {
         coEvery { deviceInfoProvider.channelId } returns "channel-id"
         coEvery { deviceInfoProvider.getUserLocale(any()) } returns Locale.US
         coEvery { deviceInfoProvider.isNotificationsOptedIn } returns true
-
-        mockFrequencyLimits()
 
         val experimentResult = ExperimentResult(
             channelId = "channel-id",
@@ -680,8 +666,6 @@ public class AutomationPreparerTest {
         coEvery { deviceInfoProvider.channelId } returns "channel-id"
         coEvery { deviceInfoProvider.getUserLocale(any()) } returns Locale.US
         coEvery { deviceInfoProvider.isNotificationsOptedIn } returns true
-
-        mockFrequencyLimits()
 
         val experimentResult = ExperimentResult(
             channelId = "channel-id",
@@ -738,8 +722,6 @@ public class AutomationPreparerTest {
         coEvery { deviceInfoProvider.getUserLocale(any()) } returns Locale.US
         coEvery { deviceInfoProvider.isNotificationsOptedIn } returns true
 
-        mockFrequencyLimits()
-
         coEvery { experimentManager.evaluateExperiments(any(), any()) } answers {
             fail()
             null
@@ -783,7 +765,6 @@ public class AutomationPreparerTest {
         coEvery { deviceInfoProvider.getUserLocale(any()) } returns Locale.US
         coEvery { deviceInfoProvider.isNotificationsOptedIn } returns true
 
-        mockFrequencyLimits()
 
         coEvery { experimentManager.evaluateExperiments(any(), any()) } answers {
             fail()
@@ -826,7 +807,7 @@ public class AutomationPreparerTest {
             triggers = listOf(),
             data = scheduleData,
             created = 0U,
-            frequencyConstraintIDs = constraints,
+            frequencyConstraintIds = constraints,
             audience = audience,
             campaigns = campaigns,
             messageType = messageType,
@@ -834,14 +815,6 @@ public class AutomationPreparerTest {
         )
     }
 
-    private fun mockFrequencyLimits() {
-        coEvery { frequencyLimitManager.getFrequencyChecker(any()) } answers {
-            object : FrequencyCheckerInterface {
-                override suspend fun isOverLimit(): Boolean = false
-                override suspend fun checkAndIncrement(): Boolean = true
-            }
-        }
-    }
 
     private fun mockExperimentsManager() {
         coEvery { experimentManager.evaluateExperiments(any(), any()) } returns null

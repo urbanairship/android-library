@@ -9,7 +9,7 @@ import com.urbanairship.automation.rewrite.AutomationEngineInterface
 import com.urbanairship.automation.rewrite.AutomationSchedule
 import com.urbanairship.automation.rewrite.AutomationTrigger
 import com.urbanairship.automation.rewrite.limits.FrequencyConstraint
-import com.urbanairship.automation.rewrite.limits.FrequencyLimitManagerInterface
+import com.urbanairship.automation.rewrite.limits.FrequencyLimitManager
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteDataInfo
@@ -40,7 +40,7 @@ public class AutomationRemoteDataSubscriberTest {
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
     private val remoteDataAccess: AutomationRemoteDataAccessInterface = mockk()
     private val engine: AutomationEngineInterface = mockk()
-    private val frequencyLimitManager: FrequencyLimitManagerInterface = mockk()
+    private val frequencyLimitManager: FrequencyLimitManager = mockk()
     private lateinit var subscriber: AutomationRemoteDataSubscriber
     private val clock = TestClock()
     private var updatesFlow = MutableSharedFlow<InAppRemoteData>(replay = 1)
@@ -51,7 +51,7 @@ public class AutomationRemoteDataSubscriberTest {
         every { remoteDataAccess.updatesFlow } answers { updatesFlow }
         every { remoteDataAccess.sourceFor(any()) } answers { getSource(firstArg()) }
 
-        coEvery { frequencyLimitManager.setConstraints(any()) } just runs
+        coEvery { frequencyLimitManager.setConstraints(any()) } returns Result.success(Unit)
         coEvery { engine.getSchedules() } returns emptyList()
     }
 
@@ -420,6 +420,7 @@ public class AutomationRemoteDataSubscriberTest {
         coEvery { frequencyLimitManager.setConstraints(any()) } answers {
             assertEquals(appConstraints + contactConstraints, firstArg())
             updateJob.complete()
+            Result.success(Unit)
         }
 
         updatesFlow.tryEmit(data)

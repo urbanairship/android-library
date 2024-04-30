@@ -76,7 +76,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     public val editGracePeriodDays: ULong? = null,
 
     internal val metadata: JsonValue? = null,
-    internal val frequencyConstraintIDs: List<String>? = null,
+    internal val frequencyConstraintIds: List<String>? = null,
     internal val messageType: String? = null,
     internal val campaigns: JsonValue? = null,
     internal val reportingContext: JsonValue? = null,
@@ -93,7 +93,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         return AutomationSchedule(identifier, triggers, group ?: this.group, priority, limit,
             startDate, endDate ?: this.endDate, audience, delay, interval, data,
             bypassHoldoutGroups, editGracePeriodDays, metadata ?: this.metadata,
-            frequencyConstraintIDs, messageType, campaigns, reportingContext, productID,
+            frequencyConstraintIds, messageType, campaigns, reportingContext, productID,
             minSDKVersion, created)
     }
 
@@ -214,7 +214,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 productID = content.get(PRODUCT_ID)?.requireString(),
                 bypassHoldoutGroups = content.optionalField(BYPASS_HOLDOUT_GROUPS),
                 editGracePeriodDays = content.optionalField(EDIT_GRACE_PERIOD_DAYS),
-                frequencyConstraintIDs = content.get(FREQUENCY_CONSTRAINT_IDS)?.requireList()?.map { it.requireString() },
+                frequencyConstraintIds = content.get(FREQUENCY_CONSTRAINT_IDS)?.requireList()?.map { it.requireString() },
                 messageType = content.optionalField(MESSAGE_TYPE),
                 minSDKVersion = content.optionalField(MIN_SDK_VERSION),
                 queue = content.optionalField(QUEUE),
@@ -243,7 +243,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(PRODUCT_ID, productID)
         .putOpt(BYPASS_HOLDOUT_GROUPS, bypassHoldoutGroups)
         .putOpt(EDIT_GRACE_PERIOD_DAYS, editGracePeriodDays?.toLong())
-        .putOpt(FREQUENCY_CONSTRAINT_IDS, frequencyConstraintIDs)
+        .putOpt(FREQUENCY_CONSTRAINT_IDS, frequencyConstraintIds)
         .putOpt(MESSAGE_TYPE, messageType)
         .putOpt(MIN_SDK_VERSION, minSDKVersion)
         .putOpt(QUEUE, queue)
@@ -271,7 +271,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         if (data != other.data) return false
         if (bypassHoldoutGroups != other.bypassHoldoutGroups) return false
         if (editGracePeriodDays != other.editGracePeriodDays) return false
-        if (frequencyConstraintIDs != other.frequencyConstraintIDs) return false
+        if (frequencyConstraintIds != other.frequencyConstraintIds) return false
         if (messageType != other.messageType) return false
         if (campaigns != other.campaigns) return false
         if (reportingContext != other.reportingContext) return false
@@ -285,7 +285,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
 
     override fun hashCode(): Int {
         return Objects.hash(identifier, triggers, group, priority, limit, startDate, audience, delay,
-            interval, data, bypassHoldoutGroups, editGracePeriodDays, frequencyConstraintIDs, messageType,
+            interval, data, bypassHoldoutGroups, editGracePeriodDays, frequencyConstraintIds, messageType,
             campaigns, reportingContext, productID, minSDKVersion, created, queue, metadata, endDate)
     }
 }

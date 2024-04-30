@@ -32,10 +32,8 @@ public class FrequencyLimitManagerTest {
 
     @Test
     public fun testGetCheckerNoLimits(): TestResult = runTest {
-        val checker = manager.getFrequencyChecker(listOf())
-        assertNotNull(checker)
-        assertTrue(checker.checkAndIncrement())
-        assertFalse(checker.isOverLimit())
+        val checker = manager.getFrequencyChecker(listOf()).getOrThrow()
+        assertNull(checker)
     }
 
     @Test
@@ -51,7 +49,8 @@ public class FrequencyLimitManagerTest {
         val constraints = store.getAllConstraints() ?: listOf()
         assertEquals(1, constraints.size)
 
-        val checker = manager.getFrequencyChecker(listOf("foo"))
+        val checker = requireNotNull(manager.getFrequencyChecker(listOf("foo")).getOrThrow())
+
         assertNotNull(checker)
         assertFalse(checker.isOverLimit())
         assertTrue(checker.checkAndIncrement())
@@ -89,8 +88,8 @@ public class FrequencyLimitManagerTest {
 
         manager.setConstraints(listOf(constraint))
 
-        val checker1 = manager.getFrequencyChecker(listOf("foo"))
-        val checker2 = manager.getFrequencyChecker(listOf("foo"))
+        val checker1 = requireNotNull(manager.getFrequencyChecker(listOf("foo")).getOrThrow())
+        val checker2 = requireNotNull(manager.getFrequencyChecker(listOf("foo")).getOrThrow())
 
         val constraints = store.getAllConstraints()
         assertEquals(1, constraints?.size)
@@ -132,7 +131,7 @@ public class FrequencyLimitManagerTest {
 
         manager.setConstraints(listOf(constraint1, constraint2))
 
-        val checker = manager.getFrequencyChecker(listOf("foo", "bar"))
+        val checker = requireNotNull(manager.getFrequencyChecker(listOf("foo", "bar")).getOrThrow())
 
         assertFalse(checker.isOverLimit())
         assertTrue(checker.checkAndIncrement())
@@ -169,7 +168,7 @@ public class FrequencyLimitManagerTest {
 
         manager.setConstraints(listOf(constraint1, constraint2))
 
-        val checker = manager.getFrequencyChecker(listOf("foo", "bar"))
+        val checker = requireNotNull(manager.getFrequencyChecker(listOf("foo", "bar")).getOrThrow())
         manager.setConstraints(listOf(FrequencyConstraint("bar", 10, 10U)))
 
         assertTrue(checker.checkAndIncrement())
@@ -191,7 +190,7 @@ public class FrequencyLimitManagerTest {
     public fun testUpdateConstraintRangeClearsOccurrences(): TestResult = runTest {
         manager.setConstraints(listOf(FrequencyConstraint("foo", 10, 2U)))
 
-        val checker = manager.getFrequencyChecker(listOf("foo"))
+        val checker = requireNotNull(manager.getFrequencyChecker(listOf("foo")).getOrThrow())
         checker.checkAndIncrement()
         manager.savePendingOccurrences()
 
@@ -205,7 +204,7 @@ public class FrequencyLimitManagerTest {
     public fun testUpdateConstraintCountDoesNotClearCount(): TestResult = runTest {
         manager.setConstraints(listOf(FrequencyConstraint("foo", 10, 2U)))
 
-        val checker = manager.getFrequencyChecker(listOf("foo"))
+        val checker = requireNotNull(manager.getFrequencyChecker(listOf("foo")).getOrThrow())
         assertTrue(checker.checkAndIncrement())
 
         manager.setConstraints(listOf(FrequencyConstraint("foo", 10, 3U)))

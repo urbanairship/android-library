@@ -2,7 +2,7 @@ package com.urbanairship.automation.rewrite.engine
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.automation.rewrite.inappmessage.PreparedInAppMessageData
-import com.urbanairship.automation.rewrite.limits.FrequencyCheckerInterface
+import com.urbanairship.automation.rewrite.limits.FrequencyChecker
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
@@ -16,7 +16,7 @@ import com.urbanairship.json.requireField
 public data class PreparedSchedule(
     internal val info: PreparedScheduleInfo,
     internal val data: PreparedScheduleData,
-    internal val frequencyChecker: FrequencyCheckerInterface?
+    internal val frequencyChecker: FrequencyChecker?
 )
 
 /** @hide */

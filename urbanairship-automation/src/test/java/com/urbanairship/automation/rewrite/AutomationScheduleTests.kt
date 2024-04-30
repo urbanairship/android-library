@@ -75,7 +75,7 @@ public class AutomationScheduleTests {
             bypassHoldoutGroups = true,
             editGracePeriodDays = 7U,
             metadata = jsonMapOf().toJsonValue(),
-            frequencyConstraintIDs = listOf("constraint1", "constraint2"),
+            frequencyConstraintIds = listOf("constraint1", "constraint2"),
             messageType = "test_type"
         )
 
@@ -156,7 +156,7 @@ public class AutomationScheduleTests {
             bypassHoldoutGroups = true,
             editGracePeriodDays = 7U,
             metadata = jsonMapOf().toJsonValue(),
-            frequencyConstraintIDs = listOf("constraint1", "constraint2"),
+            frequencyConstraintIds = listOf("constraint1", "constraint2"),
             messageType = "test_type"
         )
 
@@ -235,7 +235,7 @@ public class AutomationScheduleTests {
             bypassHoldoutGroups = true,
             editGracePeriodDays = 7U,
             metadata = jsonMapOf().toJsonValue(),
-            frequencyConstraintIDs = listOf("constraint1", "constraint2"),
+            frequencyConstraintIds = listOf("constraint1", "constraint2"),
             messageType = "test_type"
         )
 

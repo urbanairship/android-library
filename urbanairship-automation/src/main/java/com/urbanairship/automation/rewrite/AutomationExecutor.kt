@@ -1,5 +1,6 @@
 package com.urbanairship.automation.rewrite
 
+import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.automation.rewrite.engine.PreparedSchedule
@@ -31,8 +32,12 @@ public enum class InterruptedBehavior {
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface AutomationExecutorInterface {
     public suspend fun isReadyPrecheck(schedule: AutomationSchedule): ScheduleReadyResult
-    public suspend fun isReady(preparedSchedule: PreparedSchedule): ScheduleReadyResult
+
+    @MainThread
+    public fun isReady(preparedSchedule: PreparedSchedule): ScheduleReadyResult
+
     public suspend fun execute(preparedSchedule: PreparedSchedule): ScheduleExecuteResult
+
     public suspend fun interrupted(
         schedule: AutomationSchedule,
         preparedScheduleInfo: PreparedScheduleInfo
@@ -40,7 +45,10 @@ public interface AutomationExecutorInterface {
 }
 
 internal interface AutomationExecutorDelegate<ExecutionData> {
-    suspend fun isReady(data: ExecutionData, preparedScheduleInfo: PreparedScheduleInfo): ScheduleReadyResult
+
+    @MainThread
+    fun isReady(data: ExecutionData, preparedScheduleInfo: PreparedScheduleInfo): ScheduleReadyResult
+
     suspend fun execute(data: ExecutionData, preparedScheduleInfo: PreparedScheduleInfo) : ScheduleExecuteResult
     suspend fun interrupted(schedule: AutomationSchedule, preparedScheduleInfo: PreparedScheduleInfo) : InterruptedBehavior
 }
@@ -59,7 +67,7 @@ internal class AutomationExecutor(
         return ScheduleReadyResult.READY
     }
 
-    override suspend fun isReady(preparedSchedule: PreparedSchedule): ScheduleReadyResult {
+    override fun isReady(preparedSchedule: PreparedSchedule): ScheduleReadyResult {
         if (preparedSchedule.frequencyChecker?.checkAndIncrement() == false) {
             return ScheduleReadyResult.SKIP
         }

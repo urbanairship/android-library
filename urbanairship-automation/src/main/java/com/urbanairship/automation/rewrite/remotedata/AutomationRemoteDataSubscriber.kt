@@ -3,12 +3,13 @@ package com.urbanairship.automation.rewrite.remotedata
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.automation.rewrite.AutomationEngineInterface
 import com.urbanairship.automation.rewrite.AutomationSchedule
 import com.urbanairship.automation.rewrite.isNewSchedule
 import com.urbanairship.automation.rewrite.limits.FrequencyConstraint
-import com.urbanairship.automation.rewrite.limits.FrequencyLimitManagerInterface
+import com.urbanairship.automation.rewrite.limits.FrequencyLimitManager
 import com.urbanairship.remotedata.RemoteDataSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -27,7 +28,7 @@ internal class AutomationRemoteDataSubscriber (
     dataStore: PreferenceDataStore,
     private val remoteDataAccess: AutomationRemoteDataAccessInterface,
     private val engine: AutomationEngineInterface,
-    private val frequencyLimitManager: FrequencyLimitManagerInterface,
+    private val frequencyLimitManager: FrequencyLimitManager,
     private val airshipSDKVersion: String = UAirship.getVersion(),
     private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
 ) : AutomationRemoteDataSubscriberInterface {
@@ -41,7 +42,11 @@ internal class AutomationRemoteDataSubscriber (
         processJob = scope.launch {
             remoteDataAccess.updatesFlow.collect { payloads ->
                 yield()
-                processConstraints(payloads)
+
+                if (!processConstraints(payloads)) {
+                    return@collect
+                }
+
                 processAutomations(payloads)
             }
         }
@@ -63,12 +68,16 @@ internal class AutomationRemoteDataSubscriber (
         }
     }
 
-    private suspend fun processConstraints(data: InAppRemoteData) {
+    private suspend fun processConstraints(data: InAppRemoteData): Boolean {
         val constraints = data.payload.values
             .mapNotNull { it.data.constraints }
             .fold(emptyList<FrequencyConstraint>()) { acc, next -> acc + next}
 
-        frequencyLimitManager.setConstraints(constraints)
+        val result = frequencyLimitManager.setConstraints(constraints)
+        if (result.isFailure) {
+            UALog.d { "Failed to process constraints ${result.exceptionOrNull()}" }
+        }
+        return result.isSuccess
     }
 
     private suspend fun syncAutomations(
