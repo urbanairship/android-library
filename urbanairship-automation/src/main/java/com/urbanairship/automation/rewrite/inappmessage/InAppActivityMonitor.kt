@@ -16,7 +16,10 @@ import com.urbanairship.app.ForwardingActivityListener
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.util.ManifestUtils
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
@@ -79,28 +82,9 @@ public class InAppActivityMonitor(
         get() = activityMonitor.getResumedActivities(activityPredicate)
 
     @MainThread
-    override fun getResumedActivities(filter: Predicate<Activity>): List<Activity> {
+    override fun getResumedActivities(filter: Predicate<Activity>?): List<Activity> {
         return activityMonitor.getResumedActivities { activity ->
-            activityPredicate.apply(activity) && filter.apply(activity)
-        }
-    }
-
-    internal suspend fun waitForActive() {
-        if (isAppForegrounded) {
-            return
-        }
-
-        suspendCancellableCoroutine { continuation ->
-            val listener = object : SimpleActivityListener() {
-                override fun onActivityStarted(activity: Activity) {
-                    if (isAppForegrounded) {
-                        removeActivityListener(this)
-                        continuation.resumeWith(Result.success(Unit))
-                    }
-                }
-            }
-
-            addActivityListener(listener)
+            activityPredicate.apply(activity) && (filter?.apply(activity) ?: true)
         }
     }
 
@@ -143,5 +127,34 @@ public class InAppActivityMonitor(
                     }
                 }
         }
+    }
+}
+
+
+internal fun ActivityMonitor.resumedActivitiesUpdates(predicate: Predicate<Activity>? = null): Flow<Boolean> {
+    return callbackFlow {
+        val listener: ActivityListener = object : SimpleActivityListener() {
+            override fun onActivityStopped(activity: Activity) {
+            }
+
+            override fun onActivityResumed(activity: Activity) {
+                this@callbackFlow.trySend(
+                    this@resumedActivitiesUpdates.getResumedActivities(predicate).isNotEmpty()
+                )
+            }
+
+            override fun onActivityPaused(activity: Activity) {
+                this@callbackFlow.trySend(
+                    this@resumedActivitiesUpdates.getResumedActivities(predicate).isNotEmpty()
+                )
+            }
+        }
+
+        this@callbackFlow.trySend(
+            this@resumedActivitiesUpdates.getResumedActivities(predicate).isNotEmpty()
+        )
+
+        this@resumedActivitiesUpdates.addActivityListener(listener)
+        awaitClose { this@resumedActivitiesUpdates.removeActivityListener(listener) }
     }
 }

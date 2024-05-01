@@ -1,15 +1,16 @@
 package com.urbanairship.automation.rewrite.inappmessage.displaycoordinator
 
 import androidx.annotation.MainThread
-import androidx.annotation.RestrictTo
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
+import kotlinx.coroutines.flow.StateFlow
 
-/** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@MainThread
-public interface DisplayCoordinatorInterface {
-    public fun getIsReady(): Boolean
-    public fun messageWillDisplay(message: InAppMessage)
-    public fun messageFinishedDisplaying(message: InAppMessage)
-    public suspend fun waitForReady()
+internal interface DisplayCoordinator {
+
+    val isReady: StateFlow<Boolean>
+
+    @MainThread
+    fun messageWillDisplay(message: InAppMessage)
+
+    @MainThread
+    fun messageFinishedDisplaying(message: InAppMessage)
 }

@@ -61,6 +61,7 @@ class TestActivityMonitor : ActivityMonitor {
     public override val resumedActivities: List<Activity>
         get() = _resumedActivities
 
+
     /**
      * Starts an activity.
      */
@@ -93,20 +94,20 @@ class TestActivityMonitor : ActivityMonitor {
         applicationListener.onBackground(0)
     }
 
-    fun startActivity(activity: Activity?) {
-        activityListener.onActivityStarted(activity!!)
+    fun startActivity(activity: Activity) {
+        activityListener.onActivityStarted(activity)
     }
 
-    fun resumeActivity(activity: Activity?) {
-        activityListener.onActivityResumed(activity!!)
+    fun resumeActivity(activity: Activity) {
+        activityListener.onActivityResumed(activity)
     }
 
-    fun pauseActivity(activity: Activity?) {
-        activityListener.onActivityPaused(activity!!)
+    fun pauseActivity(activity: Activity) {
+        activityListener.onActivityPaused(activity)
     }
 
-    fun stopActivity(activity: Activity?) {
-        activityListener.onActivityStopped(activity!!)
+    fun stopActivity(activity: Activity) {
+        activityListener.onActivityStopped(activity)
     }
 
     override fun addActivityListener(listener: ActivityListener) {
@@ -125,10 +126,10 @@ class TestActivityMonitor : ActivityMonitor {
         applicationListener.removeListener(listener)
     }
 
-    override fun getResumedActivities(filter: Predicate<Activity>): List<Activity> {
+    override fun getResumedActivities(filter: Predicate<Activity>?): List<Activity> {
         val activities: MutableList<Activity> = ArrayList()
         for (activity in resumedActivities) {
-            if (filter.apply(activity)) {
+            if (filter?.apply(activity) != false) {
                 activities.add(activity)
             }
         }

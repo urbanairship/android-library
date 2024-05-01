@@ -13,7 +13,7 @@ import com.urbanairship.json.requireField
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class PreparedSchedule(
+internal data class PreparedSchedule(
     internal val info: PreparedScheduleInfo,
     internal val data: PreparedScheduleData,
     internal val frequencyChecker: FrequencyChecker?
@@ -21,9 +21,9 @@ public data class PreparedSchedule(
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public sealed class PreparedScheduleData {
-    public data class InAppMessage(val message: PreparedInAppMessageData) : PreparedScheduleData()
-    public data class Action(val json: JsonValue) : PreparedScheduleData()
+internal sealed class PreparedScheduleData {
+    data class InAppMessage(val message: PreparedInAppMessageData) : PreparedScheduleData()
+    data class Action(val json: JsonValue) : PreparedScheduleData()
 }
 
 /** @hide */

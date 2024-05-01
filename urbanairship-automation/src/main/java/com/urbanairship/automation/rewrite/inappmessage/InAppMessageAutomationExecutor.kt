@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -41,19 +42,19 @@ internal class InAppMessageAutomationExecutor(
         data: PreparedInAppMessageData,
         preparedScheduleInfo: PreparedScheduleInfo
     ): ScheduleReadyResult {
-        if (!data.displayAdapter.getIsReady()) {
+        if (!data.displayAdapter.isReady.value) {
             UALog.i { "Schedule ${preparedScheduleInfo.scheduleID} display adapter not ready" }
             scope.launch {
-                data.displayAdapter.waitForReady()
+                data.displayAdapter.isReady.first { it }
                 scheduleConditionsChangedNotifier.notifyChanged()
             }
             return ScheduleReadyResult.NOT_READY
         }
 
-        if (!data.displayCoordinator.getIsReady()) {
+        if (!data.displayCoordinator.isReady.value) {
             UALog.i { "Schedule ${preparedScheduleInfo.scheduleID} display coordinator not ready" }
             scope.launch {
-                data.displayCoordinator.waitForReady()
+                data.displayCoordinator.isReady.first { it }
                 scheduleConditionsChangedNotifier.notifyChanged()
             }
             return ScheduleReadyResult.NOT_READY

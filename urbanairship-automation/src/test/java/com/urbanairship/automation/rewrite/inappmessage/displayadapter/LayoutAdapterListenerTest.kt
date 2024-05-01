@@ -21,7 +21,7 @@ import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppPa
 import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppPermissionResultEvent
 import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppResolutionEvent
 import com.urbanairship.automation.rewrite.inappmessage.analytics.events.PageViewSummary
-import com.urbanairship.automation.rewrite.inappmessage.displayadapter.layout.LayoutAdapter
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.layout.LayoutListener
 import com.urbanairship.automation.rewrite.utils.ActiveTimer
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -49,7 +49,7 @@ public class LayoutAdapterListenerTest {
     private val timer = ActiveTimer(activityMonitor, clock)
     private var displayResult: DisplayResult? = null
     private val displayListener = InAppMessageDisplayListener(analytics, timer, { displayResult = it })
-    private val listener = LayoutAdapter.Listener(displayListener)
+    private val listener = LayoutListener(displayListener)
     private val defaultLayoutData = LayoutData(null, null, "button")
 
     @Before

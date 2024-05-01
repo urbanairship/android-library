@@ -122,10 +122,10 @@ public class GlobalActivityMonitor @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) c
     }
 
     @MainThread
-    override fun getResumedActivities(filter: Predicate<Activity>): List<Activity> {
+    override fun getResumedActivities(filter: Predicate<Activity>?): List<Activity> {
         val activities: MutableList<Activity> = ArrayList()
         for (activity in _resumedActivities) {
-            if (filter.apply(activity)) {
+            if (filter?.apply(activity) != false) {
                 activities.add(activity)
             }
         }

@@ -1,7 +1,8 @@
 package com.urbanairship.automation.rewrite.inappmessage
 
+import android.content.Context
 import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
-import com.urbanairship.automation.rewrite.inappmessage.displayadapter.CustomDisplayAdapterInterface
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.CustomDisplayAdapter
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.CustomDisplayAdapterType
 
 /**
@@ -27,7 +28,7 @@ public interface InAppMessagingInterface {
      */
     public fun setAdapterFactoryBlock(
         type: CustomDisplayAdapterType,
-        factoryBlock: (InAppMessage, AirshipCachedAssetsInterface) -> CustomDisplayAdapterInterface?
+        factoryBlock: (Context, InAppMessage, AirshipCachedAssetsInterface) -> CustomDisplayAdapter?
     )
 
     /**
@@ -53,7 +54,7 @@ internal class InAppMessaging(
 
     override fun setAdapterFactoryBlock(
         type: CustomDisplayAdapterType,
-        factoryBlock: (InAppMessage, AirshipCachedAssetsInterface) -> CustomDisplayAdapterInterface?
+        factoryBlock: (Context, InAppMessage, AirshipCachedAssetsInterface) -> CustomDisplayAdapter?
     ) {
         preparer.setAdapterFactoryBlock(type, factoryBlock)
     }

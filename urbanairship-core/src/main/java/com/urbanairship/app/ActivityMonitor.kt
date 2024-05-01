@@ -4,7 +4,9 @@ package com.urbanairship.app
 import android.app.Activity
 import androidx.annotation.MainThread
 import com.urbanairship.Predicate
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.callbackFlow
 
 /**
  * Activity Monitor.
@@ -62,5 +64,5 @@ public interface ActivityMonitor {
      * @return The filtered resumed activities.
      */
     @MainThread
-    public fun getResumedActivities(filter: Predicate<Activity>): List<Activity>
+    public fun getResumedActivities(filter: Predicate<Activity>?): List<Activity>
 }

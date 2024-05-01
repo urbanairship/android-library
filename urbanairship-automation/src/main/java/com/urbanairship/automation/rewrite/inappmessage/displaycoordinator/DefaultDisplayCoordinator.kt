@@ -1,44 +1,49 @@
 package com.urbanairship.automation.rewrite.inappmessage.displaycoordinator
 
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.automation.rewrite.inappmessage.InAppActivityMonitor
+import com.urbanairship.app.ActivityMonitor
+import com.urbanairship.automation.rewrite.combineStates
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
 import com.urbanairship.automation.rewrite.utils.TaskSleeper
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 
 internal class DefaultDisplayCoordinator(
     displayInterval: Long,
-    private val activityMonitor: InAppActivityMonitor,
+    activityMonitor: ActivityMonitor,
     private val sleeper: TaskSleeper = TaskSleeper.default,
-    private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.newSerialDispatcher() + SupervisorJob())
-) : DisplayCoordinatorInterface {
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO,
+) : DisplayCoordinator {
+
+    private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
+    private var lockState: MutableStateFlow<LockState> = MutableStateFlow(LockState.UNLOCKED)
+    private var unlockJob: Job? = null
+
+    override val isReady: StateFlow<Boolean> = combineStates(
+        lockState,
+        activityMonitor.foregroundState
+    ) { lockState, foregroundState ->
+        lockState == LockState.UNLOCKED && foregroundState
+    }
 
     private enum class LockState {
         UNLOCKED, LOCKED, UNLOCKING;
     }
 
-    private val lockState = ValueWithChannel(LockState.UNLOCKED)
-    private var unlockJob: Job? = null
-
     var displayInterval: Long = displayInterval
         set(value) {
             field = value
-            if (lockState.value == LockState.UNLOCKING) {
-                unlockJob?.cancel()
-                startUnlocking()
-            }
+            startUnlocking()
         }
 
-    override fun getIsReady(): Boolean {
-        return lockState.value == LockState.UNLOCKED && activityMonitor.isAppForegrounded
-    }
 
     override fun messageWillDisplay(message: InAppMessage) {
         lockState.value = LockState.LOCKED
@@ -48,58 +53,23 @@ internal class DefaultDisplayCoordinator(
         startUnlocking()
     }
 
-    override suspend fun waitForReady() {
-        while (!getIsReady()) {
-            yield()
-
-            if (!activityMonitor.isAppForegrounded) {
-                activityMonitor.waitForActive()
-                yield()
+    private fun startUnlocking() {
+        lockState.update {
+            if (it == LockState.UNLOCKED) {
+                return@update it
             }
 
-            if (lockState.value == LockState.UNLOCKED) {
-                continue
-            }
+            unlockJob?.cancel()
 
-            for (update in lockState.updates) {
+            unlockJob = scope.launch {
+                sleeper.sleep(displayInterval)
                 yield()
-                if (update == LockState.UNLOCKED) {
-                    break
+                if (isActive) {
+                    lockState.compareAndSet(LockState.UNLOCKING, LockState.UNLOCKED)
                 }
             }
+
+            LockState.UNLOCKING
         }
     }
-
-    private fun startUnlocking() {
-        if (lockState.value == LockState.UNLOCKED) {
-            return
-        }
-
-        lockState.value = LockState.UNLOCKING
-
-        unlockJob = scope.launch {
-            sleeper.sleep(displayInterval)
-            yield()
-            if (isActive) {
-                lockState.value = LockState.UNLOCKED
-            }
-        }
-    }
-}
-
-internal class ValueWithChannel<T : Any>(
-    initial: T
-) {
-    private var _value = initial
-    private val channel = Channel<T>(Channel.CONFLATED)
-    var updates: ReceiveChannel<T> = channel
-
-    var value: T
-        get() { synchronized(_value) { return _value } }
-        set(value) {
-            synchronized(_value) {
-                _value = value
-                channel.trySend(value)
-            }
-        }
 }

@@ -115,7 +115,7 @@ internal class ModalActivity : InAppMessageActivity<ModalContent>(), InAppButton
         }
     }
 
-    override fun getDisplayListener(token: String): InAppMessageDisplayListener? = ModalAdapter.getListener(token)
+    override fun getDisplayListener(token: String): InAppMessageDisplayListener? = ModalDisplayDelegate.getListener(token)
 
     override fun onButtonClicked(view: View, buttonInfo: InAppMessageButtonInfo) {
         InAppActionUtils.runActions(buttonInfo)

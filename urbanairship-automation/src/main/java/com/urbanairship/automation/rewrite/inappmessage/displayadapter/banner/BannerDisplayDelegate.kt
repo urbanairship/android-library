@@ -10,6 +10,7 @@ import androidx.core.view.ViewCompat
 import com.urbanairship.Predicate
 import com.urbanairship.UALog.e
 import com.urbanairship.app.ActivityListener
+import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.automation.R
 import com.urbanairship.automation.rewrite.inappmessage.InAppActionUtils
@@ -18,7 +19,7 @@ import com.urbanairship.automation.rewrite.inappmessage.analytics.InAppMessageAn
 import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
 import com.urbanairship.automation.rewrite.inappmessage.content.Banner
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
-import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapterInterface
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DelegatingDisplayAdapter
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayResult
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.InAppMessageDisplayListener
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonInfo
@@ -29,20 +30,19 @@ import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
 /**
  * Banner display adapter.
  */
-internal class BannerAdapter(
+internal class BannerDisplayDelegate(
     private val displayContent: InAppMessageDisplayContent.BannerContent,
     private val assets: AirshipCachedAssetsInterface?,
-    private val activityMonitor: InAppActivityMonitor
-) : DisplayAdapterInterface {
+    private val activityMonitor: ActivityMonitor
+) : DelegatingDisplayAdapter.Delegate {
 
-    private val activityPredicate: Predicate<Activity> = object : Predicate<Activity> {
+    override val activityPredicate: Predicate<Activity> = object : Predicate<Activity> {
         override fun apply(activity: Activity): Boolean {
             try {
                 if (getContainerView(activity) == null) {
@@ -56,22 +56,23 @@ internal class BannerAdapter(
             return true
         }
     }
+
     private val listener: ActivityListener = object : SimpleActivityListener() {
         override fun onActivityStopped(activity: Activity) {
             if (activityPredicate.apply(activity)) {
-                this@BannerAdapter.onActivityStopped(activity)
+                this@BannerDisplayDelegate.onActivityStopped(activity)
             }
         }
 
         override fun onActivityResumed(activity: Activity) {
             if (activityPredicate.apply(activity)) {
-                this@BannerAdapter.onActivityResumed(activity)
+                this@BannerDisplayDelegate.onActivityResumed(activity)
             }
         }
 
         override fun onActivityPaused(activity: Activity) {
             if (activityPredicate.apply(activity)) {
-                this@BannerAdapter.onActivityPaused(activity)
+                this@BannerDisplayDelegate.onActivityPaused(activity)
             }
         }
     }
@@ -80,28 +81,6 @@ internal class BannerAdapter(
     private var analyticsListener: InAppMessageDisplayListener? = null
     private var continuation: CancellableContinuation<DisplayResult>? = null
 
-    override fun getIsReady(): Boolean {
-        return activityMonitor.getResumedActivities(activityPredicate).isNotEmpty()
-    }
-
-    override suspend fun waitForReady() {
-        if (getIsReady()) { return }
-
-        val waiting = Job()
-
-        val listener = object : SimpleActivityListener() {
-            override fun onActivityResumed(activity: Activity) {
-                if (getIsReady()) {
-                    waiting.complete()
-                }
-            }
-        }
-        activityMonitor.addActivityListener(listener)
-
-        waiting.join()
-
-        activityMonitor.removeActivityListener(listener)
-    }
 
     override suspend fun display(
         context: Context,

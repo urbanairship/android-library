@@ -1,5 +1,6 @@
 package com.urbanairship.automation.rewrite.inappmessage
 
+import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.util.UrlInfo
@@ -7,45 +8,44 @@ import com.urbanairship.automation.rewrite.engine.AutomationPreparerDelegate
 import com.urbanairship.automation.rewrite.engine.PreparedScheduleInfo
 import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
 import com.urbanairship.automation.rewrite.inappmessage.assets.AssetCacheManagerInterface
-import com.urbanairship.automation.rewrite.inappmessage.displayadapter.CustomDisplayAdapterInterface
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.CustomDisplayAdapter
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.CustomDisplayAdapterType
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapter
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapterFactory
-import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapterFactoryInterface
-import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapterInterface
-import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinatorInterface
-import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinatorManagerInterface
+import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinator
+import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinatorManager
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class PreparedInAppMessageData(
+internal data class PreparedInAppMessageData(
     val message: InAppMessage,
-    val displayAdapter: DisplayAdapterInterface,
-    val displayCoordinator: DisplayCoordinatorInterface
+    val displayAdapter: DisplayAdapter,
+    val displayCoordinator: DisplayCoordinator
 )
 
 internal class InAppMessageAutomationPreparer(
-    private val activityMonitor: InAppActivityMonitor,
     private val assetsManager: AssetCacheManagerInterface,
-    private val displayCoordinatorManager: DisplayCoordinatorManagerInterface,
-    private val displayAdapterFactory: DisplayAdapterFactoryInterface = DisplayAdapterFactory()
+    private val displayCoordinatorManager: DisplayCoordinatorManager,
+    private val displayAdapterFactory: DisplayAdapterFactory
 ) : AutomationPreparerDelegate<InAppMessage, PreparedInAppMessageData> {
 
     var displayInterval: Long
         get() { synchronized(displayCoordinatorManager) { return displayCoordinatorManager.displayInterval } }
         set(value) { synchronized(displayCoordinatorManager) { displayCoordinatorManager.displayInterval = value} }
 
-    @Throws(IllegalArgumentException::class)
     override suspend fun prepare(
         data: InAppMessage,
         preparedScheduleInfo: PreparedScheduleInfo
-    ): PreparedInAppMessageData {
+    ): Result<PreparedInAppMessageData> {
         val assets = prepareAssets(data, preparedScheduleInfo.scheduleID)
             ?: throw IllegalArgumentException("Failed to cache assets")
 
         UALog.v { "Making display coordinator ${preparedScheduleInfo.scheduleID}" }
         val coordinator = displayCoordinatorManager.displayCoordinator(data)
-        val adapter = displayAdapterFactory.makeAdapter(data, assets, activityMonitor)
+        val adapter = displayAdapterFactory.makeAdapter(data, assets).getOrElse {
+            return Result.failure(it)
+        }
 
-        return PreparedInAppMessageData(data, adapter, coordinator)
+        return Result.success(PreparedInAppMessageData(data, adapter, coordinator))
     }
 
     override suspend fun cancelled(scheduleID: String) {
@@ -55,7 +55,7 @@ internal class InAppMessageAutomationPreparer(
 
     fun setAdapterFactoryBlock(
         type: CustomDisplayAdapterType,
-        factoryBlock: (InAppMessage, AirshipCachedAssetsInterface) -> CustomDisplayAdapterInterface?
+        factoryBlock: (Context, InAppMessage, AirshipCachedAssetsInterface) -> CustomDisplayAdapter?
     ) {
         displayAdapterFactory.setAdapterFactoryBlock(type, factoryBlock)
     }

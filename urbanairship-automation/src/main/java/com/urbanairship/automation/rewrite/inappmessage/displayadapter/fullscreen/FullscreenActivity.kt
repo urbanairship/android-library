@@ -27,7 +27,7 @@ import kotlin.math.max
 /**
  * Full screen in-app message activity.
  */
-internal class FullScreenActivity : InAppMessageActivity<FullscreenContent>(), InAppButtonLayout.ButtonClickListener {
+internal class FullscreenActivity : InAppMessageActivity<FullscreenContent>(), InAppButtonLayout.ButtonClickListener {
 
     private var mediaView: MediaView? = null
 
@@ -115,7 +115,7 @@ internal class FullScreenActivity : InAppMessageActivity<FullscreenContent>(), I
         }
     }
 
-    override fun getDisplayListener(token: String): InAppMessageDisplayListener? = FullScreenAdapter.getListener(token)
+    override fun getDisplayListener(token: String): InAppMessageDisplayListener? = FullscreenDisplayDelegate.getListener(token)
 
     override fun onButtonClicked(view: View, buttonInfo: InAppMessageButtonInfo) {
         InAppActionUtils.runActions(buttonInfo)

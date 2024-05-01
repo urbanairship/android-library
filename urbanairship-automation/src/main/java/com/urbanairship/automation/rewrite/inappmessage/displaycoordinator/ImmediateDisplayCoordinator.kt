@@ -1,21 +1,16 @@
 package com.urbanairship.automation.rewrite.inappmessage.displaycoordinator
 
-import com.urbanairship.automation.rewrite.inappmessage.InAppActivityMonitor
+import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
+import kotlinx.coroutines.flow.StateFlow
 
 internal class ImmediateDisplayCoordinator(
-    private val activityMonitor: InAppActivityMonitor
-) : DisplayCoordinatorInterface {
+    activityMonitor: ActivityMonitor
+) : DisplayCoordinator {
 
-    override fun getIsReady(): Boolean {
-        return activityMonitor.isAppForegrounded
-    }
+    override val isReady: StateFlow<Boolean> = activityMonitor.foregroundState
 
     override fun messageWillDisplay(message: InAppMessage) { }
 
     override fun messageFinishedDisplaying(message: InAppMessage) { }
-
-    override suspend fun waitForReady() {
-        activityMonitor.waitForActive()
-    }
 }

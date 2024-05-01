@@ -1,83 +1,73 @@
 package com.urbanairship.automation.rewrite.inappmessage.displayadapter
 
-import com.urbanairship.automation.rewrite.inappmessage.InAppActivityMonitor
+import android.content.Context
+import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
 import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.banner.BannerDisplayDelegate
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.fullscreen.FullscreenDisplayDelegate
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.html.HtmlDisplayDelegate
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.layout.AirshipLayoutDisplayDelegate
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.modal.ModalDisplayDelegate
 import com.urbanairship.automation.rewrite.utils.NetworkMonitor
 
-private typealias AdapterBuilder = (InAppMessage, AirshipCachedAssetsInterface) -> CustomDisplayAdapterInterface?
+private typealias AdapterBuilder = (Context, InAppMessage, AirshipCachedAssetsInterface) -> CustomDisplayAdapter?
 
-internal interface DisplayAdapterFactoryInterface {
-    fun setAdapterFactoryBlock(
-        forType: CustomDisplayAdapterType,
-        factoryBlock: AdapterBuilder
-    )
 
-    @Throws(IllegalArgumentException::class)
+internal class DisplayAdapterFactory(
+    private val context: Context,
+    private val networkMonitor: NetworkMonitor,
+    private val activityMonitor: ActivityMonitor
+) {
+    private val customAdapters = mutableMapOf<CustomDisplayAdapterType, AdapterBuilder>()
+
+    private fun makeCustomAdapter(context: Context,  message: InAppMessage, assets: AirshipCachedAssetsInterface): DisplayAdapter? {
+        val type = when(message.displayContent) {
+            is InAppMessageDisplayContent.BannerContent -> CustomDisplayAdapterType.BANNER
+            is InAppMessageDisplayContent.FullscreenContent -> CustomDisplayAdapterType.FULLSCREEN
+            is InAppMessageDisplayContent.HTMLContent -> CustomDisplayAdapterType.HTML
+            is InAppMessageDisplayContent.ModalContent ->CustomDisplayAdapterType.MODAL
+            is InAppMessageDisplayContent.CustomContent -> CustomDisplayAdapterType.CUSTOM
+            is InAppMessageDisplayContent.AirshipLayoutContent ->  null
+        } ?: return null
+
+        val factory = synchronized(customAdapters) {
+            customAdapters[type]
+        }
+
+        val custom = factory?.invoke(context, message, assets) ?: return null
+        return CustomDisplayAdapterWrapper(custom)
+    }
+
+    private fun makeDefaultAdapter(message: InAppMessage, assets: AirshipCachedAssetsInterface): DisplayAdapter? {
+        val delegate = when(message.displayContent) {
+            is InAppMessageDisplayContent.BannerContent -> BannerDisplayDelegate(message.displayContent, assets, activityMonitor)
+            is InAppMessageDisplayContent.FullscreenContent -> FullscreenDisplayDelegate(message.displayContent, assets, activityMonitor)
+            is InAppMessageDisplayContent.HTMLContent -> HtmlDisplayDelegate(message.displayContent, assets, message.extras, activityMonitor)
+            is InAppMessageDisplayContent.ModalContent -> ModalDisplayDelegate(message.displayContent, assets, activityMonitor)
+            is InAppMessageDisplayContent.AirshipLayoutContent -> AirshipLayoutDisplayDelegate(message.displayContent, assets, message.extras, activityMonitor)
+            else -> null
+        } ?: return null
+
+        return DelegatingDisplayAdapter(message, assets, delegate, networkMonitor, activityMonitor)
+    }
+
+    fun setAdapterFactoryBlock(type: CustomDisplayAdapterType, factoryBlock: AdapterBuilder) {
+        synchronized(customAdapters) {
+            customAdapters[type] = factoryBlock
+        }
+    }
+
     fun makeAdapter(
         message: InAppMessage,
         assets: AirshipCachedAssetsInterface,
-        activityMonitor: InAppActivityMonitor
-    ): DisplayAdapterInterface
-}
-
-internal class DisplayAdapterFactory(
-    private val networkMonitor: NetworkMonitor = NetworkMonitor.shared()
-) : DisplayAdapterFactoryInterface {
-    private val customAdapters = mutableMapOf<CustomDisplayAdapterType, AdapterBuilder>()
-
-    private fun getBuilder(type: CustomDisplayAdapterType): AdapterBuilder? {
-        return synchronized(customAdapters) { customAdapters[type] }
-    }
-
-    private fun setBuilder(type: CustomDisplayAdapterType, builder: AdapterBuilder) {
-        synchronized(customAdapters) {
-            customAdapters[type] = builder
-        }
-    }
-
-    override fun setAdapterFactoryBlock(
-        forType: CustomDisplayAdapterType, factoryBlock: AdapterBuilder
-    ) {
-        setBuilder(forType, factoryBlock)
-    }
-
-    @Throws(IllegalArgumentException::class)
-    override fun makeAdapter(
-        message: InAppMessage,
-        assets: AirshipCachedAssetsInterface,
-        activityMonitor: InAppActivityMonitor
-    ): DisplayAdapterInterface {
-        val factoryBlock: AdapterBuilder?
-
-        when(message.displayContent) {
-            is InAppMessageDisplayContent.BannerContent -> {
-                factoryBlock = getBuilder(CustomDisplayAdapterType.BANNER)
-            }
-            is InAppMessageDisplayContent.FullscreenContent -> {
-                factoryBlock = getBuilder(CustomDisplayAdapterType.FULLSCREEN)
-            }
-            is InAppMessageDisplayContent.HTMLContent -> {
-                factoryBlock = getBuilder(CustomDisplayAdapterType.HTML)
-            }
-            is InAppMessageDisplayContent.ModalContent -> {
-                factoryBlock = getBuilder(CustomDisplayAdapterType.MODAL)
-            }
-            is InAppMessageDisplayContent.CustomContent -> {
-                factoryBlock = getBuilder(CustomDisplayAdapterType.CUSTOM)
-                if (factoryBlock == null) {
-                    throw IllegalArgumentException("No adapter for message $message")
-                }
-            }
-            is InAppMessageDisplayContent.AirshipLayoutContent -> factoryBlock = null
-        }
-
-        val custom = factoryBlock?.invoke(message, assets)
-        return if (custom != null) {
-            CustomDisplayAdapterWrapper(custom)
+    ): Result<DisplayAdapter> {
+        val adapter = makeCustomAdapter(context, message, assets) ?: makeDefaultAdapter(message, assets)
+        return if (adapter != null) {
+            Result.success(adapter)
         } else {
-            AirshipLayoutDisplayAdapter(message, assets, networkMonitor, activityMonitor)
+            Result.failure(IllegalArgumentException("No display adapter for message $message"))
         }
     }
 }

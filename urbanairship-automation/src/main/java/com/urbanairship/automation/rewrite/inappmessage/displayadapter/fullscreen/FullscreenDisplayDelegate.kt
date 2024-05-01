@@ -1,14 +1,17 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.automation.rewrite.inappmessage.displayadapter.fullscreen
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import com.urbanairship.Predicate
+import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessageActivity
 import com.urbanairship.automation.rewrite.inappmessage.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
-import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapterInterface
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DelegatingDisplayAdapter
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayResult
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.InAppMessageDisplayListener
 import com.urbanairship.automation.rewrite.utils.ActiveTimer
@@ -21,11 +24,13 @@ import kotlinx.coroutines.withContext
 /**
  * Full screen adapter.
  */
-internal class FullScreenAdapter(
+internal class FullscreenDisplayDelegate(
     private val displayContent: InAppMessageDisplayContent.FullscreenContent,
     private val assets: AirshipCachedAssetsInterface?,
-    private val activityMonitor: InAppActivityMonitor
-) : DisplayAdapterInterface {
+    private val activityMonitor: ActivityMonitor
+) : DelegatingDisplayAdapter.Delegate {
+
+    override val activityPredicate: Predicate<Activity>? = null
 
     private var continuation: Continuation<DisplayResult>? = null
 
@@ -46,7 +51,7 @@ internal class FullScreenAdapter(
         setDisplayListener(token, displayListener)
 
         val intent =
-            Intent(context, FullScreenActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            Intent(context, FullscreenActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .putExtra(InAppMessageActivity.DISPLAY_LISTENER_TOKEN, token)
                 .putExtra(InAppMessageActivity.DISPLAY_CONTENT, displayContent)
                 .putExtra(InAppMessageActivity.IN_APP_ASSETS, assets)
@@ -59,8 +64,6 @@ internal class FullScreenAdapter(
         }
     }
 
-    override fun getIsReady(): Boolean = true
-    override suspend fun waitForReady() {}
 
     private fun setDisplayListener(token: String, listener: InAppMessageDisplayListener?) {
         synchronized(messageToAnalytics) {

@@ -22,7 +22,7 @@ import org.jetbrains.annotations.VisibleForTesting
 internal class FrequencyLimitManager(
     private val dao: FrequencyLimitDao,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
-    private val dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) {
 
     private val lock = ReentrantLock()
@@ -51,7 +51,7 @@ internal class FrequencyLimitManager(
 
                 info.occurrences.sortWith(OccurrenceEntity.Comparator())
 
-                val occurrenceTimestamp = info.occurrences.get(info.occurrences.size - info.constraint.count).timeStamp
+                val occurrenceTimestamp = info.occurrences[info.occurrences.size - info.constraint.count].timeStamp
                 return@any (clock.currentTimeMillis() - occurrenceTimestamp) <= info.constraint.range
             }
         }
@@ -177,11 +177,11 @@ internal class FrequencyLimitManager(
                 val toDelete = existing
                     .filter { constraint ->
                         if (!incomingIds.contains(constraint.constraintId)) {
-                            return@filter true
-                        }
-
-                        return@filter constraints.any { incoming ->
-                            constraint.constraintId == incoming.identifier && constraint.range != incoming.range
+                            true
+                        } else {
+                            constraints.any { incoming ->
+                                constraint.constraintId == incoming.identifier && constraint.range != incoming.range
+                            }
                         }
                     }
                     .mapNotNull { it.constraintId }

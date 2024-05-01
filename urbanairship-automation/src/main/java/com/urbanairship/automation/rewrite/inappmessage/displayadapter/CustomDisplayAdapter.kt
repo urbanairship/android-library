@@ -2,6 +2,8 @@ package com.urbanairship.automation.rewrite.inappmessage.displayadapter
 
 import android.content.Context
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonInfo
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Custom display adapter types
@@ -33,14 +35,12 @@ public enum class CustomDisplayAdapterType {
 /**
  * Custom display adapter
  */
-public interface CustomDisplayAdapterInterface {
+public interface CustomDisplayAdapter {
 
     /**
-     * Checks if the adapter is ready
+     *  Used before display to wait for the adapter to be ready.
      */
-    public fun getIsReady(): Boolean
-
-    public suspend fun waitForReady()
+    public val isReady: StateFlow<Boolean>
 
     /**
      * Called to display the message on the main dispatcher

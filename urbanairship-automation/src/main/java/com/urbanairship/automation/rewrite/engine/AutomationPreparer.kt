@@ -37,7 +37,7 @@ public interface AutomationPreparerInterface {
 }
 
 internal interface AutomationPreparerDelegate<DataIn, DataOut> {
-    suspend fun prepare(data: DataIn, preparedScheduleInfo: PreparedScheduleInfo) : DataOut
+    suspend fun prepare(data: DataIn, preparedScheduleInfo: PreparedScheduleInfo) : Result<DataOut>
     suspend fun cancelled(scheduleID: String)
 }
 
@@ -178,7 +178,7 @@ internal class AutomationPreparer internal constructor(
                 continuation.resume(SchedulePrepareResult.Prepared(
                     PreparedSchedule(
                         info = scheduleInfo,
-                        data = PreparedScheduleData.Action(actionPreparer.prepare(data.actions, scheduleInfo)),
+                        data = PreparedScheduleData.Action(actionPreparer.prepare(data.actions, scheduleInfo).getOrThrow()),
                         frequencyChecker = frequencyChecker
                     )
                 ))
@@ -194,7 +194,7 @@ internal class AutomationPreparer internal constructor(
                 continuation.resume(SchedulePrepareResult.Prepared(
                     PreparedSchedule(
                         info = scheduleInfo,
-                        data = PreparedScheduleData.InAppMessage(messagePreparer.prepare(data.message, scheduleInfo)),
+                        data = PreparedScheduleData.InAppMessage(messagePreparer.prepare(data.message, scheduleInfo).getOrThrow()),
                         frequencyChecker = frequencyChecker
                     )
                 ))

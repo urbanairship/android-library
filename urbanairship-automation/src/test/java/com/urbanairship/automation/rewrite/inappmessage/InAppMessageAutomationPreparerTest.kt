@@ -7,10 +7,11 @@ import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAsse
 import com.urbanairship.automation.rewrite.inappmessage.assets.AssetCacheManagerInterface
 import com.urbanairship.automation.rewrite.inappmessage.content.Banner
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
-import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapterFactoryInterface
-import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapterInterface
-import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinatorInterface
-import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinatorManagerInterface
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapter
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapterFactory
+
+import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinator
+import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinatorManager
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageMediaInfo
 import com.urbanairship.json.JsonValue
 import java.util.UUID
@@ -19,6 +20,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -28,10 +30,9 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class InAppMessageAutomationPreparerTest {
     private val activityMonitor = TestActivityMonitor()
-    private val stateTracker = InAppActivityMonitor(activityMonitor)
     private val assetsManager: AssetCacheManagerInterface = mockk()
-    private val adapterFactory: DisplayAdapterFactoryInterface = mockk()
-    private val coordinatorManager: DisplayCoordinatorManagerInterface = mockk()
+    private val adapterFactory: DisplayAdapterFactory = mockk()
+    private val coordinatorManager: DisplayCoordinatorManager = mockk()
 
     private val message = InAppMessage(
         name = "test",
@@ -48,7 +49,7 @@ public class InAppMessageAutomationPreparerTest {
         contactID = UUID.randomUUID().toString()
     )
 
-    private val preparer = InAppMessageAutomationPreparer(stateTracker, assetsManager, coordinatorManager, adapterFactory)
+    private val preparer = InAppMessageAutomationPreparer(assetsManager, coordinatorManager, adapterFactory)
 
 
     @Test
@@ -60,20 +61,20 @@ public class InAppMessageAutomationPreparerTest {
             cachedAsset
         }
 
-        val coordinator: DisplayCoordinatorInterface = mockk()
+        val coordinator: DisplayCoordinator = mockk()
         every { coordinatorManager.displayCoordinator(any()) } answers {
             assertEquals(message, firstArg())
             coordinator
         }
 
-        val adapter: DisplayAdapterInterface = mockk()
-        every { adapterFactory.makeAdapter(any(), any(), any()) } answers {
+        val adapter: DisplayAdapter = mockk()
+        every { adapterFactory.makeAdapter(any(), any()) } answers {
             assertEquals(message, firstArg())
             assertEquals(cachedAsset, secondArg())
-            adapter
+            Result.success(adapter)
         }
 
-        val result = preparer.prepare(message, preparedScheduleInfo)
+        val result = preparer.prepare(message, preparedScheduleInfo).getOrThrow()
         assertEquals(message, result.message)
         assertEquals(coordinator, result.displayCoordinator)
         assertEquals(adapter, result.displayAdapter)
@@ -81,11 +82,11 @@ public class InAppMessageAutomationPreparerTest {
 
     @Test
     public fun testPrepareFailedAssets(): TestResult = runTest {
-        val coordinator: DisplayCoordinatorInterface = mockk()
+        val coordinator: DisplayCoordinator = mockk()
         every { coordinatorManager.displayCoordinator(any()) } returns coordinator
 
-        val adapter: DisplayAdapterInterface = mockk()
-        every { adapterFactory.makeAdapter(any(), any(), any()) } returns adapter
+        val adapter: DisplayAdapter = mockk()
+        every { adapterFactory.makeAdapter(any(), any()) } returns Result.success(adapter)
 
         coEvery { assetsManager.cacheAsset(any(), any()) } answers  {
             throw IllegalArgumentException()
@@ -102,18 +103,12 @@ public class InAppMessageAutomationPreparerTest {
         val asset: AirshipCachedAssetsInterface = mockk()
         coEvery { assetsManager.cacheAsset(any(), any()) } returns asset
 
-        val coordinator: DisplayCoordinatorInterface = mockk()
+        val coordinator: DisplayCoordinator = mockk()
         every { coordinatorManager.displayCoordinator(any()) } returns coordinator
 
-        val adapter: DisplayAdapterInterface = mockk()
-        every { adapterFactory.makeAdapter(any(), any(), any()) } answers {
-            throw IllegalArgumentException()
-        }
+        every { adapterFactory.makeAdapter(any(), any()) } returns Result.failure(IllegalArgumentException("failed"))
 
-        try {
-            preparer.prepare(message, preparedScheduleInfo)
-            fail()
-        } catch (_: IllegalArgumentException) {}
+        assertTrue(preparer.prepare(message, preparedScheduleInfo).isFailure)
     }
 
     @Test

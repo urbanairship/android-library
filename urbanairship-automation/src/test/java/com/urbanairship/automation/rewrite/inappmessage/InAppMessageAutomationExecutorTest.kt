@@ -16,9 +16,9 @@ import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppRe
 import com.urbanairship.automation.rewrite.inappmessage.assets.AssetCacheManagerInterface
 import com.urbanairship.automation.rewrite.inappmessage.content.Custom
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
-import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapterInterface
+import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapter
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayResult
-import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinatorInterface
+import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinator
 import com.urbanairship.automation.rewrite.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.json.JsonValue
@@ -31,6 +31,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -44,8 +45,16 @@ public class InAppMessageAutomationExecutorTest {
     private val analytics: InAppMessageAnalyticsInterface = mockk()
     private val analyticsFactory: InAppMessageAnalyticsFactory = mockk()
     private val conditionsChangedNotifier = ScheduleConditionsChangedNotifier()
-    private val displayAdapter: DisplayAdapterInterface = mockk()
-    private val displayCoordinator: DisplayCoordinatorInterface = mockk()
+
+    private val displayAdapterReady = MutableStateFlow(true)
+    private val displayAdapter: DisplayAdapter = mockk {
+        every { isReady } returns displayAdapterReady
+    }
+
+    private val displayCoordinatorReady = MutableStateFlow(true)
+    private val displayCoordinator: DisplayCoordinator = mockk() {
+        every { isReady } returns displayCoordinatorReady
+    }
     private val actionRunFactory: ActionRunRequestFactory = mockk()
     private val executor = InAppMessageAutomationExecutor(
         context, assetManager, analyticsFactory, conditionsChangedNotifier, actionRunFactory
@@ -86,34 +95,32 @@ public class InAppMessageAutomationExecutorTest {
 
     @Test
     public fun testIsReady(): TestResult = runTest {
-        every { displayAdapter.getIsReady() } returns true
-        every { displayCoordinator.getIsReady() } returns true
+        displayAdapterReady.value = true
+        displayCoordinatorReady.value = true
 
         assertEquals(checkReady(), ScheduleReadyResult.READY)
     }
 
     @Test
     public fun testNotReadyAdapter(): TestResult = runTest {
-        every { displayAdapter.getIsReady() } returns false
-        coEvery { displayAdapter.waitForReady() } just runs
-        every { displayCoordinator.getIsReady() } returns true
+        displayAdapterReady.value = false
+        displayCoordinatorReady.value = true
 
         assertEquals(checkReady(), ScheduleReadyResult.NOT_READY)
     }
 
     @Test
     public fun testNotReadyCoordinator(): TestResult = runTest {
-        every { displayAdapter.getIsReady() } returns true
-        every { displayCoordinator.getIsReady() } returns false
-        coEvery { displayCoordinator.waitForReady() } just runs
+        displayAdapterReady.value = true
+        displayCoordinatorReady.value = false
 
         assertEquals(checkReady(), ScheduleReadyResult.NOT_READY)
     }
 
     @Test
     public fun testIsReadyDelegate(): TestResult = runTest {
-        every { displayAdapter.getIsReady() } returns true
-        every { displayCoordinator.getIsReady() } returns true
+        displayAdapterReady.value = true
+        displayCoordinatorReady.value = true
 
         val delegate: InAppMessageDisplayDelegate = mockk()
         executor.displayDelegate = delegate

@@ -14,8 +14,8 @@ import com.urbanairship.config.AirshipRuntimeConfig
  */
 public class InAppAutomation
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-constructor(
-    public val engine: AutomationEngine,
+internal constructor(
+    private val engine: AutomationEngine,
     public val inAppMessaging: InAppMessagingInterface,
     //TODO: do we need it at all?
     public val legacyInAppMessaging: LegacyInAppMessagingInterface,

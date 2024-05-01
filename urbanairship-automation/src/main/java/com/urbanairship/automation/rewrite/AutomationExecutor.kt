@@ -12,33 +12,33 @@ import com.urbanairship.json.JsonValue
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public enum class ScheduleReadyResult {
+internal enum class ScheduleReadyResult {
     READY, INVALIDATE, NOT_READY, SKIP
 }
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public enum class ScheduleExecuteResult {
+internal enum class ScheduleExecuteResult {
     CANCEL, FINISHED, RETRY
 }
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public enum class InterruptedBehavior {
+internal enum class InterruptedBehavior {
     RETRY, FINISH
 }
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface AutomationExecutorInterface {
-    public suspend fun isReadyPrecheck(schedule: AutomationSchedule): ScheduleReadyResult
+internal interface AutomationExecutorInterface {
+    suspend fun isReadyPrecheck(schedule: AutomationSchedule): ScheduleReadyResult
 
     @MainThread
-    public fun isReady(preparedSchedule: PreparedSchedule): ScheduleReadyResult
+    fun isReady(preparedSchedule: PreparedSchedule): ScheduleReadyResult
 
-    public suspend fun execute(preparedSchedule: PreparedSchedule): ScheduleExecuteResult
+    suspend fun execute(preparedSchedule: PreparedSchedule): ScheduleExecuteResult
 
-    public suspend fun interrupted(
+    suspend fun interrupted(
         schedule: AutomationSchedule,
         preparedScheduleInfo: PreparedScheduleInfo
     ) : InterruptedBehavior

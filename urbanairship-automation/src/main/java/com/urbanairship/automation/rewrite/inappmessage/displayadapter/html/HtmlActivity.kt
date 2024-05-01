@@ -140,7 +140,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
         }
     }
 
-    override fun getDisplayListener(token: String): InAppMessageDisplayListener? = HtmlDisplayAdapter.getListener(token)
+    override fun getDisplayListener(token: String): InAppMessageDisplayListener? = HtmlDisplayDelegate.getListener(token)
 
     private fun reportButtonTap(json: JsonValue) {
         try {

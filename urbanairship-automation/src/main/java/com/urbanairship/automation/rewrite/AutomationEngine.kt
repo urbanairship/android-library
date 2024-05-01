@@ -46,7 +46,7 @@ internal interface AutomationEngineInterface {
 
 //TODO: check multithreading and processing threads
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class AutomationEngine(
+internal class AutomationEngine(
     private val context: Context,
     private val store: AutomationStore,
     private val executor: AutomationExecutorInterface,

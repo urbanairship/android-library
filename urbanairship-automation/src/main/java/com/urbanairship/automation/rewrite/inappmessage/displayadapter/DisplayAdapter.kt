@@ -4,18 +4,16 @@ import android.content.Context
 import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
 import com.urbanairship.automation.rewrite.inappmessage.analytics.InAppMessageAnalyticsInterface
+import kotlinx.coroutines.flow.StateFlow
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface DisplayAdapterInterface {
+internal interface DisplayAdapter {
 
-    public fun getIsReady() : Boolean
-    public suspend fun waitForReady()
+    val isReady: StateFlow<Boolean>
 
     @MainThread
-    public suspend fun display(context: Context, analytics: InAppMessageAnalyticsInterface): DisplayResult
+    suspend fun display(context: Context, analytics: InAppMessageAnalyticsInterface): DisplayResult
 }
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public enum class DisplayResult {
+internal enum class DisplayResult {
     CANCEL, FINISHED
 }

@@ -289,7 +289,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleID)
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals("contact id", info.contactID)
-            return@answers preparedMessageData
+            return@answers Result.success(preparedMessageData)
         }
 
         val result = preparer.prepare(context, schedule, triggerContext)
@@ -342,7 +342,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleID)
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals("contact id", info.contactID)
-            return@answers preparedMessageData
+            return@answers Result.success(preparedMessageData)
         }
 
         val result = preparer.prepare(context, schedule, triggerContext)
@@ -376,7 +376,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals("contact id", info.contactID)
 
-            return@answers firstArg()
+            return@answers Result.success(firstArg())
         }
 
         val result = preparer.prepare(context, schedule, triggerContext)
@@ -444,7 +444,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals("contact id", info.contactID)
 
-            return@answers firstArg()
+            return@answers Result.success(firstArg())
         }
 
         mockkStatic(UAirship::class)
@@ -529,7 +529,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals("contact id", info.contactID)
 
-            return@answers preparedMessageData
+            return@answers Result.success(preparedMessageData)
         }
 
         mockkStatic(UAirship::class)
@@ -638,7 +638,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleID)
             assertEquals(info.experimentResult, experimentResult)
 
-            return@answers preparedMessageData
+            return@answers Result.success(preparedMessageData)
         }
 
         val result = preparer.prepare(context, schedule, triggerContext)
@@ -690,7 +690,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleID)
             assertEquals(info.experimentResult, experimentResult)
 
-            return@answers preparedMessageData
+            return@answers Result.success(preparedMessageData)
         }
 
         val result = preparer.prepare(context, schedule, triggerContext)
@@ -732,7 +732,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleID)
             assertNull(info.experimentResult)
 
-            return@answers preparedMessageData
+            return@answers Result.success(preparedMessageData)
         }
 
         val result = preparer.prepare(context, schedule, triggerContext)
@@ -776,7 +776,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleID)
             assertNull(info.experimentResult)
 
-            return@answers firstArg()
+            return@answers Result.success(firstArg())
         }
 
         val result = preparer.prepare(context, schedule, triggerContext)

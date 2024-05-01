@@ -1,29 +1,24 @@
 package com.urbanairship.automation.rewrite.inappmessage.displaycoordinator
 
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
 
-internal interface DisplayCoordinatorManagerInterface {
-    var displayInterval: Long
-    fun displayCoordinator(message: InAppMessage): DisplayCoordinatorInterface
-}
-
 internal class DisplayCoordinatorManager(
     private val dataStore: PreferenceDataStore,
-    activityMonitor: InAppActivityMonitor,
+    activityMonitor: ActivityMonitor,
     private val immediateCoordinator: ImmediateDisplayCoordinator = ImmediateDisplayCoordinator(activityMonitor),
     private val defaultCoordinator: DefaultDisplayCoordinator = defaultCoordinator(dataStore, activityMonitor)
-): DisplayCoordinatorManagerInterface {
-
-    override var displayInterval: Long
+) {
+    var displayInterval: Long
         get() { return dataStore.getLong(DISPLAY_INTERVAL_KEY, 0) }
         set(value) {
             dataStore.put(DISPLAY_INTERVAL_KEY, value)
             defaultCoordinator.displayInterval = value
         }
 
-    override fun displayCoordinator(message: InAppMessage): DisplayCoordinatorInterface {
+    fun displayCoordinator(message: InAppMessage): DisplayCoordinator {
         if (message.isEmbedded()) { return immediateCoordinator }
 
         return when(message.displayBehavior) {
@@ -35,10 +30,11 @@ internal class DisplayCoordinatorManager(
     private companion object {
         const val DISPLAY_INTERVAL_KEY = "UAInAppMessageManagerDisplayInterval"
 
-        fun defaultCoordinator(dataStore: PreferenceDataStore, activityMonitor: InAppActivityMonitor): DefaultDisplayCoordinator {
+        fun defaultCoordinator(dataStore: PreferenceDataStore, activityMonitor: ActivityMonitor): DefaultDisplayCoordinator {
             return DefaultDisplayCoordinator(
                 displayInterval = dataStore.getLong(DISPLAY_INTERVAL_KEY, 0),
-                activityMonitor = activityMonitor)
+                activityMonitor = activityMonitor
+            )
         }
     }
 }

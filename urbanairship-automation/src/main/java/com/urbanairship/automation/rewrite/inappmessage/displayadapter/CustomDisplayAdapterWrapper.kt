@@ -7,16 +7,16 @@ import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppDi
 import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppResolutionEvent
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonInfo
 import com.urbanairship.automation.rewrite.utils.ActiveTimer
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  *  Wraps a custom display adapter as a DisplayAdapter
  */
 internal class CustomDisplayAdapterWrapper (
-    val adapter: CustomDisplayAdapterInterface
-) : DisplayAdapterInterface {
+    val adapter: CustomDisplayAdapter
+) : DisplayAdapter {
 
-    override fun getIsReady(): Boolean = adapter.getIsReady()
-    override suspend fun waitForReady() = adapter.waitForReady()
+    override val isReady: StateFlow<Boolean> = adapter.isReady
 
     override suspend fun display(context: Context, analytics: InAppMessageAnalyticsInterface): DisplayResult {
         analytics.recordEvent(InAppDisplayEvent(), layoutContext = null)
