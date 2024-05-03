@@ -6,6 +6,10 @@ import com.urbanairship.UALog
 import java.io.IOException
 import java.net.URI
 import java.net.URL
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
@@ -60,24 +64,6 @@ internal interface AssetFileManagerInterface {
     fun clearAssets(identifier: String)
 }
 
-internal interface AssetCacheManagerInterface {
-    /**
-     * Cache assets for a given identifier.
-     * Downloads assets from remote paths and stores them in an identifier-named cache directory with consistent and unique file names
-     * derived from their remote paths using sha256.
-     * @param identifier: Name of the directory within the root cache directory, usually an in-app message schedule ID
-     * @param assets: An array of remote URL paths for the assets associated with the provided identifier
-     * @return [AirshipCachedAssetsInterface]
-     */
-    suspend fun cacheAsset(identifier: String, assets: List<String>): AirshipCachedAssetsInterface?
-
-    /**
-     * Clears the cache directory associated with the identifier
-     * @param identifier: Name of the directory within the root cache directory, usually an in-app message schedule ID
-     */
-    suspend fun clearCache(identifier: String)
-}
-
 /**
  * Downloads and caches asset files in filesystem using cancelable thread-safe tasks.
  */
@@ -85,69 +71,73 @@ internal class AssetCacheManager(
     context: Context,
     private val downloader: AssetDownloaderInterface = DefaultAssetDownloader(context),
     private val fileManager: AssetFileManagerInterface = DefaultAssetFileManager(context),
-    private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
-) : AssetCacheManagerInterface {
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
+) {
+    private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
+    private val tasks = mutableMapOf<String, Deferred<Result<AirshipCachedAssets>>>()
+    private val lock = ReentrantLock()
 
-    private val tasks = mutableMapOf<String, Deferred<AirshipCachedAssets?>>()
-    private val lock = Object()
-
-    override suspend fun cacheAsset(
+    /**
+     * Cache assets for a given identifier.
+     * Downloads assets from remote paths and stores them in an identifier-named cache directory with consistent and unique file names
+     * derived from their remote paths using sha256.
+     * @param identifier: Name of the directory within the root cache directory, usually an in-app message schedule ID
+     * @param assets: An array of remote URL paths for the assets associated with the provided identifier
+     * @return [AirshipCachedAssets]
+     */
+    suspend fun cacheAsset(
         identifier: String, assets: List<String>
-    ): AirshipCachedAssetsInterface? {
-        val running = synchronized(lock) { tasks[identifier] }
+    ): Result<AirshipCachedAssets> {
+        val running = lock.withLock {
+            tasks[identifier]
+        }
+
         if (running != null) {
             return running.await()
         }
 
         val task = scope.async {
-            val cached = try {
+            try {
                 val directory = fileManager.ensureCacheDirectory(identifier)
-                AirshipCachedAssets(directory, fileManager)
-            } catch (ex: Exception) {
-                UALog.e(ex) { "Failed to cache asset" }
-                return@async null
-            }
+                val cache = DefaultAirshipCachedAssets(directory, fileManager)
+                for (asset in assets) {
+                    val url =  URL(asset)
+                    if (!cache.isCached(asset)) {
+                        if (!isActive) { break }
 
-            assets.forEach {
-                try {
-                    val url = convertToUrl(it) ?: return@forEach
-                    val tempURI = downloader.downloadAsset(url).await()
-                    if (!cached.isCached(it)) {
-                        yield()
-                        if (!isActive) { return@async cached }
-
-                        cached.cacheURL(it)?.let { cacheURI ->
+                        val tempURI = downloader.downloadAsset(url).await()
+                        cache.cacheURL(asset)?.let { cacheURI ->
                             fileManager.moveAsset(tempURI, cacheURI.toURI())
-                            cached.generateAndStoreMetadata(it)
+                            cache.generateAndStoreMetadata(asset)
                         }
                     }
-                } catch (ex: Exception) {
-                    UALog.e(ex) { "Failed to cache asset: $it" }
                 }
-            }
 
-            return@async cached
+                if (isActive) {
+                    Result.success(cache)
+                } else {
+                    Result.failure(CancellationException())
+                }
+            } catch (ex: Exception) {
+                UALog.e(ex) { "Failed to cache asset" }
+                Result.failure<AirshipCachedAssets>(ex)
+            }
         }
 
         synchronized(lock) { tasks[identifier] = task }
         return task.await()
     }
 
-    override suspend fun clearCache(identifier: String) {
+    /**
+     * Clears the cache directory associated with the identifier
+     * @param identifier: Name of the directory within the root cache directory, usually an in-app message schedule ID
+     */
+    suspend fun clearCache(identifier: String) {
         tasks.remove(identifier)?.cancel()
         try {
             fileManager.clearAssets(identifier)
         } catch (ex: Exception) {
             UALog.e(ex) { "Failed to clear cache" }
-        }
-    }
-
-    private fun convertToUrl(string: String): URL? {
-        return try {
-            URL(string)
-        } catch (ex: Exception) {
-            UALog.e(ex) { "Failed to convert string $string to url" }
-            null
         }
     }
 }

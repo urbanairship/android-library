@@ -9,7 +9,7 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.DerivedStateFlow
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
 import com.urbanairship.automation.rewrite.inappmessage.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssets
 import com.urbanairship.automation.rewrite.inappmessage.getUrlInfos
 import com.urbanairship.automation.rewrite.inappmessage.resumedActivitiesUpdates
 import com.urbanairship.automation.rewrite.utils.NetworkMonitor
@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.combine
 
 internal class DelegatingDisplayAdapter(
     message: InAppMessage,
-    assets: AirshipCachedAssetsInterface,
+    assets: AirshipCachedAssets,
     val delegate: Delegate,
     networkMonitor: NetworkMonitor,
     activityMonitor: ActivityMonitor

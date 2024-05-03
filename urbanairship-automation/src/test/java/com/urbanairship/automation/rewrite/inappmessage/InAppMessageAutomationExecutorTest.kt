@@ -13,7 +13,7 @@ import com.urbanairship.automation.rewrite.inappmessage.analytics.InAppMessageAn
 import com.urbanairship.automation.rewrite.inappmessage.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppEvent
 import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppResolutionEvent
-import com.urbanairship.automation.rewrite.inappmessage.assets.AssetCacheManagerInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AssetCacheManager
 import com.urbanairship.automation.rewrite.inappmessage.content.Custom
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapter
@@ -41,7 +41,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class InAppMessageAutomationExecutorTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val assetManager: AssetCacheManagerInterface = mockk()
+    private val assetManager: AssetCacheManager = mockk()
     private val analytics: InAppMessageAnalyticsInterface = mockk()
     private val analyticsFactory: InAppMessageAnalyticsFactory = mockk()
     private val conditionsChangedNotifier = ScheduleConditionsChangedNotifier()
@@ -298,7 +298,7 @@ public class InAppMessageAutomationExecutorTest {
         return request
     }
 
-    private suspend fun checkReady(): ScheduleReadyResult = executor.isReady(preparedData, preparedInfo)
+    private fun checkReady(): ScheduleReadyResult = executor.isReady(preparedData, preparedInfo)
     private suspend fun execute(info: PreparedScheduleInfo = preparedInfo): ScheduleExecuteResult =
         executor.execute(preparedData, info)
 }

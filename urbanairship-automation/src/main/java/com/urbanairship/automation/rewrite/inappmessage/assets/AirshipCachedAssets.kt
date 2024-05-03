@@ -25,7 +25,7 @@ import java.util.Objects
  * Convenience interface representing an assets directory containing asset files
  * with filenames derived from their remote URL using sha256.
  */
-public interface AirshipCachedAssetsInterface : Parcelable {
+public interface AirshipCachedAssets : Parcelable {
 
     /**
      * Return URL at which to cache a given asset
@@ -50,7 +50,7 @@ public interface AirshipCachedAssetsInterface : Parcelable {
     public fun getMediaSize(remoteURL: String): Size
 }
 
-internal class EmptyAirshipCachedAssets : AirshipCachedAssetsInterface {
+internal class EmptyAirshipCachedAssets : AirshipCachedAssets {
     override fun cacheURL(remoteURL: String): URL? = null
     override fun isCached(remoteURL: String): Boolean = false
     override fun getMediaSize(remoteURL: String): Size = Size(-1, -1)
@@ -67,10 +67,10 @@ internal class EmptyAirshipCachedAssets : AirshipCachedAssetsInterface {
     }
 }
 
-internal class AirshipCachedAssets(
+internal class DefaultAirshipCachedAssets(
     rootDirectory: URI,
     private val fileManager: AssetFileManagerInterface
-): AirshipCachedAssetsInterface {
+): AirshipCachedAssets {
 
     private val directory = File(rootDirectory.path)
     private val metadataCache = mutableMapOf<String, JsonValue>()
@@ -194,7 +194,7 @@ internal class AirshipCachedAssets(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as AirshipCachedAssets
+        other as DefaultAirshipCachedAssets
 
         return directory == other.directory
     }
@@ -225,7 +225,7 @@ internal class AirshipCachedAssets(
                 return null
             }
 
-            val result = AirshipCachedAssets(
+            val result = DefaultAirshipCachedAssets(
                 rootDirectory = rootDirectory,
                 fileManager = DefaultAssetFileManager(UAirship.getApplicationContext())
             )

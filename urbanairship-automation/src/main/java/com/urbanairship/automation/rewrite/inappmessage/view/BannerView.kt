@@ -25,7 +25,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.customview.widget.ViewDragHelper
 import com.urbanairship.android.layout.util.Timer
 import com.urbanairship.automation.R
-import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssets
 import com.urbanairship.automation.rewrite.inappmessage.content.Banner
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonInfo
 import kotlin.math.roundToInt
@@ -36,7 +36,7 @@ import kotlin.math.roundToInt
 internal open class BannerView(
     context: Context,
     private val displayContent: Banner,
-    private val assets: AirshipCachedAssetsInterface?
+    private val assets: AirshipCachedAssets?
 ) : FrameLayout(context), InAppButtonLayout.ButtonClickListener, View.OnClickListener, BannerDismissLayout.Listener {
 
     /** In-app message display timer. */

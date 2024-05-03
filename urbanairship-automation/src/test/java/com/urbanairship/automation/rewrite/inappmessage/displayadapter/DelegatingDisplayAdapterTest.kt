@@ -3,7 +3,7 @@ package com.urbanairship.automation.rewrite.inappmessage.displayadapter
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
-import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssets
 import com.urbanairship.automation.rewrite.inappmessage.content.Banner
 import com.urbanairship.automation.rewrite.inappmessage.content.HTML
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
@@ -25,7 +25,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class DelegatingDisplayAdapterTest
 {
-    private val asset: AirshipCachedAssetsInterface = mockk()
+    private val asset: AirshipCachedAssets = mockk()
 
     private val isNetworkConnected = MutableStateFlow(false)
     private val networkMonitor: NetworkMonitor = mockk() {

@@ -621,7 +621,7 @@ public class AutomationPreparerTest {
             ))
             assertEquals("contact id", secondArg())
 
-            experimentResult
+            Result.success(experimentResult)
         }
 
         coEvery { messagePreparer.prepare(any(), any()) } answers {
@@ -673,7 +673,7 @@ public class AutomationPreparerTest {
             ))
             assertEquals("contact id", secondArg())
 
-            experimentResult
+            Result.success(experimentResult)
         }
 
         coEvery { messagePreparer.prepare(any(), any()) } answers {
@@ -713,10 +713,6 @@ public class AutomationPreparerTest {
         coEvery { deviceInfoProvider.getUserLocale(any()) } returns Locale.US
         coEvery { deviceInfoProvider.isNotificationsOptedIn } returns true
 
-        coEvery { experimentManager.evaluateExperiments(any(), any()) } answers {
-            fail()
-            null
-        }
 
         coEvery { messagePreparer.prepare(any(), any()) } answers {
             val info: PreparedScheduleInfo = secondArg()
@@ -732,6 +728,9 @@ public class AutomationPreparerTest {
         } else {
             fail()
         }
+
+        coVerify(exactly = 0) { experimentManager.evaluateExperiments(any(), any()) }
+
     }
 
     @Test
@@ -757,11 +756,6 @@ public class AutomationPreparerTest {
         coEvery { deviceInfoProvider.isNotificationsOptedIn } returns true
 
 
-        coEvery { experimentManager.evaluateExperiments(any(), any()) } answers {
-            fail()
-            null
-        }
-
         coEvery { actionPreparer.prepare(any(), any()) } answers {
             val info: PreparedScheduleInfo = secondArg()
             assertEquals(schedule.identifier, info.scheduleID)
@@ -776,6 +770,9 @@ public class AutomationPreparerTest {
         } else {
             fail()
         }
+
+        coVerify(exactly = 0) { experimentManager.evaluateExperiments(any(), any()) }
+
     }
 
     private fun makeSchedule(
@@ -808,6 +805,6 @@ public class AutomationPreparerTest {
 
 
     private fun mockExperimentsManager() {
-        coEvery { experimentManager.evaluateExperiments(any(), any()) } returns null
+        coEvery { experimentManager.evaluateExperiments(any(), any()) } returns Result.success(null)
     }
 }

@@ -16,7 +16,7 @@ import com.urbanairship.automation.R
 import com.urbanairship.automation.rewrite.inappmessage.InAppActionUtils
 import com.urbanairship.automation.rewrite.inappmessage.InAppActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssets
 import com.urbanairship.automation.rewrite.inappmessage.content.Banner
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DelegatingDisplayAdapter
@@ -38,7 +38,7 @@ import kotlinx.coroutines.withContext
  */
 internal class BannerDisplayDelegate(
     private val displayContent: InAppMessageDisplayContent.BannerContent,
-    private val assets: AirshipCachedAssetsInterface?,
+    private val assets: AirshipCachedAssets?,
     private val activityMonitor: ActivityMonitor
 ) : DelegatingDisplayAdapter.Delegate {
 

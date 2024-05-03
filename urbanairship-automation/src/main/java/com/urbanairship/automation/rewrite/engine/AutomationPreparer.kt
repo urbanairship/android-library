@@ -1,7 +1,6 @@
 package com.urbanairship.automation.rewrite.engine
 
 import android.content.Context
-import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
@@ -21,17 +20,12 @@ import com.urbanairship.deferred.DeferredResolver
 import com.urbanairship.deferred.DeferredResult
 import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.experiment.ExperimentManager
+import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.experiment.MessageInfo
 import com.urbanairship.json.JsonValue
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.time.Duration.Companion.seconds
-
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface AutomationPreparerInterface {
-    public suspend fun prepare(context: Context, schedule: AutomationSchedule, deferredContext: DeferredTriggerContext?): SchedulePrepareResult
-    public suspend fun cancelled(schedule: AutomationSchedule)
-}
 
 internal interface AutomationPreparerDelegate<DataIn, DataOut> {
     suspend fun prepare(data: DataIn, preparedScheduleInfo: PreparedScheduleInfo) : Result<DataOut>
@@ -48,13 +42,13 @@ internal class AutomationPreparer internal constructor(
     private val experiments: ExperimentManager,
     private val remoteDataAccess: AutomationRemoteDataAccess,
     private val queues: Queues = Queues()
-): AutomationPreparerInterface {
+) {
 
     internal companion object {
         private const val DEFAULT_MESSAGE_TYPE = "transactional"
     }
 
-    override suspend fun cancelled(schedule: AutomationSchedule) {
+    suspend fun cancelled(schedule: AutomationSchedule) {
         if (schedule.isInAppMessageType()) {
             messagePreparer.cancelled(schedule.identifier)
         } else {
@@ -62,7 +56,7 @@ internal class AutomationPreparer internal constructor(
         }
     }
 
-    override suspend fun prepare(
+    suspend fun prepare(
         context: Context,
         schedule: AutomationSchedule,
         deferredContext: DeferredTriggerContext?
@@ -94,6 +88,7 @@ internal class AutomationPreparer internal constructor(
                 return@run RetryingQueue.Result.Success(SchedulePrepareResult.Invalidate)
             }
 
+            // Check if schedule is already over limit
             if (frequencyChecker?.isOverLimit() == true) {
                 UALog.v { "Frequency limits exceeded ${schedule.identifier}" }
                 return@run RetryingQueue.Result.Success(
@@ -120,17 +115,10 @@ internal class AutomationPreparer internal constructor(
             }
 
             // Experiment result
-            val experimentResult = if (schedule.evaluateExperiments()) {
-                /// TODO: make this return a result so we can retry if it fails
-                experiments.evaluateExperiments(
-                    messageInfo = MessageInfo(
-                        messageType = schedule.messageType ?: DEFAULT_MESSAGE_TYPE,
-                        campaigns = schedule.campaigns
-                    ),
-                    contactId = deviceInfoProvider.getStableContactId()
-                )
-            } else {
-                null
+            val experimentResult = evaluateExperiments(schedule).getOrElse { ex ->
+                UALog.e(ex) { "Failed to evaluate hold out groups ${schedule.identifier}" }
+                remoteDataAccess.notifyOutdated(schedule)
+                return@run RetryingQueue.Result.Retry()
             }
 
             val scheduleInfo = PreparedScheduleInfo(
@@ -232,6 +220,20 @@ internal class AutomationPreparer internal constructor(
                     }
                 )
             }
+        }
+    }
+
+    private suspend fun evaluateExperiments(schedule: AutomationSchedule): Result<ExperimentResult?> {
+        return if (schedule.evaluateExperiments()) {
+            experiments.evaluateExperiments(
+                messageInfo = MessageInfo(
+                    messageType = schedule.messageType ?: DEFAULT_MESSAGE_TYPE,
+                    campaigns = schedule.campaigns
+                ),
+                contactId = deviceInfoProvider.getStableContactId()
+            )
+        } else {
+            Result.success(null)
         }
     }
 

@@ -1,15 +1,13 @@
 package com.urbanairship.automation.rewrite.inappmessage
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestActivityMonitor
 import com.urbanairship.automation.rewrite.engine.PreparedScheduleInfo
-import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
-import com.urbanairship.automation.rewrite.inappmessage.assets.AssetCacheManagerInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssets
+import com.urbanairship.automation.rewrite.inappmessage.assets.AssetCacheManager
 import com.urbanairship.automation.rewrite.inappmessage.content.Banner
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapter
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapterFactory
-
 import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinator
 import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinatorManager
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageMediaInfo
@@ -29,8 +27,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 public class InAppMessageAutomationPreparerTest {
-    private val activityMonitor = TestActivityMonitor()
-    private val assetsManager: AssetCacheManagerInterface = mockk()
+    private val assetsManager: AssetCacheManager = mockk()
     private val adapterFactory: DisplayAdapterFactory = mockk()
     private val coordinatorManager: DisplayCoordinatorManager = mockk()
 
@@ -54,11 +51,11 @@ public class InAppMessageAutomationPreparerTest {
 
     @Test
     public fun testPrepare(): TestResult = runTest {
-        val cachedAsset: AirshipCachedAssetsInterface = mockk()
+        val cachedAsset: AirshipCachedAssets = mockk()
         coEvery { assetsManager.cacheAsset(any(), any()) } answers {
             assertEquals(preparedScheduleInfo.scheduleID, firstArg())
             assertEquals(listOf("https://banner.url"), secondArg())
-            cachedAsset
+            Result.success(cachedAsset)
         }
 
         val coordinator: DisplayCoordinator = mockk()
@@ -100,8 +97,8 @@ public class InAppMessageAutomationPreparerTest {
 
     @Test
     public fun testPrepareFailedAdapter(): TestResult = runTest {
-        val asset: AirshipCachedAssetsInterface = mockk()
-        coEvery { assetsManager.cacheAsset(any(), any()) } returns asset
+        val asset: AirshipCachedAssets = mockk()
+        coEvery { assetsManager.cacheAsset(any(), any()) } returns Result.success(asset)
 
         val coordinator: DisplayCoordinator = mockk()
         every { coordinatorManager.displayCoordinator(any()) } returns coordinator

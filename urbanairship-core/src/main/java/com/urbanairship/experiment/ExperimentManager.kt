@@ -16,6 +16,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.util.Clock
+import java.lang.IllegalStateException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
@@ -63,17 +64,17 @@ public class ExperimentManager internal constructor(
      * @return The experiments result. If no experiment matches, null is returned.
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public suspend fun evaluateExperiments(messageInfo: MessageInfo, contactId: String? = null): ExperimentResult? {
+    public suspend fun evaluateExperiments(messageInfo: MessageInfo, contactId: String? = null): Result<ExperimentResult?> {
 
         val activeExperiments = getActiveExperiments(messageInfo)
         if (activeExperiments.isEmpty()) {
-            return null
+            return Result.success(null)
         }
 
         val channelId = infoProvider.channelId
         if (channelId == null) {
             UALog.d("Channel ID not available, unable to evaluate hold out groups.")
-            return null
+            return Result.failure(IllegalStateException("Channel ID not available, unable to evaluate hold out groups."))
         }
 
         val evaluationContactId = contactId ?: infoProvider.getStableContactId()
@@ -93,12 +94,15 @@ public class ExperimentManager internal constructor(
             }
         }
 
-        return ExperimentResult(
-            channelId = channelId,
-            contactId = evaluationContactId,
-            matchedExperimentId = matchedExperiment?.id,
-            isMatching = (matchedExperiment != null),
-            allEvaluatedExperimentsMetadata = allExperimentsMetadata)
+        return Result.success(
+            ExperimentResult(
+                channelId = channelId,
+                contactId = evaluationContactId,
+                matchedExperimentId = matchedExperiment?.id,
+                isMatching = (matchedExperiment != null),
+                allEvaluatedExperimentsMetadata = allExperimentsMetadata
+            )
+        )
     }
 
     /**
@@ -109,7 +113,7 @@ public class ExperimentManager internal constructor(
     public fun evaluateGlobalHoldoutsPendingResult(messageInfo: MessageInfo, contactId: String? = null): PendingResult<ExperimentResult?> {
         val result = PendingResult<ExperimentResult?>()
         scope.launch {
-            result.result = evaluateExperiments(messageInfo, contactId)
+            result.result = evaluateExperiments(messageInfo, contactId).getOrNull()
         }
         return result
     }

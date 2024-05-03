@@ -7,7 +7,6 @@ import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.activity.ThemedActivity
 import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssets
-import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
 import com.urbanairship.automation.rewrite.inappmessage.assets.EmptyAirshipCachedAssets
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.InAppMessageDisplayListener
@@ -23,7 +22,7 @@ internal abstract class InAppMessageActivity<T: InAppMessageDisplayContent> : Th
 
     protected var displayListener: InAppMessageDisplayListener? = null
         private set
-    protected var assets: AirshipCachedAssetsInterface? = null
+    protected var assets: AirshipCachedAssets? = null
         private set
 
     override fun onCreate(savedInstanceState: Bundle?) {

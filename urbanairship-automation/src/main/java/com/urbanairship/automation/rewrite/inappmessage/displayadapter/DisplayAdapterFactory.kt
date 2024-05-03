@@ -3,7 +3,7 @@ package com.urbanairship.automation.rewrite.inappmessage.displayadapter
 import android.content.Context
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
-import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssets
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.banner.BannerDisplayDelegate
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.fullscreen.FullscreenDisplayDelegate
@@ -12,7 +12,7 @@ import com.urbanairship.automation.rewrite.inappmessage.displayadapter.layout.Ai
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.modal.ModalDisplayDelegate
 import com.urbanairship.automation.rewrite.utils.NetworkMonitor
 
-private typealias AdapterBuilder = (Context, InAppMessage, AirshipCachedAssetsInterface) -> CustomDisplayAdapter?
+private typealias AdapterBuilder = (Context, InAppMessage, AirshipCachedAssets) -> CustomDisplayAdapter?
 
 
 internal class DisplayAdapterFactory(
@@ -22,7 +22,7 @@ internal class DisplayAdapterFactory(
 ) {
     private val customAdapters = mutableMapOf<CustomDisplayAdapterType, AdapterBuilder>()
 
-    private fun makeCustomAdapter(context: Context,  message: InAppMessage, assets: AirshipCachedAssetsInterface): DisplayAdapter? {
+    private fun makeCustomAdapter(context: Context,  message: InAppMessage, assets: AirshipCachedAssets): DisplayAdapter? {
         val type = when(message.displayContent) {
             is InAppMessageDisplayContent.BannerContent -> CustomDisplayAdapterType.BANNER
             is InAppMessageDisplayContent.FullscreenContent -> CustomDisplayAdapterType.FULLSCREEN
@@ -40,7 +40,7 @@ internal class DisplayAdapterFactory(
         return CustomDisplayAdapterWrapper(custom)
     }
 
-    private fun makeDefaultAdapter(message: InAppMessage, assets: AirshipCachedAssetsInterface): DisplayAdapter? {
+    private fun makeDefaultAdapter(message: InAppMessage, assets: AirshipCachedAssets): DisplayAdapter? {
         val delegate = when(message.displayContent) {
             is InAppMessageDisplayContent.BannerContent -> BannerDisplayDelegate(message.displayContent, assets, activityMonitor)
             is InAppMessageDisplayContent.FullscreenContent -> FullscreenDisplayDelegate(message.displayContent, assets, activityMonitor)
@@ -61,7 +61,7 @@ internal class DisplayAdapterFactory(
 
     fun makeAdapter(
         message: InAppMessage,
-        assets: AirshipCachedAssetsInterface,
+        assets: AirshipCachedAssets,
     ): Result<DisplayAdapter> {
         val adapter = makeCustomAdapter(context, message, assets) ?: makeDefaultAdapter(message, assets)
         return if (adapter != null) {

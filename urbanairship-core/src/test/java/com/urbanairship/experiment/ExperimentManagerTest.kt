@@ -178,7 +178,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo)!!
+        val result = subject.evaluateExperiments(messageInfo).getOrNull()!!
         assertEquals("fake-id", result.matchedExperimentId)
         assertTrue(result.isMatching)
         assertEquals(contactId, result.contactId)
@@ -206,7 +206,7 @@ public class ExperimentManagerTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
         val result = subject.evaluateExperiments(messageInfo)
-        assertNull(result)
+        assertTrue(result.isFailure)
     }
 
     @Test
@@ -229,7 +229,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo, activeContactId)!!
+        val result = subject.evaluateExperiments(messageInfo, activeContactId).getOrNull()!!
         assertTrue(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
         assertEquals(activeContactId, result.contactId)
@@ -252,7 +252,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo)!!
+        val result = subject.evaluateExperiments(messageInfo).getOrNull()!!
         assertTrue(result.isMatching)
         assertEquals("first", result.matchedExperimentId)
         assertTrue(result.allEvaluatedExperimentsMetadata.size == 1)
@@ -275,7 +275,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(MessageInfo("transactional", null))!!
+        val result = subject.evaluateExperiments(MessageInfo("transactional", null)).getOrNull()!!
         assert(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
     }
@@ -304,7 +304,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo)!!
+        val result = subject.evaluateExperiments(messageInfo).getOrNull()!!
         assert(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
     }
@@ -332,7 +332,7 @@ public class ExperimentManagerTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
         currentTime = 2
 
-        val result = subject.evaluateExperiments(messageInfo)!!
+        val result = subject.evaluateExperiments(messageInfo).getOrNull()!!
         assert(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
     }

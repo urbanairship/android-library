@@ -35,7 +35,7 @@ import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppPa
 import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppPagerSummaryEvent
 import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppPermissionResultEvent
 import com.urbanairship.automation.rewrite.inappmessage.analytics.events.PageViewSummary
-import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssets
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DelegatingDisplayAdapter
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayResult
@@ -57,7 +57,7 @@ import kotlinx.coroutines.withContext
 /** Airship layout display adapter. */
 internal class AirshipLayoutDisplayDelegate(
     private val displayContent: InAppMessageDisplayContent.AirshipLayoutContent,
-    private val assets: AirshipCachedAssetsInterface?,
+    private val assets: AirshipCachedAssets?,
     private val messageExtras: JsonMap?,
     private val activityMonitor: ActivityMonitor
 ) : DelegatingDisplayAdapter.Delegate {

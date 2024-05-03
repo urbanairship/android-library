@@ -30,7 +30,7 @@ import com.urbanairship.Fonts
 import com.urbanairship.UALog.d
 import com.urbanairship.UALog.e
 import com.urbanairship.automation.R
-import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssets
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonInfo
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageMediaInfo
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageTextInfo
@@ -214,7 +214,7 @@ internal object InAppViewUtils {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    fun loadMediaInfo(mediaView: MediaView, mediaInfo: InAppMessageMediaInfo, assets: AirshipCachedAssetsInterface?) {
+    fun loadMediaInfo(mediaView: MediaView, mediaInfo: InAppMessageMediaInfo, assets: AirshipCachedAssets?) {
         if (mediaView.width == 0) {
             val weakReference = WeakReference(mediaView)
             mediaView.viewTreeObserver.addOnPreDrawListener(object :

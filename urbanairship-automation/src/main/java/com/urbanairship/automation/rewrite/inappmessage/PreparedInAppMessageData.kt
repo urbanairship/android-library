@@ -6,8 +6,8 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.util.UrlInfo
 import com.urbanairship.automation.rewrite.engine.AutomationPreparerDelegate
 import com.urbanairship.automation.rewrite.engine.PreparedScheduleInfo
-import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
-import com.urbanairship.automation.rewrite.inappmessage.assets.AssetCacheManagerInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssets
+import com.urbanairship.automation.rewrite.inappmessage.assets.AssetCacheManager
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.CustomDisplayAdapter
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.CustomDisplayAdapterType
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapter
@@ -23,7 +23,7 @@ internal data class PreparedInAppMessageData(
 )
 
 internal class InAppMessageAutomationPreparer(
-    private val assetsManager: AssetCacheManagerInterface,
+    private val assetsManager: AssetCacheManager,
     private val displayCoordinatorManager: DisplayCoordinatorManager,
     private val displayAdapterFactory: DisplayAdapterFactory
 ) : AutomationPreparerDelegate<InAppMessage, PreparedInAppMessageData> {
@@ -36,11 +36,13 @@ internal class InAppMessageAutomationPreparer(
         data: InAppMessage,
         preparedScheduleInfo: PreparedScheduleInfo
     ): Result<PreparedInAppMessageData> {
-        val assets = prepareAssets(data, preparedScheduleInfo.scheduleID)
-            ?: throw IllegalArgumentException("Failed to cache assets")
+        val assets = prepareAssets(data, preparedScheduleInfo.scheduleID).getOrElse {
+            return Result.failure(it)
+        }
 
         UALog.v { "Making display coordinator ${preparedScheduleInfo.scheduleID}" }
         val coordinator = displayCoordinatorManager.displayCoordinator(data)
+
         val adapter = displayAdapterFactory.makeAdapter(data, assets).getOrElse {
             return Result.failure(it)
         }
@@ -55,12 +57,12 @@ internal class InAppMessageAutomationPreparer(
 
     fun setAdapterFactoryBlock(
         type: CustomDisplayAdapterType,
-        factoryBlock: (Context, InAppMessage, AirshipCachedAssetsInterface) -> CustomDisplayAdapter?
+        factoryBlock: (Context, InAppMessage, AirshipCachedAssets) -> CustomDisplayAdapter?
     ) {
         displayAdapterFactory.setAdapterFactoryBlock(type, factoryBlock)
     }
 
-    private suspend fun prepareAssets(message: InAppMessage, scheduleID: String): AirshipCachedAssetsInterface? {
+    private suspend fun prepareAssets(message: InAppMessage, scheduleID: String): Result<AirshipCachedAssets> {
         val imageUrls = message
             .getUrlInfos()
             .mapNotNull {

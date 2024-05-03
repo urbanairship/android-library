@@ -96,13 +96,15 @@ public class AssetCacheManagerTest {
 
         manager.clearCache(testScheduleId)
 
-        val cachedAsset = manager.cacheAsset(testScheduleId, listOf(assetRemoteURL1.toString(), assetRemoteURL2.toString()))
+        val cachedAsset = manager.cacheAsset(testScheduleId, listOf(assetRemoteURL1,
+            assetRemoteURL2
+        )).getOrThrow()
 
-        assertTrue(cachedAsset?.isCached(assetRemoteURL1) == true)
-        assertTrue(cachedAsset?.isCached(assetRemoteURL2) == true)
+        assertTrue(cachedAsset.isCached(assetRemoteURL1))
+        assertTrue(cachedAsset.isCached(assetRemoteURL2))
 
-        assertEquals(cachedAsset?.cacheURL(assetRemoteURL1), localAssetFile1.toURL())
-        assertEquals(cachedAsset?.cacheURL(assetRemoteURL2), localAssetFile2.toURL())
+        assertEquals(cachedAsset.cacheURL(assetRemoteURL1), localAssetFile1.toURL())
+        assertEquals(cachedAsset.cacheURL(assetRemoteURL2), localAssetFile2.toURL())
 
         verify(exactly = 1) { fileManager.moveAsset(eq(URI("file:///tmp/asset")), eq(localAssetFile1)) }
         verify(exactly = 1) { fileManager.moveAsset(eq(URI("file:///tmp/asset")), eq(localAssetFile2)) }

@@ -9,7 +9,7 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessageActivity
 import com.urbanairship.automation.rewrite.inappmessage.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssets
 import com.urbanairship.automation.rewrite.inappmessage.content.InAppMessageDisplayContent
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DelegatingDisplayAdapter
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayResult
@@ -27,7 +27,7 @@ import kotlinx.coroutines.withContext
  */
 internal class HtmlDisplayDelegate(
     private val displayContent: InAppMessageDisplayContent.HTMLContent,
-    private val assets: AirshipCachedAssetsInterface?,
+    private val assets: AirshipCachedAssets?,
     private val messageExtras: JsonMap?,
     private val activityMonitor: ActivityMonitor
 ) : DelegatingDisplayAdapter.Delegate {

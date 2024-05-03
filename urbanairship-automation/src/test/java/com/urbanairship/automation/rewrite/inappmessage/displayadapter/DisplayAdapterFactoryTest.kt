@@ -5,7 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
-import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssetsInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AirshipCachedAssets
 import com.urbanairship.automation.rewrite.inappmessage.content.AirshipLayout
 import com.urbanairship.automation.rewrite.inappmessage.content.Banner
 import com.urbanairship.automation.rewrite.inappmessage.content.Custom
@@ -31,7 +31,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class DisplayAdapterFactoryTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val cachedAsset: AirshipCachedAssetsInterface = mockk(relaxed = true)
+    private val cachedAsset: AirshipCachedAssets = mockk(relaxed = true)
     private val activityMonitor: ActivityMonitor = mockk(relaxed = true)
     private val networkMonitor: NetworkMonitor = mockk(relaxed = true)
 

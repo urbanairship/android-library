@@ -5,7 +5,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.automation.rewrite.engine.AutomationDelayProcessorInterface
-import com.urbanairship.automation.rewrite.engine.AutomationPreparerInterface
+import com.urbanairship.automation.rewrite.engine.AutomationPreparer
 import com.urbanairship.automation.rewrite.engine.AutomationScheduleState
 import com.urbanairship.automation.rewrite.engine.PreparedSchedule
 import com.urbanairship.automation.rewrite.engine.SchedulePrepareResult
@@ -51,7 +51,7 @@ internal class AutomationEngine(
     private val context: Context,
     private val store: AutomationStore,
     private val executor: AutomationExecutorInterface,
-    private val preparer: AutomationPreparerInterface,
+    private val preparer: AutomationPreparer,
     private val scheduleConditionsChangedNotifier: ScheduleConditionsChangedNotifier,
     private val eventsFeed: AutomationEventFeed,
     private val triggerProcessor: AutomationTriggerProcessorInterface,

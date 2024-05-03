@@ -12,7 +12,7 @@ import com.urbanairship.automation.rewrite.ScheduleReadyResult
 import com.urbanairship.automation.rewrite.engine.PreparedScheduleInfo
 import com.urbanairship.automation.rewrite.inappmessage.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.automation.rewrite.inappmessage.analytics.events.InAppResolutionEvent
-import com.urbanairship.automation.rewrite.inappmessage.assets.AssetCacheManagerInterface
+import com.urbanairship.automation.rewrite.inappmessage.assets.AssetCacheManager
 import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayResult
 import com.urbanairship.automation.rewrite.utils.ScheduleConditionsChangedNotifier
 import kotlinx.coroutines.CoroutineDispatcher
@@ -25,7 +25,7 @@ import kotlinx.coroutines.withContext
 
 internal class InAppMessageAutomationExecutor(
     private val context: Context,
-    private val assetManager: AssetCacheManagerInterface,
+    private val assetManager: AssetCacheManager,
     private val analyticsFactory: InAppMessageAnalyticsFactory,
     private val scheduleConditionsChangedNotifier: ScheduleConditionsChangedNotifier,
     private val actionRunnerFactory: ActionRunRequestFactory,
