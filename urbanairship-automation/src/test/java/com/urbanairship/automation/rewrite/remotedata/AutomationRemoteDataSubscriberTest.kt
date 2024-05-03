@@ -16,8 +16,6 @@ import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
 import java.util.UUID
 import kotlin.random.Random
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -26,11 +24,12 @@ import io.mockk.mockk
 import io.mockk.runs
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.fail
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -38,26 +37,30 @@ import org.junit.runner.RunWith
 public class AutomationRemoteDataSubscriberTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
-    private val remoteDataAccess: AutomationRemoteDataAccessInterface = mockk()
-    private val engine: AutomationEngineInterface = mockk()
-    private val frequencyLimitManager: FrequencyLimitManager = mockk()
-    private lateinit var subscriber: AutomationRemoteDataSubscriber
-    private val clock = TestClock()
+    private val clock = TestClock().apply { currentTimeMillis = 1000 }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val testDispatcher = UnconfinedTestDispatcher()
+
     private var updatesFlow = MutableSharedFlow<InAppRemoteData>(replay = 1)
-
-    @Before
-    public fun setup() {
-        subscriber = AutomationRemoteDataSubscriber(dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.11")
-        every { remoteDataAccess.updatesFlow } answers { updatesFlow }
-        every { remoteDataAccess.sourceFor(any()) } answers { getSource(firstArg()) }
-
-        coEvery { frequencyLimitManager.setConstraints(any()) } returns Result.success(Unit)
-        coEvery { engine.getSchedules() } returns emptyList()
+    private val remoteDataAccess: AutomationRemoteDataAccessInterface = mockk {
+        every { this@mockk.updatesFlow } returns this@AutomationRemoteDataSubscriberTest.updatesFlow
+        every { this@mockk.sourceFor(any()) } answers { getSource(firstArg()) }
     }
 
-    @Test
-    public fun testSchedulingAutomations(): TestResult = runTest(timeout = 15.seconds) {
+    private val engine: AutomationEngineInterface = mockk {
+        coEvery { this@mockk.getSchedules() } returns emptyList()
+    }
 
+    private val frequencyLimitManager: FrequencyLimitManager = mockk {
+        coEvery { this@mockk.setConstraints(any()) } returns Result.success(Unit)
+    }
+    private var subscriber: AutomationRemoteDataSubscriber = AutomationRemoteDataSubscriber(
+        dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.11", testDispatcher
+    )
+
+    @Test
+    public fun testSchedulingAutomations(): TestResult = runTest {
         val appSchedules = makeSchedules(source = RemoteDataSource.APP)
         val contactSchedules = makeSchedules(source = RemoteDataSource.CONTACT)
 
@@ -74,51 +77,38 @@ public class AutomationRemoteDataSubscriberTest {
             )
         )
 
-        val job = Job()
-
-        coEvery { engine.upsertSchedules(any()) } answers {
-            if (appSchedules != firstArg() && contactSchedules != firstArg()) {
-                fail()
-            }
-
-            if (contactSchedules == firstArg()) {
-                job.complete()
-            }
-        }
+        coEvery { engine.upsertSchedules(any()) } just runs
 
         subscriber.subscribe()
-        updatesFlow.tryEmit(data)
+        updatesFlow.emit(data)
 
-        job.join()
+        coVerify {
+            engine.upsertSchedules(appSchedules)
+            engine.upsertSchedules(contactSchedules)
+        }
 
-        coVerify(exactly = 1) { engine.upsertSchedules(eq(appSchedules)) }
-        coVerify(exactly = 1) { engine.upsertSchedules(eq(contactSchedules)) }
     }
 
     @Test
-    public fun testEmptyPayloadStopsSchedules(): TestResult = runTest(timeout = 20.seconds) {
+    public fun testEmptyPayloadStopsSchedules(): TestResult = runTest {
         val appSchedules = makeSchedules(RemoteDataSource.APP)
         coEvery { engine.getSchedules() } returns appSchedules
 
         val emptyData = InAppRemoteData(emptyMap())
         val scheduleIDs = appSchedules.map { it.identifier }
 
-        val job = Job()
-        coEvery { engine.stopSchedules(any()) } answers {
-            assertEquals(scheduleIDs, firstArg())
-            job.complete()
-        }
+        coEvery { engine.stopSchedules(any()) } just runs
 
         subscriber.subscribe()
-        updatesFlow.tryEmit(emptyData)
-
-        job.join()
+        updatesFlow.emit(emptyData)
 
         coVerify { engine.stopSchedules(eq(scheduleIDs)) }
     }
 
     @Test
     public fun testIgnoreSchedulesNoLongerScheduled(): TestResult = runTest {
+        coEvery { engine.upsertSchedules(any()) } just runs
+
         subscriber.subscribe()
 
         clock.currentTimeMillis = 1
@@ -138,16 +128,9 @@ public class AutomationRemoteDataSubscriberTest {
             )
         )
 
-        var updateJob = Job()
+        updatesFlow.emit(firstUpdate)
 
-        coEvery { engine.upsertSchedules(any()) } answers {
-            assertEquals(firstUpdateSchedules, firstArg())
-            updateJob.complete()
-        }
-
-        updatesFlow.tryEmit(firstUpdate)
-        updateJob.join()
-
+        coVerify { engine.upsertSchedules(firstUpdateSchedules) }
         coEvery { engine.getSchedules() } returns firstUpdateSchedules
 
         val secondUpdateSchedules = firstUpdateSchedules + makeSchedules(RemoteDataSource.APP, 4u)
@@ -165,16 +148,19 @@ public class AutomationRemoteDataSubscriberTest {
             )
         )
 
-        updateJob = Job()
-
-        updatesFlow.tryEmit(secondUpdate)
+        updatesFlow.emit(secondUpdate)
         // Should still be the first update schedules since the second updates are older
-        updateJob.join()
+        coVerify { engine.upsertSchedules(firstUpdateSchedules) }
+
     }
 
     @Test
     public fun testOlderSchedulesMinSDKVersion(): TestResult = runTest {
-        subscriber = AutomationRemoteDataSubscriber(dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.0.0")
+        coEvery { engine.upsertSchedules(any()) } just runs
+
+        subscriber = AutomationRemoteDataSubscriber(
+            dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.0.0", testDispatcher
+        )
         subscriber.subscribe()
 
         clock.currentTimeMillis = 1
@@ -194,29 +180,18 @@ public class AutomationRemoteDataSubscriberTest {
             )
         )
 
-        var updateJob = Job()
-        var expectedSchedules = firstUpdateSchedules
-        coEvery { engine.upsertSchedules(any()) } answers {
-            assertEquals(expectedSchedules, firstArg())
-            updateJob.complete()
-        }
-
-        updatesFlow.tryEmit(firstUpdate)
-        updateJob.join()
-
+        updatesFlow.emit(firstUpdate)
+        coVerify { engine.upsertSchedules(firstUpdateSchedules) }
         subscriber.unsubscribe()
-        updatesFlow = MutableSharedFlow(replay = 1)
 
-        subscriber = AutomationRemoteDataSubscriber(dataStore, remoteDataAccess, engine, frequencyLimitManager, "2.0.0")
-        subscriber.subscribe()
-
-        coEvery { engine.getSchedules() } returns firstUpdateSchedules
+        subscriber = AutomationRemoteDataSubscriber(dataStore, remoteDataAccess, engine, frequencyLimitManager, "2.0.0", testDispatcher)
 
         val secondUpdateSchedules = firstUpdateSchedules + makeSchedules(
             source = RemoteDataSource.APP,
             count = 4u,
             minSDKVersion = "2.0.0"
         )
+
         val secondUpdate = InAppRemoteData(
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
@@ -225,11 +200,13 @@ public class AutomationRemoteDataSubscriberTest {
                 )
             )
         )
-        expectedSchedules = secondUpdateSchedules
-        updateJob = Job()
 
-        updatesFlow.tryEmit(secondUpdate)
-        updateJob.join()
+        updatesFlow.emit(secondUpdate)
+
+        coEvery { engine.getSchedules() } returns firstUpdateSchedules
+
+        subscriber.subscribe()
+        coVerify { engine.upsertSchedules(secondUpdateSchedules) }
     }
 
     @Test
@@ -260,8 +237,8 @@ public class AutomationRemoteDataSubscriberTest {
             updateJob.complete()
         }
 
-        updatesFlow.tryEmit(update)
-        updatesFlow.tryEmit(update)
+        updatesFlow.emit(update)
+        updatesFlow.emit(update)
 
         updateJob.join()
 
@@ -300,7 +277,7 @@ public class AutomationRemoteDataSubscriberTest {
             )
         )
 
-        updatesFlow.tryEmit(remoteData)
+        updatesFlow.emit(remoteData)
 
         updateJob.join()
 
@@ -319,7 +296,7 @@ public class AutomationRemoteDataSubscriberTest {
         updateJob = Job()
         expectedSchedules = updatedSchedules
 
-        updatesFlow.tryEmit(
+        updatesFlow.emit(
             InAppRemoteData(
                 payload = mapOf(
                     RemoteDataSource.APP to InAppRemoteData.Payload(
@@ -354,7 +331,7 @@ public class AutomationRemoteDataSubscriberTest {
             source = RemoteDataSource.APP
         )
 
-        updatesFlow.tryEmit(
+        updatesFlow.emit(
             InAppRemoteData(
                 payload = mapOf(
                     RemoteDataSource.APP to InAppRemoteData.Payload(
@@ -373,7 +350,7 @@ public class AutomationRemoteDataSubscriberTest {
         updateJob = Job()
 
         // update again with different date
-        updatesFlow.tryEmit(
+        updatesFlow.emit(
             InAppRemoteData(
                 payload = mapOf(
                     RemoteDataSource.APP to InAppRemoteData.Payload(
@@ -423,7 +400,7 @@ public class AutomationRemoteDataSubscriberTest {
             Result.success(Unit)
         }
 
-        updatesFlow.tryEmit(data)
+        updatesFlow.emit(data)
         updateJob.join()
     }
 

@@ -1,7 +1,6 @@
 package com.urbanairship.automation.rewrite.engine
 
 import android.content.Context
-import android.os.Looper
 import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.audience.AudienceSelector
@@ -16,6 +15,7 @@ import com.urbanairship.automation.rewrite.isInAppMessageType
 import com.urbanairship.automation.rewrite.limits.FrequencyChecker
 import com.urbanairship.automation.rewrite.limits.FrequencyLimitManager
 import com.urbanairship.automation.rewrite.remotedata.AutomationRemoteDataAccess
+import com.urbanairship.automation.rewrite.utils.RetryingQueue
 import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.deferred.DeferredResolver
 import com.urbanairship.deferred.DeferredResult
@@ -23,12 +23,9 @@ import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.experiment.ExperimentManager
 import com.urbanairship.experiment.MessageInfo
 import com.urbanairship.json.JsonValue
-import com.urbanairship.util.RetryingExecutor
-import com.urbanairship.util.RetryingExecutor.Operation
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.runBlocking
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+import kotlin.time.Duration.Companion.seconds
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface AutomationPreparerInterface {
@@ -54,7 +51,6 @@ internal class AutomationPreparer internal constructor(
 ): AutomationPreparerInterface {
 
     internal companion object {
-        private const val DEFERRED_RESULT_KEY = "AirshipAutomation#deferredResult"
         private const val DEFAULT_MESSAGE_TYPE = "transactional"
     }
 
@@ -73,175 +69,187 @@ internal class AutomationPreparer internal constructor(
     ): SchedulePrepareResult {
         UALog.v { "Preparing ${schedule.identifier}" }
 
-        return suspendCoroutine {
-            val queues = queues.queue(schedule.queue)
+        val prepareCache = PrepareCache()
+        return queues.queue(schedule.queue).run("Schedule ${schedule.identifier}") {
 
-            queues.execute(Operation {
-                try {
-                    if (runBlocking { remoteDataAccess.requiredUpdate(schedule) }) {
-                        UALog.v { "Schedule out of date ${schedule.identifier}" }
-                        runBlocking { remoteDataAccess.waitForFullRefresh(schedule) }
-                        it.resume(SchedulePrepareResult.Invalidate)
-                        return@Operation RetryingExecutor.finishedResult()
-                    }
+            // Check if we are out of date
+            if (remoteDataAccess.requiredUpdate(schedule)) {
+                UALog.v { "Schedule out of date ${schedule.identifier}" }
+                remoteDataAccess.waitForFullRefresh(schedule)
+                return@run RetryingQueue.Result.Success(SchedulePrepareResult.Invalidate)
+            }
 
-                    if (!runBlocking { remoteDataAccess.bestEffortRefresh(schedule) }) {
-                        UALog.v { "Schedule out of date ${schedule.identifier}" }
-                        it.resume(SchedulePrepareResult.Invalidate)
-                        return@Operation RetryingExecutor.finishedResult()
-                    }
+            // Best effort refresh
+            if (!remoteDataAccess.bestEffortRefresh(schedule) ) {
+                UALog.v { "Schedule out of date ${schedule.identifier}" }
+                return@run RetryingQueue.Result.Success(SchedulePrepareResult.Invalidate)
+            }
 
-                    val frequencyCheckerResult = runBlocking {
-                        frequencyLimitManager.getFrequencyChecker(schedule.frequencyConstraintIds)
-                    }
+            // Frequency Checker
+            val frequencyChecker = frequencyLimitManager.getFrequencyChecker(
+                schedule.frequencyConstraintIds
+            ).getOrElse { ex ->
+                UALog.e(ex) { "Failed to fetch frequency checker for schedule ${schedule.identifier}" }
+                remoteDataAccess.notifyOutdated(schedule)
+                return@run RetryingQueue.Result.Success(SchedulePrepareResult.Invalidate)
+            }
 
-                    val frequencyChecker = frequencyCheckerResult.getOrElse { ex ->
-                        UALog.e(ex) { "Failed to fetch frequency checker for schedule ${schedule.identifier}" }
-                        it.resume(SchedulePrepareResult.Invalidate)
-                        return@Operation RetryingExecutor.finishedResult()
-                    }
+            if (frequencyChecker?.isOverLimit() == true) {
+                UALog.v { "Frequency limits exceeded ${schedule.identifier}" }
+                return@run RetryingQueue.Result.Success(
+                    result = SchedulePrepareResult.Skip,
+                    ignoreReturnOrder = true
+                )
+            }
 
-                    if (frequencyChecker?.isOverLimit() == true) {
-                        UALog.v { "Frequency limits exceeded ${schedule.identifier}" }
-                        it.resume(SchedulePrepareResult.Skip)
-                        return@Operation RetryingExecutor.finishedResult()
-                    }
+            // Audience checks
+            schedule.audience?.let { _ ->
+                val match = audienceChecker.evaluate(
+                    context = context,
+                    newEvaluationDate = schedule.created.toLong(),
+                    infoProvider = deviceInfoProvider.snapshot(context),
+                    contactId = remoteDataAccess.contactIDFor(schedule)
+                )
 
-                    schedule.audience?.let { _ ->
-                        val match = runBlocking {
-                            audienceChecker.evaluate(
-                                context = context,
-                                newEvaluationDate = schedule.created.toLong(),
-                                infoProvider = deviceInfoProvider.snapshot(context),
-                                contactId = remoteDataAccess.contactIDFor(schedule)
-                            )
-                        }
-
-                        if (!match) {
-                            it.resume(schedule.missedAudiencePrepareResult())
-                            return@Operation RetryingExecutor.finishedResult() //TODO: ignoreReturnOrder: true
-                        }
-                    }
-
-                    val experimentResult = if (schedule.evaluateExperiments()) {
-                        runBlocking { experiments.evaluateExperiments(
-                            messageInfo = MessageInfo(
-                                messageType = schedule.messageType ?: DEFAULT_MESSAGE_TYPE,
-                                campaigns = schedule.campaigns
-                            ),
-                            contactId = deviceInfoProvider.getStableContactId()
-                        ) }
-                    } else {
-                        null
-                    }
-
-                    val scheduleInfo = PreparedScheduleInfo(
-                        scheduleID = schedule.identifier,
-                        productID = schedule.productID,
-                        campaigns = schedule.campaigns,
-                        contactID = runBlocking { deviceInfoProvider.getStableContactId() },
-                        experimentResult = experimentResult,
-                        reportingContext = schedule.reportingContext
+                if (!match) {
+                    return@run RetryingQueue.Result.Success(
+                        result = schedule.missedAudiencePrepareResult(),
+                        ignoreReturnOrder = true
                     )
-
-                    return@Operation runBlocking { prepareData(
-                        context = context,
-                        data = schedule.data,
-                        triggerContext = deferredContext,
-                        deviceInfoProvider = deviceInfoProvider,
-                        scheduleInfo = scheduleInfo,
-                        frequencyChecker = frequencyChecker,
-                        schedule = schedule,
-                        continuation = it
-                    ) }
-                } catch (ex: Exception) {
-                    UALog.e(ex) { "Failed to prepare ${schedule.identifier}" }
-                    return@Operation RetryingExecutor.retryResult()
                 }
-            })
+            }
 
+            // Experiment result
+            val experimentResult = if (schedule.evaluateExperiments()) {
+                /// TODO: make this return a result so we can retry if it fails
+                experiments.evaluateExperiments(
+                    messageInfo = MessageInfo(
+                        messageType = schedule.messageType ?: DEFAULT_MESSAGE_TYPE,
+                        campaigns = schedule.campaigns
+                    ),
+                    contactId = deviceInfoProvider.getStableContactId()
+                )
+            } else {
+                null
+            }
+
+            val scheduleInfo = PreparedScheduleInfo(
+                scheduleID = schedule.identifier,
+                productID = schedule.productID,
+                campaigns = schedule.campaigns,
+                contactID = deviceInfoProvider.getStableContactId(),
+                experimentResult = experimentResult,
+                reportingContext = schedule.reportingContext
+            )
+
+            prepareData(
+                context = context,
+                prepareCache = prepareCache,
+                data = schedule.data,
+                triggerContext = deferredContext,
+                deviceInfoProvider = deviceInfoProvider,
+                scheduleInfo = scheduleInfo,
+                frequencyChecker = frequencyChecker,
+                schedule = schedule,
+            )
         }
     }
 
     private suspend fun prepareData(
         context: Context,
+        prepareCache: PrepareCache,
         data: AutomationSchedule.ScheduleData,
         triggerContext: DeferredTriggerContext?,
         deviceInfoProvider: DeviceInfoProvider,
         scheduleInfo: PreparedScheduleInfo,
         frequencyChecker: FrequencyChecker?,
         schedule: AutomationSchedule,
-        continuation: Continuation<SchedulePrepareResult>
-    ): RetryingExecutor.Result {
+    ): RetryingQueue.Result<SchedulePrepareResult> {
         return when(data) {
             is AutomationSchedule.ScheduleData.Actions -> {
-                continuation.resume(SchedulePrepareResult.Prepared(
-                    PreparedSchedule(
-                        info = scheduleInfo,
-                        data = PreparedScheduleData.Action(actionPreparer.prepare(data.actions, scheduleInfo).getOrThrow()),
-                        frequencyChecker = frequencyChecker
-                    )
-                ))
-                RetryingExecutor.finishedResult()
+                actionPreparer.prepare(data.actions, scheduleInfo).fold(
+                    onFailure = {
+                        UALog.e(it) { "Failed to prepare actions" }
+                        RetryingQueue.Result.Retry()
+                    },
+                    onSuccess = {
+                        RetryingQueue.Result.Success(
+                            SchedulePrepareResult.Prepared(
+                                PreparedSchedule(
+                                    info = scheduleInfo,
+                                    data = PreparedScheduleData.Action(it),
+                                    frequencyChecker = frequencyChecker
+                                )
+                            )
+                        )
+                    }
+                )
             }
+
             is AutomationSchedule.ScheduleData.InAppMessageData -> {
                 if (!data.message.displayContent.validate()) {
                     UALog.d { "⚠️ Message did not pass validation: ${data.message.name} - skipping(${schedule.identifier})." }
-                    continuation.resume(SchedulePrepareResult.Skip)
-                    RetryingExecutor.finishedResult()
-                }
-
-                continuation.resume(SchedulePrepareResult.Prepared(
-                    PreparedSchedule(
-                        info = scheduleInfo,
-                        data = PreparedScheduleData.InAppMessage(messagePreparer.prepare(data.message, scheduleInfo).getOrThrow()),
-                        frequencyChecker = frequencyChecker
+                    RetryingQueue.Result.Success(SchedulePrepareResult.Skip)
+                } else {
+                    messagePreparer.prepare(data.message, scheduleInfo).fold(
+                        onFailure = {
+                            UALog.e(it) { "Failed to prepare message" }
+                            RetryingQueue.Result.Retry()
+                        },
+                        onSuccess = {
+                            RetryingQueue.Result.Success(
+                                SchedulePrepareResult.Prepared(
+                                    PreparedSchedule(
+                                        info = scheduleInfo,
+                                        data = PreparedScheduleData.InAppMessage(it),
+                                        frequencyChecker = frequencyChecker
+                                    )
+                                )
+                            )
+                        }
                     )
-                ))
-                RetryingExecutor.finishedResult()
+                }
             }
+
             is AutomationSchedule.ScheduleData.Deferred -> {
-                prepareDeferred(
-                    context = context,
+                prepareDeferred(context = context,
+                    prepareCache = prepareCache,
                     deferred = data.deferred,
                     triggerContext = triggerContext,
                     deviceInfoProvider = deviceInfoProvider,
                     schedule = schedule,
-                    continuation = continuation,
                     onResult = {
                         prepareData(
                             context = context,
+                            prepareCache = prepareCache,
                             data = it,
                             triggerContext = triggerContext,
                             deviceInfoProvider = deviceInfoProvider,
                             scheduleInfo = scheduleInfo,
                             frequencyChecker = frequencyChecker,
-                            schedule = schedule,
-                            continuation = continuation
+                            schedule = schedule
                         )
                     }
                 )
-
             }
-
         }
     }
 
     private suspend fun prepareDeferred(
         context: Context,
+        prepareCache: PrepareCache,
         deferred: DeferredAutomationData,
         triggerContext: DeferredTriggerContext?,
         deviceInfoProvider: DeviceInfoProvider,
         schedule: AutomationSchedule,
-        continuation: Continuation<SchedulePrepareResult>,
-        onResult: suspend (AutomationSchedule.ScheduleData) -> RetryingExecutor.Result
-    ): RetryingExecutor.Result {
+        onResult: suspend (AutomationSchedule.ScheduleData) -> RetryingQueue.Result<SchedulePrepareResult>
+    ): RetryingQueue.Result<SchedulePrepareResult> {
         UALog.v { "Resolving deferred ${schedule.identifier}" }
 
         val channelID = deviceInfoProvider.channelId
         if (channelID == null) {
             UALog.v { "Unable to resolve deferred until channel is created ${schedule.identifier}" }
-            return RetryingExecutor.retryResult()
+            return RetryingQueue.Result.Retry()
         }
 
         val request = DeferredRequest(
@@ -252,66 +260,64 @@ internal class AutomationPreparer internal constructor(
             notificationOptIn = deviceInfoProvider.isNotificationsOptedIn
         )
 
-        //TODO: resolve from cache
-        /*
-        if let cached: AutomationSchedule.ScheduleData = await retryState.value(key: Self.deferredResultKey) {
-            AirshipLogger.trace("Deferred resolved from cache \(schedule.identifier)")
-
-            return try await onResult(cached)
-        }
-         */
-
-        val result = deferredResolver.resolve(request, DeferredScheduleResult::fromJson)
+        val result = prepareCache.deferredResult ?: deferredResolver.resolve(request, DeferredScheduleResult::fromJson)
         UALog.v { "Deferred result ${schedule.identifier} $result" }
 
-        when(result) {
+        return when(result) {
             is DeferredResult.NotFound -> {
                 remoteDataAccess.notifyOutdated(schedule)
-                continuation.resume(SchedulePrepareResult.Invalidate)
-                return RetryingExecutor.finishedResult()
+                RetryingQueue.Result.Success(SchedulePrepareResult.Invalidate)
             }
+
             is DeferredResult.OutOfDate -> {
                 remoteDataAccess.notifyOutdated(schedule)
-                continuation.resume(SchedulePrepareResult.Invalidate)
-                return RetryingExecutor.finishedResult()
+                RetryingQueue.Result.Success(SchedulePrepareResult.Invalidate)
             }
+
             is DeferredResult.RetriableError -> {
-                val interval = result.retryAfter ?: return RetryingExecutor.retryResult()
-                return RetryingExecutor.retryResult(interval)
+                RetryingQueue.Result.Retry(retryAfter = result.retryAfter?.seconds)
             }
+
             is DeferredResult.TimedOut -> {
                 if (deferred.retryOnTimeOut != false) {
-                    return RetryingExecutor.retryResult()
+                    RetryingQueue.Result.Retry()
+                } else {
+                    RetryingQueue.Result.Success(
+                        result = SchedulePrepareResult.Penalize,
+                        ignoreReturnOrder = true
+                    )
                 }
-
-                continuation.resume(SchedulePrepareResult.Penalize)
-                return RetryingExecutor.finishedResult() // ignoreReturnOrder: true
             }
+
             is DeferredResult.Success -> {
-                if (!result.result.isAudienceMatch) {
-                    continuation.resume(schedule.missedAudiencePrepareResult())
-                    return RetryingExecutor.finishedResult() // ignoreReturnOrder: true
-                }
+                prepareCache.deferredResult = result
 
-                when(deferred.type) {
-                    DeferredAutomationData.DeferredType.ACTIONS -> {
-                        val actions = result.result.actions
-                        if (actions == null) {
-                            UALog.v { "Failed to get result for deferred ${schedule.identifier}" }
-                            return RetryingExecutor.retryResult()
+                if (result.result.isAudienceMatch) {
+                    when(deferred.type) {
+                        DeferredAutomationData.DeferredType.ACTIONS -> {
+                            val actions = result.result.actions
+                            if (actions == null) {
+                                UALog.v { "Failed to get result for deferred ${schedule.identifier}" }
+                                RetryingQueue.Result.Retry()
+                            } else {
+                                onResult(AutomationSchedule.ScheduleData.Actions(actions))
+                            }
                         }
-                        return onResult(AutomationSchedule.ScheduleData.Actions(actions))
-                    }
-                    DeferredAutomationData.DeferredType.IN_APP_MESSAGE -> {
-                        val message = result.result.message
-                        if (message == null) {
-                            UALog.v { "Failed to get result for deferred ${schedule.identifier}" }
-                            return RetryingExecutor.retryResult()
+                        DeferredAutomationData.DeferredType.IN_APP_MESSAGE -> {
+                            val message = result.result.message
+                            if (message == null) {
+                                UALog.v { "Failed to get result for deferred ${schedule.identifier}" }
+                                RetryingQueue.Result.Retry()
+                            } else {
+                                onResult(AutomationSchedule.ScheduleData.InAppMessageData(message))
+                            }
                         }
-
-                        message.source = InAppMessage.InAppMessageSource.REMOTE_DATA
-                        return onResult(AutomationSchedule.ScheduleData.InAppMessageData(message))
                     }
+                } else {
+                    RetryingQueue.Result.Success(
+                        result = schedule.missedAudiencePrepareResult(),
+                        ignoreReturnOrder = true
+                    )
                 }
             }
         }
@@ -330,20 +336,22 @@ private fun AutomationSchedule.evaluateExperiments(): Boolean {
     return isInAppMessageType() && bypassHoldoutGroups != true
 }
 
-internal class Queues(
-    private var queues: MutableMap<String, RetryingExecutor> = mutableMapOf(),
-    private val defaultQueue: RetryingExecutor = RetryingExecutor.newSerialExecutor(Looper.getMainLooper())
-) {
+internal class Queues {
+    private val defaultQueue = RetryingQueue()
+    private var queues = mutableMapOf<String, RetryingQueue>()
+    private val lock = ReentrantLock()
 
-    fun queue(name: String?): RetryingExecutor {
-        val executorName = name ?: return defaultQueue
-
-        fun makeAndSaveExecutor(): RetryingExecutor {
-            val result = RetryingExecutor.newSerialExecutor(Looper.getMainLooper())
-            queues[executorName] = result
-            return result
+    fun queue(name: String?): RetryingQueue {
+        return if (name == null) {
+            defaultQueue
+        } else {
+            lock.withLock {
+                queues.getOrPut(name) { RetryingQueue() }
+            }
         }
-
-        return queues[executorName] ?: makeAndSaveExecutor()
     }
 }
+
+private class PrepareCache(
+    var deferredResult: DeferredResult<DeferredScheduleResult>? = null
+)

@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DefaultDisplayCoordinator
 import com.urbanairship.automation.rewrite.utils.TaskSleeper
+import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -20,7 +21,7 @@ public class DefaultDisplayCoordinatorTest {
     private val activityMonitor = TestActivityMonitor()
     private val sleeper: TaskSleeper = mockk(relaxed = true)
     private val coordinator = DefaultDisplayCoordinator(
-        displayInterval = 10,
+        displayInterval = 10.seconds,
         activityMonitor = activityMonitor,
         sleeper = sleeper
     )
@@ -64,6 +65,6 @@ public class DefaultDisplayCoordinatorTest {
             assertTrue(awaitItem())
         }
 
-        coVerify { sleeper.sleep(10L) }
+        coVerify { sleeper.sleep(10.seconds) }
     }
 }

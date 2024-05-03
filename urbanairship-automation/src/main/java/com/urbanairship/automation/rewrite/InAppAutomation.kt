@@ -6,7 +6,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.UAirship
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessagingInterface
 import com.urbanairship.automation.rewrite.inappmessage.legacy.LegacyInAppMessagingInterface
-import com.urbanairship.automation.rewrite.remotedata.AutomationRemoteDataSubscriberInterface
+import com.urbanairship.automation.rewrite.remotedata.AutomationRemoteDataSubscriber
 import com.urbanairship.config.AirshipRuntimeConfig
 
 /**
@@ -17,9 +17,8 @@ public class InAppAutomation
 internal constructor(
     private val engine: AutomationEngine,
     public val inAppMessaging: InAppMessagingInterface,
-    //TODO: do we need it at all?
     public val legacyInAppMessaging: LegacyInAppMessagingInterface,
-    private val remoteDataSubscriber: AutomationRemoteDataSubscriberInterface,
+    private val remoteDataSubscriber: AutomationRemoteDataSubscriber,
     private val dataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,
     private val config: AirshipRuntimeConfig

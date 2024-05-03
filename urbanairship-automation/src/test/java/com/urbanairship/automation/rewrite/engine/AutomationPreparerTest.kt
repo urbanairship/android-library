@@ -336,18 +336,9 @@ public class AutomationPreparerTest {
 
         mockExperimentsManager()
 
-        coEvery { messagePreparer.prepare(any(), any()) } answers  {
-            val info: PreparedScheduleInfo = secondArg()
-            assertEquals(schedule.data, AutomationSchedule.ScheduleData.InAppMessageData(firstArg()))
-            assertEquals(schedule.identifier, info.scheduleID)
-            assertEquals(schedule.campaigns, info.campaigns)
-            assertEquals("contact id", info.contactID)
-            return@answers Result.success(preparedMessageData)
-        }
-
         val result = preparer.prepare(context, schedule, triggerContext)
         assertEquals(SchedulePrepareResult.Skip, result)
-        coVerify { messagePreparer.prepare(any(), any()) }
+        coVerify(exactly = 0) { messagePreparer.prepare(any(), any()) }
     }
 
     @Test

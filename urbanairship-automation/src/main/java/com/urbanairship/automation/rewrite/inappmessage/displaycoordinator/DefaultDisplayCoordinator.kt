@@ -5,6 +5,7 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.combineStates
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
 import com.urbanairship.automation.rewrite.utils.TaskSleeper
+import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -17,7 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 
 internal class DefaultDisplayCoordinator(
-    displayInterval: Long,
+    displayInterval: Duration,
     activityMonitor: ActivityMonitor,
     private val sleeper: TaskSleeper = TaskSleeper.default,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO,
@@ -38,7 +39,7 @@ internal class DefaultDisplayCoordinator(
         UNLOCKED, LOCKED, UNLOCKING;
     }
 
-    var displayInterval: Long = displayInterval
+    var displayInterval: Duration = displayInterval
         set(value) {
             field = value
             startUnlocking()

@@ -1,6 +1,5 @@
 package com.urbanairship.automation.rewrite.remotedata
 
-import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
@@ -11,18 +10,13 @@ import com.urbanairship.automation.rewrite.isNewSchedule
 import com.urbanairship.automation.rewrite.limits.FrequencyConstraint
 import com.urbanairship.automation.rewrite.limits.FrequencyLimitManager
 import com.urbanairship.remotedata.RemoteDataSource
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
-
-/** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface AutomationRemoteDataSubscriberInterface {
-    public fun subscribe()
-    public fun unsubscribe()
-}
 
 internal class AutomationRemoteDataSubscriber (
     dataStore: PreferenceDataStore,
@@ -30,30 +24,29 @@ internal class AutomationRemoteDataSubscriber (
     private val engine: AutomationEngineInterface,
     private val frequencyLimitManager: FrequencyLimitManager,
     private val airshipSDKVersion: String = UAirship.getVersion(),
-    private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
-) : AutomationRemoteDataSubscriberInterface {
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
+)  {
 
+    private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
     private val sourceInfoStore = AutomationSourceInfoStore(dataStore)
     private var processJob: Job? = null
+    private var lock = ReentrantLock()
 
-    override fun subscribe() {
-        if (synchronized(this) { processJob != null }) { return }
+    fun subscribe() {
+        if (lock.withLock { processJob != null }) { return }
 
         processJob = scope.launch {
             remoteDataAccess.updatesFlow.collect { payloads ->
-                yield()
-
                 if (!processConstraints(payloads)) {
                     return@collect
                 }
-
                 processAutomations(payloads)
             }
         }
     }
 
-    override fun unsubscribe() {
-        synchronized(this) {
+    fun unsubscribe() {
+        lock.withLock {
             processJob?.cancel()
             processJob = null
         }
@@ -83,7 +76,8 @@ internal class AutomationRemoteDataSubscriber (
     private suspend fun syncAutomations(
         payload: InAppRemoteData.Payload?,
         source: RemoteDataSource,
-        current: List<AutomationSchedule>) {
+        current: List<AutomationSchedule>
+    ) {
 
         val currentScheduleIDs = current.map { it.identifier }
 

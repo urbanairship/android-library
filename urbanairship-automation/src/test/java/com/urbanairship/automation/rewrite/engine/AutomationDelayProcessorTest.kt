@@ -7,6 +7,7 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.AutomationAppState
 import com.urbanairship.automation.rewrite.AutomationDelay
 import com.urbanairship.automation.rewrite.utils.TaskSleeper
+import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.coVerify
 import io.mockk.every
@@ -87,7 +88,7 @@ public class AutomationDelayProcessorTest {
             assertTrue(awaitItem())
         }
 
-        coVerify { sleeper.sleep(100L) }
+        coVerify { sleeper.sleep(100.seconds) }
     }
 
     @Test
@@ -99,7 +100,7 @@ public class AutomationDelayProcessorTest {
             assertTrue(awaitItem())
         }
 
-        coVerify { sleeper.sleep(100L) }
+        coVerify { sleeper.sleep(100.seconds) }
     }
 
     @Test
@@ -112,7 +113,7 @@ public class AutomationDelayProcessorTest {
             assertTrue(awaitItem())
         }
 
-        coVerify { sleeper.sleep(50L) }
+        coVerify { sleeper.sleep(50.seconds) }
     }
 
     @Test

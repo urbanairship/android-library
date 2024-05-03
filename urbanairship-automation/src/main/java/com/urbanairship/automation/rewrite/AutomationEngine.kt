@@ -15,6 +15,7 @@ import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.rewrite.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.automation.rewrite.utils.TaskSleeper
 import com.urbanairship.util.Clock
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -465,7 +466,7 @@ internal class AutomationEngine(
 
     private fun handleInterval(interval: Long, scheduleID: String) {
         secondaryScope.launch {
-            sleeper.sleep(interval)
+            sleeper.sleep(interval.seconds)
             updateState(scheduleID) {
                 it.idle(clock.currentTimeMillis())
             }

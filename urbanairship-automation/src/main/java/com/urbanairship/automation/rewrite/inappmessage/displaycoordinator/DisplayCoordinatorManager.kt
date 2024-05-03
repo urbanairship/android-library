@@ -4,6 +4,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppActivityMonitor
 import com.urbanairship.automation.rewrite.inappmessage.InAppMessage
+import kotlin.time.Duration.Companion.seconds
 
 internal class DisplayCoordinatorManager(
     private val dataStore: PreferenceDataStore,
@@ -15,7 +16,7 @@ internal class DisplayCoordinatorManager(
         get() { return dataStore.getLong(DISPLAY_INTERVAL_KEY, 0) }
         set(value) {
             dataStore.put(DISPLAY_INTERVAL_KEY, value)
-            defaultCoordinator.displayInterval = value
+            defaultCoordinator.displayInterval = value.seconds
         }
 
     fun displayCoordinator(message: InAppMessage): DisplayCoordinator {
@@ -32,7 +33,7 @@ internal class DisplayCoordinatorManager(
 
         fun defaultCoordinator(dataStore: PreferenceDataStore, activityMonitor: ActivityMonitor): DefaultDisplayCoordinator {
             return DefaultDisplayCoordinator(
-                displayInterval = dataStore.getLong(DISPLAY_INTERVAL_KEY, 0),
+                displayInterval = dataStore.getLong(DISPLAY_INTERVAL_KEY, 0).seconds,
                 activityMonitor = activityMonitor
             )
         }

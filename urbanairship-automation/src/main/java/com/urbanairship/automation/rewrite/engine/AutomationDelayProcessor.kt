@@ -9,6 +9,7 @@ import com.urbanairship.automation.rewrite.utils.TaskSleeper
 import com.urbanairship.util.Clock
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -38,7 +39,7 @@ internal class AutomationDelayProcessor(
 
         val wait = remainingSeconds(delay, triggerDate)
         if (wait > 0) {
-            sleeper.sleep(wait)
+            sleeper.sleep(wait.seconds)
         }
 
         while (isActive && !areConditionsMet(delay)) {
