@@ -3,25 +3,20 @@
 package com.urbanairship.embedded
 
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.PendingResult
 import com.urbanairship.android.layout.AirshipEmbeddedViewManager
-import com.urbanairship.android.layout.EmbeddedDisplayRequest
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 /**
  * Provides information about pending embedded views.
  */
-public class AirshipEmbeddedViewObserver
+public class AirshipEmbeddedObserver
 @VisibleForTesting
 internal constructor(
     public val filter: (AirshipEmbeddedInfo) -> Boolean,
@@ -61,7 +56,12 @@ internal constructor(
     @JvmSynthetic
     public val embeddedViewInfoFlow: Flow<List<AirshipEmbeddedInfo>> =
         manager.allPending().map { list ->
-            list.map { AirshipEmbeddedInfo(it) }
-                .filter(filter)
+            list.map {
+                AirshipEmbeddedInfo(
+                    instanceId = it.viewInstanceId,
+                    embeddedId = it.embeddedViewId,
+                    extras = it.extras
+                )
+            }.filter(filter)
         }
 }

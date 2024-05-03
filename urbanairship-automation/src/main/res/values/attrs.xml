@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-
     <declare-styleable name="UrbanAirshipInAppButtonLayout">
         <attr name="urbanAirshipButtonLayoutResourceId" format="reference" />
         <attr name="urbanAirshipStackedSpaceHeight" format="dimension" />
         <attr name="urbanAirshipSeparatedSpaceWidth" format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="AirshipEmbeddedView">
+        <attr name="airshipEmbeddedId" format="string"/>
+        <attr name="airshipPlaceholder" format="reference"/>
+        <attr name="airshipInAnimation" format="reference"/>
+        <attr name="airshipOutAnimation" format="reference"/>
     </declare-styleable>
 
 </resources>

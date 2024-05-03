@@ -1,6 +1,8 @@
 package com.urbanairship.android.layout
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.android.layout.display.DisplayArgs
+import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.json.JsonMap
 import java.util.Objects
 
@@ -14,8 +16,8 @@ public data class EmbeddedDisplayRequest(
     val embeddedViewId: String,
     val viewInstanceId: String,
     val extras: JsonMap,
-    val layoutInfoProvider: LayoutInfoProvider,
-    val displayArgsProvider: DisplayArgsProvider
+    val layoutInfoProvider: () -> LayoutInfo?,
+    val displayArgsProvider: () -> DisplayArgs
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

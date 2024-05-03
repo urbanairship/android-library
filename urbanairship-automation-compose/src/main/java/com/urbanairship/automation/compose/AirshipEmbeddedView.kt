@@ -5,96 +5,137 @@ package com.urbanairship.automation.compose
 import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams
-import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
-import android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.updateLayoutParams
 import com.urbanairship.UALog
-import com.urbanairship.android.layout.AirshipEmbeddedViewManager
-import com.urbanairship.android.layout.property.Size.DimensionType.AUTO
-import com.urbanairship.android.layout.property.Size.DimensionType.PERCENT
 import com.urbanairship.android.layout.ui.EmbeddedLayout
-import com.urbanairship.automation.InAppAutomation
-import com.urbanairship.embedded.EmbeddedViewManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
-import kotlin.math.roundToInt
+import com.urbanairship.embedded.AirshipEmbeddedInfo
 
+/** Default values used for [AirshipEmbeddedView] implementations. */
 public object AirshipEmbeddedViewDefaults {
-    public val DefaultTransitionSpec: AnimatedContentTransitionScope<EmbeddedLayout?>.() -> ContentTransform = {
-        (fadeIn(animationSpec = tween(220, 90)) +
-                scaleIn(initialScale = 0.92f, animationSpec = tween(220, 90)))
+    /**
+     * A cross-fade animation that can optionally be used for embedded content transitions.
+     *
+     * When placing an `AirshipEmbeddedView` inside a lazy composable, the embedded view should
+     * not use the built-in animations. Instead, handle animation externally using the animations
+     * made available in the lazy composable scope.
+     */
+    public val CrossfadeContentTransform: ContentTransform =
+        fadeIn(animationSpec = tween(220, 90))
             .togetherWith(fadeOut(animationSpec = tween(90)))
-    }
 
-    public val NoneTransitionSpec: AnimatedContentTransitionScope<EmbeddedLayout?>.() -> ContentTransform = {
-        EnterTransition.None.togetherWith(ExitTransition.None)
-    }
+    /** A content transform that doesn't animate. */
+    public val NoContentTransform: ContentTransform =
+        EnterTransition.None togetherWith ExitTransition.None
+
+    /** Default content alignment. */
+    public val ContentAlignment: Alignment = Alignment.Center
 }
 
+/**
+ * A container that displays embedded content for the given `embeddedId`.
+ *
+ * When included inside of a lazy composable or scrolling list, prefer using the variant of this
+ * composable that accepts an [AirshipEmbeddedViewState], which may be hoisted to avoid
+ * unnecessary recompositions.
+ *
+ * @param embeddedId the embedded ID.
+ * @param modifier the modifier to apply to this layout.
+ * @param comparator optional `Comparator` used to sort available embedded contents.
+ * @param contentAlignment optional alignment of the embedded content.
+ * @param parentWidthProvider optional provider for the parent width.
+ * @param parentHeightProvider optional provider for the parent height.
+ * @param animatedContentTransform optional [ContentTransform] used to animate content changes.
+ * @param placeholder optional placeholder composable to display when no content is available.
+ */
+@Composable
+public fun AirshipEmbeddedView(
+    embeddedId: String,
+    modifier: Modifier = Modifier,
+    comparator: Comparator<AirshipEmbeddedInfo>? = null,
+    contentAlignment: Alignment = AirshipEmbeddedViewDefaults.ContentAlignment,
+    parentWidthProvider: (() -> Int)? = null,
+    parentHeightProvider: (() -> Int)? = null,
+    animatedContentTransform: ContentTransform = AirshipEmbeddedViewDefaults.NoContentTransform,
+    placeholder: (@Composable () -> Unit)? = null
+) {
+    EmbeddedViewContent(
+        modifier = modifier,
+        state = rememberAirshipEmbeddedViewState(embeddedId, comparator),
+        contentAlignment = contentAlignment,
+        parentWidthProvider = parentWidthProvider,
+        parentHeightProvider = parentHeightProvider,
+        animatedContentTransform = animatedContentTransform,
+        placeholder = placeholder
+    )
+}
+
+/**
+ * A container that displays embedded content for the `embeddedId` defined on the given
+ * [AirshipEmbeddedViewState] instance.
+ *
+ * This composable may be useful when access to the embedded view state is needed outside of the
+ * `AirshipEmbeddedView` composable, embedded view state should be hoisted, and for advanced custom
+ * logic that depends on the availability of embedded view content.
+ *
+ * When included inside of a lazy composable or scrolling list, prefer using the default value
+ * for `animatedContentTransform` and use the animation support provided by the lazy composable.
+ *
+ * @param state the [AirshipEmbeddedViewState] to be used by this embedded view.
+ * @param modifier the modifier to apply to this layout.
+ * @param contentAlignment optional alignment of the embedded content.
+ * @param animatedContentTransform optional [ContentTransform] used to animate content changes.
+ * @param parentWidthProvider optional provider for the parent width.
+ * @param parentHeightProvider optional provider for the parent height.
+ * @param placeholder optional placeholder composable to display when no content is available.
+ */
 @Composable
 public fun AirshipEmbeddedView(
     state: AirshipEmbeddedViewState,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null,
-    // TODO: can we do this without exposing EmbeddedLayout? maybe not...
-    transitionSpec: AnimatedContentTransitionScope<EmbeddedLayout?>.() -> ContentTransform = AirshipEmbeddedViewDefaults.DefaultTransitionSpec,
-    contentAlignment: Alignment = Alignment.Center,
+    contentAlignment: Alignment = AirshipEmbeddedViewDefaults.ContentAlignment,
+    animatedContentTransform: ContentTransform = AirshipEmbeddedViewDefaults.NoContentTransform,
     parentWidthProvider: (() -> Int)? = null,
     parentHeightProvider: (() -> Int)? = null,
     placeholder: (@Composable () -> Unit)? = null
 ) {
-    AirshipEmbeddedView(
-        embeddedId = state.embeddedId,
+    EmbeddedViewContent(
         modifier = modifier,
         state = state,
-        onClick = onClick,
-        transitionSpec = transitionSpec,
         contentAlignment = contentAlignment,
         parentWidthProvider = parentWidthProvider,
         parentHeightProvider = parentHeightProvider,
+        animatedContentTransform = animatedContentTransform,
         placeholder = placeholder
     )
 }
 
 @Composable
-public fun AirshipEmbeddedView(
-    embeddedId: String,
+private fun EmbeddedViewContent(
     modifier: Modifier = Modifier,
-    state: AirshipEmbeddedViewState = rememberAirshipEmbeddedViewState(embeddedId),
-    onClick: (() -> Unit)? = null,
-    // TODO: can we do this without exposing EmbeddedLayout? maybe not...
-    transitionSpec: AnimatedContentTransitionScope<EmbeddedLayout?>.() -> ContentTransform = AirshipEmbeddedViewDefaults.DefaultTransitionSpec,
-    contentAlignment: Alignment = Alignment.Center,
-    parentWidthProvider: (() -> Int)? = null,
-    parentHeightProvider: (() -> Int)? = null,
-    placeholder: (@Composable () -> Unit)? = null
+    state: AirshipEmbeddedViewState,
+    contentAlignment: Alignment,
+    parentWidthProvider: (() -> Int)?,
+    parentHeightProvider: (() -> Int)?,
+    animatedContentTransform: ContentTransform,
+    placeholder: (@Composable () -> Unit)?
 ) {
     Box(
         contentAlignment = contentAlignment,
@@ -107,223 +148,90 @@ public fun AirshipEmbeddedView(
             } else {
                 // Default preview placeholder
                 BasicText(
-                    text = "Airship Embedded View (\"$embeddedId\")",
+                    text = "Airship Embedded View (\"${state.embeddedId}\")",
                     modifier = Modifier.align(Alignment.Center)
                 )
             }
         } else {
-            EmbeddedViewContent(
-                embeddedId = embeddedId,
-                onClick = onClick,
-                state = state,
-                transitionSpec = transitionSpec,
+            AnimatedContent(
+                targetState = state.currentLayout,
+                transitionSpec = { animatedContentTransform },
+                contentKey = { it?.viewInstanceId },
                 contentAlignment = contentAlignment,
-                parentWidthProvider = parentWidthProvider,
-                parentHeightProvider = parentHeightProvider,
-                placeholder = placeholder,
-            )
+                label = "Airship Embedded View (\"${state.embeddedId}\")",
+                modifier = modifier,
+            ){ layout ->
+                EmbeddedViewWrapper(
+                    embeddedId = state.embeddedId,
+                    layout = layout,
+                    embeddedSize = state.placementSize
+                        ?.toEmbeddedSize(parentWidthProvider, parentHeightProvider),
+                    placeholder = placeholder,
+                    modifier = Modifier.wrapContentSize(),
+                )
+            }
         }
     }
 }
 
-@Composable
-private fun BoxScope.EmbeddedViewContent(
-    embeddedId: String,
-    onClick: (() -> Unit)?,
-    state: AirshipEmbeddedViewState,
-    modifier: Modifier = Modifier,
-    transitionSpec: AnimatedContentTransitionScope<EmbeddedLayout?>.() -> ContentTransform,
-    contentAlignment: Alignment,
-    parentWidthProvider: (() -> Int)? = null,
-    parentHeightProvider: (() -> Int)? = null,
-    placeholder: (@Composable () -> Unit)?
-) {
-    AnimatedContent(
-        label = "Airship Embedded View (\"$embeddedId\")",
-        targetState = state.currentLayout,
-        transitionSpec = transitionSpec,
-        contentKey = { it?.viewInstanceId },
-        contentAlignment = contentAlignment,
-        modifier = modifier
-    ) { layout ->
-        EmbeddedViewWrapper(
-            layoutId = embeddedId,
-            layout = layout,
-            onClick = onClick,
-            modifier = Modifier.matchParentSize(),
-            parentWidthProvider = parentWidthProvider,
-            parentHeightProvider = parentHeightProvider,
-            placeholder = placeholder,
-        )
-    }
-}
-
+/** Shows the embedded view if content is available, otherwise shows the placeholder. */
 @Composable
 private fun EmbeddedViewWrapper(
-    layoutId: String,
+    embeddedId: String,
     layout: EmbeddedLayout?,
-    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
-    parentWidthProvider: (() -> Int)?,
-    parentHeightProvider: (() -> Int)?,
+    embeddedSize: EmbeddedSize?,
     placeholder: (@Composable () -> Unit)?
 ) {
     if (layout != null) {
-        // This is only nullable because we're safe-casting the placement type.
-        // It should never be null, in practice.
-        val size = layout.getPlacement()?.size ?: return
+        // Only nullable because we're safe-casting the placement type farther down.
+        // Placement should never be null here, in practice.
+        val (width, height) = embeddedSize ?: return
 
-        val (widthSpec, fillWidth) = when (size.width.type) {
-            AUTO -> WRAP_CONTENT to false
-            PERCENT -> parentWidthProvider?.invoke()?.let { parentWidth ->
-                (size.width.float * parentWidth).roundToInt() to true
-            } ?: (MATCH_PARENT to false)
-
-            else -> MATCH_PARENT to false
-        }
-
-        val (heightSpec, fillHeight) = when (size.height.type) {
-            AUTO -> WRAP_CONTENT to false
-            PERCENT -> parentHeightProvider?.invoke()?.let { parentHeight ->
-                (size.height.float * parentHeight).roundToInt() to true
-            } ?: (MATCH_PARENT to false)
-
-            else -> MATCH_PARENT to false
+        // Remember the view, updating it if the layout instance ID changes.
+        val view = remember(layout.viewInstanceId) {
+            mutableStateOf(
+                layout.makeView(width.fill, height.fill)?.apply {
+                    layoutParams = LayoutParams(width.spec, height.spec).apply {
+                        gravity = Gravity.CENTER
+                    }
+                }
+            )
         }
 
         AndroidView(
             factory = { viewContext ->
                 FrameLayout(viewContext).apply {
-                    layoutParams = LayoutParams(widthSpec, heightSpec)
-                    onClick?.let { setOnClickListener { onClick() } }
-                    UALog.v { "Displayed embedded layout for id: \"$layoutId\"" }
+                    layoutParams = LayoutParams(width.spec, height.spec)
+                }.also {
+                    UALog.v { "Create embedded layout for id: \"$embeddedId\"" }
                 }
             },
             update = { frame ->
-                layout.makeView(fillWidth, fillHeight)?.apply {
-                    layoutParams = LayoutParams(widthSpec, heightSpec).apply {
-                        gravity = Gravity.CENTER
+                view.value?.apply {
+                    // Update the layout params to pass along size changes to the
+                    // child embedded view.
+                    updateLayoutParams {
+                        LayoutParams(width.spec, height.spec).apply {
+                            gravity = Gravity.CENTER
+                        }
                     }
-                }?.let { frame.addView(it) }
-                UALog.v { "Updated embedded layout for id: \"$layoutId\"" }
-            },
-            onReset = { view ->
-                view.removeAllViews()
-                UALog.v { "Reset embedded layout for id: \"$layoutId\"" }
-            },
-            onRelease = {
-                UALog.v { "Released embedded layout for id: \"$layoutId\"" }
+                    // If the frame is empty, add the view.
+                    // The frame will be empty on the first update after the view is
+                    // created, and when the frame is reset and then updated again.
+                    if (frame.childCount == 0) {
+                        frame.addView(this)
+                    }
+                    UALog.v { "Update embedded layout for id: \"$embeddedId\"" }
+                }
+             },
+            onReset = { frame ->
+                frame.removeAllViews()
+                UALog.v { "Reset embedded layout for id: \"$embeddedId\"" }
             },
             modifier = modifier
         )
     } else if (placeholder != null) {
         placeholder()
     }
-}
-
-/**
- * Creates a [AirshipEmbeddedViewState] that can be used to manage the state of an embedded layout.
- */
-@Composable
-public fun rememberAirshipEmbeddedViewState(
-    embeddedId: String,
-    onAvailable: () -> Boolean = { true },
-    onEmpty: () -> Unit = {},
-): AirshipEmbeddedViewState {
-    return rememberAirshipEmbeddedViewState(embeddedId, onAvailable, onEmpty, EmbeddedViewManager)
-}
-
-@Composable
-internal fun rememberAirshipEmbeddedViewState(
-    embeddedId: String,
-    onAvailable: () -> Boolean = { true },
-    onEmpty: () -> Unit = {},
-    embeddedViewManager: AirshipEmbeddedViewManager,
-): AirshipEmbeddedViewState {
-    val context = LocalContext.current
-    val state = remember { AirshipEmbeddedViewState(embeddedId) }
-
-    LaunchedEffect(key1 = embeddedId) {
-        withContext(Dispatchers.Default) {
-            embeddedViewManager
-                .displayRequests(embeddedId)
-                .map { request ->
-                    if (request == null) {
-                        // Nothing to display, call onEmpty and return.
-                        UALog.v { "No display request available for id: \"$embeddedId\"" }
-                        onEmpty()
-                        return@map null
-                    }
-
-                    if (!onAvailable()) {
-                        // Display suppressed, return.
-                        UALog.v { "Display request rejected for id: \"$embeddedId\"" }
-                        return@map null
-                    }
-
-                    UALog.v { "Display request available for id: \"$embeddedId\"" }
-
-                    // Inflate the embedded layout
-                    val displayArgs = request.displayArgsProvider.invoke()
-                    EmbeddedLayout(context, embeddedId, displayArgs, embeddedViewManager)
-                }
-                .collect { state.currentLayout = it }
-        }
-    }
-
-    return state
-}
-
-/** State holder for [AirshipEmbeddedView]. */
-@Stable
-public class AirshipEmbeddedViewState(
-    public val embeddedId: String
-) {
-    public var currentLayout: EmbeddedLayout? by mutableStateOf(null)
-
-    /**
-     * Flag indicating whether an embedded layout is available for display.
-     *
-     * This can be used in a composable to show or hide the embedded view.
-     *
-     * @return `true` if an embedded layout is available for display, otherwise `false`.
-     */
-    public val isAvailable: Boolean
-        get() = currentLayout != null
-
-    /** Dismiss the currently displayed layout. */
-    public suspend fun dismissCurrent() {
-        currentLayout?.let { layout ->
-            EmbeddedViewManager.dismiss(layout.embeddedViewId, layout.viewInstanceId)
-        }
-    }
-
-    /** Dismiss all pending embedded layouts for the current embedded view ID. */
-    public suspend fun dismissAll() {
-        currentLayout?.let { layout ->
-            EmbeddedViewManager.dismissAll(layout.embeddedViewId)
-        }
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as AirshipEmbeddedViewState
-
-        if (embeddedId != other.embeddedId) return false
-        if (currentLayout != other.currentLayout) return false
-        if (isAvailable != other.isAvailable) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = embeddedId.hashCode()
-        result = 31 * result + (currentLayout?.hashCode() ?: 0)
-        result = 31 * result + isAvailable.hashCode()
-        return result
-    }
-
-
 }

@@ -2,6 +2,7 @@ package com.urbanairship.json
 
 import com.urbanairship.UALog
 
+@Throws(JsonException::class)
 public fun jsonMapOf(vararg fields: Pair<String, *>): JsonMap =
     JsonMap.newBuilder().apply {
         for ((k, v) in fields) {
@@ -33,6 +34,7 @@ public fun <T> Map<String, T?>.toJsonMap(): JsonMap where T : JsonSerializable =
  *
  * @throws JsonException if an invalid type is specified, or if the field is `null` or missing.
  */
+@Throws(JsonException::class)
 public inline fun <reified T> JsonMap.requireField(key: String): T {
     val field = get(key) ?: throw JsonException("Missing required field: '$key'")
     return when (T::class) {
@@ -53,6 +55,7 @@ public inline fun <reified T> JsonMap.requireField(key: String): T {
  *
  * @throws JsonException if an invalid type is specified.
  */
+@Throws(JsonException::class)
 public inline fun <reified T> JsonMap.optionalField(key: String): T? {
     val field = get(key) ?: return null
     return when (T::class) {
@@ -73,6 +76,7 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
  * Gets the field with the given [key] from the [JsonMap] and convert it using [builder] function,
  * or `null` if not defined.
  */
+@Throws(JsonException::class)
 internal inline fun <reified T> JsonMap.optionalFieldConverted(key: String, builder: (String) -> T?): T? {
     val result = optionalField<String>(key)?.let(builder)
     if (result == null) {

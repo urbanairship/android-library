@@ -36,8 +36,6 @@ import com.urbanairship.android.layout.util.pagerGestures
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
-import java.lang.Integer.max
-import java.lang.Integer.min
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -45,6 +43,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.lang.Integer.max
+import java.lang.Integer.min
 
 internal class PagerModel(
     val items: List<Item>,
@@ -131,8 +131,8 @@ internal class PagerModel(
                 }
                 .collect {
                     // Clear any automated actions scheduled for the previous page.
-                    clearAutomatedActions()
-                    UALog.v { "cleared automated actions for page: ${it.lastPageIndex}" }
+                    clearAutomatedActions(it.lastPageIndex)
+
                     // Handle any actions defined for the current page.
                     items[it.pageIndex].run {
                         handlePageActions(displayActions, automatedActions)
@@ -192,10 +192,7 @@ internal class PagerModel(
     }
 
     override fun onViewDetached(view: PagerView) {
-        super.onViewDetached(view)
-
         clearAutomatedActions()
-        UALog.v { "cleared all automated actions for pager." }
     }
 
     /** Returns a stable viewId for the pager item view at the given adapter `position`.  */
@@ -416,12 +413,25 @@ internal class PagerModel(
         }
     }
 
-    private fun clearAutomatedActions() {
+    private fun clearAutomatedActions(pageIndex: Int? = null) {
         navigationActionTimer?.stop()
         scheduledJob?.cancel()
+
         for (timer in automatedActionsTimers) {
             timer.stop()
         }
+
+        if (automatedActionsTimers.isNotEmpty()) {
+            UALog.v {
+                if (pageIndex != null) {
+                    "Cleared all automated actions! For page: '$pageIndex'"
+                } else {
+                    @OptIn(DelicateLayoutApi::class)
+                    "Cleared all automated actions! For pager: '${pagerState.value.identifier}'"
+                }
+            }
+        }
+
         automatedActionsTimers.clear()
     }
 }

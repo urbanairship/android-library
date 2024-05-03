@@ -38,8 +38,7 @@ import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.compose.AirshipEmbeddedView
-import com.urbanairship.embedded.AirshipEmbeddedInfo
-import com.urbanairship.embedded.AirshipEmbeddedViewObserver
+import com.urbanairship.embedded.AirshipEmbeddedObserver
 import com.urbanairship.json.emptyJsonMap
 import kotlinx.coroutines.launch
 
@@ -54,8 +53,8 @@ class EmbeddedActivity : ComponentActivity() {
           )
         }
 
-        val observer = AirshipEmbeddedViewObserver("playground")
-        observer.listener = AirshipEmbeddedViewObserver.Listener {
+        val observer = AirshipEmbeddedObserver("playground")
+        observer.listener = AirshipEmbeddedObserver.Listener {
             UALog.v("LISTENER - Embedded view info updated: $it")
         }
 

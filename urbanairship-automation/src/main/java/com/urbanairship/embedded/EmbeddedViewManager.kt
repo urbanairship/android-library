@@ -5,18 +5,14 @@ package com.urbanairship.embedded
 import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.AirshipEmbeddedViewManager
-import com.urbanairship.android.layout.DisplayArgsProvider
 import com.urbanairship.android.layout.EmbeddedDisplayRequest
-import com.urbanairship.android.layout.LayoutInfoProvider
+import com.urbanairship.android.layout.display.DisplayArgs
+import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.json.JsonMap
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapConcat
@@ -36,8 +32,8 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
         embeddedViewId: String,
         viewInstanceId: String,
         extras: JsonMap,
-        layoutInfoProvider: LayoutInfoProvider,
-        displayArgsProvider: DisplayArgsProvider
+        layoutInfoProvider: () -> LayoutInfo?,
+        displayArgsProvider: () -> DisplayArgs
     ) {
         val pendingForView = pending[embeddedViewId]
 
@@ -57,25 +53,14 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
 
         UALog.v { "Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
 
-        viewsFlow.tryEmit(pending.toMap())
-    }
-
-    override fun dismiss(embeddedViewId: String) {
-        val pendingForView = pending[embeddedViewId] ?: return
-
-        // Pop the first request off the list of pending requests
-        pending[embeddedViewId] = pendingForView.drop(1)
-
-        UALog.v { "Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
-
-        viewsFlow.tryEmit(pending.toMap())
+        viewsFlow.value = pending.toMap()
     }
 
     override fun dismissAll(embeddedViewId: String) {
         pending[embeddedViewId] = emptyList()
         UALog.v { "Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
 
-        viewsFlow.tryEmit(pending.toMap())
+        viewsFlow.value = pending.toMap()
     }
 
     override fun dismiss(embeddedViewId: String, viewInstanceId: String) {
@@ -85,7 +70,7 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
         pending[embeddedViewId] = pendingForView.filterNot { it.viewInstanceId == viewInstanceId }
         UALog.v { "Embedded view '$embeddedViewId' has ${pending[embeddedViewId]?.size} pending" }
 
-        viewsFlow.tryEmit(pending.toMap())
+        viewsFlow.value = pending.toMap()
     }
 
     /** @hide */
@@ -99,9 +84,32 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun displayRequests(embeddedViewId: String, scope: CoroutineScope): Flow<EmbeddedDisplayRequest?> {
+    override fun displayRequests(
+        embeddedViewId: String,
+        comparator: Comparator<AirshipEmbeddedInfo>?,
+        scope: CoroutineScope,
+    ): Flow<EmbeddedDisplayRequest?> {
         return viewsFlow
-            .map { it[embeddedViewId]?.firstOrNull() }
+            .map { list ->
+                if (comparator != null) {
+                    list[embeddedViewId]
+                        // Map the list to a list of pairs, so we can sort by the embedded info
+                        ?.map { request ->
+                            val info = AirshipEmbeddedInfo(
+                                instanceId = request.viewInstanceId,
+                                embeddedId = request.embeddedViewId,
+                                extras = request.extras
+                            )
+                            Pair(info, request)
+                        }
+                       ?.sortedWith { a, b -> comparator.compare(a.first, b.first) }
+                       // Map the list back to just the request, with the sort order applied
+                       ?.map { it.second }
+                } else {
+                    list[embeddedViewId]
+                }
+            }
+            .map { it?.firstOrNull() }
             .distinctUntilChanged()
             .shareIn(scope, replay = 1, started = WhileSubscribed())
     }

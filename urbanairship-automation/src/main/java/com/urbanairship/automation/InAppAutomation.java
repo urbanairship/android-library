@@ -7,6 +7,13 @@ import android.net.Uri;
 import android.os.Looper;
 import android.text.TextUtils;
 
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
+
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
@@ -31,13 +38,13 @@ import com.urbanairship.contacts.Contact;
 import com.urbanairship.deferred.DeferredRequest;
 import com.urbanairship.deferred.DeferredResolver;
 import com.urbanairship.deferred.DeferredResult;
+import com.urbanairship.embedded.EmbeddedViewManager;
 import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.experiment.MessageInfo;
 import com.urbanairship.iam.InAppAutomationScheduler;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
-import com.urbanairship.embedded.EmbeddedViewManager;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
@@ -59,15 +66,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
-import static com.urbanairship.util.Checks.checkNotNull;
 
 /**
  * In-app automation.
@@ -380,12 +378,14 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     /**
      * Gets the embedded view manager.
      *
+     * @hide
+     *
      * @return The embedded view manager.
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public AirshipEmbeddedViewManager getEmbeddedViewManager() {
         return embeddedViewManager;
     }
-
 
     /**
      * {@inheritDoc}

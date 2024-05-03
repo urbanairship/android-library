@@ -26,8 +26,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
          cache-read-only: ${{ github.event.pull_request.base.ref != 'main' && github.event.pull_request.base.ref != 'next' }}
-          
-  
+
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
         
