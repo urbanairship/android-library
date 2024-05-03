@@ -2,6 +2,21 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.0.0-alpha, May 3, 2024
+Initial alpha release of SDK 18.0.0. This version is not suitable for a production app, but we encourage testing out the new APIs and providing us feedback so we can make changes before the final SDK 18 release.
+
+The Airship SDK now requires `compileSdk` version 34 (Android 14) or higher.
+
+### Changes
+- Improved image loading for In-App messages, Scenes, and Surveys
+- Reset GIF animations on visibility change in Scenes and Surveys
+- Pause Story progress while videos are loading
+- Migrated to non-transitive R classes
+- Check schedule’s start date before executing, to better handle updates to the scheduled start date
+- Removed `urbanairship-ads-identifier` and `urbanairship-preference` modules
+
+See the [Migration Guide](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-17-18.md) for further details.
+
 ## Version 17.8.0, April 11, 2024
 Minor release that fixes potential crashes when evaluating experiments before a Channel ID has been created. Apps that make use of experiments or holdout groups should update to this version or later.
 
