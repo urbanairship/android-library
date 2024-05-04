@@ -75,6 +75,20 @@ class AirshipDokkaPlugin : Plugin<Project> {
             tasks.withType<DokkaTaskPartial>().configureEach {
                 dependencies.addDokkaAndroidPlugin()
 
+                try {
+                    val kaptReleaseKotlin = tasks.named("kaptReleaseKotlin")
+                    mustRunAfter(kaptReleaseKotlin)
+                } catch (_: Exception) {
+                    // Ignore if the task doesn't exist
+                }
+
+                try {
+                    val kaptDebugKotlin = tasks.named("kaptDebugKotlin")
+                    mustRunAfter(kaptDebugKotlin)
+                } catch (_: Exception) {
+                    // Ignore if the task doesn't exist
+                }
+
                 moduleVersion.set(project.version.toString())
                 moduleName.set(project.name)
 
