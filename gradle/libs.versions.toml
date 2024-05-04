@@ -85,7 +85,7 @@ mockk = '1.13.5'
 
 # Doc Dependencies
 doclava = '1.0.6'
-dokka = '1.4.32'
+dokka = '1.9.20'
 
 [plugins]
 
