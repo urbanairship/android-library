@@ -776,7 +776,8 @@ public class UAirship {
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
                 privacyManager, channel, pushManager, analytics, remoteData, this.experimentManager,
-                infoProvider, meteredUsageManager, contact, deferredResolver, localeManager, eventFeed);
+                infoProvider, meteredUsageManager, contact, deferredResolver, localeManager,
+                eventFeed, applicationMetrics);
         processModule(automationModule);
 
         // Ad Id

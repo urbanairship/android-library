@@ -10,7 +10,10 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,10 +23,13 @@ import org.mockito.kotlin.mock
 public class DefaultDisplayCoordinatorTest {
     private val activityMonitor = TestActivityMonitor()
     private val sleeper: TaskSleeper = mockk(relaxed = true)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     private val coordinator = DefaultDisplayCoordinator(
         displayInterval = 10.seconds,
         activityMonitor = activityMonitor,
-        sleeper = sleeper
+        sleeper = sleeper,
+        dispatcher = UnconfinedTestDispatcher()
     )
 
     @Test

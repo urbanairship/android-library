@@ -52,7 +52,7 @@ public data class DeferredTriggerContext(
             return DeferredTriggerContext(
                 type = content.requireField(KEY_TYPE),
                 goal = content.requireField(KEY_GOAL),
-                event = content.require(KEY_EVENT)
+                event = content.opt(KEY_EVENT)
             )
         }
     }

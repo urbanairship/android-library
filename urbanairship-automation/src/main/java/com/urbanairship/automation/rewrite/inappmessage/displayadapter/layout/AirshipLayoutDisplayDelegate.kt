@@ -84,6 +84,7 @@ internal class AirshipLayoutDisplayDelegate(
                 .setListener(LayoutListener(displayListener))
                 .setImageCache { url -> assets?.cacheURL(url)?.path }
                 .setWebViewClientFactory { InAppMessageWebViewClient(messageExtras) }
+                .setInAppActivityMonitor(activityMonitor)
 
         return withContext(Dispatchers.Main) {
             suspendCancellableCoroutine {

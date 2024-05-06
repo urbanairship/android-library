@@ -255,8 +255,8 @@ public class AutomationScheduleData(
             val leftPriority = left.schedule.priority ?: 0
             val rightPriority = right.schedule.priority ?: 0
 
-            if (leftPriority < rightPriority) {
-                return 1
+            if (leftPriority != rightPriority) {
+                return leftPriority.compareTo(rightPriority)
             }
 
             val leftDate = left.triggerInfo?.date ?: date

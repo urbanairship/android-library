@@ -38,7 +38,6 @@ internal class AutomationPreparer internal constructor(
     private val deferredResolver: DeferredResolver,
     private val frequencyLimitManager: FrequencyLimitManager,
     private val deviceInfoProvider: DeviceInfoProvider,
-    private val audienceChecker: AudienceSelector,
     private val experiments: ExperimentManager,
     private val remoteDataAccess: AutomationRemoteDataAccess,
     private val queues: Queues = Queues()
@@ -98,8 +97,8 @@ internal class AutomationPreparer internal constructor(
             }
 
             // Audience checks
-            schedule.audience?.let { _ ->
-                val match = audienceChecker.evaluate(
+            schedule.audience?.let {
+                val match = it.audienceSelector.evaluate(
                     context = context,
                     newEvaluationDate = schedule.created.toLong(),
                     infoProvider = deviceInfoProvider.snapshot(context),

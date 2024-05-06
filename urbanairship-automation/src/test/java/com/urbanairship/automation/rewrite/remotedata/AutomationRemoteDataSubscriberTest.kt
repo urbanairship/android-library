@@ -23,7 +23,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.fail
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -42,7 +41,7 @@ public class AutomationRemoteDataSubscriberTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     private val testDispatcher = UnconfinedTestDispatcher()
 
-    private var updatesFlow = MutableSharedFlow<InAppRemoteData>(replay = 1)
+    private var updatesFlow = MutableSharedFlow<InAppRemoteData>()
     private val remoteDataAccess: AutomationRemoteDataAccessInterface = mockk {
         every { this@mockk.updatesFlow } returns this@AutomationRemoteDataSubscriberTest.updatesFlow
         every { this@mockk.sourceFor(any()) } answers { getSource(firstArg()) }
@@ -77,7 +76,9 @@ public class AutomationRemoteDataSubscriberTest {
             )
         )
 
-        coEvery { engine.upsertSchedules(any()) } just runs
+        coEvery {
+            engine.upsertSchedules(any())
+        } just runs
 
         subscriber.subscribe()
         updatesFlow.emit(data)
@@ -86,7 +87,6 @@ public class AutomationRemoteDataSubscriberTest {
             engine.upsertSchedules(appSchedules)
             engine.upsertSchedules(contactSchedules)
         }
-
     }
 
     @Test
@@ -201,11 +201,12 @@ public class AutomationRemoteDataSubscriberTest {
             )
         )
 
-        updatesFlow.emit(secondUpdate)
 
         coEvery { engine.getSchedules() } returns firstUpdateSchedules
 
         subscriber.subscribe()
+        updatesFlow.emit(secondUpdate)
+
         coVerify { engine.upsertSchedules(secondUpdateSchedules) }
     }
 

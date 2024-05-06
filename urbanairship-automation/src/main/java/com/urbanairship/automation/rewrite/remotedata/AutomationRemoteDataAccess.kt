@@ -36,7 +36,7 @@ internal interface AutomationRemoteDataAccessInterface {
 internal class AutomationRemoteDataAccess(
     private val context: Context,
     private val remoteData: RemoteData,
-    private val network: Network
+    private val network: Network = Network.shared()
 ): AutomationRemoteDataAccessInterface {
     internal companion object {
         private val REMOTE_DATA_TYPES = listOf("in_app_messages")
@@ -171,7 +171,14 @@ internal class InAppRemoteData(
             @Throws(JsonException::class)
             fun fromJson(value: JsonMap): Data {
                 return Data(
-                    schedules = value.require(SCHEDULES).requireList().map(AutomationSchedule::fromJson),
+                    schedules = value.require(SCHEDULES).requireList().mapNotNull {
+                        try {
+                            AutomationSchedule.fromJson(it)
+                        } catch (ex: Exception) {
+                            UALog.e(ex) { "Failed to parse a schedule from $it" }
+                            null
+                        }
+                    },
                     constraints = value.get(CONSTRAINTS)?.requireList()?.map(FrequencyConstraint::fromJson)
                 )
             }

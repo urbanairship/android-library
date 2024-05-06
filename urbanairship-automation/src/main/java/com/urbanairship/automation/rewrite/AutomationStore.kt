@@ -26,6 +26,7 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonTypeConverters
 import com.urbanairship.json.JsonValue
+import com.urbanairship.util.SerialQueue
 import java.io.File
 import org.jetbrains.annotations.VisibleForTesting
 
@@ -54,6 +55,39 @@ internal interface TriggerStoreInterface {
     suspend fun deleteTriggersExcluding(scheduleIDs: List<String>)
     suspend fun deleteTriggers(scheduleIDs: List<String>)
     suspend fun deleteTriggers(scheduleID: String, triggerIDs: Set<String>)
+}
+
+internal class SerialAccessAutomationStore(private val store: AutomationStore): ScheduleStoreInterface, TriggerStoreInterface {
+
+    private val queue = SerialQueue()
+    override suspend fun getSchedules(): List<AutomationScheduleData> = queue.run { store.getSchedules() }
+
+    override suspend fun getSchedules(group: String): List<AutomationScheduleData> = queue.run { store.getSchedules(group) }
+
+    override suspend fun getSchedules(ids: List<String>): List<AutomationScheduleData> = queue.run { store.getSchedules(ids) }
+
+    override suspend fun updateSchedule(
+        id: String, closure: (AutomationScheduleData) -> AutomationScheduleData
+    ): AutomationScheduleData? = queue.run { store.updateSchedule(id, closure) }
+
+    override suspend fun upsertSchedules(
+        ids: List<String>, closure: (String, AutomationScheduleData?) -> AutomationScheduleData
+    ): List<AutomationScheduleData> = queue.run { store.upsertSchedules(ids, closure) }
+
+    override suspend fun deleteSchedules(ids: List<String>) = queue.run { store.deleteSchedules(ids) }
+
+    override suspend fun deleteSchedules(group: String) = queue.run { store.deleteSchedules(group) }
+
+    override suspend fun getSchedule(id: String): AutomationScheduleData? = queue.run { store.getSchedule(id) }
+    override suspend fun getTrigger(scheduleID: String, triggerID: String): TriggerData? = queue.run { store.getTrigger(scheduleID, triggerID) }
+
+    override suspend fun upsertTriggers(triggers: List<TriggerData>) = queue.run { store.upsertTriggers(triggers) }
+
+    override suspend fun deleteTriggersExcluding(scheduleIDs: List<String>) = queue.run { store.deleteTriggersExcluding(scheduleIDs) }
+
+    override suspend fun deleteTriggers(scheduleIDs: List<String>) = queue.run { store.deleteTriggers(scheduleIDs) }
+
+    override suspend fun deleteTriggers(scheduleID: String, triggerIDs: Set<String>) = queue.run { store.deleteTriggers(scheduleID, triggerIDs) }
 }
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

@@ -55,22 +55,23 @@ internal class DefaultDisplayCoordinator(
     }
 
     private fun startUnlocking() {
+        unlockJob?.cancel()
+
         lockState.update {
             if (it == LockState.UNLOCKED) {
                 return@update it
             }
 
-            unlockJob?.cancel()
+            LockState.UNLOCKING
+        }
 
+        if (lockState.value == LockState.UNLOCKING) {
             unlockJob = scope.launch {
                 sleeper.sleep(displayInterval)
-                yield()
                 if (isActive) {
-                    lockState.compareAndSet(LockState.UNLOCKING, LockState.UNLOCKED)
+                    lockState.value = LockState.UNLOCKED
                 }
             }
-
-            LockState.UNLOCKING
         }
     }
 }

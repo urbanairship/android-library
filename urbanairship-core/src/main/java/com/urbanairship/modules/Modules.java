@@ -6,6 +6,7 @@ import android.content.Context;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
+import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.UALog;
@@ -107,15 +108,16 @@ public class Modules {
             @NonNull Contact contact,
             @NonNull DeferredResolver deferredResolver,
             @NonNull LocaleManager localeManager,
-            @NonNull AirshipEventFeed eventFeed
-    ) {
+            @NonNull AirshipEventFeed eventFeed,
+            @NonNull ApplicationMetrics metrics
+            ) {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager,
                         airshipChannel, pushManager, analytics, remoteData, experimentManager,
                         infoProvider, meteredUsage, contact, deferredResolver, localeManager,
-                        eventFeed);
+                        eventFeed, metrics, true);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Automation module");

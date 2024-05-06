@@ -19,19 +19,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface AutomationTriggerProcessorInterface {
-    @MainThread
-    public fun setPaused(paused: Boolean)
-    public suspend fun getTriggerResults(): Flow<TriggerResult>
-    public suspend fun processEvent(automationEvent: AutomationEvent)
-    public suspend fun restoreSchedules(datas: List<AutomationScheduleData>)
-    public suspend fun updateSchedules(datas: List<AutomationScheduleData>)
-    public suspend fun updateScheduleState(scheduleId: String, state: AutomationScheduleState)
-    public suspend fun cancel(scheduleIds: List<String>)
-    public suspend fun cancel(group: String)
-}
-
 internal class AutomationTriggerProcessor(
     private val store: TriggerStoreInterface,
     private val clock: Clock = Clock.DEFAULT_CLOCK
@@ -47,7 +34,7 @@ internal class AutomationTriggerProcessor(
         isPausedFlow.update { paused }
     }
 
-    fun getTriggerResults() : Flow<TriggerResult> = triggerResultsFlow
+    suspend fun getTriggerResults() : Flow<TriggerResult> = triggerResultsFlow
 
     suspend fun processEvent(event: AutomationEvent) {
 
@@ -151,7 +138,7 @@ internal class AutomationTriggerProcessor(
         }
     }
 
-    internal suspend fun cancel(scheduleIds: List<String>) {
+    suspend fun cancel(scheduleIds: List<String>) {
         scheduleIds.forEach {
             this.preparedTriggers.remove(it)
             this.scheduleGroups.remove(it)
@@ -160,7 +147,7 @@ internal class AutomationTriggerProcessor(
         store.deleteTriggers(scheduleIds)
     }
 
-    internal suspend fun cancel(group: String) {
+    suspend fun cancel(group: String) {
         val scheduleIds = this.scheduleGroups.filter { it.value == group }.map { it.key }
         cancel(scheduleIds)
     }
@@ -172,7 +159,7 @@ internal class AutomationTriggerProcessor(
         }
     }
 
-    internal suspend fun updateScheduleState(scheduleId: String, state: AutomationScheduleState) {
+    suspend fun updateScheduleState(scheduleId: String, state: AutomationScheduleState) {
         when (state) {
             AutomationScheduleState.IDLE -> {
                 this.activateTriggers(scheduleId, TriggerExecutionType.EXECUTION)

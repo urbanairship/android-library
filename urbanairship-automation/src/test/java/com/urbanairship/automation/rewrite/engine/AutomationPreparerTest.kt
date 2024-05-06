@@ -86,7 +86,6 @@ public class AutomationPreparerTest {
             messagePreparer = messagePreparer,
             deferredResolver = deferredResolver,
             frequencyLimitManager = frequencyLimitManager,
-            audienceChecker = audienceSelector,
             experiments = experimentManager,
             remoteDataAccess = remoteDataAccess,
             deviceInfoProvider = deviceInfoProvider
@@ -153,7 +152,7 @@ public class AutomationPreparerTest {
     public fun testAudienceMismatchSkip(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.SKIP
             )
         )
@@ -182,7 +181,7 @@ public class AutomationPreparerTest {
     public fun testAudienceMismatchPenalize(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.PENALIZE
             )
         )
@@ -211,7 +210,7 @@ public class AutomationPreparerTest {
     public fun testAudienceMismatchCancel(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.CANCEL
             )
         )
@@ -240,7 +239,7 @@ public class AutomationPreparerTest {
     public fun testContactIDAudienceChecks(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.PENALIZE
             )
         )
@@ -268,7 +267,7 @@ public class AutomationPreparerTest {
     public fun testPrepareMessage(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.PENALIZE
             ),
             campaigns = JsonValue.wrap("campaigns"),
@@ -321,7 +320,7 @@ public class AutomationPreparerTest {
 
         val schedule = makeSchedule(
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.PENALIZE
             ),
             campaigns = JsonValue.wrap("campaigns"),
@@ -346,7 +345,7 @@ public class AutomationPreparerTest {
         val schedule = makeSchedule(
             data = AutomationSchedule.ScheduleData.Actions(JsonValue.wrap("action payload")),
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.PENALIZE
             ),
             campaigns = JsonValue.wrap("campaigns"),
@@ -395,7 +394,7 @@ public class AutomationPreparerTest {
                 )
             ),
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.PENALIZE
             ),
             campaigns = JsonValue.wrap("campaigns"),
@@ -471,7 +470,7 @@ public class AutomationPreparerTest {
                 )
             ),
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.PENALIZE
             ),
             campaigns = JsonValue.wrap("campaigns"),
@@ -554,7 +553,7 @@ public class AutomationPreparerTest {
                 )
             ),
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.SKIP
             ),
             campaigns = JsonValue.wrap("campaigns"),
@@ -590,7 +589,7 @@ public class AutomationPreparerTest {
     public fun testExperiments(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.PENALIZE
             ),
             campaigns = JsonValue.wrap("campaigns"),
@@ -644,7 +643,7 @@ public class AutomationPreparerTest {
     public fun testExperimentsDefaultMessageType(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.PENALIZE
             ),
             campaigns = JsonValue.wrap("campaigns"),
@@ -696,7 +695,7 @@ public class AutomationPreparerTest {
     public fun testByPassExperiments(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.PENALIZE
             ),
             campaigns = JsonValue.wrap("campaigns"),
@@ -738,7 +737,7 @@ public class AutomationPreparerTest {
         val schedule = makeSchedule(
             data = AutomationSchedule.ScheduleData.Actions(JsonValue.wrap("action")),
             audience = AutomationAudience(
-                audienceSelector = AudienceSelector.newBuilder().build(),
+                audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.PENALIZE
             ),
             campaigns = JsonValue.wrap("campaigns"),

@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.automation.rewrite.inappmessage
 
+import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.automation.rewrite.inappmessage.info.InAppMessageButtonInfo
@@ -31,6 +32,7 @@ internal object InAppActionUtils {
     fun runActions(
         actionsMap: Map<String, JsonValue>?,
         requestFactory: ActionRunRequestFactory? = null,
+        @Action.Situation situation: Int? = null,
         runSync: Boolean = false
     ) {
         val actions = actionsMap ?: return
@@ -38,7 +40,10 @@ internal object InAppActionUtils {
         actions.map {
             val result  = requestFactory?.createActionRequest(it.key)
                 ?: ActionRunRequest.createRequest(it.key)
-            result.apply { setValue(it.value) }
+            result.apply {
+                setValue(it.value)
+                situation?.let(this::setSituation)
+            }
         }.forEach {
             if (runSync) {
                 it.runSync()

@@ -46,4 +46,16 @@ internal interface InternalLegacyInAppMessagingProtocol: LegacyInAppMessagingInt
 //TODO: Implement
 public class LegacyInAppMessaging(
     private val pushManager: PushManager
-) {}
+) : LegacyInAppMessagingInterface {
+
+    override val customMessageConverter: MessageConvertor?
+        get() = TODO("Not yet implemented")
+    override val messageExtender: MessageExtender?
+        get() = TODO("Not yet implemented")
+    override var scheduleExtender: ScheduleExtender?
+        get() = TODO("Not yet implemented")
+        set(value) {}
+    override var displayAsapEnabled: Boolean
+        get() = TODO("Not yet implemented")
+        set(value) {}
+}

@@ -9,7 +9,7 @@ import com.urbanairship.automation.rewrite.engine.AutomationPreparer
 import com.urbanairship.automation.rewrite.engine.AutomationScheduleState
 import com.urbanairship.automation.rewrite.engine.PreparedSchedule
 import com.urbanairship.automation.rewrite.engine.SchedulePrepareResult
-import com.urbanairship.automation.rewrite.engine.triggerprocessor.AutomationTriggerProcessorInterface
+import com.urbanairship.automation.rewrite.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.rewrite.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.rewrite.utils.ScheduleConditionsChangedNotifier
@@ -25,6 +25,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
@@ -49,21 +50,19 @@ internal interface AutomationEngineInterface {
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class AutomationEngine(
     private val context: Context,
-    private val store: AutomationStore,
+    private val store: ScheduleStoreInterface,
     private val executor: AutomationExecutorInterface,
     private val preparer: AutomationPreparer,
     private val scheduleConditionsChangedNotifier: ScheduleConditionsChangedNotifier,
     private val eventsFeed: AutomationEventFeed,
-    private val triggerProcessor: AutomationTriggerProcessorInterface,
+    private val triggerProcessor: AutomationTriggerProcessor,
     private val delayProcessor: AutomationDelayProcessorInterface,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val sleeper: TaskSleeper = TaskSleeper.default,
-    private val processingDispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
-    private val secondaryDispatcher: CoroutineDispatcher = AirshipDispatchers.IO
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
 ) : AutomationEngineInterface {
 
-    private val processingScope = CoroutineScope(processingDispatcher + SupervisorJob())
-    private val secondaryScope = CoroutineScope(secondaryDispatcher + SupervisorJob())
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     private var isPaused = MutableStateFlow(false)
     private var isExecutionPaused = MutableStateFlow(false)
@@ -78,26 +77,28 @@ internal class AutomationEngine(
     }
 
     override fun start() {
-        startTask = processingScope.async { restoreSchedules() }
+        startTask = scope.async { restoreSchedules() }
 
-        processingScope.launch {
+        scope.launch {
             triggerProcessor.getTriggerResults().collect {
-                yield()
-                processTriggerResult(it)
+                if (isActive) {
+                    processTriggerResult(it)
+                }
             }
         }
 
-        processingScope.launch {
+        scope.launch {
             eventsFeed.feed.collect {
-                yield()
-                processingScope.launch { triggerProcessor.processEvent(it) }
+                if (isActive) {
+                    triggerProcessor.processEvent(it)
+                }
             }
         }
     }
 
     public fun stop() {
         startTask?.cancel()
-        processingScope.cancel()
+        scope.cancel()
     }
 
     override suspend fun stopSchedules(identifiers: List<String>) {
@@ -291,12 +292,11 @@ internal class AutomationEngine(
     }
 
     private suspend fun startTaskToProcessTriggeredSchedule(scheduleID: String) {
-        try {
+        scope.launch {
             UALog.v { "Processing triggered schedule $scheduleID" }
             processTriggeredSchedule(scheduleID)
-        } catch (ex: Exception) {
-            UALog.e(ex) { "Failed to process triggered schedule $scheduleID" }
         }
+        yield()
     }
 
     private suspend fun processTriggeredSchedule(scheduleID: String) {
@@ -318,15 +318,33 @@ internal class AutomationEngine(
         }
 
         val prepared = prepareSchedule(data) ?: return
-        startExecuting(data, prepared)
-
+        startExecuting(prepared.first, prepared.second)
     }
 
-    private suspend fun prepareSchedule(data: AutomationScheduleData): PreparedSchedule? {
+    private suspend fun prepareSchedule(data: AutomationScheduleData): Pair<AutomationScheduleData, PreparedSchedule>? {
         UALog.v { "Preparing schedule $data" }
 
         val result = preparer.prepare(context, data.schedule, data.triggerInfo?.context)
         UALog.v { "Preparing schedule $data result: $result" }
+
+        val updated = updateState(data.schedule.identifier) {
+            if (!it.isInState(listOf(AutomationScheduleState.TRIGGERED))) {
+                return@updateState it
+            }
+
+            return@updateState when(result) {
+                is SchedulePrepareResult.Prepared -> {
+                    it.prepared(result.schedule.info, clock.currentTimeMillis())
+                }
+                SchedulePrepareResult.Penalize -> {
+                    it.prepareCancelled(clock.currentTimeMillis(), penalize = true)
+                }
+                SchedulePrepareResult.Skip -> {
+                    it.prepareCancelled(clock.currentTimeMillis(), penalize = false)
+                }
+                else -> { it }
+            }
+        } ?: data
 
         return when(result) {
             SchedulePrepareResult.Cancel -> {
@@ -334,22 +352,12 @@ internal class AutomationEngine(
                 null
             }
             is SchedulePrepareResult.Prepared -> {
-                if (data.isInState(listOf(AutomationScheduleState.TRIGGERED))) {
-                    data.prepared(result.schedule.info, clock.currentTimeMillis())
-                }
-
-                result.schedule
+                Pair(updated, result.schedule)
             }
             SchedulePrepareResult.Skip -> {
-                if (data.isInState(listOf(AutomationScheduleState.TRIGGERED))) {
-                    data.prepareCancelled(clock.currentTimeMillis(), penalize = false)
-                }
                 null
             }
             SchedulePrepareResult.Penalize -> {
-                if (data.isInState(listOf(AutomationScheduleState.TRIGGERED))) {
-                    data.prepareCancelled(clock.currentTimeMillis(), penalize = true)
-                }
                 null
             }
             SchedulePrepareResult.Invalidate -> {
@@ -384,7 +392,14 @@ internal class AutomationEngine(
                     }
                 }
 
-                when(execute(preparedSchedule)) {
+                UALog.v { "Executing schedule ${preparedSchedule.info.scheduleID}" }
+                updateState(preparedSchedule.info.scheduleID) { it.executing(clock.currentTimeMillis()) }
+
+                val result = executor.execute(preparedSchedule)
+
+                UALog.v { "Executing result ${preparedSchedule.info.scheduleID} $result" }
+
+                when(result) {
                     ScheduleExecuteResult.CANCEL -> {
                         store.deleteSchedules(listOf(scheduleID))
                         triggerProcessor.cancel(listOf(scheduleID))
@@ -451,21 +466,9 @@ internal class AutomationEngine(
         return result
     }
 
-    private suspend fun execute(preparedSchedule: PreparedSchedule): ScheduleExecuteResult {
-        UALog.v { "Executing schedule ${preparedSchedule.info.scheduleID}" }
-        val job = secondaryScope.async {
-            updateState(preparedSchedule.info.scheduleID) {it.executing(clock.currentTimeMillis())}
-        }
-
-        val result = executor.execute(preparedSchedule)
-        job.await()
-
-        UALog.v { "Executing result ${preparedSchedule.info.scheduleID} $result" }
-        return result
-    }
 
     private fun handleInterval(interval: Long, scheduleID: String) {
-        secondaryScope.launch {
+        scope.launch {
             sleeper.sleep(interval.seconds)
             updateState(scheduleID) {
                 it.idle(clock.currentTimeMillis())

@@ -5,6 +5,7 @@ package com.urbanairship.modules.automation;
 import android.content.Context;
 
 import com.urbanairship.AirshipVersionInfo;
+import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.analytics.AirshipEventFeed;
@@ -48,6 +49,8 @@ public interface AutomationModuleFactory extends AirshipVersionInfo {
                  @NonNull Contact contact,
                  @NonNull DeferredResolver deferredResolver,
                  @NonNull LocaleManager localeManager,
-                 @NonNull AirshipEventFeed eventFeed);
+                 @NonNull AirshipEventFeed eventFeed,
+                 @NonNull ApplicationMetrics metrics,
+                 @NonNull Boolean useNewAutomation);
 
     }
