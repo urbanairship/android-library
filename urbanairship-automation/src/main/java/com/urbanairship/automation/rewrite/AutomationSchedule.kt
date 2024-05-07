@@ -133,7 +133,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             ).toJsonValue()
         }
 
-        internal data class Deferred(internal val deferred: DeferredAutomationData) : ScheduleData() {
+        public data class Deferred internal constructor(internal val deferred: DeferredAutomationData) : ScheduleData() {
             override fun toJsonValue(): JsonValue = jsonMapOf(
                 TYPE to ScheduleType.DEFERRED,
                 DEFERRED to deferred

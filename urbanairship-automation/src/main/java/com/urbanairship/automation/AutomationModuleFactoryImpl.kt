@@ -3,7 +3,6 @@ package com.urbanairship.automation
 
 import android.content.Context
 import androidx.annotation.RestrictTo
-import com.urbanairship.AirshipComponent
 import com.urbanairship.ApplicationMetrics
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
@@ -43,15 +42,12 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.contacts.Contact
 import com.urbanairship.deferred.DeferredResolver
 import com.urbanairship.experiment.ExperimentManager
-import com.urbanairship.iam.LegacyInAppMessage
-import com.urbanairship.iam.LegacyInAppMessageManager
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.automation.AutomationModuleFactory
 import com.urbanairship.push.PushManager
 import com.urbanairship.remotedata.RemoteData
-import java.util.Arrays
 
 /**
  * Automation module loader factory implementation. Also loads IAA.
@@ -80,29 +76,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         metrics: ApplicationMetrics,
         useNewAutomation: Boolean
     ): Module {
-        fun registerOldAutomation(): Module {
-            val inAppAutomation = InAppAutomation(
-                context,
-                dataStore,
-                runtimeConfig,
-                privacyManager,
-                analytics,
-                remoteData,
-                airshipChannel,
-                experimentManager,
-                infoProvider,
-                meteredUsage,
-                contact,
-                deferredResolver,
-                localeManager
-            )
-            val legacyInAppMessageManager =
-                LegacyInAppMessageManager(context, dataStore, inAppAutomation, analytics, pushManager)
-            val components: Collection<AirshipComponent> =
-                listOf(inAppAutomation, legacyInAppMessageManager)
 
-            return Module.multipleComponents(components, R.xml.ua_automation_actions)
-        }
 
         fun registerNewAutomation(): Module {
             val assetManager = AssetCacheManager(context)
@@ -175,11 +149,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
             return Module.singleComponent(component, R.xml.ua_automation_actions)
         }
 
-        return if (useNewAutomation) {
-            registerNewAutomation()
-        } else {
-            registerOldAutomation()
-        }
+        return  registerNewAutomation()
     }
 
     override val airshipVersion: String

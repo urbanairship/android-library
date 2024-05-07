@@ -29,9 +29,7 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.app.GlobalActivityMonitor
-import com.urbanairship.automation.InAppAutomation
-import com.urbanairship.iam.InAppActionUtils
-import com.urbanairship.json.JsonMap
+import com.urbanairship.embedded.EmbeddedViewManager
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.emptyJsonMap
 import com.urbanairship.permission.Permission
@@ -127,7 +125,7 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             val payload = LayoutInfo(jsonMap)
-            Thomas.prepareDisplay(payload, emptyJsonMap(), InAppAutomation.shared().embeddedViewManager)
+            Thomas.prepareDisplay(payload, emptyJsonMap(), EmbeddedViewManager)
                 .setInAppActivityMonitor(GlobalActivityMonitor.shared(applicationContext))
                 .setListener(thomasListener)
                 .display(this)
@@ -206,12 +204,14 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            InAppActionUtils.runActions(actions, ActionRunRequestFactory {
+            actions.forEach {
                 val bundle = Bundle()
-                bundle.putParcelable(PromptPermissionAction.RECEIVER_METADATA, permissionResultReceiver)
-
-                ActionRunRequest.createRequest(it).setMetadata(bundle)
-            })
+                bundle.putParcelable(
+                    PromptPermissionAction.RECEIVER_METADATA,
+                    permissionResultReceiver
+                )
+                ActionRunRequest.createRequest(it.key).setMetadata(bundle).setValue(it.value).run()
+            }
         }
 
         override fun onPagerGesture(

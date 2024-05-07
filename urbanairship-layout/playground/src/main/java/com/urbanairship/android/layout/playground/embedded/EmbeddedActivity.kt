@@ -36,9 +36,9 @@ import com.urbanairship.android.layout.property.ConstrainedSize
 import com.urbanairship.android.layout.property.EmbeddedPlacement
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.app.GlobalActivityMonitor
-import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.compose.AirshipEmbeddedView
 import com.urbanairship.embedded.AirshipEmbeddedObserver
+import com.urbanairship.embedded.EmbeddedViewManager
 import com.urbanairship.json.emptyJsonMap
 import kotlinx.coroutines.launch
 
@@ -174,7 +174,7 @@ private fun displayLayout(context: Context, fileName: String, embeddedId: String
             ),
         )
 
-        val manager = InAppAutomation.shared().embeddedViewManager
+        val manager = EmbeddedViewManager
 
         manager.dismissAll(embeddedId)
 
