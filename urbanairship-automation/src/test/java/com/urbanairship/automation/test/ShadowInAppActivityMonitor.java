@@ -2,7 +2,7 @@ package com.urbanairship.automation.test;
 
 import android.app.Activity;
 
-import com.urbanairship.automation.rewrite.inappmessage.InAppActivityMonitor;
+import com.urbanairship.iam.InAppActivityMonitor;
 
 import org.robolectric.annotation.Implementation;
 import org.robolectric.annotation.Implements;

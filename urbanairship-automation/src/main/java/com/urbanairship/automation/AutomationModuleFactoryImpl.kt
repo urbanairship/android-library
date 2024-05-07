@@ -11,32 +11,25 @@ import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.audience.DeviceInfoProvider
-import com.urbanairship.automation.rewrite.AutomationEngine
-import com.urbanairship.automation.rewrite.AutomationEventFeed
-import com.urbanairship.automation.rewrite.AutomationExecutor
-import com.urbanairship.automation.rewrite.AutomationStore
-import com.urbanairship.automation.rewrite.InAppAutomation
-import com.urbanairship.automation.rewrite.InAppAutomationComponent
-import com.urbanairship.automation.rewrite.SerialAccessAutomationStore
-import com.urbanairship.automation.rewrite.actionautomation.ActionAutomationExecutor
-import com.urbanairship.automation.rewrite.actionautomation.ActionAutomationPreparer
-import com.urbanairship.automation.rewrite.engine.AutomationDelayProcessor
-import com.urbanairship.automation.rewrite.engine.AutomationPreparer
-import com.urbanairship.automation.rewrite.engine.triggerprocessor.AutomationTriggerProcessor
-import com.urbanairship.automation.rewrite.inappmessage.InAppMessageAutomationExecutor
-import com.urbanairship.automation.rewrite.inappmessage.InAppMessageAutomationPreparer
-import com.urbanairship.automation.rewrite.inappmessage.InAppMessaging
-import com.urbanairship.automation.rewrite.inappmessage.analytics.InAppEventRecorder
-import com.urbanairship.automation.rewrite.inappmessage.analytics.InAppMessageAnalyticsFactory
-import com.urbanairship.automation.rewrite.inappmessage.assets.AssetCacheManager
-import com.urbanairship.automation.rewrite.inappmessage.displayadapter.DisplayAdapterFactory
-import com.urbanairship.automation.rewrite.inappmessage.displaycoordinator.DisplayCoordinatorManager
-import com.urbanairship.automation.rewrite.inappmessage.legacy.LegacyInAppMessaging
-import com.urbanairship.automation.rewrite.limits.FrequencyLimitManager
-import com.urbanairship.automation.rewrite.remotedata.AutomationRemoteDataAccess
-import com.urbanairship.automation.rewrite.remotedata.AutomationRemoteDataSubscriber
-import com.urbanairship.automation.rewrite.utils.NetworkMonitor
-import com.urbanairship.automation.rewrite.utils.ScheduleConditionsChangedNotifier
+import com.urbanairship.automation.action.ActionAutomationExecutor
+import com.urbanairship.automation.action.ActionAutomationPreparer
+import com.urbanairship.automation.engine.AutomationDelayProcessor
+import com.urbanairship.automation.engine.AutomationPreparer
+import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
+import com.urbanairship.iam.InAppMessageAutomationExecutor
+import com.urbanairship.iam.InAppMessageAutomationPreparer
+import com.urbanairship.iam.InAppMessaging
+import com.urbanairship.iam.analytics.InAppEventRecorder
+import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
+import com.urbanairship.iam.assets.AssetCacheManager
+import com.urbanairship.iam.adapter.DisplayAdapterFactory
+import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
+import com.urbanairship.iam.legacy.LegacyInAppMessaging
+import com.urbanairship.automation.limits.FrequencyLimitManager
+import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
+import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
+import com.urbanairship.automation.utils.NetworkMonitor
+import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.contacts.Contact
@@ -93,7 +86,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
             val messagePreparer = InAppMessageAutomationPreparer(
                 assetsManager = assetManager,
                 displayCoordinatorManager = displayCoordinatorManager,
-                displayAdapterFactory = DisplayAdapterFactory(context, NetworkMonitor.shared(context), activityMonitor))
+                displayAdapterFactory = DisplayAdapterFactory(context, NetworkMonitor.shared(context), activityMonitor)
+            )
 
             // Execution
             val actionExecutor = ActionAutomationExecutor()
