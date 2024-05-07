@@ -2,7 +2,6 @@
 
 package com.urbanairship.automation.rewrite.engine.triggerprocessor
 
-import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.automation.rewrite.AutomationEvent
@@ -34,7 +33,7 @@ internal class AutomationTriggerProcessor(
         isPausedFlow.update { paused }
     }
 
-    suspend fun getTriggerResults() : Flow<TriggerResult> = triggerResultsFlow
+    fun getTriggerResults() : Flow<TriggerResult> = triggerResultsFlow
 
     suspend fun processEvent(event: AutomationEvent) {
 
@@ -162,22 +161,31 @@ internal class AutomationTriggerProcessor(
     suspend fun updateScheduleState(scheduleId: String, state: AutomationScheduleState) {
         when (state) {
             AutomationScheduleState.IDLE -> {
-                this.activateTriggers(scheduleId, TriggerExecutionType.EXECUTION)
+                this.updateActiveTriggers(scheduleId, type = TriggerExecutionType.EXECUTION)
             }
             AutomationScheduleState.TRIGGERED, AutomationScheduleState.PREPARED -> {
-                this.activateTriggers(scheduleId, TriggerExecutionType.DELAY_CANCELLATION)
+                this.updateActiveTriggers(scheduleId, type = TriggerExecutionType.DELAY_CANCELLATION)
             }
-            AutomationScheduleState.PAUSED, AutomationScheduleState.FINISHED -> {
-                this.disableTriggers(scheduleId)
+            AutomationScheduleState.EXECUTING, AutomationScheduleState.PAUSED, AutomationScheduleState.FINISHED -> {
+                this.updateActiveTriggers(scheduleId, type = null)
             }
-            else -> return
         }
     }
 
-    private suspend fun activateTriggers(scheduleId: String, type: TriggerExecutionType) {
-        val triggers = preparedTriggers[scheduleId] ?: return
+    private suspend fun updateActiveTriggers(scheduleId: String, type: TriggerExecutionType?) {
+        val triggers = preparedTriggers[scheduleId]?:  return
+        if (type == null) {
+            triggers.forEach { it.disable() }
+            return
+        }
 
-        triggers.forEach { it.activate() }
+        triggers.forEach {
+            if (it.executionType == type) {
+                it.activate()
+            } else {
+                it.disable()
+            }
+        }
 
         val sessionState = appSessionState ?: return
 
@@ -191,12 +199,6 @@ internal class AutomationTriggerProcessor(
         }
 
         store.upsertTriggers(results.map { it.triggerData })
-    }
-
-    private fun disableTriggers(scheduleId: String) {
-        this.preparedTriggers[scheduleId]?.forEach {
-            it.disable()
-        }
     }
 
     private suspend fun emit(result: TriggerResult) {

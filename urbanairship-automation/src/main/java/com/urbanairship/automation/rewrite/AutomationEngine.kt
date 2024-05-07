@@ -18,12 +18,11 @@ import com.urbanairship.util.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -46,7 +45,6 @@ internal interface AutomationEngineInterface {
     suspend fun getSchedules(group: String): List<AutomationSchedule>
 }
 
-//TODO: check multithreading and processing threads
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class AutomationEngine(
     private val context: Context,
@@ -59,14 +57,37 @@ internal class AutomationEngine(
     private val delayProcessor: AutomationDelayProcessorInterface,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val sleeper: TaskSleeper = TaskSleeper.default,
-    dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
+    private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
 ) : AutomationEngineInterface {
 
-    private val scope = CoroutineScope(dispatcher + SupervisorJob())
+    private companion object {
+        val INTERRUPTIBLE_STATES = listOf(
+            AutomationScheduleState.EXECUTING,
+            AutomationScheduleState.PREPARED,
+            AutomationScheduleState.TRIGGERED
+        )
+    }
+    enum class ScheduleRestoreState {
+        IDLE,
+        IN_PROGRESS,
+        RESTORED
+    }
+
+    private val supervisorJob = SupervisorJob()
+    private val scope = CoroutineScope(dispatcher + supervisorJob)
 
     private var isPaused = MutableStateFlow(false)
     private var isExecutionPaused = MutableStateFlow(false)
-    private var startTask: Deferred<Unit>? = null
+    private var restoreState = MutableStateFlow(ScheduleRestoreState.IDLE)
+
+    @VisibleForTesting
+    internal fun isStarted(): Boolean = restoreState.value != ScheduleRestoreState.IDLE
+
+    @VisibleForTesting
+    internal fun isPaused(): Boolean = isPaused.value
+
+    @VisibleForTesting
+    internal fun isExecutionPaused(): Boolean = isExecutionPaused.value
 
     override fun setEnginePaused(paused: Boolean) {
         isPaused.update { paused }
@@ -77,33 +98,46 @@ internal class AutomationEngine(
     }
 
     override fun start() {
-        startTask = scope.async { restoreSchedules() }
+        restoreState.value = ScheduleRestoreState.IN_PROGRESS
 
         scope.launch {
-            triggerProcessor.getTriggerResults().collect {
-                if (isActive) {
-                    processTriggerResult(it)
+            restoreSchedules()
+            restoreState.value = ScheduleRestoreState.RESTORED
+
+            if (!isActive) { return@launch }
+
+            launch {
+                triggerProcessor.getTriggerResults().collect {
+                    if (isActive) {
+                        processTriggerResult(it)
+                    }
                 }
             }
-        }
 
-        scope.launch {
-            eventsFeed.feed.collect {
-                if (isActive) {
-                    triggerProcessor.processEvent(it)
+            launch {
+                eventsFeed.feed.collect {
+                    if (isActive) {
+                        triggerProcessor.processEvent(it)
+                    }
                 }
             }
         }
     }
 
-    public fun stop() {
-        startTask?.cancel()
-        scope.cancel()
+    fun stop() {
+        restoreState.value = ScheduleRestoreState.IDLE
+        supervisorJob.cancelChildren()
     }
 
-    override suspend fun stopSchedules(identifiers: List<String>) {
+    private suspend fun waitForScheduleRestore() {
+        restoreState.first { it == ScheduleRestoreState.RESTORED }
+    }
+
+    override suspend fun stopSchedules(identifiers: List<String>) = withContext(dispatcher) {
+        waitForScheduleRestore()
+
         UALog.d { "Stopping schedules $identifiers" }
-        startTask?.await()
+
         val timestamp = clock.currentTimeMillis()
         for (item in identifiers) {
             updateState(item) { data ->
@@ -113,16 +147,14 @@ internal class AutomationEngine(
         }
     }
 
-    override suspend fun upsertSchedules(schedules: List<AutomationSchedule>) {
-        startTask?.await()
+    override suspend fun upsertSchedules(schedules: List<AutomationSchedule>) = withContext(dispatcher) {
+        waitForScheduleRestore()
 
         val idToSchedule = schedules.associateBy { it.identifier }
 
-        UALog.d { "Upserting schedules ${idToSchedule.keys}" }
+        UALog.d { "Upsert schedules ${idToSchedule.keys}" }
         val data = store.upsertSchedules(idToSchedule.keys.toList()) { identifier, data ->
-            val schedule = idToSchedule[identifier]
-                ?: throw IllegalArgumentException("Invalid schedule identifier")
-
+            val schedule = requireNotNull(idToSchedule[identifier])
             val stored = schedule.updateOrCreate(data, clock.currentTimeMillis())
             stored.updateState(clock.currentTimeMillis())
         }
@@ -130,42 +162,47 @@ internal class AutomationEngine(
         triggerProcessor.updateSchedules(data)
     }
 
-    override suspend fun cancelSchedules(identifiers: List<String>) {
+    override suspend fun cancelSchedules(identifiers: List<String>) = withContext(dispatcher) {
+        waitForScheduleRestore()
+
         UALog.d { "Cancelling schedules ${identifiers})" }
-        startTask?.await()
 
         store.deleteSchedules(identifiers)
         triggerProcessor.cancel(identifiers)
     }
 
-    override suspend fun cancelSchedules(group: String) {
+    override suspend fun cancelSchedules(group: String) = withContext(dispatcher) {
+        waitForScheduleRestore()
+
         UALog.d { "Cancelling schedules with group ${group})" }
-        startTask?.await()
+
         store.deleteSchedules(group)
         triggerProcessor.cancel(group)
     }
 
-    override suspend fun cancelSchedulesWith(type: AutomationSchedule.ScheduleType) {
-        UALog.d { "Cancelling schedules with type ${type})" }
+    override suspend fun cancelSchedulesWith(type: AutomationSchedule.ScheduleType) = withContext(dispatcher) {
+        waitForScheduleRestore()
 
-        startTask?.await()
+        UALog.d { "Cancelling schedules with type ${type})" }
 
         //we don't store schedule type as a separate field, but it's a part of airship json, so we
         // can't utilize room to filter out our results
         val ids = getSchedules().mapNotNull { schedule ->
-            when(schedule.data) {
+            when (schedule.data) {
                 is AutomationSchedule.ScheduleData.Actions -> {
                     if (type != AutomationSchedule.ScheduleType.ACTIONS) {
                         return@mapNotNull null
                     }
                     return@mapNotNull schedule.identifier
                 }
+
                 is AutomationSchedule.ScheduleData.Deferred -> {
                     if (type != AutomationSchedule.ScheduleType.DEFERRED) {
                         return@mapNotNull null
                     }
                     return@mapNotNull schedule.identifier
                 }
+
                 is AutomationSchedule.ScheduleData.InAppMessageData -> {
                     if (type != AutomationSchedule.ScheduleType.IN_APP_MESSAGE) {
                         return@mapNotNull null
@@ -179,47 +216,42 @@ internal class AutomationEngine(
         triggerProcessor.cancel(ids)
     }
 
-    override suspend fun getSchedules(): List<AutomationSchedule> {
-        return store
+    override suspend fun getSchedules(): List<AutomationSchedule> = withContext(dispatcher) {
+        return@withContext store
             .getSchedules()
             .filter { !it.shouldDelete(clock.currentTimeMillis()) }
             .map { it.schedule }
     }
 
-    override suspend fun getSchedule(identifier: String): AutomationSchedule? {
-        val result = store.getSchedule(identifier) ?: return null
+    override suspend fun getSchedule(identifier: String): AutomationSchedule? = withContext(dispatcher) {
+        val result = store.getSchedule(identifier) ?: return@withContext null
         if (result.isExpired(clock.currentTimeMillis())) {
-            return null
+            return@withContext null
         }
 
-        return result.schedule
+        return@withContext result.schedule
     }
 
-    override suspend fun getSchedules(group: String): List<AutomationSchedule> {
+    override suspend fun getSchedules(group: String): List<AutomationSchedule> = withContext(dispatcher) {
         val date = clock.currentTimeMillis()
 
-        return store
+        return@withContext store
             .getSchedules(group)
             .filter { !it.isExpired(date) }
             .map { it.schedule }
             .toList()
     }
 
-    @VisibleForTesting
-    internal fun isStarted(): Boolean = startTask != null && !(startTask?.isCancelled ?: true)
-
-    internal fun isPaused(): Boolean = isPaused.value
-    internal fun isExecutionPaused(): Boolean = isExecutionPaused.value
-
     private suspend fun updateState(
         identifier: String,
-        updateBlock: (AutomationScheduleData) -> AutomationScheduleData): AutomationScheduleData? {
-
+        updateBlock: (AutomationScheduleData) -> AutomationScheduleData
+    ): AutomationScheduleData? {
         val result = store.updateSchedule(identifier, updateBlock) ?: return null
         triggerProcessor.updateScheduleState(identifier, result.scheduleState)
         return result
     }
 
+    // Runs queued, via start() coroutine
     private suspend fun processTriggerResult(result: TriggerResult) {
         val date = clock.currentTimeMillis()
 
@@ -239,6 +271,7 @@ internal class AutomationEngine(
         }
     }
 
+    // Runs queued, via start() coroutine
     private suspend fun restoreSchedules() {
         val now = clock.currentTimeMillis()
 
@@ -251,25 +284,26 @@ internal class AutomationEngine(
 
         // Handle interrupted
         schedules.filter {
-            it.isInState(listOf(
-                AutomationScheduleState.EXECUTING,
-                AutomationScheduleState.PREPARED,
-                AutomationScheduleState.TRIGGERED)) }
-            .forEach { data ->
-                val preparedInfo = data.preparedScheduleInfo
-                if (data.scheduleState == AutomationScheduleState.EXECUTING && preparedInfo != null) {
-                    val behavior = executor.interrupted(data.schedule, preparedInfo)
-                    updateState(data.schedule.identifier) {
-                        it.executionInterrupted(now, retry = behavior == InterruptedBehavior.RETRY)
-                    }
-                } else {
-                    updateState(data.schedule.identifier) { it.prepareInterrupted(now) }
+            it.isInState(INTERRUPTIBLE_STATES)
+        }.forEach { data ->
+            val updated: AutomationScheduleData?
+            val preparedInfo = data.preparedScheduleInfo
+            if (data.scheduleState == AutomationScheduleState.EXECUTING && preparedInfo != null) {
+                val behavior = executor.interrupted(data.schedule, preparedInfo)
+                updated = updateState(data.schedule.identifier) {
+                    it.executionInterrupted(now, retry = behavior == InterruptedBehavior.RETRY)
                 }
-
-                if (data.scheduleState == AutomationScheduleState.TRIGGERED) {
-                    startTaskToProcessTriggeredSchedule(data.schedule.identifier)
+                if (updated?.scheduleState == AutomationScheduleState.PAUSED) {
+                    handleInterval(updated.schedule.interval?.toLong() ?: 0L, data.schedule.identifier)
                 }
+            } else {
+                updated = updateState(data.schedule.identifier) { it.prepareInterrupted(now) }
             }
+
+            if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
+                startTaskToProcessTriggeredSchedule(updated.schedule.identifier)
+            }
+        }
 
         // Restore Intervals
         schedules
@@ -296,6 +330,7 @@ internal class AutomationEngine(
             UALog.v { "Processing triggered schedule $scheduleID" }
             processTriggeredSchedule(scheduleID)
         }
+        // Give the task above a chance to run
         yield()
     }
 
@@ -317,8 +352,8 @@ internal class AutomationEngine(
             return
         }
 
-        val prepared = prepareSchedule(data) ?: return
-        startExecuting(prepared.first, prepared.second)
+        val (scheduleData, preparedSchedule) = prepareSchedule(data) ?: return
+        executeSchedule(scheduleData, preparedSchedule)
     }
 
     private suspend fun prepareSchedule(data: AutomationScheduleData): Pair<AutomationScheduleData, PreparedSchedule>? {
@@ -367,7 +402,7 @@ internal class AutomationEngine(
         }
     }
 
-    private suspend fun startExecuting(data: AutomationScheduleData, preparedSchedule: PreparedSchedule) {
+    private suspend fun executeSchedule(data: AutomationScheduleData, preparedSchedule: PreparedSchedule) {
         withContext(Dispatchers.Main) {
             UALog.v { "Starting to execute schedule $data" }
 
@@ -379,6 +414,8 @@ internal class AutomationEngine(
                         val updated = updateState(scheduleID) { it.executionInvalidated(clock.currentTimeMillis())}
                         if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
                             startTaskToProcessTriggeredSchedule(scheduleID)
+                        } else {
+                            preparer.cancelled(data.schedule)
                         }
                         return@withContext
                     }
@@ -388,6 +425,7 @@ internal class AutomationEngine(
                     }
                     ScheduleReadyResult.SKIP -> {
                         updateState(scheduleID) { it.executionSkipped(clock.currentTimeMillis()) }
+                        preparer.cancelled(data.schedule)
                         return@withContext
                     }
                 }
@@ -465,7 +503,6 @@ internal class AutomationEngine(
 
         return result
     }
-
 
     private fun handleInterval(interval: Long, scheduleID: String) {
         scope.launch {

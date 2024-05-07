@@ -29,8 +29,9 @@ public class AutomationScheduleData(
     public var preparedScheduleInfo: PreparedScheduleInfo? = preparedScheduleInfo
         private set
 
-    internal fun setSchedule(schedule: AutomationSchedule) {
+    internal fun setSchedule(schedule: AutomationSchedule): AutomationScheduleData {
         this.schedule = schedule
+        return this
     }
 
     private fun setState(state: AutomationScheduleState, date: Long): AutomationScheduleData {
