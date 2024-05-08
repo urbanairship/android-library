@@ -15,6 +15,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
 
 /**
  * Wrapper for the download tasks that is responsible for downloading assets
@@ -70,7 +71,7 @@ internal class AssetCacheManager(
     context: Context,
     private val downloader: AssetDownloaderInterface = DefaultAssetDownloader(context),
     private val fileManager: AssetFileManagerInterface = DefaultAssetFileManager(context),
-    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
+    private val dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) {
     private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
     private val tasks = mutableMapOf<String, Deferred<Result<AirshipCachedAssets>>>()
@@ -131,7 +132,7 @@ internal class AssetCacheManager(
      * Clears the cache directory associated with the identifier
      * @param identifier: Name of the directory within the root cache directory, usually an in-app message schedule ID
      */
-    suspend fun clearCache(identifier: String) {
+    suspend fun clearCache(identifier: String) = withContext(dispatcher) {
         tasks.remove(identifier)?.cancel()
         try {
             fileManager.clearAssets(identifier)

@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -431,9 +432,14 @@ internal class AutomationEngine(
                 }
 
                 UALog.v { "Executing schedule ${preparedSchedule.info.scheduleID}" }
-                updateState(preparedSchedule.info.scheduleID) { it.executing(clock.currentTimeMillis()) }
+
+                val updateStateJob = async(dispatcher) {
+                    updateState(preparedSchedule.info.scheduleID) { it.executing(clock.currentTimeMillis()) }
+                }
 
                 val result = executor.execute(preparedSchedule)
+
+                updateStateJob.join()
 
                 UALog.v { "Executing result ${preparedSchedule.info.scheduleID} $result" }
 

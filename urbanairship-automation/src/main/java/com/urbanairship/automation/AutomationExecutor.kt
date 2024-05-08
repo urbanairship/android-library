@@ -49,6 +49,7 @@ internal interface AutomationExecutorDelegate<ExecutionData> {
     @MainThread
     fun isReady(data: ExecutionData, preparedScheduleInfo: PreparedScheduleInfo): ScheduleReadyResult
 
+    @MainThread
     suspend fun execute(data: ExecutionData, preparedScheduleInfo: PreparedScheduleInfo) : ScheduleExecuteResult
     suspend fun interrupted(schedule: AutomationSchedule, preparedScheduleInfo: PreparedScheduleInfo) : InterruptedBehavior
 }
@@ -82,6 +83,7 @@ internal class AutomationExecutor(
         }
     }
 
+    @MainThread
     override suspend fun execute(preparedSchedule: PreparedSchedule): ScheduleExecuteResult {
         return try {
             when(preparedSchedule.data) {
