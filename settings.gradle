@@ -15,7 +15,9 @@ dependencyResolutionManagement {
 }
 
 include ':urbanairship-adm',
-        ':urbanairship-ads-identifier', // TODO(SDK18): remove for SDK 18.0.0
+        // ads-identifier is no longer published as of SDK 18.0.0
+        // TODO: migrate goat and debug and remove this module
+        ':urbanairship-ads-identifier',
         ':urbanairship-automation',
         ':urbanairship-automation-compose',
         ':urbanairship-core',
@@ -27,6 +29,8 @@ include ':urbanairship-adm',
         ':urbanairship-layout:playground',
         ':urbanairship-live-update',
         ':urbanairship-message-center',
+        // preference is no longer published as of SDK 18.0.0.
+        // TODO: migrate sample, goat and debug, and remove this module
         ':urbanairship-preference',
         ':urbanairship-preference-center',
         ':urbanairship-feature-flag',
