@@ -313,7 +313,7 @@ public class ExperimentManagerTest {
     public fun testResultExcludesInactiveExperiments(): TestResult = runTest {
         val unmatchedJson = generateExperimentsPayload(
             id = "unmatched",
-            timeCriteria = TimeCriteria(start = 2L, end = Date().time + 4L)
+            timeCriteria = TimeCriteria(start = 3L, end = Date().time + 4L)
         )
             .build()
 

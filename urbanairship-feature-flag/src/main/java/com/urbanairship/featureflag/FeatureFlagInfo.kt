@@ -2,15 +2,13 @@
 
 package com.urbanairship.featureflag
 
-import android.content.Context
 import android.net.Uri
 import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.audience.AudienceSelector
-import com.urbanairship.audience.DeviceInfoProvider
-import com.urbanairship.experiment.ResolutionType
 import com.urbanairship.experiment.TimeCriteria
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -19,81 +17,60 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.util.DateUtils
 import java.text.ParseException
-import kotlin.jvm.Throws
 
-internal enum class FeatureFlagVariablesType(val jsonValue: String) {
-    FIXED("fixed"),
-    VARIANTS("variant")
-}
+internal sealed class FeatureFlagVariables: JsonSerializable {
+    data class Fixed(val data: JsonMap?) : FeatureFlagVariables() {
 
-internal interface FeatureFlagPayload {
-    suspend fun evaluateVariables(
-        context: Context,
-        newEvaluationDate: Long,
-        infoProvider: DeviceInfoProvider
-    ): VariablesVariant?
-}
+        override fun toJsonValue(): JsonValue {
+            return jsonMapOf(
+                KEY_TYPE to VariableType.FIXED.jsonValue,
+                KEY_DATA to data
+            ).toJsonValue()
+        }
+    }
 
-internal data class FeatureFlagVariables(
-    val type: FeatureFlagVariablesType,
-    val variants: List<VariablesVariant>
-) {
+    data class Variant(val variantVariables: List<VariablesVariant>) : FeatureFlagVariables() {
+
+        override fun toJsonValue(): JsonValue {
+            return jsonMapOf(
+                KEY_TYPE to VariableType.VARIANTS.jsonValue,
+                KEY_VARIANTS to variantVariables
+            ).toJsonValue()
+        }
+    }
 
     companion object {
+
         private const val KEY_TYPE = "type"
         private const val KEY_VARIANTS = "variants"
-
-        private const val KEY_ID = "id"
-        private const val KEY_AUDIENCE = "audience_selector"
-        private const val KEY_REPORTING_METADATA = "reporting_metadata"
         private const val KEY_DATA = "data"
 
         @Throws(JsonException::class)
         fun fromJson(json: JsonMap): FeatureFlagVariables {
             val rawType: String = json.requireField(KEY_TYPE)
-            val type = FeatureFlagVariablesType.values().firstOrNull { it.jsonValue == rawType }
-                ?: throw JsonException("can't parse type from $json")
+            val type =
+                VariableType.entries.firstOrNull { it.jsonValue == rawType } ?: throw JsonException(
+                    "can't parse type from $json"
+                )
 
-            val flagVariants: List<VariablesVariant>
-            if (type == FeatureFlagVariablesType.FIXED) {
-                flagVariants = listOf(
-                    VariablesVariant(id = null, selector = null, reportingMetadata = null, data = json.optionalField(KEY_DATA)))
-            } else if (type == FeatureFlagVariablesType.VARIANTS) {
-                flagVariants = json
-                    .require(KEY_VARIANTS)
-                    .optList()
-                    .list
-                    .map { it.optMap() }
-                    .map {
-                        VariablesVariant(
-                            id = it.requireField(KEY_ID),
-                            selector = AudienceSelector.fromJson(it.opt(KEY_AUDIENCE)),
-                            reportingMetadata = it.requireField(KEY_REPORTING_METADATA),
-                            data = it.optionalField(KEY_DATA)
-                        )
-                    }
-            } else {
-                throw JsonException("unsupported variants type $type")
-            }
+            return when (type) {
+                VariableType.FIXED -> {
+                    return Fixed(json.optionalField(KEY_DATA))
+                }
 
-            return FeatureFlagVariables(type, flagVariants)
-        }
-    }
-
-    suspend fun evaluateVariables(
-        context: Context,
-        newEvaluationDate: Long,
-        infoProvider: DeviceInfoProvider
-    ): VariablesVariant? {
-        return when (type) {
-            FeatureFlagVariablesType.FIXED -> {
-                variants.firstOrNull()
-            }
-            FeatureFlagVariablesType.VARIANTS -> {
-                variants.firstOrNull { it.selector?.evaluate(context, newEvaluationDate, infoProvider) ?: false }
+                VariableType.VARIANTS -> {
+                    Variant(json.requireField<JsonList>(KEY_VARIANTS).map {
+                        VariablesVariant.fromJson(it.requireMap())
+                    })
+                }
             }
         }
     }
+}
+
+private enum class VariableType(val jsonValue: String) {
+    FIXED("fixed"),
+    VARIANTS("variant")
 }
 
 internal data class VariablesVariant(
@@ -109,7 +86,15 @@ internal data class VariablesVariant(
         private const val KEY_SELECTOR = "audience_selector"
         private const val KEY_DATA = "data"
 
-        internal val empty = VariablesVariant(null, null, null, null)
+        @Throws(JsonException::class)
+        fun fromJson(json: JsonMap): VariablesVariant {
+            return VariablesVariant(
+                id = json.requireField(KEY_ID),
+                selector = AudienceSelector.fromJson(json.opt(KEY_SELECTOR)),
+                reportingMetadata = json.requireField(KEY_REPORTING_METADATA),
+                data = json.optionalField(KEY_DATA)
+            )
+        }
     }
 
     override fun toJsonValue(): JsonValue {
@@ -122,8 +107,14 @@ internal data class VariablesVariant(
     }
 }
 
+internal sealed class FeatureFlagPayload {
+    internal data class DeferredPayload(val url: Uri) : FeatureFlagPayload()
+
+    internal data class StaticPayload(val variables: FeatureFlagVariables? = null) : FeatureFlagPayload()
+}
+
 @OpenForTesting
-internal class FeatureFlagInfo(
+internal data class FeatureFlagInfo(
     /**
      * Unique id of the flag, a UUID
      */
@@ -152,12 +143,12 @@ internal class FeatureFlagInfo(
     /**
      * Optional audience selector
      */
-    val audience: AudienceSelector?,
+    val audience: AudienceSelector? = null,
 
     /**
      * Optional time span in which the flag should be active
      */
-    val timeCriteria: TimeCriteria?,
+    val timeCriteria: TimeCriteria? = null,
 
     /**
      * Flag payload
@@ -167,7 +158,7 @@ internal class FeatureFlagInfo(
     /**
      * Evaluation options.
      */
-    val evaluationOptions: EvaluationOptions?
+    val evaluationOptions: EvaluationOptions?  = null
 
 ) {
     internal companion object {
@@ -176,14 +167,15 @@ internal class FeatureFlagInfo(
         private const val KEY_LAST_UPDATED = "last_updated"
         private const val KEY_PAYLOAD = "flag"
 
-        private const val KEY_TYPE = "type"
-        private const val KEY_VARIABLES = "variables"
-        private const val KEY_DEFERRED = "deferred"
         private const val KEY_REPORTING_METADATA = "reporting_metadata"
         private const val KEY_AUDIENCE_SELECTOR = "audience_selector"
         private const val KEY_TIME_CRITERIA = "time_criteria"
         private const val KEY_NAME = "name"
         private const val KEY_EVALUATION_OPTIONS = "evaluation_options"
+        private const val KEY_URL = "url"
+        private const val KEY_TYPE = "type"
+        private const val KEY_DEFERRED = "deferred"
+        private const val KEY_VARIABLES = "variables"
 
         /**
          * Creates a `FeatureFlagInfo` object a [JsonMap].
@@ -194,9 +186,29 @@ internal class FeatureFlagInfo(
          */
         internal fun fromJson(json: JsonMap): FeatureFlagInfo? {
             try {
-
                 val payload = json.require(KEY_PAYLOAD).optMap()
                 val audience = payload.get(KEY_AUDIENCE_SELECTOR)?.let(AudienceSelector::fromJson)
+                val payloadType =  payload.requireField<String>(KEY_TYPE).let { type ->
+                    FeatureFlagPayloadType.entries.firstOrNull { it.jsonValue == type } ?: throw JsonException(
+                        "Invalid feature flag payload type $type"
+                    )
+                }
+
+                val parsedPayload = when (payloadType) {
+                    FeatureFlagPayloadType.DEFERRED -> {
+                        val url = Uri.parse(
+                            payload.requireField<JsonMap>(KEY_DEFERRED).requireField(KEY_URL)
+                        )
+                        FeatureFlagPayload.DeferredPayload(url)
+                    }
+
+                    FeatureFlagPayloadType.STATIC -> {
+                        val variables = payload.optionalField<JsonMap>(KEY_VARIABLES)?.let {
+                            FeatureFlagVariables.fromJson(it)
+                        }
+                        FeatureFlagPayload.StaticPayload(variables)
+                    }
+                }
 
                 return FeatureFlagInfo(
                     id = json.requireField(KEY_ID),
@@ -205,9 +217,9 @@ internal class FeatureFlagInfo(
                     name = payload.requireField(KEY_NAME),
                     reportingContext = payload.require(KEY_REPORTING_METADATA).optMap(),
                     audience = audience,
-                    timeCriteria = TimeCriteria.fromJson(payload.opt(KEY_TIME_CRITERIA).optMap()),
-                    payload = parsePayload(payload),
-                    evaluationOptions = EvaluationOptions.fromJson(payload.opt(KEY_EVALUATION_OPTIONS).optMap())
+                    timeCriteria = payload.opt(KEY_TIME_CRITERIA).map?.let { TimeCriteria.fromJson(it) },
+                    payload = parsedPayload,
+                    evaluationOptions = payload.opt(KEY_EVALUATION_OPTIONS).map?.let { EvaluationOptions.fromJson(it) }
                 )
             } catch (ex: JsonException) {
                 UALog.e { "failed to parse FeatureFlagInfo from json $json" }
@@ -217,94 +229,35 @@ internal class FeatureFlagInfo(
                 return null
             }
         }
-
-        @Throws(JsonException::class)
-        private fun parsePayload(json: JsonMap): FeatureFlagPayload {
-            val type = ResolutionType.from(json.requireField(KEY_TYPE))
-                ?: throw JsonException("can't parse type from $json")
-
-            return when (type) {
-                ResolutionType.DEFERRED -> DeferredPayload.fromJson(json.opt(KEY_DEFERRED).optMap())
-                ResolutionType.STATIC -> StaticPayload.fromJson(json.opt(KEY_VARIABLES).optMap())
-            }
-        }
     }
 }
 
-internal class DeferredPayload(
-    val url: Uri,
-) : FeatureFlagPayload {
-    companion object {
-        private const val KEY_URL = "url"
-
-        @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): DeferredPayload {
-
-            return DeferredPayload(
-                url = Uri.parse(json.require(KEY_URL).requireString()),
-            )
-        }
-    }
-
-    override suspend fun evaluateVariables(
-        context: Context,
-        newEvaluationDate: Long,
-        infoProvider: DeviceInfoProvider
-    ): VariablesVariant? {
-        UALog.e { "method not implemented" }
-        return null
-    }
+private enum class FeatureFlagPayloadType(val jsonValue: String) {
+    DEFERRED("deferred"),
+    STATIC("static");
 }
 
-internal class StaticPayload(
-    private val variableVariants: FeatureFlagVariables
-) : FeatureFlagPayload {
-
-    companion object {
-
-        @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): StaticPayload {
-            if (json.isEmpty) {
-                val variables = FeatureFlagVariables(
-                    type = FeatureFlagVariablesType.FIXED, variants = listOf(VariablesVariant.empty)
-                )
-                return StaticPayload(variables)
-            }
-
-            return StaticPayload(FeatureFlagVariables.fromJson(json))
-        }
-    }
-
-    override suspend fun evaluateVariables(
-        context: Context,
-        newEvaluationDate: Long,
-        infoProvider: DeviceInfoProvider
-    ): VariablesVariant? {
-        return variableVariants.evaluateVariables(context, newEvaluationDate, infoProvider)
-    }
-}
-
-internal class EvaluationOptions(
+internal data class EvaluationOptions(
     val disallowStaleValues: Boolean?,
     val ttl: ULong?
 ) : JsonSerializable {
 
     companion object {
+
         private const val KEY_STALE_DATA_FLAG = "disallow_stale_value"
         private const val KEY_TTL = "ttl"
 
         fun fromJson(json: JsonMap): EvaluationOptions? {
             return EvaluationOptions(
-                    disallowStaleValues = json.optionalField(KEY_STALE_DATA_FLAG),
-                    ttl = json.optionalField(KEY_TTL)
+                disallowStaleValues = json.optionalField(KEY_STALE_DATA_FLAG),
+                ttl = json.optionalField(KEY_TTL)
             )
         }
     }
 
     override fun toJsonValue(): JsonValue {
         return jsonMapOf(
-            KEY_STALE_DATA_FLAG to disallowStaleValues,
-            KEY_TTL to ttl?.toLong()
+            KEY_STALE_DATA_FLAG to disallowStaleValues, KEY_TTL to ttl?.toLong()
         ).toJsonValue()
     }
 }

@@ -32,7 +32,7 @@ class FeatureFlagInfoTest {
         assert(jsonMapOf("flag_id" to "27f26d85-0550-4df5-85f0-7022fa7a5925") == testFlag.reportingContext)
         assertNotNull(testFlag.audience)
         assertNotNull(testFlag.timeCriteria)
-        assert(testFlag.payload is StaticPayload)
+        assert(testFlag.payload is FeatureFlagPayload.StaticPayload)
     }
 
     private fun generateFeatureFlagPayload(): JsonMap {

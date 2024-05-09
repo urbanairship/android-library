@@ -3,6 +3,7 @@
 package com.urbanairship.featureflag
 
 import android.content.Context
+import androidx.annotation.Keep
 import com.urbanairship.BuildConfig
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.analytics.AirshipEventFeed
@@ -13,8 +14,8 @@ import com.urbanairship.deferred.DeferredResolver
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.featureflag.FeatureFlagsModuleFactory
 import com.urbanairship.remotedata.RemoteData
-import com.urbanairship.util.Clock
 
+@Keep
 class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
 
     override fun build(
@@ -28,14 +29,13 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
         eventFeed: AirshipEventFeed
     ): Module {
         val manager = FeatureFlagManager(
-            context = context,
+            context = context.applicationContext,
             dataStore = dataStore,
-            remoteData = remoteData,
-            analytics = analytics,
+            audienceEvaluator = AudienceEvaluator(context.applicationContext),
+            remoteData = FeatureFlagRemoteDataAccess(remoteData),
             infoProvider = infoProvider,
-            clock = Clock.DEFAULT_CLOCK,
             deferredResolver = FlagDeferredResolver(cache, resolver),
-            eventFeed = eventFeed
+            featureFlagAnalytics = FeatureFlagAnalytics(eventFeed, analytics)
         )
         return Module.singleComponent(manager, 0)
     }

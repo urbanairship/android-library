@@ -42,7 +42,7 @@ import org.junit.runner.RunWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
-public class FeatureFlagDeferredResolverTest {
+class FeatureFlagDeferredResolverTest {
     private lateinit var cache: AirshipCache
     private val clock: Clock = mockk()
     private val coreResolver: DeferredResolver = mockk()
@@ -51,7 +51,7 @@ public class FeatureFlagDeferredResolverTest {
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
-    public fun setup() {
+    fun setup() {
         cache = spyk(AirshipCache(
             context = ApplicationProvider.getApplicationContext(),
             runtimeConfig = mockk(),
@@ -68,22 +68,24 @@ public class FeatureFlagDeferredResolverTest {
     }
 
     @After
-    public fun tearDown() {
+    fun tearDown() {
         Dispatchers.resetMain()
     }
 
     @Test
-    public fun resolverReturnsValidCachedValue(): TestResult = runTest {
-        val expected = FeatureFlag.createFlag(
-            name = "test",
-            isEligible = true,
-            reportingInfo = FeatureFlag.ReportingInfo(jsonMapOf("reporting" to "context"), "channel-id", "contact-id"),
-            variables = jsonMapOf("variable" to "value")
+    fun resolverReturnsValidCachedValue(): TestResult = runTest {
+        val expected = DeferredFlag.Found(
+            DeferredFlagInfo(
+                isEligible = true,
+                variables = FeatureFlagVariables.Fixed(jsonMapOf("variable" to "value")),
+                reportingMetadata = jsonMapOf("reporting" to "context")
+            )
         )
+
         val request = makeDeferredRequest()
         val flagName = "flag-name"
-        val info = makeFeatureFlagInfo(flagName, StaticPayload(FeatureFlagVariables(FeatureFlagVariablesType.FIXED, listOf())))
-        val cacheKey = calculateItemId(flagName, info, request)
+        val info = makeFeatureFlagInfo(flagName, FeatureFlagPayload.DeferredPayload(request.uri))
+        val cacheKey = calculateItemId(info, request)
 
         cache.store(expected, cacheKey, 2U)
 
@@ -93,23 +95,31 @@ public class FeatureFlagDeferredResolverTest {
     }
 
     @Test
-    public fun testSuccessPath(): TestResult = runTest {
-        val expected = FeatureFlag.createFlag(
-            name = "flag-name",
-            isEligible = true,
-            reportingInfo = FeatureFlag.ReportingInfo(jsonMapOf("reporting" to "context"), "channel-id", "contact-id"),
-            variables = jsonMapOf("variable" to "value")
+    fun testSuccessPath(): TestResult = runTest {
+        val expected = DeferredFlag.Found(
+            DeferredFlagInfo(
+                isEligible = true,
+                variables = FeatureFlagVariables.Fixed(
+                    jsonMapOf("variable" to "value")
+                ),
+                reportingMetadata = jsonMapOf("reporting" to "context")
+            )
         )
+
         val request = makeDeferredRequest()
         val flagName = "flag-name"
-        val payload = DeferredPayload(url = Uri.parse("https://deferred.payload"))
-        val info = makeFeatureFlagInfo(flagName, payload)
+        val info = makeFeatureFlagInfo(flagName, FeatureFlagPayload.DeferredPayload(request.uri))
 
         val callbackSlot = slot<(JsonValue) -> Any>()
         coEvery { coreResolver.resolve(request, capture(callbackSlot)) } answers {
             val deferred = callbackSlot.captured.invoke(jsonMapOf(
                 "is_eligible" to true,
-                "variables" to mapOf("variable" to "value"),
+                "variables" to jsonMapOf(
+                    "type" to "fixed",
+                    "data" to jsonMapOf(
+                        "variable" to "value"
+                    )
+                ),
                 "reporting_metadata" to mapOf(
                     "reporting" to "context"
                 )
@@ -120,24 +130,30 @@ public class FeatureFlagDeferredResolverTest {
         val actual = subject.resolve(request, info)
         assertEquals(expected, actual.getOrNull())
 
-        val cacheKey = calculateItemId(flagName, info, request)
+        val cacheKey = calculateItemId(info, request)
         coVerify { cache.store(expected, cacheKey, 60000U) }
     }
 
     @Test
-    public fun testCacheTtlIsCorrectlyParsed(): TestResult = runTest {
-
+    fun testCacheTtlIsCorrectlyParsed(): TestResult = runTest {
         val request = makeDeferredRequest()
         val flagName = "flag-name"
-        val payload = DeferredPayload(url = Uri.parse("https://deferred.payload"))
-        var evaluationOptions = EvaluationOptions(disallowStaleValues = null, ttl = 123U)
-        var info = makeFeatureFlagInfo(flagName, payload, evaluationOptions)
+        val info = makeFeatureFlagInfo(
+            flagName,
+            FeatureFlagPayload.DeferredPayload(request.uri),
+            EvaluationOptions(disallowStaleValues = null, ttl = 123U)
+        )
 
         val callbackSlot = slot<(JsonValue) -> Any>()
         coEvery { coreResolver.resolve(request, capture(callbackSlot)) } answers {
             val deferred = callbackSlot.captured.invoke(jsonMapOf(
                 "is_eligible" to true,
-                "variables" to mapOf("variable" to "value"),
+                "variables" to jsonMapOf(
+                    "type" to "fixed",
+                    "data" to jsonMapOf(
+                        "variable" to "value"
+                    )
+                ),
                 "reporting_metadata" to mapOf(
                     "reporting" to "context"
                 )
@@ -147,38 +163,44 @@ public class FeatureFlagDeferredResolverTest {
 
         subject.resolve(request, info)
 
-        val cacheKey = calculateItemId(flagName, info, request)
+        val cacheKey = calculateItemId(info, request)
         coVerify { cache.store(any(), cacheKey, 60000U) }
 
-        evaluationOptions = EvaluationOptions(disallowStaleValues = null, ttl = 70000U)
-        info = makeFeatureFlagInfo("another-flag", payload, evaluationOptions)
-        subject.resolve(request, info)
-        coVerify { cache.store(any(), calculateItemId("another-flag", info, request), 70000U) }
+        val otherInfo = makeFeatureFlagInfo(
+            "another-flag",
+            FeatureFlagPayload.DeferredPayload(request.uri),
+            EvaluationOptions(disallowStaleValues = null, ttl = 70000U)
+        )
+
+        subject.resolve(request, otherInfo)
+        coVerify { cache.store(any(), calculateItemId(otherInfo, request), 70000U) }
     }
 
     @Test
-    public fun testNotFound(): TestResult = runTest {
+    fun testNotFound(): TestResult = runTest {
         val request = makeDeferredRequest()
-        val flagName = "flag-name"
-        val payload = DeferredPayload(url = Uri.parse("https://deferred.payload"))
-        val info = makeFeatureFlagInfo(flagName, payload)
+        val info = makeFeatureFlagInfo(
+            "flag-name",
+            FeatureFlagPayload.DeferredPayload(request.uri)
+        )
 
         val callbackSlot = slot<(JsonValue) -> Any>()
         coEvery { coreResolver.resolve(request, capture(callbackSlot)) } answers {
             DeferredResult.NotFound()
         }
 
-        val expected = FeatureFlag.createMissingFlag(flagName)
+        val expected = Result.success(DeferredFlag.NotFound)
         val actual = subject.resolve(request, info)
-        assertEquals(expected, actual.getOrNull())
+        assertEquals(expected, actual)
     }
 
     @Test
-    public fun testOutOfDateThrows(): TestResult = runTest {
+    fun testOutOfDateThrows(): TestResult = runTest {
         val request = makeDeferredRequest()
-        val flagName = "flag-name"
-        val payload = DeferredPayload(url = Uri.parse("https://deferred.payload"))
-        val info = makeFeatureFlagInfo(flagName, payload)
+        val info = makeFeatureFlagInfo(
+            "flag-name",
+            FeatureFlagPayload.DeferredPayload(request.uri)
+        )
 
         val callbackSlot = slot<(JsonValue) -> Any>()
         coEvery { coreResolver.resolve(request, capture(callbackSlot)) } answers {
@@ -190,17 +212,22 @@ public class FeatureFlagDeferredResolverTest {
     }
 
     @Test
-    public fun testRetryError(): TestResult = runTest {
-        val expected = FeatureFlag.createFlag(
-            name = "flag-name",
-            isEligible = true,
-            reportingInfo = FeatureFlag.ReportingInfo(jsonMapOf("reporting" to "context"), "channel-id", "contact-id"),
-            variables = jsonMapOf("variable" to "value")
+    fun testRetryError(): TestResult = runTest {
+        val expected = DeferredFlag.Found(
+            DeferredFlagInfo(
+                isEligible = true,
+                variables = FeatureFlagVariables.Fixed(
+                    jsonMapOf("variable" to "value")
+                ),
+                reportingMetadata = jsonMapOf("reporting" to "context")
+            )
         )
+
         val request = makeDeferredRequest()
-        val flagName = "flag-name"
-        val payload = DeferredPayload(url = Uri.parse("https://deferred.payload"))
-        val info = makeFeatureFlagInfo(flagName, payload)
+        val info = makeFeatureFlagInfo(
+            "flag-name",
+            FeatureFlagPayload.DeferredPayload(request.uri)
+        )
 
         val callbackSlot = slot<(JsonValue) -> Any>()
         var returnError = true
@@ -212,7 +239,12 @@ public class FeatureFlagDeferredResolverTest {
             } else {
                 val deferred = callbackSlot.captured.invoke(jsonMapOf(
                     "is_eligible" to true,
-                    "variables" to mapOf("variable" to "value"),
+                    "variables" to jsonMapOf(
+                        "type" to "fixed",
+                        "data" to jsonMapOf(
+                            "variable" to "value"
+                        )
+                    ),
                     "reporting_metadata" to mapOf(
                         "reporting" to "context"
                     )
@@ -224,16 +256,27 @@ public class FeatureFlagDeferredResolverTest {
         val actual = subject.resolve(request, info)
         assertEquals(expected, actual.getOrNull())
 
-        val cacheKey = calculateItemId(flagName, info, request)
+        val cacheKey = calculateItemId(info, request)
         coVerify { cache.store(expected, cacheKey, 60000U) }
     }
 
     @Test
-    public fun testRetryOnlyOnce(): TestResult = runTest {
+    fun testRetryOnlyOnce(): TestResult = runTest {
+        val expected = DeferredFlag.Found(
+            DeferredFlagInfo(
+                isEligible = true,
+                variables = FeatureFlagVariables.Fixed(
+                    jsonMapOf("variable" to "value")
+                ),
+                reportingMetadata = jsonMapOf("reporting" to "context")
+            )
+        )
+
         val request = makeDeferredRequest()
-        val flagName = "flag-name"
-        val payload = DeferredPayload(url = Uri.parse("https://deferred.payload"))
-        val info = makeFeatureFlagInfo(flagName, payload)
+        val info = makeFeatureFlagInfo(
+            "flag-name",
+            FeatureFlagPayload.DeferredPayload(request.uri)
+        )
 
         val callbackSlot = slot<(JsonValue) -> Any>()
         var counter = 0
@@ -244,7 +287,12 @@ public class FeatureFlagDeferredResolverTest {
             } else {
                 val deferred = callbackSlot.captured.invoke(jsonMapOf(
                     "is_eligible" to true,
-                    "variables" to mapOf("variable" to "value"),
+                    "variables" to jsonMapOf(
+                        "type" to "fixed",
+                        "data" to jsonMapOf(
+                            "variable" to "value"
+                        )
+                    ),
                     "reporting_metadata" to mapOf(
                         "reporting" to "context"
                     )
@@ -258,17 +306,22 @@ public class FeatureFlagDeferredResolverTest {
     }
 
     @Test
-    public fun waitForResolving(): TestResult = runTest {
-        val expected = FeatureFlag.createFlag(
-            name = "flag-name",
-            isEligible = true,
-            reportingInfo = FeatureFlag.ReportingInfo(jsonMapOf("reporting" to "context"), "channel-id", "contact-id"),
-            variables = jsonMapOf("variable" to "value")
+    fun waitForResolving(): TestResult = runTest {
+        val expected = DeferredFlag.Found(
+            DeferredFlagInfo(
+                isEligible = true,
+                variables = FeatureFlagVariables.Fixed(
+                    jsonMapOf("variable" to "value")
+                ),
+                reportingMetadata = jsonMapOf("reporting" to "context")
+            )
         )
+
         val request = makeDeferredRequest()
-        val flagName = "flag-name"
-        val payload = DeferredPayload(url = Uri.parse("https://deferred.payload"))
-        val info = makeFeatureFlagInfo(flagName, payload)
+        val info = makeFeatureFlagInfo(
+            "flag-name",
+            FeatureFlagPayload.DeferredPayload(request.uri)
+        )
 
         val callbackSlot = slot<(JsonValue) -> Any>()
         val response: MutableStateFlow<JsonValue?> = MutableStateFlow(null)
@@ -280,8 +333,12 @@ public class FeatureFlagDeferredResolverTest {
             DeferredResult.Success(callbackSlot.captured.invoke(result))
         }
 
-        val first = async { subject.resolve(request, info) }
-        val second = async { subject.resolve(request, info) }
+        val first = async {
+            subject.resolve(request, info)
+        }
+        val second = async {
+            subject.resolve(request, info)
+        }
 
         var valueFirst = withTimeoutOrNull(100, { first.await() })
         var valueSecond = withTimeoutOrNull(100, { second.await() })
@@ -289,15 +346,20 @@ public class FeatureFlagDeferredResolverTest {
         assertNull(valueFirst)
         assertNull(valueSecond)
 
-        response.tryEmit(
+        response.value =
             jsonMapOf(
                 "is_eligible" to true,
-                "variables" to mapOf("variable" to "value"),
+                "variables" to jsonMapOf(
+                    "type" to "fixed",
+                    "data" to jsonMapOf(
+                        "variable" to "value"
+                    )
+                ),
                 "reporting_metadata" to mapOf(
                     "reporting" to "context"
                 )
             ).toJsonValue()
-        )
+
 
         subject.resolve(request, info)
 
@@ -310,26 +372,30 @@ public class FeatureFlagDeferredResolverTest {
         assertEquals(1, resolveCount)
     }
 
-    @Ignore("TODO: Fix this test. It's failing in CI.")
     @Test
-    public fun reResolveOnFinished(): TestResult = runTest(UnconfinedTestDispatcher()) {
-        val expected = FeatureFlag.createFlag(
-            name = "flag-name",
-            isEligible = true,
-            reportingInfo = FeatureFlag.ReportingInfo(jsonMapOf("reporting" to "context"), "channel-id", "contact-id"),
-            variables = jsonMapOf("variable" to "value")
+    fun reResolveOnFinished(): TestResult = runTest(UnconfinedTestDispatcher()) {
+        val expected = DeferredFlag.Found(
+            DeferredFlagInfo(
+                isEligible = true,
+                variables = FeatureFlagVariables.Fixed(
+                    jsonMapOf("variable" to "value")
+                ),
+                reportingMetadata = jsonMapOf("reporting" to "context")
+            )
         )
+
         val request = makeDeferredRequest()
-        val flagName = "flag-name"
-        val payload = DeferredPayload(url = Uri.parse("https://deferred.payload"))
-        val info = makeFeatureFlagInfo(flagName, payload)
+        val info = makeFeatureFlagInfo(
+            "flag-name",
+            FeatureFlagPayload.DeferredPayload(request.uri)
+        )
 
         val callbackSlot = slot<(JsonValue) -> Any>()
-        val response: MutableStateFlow<JsonValue> = MutableStateFlow(JsonValue.NULL)
+        val response: MutableStateFlow<JsonValue?> = MutableStateFlow(null)
         var resolveCount = 0
 
         coEvery { coreResolver.resolve(request, capture(callbackSlot)) } coAnswers {
-            val result = response.first()
+            val result = response.filterNotNull().first()
             resolveCount += 1
             DeferredResult.Success(callbackSlot.captured.invoke(result))
         }
@@ -340,15 +406,20 @@ public class FeatureFlagDeferredResolverTest {
 
         assertNull(valueFirst)
 
-        response.tryEmit(
-            jsonMapOf(
-                "is_eligible" to true,
-                "variables" to mapOf("variable" to "value"),
-                "reporting_metadata" to mapOf(
-                    "reporting" to "context"
+        response.value = jsonMapOf(
+            "is_eligible" to true,
+            "variables" to jsonMapOf(
+                "type" to "fixed",
+                "data" to jsonMapOf(
+                    "variable" to "value"
                 )
-            ).toJsonValue()
-        )
+            ),
+            "reporting_metadata" to mapOf(
+                "reporting" to "context"
+            )
+        ).toJsonValue()
+
+
 
         subject.resolve(request, info)
 
@@ -395,8 +466,8 @@ public class FeatureFlagDeferredResolverTest {
         )
     }
 
-    private fun calculateItemId(name: String, info: FeatureFlagInfo, request: DeferredRequest): String {
-        return listOf(name, info.id, info.lastUpdated, request.contactID ?: "", request.uri.toString())
+    private fun calculateItemId(info: FeatureFlagInfo, request: DeferredRequest): String {
+        return listOf(info.name, info.id, info.lastUpdated, request.contactID ?: "", request.uri.toString())
             .joinToString(":")
     }
 }
