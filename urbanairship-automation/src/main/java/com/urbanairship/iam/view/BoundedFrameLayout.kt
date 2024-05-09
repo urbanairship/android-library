@@ -8,21 +8,7 @@ import android.widget.FrameLayout
 import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
 
-/**
- * FrameLayout that supports max width.
- *
- * @hide
- */
-/**
- * Default constructor.
- *
- * @param context A Context object used to access application assets.
- * @param attrs An AttributeSet passed to our parent.
- * @param defStyle The default style resource ID.
- * @param defResStyle A resource identifier of a style resource that supplies default values for
- * the view, used only if defStyle is 0 or cannot be found in the theme. Can be 0 to not
- * look for defaults.
- */
+/** FrameLayout that supports max width. */
 internal class BoundedFrameLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,

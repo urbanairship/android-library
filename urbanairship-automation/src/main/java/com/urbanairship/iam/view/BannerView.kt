@@ -99,15 +99,6 @@ internal open class BannerView(
         fun onUserDismissed(view: BannerView)
     }
 
-    init {
-        ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
-            for (i in 0 until childCount) {
-                ViewCompat.dispatchApplyWindowInsets(getChildAt(i), WindowInsetsCompat(insets))
-            }
-            insets
-        }
-    }
-
     /**
      * Sets the banner listener.
      *
@@ -150,6 +141,7 @@ internal open class BannerView(
             )
         }
 
+        // Banner actions
         if (displayContent.actions.isNotEmpty()) {
             bannerView.isClickable = true
             bannerView.setOnClickListener(this)
@@ -181,7 +173,7 @@ internal open class BannerView(
 
         // Button Layout
         val buttonLayout = view.findViewById<InAppButtonLayout>(R.id.buttons)
-        if (displayContent.buttons.isEmpty() != false) {
+        if (displayContent.buttons.isEmpty()) {
             buttonLayout.visibility = GONE
         } else {
             buttonLayout.setButtons(displayContent.buttonLayoutType, displayContent.buttons)
@@ -193,6 +185,15 @@ internal open class BannerView(
         val drawable = DrawableCompat.wrap(bannerPull.background).mutate()
         DrawableCompat.setTint(drawable, displayContent.dismissButtonColor.color)
         ViewCompat.setBackground(bannerPull, drawable)
+
+        // Handle window insets
+        ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
+            for (i in 0 until childCount) {
+                ViewCompat.dispatchApplyWindowInsets(getChildAt(i), WindowInsetsCompat(insets))
+            }
+            insets
+        }
+
         return view
     }
 
@@ -274,12 +275,12 @@ internal open class BannerView(
     /**
      * Sets the animation.
      *
-     * @param in The animation in.
-     * @param out The animation out.
+     * @param inAnimation The animation in.
+     * @param outAnimation The animation out.
      */
-    fun setAnimations(@AnimatorRes `in`: Int, @AnimatorRes out: Int) {
-        animationIn = `in`
-        animationOut = out
+    fun setAnimations(@AnimatorRes inAnimation: Int, @AnimatorRes outAnimation: Int) {
+        animationIn = inAnimation
+        animationOut = outAnimation
     }
 
     override fun onButtonClicked(view: View, buttonInfo: InAppMessageButtonInfo) {

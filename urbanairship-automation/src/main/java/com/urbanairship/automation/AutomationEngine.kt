@@ -152,15 +152,17 @@ internal class AutomationEngine(
         waitForScheduleRestore()
 
         val idToSchedule = schedules.associateBy { it.identifier }
+        val idToScheduleKeys = idToSchedule.keys
 
-        UALog.d { "Upsert schedules ${idToSchedule.keys}" }
-        val data = store.upsertSchedules(idToSchedule.keys.toList()) { identifier, data ->
+        UALog.d { "Updating schedules $idToScheduleKeys" }
+
+        val updatedSchedules = store.upsertSchedules(idToSchedule.keys.toList()) { identifier, data ->
             val schedule = requireNotNull(idToSchedule[identifier])
             val stored = schedule.updateOrCreate(data, clock.currentTimeMillis())
             stored.updateState(clock.currentTimeMillis())
         }
 
-        triggerProcessor.updateSchedules(data)
+        triggerProcessor.updateSchedules(updatedSchedules)
     }
 
     override suspend fun cancelSchedules(identifiers: List<String>) = withContext(dispatcher) {
@@ -252,7 +254,6 @@ internal class AutomationEngine(
         return result
     }
 
-    // Runs queued, via start() coroutine
     private suspend fun processTriggerResult(result: TriggerResult) {
         val date = clock.currentTimeMillis()
 
@@ -272,7 +273,6 @@ internal class AutomationEngine(
         }
     }
 
-    // Runs queued, via start() coroutine
     private suspend fun restoreSchedules() {
         val now = clock.currentTimeMillis()
 

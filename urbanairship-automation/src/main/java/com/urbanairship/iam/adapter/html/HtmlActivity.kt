@@ -3,6 +3,7 @@ package com.urbanairship.iam.adapter.html
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.content.res.Resources
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
@@ -13,6 +14,7 @@ import android.view.ViewTreeObserver
 import android.webkit.WebView
 import android.widget.ImageButton
 import android.widget.ProgressBar
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
@@ -21,13 +23,11 @@ import com.urbanairship.automation.R
 import com.urbanairship.iam.InAppMessageActivity
 import com.urbanairship.iam.content.HTML
 import com.urbanairship.iam.content.InAppMessageDisplayContent.HTMLContent
-import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.iam.view.BoundedFrameLayout
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.emptyJsonMap
-import com.urbanairship.util.parcelableExtra
 import com.urbanairship.webkit.AirshipWebChromeClient
 import com.urbanairship.webkit.AirshipWebView
 import java.lang.ref.WeakReference
@@ -44,28 +44,31 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
     private var url: String? = null
     private val delayedLoadRunnable = Runnable { load() }
 
-    override fun extractDisplayContent(): HTMLContent? = parcelableExtra(DISPLAY_CONTENT)
-
     override fun onCreateMessage(savedInstanceState: Bundle?) {
-        val displayContent = displayContent ?: return
-        val html = displayContent.html
+        val messageContent = displayContent?.html
+        if (messageContent == null) {
+            finish()
+            return
+        }
         var borderRadius = 0f
-        if (isFullScreen(displayContent)) {
+        if (isFullScreen(messageContent)) {
             setTheme(R.style.UrbanAirship_InAppHtml_Activity_Fullscreen)
             setContentView(R.layout.ua_iam_html_fullscreen)
         } else {
             setContentView(R.layout.ua_iam_html)
-            borderRadius = html.borderRadius
+            borderRadius = messageContent.borderRadius
         }
 
         val progressBar = findViewById<ProgressBar>(R.id.progress)
         val dismiss = findViewById<ImageButton>(R.id.dismiss)
         val content = findViewById<BoundedFrameLayout>(R.id.content_holder)
-        applySizeConstraints(html)
+        applySizeConstraints(messageContent)
 
-        webView = findViewById(R.id.web_view)
+        val wv = findViewById<AirshipWebView>(R.id.web_view)
+        webView = wv
+
         handler = Handler(Looper.getMainLooper())
-        url = html.url
+        url = messageContent.url
 
         if (!UAirship.shared().urlAllowList.isAllowed(url, UrlAllowList.SCOPE_OPEN_URL)) {
             UALog.e("HTML in-app message URL is not allowed. Unable to display message.")
@@ -73,14 +76,9 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
             return
         }
 
-        val extras = try {
-            JsonValue.parseString(intent.getStringExtra(INTENT_EXTRAS_KEY)).optMap()
-        } catch (ex: JsonException) {
-            UALog.e(ex) { "Failed to decode message extras" }
-            emptyJsonMap()
-        }
+        val extras = args.extras ?: emptyJsonMap()
 
-        webView?.setWebViewClient(object : HtmlWebViewClient(extras) {
+        wv.setWebViewClient(object : HtmlWebViewClient(extras) {
             override fun onMessageDismissed(argument: JsonValue) {
                 reportButtonTap(argument)
                 finish()
@@ -89,7 +87,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 if (error == null) {
-                    crossFade(webView, progressBar)
+                    crossFade(view, progressBar)
                     return
                 }
 
@@ -99,7 +97,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
                     else -> {
                         // Load an empty page
                         error = null
-                        webView?.loadData("", "text/html", null)
+                        view?.loadData("", "text/html", null)
                     }
                 }
             }
@@ -112,27 +110,31 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
                 failingUrl: String
             ) {
                 if (failingUrl == intent.dataString) {
-                    UALog.e("HtmlActivity - Failed to load page %s with error %s %s",
-                        failingUrl, errorCode, description )
+                    UALog.e {
+                        "HtmlActivity - Failed to load page $failingUrl " +
+                                "with error $errorCode $description"
+                    }
                     error = errorCode
                 }
             }
         })
-        webView?.setAlpha(0f)
-        webView?.settings?.setSupportMultipleWindows(true)
-        webView?.webChromeClient = AirshipWebChromeClient(this)
+        wv.setAlpha(0f)
+        wv.settings.setSupportMultipleWindows(true)
+        wv.webChromeClient = AirshipWebChromeClient(this)
 
         // DismissButton
         val dismissDrawable = DrawableCompat.wrap(dismiss.drawable).mutate()
-        DrawableCompat.setTint(dismissDrawable, html.dismissButtonColor.color)
+        DrawableCompat.setTint(dismissDrawable, messageContent.dismissButtonColor.color)
         dismiss.setImageDrawable(dismissDrawable)
         dismiss.setOnClickListener {
             displayListener?.onUserDismissed()
             finish()
         }
-        val backgroundColor = html.backgroundColor.color
+
+        // Background
+        val backgroundColor = messageContent.backgroundColor.color
         content.setBackgroundColor(backgroundColor)
-        webView?.setBackgroundColor(backgroundColor)
+        wv.setBackgroundColor(backgroundColor)
         if (Color.alpha(backgroundColor) == 255) {
             if (borderRadius > 0) {
                 content.setClipPathBorderRadius(borderRadius)
@@ -140,26 +142,24 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
         }
     }
 
-    override fun getDisplayListener(token: String): InAppMessageDisplayListener? =
-        HtmlDisplayDelegate.getListener(token)
-
     private fun reportButtonTap(json: JsonValue) {
         try {
-            val buttonInfo = json
-                .optMap()
-                .get("button_info")
+            json.optMap().get("button_info")
                 ?.let(InAppMessageButtonInfo::fromJson)
-                ?: return
-
-            displayListener?.onButtonDismissed(buttonInfo)
+                ?.let { displayListener?.onButtonDismissed(it) }
         } catch (ex: JsonException) {
             UALog.e(ex) { "Unable to parse message resolution JSON" }
         }
     }
 
-    private fun isFullScreen(displayContent: HTMLContent): Boolean {
-        return if (displayContent.html.allowFullscreenDisplay) {
-            resources.getBoolean(R.bool.ua_iam_html_allow_fullscreen_display)
+    private fun isFullScreen(html: HTML): Boolean {
+        return if (html.allowFullscreenDisplay) {
+            try {
+                resources.getBoolean(R.bool.ua_iam_html_allow_fullscreen_display)
+            } catch (e: Resources.NotFoundException) {
+                UALog.w { "Failed to load 'R.bool.ua_iam_html_allow_fullscreen_display'!"  }
+                false
+            }
         } else {
             false
         }
@@ -203,16 +203,17 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
      * @param delay Delay before loading the page. A delay of 0 or less load the page immediately.
      */
     private fun load(delay: Long = 0) {
-        webView?.run {
-            stopLoading()
-            if (delay > 0) {
-                handler?.postDelayed(delayedLoadRunnable, delay)
-            } else {
-                url?.let {
-                    UALog.i("Loading url: %s", it)
-                    error = null
-                    loadUrl(it)
-                }
+        webView?.stopLoading()
+
+        if (delay > 0) {
+            handler?.postDelayed(delayedLoadRunnable, delay)
+        } else {
+            url?.let {
+                UALog.i("Loading url: %s", it)
+                error = null
+                webView?.loadUrl(it)
+            } ?: UALog.w {
+                "Unable to load HTML for in-app message. URL is null!"
             }
         }
     }
@@ -267,6 +268,5 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
 
     companion object {
         private const val RETRY_DELAY_MS: Long = 20_000 // 20 seconds
-        internal const val INTENT_EXTRAS_KEY = "message_extras"
     }
 }

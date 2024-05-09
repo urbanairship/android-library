@@ -6,9 +6,7 @@ import android.util.AttributeSet
 import android.view.View
 import com.urbanairship.R
 
-/**
- * View delegate to support bounded views.
- */
+/** View delegate to support bounded views. */
 internal class BoundedViewDelegate(
     context: Context,
     attributeSet: AttributeSet?,

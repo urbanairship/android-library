@@ -89,6 +89,7 @@ public class HTML @VisibleForTesting internal constructor(
 
     internal fun validate(): Boolean = url.isNotBlank()
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         URL_KEY to url,
         WIDTH_KEY to width,
@@ -101,7 +102,6 @@ public class HTML @VisibleForTesting internal constructor(
         ALLOW_FULLSCREEN_DISPLAY_KEY to allowFullscreenDisplay
     ).toJsonValue()
 
-    override fun toString(): String = toJsonValue().toString()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -133,4 +133,7 @@ public class HTML @VisibleForTesting internal constructor(
         return result
     }
 
+    override fun toString(): String {
+        return "HTML(url='$url', height=$height, width=$width, aspectLock=$aspectLock, requiresConnectivity=$requiresConnectivity, backgroundColor=$backgroundColor, dismissButtonColor=$dismissButtonColor, borderRadius=$borderRadius, allowFullscreenDisplay=$allowFullscreenDisplay)"
+    }
 }

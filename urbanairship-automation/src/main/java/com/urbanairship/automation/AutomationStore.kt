@@ -23,6 +23,8 @@ import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.db.SuspendingBatchedQueryHelper
+import com.urbanairship.db.SuspendingBatchedQueryHelper.runBatched
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonTypeConverters
 import com.urbanairship.json.JsonValue
@@ -82,6 +84,7 @@ internal class SerialAccessAutomationStore(private val store: AutomationStore): 
     override suspend fun deleteSchedules(group: String) = queue.run { store.deleteSchedules(group) }
 
     override suspend fun getSchedule(id: String): AutomationScheduleData? = queue.run { store.getSchedule(id) }
+
     override suspend fun getTrigger(scheduleID: String, triggerID: String): TriggerData? = queue.run { store.getTrigger(scheduleID, triggerID) }
 
     override suspend fun upsertTriggers(triggers: List<TriggerData>) = queue.run { store.upsertTriggers(triggers) }
@@ -132,32 +135,13 @@ public abstract class AutomationStore : RoomDatabase(), ScheduleStoreInterface,
     override suspend fun updateSchedule(
         id: String, closure: (AutomationScheduleData) -> AutomationScheduleData
     ): AutomationScheduleData? {
-
-        val current = dao.getSchedule(id)?.toScheduleData() ?: return null
-
-        val updated = closure(current)
-        dao.update(ScheduleEntity.fromScheduleData(updated))
-
-        return updated
+        return dao.updateSchedule(id, closure)
     }
 
     override suspend fun upsertSchedules(
         ids: List<String>, closure: (String, AutomationScheduleData?) -> AutomationScheduleData
     ): List<AutomationScheduleData> {
-
-        val current = dao.getSchedules(ids)
-            ?.mapNotNull { it.toScheduleData() }
-            ?.associateBy { it.schedule.identifier } ?: mapOf()
-
-        val result = mutableListOf<AutomationScheduleData>()
-
-        ids.forEach {id ->
-            val updated = closure(id, current[id])
-            dao.insert(ScheduleEntity.fromScheduleData(updated))
-            result.add(updated)
-        }
-
-        return result
+        return dao.upsertSchedules(ids, closure)
     }
 
     override suspend fun deleteSchedules(ids: List<String>) {
@@ -173,11 +157,16 @@ public abstract class AutomationStore : RoomDatabase(), ScheduleStoreInterface,
     }
 
     override suspend fun getTrigger(scheduleID: String, triggerID: String): TriggerData? {
-        return dao.getTrigger(scheduleID, triggerID)?.toTriggerData()
+        return try {
+            dao.getTrigger(scheduleID, triggerID)?.toTriggerData()
+        } catch (e: JsonException) {
+            UALog.w(e) { "Failed to get trigger: $triggerID for schedule: $scheduleID" }
+            null
+        }
     }
 
     override suspend fun upsertTriggers(triggers: List<TriggerData>) {
-        dao.upsert(triggers.map { TriggerEntity(it) })
+        dao.upsertTriggers(triggers.map { TriggerEntity(it) })
     }
 
     override suspend fun deleteTriggersExcluding(scheduleIDs: List<String>) {
@@ -196,8 +185,32 @@ public abstract class AutomationStore : RoomDatabase(), ScheduleStoreInterface,
 @Dao
 internal interface AutomationDao {
 
+    @Transaction
+    suspend fun upsertSchedules(
+        ids: List<String>, closure: (String, AutomationScheduleData?) -> AutomationScheduleData
+    ): List<AutomationScheduleData> {
+        val current = getSchedules(ids)
+            ?.mapNotNull { it.toScheduleData() }
+            ?.associateBy { it.schedule.identifier }
+            ?: mapOf()
+
+        val result = mutableListOf<AutomationScheduleData>()
+
+        upsertSchedulesInternal(ids.map { id ->
+            val updated = closure(id, current[id])
+            ScheduleEntity.fromScheduleData(updated)
+                .also { result.add(updated) }
+        })
+
+        return result
+    }
+
+    /**
+     * This query is only for internal use, with batched queries
+     * to avoid the max query params limit of 999.
+     */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(schedule: ScheduleEntity)
+    suspend fun upsertSchedulesInternal(schedules: List<ScheduleEntity>)
 
     @Query("SELECT * FROM schedules")
     suspend fun getAllSchedules(): List<ScheduleEntity>?
@@ -205,24 +218,53 @@ internal interface AutomationDao {
     @Query("SELECT * FROM schedules WHERE (`group` = :group)")
     suspend fun getSchedules(group: String): List<ScheduleEntity>?
 
-    @Query("SELECT * FROM schedules WHERE (identifier IN (:ids))")
+    @Query("SELECT * FROM schedules WHERE (scheduleId IN (:ids))")
     suspend fun getSchedules(ids: List<String>): List<ScheduleEntity>?
 
-    @Update
-    suspend fun update(schedule: ScheduleEntity)
+    @Transaction
+    suspend fun updateSchedule(
+        id: String, closure: (AutomationScheduleData) -> AutomationScheduleData
+    ): AutomationScheduleData? {
+        val current = getSchedule(id)?.toScheduleData() ?: return null
+        val updated = closure(current)
 
-    @Query("SELECT * FROM schedules WHERE identifier = :id")
+        updateScheduleInternal(ScheduleEntity.fromScheduleData(updated))
+
+        return updated
+    }
+
+    @Update
+    suspend fun updateScheduleInternal(schedule: ScheduleEntity)
+
+    @Query("SELECT * FROM schedules WHERE scheduleId = :id")
     suspend fun getSchedule(id: String): ScheduleEntity?
 
-    @Query("DELETE FROM schedules WHERE (identifier IN (:ids))")
-    suspend fun deleteSchedules(ids: List<String>)
+    @Transaction
+    suspend fun deleteSchedules(ids: List<String>) {
+        runBatched(ids) { deleteSchedulesBatchInternal(it) }
+    }
+
+    /**
+     * This query is only for internal use, with batched queries
+     * to avoid the max query params limit of 999.
+     */
+    @Query("DELETE FROM schedules WHERE (scheduleId IN (:ids))")
+    suspend fun deleteSchedulesBatchInternal(ids: List<String>)
 
     @Query("DELETE FROM schedules WHERE `group` = :group")
     suspend fun deleteSchedules(group: String)
 
     @Transaction
+    suspend fun upsertTriggers(triggers: List<TriggerEntity>) {
+        runBatched(triggers) { upsertTriggersInternal(it) }
+    }
+
+    /**
+     * This query is only for internal use, with batched queries
+     * to avoid the max query params limit of 999.
+     */
     @Upsert
-    suspend fun upsert(triggers: List<TriggerEntity>)
+    suspend fun upsertTriggersInternal(triggers: List<TriggerEntity>)
 
     @Transaction
     @Query("SELECT * FROM automation_trigger_data WHERE scheduleId = :scheduleId AND triggerId = :triggerId LIMIT 1")
@@ -234,7 +276,16 @@ internal interface AutomationDao {
 
     @Transaction
     @Query("DELETE FROM automation_trigger_data WHERE scheduleId IN (:scheduleIds)")
-    suspend fun deleteTriggers(scheduleIds: List<String>)
+    suspend fun deleteTriggers(scheduleIds: List<String>) {
+        runBatched(scheduleIds) { deleteTriggersInternal(it) }
+    }
+
+    /**
+     * This query is only for internal use, with batched queries
+     * to avoid the max query params limit of 999.
+     */
+    @Query("DELETE FROM automation_trigger_data WHERE scheduleId IN (:scheduleIds)")
+    suspend fun deleteTriggersInternal(scheduleIds: List<String>)
 
     @Transaction
     @Query("DELETE FROM automation_trigger_data WHERE NOT (scheduleId  IN (:scheduleIds))")
@@ -249,7 +300,7 @@ internal interface AutomationDao {
 @TypeConverters(JsonTypeConverters::class)
 internal class ScheduleEntity(
     @PrimaryKey
-    var identifier: String,
+    var scheduleId: String,
     var group: String?,
     var executionCount: Int,
     var preparedScheduleInfo: JsonValue?,
@@ -262,7 +313,7 @@ internal class ScheduleEntity(
     companion object {
         fun fromScheduleData(data: AutomationScheduleData): ScheduleEntity {
             return ScheduleEntity(
-                identifier = data.schedule.identifier,
+                scheduleId = data.schedule.identifier,
                 group = data.schedule.group,
                 executionCount = data.executionCount,
                 preparedScheduleInfo = data.preparedScheduleInfo?.toJsonValue(),

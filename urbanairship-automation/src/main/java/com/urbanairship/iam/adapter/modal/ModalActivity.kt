@@ -19,6 +19,7 @@ import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.iam.info.InAppMessageTextInfo
 import com.urbanairship.iam.view.BackgroundDrawableBuilder
+import com.urbanairship.iam.view.BorderRadius
 import com.urbanairship.iam.view.BoundedLinearLayout
 import com.urbanairship.iam.view.InAppButtonLayout
 import com.urbanairship.iam.view.InAppViewUtils
@@ -27,31 +28,48 @@ import com.urbanairship.util.parcelableExtra
 import com.urbanairship.webkit.AirshipWebChromeClient
 import kotlin.math.max
 
-/**
- * Modal in-app message activity.
- */
+/** Modal in-app message activity. */
 internal class ModalActivity : InAppMessageActivity<ModalContent>(), InAppButtonLayout.ButtonClickListener {
 
     private var mediaView: MediaView? = null
 
-    override fun extractDisplayContent(): ModalContent? = parcelableExtra(DISPLAY_CONTENT)
-
     override fun onCreateMessage(savedInstanceState: Bundle?) {
-        val messageContent = displayContent?.modal ?: return
+        val messageContent = displayContent?.modal
+        if (messageContent == null) {
+            finish()
+            return
+        }
+
+        val messageAllowsFullscreen = messageContent.allowFullscreenDisplay
+        val appAllowsFullscreen = resources.getBoolean(R.bool.ua_iam_modal_allow_fullscreen_display)
+        val borderRadius = if (appAllowsFullscreen && messageAllowsFullscreen) {
+            setTheme(R.style.UrbanAirship_InAppModal_Activity_Fullscreen)
+            setContentView(R.layout.ua_iam_modal_fullscreen)
+            0f
+        } else {
+            setContentView(R.layout.ua_iam_modal)
+            messageContent.borderRadius
+        }
 
         val template = normalizeTemplate(messageContent)
 
         // Inflate the content before finding other views
-        val content: ViewStub = findViewById(R.id.modal_content)
+        val content = findViewById<ViewStub>(R.id.modal_content)
+        if (content == null) {
+            finish()
+            return
+        }
+
         content.layoutResource = getTemplate(template)
         content.inflate()
-        val modal: BoundedLinearLayout = findViewById(R.id.modal)
-        val heading: TextView = findViewById(R.id.heading)
-        val body: TextView = findViewById(R.id.body)
-        val buttonLayout: InAppButtonLayout = findViewById(R.id.buttons)
+
+        val modal = findViewById<BoundedLinearLayout>(R.id.modal)
+        val heading = findViewById<TextView>(R.id.heading)
+        val body = findViewById<TextView>(R.id.body)
+        val buttonLayout = findViewById<InAppButtonLayout>(R.id.buttons)
+        val footer = findViewById<Button>(R.id.footer)
+        val dismiss = findViewById<ImageButton>(R.id.dismiss)
         mediaView = findViewById(R.id.media)
-        val footer: Button = findViewById(R.id.footer)
-        val dismiss: ImageButton = findViewById(R.id.dismiss)
 
         // Heading
         if (messageContent.heading != null) {
@@ -78,7 +96,6 @@ internal class ModalActivity : InAppMessageActivity<ModalContent>(), InAppButton
                 it.setChromeClient(AirshipWebChromeClient(this))
                 InAppViewUtils.loadMediaInfo(it, messageContent.media, assets)
             }
-
         } else {
             mediaView?.visibility = View.GONE
         }
@@ -99,12 +116,18 @@ internal class ModalActivity : InAppMessageActivity<ModalContent>(), InAppButton
             footer.visibility = View.GONE
         }
 
+        // Background color
         val background: Drawable = BackgroundDrawableBuilder.newBuilder(this)
             .setBackgroundColor(messageContent.backgroundColor.color)
+            .setBorderRadius(borderRadius, BorderRadius.ALL)
             .build()
         ViewCompat.setBackground(modal, background)
 
-        // DismissButton
+        if (borderRadius > 0) {
+            modal.setClipPathBorderRadius(borderRadius)
+        }
+
+        // Dismiss Button
         val dismissDrawable = DrawableCompat.wrap(dismiss.drawable).mutate()
         DrawableCompat.setTint(dismissDrawable, messageContent.dismissButtonColor.color)
         dismiss.setImageDrawable(dismissDrawable)
@@ -113,9 +136,6 @@ internal class ModalActivity : InAppMessageActivity<ModalContent>(), InAppButton
             finish()
         }
     }
-
-    override fun getDisplayListener(token: String): InAppMessageDisplayListener? =
-        ModalDisplayDelegate.getListener(token)
 
     override fun onButtonClicked(view: View, buttonInfo: InAppMessageButtonInfo) {
         com.urbanairship.iam.InAppActionUtils.runActions(buttonInfo)

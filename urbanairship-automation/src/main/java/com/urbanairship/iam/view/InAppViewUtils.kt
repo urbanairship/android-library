@@ -26,7 +26,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.doOnPreDraw
 import com.urbanairship.Fonts
+import com.urbanairship.UALog
 import com.urbanairship.UALog.d
 import com.urbanairship.UALog.e
 import com.urbanairship.automation.R
@@ -216,50 +218,45 @@ internal object InAppViewUtils {
     fun loadMediaInfo(mediaView: MediaView, mediaInfo: InAppMessageMediaInfo, assets: AirshipCachedAssets?) {
         if (mediaView.width == 0) {
             val weakReference = WeakReference(mediaView)
-            mediaView.viewTreeObserver.addOnPreDrawListener(object :
-                ViewTreeObserver.OnPreDrawListener {
-                override fun onPreDraw(): Boolean {
-                    val local = weakReference.get() ?: return false
-                    loadMediaInfo(local, mediaInfo, assets)
-                    local.viewTreeObserver.removeOnPreDrawListener(this)
-                    return false
-                }
-            })
-            return
-        }
 
-        // Default to a 16:9 aspect ratio
-        var width = 16
-        var height = 9
-        val cachedLocation = assets?.let {
-            val remote = mediaInfo.url
-            val result = it.cacheURL(remote)?.toString() ?: return@let null
-
-            val size = it.getMediaSize(remote)
-            width = maxOf(size.width, width)
-            height = maxOf(size.height, height)
-
-            return@let result
-        }
-        val params = mediaView.layoutParams
-
-        // Check if we can grow the image horizontally to fit the width
-        if (params.height == ViewGroup.LayoutParams.WRAP_CONTENT) {
-            val scale = mediaView.width.toFloat() / width.toFloat()
-            params.height = Math.round(scale * height)
-        } else {
-            val imageRatio = width.toFloat() / height.toFloat()
-            val viewRatio = mediaView.width.toFloat() / mediaView.height
-            if (imageRatio >= viewRatio) {
-                // Image is wider than the view
-                params.height = Math.round(mediaView.width / imageRatio)
-            } else {
-                // View is wider than the image
-                params.width = Math.round(mediaView.height * imageRatio)
+            mediaView.doOnPreDraw {
+                val local = weakReference.get() ?: return@doOnPreDraw
+                loadMediaInfo(local, mediaInfo, assets)
             }
+        } else {
+            // Default to a 16:9 aspect ratio
+            var width = 16
+            var height = 9
+            val cachedLocation = assets?.let {
+                val remote = mediaInfo.url
+                val result = it.cacheURL(remote)?.toString() ?: return@let null
+
+                val size = it.getMediaSize(remote)
+                width = maxOf(size.width, width)
+                height = maxOf(size.height, height)
+
+                result
+            }
+            val params = mediaView.layoutParams
+
+            // Check if we can grow the image horizontally to fit the width
+            if (params.height == ViewGroup.LayoutParams.WRAP_CONTENT) {
+                val scale = mediaView.width.toFloat() / width.toFloat()
+                params.height = Math.round(scale * height)
+            } else {
+                val imageRatio = width.toFloat() / height.toFloat()
+                val viewRatio = mediaView.width.toFloat() / mediaView.height
+                if (imageRatio >= viewRatio) {
+                    // Image is wider than the view
+                    params.height = Math.round(mediaView.width / imageRatio)
+                } else {
+                    // View is wider than the image
+                    params.width = Math.round(mediaView.height * imageRatio)
+                }
+            }
+            mediaView.layoutParams = params
+            mediaView.setMediaInfo(mediaInfo, cachedLocation)
         }
-        mediaView.layoutParams = params
-        mediaView.setMediaInfo(mediaInfo, cachedLocation)
     }
 
     /**

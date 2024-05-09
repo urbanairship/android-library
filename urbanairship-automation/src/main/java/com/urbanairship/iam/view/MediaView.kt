@@ -15,6 +15,8 @@ import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
+import androidx.core.view.doOnPreDraw
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.iam.info.InAppMessageMediaInfo
 import com.urbanairship.images.ImageRequestOptions
@@ -84,13 +86,17 @@ internal class MediaView @JvmOverloads constructor(
                 imageView.scaleType = ImageView.ScaleType.FIT_CENTER
                 imageView.adjustViewBounds = true
                 imageView.contentDescription = mediaInfo.description
-                addView(imageView)
                 val url = cachedMediaUrl ?: mediaInfo.url
-                UAirship.shared().imageLoader.load(
-                    context,
-                    imageView,
-                    ImageRequestOptions.newBuilder(url).build()
-                )
+
+                imageView.doOnPreDraw {
+                    UAirship.shared().imageLoader.load(
+                        context,
+                        imageView,
+                        ImageRequestOptions.newBuilder(url).build()
+                    )
+                }
+
+                addView(imageView)
             }
         }
     }

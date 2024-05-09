@@ -69,7 +69,7 @@ internal class DefaultAssetFileManager(
     private fun ensureRootCacheDirectory(): URI {
         if (!rootFolder.exists()) {
             if (!rootFolder.mkdirs()) {
-                throw IOException("Failed to create cache folder")
+                throw IOException("Failed to create cache folder: ${rootFolder.path}")
             }
         }
 

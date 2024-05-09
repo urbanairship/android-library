@@ -41,6 +41,7 @@ public sealed class InAppMessageDisplayContent : JsonSerializable, Parcelable {
     public data class ModalContent(public val modal: Modal): InAppMessageDisplayContent() {
         override fun validate(): Boolean = modal.validate()
         override val displayType: DisplayType = DisplayType.MODAL
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue = modal.toJsonValue()
     }
 
@@ -50,6 +51,7 @@ public sealed class InAppMessageDisplayContent : JsonSerializable, Parcelable {
     public data class HTMLContent(public val html: HTML): InAppMessageDisplayContent() {
         override fun validate(): Boolean = html.validate()
         override val displayType: DisplayType = DisplayType.HTML
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue = html.toJsonValue()
     }
 
@@ -150,12 +152,15 @@ public sealed class InAppMessageDisplayContent : JsonSerializable, Parcelable {
 
 
     override fun writeToParcel(destination: Parcel, flags: Int) {
-        val json = jsonMapOf(
-            PARCEL_DISPLAY_TYPE to displayType,
-            PARCEL_CONTENT to toJsonValue()
-        ).toJsonValue()
 
-        destination.writeString(json.toString())
+        try {
+            val json = jsonMapOf(
+                PARCEL_DISPLAY_TYPE to displayType, PARCEL_CONTENT to toJsonValue()
+            )
+            destination.writeString(json.toString())
+        } catch (e: JsonException) {
+            UALog.e(e) { "Failed to write in-app message display content to parcel!" }
+        }
     }
 
     override fun describeContents(): Int = 0

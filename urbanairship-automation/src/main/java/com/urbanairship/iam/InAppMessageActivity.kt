@@ -6,10 +6,12 @@ import androidx.activity.addCallback
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.activity.ThemedActivity
+import com.urbanairship.iam.adapter.InAppDisplayArgs
+import com.urbanairship.iam.adapter.InAppDisplayArgsLoader
+import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.assets.EmptyAirshipCachedAssets
 import com.urbanairship.iam.content.InAppMessageDisplayContent
-import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.util.parcelableExtra
 
 /**
@@ -17,11 +19,17 @@ import com.urbanairship.util.parcelableExtra
  */
 internal abstract class InAppMessageActivity<T: InAppMessageDisplayContent> : ThemedActivity() {
 
+    private lateinit var loader: InAppDisplayArgsLoader
+
+    protected lateinit var args: InAppDisplayArgs<T>
+        private set
+
     protected var displayContent: T? = null
         private set
 
     protected var displayListener: InAppMessageDisplayListener? = null
         private set
+
     protected var assets: AirshipCachedAssets? = null
         private set
 
@@ -34,21 +42,23 @@ internal abstract class InAppMessageActivity<T: InAppMessageDisplayContent> : Th
             return
         }
 
-        val token = intent.getStringExtra(DISPLAY_LISTENER_TOKEN)
+        loader = parcelableExtra(EXTRA_DISPLAY_ARGS_LOADER) ?: run {
+            UALog.e("Missing layout args loader")
+            finish()
+            return@onCreate
+        }
 
-        displayContent = extractDisplayContent()
-
-        assets = parcelableExtra<AirshipCachedAssets>(IN_APP_ASSETS) ?:
-            parcelableExtra<EmptyAirshipCachedAssets>(IN_APP_ASSETS)
-
-
-        if (token == null || displayContent == null) {
-            UALog.e { "$javaClass unable to show message. Missing display handler or in-app message" }
+        args = try {
+            loader.load()
+        } catch (e: InAppDisplayArgsLoader.LoadException) {
+            UALog.e(e) { "Failed to load in-app message display args!" }
             finish()
             return
         }
 
-        displayListener = getDisplayListener(token)
+        assets = args.assets ?: EmptyAirshipCachedAssets()
+        displayListener = args.displayListener
+        displayContent = args.displayContent
 
         if (displayListener?.isDisplaying == false) {
             finish()
@@ -81,10 +91,6 @@ internal abstract class InAppMessageActivity<T: InAppMessageDisplayContent> : Th
      */
     protected abstract fun onCreateMessage(savedInstanceState: Bundle?)
 
-    protected abstract fun getDisplayListener(token: String): InAppMessageDisplayListener?
-
-    protected abstract fun extractDisplayContent(): T?
-
     override fun onResume() {
         super.onResume()
         displayListener?.onResume()
@@ -95,20 +101,16 @@ internal abstract class InAppMessageActivity<T: InAppMessageDisplayContent> : Th
         displayListener?.onPause()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isFinishing && ::loader.isInitialized) {
+            loader.dispose()
+        }
+    }
+
     companion object {
-        /**
-         * Display listener intent extra key.
-         */
-        const val DISPLAY_LISTENER_TOKEN = "analytics_token"
-
-        /**
-         * Message display content extra key.
-         */
-        const val DISPLAY_CONTENT = "display_content"
-
-        /**
-         * Assets intent extra key.
-         */
-        const val IN_APP_ASSETS = "assets"
+        // Asset loader
+        const val EXTRA_DISPLAY_ARGS_LOADER: String =
+            "com.urbanairship.automation.EXTRA_DISPLAY_ARGS_LOADER"
     }
 }

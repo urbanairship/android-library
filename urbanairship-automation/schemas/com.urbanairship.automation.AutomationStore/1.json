@@ -2,15 +2,15 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "30f427763e0b6d17950e3ba7b035a045",
+    "identityHash": "436ed9d6a4c9df31222ddc420e233ccc",
     "entities": [
       {
         "tableName": "schedules",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`identifier` TEXT NOT NULL, `group` TEXT, `executionCount` INTEGER NOT NULL, `preparedScheduleInfo` TEXT, `schedule` TEXT NOT NULL, `scheduleState` TEXT NOT NULL, `scheduleStateChangeDate` INTEGER NOT NULL, `triggerInfo` TEXT, PRIMARY KEY(`identifier`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`scheduleId` TEXT NOT NULL, `group` TEXT, `executionCount` INTEGER NOT NULL, `preparedScheduleInfo` TEXT, `schedule` TEXT NOT NULL, `scheduleState` TEXT NOT NULL, `scheduleStateChangeDate` INTEGER NOT NULL, `triggerInfo` TEXT, PRIMARY KEY(`scheduleId`))",
         "fields": [
           {
-            "fieldPath": "identifier",
-            "columnName": "identifier",
+            "fieldPath": "scheduleId",
+            "columnName": "scheduleId",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -60,7 +60,7 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "identifier"
+            "scheduleId"
           ]
         },
         "indices": [],
@@ -102,7 +102,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '30f427763e0b6d17950e3ba7b035a045')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '436ed9d6a4c9df31222ddc420e233ccc')"
     ]
   }
 }

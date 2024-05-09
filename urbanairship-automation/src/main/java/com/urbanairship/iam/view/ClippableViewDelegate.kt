@@ -7,14 +7,13 @@ import android.view.View
 import android.view.ViewOutlineProvider
 import androidx.annotation.MainThread
 
-/**
- * View delegate that supports clipping a view to a border radius.
- */
+/** View delegate that supports clipping a view to a border radius. */
 internal class ClippableViewDelegate {
 
     /**
      * Clips the view to the border radius.
      *
+     * @param view The view to clip.
      * @param borderRadius The border radius.
      */
     @MainThread

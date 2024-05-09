@@ -1,6 +1,7 @@
 package com.urbanairship.iam.content
 
 import android.graphics.Color
+import androidx.annotation.FloatRange
 import com.urbanairship.iam.content.Modal.Template
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.iam.info.InAppMessageButtonLayoutType
@@ -49,6 +50,11 @@ public class Modal @VisibleForTesting internal constructor(
      */
     public val backgroundColor: InAppMessageColor = InAppMessageColor(Color.WHITE),
     /**
+     * The optional border radius. Defaults to 0.
+     */
+    @FloatRange(from = 0.0)
+    public val borderRadius: Float = 0f,
+    /**
      * The optional banner dismiss button color.
      */
     public val dismissButtonColor: InAppMessageColor = InAppMessageColor(Color.BLACK),
@@ -96,6 +102,7 @@ public class Modal @VisibleForTesting internal constructor(
         private const val BODY_KEY = "body"
         private const val HEADING_KEY = "heading"
         private const val BACKGROUND_COLOR_KEY = "background_color"
+        private const val BORDER_RADIUS_KEY = "border_radius"
         private const val BUTTON_LAYOUT_KEY = "button_layout"
         private const val BUTTONS_KEY = "buttons"
         private const val MEDIA_KEY = "media"
@@ -127,6 +134,7 @@ public class Modal @VisibleForTesting internal constructor(
                     ?: Template.HEADER_MEDIA_BODY,
                 backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.WHITE),
+                borderRadius = content.opt(BORDER_RADIUS_KEY).getFloat(0F),
                 dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.BLACK),
                 allowFullscreenDisplay = content.optionalField(ALLOW_FULLSCREEN_DISPLAY_KEY)
@@ -139,6 +147,7 @@ public class Modal @VisibleForTesting internal constructor(
         return heading?.validate() == true || body?.validate() == true
     }
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         HEADING_KEY to heading,
         BODY_KEY to body,
@@ -151,8 +160,6 @@ public class Modal @VisibleForTesting internal constructor(
         DISMISS_BUTTON_COLOR_KEY to dismissButtonColor,
         ALLOW_FULLSCREEN_DISPLAY_KEY to allowFullscreenDisplay
     ).toJsonValue()
-
-    override fun toString(): String = toJsonValue().toString()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -184,6 +191,10 @@ public class Modal @VisibleForTesting internal constructor(
         result = 31 * result + dismissButtonColor.hashCode()
         result = 31 * result + allowFullscreenDisplay.hashCode()
         return result
+    }
+
+    override fun toString(): String {
+        return "Modal(heading=$heading, body=$body, media=$media, footer=$footer, buttons=$buttons, buttonLayoutType=$buttonLayoutType, template=$template, backgroundColor=$backgroundColor, dismissButtonColor=$dismissButtonColor, allowFullscreenDisplay=$allowFullscreenDisplay)"
     }
 
 }
