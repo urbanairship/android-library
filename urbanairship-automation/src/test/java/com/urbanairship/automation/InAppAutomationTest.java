@@ -10,12 +10,10 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.ShadowAirshipExecutorsLegacy;
 import com.urbanairship.TestApplication;
-import com.urbanairship.TestDeviceInfoProvider;
-import com.urbanairship.TestRequestSession;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.CustomEvent;
-import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.audience.AudienceOverridesProvider;
+import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.deferred.AutomationDeferredResult;
@@ -36,7 +34,6 @@ import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.experiment.ExperimentResult;
 import com.urbanairship.experiment.MessageInfo;
 import com.urbanairship.http.RequestException;
-import com.urbanairship.http.Response;
 import com.urbanairship.iam.InAppMessage;
 import com.urbanairship.iam.InAppMessageManager;
 import com.urbanairship.iam.custom.CustomDisplayContent;
@@ -63,16 +60,13 @@ import org.robolectric.annotation.LooperMode;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.Supplier;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import static com.urbanairship.automation.tags.TestUtils.tagSet;
@@ -142,8 +136,6 @@ public class InAppAutomationTest {
     public void setup() {
         when(mockRuntimeConfig.getConfigOptions()).thenAnswer((Answer<AirshipConfigOptions>) invocation -> config);
 
-        when(mockInfoProvider.getChannelId()).thenReturn("channel-id");
-
         mockChannel = mock(AirshipChannel.class);
         mockIamManager = mock(InAppMessageManager.class);
         mockObserver = mock(InAppRemoteDataObserver.class);
@@ -185,7 +177,7 @@ public class InAppAutomationTest {
         inAppAutomation = new InAppAutomation(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
                 mockRuntimeConfig, privacyManager, mockEngine, mockChannel, mockObserver, mockIamManager,
                 executor, mockActionsScheduleDelegate, mockMessageScheduleDelegate,
-                mockFrequencyLimitManager, audienceOverridesProvider, mockExperimentManager, mockInfoProvider,
+                mockFrequencyLimitManager, mockExperimentManager, () -> mockInfoProvider,
                 meteredUsage, mockClock, executor, mockContact, deferredResolver, localeManager);
 
         inAppAutomation.init();
@@ -322,38 +314,6 @@ public class InAppAutomationTest {
         when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
 
         AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        driver.onPrepareSchedule(schedule, null, callback);
-        ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
-        verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(schedule.getData()), any(), argumentCaptor.capture());
-        argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
-        verify(callback).onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
-    }
-
-
-    @Test
-    public void testPrepareScheduleNoChannelId() {
-        when(mockInfoProvider.getChannelId()).thenReturn(null);
-
-        InAppMessage message = InAppMessage.newBuilder()
-                                           .setDisplayContent(new CustomDisplayContent(JsonValue.NULL))
-                                           .build();
-
-        Schedule<InAppMessage> schedule = Schedule.newBuilder(message)
-                                                  .addTrigger(Triggers.newAppInitTriggerBuilder().setGoal(1).build())
-                                                  .setBypassHoldoutGroups(true)
-                                                  .build();
-
-        when(mockObserver.requiresRefresh(eq(schedule))).thenReturn(false);
-        when(mockObserver.bestEffortRefresh(eq(schedule))).thenReturn(true);
-
-        AutomationDriver.PrepareScheduleCallback callback = mock(AutomationDriver.PrepareScheduleCallback.class);
-        driver.onPrepareSchedule(schedule, null, callback);
-        verify(mockMessageScheduleDelegate, never()).onPrepareSchedule(eq(schedule), eq(schedule.getData()), any(), any());
-        verify(callback, never()).onFinish(anyInt());
-
-        // Sanity check: we should be able to prepare a schedule once we do have a channel ID.
-        when(mockInfoProvider.getChannelId()).thenReturn("channel-id");
-
         driver.onPrepareSchedule(schedule, null, callback);
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
         verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(schedule.getData()), any(), argumentCaptor.capture());
@@ -1157,7 +1117,7 @@ public class InAppAutomationTest {
         driver.onPrepareSchedule(schedule, null, callback);
 
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
-        verify(mockExperimentManager, never()).evaluateGlobalHoldoutsPendingResult(any(), nullable(String.class));
+        verify(mockExperimentManager, never()).evaluateGlobalHoldoutsPendingResult(any(), eq(mockInfoProvider), nullable(String.class));
         verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(schedule.getData()), any(), argumentCaptor.capture());
 
         argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
@@ -1186,7 +1146,7 @@ public class InAppAutomationTest {
         pendingResult.setResult(results);
         doReturn(pendingResult)
                 .when(mockExperimentManager)
-                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), nullable(String.class));
+                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq(mockInfoProvider), nullable(String.class));
 
         doReturn(new RemoteDataInfo("url", null, RemoteDataSource.APP, null))
                 .when(mockObserver).parseRemoteDataInfo(eq(schedule));
@@ -1221,7 +1181,7 @@ public class InAppAutomationTest {
         pendingResult.setResult(results);
         doReturn(pendingResult)
                 .when(mockExperimentManager)
-                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq("some-contact-id"));
+                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq(mockInfoProvider), eq("some-contact-id"));
 
         doReturn(new RemoteDataInfo("url", null, RemoteDataSource.APP, "some-contact-id"))
                 .when(mockObserver).parseRemoteDataInfo(eq(schedule));
@@ -1262,7 +1222,7 @@ public class InAppAutomationTest {
         pendingResult.setResult(results);
         doReturn(pendingResult)
                 .when(mockExperimentManager)
-                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), nullable(String.class));
+                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq(mockInfoProvider), nullable(String.class));
 
         doReturn(new RemoteDataInfo("url", null, RemoteDataSource.APP, null))
                 .when(mockObserver).parseRemoteDataInfo(eq(schedule));
@@ -1308,7 +1268,7 @@ public class InAppAutomationTest {
         pendingResult.setResult(results);
         doReturn(pendingResult)
                 .when(mockExperimentManager)
-                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), nullable(String.class));
+                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq(mockInfoProvider), nullable(String.class));
 
         doReturn(new RemoteDataInfo("url", null, RemoteDataSource.APP, null))
                 .when(mockObserver).parseRemoteDataInfo(eq(schedule));

@@ -29,7 +29,6 @@ public class ExperimentManager internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     private val remoteData: RemoteData,
-    private val infoProvider: DeviceInfoProvider,
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) : AirshipComponent(context, dataStore) {
 
@@ -59,31 +58,26 @@ public class ExperimentManager internal constructor(
      * @hide
      *
      * @param messageInfo The message info.
+     * @param deviceInfoProvider The device info provider.
      * @param contactId The contact ID. If not provided, the stable contact ID will be used.
      * @return The experiments result. If no experiment matches, null is returned.
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public suspend fun evaluateExperiments(messageInfo: MessageInfo, contactId: String? = null): ExperimentResult? {
-
+    public suspend fun evaluateExperiments(messageInfo: MessageInfo, deviceInfoProvider: DeviceInfoProvider, contactId: String? = null): ExperimentResult? {
         val activeExperiments = getActiveExperiments(messageInfo)
         if (activeExperiments.isEmpty()) {
             return null
         }
 
-        val channelId = infoProvider.channelId
-        if (channelId == null) {
-            UALog.d("Channel ID not available, unable to evaluate hold out groups.")
-            return null
-        }
-
-        val evaluationContactId = contactId ?: infoProvider.getStableContactId()
+        val channelId = deviceInfoProvider.getChannelId()
+        val evaluationContactId = contactId ?: deviceInfoProvider.getStableContactId()
 
         val allExperimentsMetadata: MutableList<JsonMap> = mutableListOf()
         var matchedExperiment: Experiment? = null
 
         for (experiment in activeExperiments) {
             val isMatching = getResolutionFunction(experiment)
-                .invoke(experiment, infoProvider, evaluationContactId)
+                .invoke(experiment, deviceInfoProvider, evaluationContactId)
 
             allExperimentsMetadata.add(experiment.reportingMetadata)
 
@@ -103,13 +97,14 @@ public class ExperimentManager internal constructor(
 
     /**
      * Checks if the channel and/or contact is part of a global holdout or not.
+     * @param deviceInfoProvider The device info provider.
      * @param contactId The contact ID. If not provided, the stable contact ID will be used.
      * @return The pending experiment result. If no experiment matches, null result is returned.
      */
-    public fun evaluateGlobalHoldoutsPendingResult(messageInfo: MessageInfo, contactId: String? = null): PendingResult<ExperimentResult?> {
+    public fun evaluateGlobalHoldoutsPendingResult(messageInfo: MessageInfo, deviceInfoProvider: DeviceInfoProvider, contactId: String? = null): PendingResult<ExperimentResult?> {
         val result = PendingResult<ExperimentResult?>()
         scope.launch {
-            result.result = evaluateExperiments(messageInfo, contactId)
+            result.result = evaluateExperiments(messageInfo, deviceInfoProvider, contactId)
         }
         return result
     }
@@ -134,7 +129,7 @@ public class ExperimentManager internal constructor(
         infoProvider: DeviceInfoProvider,
         contactId: String
     ): Boolean {
-        return experiment.audience.evaluate(context, experiment.created, infoProvider, contactId)
+        return experiment.audience.evaluate(experiment.created, infoProvider, contactId)
     }
 
     private suspend fun getActiveExperiments(messageInfo: MessageInfo): List<Experiment> {

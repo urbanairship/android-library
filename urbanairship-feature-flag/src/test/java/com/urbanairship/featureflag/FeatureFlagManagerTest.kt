@@ -60,17 +60,16 @@ class FeatureFlagManagerTest {
             dataStore = PreferenceDataStore.inMemoryStore(context),
             remoteData = remoteData,
             analytics = analytics,
-            infoProvider = infoProvider,
+            infoProviderFactory = { infoProvider },
             deferredResolver = deferredResolver,
             clock = clock
         )
 
         coEvery { infoProvider.getPermissionStatuses() } returns mapOf()
-        coEvery { infoProvider.snapshot(any()) } returns infoProvider
-        every { infoProvider.channelId } answers { channelId }
+        coEvery { infoProvider.getChannelId() } answers { channelId }
         coEvery { infoProvider.getStableContactId() } answers { contactId }
-        every { infoProvider.appVersion } returns 1
-        every { infoProvider.userCutOffDate(context) } returns 1
+        every { infoProvider.appVersionCode } returns 1
+        every { infoProvider.installDateMilliseconds } returns 1
     }
 
     @Test
@@ -561,7 +560,7 @@ class FeatureFlagManagerTest {
             reportingMetadata = reportingMetadata
                 ?: jsonMapOf("flag_id" to "27f26d85-0550-4df5-85f0-7022fa7a5925"),
             contactId = infoProvider.getStableContactId(),
-            channelId = infoProvider.channelId
+            channelId = infoProvider.getChannelId()
         )
     }
 

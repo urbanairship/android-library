@@ -48,7 +48,6 @@ public class AutomationModuleFactoryImpl implements AutomationModuleFactory {
                         @NonNull Analytics analytics,
                         @NonNull RemoteData remoteData,
                         @NonNull ExperimentManager experimentManager,
-                        @NonNull DeviceInfoProvider infoProvider,
                         @NonNull AirshipMeteredUsage meteredUsage,
                         @NonNull Contact contact,
                         @NonNull DeferredResolver deferredResolver,
@@ -56,7 +55,7 @@ public class AutomationModuleFactoryImpl implements AutomationModuleFactory {
 
         InAppAutomation inAppAutomation = new InAppAutomation(context, dataStore, runtimeConfig,
                 privacyManager, analytics, remoteData, airshipChannel, experimentManager,
-                infoProvider, meteredUsage, contact, deferredResolver, localeManager);
+                meteredUsage, contact, deferredResolver, localeManager);
         LegacyInAppMessageManager legacyInAppMessageManager = new LegacyInAppMessageManager(context, dataStore, inAppAutomation, analytics, pushManager);
 
         Collection<AirshipComponent> components = Arrays.asList(inAppAutomation, legacyInAppMessageManager);

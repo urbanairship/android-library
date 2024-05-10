@@ -100,7 +100,6 @@ public class Modules {
                                     @NonNull Analytics analytics,
                                     @NonNull RemoteData remoteData,
                                     @NonNull ExperimentManager experimentManager,
-                                    @NonNull DeviceInfoProvider infoProvider,
                                     @NonNull AirshipMeteredUsage meteredUsage,
                                     @NonNull Contact contact,
                                     @NonNull DeferredResolver deferredResolver,
@@ -110,7 +109,7 @@ public class Modules {
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager,
                         airshipChannel, pushManager, analytics, remoteData, experimentManager,
-                        infoProvider, meteredUsage, contact, deferredResolver, localeManager);
+                        meteredUsage, contact, deferredResolver, localeManager);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Automation module");
@@ -192,15 +191,14 @@ public class Modules {
             @NonNull PreferenceDataStore dataStore,
             @NonNull RemoteData remoteData,
             @NonNull Analytics analytics,
-            @NonNull DeviceInfoProvider infoProvider,
             @NonNull AirshipCache cache,
-            @NonNull DeferredResolver resolver) {
+            @NonNull DeferredResolver resolver
+    ) {
         try {
             FeatureFlagsModuleFactory moduleFactory =
                     createFactory(FEATURE_FLAGS_FACTORY, FeatureFlagsModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore, remoteData, analytics, infoProvider,
-                        cache, resolver);
+                return moduleFactory.build(context, dataStore, remoteData, analytics, cache, resolver);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Feature Flags module");

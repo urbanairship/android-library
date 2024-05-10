@@ -16,7 +16,6 @@ import com.urbanairship.PrivacyManager;
 import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.automation.actions.Actions;
 import com.urbanairship.automation.deferred.AutomationDeferredResult;
@@ -51,7 +50,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -64,8 +62,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
-
-import static com.urbanairship.util.Checks.checkNotNull;
+import androidx.core.util.Supplier;
 
 /**
  * In-app automation.
@@ -99,14 +96,13 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private final Map<String, FrequencyChecker> frequencyCheckerMap = new HashMap<>();
     private final Map<String, RemoteDataInfo> remoteDataInfoMap = new HashMap<>();
 
-    private final Map<String, Uri> redirectURLs = new HashMap<>();
 
     private final AtomicBoolean isStarted = new AtomicBoolean(false);
 
     private Cancelable subscription;
 
     private final ExperimentManager experimentManager;
-    private final DeviceInfoProvider infoProvider;
+    private final Supplier<DeviceInfoProvider> infoProviderFactory;
 
     private final AirshipRuntimeConfig config;
     private final Clock clock;
@@ -184,7 +180,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      * @param remoteData Remote data.
      * @param airshipChannel The airship channel.
      * @param experimentManager The experiment manager instance.
-     * @param infoProvider The device info provider.
      * @param meteredUsage The metered usage tracker.
      * @param contact The current contact.
      * @param deferredResolver The shared deferred resolver.
@@ -200,7 +195,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                            @NonNull RemoteData remoteData,
                            @NonNull AirshipChannel airshipChannel,
                            @NonNull ExperimentManager experimentManager,
-                           @NonNull DeviceInfoProvider infoProvider,
                            @NonNull AirshipMeteredUsage meteredUsage,
                            @NonNull Contact contact,
                            @NonNull DeferredResolver deferredResolver,
@@ -217,7 +211,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.frequencyLimitManager = new FrequencyLimitManager(context, runtimeConfig);
         this.config = runtimeConfig;
         this.experimentManager = experimentManager;
-        this.infoProvider = infoProvider;
+        this.infoProviderFactory = DeviceInfoProvider::newProvider;
         this.meteredUsage = meteredUsage;
         this.clock = Clock.DEFAULT_CLOCK;
         this.backgroundExecutor = AirshipExecutors.newSerialExecutor();
@@ -239,9 +233,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull ActionsScheduleDelegate actionsScheduleDelegate,
                     @NonNull InAppMessageScheduleDelegate inAppMessageScheduleDelegate,
                     @NonNull FrequencyLimitManager frequencyLimitManager,
-                    @NonNull AudienceOverridesProvider audienceOverridesProvider,
                     @NonNull ExperimentManager experimentManager,
-                    @NonNull DeviceInfoProvider infoProvider,
+                    @NonNull Supplier<DeviceInfoProvider> infoProviderFactory,
                     @NonNull AirshipMeteredUsage meteredUsage,
                     @NonNull Clock clock,
                     @NonNull Executor executor,
@@ -261,7 +254,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.frequencyLimitManager = frequencyLimitManager;
         this.config = runtimeConfig;
         this.experimentManager = experimentManager;
-        this.infoProvider = infoProvider;
+        this.infoProviderFactory = infoProviderFactory;
         this.meteredUsage = meteredUsage;
         this.clock = clock;
         this.backgroundExecutor = executor;
@@ -579,6 +572,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                                    final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
         UALog.v("onPrepareSchedule schedule: %s, trigger context: %s", schedule.getId(), triggerContext);
 
+        DeviceInfoProvider deviceInfoProvider = infoProviderFactory.get();
         final AutomationDriver.PrepareScheduleCallback callbackWrapper = result -> {
             if (result != AutomationDriver.PREPARE_RESULT_CONTINUE) {
                 frequencyCheckerMap.remove(schedule.getId());
@@ -638,8 +632,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             RemoteDataInfo info = remoteDataSubscriber.parseRemoteDataInfo(schedule);
             String contactId = info == null ? null : info.getContactId();
 
-            PendingResult<Boolean> result = schedule.getAudienceSelector().evaluateAsPendingResult(
-                    getContext(), schedule.getNewUserEvaluationDate(), infoProvider, contactId);
+            PendingResult<Boolean> result = schedule.getAudienceSelector().evaluateAsPendingResult(schedule.getNewUserEvaluationDate(), deviceInfoProvider, contactId);
             try {
                 if (Boolean.TRUE.equals(result.get())) { return RetryingExecutor.finishedResult(); }
             } catch (Exception ignore) { }
@@ -651,11 +644,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         PendingResult<ExperimentResult> experimentResults = new PendingResult<>();
         RetryingExecutor.Operation evaluateExperiments = () -> {
             try {
-                // Ensure we have a channel ID available. Otherwise, throw so that we'll retry.
-                Objects.requireNonNull(infoProvider.getChannelId(),
-                        "Channel ID must be available to evaluate experiments.");
-
-                ExperimentResult result = evaluateExperiments(schedule);
+                ExperimentResult result = evaluateExperiments(schedule, deviceInfoProvider);
                 experimentResults.setResult(result);
                 return RetryingExecutor.finishedResult();
             } catch (Exception ex) {
@@ -667,7 +656,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         RetryingExecutor.Operation prepareSchedule = () -> {
             switch (schedule.getType()) {
                 case Schedule.TYPE_DEFERRED:
-                    return resolveDeferred(schedule, triggerContext, experimentResults.getResult(), callbackWrapper);
+                    return resolveDeferred(schedule, deviceInfoProvider, triggerContext, experimentResults.getResult(), callbackWrapper);
                 case Schedule.TYPE_ACTION:
                     prepareSchedule(schedule, schedule.coerceType(), experimentResults.getResult(), actionScheduleDelegate, callbackWrapper);
                     break;
@@ -689,7 +678,9 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     }
 
     private @Nullable ExperimentResult evaluateExperiments(
-            final @NonNull Schedule<? extends ScheduleData> schedule ) throws ExecutionException, InterruptedException {
+            final @NonNull Schedule<? extends ScheduleData> schedule,
+            @NonNull DeviceInfoProvider deviceInfoProvider
+    ) throws ExecutionException, InterruptedException {
 
         RemoteDataInfo remoteDataInfo = remoteDataSubscriber.parseRemoteDataInfo(schedule);
 
@@ -708,6 +699,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         return experimentManager
                 .evaluateGlobalHoldoutsPendingResult(
                         messageInfo,
+                        deviceInfoProvider,
                         remoteDataInfo == null ? null : remoteDataInfo.getContactId()
                 )
                 .get();
@@ -729,6 +721,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     }
 
     private RetryingExecutor.Result resolveDeferred(final @NonNull Schedule<? extends ScheduleData> schedule,
+                                                    final @Nullable DeviceInfoProvider deviceInfoProvider,
                                                     final @Nullable TriggerContext triggerContext,
                                                     final @Nullable ExperimentResult experimentResult,
                                                     final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
@@ -742,7 +735,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         DeferredResult<AutomationDeferredResult> result;
 
         try {
-            DeferredRequest request = makeDeferredRequest(scheduleData, channelId, triggerContext);
+            DeferredRequest request = makeDeferredRequest(scheduleData, deviceInfoProvider, channelId, triggerContext);
             result = deferredResolver
                     .resolveAsPendingResult(request, AutomationDeferredResult::parse).get();
 
@@ -795,6 +788,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
     private DeferredRequest makeDeferredRequest(
             @NonNull Deferred schedule,
+            @NonNull DeviceInfoProvider deviceInfoProvider,
             @NonNull String channelId,
             @Nullable TriggerContext triggerContext) throws ExecutionException, InterruptedException {
         String triggerType = null;
@@ -807,7 +801,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             triggerGoal = triggerContext.getTrigger().getGoal();
         }
 
-        return DeferredRequest.automation(schedule.getUrl(), channelId, infoProvider,
+        return DeferredRequest.automation(schedule.getUrl(), channelId, deviceInfoProvider,
                 triggerType, triggerEvent, triggerGoal, localeManager).get();
     }
 

@@ -42,7 +42,6 @@ public interface AutomationModuleFactory extends AirshipVersionInfo {
                  @NonNull Analytics analytics,
                  @NonNull RemoteData remoteData,
                  @NonNull ExperimentManager experimentManager,
-                 @NonNull DeviceInfoProvider infoProvider,
                  @NonNull AirshipMeteredUsage meteredUsage,
                  @NonNull Contact contact,
                  @NonNull DeferredResolver deferredResolver,

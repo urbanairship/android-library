@@ -6,7 +6,7 @@ import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestApplication
-import com.urbanairship.audience.DeviceInfoProviderImpl
+import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.experiment.ExperimentManager.Companion.PAYLOAD_TYPE
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
@@ -41,26 +41,20 @@ public class ExperimentManagerTest {
     private val remoteData: RemoteData = mockk()
 
     private lateinit var subject: ExperimentManager
-    private var channelId: String? = "default-channel-id"
+    private var channelId: String = "default-channel-id"
     private var contactId: String = "default-contact-id"
     private val messageInfo = MessageInfo("", null)
     private var currentTime = 1L
+
+    private val infoProvider: DeviceInfoProvider = mockk {
+        coEvery { getChannelId() } answers { channelId }
+        coEvery { getStableContactId() } answers { contactId }
+    }
 
     @Before
     public fun setUp() {
         val permissionManager: PermissionsManager = mockk()
         every { permissionManager.configuredPermissions } returns emptySet()
-        val infoProvider = DeviceInfoProviderImpl(
-            notificationStatusFetcher = { true },
-            privacyFeatureFetcher = { true },
-            channelTagsFetcher = { emptySet() },
-            channelIdFetcher = { channelId },
-            versionFetcher = { 1 },
-            permissionsManager = permissionManager,
-            contactIdFetcher = { contactId },
-            platform = "android",
-            mockk()
-        )
 
         val clock: Clock = mockk()
         every { clock.currentTimeMillis() } answers { currentTime }
@@ -69,7 +63,6 @@ public class ExperimentManagerTest {
             context = context,
             dataStore = dataStore,
             remoteData = remoteData,
-            infoProvider = infoProvider,
             clock = clock
         )
     }
@@ -178,35 +171,13 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo)!!
+        val result = subject.evaluateExperiments(messageInfo, infoProvider)!!
         assertEquals("fake-id", result.matchedExperimentId)
         assertTrue(result.isMatching)
         assertEquals(contactId, result.contactId)
         assertEquals(channelId, result.channelId)
 
         assert(result.allEvaluatedExperimentsMetadata.contains(extractReportingMetadata(experimentJson)))
-    }
-
-    @Test
-    public fun testHoldoutGroupEvaluationNoChannelId(): TestResult = runTest {
-        channelId = null
-        contactId = "some-contact-id"
-
-        val experimentJson = generateExperimentsPayload(
-            id = "fake-id",
-            hashIdentifier = "channel")
-            .build()
-
-        val data = RemoteDataPayload(
-            type = PAYLOAD_TYPE,
-            timestamp = 1L,
-            data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson))
-        )
-
-        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
-
-        val result = subject.evaluateExperiments(messageInfo)
-        assertNull(result)
     }
 
     @Test
@@ -229,7 +200,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo, activeContactId)!!
+        val result = subject.evaluateExperiments(messageInfo, infoProvider, activeContactId)!!
         assertTrue(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
         assertEquals(activeContactId, result.contactId)
@@ -252,7 +223,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo)!!
+        val result = subject.evaluateExperiments(messageInfo, infoProvider)!!
         assertTrue(result.isMatching)
         assertEquals("first", result.matchedExperimentId)
         assertTrue(result.allEvaluatedExperimentsMetadata.size == 1)
@@ -275,7 +246,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(MessageInfo("transactional", null))!!
+        val result = subject.evaluateExperiments(MessageInfo("transactional", null), infoProvider)!!
         assert(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
     }
@@ -304,7 +275,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo)!!
+        val result = subject.evaluateExperiments(messageInfo, infoProvider)!!
         assert(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
     }
@@ -332,7 +303,7 @@ public class ExperimentManagerTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
         currentTime = 2
 
-        val result = subject.evaluateExperiments(messageInfo)!!
+        val result = subject.evaluateExperiments(messageInfo, infoProvider)!!
         assert(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
     }

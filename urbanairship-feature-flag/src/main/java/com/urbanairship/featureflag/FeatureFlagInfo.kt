@@ -81,7 +81,6 @@ internal data class FeatureFlagVariables(
     }
 
     suspend fun evaluateVariables(
-        context: Context,
         newEvaluationDate: Long,
         infoProvider: DeviceInfoProvider
     ): VariablesVariant? {
@@ -90,7 +89,7 @@ internal data class FeatureFlagVariables(
                 variants.firstOrNull()
             }
             FeatureFlagVariablesType.VARIANTS -> {
-                variants.firstOrNull { it.selector?.evaluate(context, newEvaluationDate, infoProvider) ?: false }
+                variants.firstOrNull { it.selector?.evaluate(newEvaluationDate, infoProvider) ?: false }
             }
         }
     }
@@ -280,7 +279,7 @@ internal class StaticPayload(
         newEvaluationDate: Long,
         infoProvider: DeviceInfoProvider
     ): VariablesVariant? {
-        return variableVariants.evaluateVariables(context, newEvaluationDate, infoProvider)
+        return variableVariants.evaluateVariables(newEvaluationDate, infoProvider)
     }
 }
 

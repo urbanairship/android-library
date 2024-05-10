@@ -6,7 +6,6 @@ import android.content.Context
 import com.urbanairship.BuildConfig
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.analytics.Analytics
-import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.cache.AirshipCache
 import com.urbanairship.deferred.DeferredResolver
 import com.urbanairship.modules.Module
@@ -21,7 +20,6 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
         dataStore: PreferenceDataStore,
         remoteData: RemoteData,
         analytics: Analytics,
-        infoProvider: DeviceInfoProvider,
         cache: AirshipCache,
         resolver: DeferredResolver
     ): Module {
@@ -30,7 +28,6 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
             dataStore = dataStore,
             remoteData = remoteData,
             analytics = analytics,
-            infoProvider = infoProvider,
             clock = Clock.DEFAULT_CLOCK,
             deferredResolver = FlagDeferredResolver(cache, resolver)
         )

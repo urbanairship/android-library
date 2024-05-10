@@ -37,8 +37,8 @@ public abstract class AudienceChecks {
         }
 
         try {
-            return selector.evaluateAsPendingResult(context, 0,
-                    DeviceInfoProvider.Companion.legacy(), null).get();
+            return selector.evaluateAsPendingResult(0,
+                    DeviceInfoProvider.newProvider(), null).get();
         } catch (Exception e) {
             return false;
         }

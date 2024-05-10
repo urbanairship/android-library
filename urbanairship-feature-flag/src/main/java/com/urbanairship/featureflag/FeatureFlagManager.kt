@@ -34,7 +34,9 @@ public class FeatureFlagManager
     dataStore: PreferenceDataStore,
     private val remoteData: RemoteData,
     private val analytics: Analytics,
-    private val infoProvider: DeviceInfoProvider,
+    private val infoProviderFactory: () -> DeviceInfoProvider = {
+        DeviceInfoProvider.newCachingProvider()
+    },
     private val deferredResolver: FlagDeferredResolver,
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) : AirshipComponent(context, dataStore) {
@@ -207,11 +209,11 @@ public class FeatureFlagManager
             )
         }
 
-        val deviceInfoSnapshot = infoProvider.snapshot(context)
+        val deviceInfo = infoProviderFactory()
 
         for (info in flags) {
             val audienceCheck =
-                info.audience?.evaluate(context, info.created, deviceInfoSnapshot, null) ?: true
+                info.audience?.evaluate(info.created, deviceInfo, null) ?: true
             if (!audienceCheck) {
                 continue
             }
@@ -219,7 +221,7 @@ public class FeatureFlagManager
             return when (val payload = info.payload) {
                 is StaticPayload -> {
                     val variables =
-                        info.payload.evaluateVariables(context, info.created, deviceInfoSnapshot)
+                        info.payload.evaluateVariables(context, info.created, deviceInfo)
 
                     Result.success(
                         FeatureFlag.createFlag(
@@ -228,22 +230,22 @@ public class FeatureFlagManager
                             variables = variables?.data,
                             reportingInfo = FeatureFlag.ReportingInfo(
                                 reportingMetadata = variables?.reportingMetadata ?: info.reportingContext,
-                                channelId = deviceInfoSnapshot.channelId,
-                                contactId = deviceInfoSnapshot.getStableContactId()
+                                channelId = deviceInfo.getChannelId(),
+                                contactId = deviceInfo.getStableContactId()
                             )
                         )
                     )
                 }
                 is DeferredPayload -> {
-                    val contactId = deviceInfoSnapshot.getStableContactId()
-                    val chanelId = deviceInfoSnapshot.channelId ?: return Result.failure(FeatureFlagException.FailedToFetch())
-                    val locale = deviceInfoSnapshot.getUserLocale(context)
+                    val contactId = deviceInfo.getStableContactId()
+                    val chanelId = deviceInfo.getChannelId()
+                    val locale = deviceInfo.locale
                     val request = DeferredRequest(
                         uri = payload.url,
                         channelID = chanelId,
                         contactID = contactId,
                         locale = locale,
-                        notificationOptIn = deviceInfoSnapshot.isNotificationsOptedIn
+                        notificationOptIn = deviceInfo.isNotificationsOptedIn
                     )
 
                     deferredResolver.resolve(request, info)
@@ -259,8 +261,8 @@ public class FeatureFlagManager
                 variables = null,
                 reportingInfo = FeatureFlag.ReportingInfo(
                     reportingMetadata = flags.last().reportingContext,
-                    channelId = deviceInfoSnapshot.channelId,
-                    contactId = deviceInfoSnapshot.getStableContactId(),
+                    channelId = deviceInfo.getChannelId(),
+                    contactId = deviceInfo.getStableContactId(),
                 )
             )
         )

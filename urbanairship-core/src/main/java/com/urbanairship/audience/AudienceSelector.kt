@@ -2,13 +2,11 @@
 
 package com.urbanairship.audience
 
-import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.core.os.LocaleListCompat
 import androidx.core.util.ObjectsCompat
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
-import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.actions.FetchDeviceInfoAction
 import com.urbanairship.json.JsonException
@@ -502,7 +500,6 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
      */
 
     public fun evaluateAsPendingResult(
-        context: Context,
         newEvaluationDate: Long,
         infoProvider: DeviceInfoProvider,
         contactId: String? = null
@@ -511,14 +508,13 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
         val result = PendingResult<Boolean>()
         scope.launch {
-            result.result = evaluate(context, newEvaluationDate, infoProvider, contactId)
+            result.result = evaluate(newEvaluationDate, infoProvider, contactId)
         }
 
         return result
     }
 
     public suspend fun evaluate(
-        context: Context,
         newEvaluationDate: Long,
         infoProvider: DeviceInfoProvider,
         contactId: String? = null
@@ -527,15 +523,12 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         if (!checkDeviceType(infoProvider)) { return false }
         if (!checkTestDevice(infoProvider)) { return false }
         if (!checkNotificationOptInStatus(infoProvider)) { return false }
-        if (!checkLocale(context, infoProvider)) { return false }
+        if (!checkLocale(infoProvider)) { return false }
         if (!checkTags(infoProvider)) { return false }
         if (!checkAnalytics(infoProvider)) { return false }
-
-        val permissions = infoProvider.getPermissionStatuses()
-        if (!checkPermissions(permissions)) { return false }
-        if (!checkLocationOptInStatus(permissions)) { return false }
+        if (!checkPermissions(infoProvider)) { return false }
         if (!checkVersion(infoProvider)) { return false }
-        if (!checkNewUser(context, infoProvider, newEvaluationDate)) { return false }
+        if (!checkNewUser(infoProvider, newEvaluationDate)) { return false }
         if (!checkHash(infoProvider, contactId)) { return false }
 
         return true
@@ -545,12 +538,16 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         return deviceTypes?.contains(infoProvider.platform) ?: true
     }
 
-    private fun checkTestDevice(infoProvider: DeviceInfoProvider): Boolean {
+    private suspend fun checkTestDevice(infoProvider: DeviceInfoProvider): Boolean {
         if (testDevices.isEmpty()) {
             return true
         }
 
-        var digest = UAStringUtil.sha256Digest(infoProvider.channelId)
+        if (!infoProvider.channelCreated) {
+            return false
+        }
+
+        var digest = UAStringUtil.sha256Digest(infoProvider.getChannelId())
         if (digest == null || digest.size < 16) {
             return false
         }
@@ -570,12 +567,12 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         return required == dataProvider.isNotificationsOptedIn
     }
 
-    private fun checkLocale(context: Context, dataProvider: DeviceInfoProvider): Boolean {
+    private fun checkLocale(dataProvider: DeviceInfoProvider): Boolean {
         if (languageTags.isEmpty()) {
             return true
         }
 
-        val locale = dataProvider.getUserLocale(context)
+        val locale = dataProvider.locale
 
         // getFirstMatch will return the default language if none of the specified locales are found,
         // so we still have to verify the locale exists in the audience conditions
@@ -604,10 +601,6 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
     private fun checkTags(infoProvider: DeviceInfoProvider): Boolean {
         val selector = tagSelector ?: return true
 
-        if (!infoProvider.isFeatureEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-            return false
-        }
-
         return selector.apply(infoProvider.channelTags)
     }
 
@@ -615,40 +608,50 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         val required = requiresAnalytics ?: return true
         if (!required) { return true }
 
-        return infoProvider.isFeatureEnabled(PrivacyManager.FEATURE_ANALYTICS)
+        return infoProvider.analyticsEnabled
     }
 
-    private fun checkPermissions(permissions: Map<Permission, PermissionStatus>): Boolean {
-        val required = permissionsPredicate ?: return true
-        val converted = permissions.map { it.key.value to it.value.value }.toMap()
+    private suspend fun checkPermissions(infoProvider: DeviceInfoProvider): Boolean {
+        if (locationOptIn == null && permissionsPredicate == null) {
+            return true
+        }
 
-        return required.apply(JsonValue.wrap(converted))
-    }
+        val permissions = infoProvider.getPermissionStatuses()
 
-    private fun checkLocationOptInStatus(permissions: Map<Permission, PermissionStatus>): Boolean {
-        val required = locationOptIn ?: return true
-        val locationPermission = permissions[Permission.LOCATION] ?: return false
-        val current = PermissionStatus.GRANTED == locationPermission
+        if (locationOptIn != null) {
+            val locationPermission = permissions[Permission.LOCATION] ?: return false
+            val current = PermissionStatus.GRANTED == locationPermission
+            if (current != locationOptIn) {
+                return false
+            }
+        }
 
-        return current == required
+        if (permissionsPredicate != null) {
+            val converted = permissions.map { it.key.value to it.value.value }.toMap()
+
+            if (!permissionsPredicate.apply(JsonValue.wrap(converted))) {
+                return false
+            }
+        }
+
+        return true
     }
 
     private fun checkVersion(infoProvider: DeviceInfoProvider): Boolean {
         val required = versionPredicate ?: return true
-        val version = VersionUtils.createVersionObject(infoProvider.appVersion)
+        val version = VersionUtils.createVersionObject(infoProvider.appVersionCode)
         return required.apply(version)
     }
 
-    private fun checkNewUser(context: Context, infoProvider: DeviceInfoProvider, cutOffDate: Long): Boolean {
+    private fun checkNewUser(infoProvider: DeviceInfoProvider, cutOffDate: Long): Boolean {
         val required = newUser ?: return true
-
-        return required == (infoProvider.userCutOffDate(context) >= cutOffDate)
+        return required == (infoProvider.installDateMilliseconds >= cutOffDate)
     }
 
     private suspend fun checkHash(infoProvider: DeviceInfoProvider, contactId: String?): Boolean {
         val selector = hashSelector ?: return true
 
-        val channelId = infoProvider.channelId ?: return false
+        val channelId = infoProvider.getChannelId()
         val useContactId = contactId ?: infoProvider.getStableContactId()
 
         return selector.evaluate(channelId, useContactId)
