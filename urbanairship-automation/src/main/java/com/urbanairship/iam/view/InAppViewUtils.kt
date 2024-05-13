@@ -17,7 +17,6 @@ import android.text.style.CharacterStyle
 import android.text.style.ImageSpan
 import android.view.Gravity
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.widget.Button
 import android.widget.TextView
 import androidx.annotation.DrawableRes
@@ -28,7 +27,6 @@ import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.doOnPreDraw
 import com.urbanairship.Fonts
-import com.urbanairship.UALog
 import com.urbanairship.UALog.d
 import com.urbanairship.UALog.e
 import com.urbanairship.automation.R
@@ -229,7 +227,7 @@ internal object InAppViewUtils {
             var height = 9
             val cachedLocation = assets?.let {
                 val remote = mediaInfo.url
-                val result = it.cacheURL(remote)?.toString() ?: return@let null
+                val result = it.cacheUri(remote)?.toString() ?: return@let null
 
                 val size = it.getMediaSize(remote)
                 width = maxOf(size.width, width)

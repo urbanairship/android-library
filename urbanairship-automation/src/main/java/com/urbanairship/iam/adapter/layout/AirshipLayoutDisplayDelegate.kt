@@ -52,7 +52,7 @@ internal class AirshipLayoutDisplayDelegate(
         val request =
             Thomas.prepareDisplay(displayContent.layout.layoutInfo, extras, EmbeddedViewManager)
                 .setListener(LayoutListener(displayListener))
-                .setImageCache { url -> assets?.cacheURL(url)?.path }
+                .setImageCache { url -> assets?.cacheUri(url)?.path }
                 .setWebViewClientFactory { InAppMessageWebViewClient(messageExtras) }
                 .setInAppActivityMonitor(activityMonitor)
 

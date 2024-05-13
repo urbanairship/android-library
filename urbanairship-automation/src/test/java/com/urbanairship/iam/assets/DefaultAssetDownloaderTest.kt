@@ -1,10 +1,11 @@
 package com.urbanairship.iam.assets
 
 import android.content.Context
+import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.util.FileUtils
-import java.net.URL
+import com.urbanairship.util.toURL
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -18,15 +19,15 @@ import org.junit.runner.RunWith
 public class DefaultAssetDownloaderTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val downloader = DefaultAssetDownloader(context)
-    private val testURL = URL("https://airship.com/whatever")
+    private val testUri = "https://airship.com/whatever".toUri()
 
     @Test
     public fun testDownloadAssetDataMatches(): TestResult = runTest {
         mockkStatic(FileUtils::class)
         every { FileUtils.downloadFile(any(), any()) } returns mockk()
 
-        downloader.downloadAsset(testURL).await()
+        downloader.downloadAsset(testUri)
 
-        verify { FileUtils.downloadFile(eq(testURL), any()) }
+        verify { FileUtils.downloadFile(eq(testUri.toURL()), any()) }
     }
 }

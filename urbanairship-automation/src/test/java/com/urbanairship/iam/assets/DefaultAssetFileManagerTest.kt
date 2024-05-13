@@ -1,6 +1,8 @@
 package com.urbanairship.iam.assets
 
 import android.content.Context
+import androidx.core.net.toFile
+import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.File
@@ -18,7 +20,7 @@ public class DefaultAssetFileManagerTest {
 
     @After
     public fun tearDown() {
-        val root = File(manager.getRootDirectory())
+        val root = manager.getRootDirectory().toFile()
         if (root.exists()) {
             root.delete()
         }
@@ -27,21 +29,25 @@ public class DefaultAssetFileManagerTest {
     @Test
     public fun testEnsureCacheRootDirectory() {
         var uri = manager.getRootDirectory()
-        assertTrue(uri.path.endsWith("$testRoot/"))
-        var file = File(uri.path)
-        assertTrue(file.exists())
+        val rootDirectory = uri.toFile()
 
-        file.delete()
+        println("uri path: ${uri.path}")
+        assertTrue(uri.path?.endsWith(testRoot) == true)
+        assertTrue(rootDirectory.exists())
+
+        assertTrue(rootDirectory.delete())
+        assertFalse(rootDirectory.exists())
+
         uri = manager.getRootDirectory()
-        assertTrue(uri.path.endsWith("$testRoot/"))
-        file = File(uri.path)
-        assertTrue(file.exists())
+
+        assertTrue(uri.path?.endsWith(testRoot) == true)
+        assertTrue(rootDirectory.exists())
     }
 
     @Test
     public fun testClearAssetsSuccess() {
         val identifier = "test-id"
-        val file = File(manager.ensureCacheDirectory(identifier))
+        val file = manager.ensureCacheDirectory(identifier)
         assertTrue(file.exists())
 
         manager.clearAssets(identifier)
@@ -51,7 +57,7 @@ public class DefaultAssetFileManagerTest {
     @Test
     public fun testMoveAssetSuccess() {
         val identifier = "test-id"
-        val dir = File(manager.ensureCacheDirectory(identifier))
+        val dir = manager.ensureCacheDirectory(identifier)
 
         val fromFile = File(dir, "test.txt")
         fromFile.writeBytes("test".toByteArray())
@@ -61,9 +67,11 @@ public class DefaultAssetFileManagerTest {
         val toFile = File(dir, "to-file.txt")
         assertFalse(toFile.exists())
 
-        manager.moveAsset(fromFile.toURI(), toFile.toURI())
+        manager.moveAsset(fromFile.toUri(), toFile.toUri())
 
         assertFalse(fromFile.exists())
         assertTrue(toFile.exists())
+
+        assertTrue(manager.assetItemExists(toFile.toUri()))
     }
 }

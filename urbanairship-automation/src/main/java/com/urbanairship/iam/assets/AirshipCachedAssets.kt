@@ -1,25 +1,25 @@
 package com.urbanairship.iam.assets
 
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.Size
+import androidx.annotation.VisibleForTesting
+import androidx.core.net.toUri
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.UAStringUtil
-import java.io.BufferedReader
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.FileOutputStream
-import java.io.FileReader
 import java.io.IOException
 import java.io.StringWriter
-import java.net.URI
-import java.net.URL
 import java.util.Objects
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Convenience interface representing an assets directory containing asset files
@@ -28,37 +28,37 @@ import java.util.Objects
 public interface AirshipCachedAssets : Parcelable {
 
     /**
-     * Return URL at which to cache a given asset
-     * @param remoteURL: URL from which the cached data is fetched
-     * @return [URL] at which to cache a given asset
+     * Return a uri at which to cache a given asset
+     * @param remoteUrl: URL from which the cached data is fetched
+     * @return [Uri] at which to cache a given asset
      */
-    public fun cacheURL(remoteURL: String): URL?
+    public fun cacheUri(remoteUrl: String): Uri?
 
     /**
-     * Checks if a [URL] is cached
-     * @param remoteURL: URL from which the cached data is fetched
+     * Checks if an asset is cached
+     * @param remoteUrl: url string from which the cached data is fetched
      * @return `true` if cached, otherwise `false`.
      */
-    public fun isCached(remoteURL: String): Boolean
+    public fun isCached(remoteUrl: String): Boolean
 
     /**
      * Returns the downloaded media size.
-     * @param remoteURL: URL from which the cached data is fetched
+     * @param remoteUrl: url string from which the cached data is fetched
      * @return [Size]. If the asset hasn't been cached or it fails to get either width or height
      * the missing fields are filled with `-1`
      */
-    public fun getMediaSize(remoteURL: String): Size
+    public fun getMediaSize(remoteUrl: String): Size
 }
 
 internal class EmptyAirshipCachedAssets : AirshipCachedAssets {
-    override fun cacheURL(remoteURL: String): URL? = null
-    override fun isCached(remoteURL: String): Boolean = false
-    override fun getMediaSize(remoteURL: String): Size = Size(-1, -1)
+    override fun cacheUri(remoteUrl: String): Uri? = null
+    override fun isCached(remoteUrl: String): Boolean = false
+    override fun getMediaSize(remoteUrl: String): Size = Size(-1, -1)
 
     override fun describeContents(): Int = 0
     override fun writeToParcel(dest: Parcel, flags: Int) { }
 
-    companion object : Parcelable.Creator<EmptyAirshipCachedAssets> {
+    companion object CREATOR: Parcelable.Creator<EmptyAirshipCachedAssets> {
         override fun createFromParcel(source: Parcel?): EmptyAirshipCachedAssets {
             return EmptyAirshipCachedAssets()
         }
@@ -68,75 +68,73 @@ internal class EmptyAirshipCachedAssets : AirshipCachedAssets {
 }
 
 internal class DefaultAirshipCachedAssets(
-    rootDirectory: URI,
-    private val fileManager: AssetFileManagerInterface
+    private val directory: File,
+    private val fileManager: AssetFileManager
 ): AirshipCachedAssets {
 
-    private val directory = File(rootDirectory.path)
+    private val lock = ReentrantLock()
     private val metadataCache = mutableMapOf<String, JsonValue>()
 
-    override fun cacheURL(remoteURL: String): URL? {
+    override fun cacheUri(remoteUrl: String): Uri? =
         try {
-            val remote = URL(remoteURL)
-            val destination = getCachedAssetURI(remote)
-            if (!fileManager.assetItemExists(destination)) { return null }
-
-            return destination.toURL()
+            getCachedAssetUrl(remote = remoteUrl.toUri())
         } catch (ex: Exception) {
-            UALog.e(ex) { "Failed to get cache url" }
-            return null
+            UALog.e(ex) { "Failed to get cached asset url! $remoteUrl" }
+            null
         }
-    }
 
-    private fun metadataURI(mediaURI: URI): File {
-        val path = mediaURI.path + METADATA_SUFFIX
-        return File(path)
-    }
+    private fun metadataUri(mediaUri: Uri): File =
+        File("${mediaUri.path}.${METADATA_EXTENSION}")
 
-    override fun isCached(remoteURL: String): Boolean {
+    override fun isCached(remoteUrl: String): Boolean =
         try {
-            val remote = URL(remoteURL)
-            val destination = getCachedAssetURI(remote)
-            return fileManager.assetItemExists(destination)
+            val remote = remoteUrl.toUri()
+            val destination = getCachedAssetUrl(remote)
+            fileManager.assetItemExists(destination)
         } catch (ex: Exception) {
-            UALog.e(ex) { "Failed to get cache url" }
-            return false
+            UALog.e(ex) { "Failed to determine if asset is cached! $remoteUrl" }
+            false
         }
-    }
 
-    override fun getMediaSize(remoteURL: String): Size {
-        return synchronized(metadataCache) {
-            val cached = metadataCache[remoteURL]
-            if (cached != null) { return@synchronized jsonToSize(cached) }
-
-            val local = cacheURL(remoteURL)?.toOptionalURI() ?: return@synchronized Size(-1, -1)
-
-            val loaded = readJson(metadataURI(local))
-            metadataCache[remoteURL] = loaded
-            jsonToSize(loaded)
+    override fun getMediaSize(remoteUrl: String): Size {
+        return lock.withLock {
+            val cached = metadataCache[remoteUrl]
+            if (cached != null) {
+                jsonToSize(cached)
+            } else {
+                val local = cacheUri(remoteUrl) ?: return Size(-1, -1)
+                val loaded = readJson(metadataUri(local))
+                metadataCache[remoteUrl] = loaded
+                jsonToSize(loaded)
+            }
         }
     }
 
     internal fun generateAndStoreMetadata(url: String) {
         if (!directory.exists()) { return }
 
-        val mediaURI = cacheURL(url)?.toOptionalURI() ?: return
+        val mediaUrl = cacheUri(url) ?: return
 
         try {
-            if (!fileManager.assetItemExists(mediaURI)) { return }
+            if (!fileManager.assetItemExists(mediaUrl)) { return }
         } catch (ex: IOException) {
-            UALog.e(ex) { "Failed to read file $mediaURI" }
+            UALog.e(ex) { "Failed to generate and store cached asset metadata! $url" }
             return
         }
 
         val options = BitmapFactory.Options()
         options.inJustDecodeBounds = true
-        BitmapFactory.decodeFile(mediaURI.path, options)
+        BitmapFactory.decodeFile(mediaUrl.path, options)
 
-        val json = sizeToJson(Size(options.outWidth, options.outHeight))
+        val json = try {
+            sizeToJson(Size(options.outWidth, options.outHeight))
+        } catch (ex: JsonException) {
+            UALog.e(ex) { "Failed to generate cached asset metadata. Unable to convert size to json!" }
+            return
+        }
 
-        writeJson(metadataURI(mediaURI), json)
-        synchronized(metadataCache) { metadataCache[url] =json }
+        writeJson(metadataUri(mediaUrl), json)
+        lock.withLock { metadataCache[url] =json }
     }
 
     private fun jsonToSize(json: JsonValue): Size {
@@ -147,6 +145,7 @@ internal class DefaultAirshipCachedAssets(
         )
     }
 
+    @Throws(JsonException::class)
     private fun sizeToJson(size: Size): JsonValue = jsonMapOf(
         METADATA_IMAGE_HEIGHT to size.height,
         METADATA_IMAGE_WIDTH to size.width
@@ -154,11 +153,11 @@ internal class DefaultAirshipCachedAssets(
 
     private fun writeJson(destination: File, jsonValue: JsonValue) {
         try {
-            FileOutputStream(destination).use {
-                it.write(jsonValue.toString().toByteArray())
+            destination.bufferedWriter().use {
+                it.write(jsonValue.toString())
             }
         } catch (ex: Exception) {
-            UALog.e(ex) { "Failed to write metadata." }
+            UALog.e(ex) { "Failed to write cached asset metadata!" }
         }
     }
 
@@ -168,26 +167,27 @@ internal class DefaultAirshipCachedAssets(
         }
 
         try {
-            BufferedReader(FileReader(metadata)).use { reader ->
-                val writer = StringWriter()
+            val writer = StringWriter()
+            metadata.bufferedReader().use { reader ->
                 reader.copyTo(writer)
-                return JsonValue.parseString(writer.toString())
             }
+            return JsonValue.parseString(writer.toString())
         } catch (e: IOException) {
-            UALog.e(e) { "Error reading file" }
+            UALog.e(e) { "Failed to read cached asset metadata!" }
         } catch (e: JsonException) {
-            UALog.e(e) { "Error parsing file as JSON." }
+            UALog.e(e) { "Failed to parse cached asset metadata!" }
         } catch (ex: FileNotFoundException) {
-            UALog.e(ex) { "Failed to read file" }
+            UALog.e(ex) { "Failed to read cached asset metadata. File not found!" }
         }
 
         return JsonValue.NULL
     }
 
     @Throws(IOException::class)
-    private fun getCachedAssetURI(remote: URL): URI {
-        val hash = UAStringUtil.sha256(remote.path) ?: throw IOException("Failed to generate hash")
-        return File(directory, hash).toURI()
+    private fun getCachedAssetUrl(remote: Uri): Uri {
+        val hash = UAStringUtil.sha256(remote.path)
+            ?: throw IOException("Failed to generate cached asset URL hash!")
+        return File(directory, hash).toUri()
     }
 
     override fun equals(other: Any?): Boolean {
@@ -199,42 +199,7 @@ internal class DefaultAirshipCachedAssets(
         return directory == other.directory
     }
 
-    override fun hashCode(): Int {
-        return Objects.hash(directory)
-    }
-
-    companion object : Parcelable.Creator<AirshipCachedAssets> {
-        private const val METADATA_SUFFIX = ".metadata"
-        private const val METADATA_IMAGE_WIDTH = "width"
-        private const val METADATA_IMAGE_HEIGHT = "height"
-
-        override fun createFromParcel(parcel: Parcel): AirshipCachedAssets? {
-            val metadata = try {
-                JsonValue.parseString(parcel.readString()).optMap()
-            } catch (ex: JsonException) {
-                UALog.e(ex) { "Failed to restore asset" }
-                jsonMapOf()
-            }
-
-            val path = parcel.readString() ?: return null
-
-            val rootDirectory = try {
-                URI(path)
-            } catch (ex: Exception) {
-                UALog.e(ex) { "Failed to restore asset from $path" }
-                return null
-            }
-
-            val result = DefaultAirshipCachedAssets(
-                rootDirectory = rootDirectory,
-                fileManager = DefaultAssetFileManager(UAirship.getApplicationContext())
-            )
-            result.metadataCache.putAll(metadata.map)
-            return result
-        }
-
-        override fun newArray(size: Int): Array<AirshipCachedAssets?> = arrayOfNulls(size)
-    }
+    override fun hashCode(): Int = Objects.hash(directory)
 
     override fun describeContents(): Int = 0
 
@@ -244,16 +209,48 @@ internal class DefaultAirshipCachedAssets(
             parcel.writeString(metadata.toString())
             parcel.writeString(directory.absolutePath)
         } catch (ex: JsonException) {
-            UALog.e(ex) { "Failed to parcelize metadata" }
+            UALog.e(ex) { "Failed to write cached asset metadata to parcel!" }
         }
     }
-}
 
-private fun URL.toOptionalURI(): URI? {
-    return try {
-        this.toURI()
-    } catch (ex: Exception) {
-        UALog.e(ex) { "Failed to convert URL $this" }
-        null
+    companion object CREATOR: Parcelable.Creator<AirshipCachedAssets> {
+        @VisibleForTesting
+        internal const val METADATA_EXTENSION = ".metadata"
+        private const val METADATA_IMAGE_WIDTH = "width"
+        private const val METADATA_IMAGE_HEIGHT = "height"
+
+        override fun createFromParcel(parcel: Parcel): AirshipCachedAssets? {
+            val metadata = try {
+                JsonValue.parseString(parcel.readString()).optMap()
+            } catch (ex: JsonException) {
+                UALog.e(ex) { "Failed to restore cached asset metadata from parcel!" }
+                jsonMapOf()
+            }
+
+            val path = parcel.readString() ?: return null
+            val file = File(path)
+
+            val directory = try {
+                if (file.exists()) {
+                    file
+                } else {
+                    UALog.e { "Failed to restore cached asset! Directory does not exist! $path" }
+                    return null
+                }
+            } catch (ex: Exception) {
+                UALog.e(ex) { "Failed to restore cached asset! $path" }
+                return null
+            }
+
+            val result = DefaultAirshipCachedAssets(
+                directory = directory,
+                fileManager = DefaultAssetFileManager(UAirship.getApplicationContext())
+            )
+            result.metadataCache.putAll(metadata.map)
+
+            return result
+        }
+
+        override fun newArray(size: Int): Array<AirshipCachedAssets?> = arrayOfNulls(size)
     }
 }
