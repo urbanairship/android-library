@@ -2,6 +2,15 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 17.8.1, May 13, 2024
+Patch release that improves first run display times for Scenes, Surveys, and In-App Automations.
+
+### Changes
+- Fixed checking for channel ID being created when preparing a IAX to display causing messages to be delayed late on first run.
+- Experiments and IAX that use either personalization or server side segmentation will now block and wait for the channel to become available instead of retrying after 30 seconds.
+- Fixed server side segmentation & personalization for the device property `app version` to use the version name instead of the version code for IAX and Feature Flags. This was a regression introduced in 17.0.0. The local audience app version selector will continue to use version code.
+
+
 ## Version 17.8.0, April 11, 2024
 Minor release that fixes potential crashes when evaluating experiments before a Channel ID has been created. Apps that make use of experiments or holdout groups should update to this version or later.
 
