@@ -9,7 +9,6 @@ import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.locale.LocaleManager
 import java.util.Locale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -63,7 +62,7 @@ public data class DeferredRequest @JvmOverloads constructor(
     val triggerContext: DeferredTriggerContext? = null,
     val locale: Locale,
     val notificationOptIn: Boolean,
-    val appVersion: String = UAirship.getAppVersion().toString(),
+    val appVersionName: String,
     val sdkVersion: String = UAirship.getVersion()
 ) {
 
@@ -75,31 +74,29 @@ public data class DeferredRequest @JvmOverloads constructor(
         @JvmStatic
         public fun automation(
             uri: Uri,
-            channelID: String,
             infoProvider: DeviceInfoProvider,
             triggerType: String?,
             triggerEvent: JsonValue?,
             triggerGoal: Double,
-            localeManager: LocaleManager
         ): PendingResult<DeferredRequest> {
 
             val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
             val result = PendingResult<DeferredRequest>()
-            val context: DeferredTriggerContext?
-            if (triggerType != null && triggerEvent != null) {
-                context = DeferredTriggerContext(triggerType, triggerGoal, triggerEvent)
+            val context = if (triggerType != null && triggerEvent != null) {
+                DeferredTriggerContext(triggerType, triggerGoal, triggerEvent)
             } else {
-                context = null
+                null
             }
 
             scope.launch {
                 result.result = DeferredRequest(
                     uri = uri,
-                    channelID = channelID,
+                    channelID = infoProvider.getChannelId(),
                     contactID = infoProvider.getStableContactId(),
                     triggerContext = context,
-                    locale = localeManager.locale,
-                    notificationOptIn = infoProvider.isNotificationsOptedIn
+                    locale = infoProvider.locale,
+                    notificationOptIn = infoProvider.isNotificationsOptedIn,
+                    appVersionName = infoProvider.appVersionName
                 )
             }
 

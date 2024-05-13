@@ -55,7 +55,7 @@ public class AutomationModuleFactoryImpl implements AutomationModuleFactory {
 
         InAppAutomation inAppAutomation = new InAppAutomation(context, dataStore, runtimeConfig,
                 privacyManager, analytics, remoteData, airshipChannel, experimentManager,
-                meteredUsage, contact, deferredResolver, localeManager);
+                meteredUsage, contact, deferredResolver);
         LegacyInAppMessageManager legacyInAppMessageManager = new LegacyInAppMessageManager(context, dataStore, inAppAutomation, analytics, pushManager);
 
         Collection<AirshipComponent> components = Arrays.asList(inAppAutomation, legacyInAppMessageManager);

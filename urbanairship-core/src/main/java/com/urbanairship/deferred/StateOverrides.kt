@@ -6,7 +6,7 @@ import com.urbanairship.json.jsonMapOf
 import java.util.Locale
 
 internal data class StateOverrides(
-    val appVersion: String,
+    val appVersionName: String,
     val sdkVersion: String,
     val notificationOptIn: Boolean,
     val locale: Locale?
@@ -20,7 +20,7 @@ internal data class StateOverrides(
     }
 
     constructor(request: DeferredRequest) : this(
-        appVersion = request.appVersion,
+        appVersionName = request.appVersionName,
         sdkVersion = request.sdkVersion,
         notificationOptIn = request.notificationOptIn,
         locale = request.locale
@@ -28,7 +28,7 @@ internal data class StateOverrides(
 
     override fun toJsonValue(): JsonValue {
         return jsonMapOf(
-            KEY_APP_VERSION to appVersion,
+            KEY_APP_VERSION to appVersionName,
             KEY_SDK_VERSION to sdkVersion,
             KEY_NOTIFICATION_OPT_IN to notificationOptIn,
             KEY_LOCALE_COUNTRY to locale?.country,

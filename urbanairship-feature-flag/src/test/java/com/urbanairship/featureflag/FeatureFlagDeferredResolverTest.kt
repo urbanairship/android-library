@@ -372,7 +372,7 @@ public class FeatureFlagDeferredResolverTest {
             triggerContext = DeferredTriggerContext("type", 1.0, JsonValue.wrap(1)),
             locale = Locale.ENGLISH,
             notificationOptIn = false,
-            appVersion = "1.2.3",
+            appVersionName = "1.2.3",
             sdkVersion = "3.2.1"
         )
     }

@@ -245,7 +245,8 @@ public class FeatureFlagManager
                         channelID = chanelId,
                         contactID = contactId,
                         locale = locale,
-                        notificationOptIn = deviceInfo.isNotificationsOptedIn
+                        notificationOptIn = deviceInfo.isNotificationsOptedIn,
+                        appVersionName = deviceInfo.appVersionName
                     )
 
                     deferredResolver.resolve(request, info)

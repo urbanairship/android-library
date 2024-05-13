@@ -49,7 +49,7 @@ public class DeferredApiClientTest {
         every { userLocale.language } returns "test-language"
 
         val stateOverrides = StateOverrides(
-            appVersion = "1.2.3",
+            appVersionName = "1.2.3",
             sdkVersion = "test-sdk",
             notificationOptIn = true,
             locale = userLocale
@@ -134,7 +134,7 @@ public class DeferredApiClientTest {
         val channelId = "test-channel-id"
 
         val stateOverrides = StateOverrides(
-            appVersion = "1.2.3",
+            appVersionName = "1.2.3",
             sdkVersion = "test-sdk",
             notificationOptIn = true,
             locale = null

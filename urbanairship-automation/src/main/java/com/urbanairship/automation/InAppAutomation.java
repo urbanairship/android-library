@@ -87,8 +87,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
 
     private final AirshipMeteredUsage meteredUsage;
     private final DeferredResolver deferredResolver;
-    private final LocaleManager localeManager;
-
     private final ActionsScheduleDelegate actionScheduleDelegate;
     private final InAppMessageScheduleDelegate inAppMessageScheduleDelegate;
 
@@ -183,7 +181,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
      * @param meteredUsage The metered usage tracker.
      * @param contact The current contact.
      * @param deferredResolver The shared deferred resolver.
-     * @param localeManager The airship locale manager.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -197,8 +194,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                            @NonNull ExperimentManager experimentManager,
                            @NonNull AirshipMeteredUsage meteredUsage,
                            @NonNull Contact contact,
-                           @NonNull DeferredResolver deferredResolver,
-                           @NonNull LocaleManager localeManager) {
+                           @NonNull DeferredResolver deferredResolver) {
         super(context, preferenceDataStore);
         this.privacyManager = privacyManager;
         this.automationEngine = new AutomationEngine(context, runtimeConfig, analytics, preferenceDataStore);
@@ -217,7 +213,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.backgroundExecutor = AirshipExecutors.newSerialExecutor();
         this.contact = contact;
         this.deferredResolver = deferredResolver;
-        this.localeManager = localeManager;
     }
 
     @VisibleForTesting
@@ -239,8 +234,7 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                     @NonNull Clock clock,
                     @NonNull Executor executor,
                     @NonNull Contact contact,
-                    @NonNull DeferredResolver deferredResolver,
-                    @NonNull LocaleManager localeManager) {
+                    @NonNull DeferredResolver deferredResolver) {
 
         super(context, preferenceDataStore);
         this.privacyManager = privacyManager;
@@ -260,7 +254,6 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
         this.backgroundExecutor = executor;
         this.contact = contact;
         this.deferredResolver = deferredResolver;
-        this.localeManager = localeManager;
     }
 
     /**
@@ -726,16 +719,11 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
                                                     final @Nullable ExperimentResult experimentResult,
                                                     final @NonNull AutomationDriver.PrepareScheduleCallback callback) {
 
-        String channelId = airshipChannel.getId();
-        if (channelId == null) {
-            return RetryingExecutor.retryResult();
-        }
-
         Deferred scheduleData = schedule.coerceType();
         DeferredResult<AutomationDeferredResult> result;
 
         try {
-            DeferredRequest request = makeDeferredRequest(scheduleData, deviceInfoProvider, channelId, triggerContext);
+            DeferredRequest request = makeDeferredRequest(scheduleData, deviceInfoProvider, triggerContext);
             result = deferredResolver
                     .resolveAsPendingResult(request, AutomationDeferredResult::parse).get();
 
@@ -789,11 +777,11 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
     private DeferredRequest makeDeferredRequest(
             @NonNull Deferred schedule,
             @NonNull DeviceInfoProvider deviceInfoProvider,
-            @NonNull String channelId,
-            @Nullable TriggerContext triggerContext) throws ExecutionException, InterruptedException {
+            @Nullable TriggerContext triggerContext
+    ) throws ExecutionException, InterruptedException {
         String triggerType = null;
         JsonValue triggerEvent = null;
-        Double triggerGoal = 0.0;
+        double triggerGoal = 0.0;
 
         if (triggerContext != null) {
             triggerType = triggerContext.getTrigger().getTriggerName();
@@ -801,8 +789,8 @@ public class InAppAutomation extends AirshipComponent implements InAppAutomation
             triggerGoal = triggerContext.getTrigger().getGoal();
         }
 
-        return DeferredRequest.automation(schedule.getUrl(), channelId, deviceInfoProvider,
-                triggerType, triggerEvent, triggerGoal, localeManager).get();
+        return DeferredRequest.automation(schedule.getUrl(), deviceInfoProvider,
+                triggerType, triggerEvent, triggerGoal).get();
     }
 
     @MainThread

@@ -122,7 +122,7 @@ public class InAppAutomationTest {
     private AirshipConfigOptions config = AirshipConfigOptions.newBuilder().build();
     private AirshipRuntimeConfig mockRuntimeConfig = mock(AirshipRuntimeConfig.class);
 
-    private DeviceInfoProvider mockInfoProvider = mock(DeviceInfoProvider.class);
+    private TestDeviceInfoProvider testDeviceInfoProvider = new TestDeviceInfoProvider();
 
     private Clock mockClock = mock(Clock.class);
     private AirshipMeteredUsage meteredUsage = mock(AirshipMeteredUsage.class);
@@ -130,7 +130,6 @@ public class InAppAutomationTest {
     private Contact mockContact = mock(Contact.class);
 
     private DeferredResolver deferredResolver;
-    private LocaleManager localeManager;
 
     @Before
     public void setup() {
@@ -142,9 +141,6 @@ public class InAppAutomationTest {
         mockEngine = mock(AutomationEngine.class);
         deferredResolver = mock(DeferredResolver.class);
         mockExperimentManager = mock(ExperimentManager.class);
-        localeManager = mock(LocaleManager.class);
-
-        when(localeManager.getLocale()).thenReturn(new Locale("test-language", "test-country"));
 
         doAnswer(new Answer<Void>() {
             @Override
@@ -177,8 +173,8 @@ public class InAppAutomationTest {
         inAppAutomation = new InAppAutomation(TestApplication.getApplication(), TestApplication.getApplication().preferenceDataStore,
                 mockRuntimeConfig, privacyManager, mockEngine, mockChannel, mockObserver, mockIamManager,
                 executor, mockActionsScheduleDelegate, mockMessageScheduleDelegate,
-                mockFrequencyLimitManager, mockExperimentManager, () -> mockInfoProvider,
-                meteredUsage, mockClock, executor, mockContact, deferredResolver, localeManager);
+                mockFrequencyLimitManager, mockExperimentManager, () -> testDeviceInfoProvider,
+                meteredUsage, mockClock, executor, mockContact, deferredResolver);
 
         inAppAutomation.init();
         inAppAutomation.onAirshipReady(UAirship.shared());
@@ -348,7 +344,6 @@ public class InAppAutomationTest {
 
     @Test
     public void testDeferredSchedules() throws RequestException {
-        when(mockChannel.getId()).thenReturn("some channel");
         CustomEvent event = CustomEvent.newBuilder("some event").build();
         TriggerContext triggerContext = new TriggerContext(Triggers.newCustomEventTriggerBuilder().build(), event.toJsonValue());
 
@@ -370,13 +365,13 @@ public class InAppAutomationTest {
         attributeOverrides.add(AttributeMutation.newRemoveAttributeMutation("foo", 100));
         attributeOverrides.add(AttributeMutation.newRemoveAttributeMutation("bar", 100));
 
-        audienceOverridesProvider.recordChannelUpdate("some channel", tagOverrides, attributeOverrides, null);
+        audienceOverridesProvider.recordChannelUpdate(testDeviceInfoProvider.getChannelId(), tagOverrides, attributeOverrides, null);
 
         DeferredTriggerContext deferredTriggerContext = new DeferredTriggerContext(triggerContext.getTrigger().getTriggerName(),
                 triggerContext.getTrigger().getGoal(), triggerContext.getEvent());
 
-        DeferredRequest request = new DeferredRequest(Uri.parse("https://neat"), "some channel",
-                null, deferredTriggerContext, localeManager.getLocale(), false);
+        DeferredRequest request = new DeferredRequest(Uri.parse("https://neat"), testDeviceInfoProvider.getChannelId(),
+                testDeviceInfoProvider.getStableContactId(), deferredTriggerContext, testDeviceInfoProvider.getLocale(), testDeviceInfoProvider.isNotificationsOptedIn(), testDeviceInfoProvider.getAppVersionName());
 
         doAnswer(invocation -> {
             AutomationDeferredResult automationDeferredResult = new AutomationDeferredResult(true, message);
@@ -1117,7 +1112,7 @@ public class InAppAutomationTest {
         driver.onPrepareSchedule(schedule, null, callback);
 
         ArgumentCaptor<AutomationDriver.PrepareScheduleCallback> argumentCaptor = ArgumentCaptor.forClass(AutomationDriver.PrepareScheduleCallback.class);
-        verify(mockExperimentManager, never()).evaluateGlobalHoldoutsPendingResult(any(), eq(mockInfoProvider), nullable(String.class));
+        verify(mockExperimentManager, never()).evaluateGlobalHoldoutsPendingResult(any(), eq(testDeviceInfoProvider), nullable(String.class));
         verify(mockMessageScheduleDelegate).onPrepareSchedule(eq(schedule), eq(schedule.getData()), any(), argumentCaptor.capture());
 
         argumentCaptor.getValue().onFinish(AutomationDriver.PREPARE_RESULT_CONTINUE);
@@ -1146,7 +1141,7 @@ public class InAppAutomationTest {
         pendingResult.setResult(results);
         doReturn(pendingResult)
                 .when(mockExperimentManager)
-                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq(mockInfoProvider), nullable(String.class));
+                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq(testDeviceInfoProvider), nullable(String.class));
 
         doReturn(new RemoteDataInfo("url", null, RemoteDataSource.APP, null))
                 .when(mockObserver).parseRemoteDataInfo(eq(schedule));
@@ -1181,7 +1176,7 @@ public class InAppAutomationTest {
         pendingResult.setResult(results);
         doReturn(pendingResult)
                 .when(mockExperimentManager)
-                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq(mockInfoProvider), eq("some-contact-id"));
+                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq(testDeviceInfoProvider), eq("some-contact-id"));
 
         doReturn(new RemoteDataInfo("url", null, RemoteDataSource.APP, "some-contact-id"))
                 .when(mockObserver).parseRemoteDataInfo(eq(schedule));
@@ -1222,7 +1217,7 @@ public class InAppAutomationTest {
         pendingResult.setResult(results);
         doReturn(pendingResult)
                 .when(mockExperimentManager)
-                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq(mockInfoProvider), nullable(String.class));
+                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq(testDeviceInfoProvider), nullable(String.class));
 
         doReturn(new RemoteDataInfo("url", null, RemoteDataSource.APP, null))
                 .when(mockObserver).parseRemoteDataInfo(eq(schedule));
@@ -1268,7 +1263,7 @@ public class InAppAutomationTest {
         pendingResult.setResult(results);
         doReturn(pendingResult)
                 .when(mockExperimentManager)
-                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq(mockInfoProvider), nullable(String.class));
+                .evaluateGlobalHoldoutsPendingResult(eq(expectedInfo), eq(testDeviceInfoProvider), nullable(String.class));
 
         doReturn(new RemoteDataInfo("url", null, RemoteDataSource.APP, null))
                 .when(mockObserver).parseRemoteDataInfo(eq(schedule));
