@@ -47,7 +47,12 @@ internal class AutomationSourceInfoStore(
 
     fun getSourceInfo(source: RemoteDataSource, contactID: String?): AutomationSourceInfo? {
         val key = makeInfoKey(source, contactID)
-        return AutomationSourceInfo.fromJson(dataStore.getJsonValue(key))
+        val json = dataStore.getJsonValue(key)
+        return if (json.isNull) {
+            recoverSource(source, contactID)
+        } else {
+            AutomationSourceInfo.fromJson(json)
+        }
     }
 
     fun setSourceInfo(info: AutomationSourceInfo, source: RemoteDataSource, contactID: String?) {
@@ -62,7 +67,59 @@ internal class AutomationSourceInfoStore(
         }
     }
 
+    private fun recoverSource(source: RemoteDataSource, contactID: String?): AutomationSourceInfo? {
+        val key = makeInfoKey(source, contactID)
+
+        return when (source) {
+            RemoteDataSource.APP -> {
+                recoverStore(
+                    key = key,
+                    legacyTimestampKey = LEGACY_APP_LAST_PAYLOAD_TIMESTAMP_KEY,
+                    legacySdkVersionKey = LEGACY_APP_LAST_SDK_VERSION_KEY
+                )
+            }
+
+            RemoteDataSource.CONTACT -> {
+                recoverStore(
+                    key = key,
+                    legacyTimestampKey = LEGACY_CONTACT_LAST_PAYLOAD_TIMESTAMP_KEY,
+                    legacySdkVersionKey = LEGACY_CONTACT_LAST_SDK_VERSION_KEY
+                )
+            }
+        }
+    }
+
+    private fun recoverStore(
+        key: String,
+        legacyTimestampKey: String,
+        legacySdkVersionKey: String
+    ): AutomationSourceInfo? {
+        val lastSDKVersion = dataStore.getString(legacySdkVersionKey, null)
+        val lastUpdate: Long = dataStore.getLong(legacyTimestampKey, -1L)
+
+        if (lastSDKVersion == null || lastUpdate == -1L) {
+            return null
+        }
+
+        val store = AutomationSourceInfo(
+            remoteDataInfo = null,
+            payloadTimestamp = lastUpdate,
+            airshipSDKVersion = lastSDKVersion
+        )
+
+        dataStore.put(key, store)
+        dataStore.remove(legacyTimestampKey)
+        dataStore.remove(legacySdkVersionKey)
+        return store
+    }
+
     companion object {
         private const val SOURCE_INFO_KEY_PREFIX = "AutomationSourceInfo"
+
+        // Legacy store keys
+        private const val LEGACY_APP_LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP"
+        private const val LEGACY_APP_LAST_SDK_VERSION_KEY = "com.urbanairship.iaa.last_sdk_version"
+        private const val LEGACY_CONTACT_LAST_PAYLOAD_TIMESTAMP_KEY = "com.urbanairship.iam.data.contact_last_payload_timestamp"
+        private const val LEGACY_CONTACT_LAST_SDK_VERSION_KEY =  "com.urbanairship.iaa.contact_last_sdk_version"
     }
 }

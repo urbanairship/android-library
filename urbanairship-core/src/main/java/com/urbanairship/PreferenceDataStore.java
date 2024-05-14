@@ -43,7 +43,10 @@ public final class PreferenceDataStore {
             "com.urbanairship.push.LAST_REGISTRATION_PAYLOAD",
             "com.urbanairship.remotedata.LAST_REFRESH_APP_VERSION",
             "com.urbanairship.remotedata.LAST_MODIFIED",
-            "com.urbanairship.remotedata.LAST_REFRESH_TIME"
+            "com.urbanairship.remotedata.LAST_REFRESH_TIME",
+            "com.urbanairship.iam.data.last_payload_info",
+            "com.urbanairship.iam.data.LAST_PAYLOAD_METADATA",
+            "com.urbanairship.iam.data.contact_last_payload_info"
     };
 
     Executor executor = AirshipExecutors.newSerialExecutor();
