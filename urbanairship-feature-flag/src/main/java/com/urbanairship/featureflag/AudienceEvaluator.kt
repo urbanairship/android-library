@@ -2,16 +2,15 @@
 
 package com.urbanairship.featureflag
 
-import android.content.Context
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
 
-internal class AudienceEvaluator(private val context: Context) {
+internal class AudienceEvaluator {
     suspend fun evaluate(
         audienceSelector: AudienceSelector,
         newEvaluationDate: Long,
         infoProvider: DeviceInfoProvider
     ): Boolean {
-        return audienceSelector.evaluate(context, newEvaluationDate, infoProvider)
+        return audienceSelector.evaluate(newEvaluationDate, infoProvider)
     }
 }

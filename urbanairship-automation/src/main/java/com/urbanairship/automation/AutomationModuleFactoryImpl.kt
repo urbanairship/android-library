@@ -10,7 +10,6 @@ import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.GlobalActivityMonitor
-import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.automation.action.ActionAutomationExecutor
 import com.urbanairship.automation.action.ActionAutomationPreparer
 import com.urbanairship.automation.engine.AutomationDelayProcessor
@@ -35,7 +34,6 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.contacts.Contact
 import com.urbanairship.deferred.DeferredResolver
 import com.urbanairship.experiment.ExperimentManager
-import com.urbanairship.locale.LocaleManager
 import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.automation.AutomationModuleFactory
@@ -60,14 +58,11 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         analytics: Analytics,
         remoteData: RemoteData,
         experimentManager: ExperimentManager,
-        infoProvider: DeviceInfoProvider,
         meteredUsage: AirshipMeteredUsage,
         contact: Contact,
         deferredResolver: DeferredResolver,
-        localeManager: LocaleManager,
         eventFeed: AirshipEventFeed,
-        metrics: ApplicationMetrics,
-        useNewAutomation: Boolean
+        metrics: ApplicationMetrics
     ): Module {
 
 
@@ -111,7 +106,6 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                     messagePreparer = messagePreparer,
                     deferredResolver = deferredResolver,
                     frequencyLimitManager = frequencyLimits,
-                    deviceInfoProvider = infoProvider,
                     experiments = experimentManager,
                     remoteDataAccess = remoteDataAccess
                 ),

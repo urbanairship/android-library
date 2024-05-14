@@ -30,7 +30,9 @@ public class FeatureFlagManager
     dataStore: PreferenceDataStore,
     private val audienceEvaluator: AudienceEvaluator,
     private val remoteData: FeatureFlagRemoteDataAccess,
-    private val infoProvider: DeviceInfoProvider,
+    private val infoProviderFactory: () -> DeviceInfoProvider = {
+        DeviceInfoProvider.newCachingProvider()
+    },
     private val deferredResolver: FlagDeferredResolver,
     private val featureFlagAnalytics: FeatureFlagAnalytics
 ) : AirshipComponent(context, dataStore) {
@@ -160,26 +162,26 @@ public class FeatureFlagManager
             )
         }
 
-        val deviceInfoSnapshot = infoProvider.snapshot(context)
+        val deviceInfo = infoProviderFactory()
 
         for (info in flags) {
-            if (!audienceEvaluator.evaluateOptional(info.audience, info.created, deviceInfoSnapshot)) {
+            if (!audienceEvaluator.evaluateOptional(info.audience, info.created, deviceInfo)) {
                 continue
             }
 
             return when (val payload = info.payload) {
                 is FeatureFlagPayload.StaticPayload -> {
-                    resolveStatic(info, true, payload, deviceInfoSnapshot)
+                    resolveStatic(info, true, payload, deviceInfo)
                 }
                 is FeatureFlagPayload.DeferredPayload -> {
-                    resolveDeferred(info, payload, deviceInfoSnapshot)
+                    resolveDeferred(info, payload, deviceInfo)
                 }
             }
         }
 
         val last = flags.last()
         return if (last.payload is FeatureFlagPayload.StaticPayload) {
-            resolveStatic(last, false, last.payload, deviceInfoSnapshot)
+            resolveStatic(last, false, last.payload, deviceInfo)
         } else {
             Result.success(
                 FeatureFlag.createFlag(
@@ -188,8 +190,8 @@ public class FeatureFlagManager
                     variables = null,
                     reportingInfo = FeatureFlag.ReportingInfo(
                         reportingMetadata = last.reportingContext,
-                        channelId = deviceInfoSnapshot.channelId,
-                        contactId = deviceInfoSnapshot.getStableContactId(),
+                        channelId = deviceInfo.getChannelId(),
+                        contactId = deviceInfo.getStableContactId(),
                     )
                 )
             )
@@ -214,7 +216,7 @@ public class FeatureFlagManager
             variables = variables?.data,
             reportingInfo = FeatureFlag.ReportingInfo(
                 reportingMetadata = variables?.reportingMetadata ?: flagInfo.reportingContext,
-                channelId = deviceInfoProvider.channelId,
+                channelId = deviceInfoProvider.getChannelId(),
                 contactId = deviceInfoProvider.getStableContactId()
             )
         )
@@ -228,13 +230,14 @@ public class FeatureFlagManager
         deviceInfoProvider: DeviceInfoProvider
     ): Result<FeatureFlag> {
         val contactId = deviceInfoProvider.getStableContactId()
-        val chanelId = deviceInfoProvider.channelId ?: return Result.failure(FeatureFlagException.FailedToFetch())
+        val chanelId = deviceInfoProvider.getChannelId()
         val request = DeferredRequest(
             uri = deferredPayload.url,
             channelID = chanelId,
             contactID = contactId,
-            locale = deviceInfoProvider.getUserLocale(context),
-            notificationOptIn = deviceInfoProvider.isNotificationsOptedIn
+            locale = deviceInfoProvider.locale,
+            notificationOptIn = deviceInfoProvider.isNotificationsOptedIn,
+            appVersionName = deviceInfoProvider.appVersionName
         )
 
         return deferredResolver.resolve(request, flagInfo).fold(
@@ -253,7 +256,7 @@ public class FeatureFlagManager
                             variables = variables?.data,
                             reportingInfo = FeatureFlag.ReportingInfo(
                                 reportingMetadata = variables?.reportingMetadata ?: deferredFlag.flagInfo.reportingMetadata,
-                                channelId = deviceInfoProvider.channelId,
+                                channelId = deviceInfoProvider.getChannelId(),
                                 contactId = deviceInfoProvider.getStableContactId()
                             )
                         )

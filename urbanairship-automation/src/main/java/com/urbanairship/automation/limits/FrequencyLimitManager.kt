@@ -33,8 +33,8 @@ internal class FrequencyLimitManager(
     private val queue = SerialQueue()
 
     internal constructor(context: Context, config: AirshipRuntimeConfig) : this(
-        FrequencyLimitDatabase.createDatabase(context, config).dao)
-
+        FrequencyLimitDatabase.createDatabase(context, config).dao
+    )
 
     @VisibleForTesting
     internal fun isOverLimit(constraintIDs: Collection<String>): Boolean {
@@ -80,28 +80,32 @@ internal class FrequencyLimitManager(
         val time = clock.currentTimeMillis()
 
         lock.withLock {
-            constraintIDs.forEach { id ->
-                constraintMap[id]?.let { info ->
+            constraintIDs.forEach {
+                val constraint = constraintMap[it]
+                if (constraint != null) {
                     val occurrence = OccurrenceEntity()
-                    occurrence.parentConstraintId = id
+                    occurrence.parentConstraintId = it
                     occurrence.timeStamp = time
 
-                    info.occurrences.add(occurrence)
                     pendingOccurrences.add(occurrence)
+                    constraint.occurrences.add(occurrence)
                 }
             }
         }
 
-
         scope.launch {
-            queue.run {
-                savePendingOccurrences()
-            }
+            writePendingInQueue()
         }
     }
 
     @VisibleForTesting
-    internal suspend fun savePendingOccurrences() {
+    suspend fun writePendingInQueue() {
+        queue.run {
+            writePending()
+        }
+    }
+
+    private suspend fun writePending() {
         val toSave = lock.withLock {
             val copy = pendingOccurrences.map { it }
             pendingOccurrences.clear()
@@ -116,6 +120,7 @@ internal class FrequencyLimitManager(
             }
         }
     }
+
 
     /**
      * Gets a frequency checker for the current constraints.
@@ -132,9 +137,11 @@ internal class FrequencyLimitManager(
         }
 
         return queue.run {
-            savePendingOccurrences()
+            writePending()
+            val fetched = lock.withLock {
+                constraintMap.keys
+            }
 
-            val fetched = constraintMap.keys
             val need = constraintIds.subtract(fetched)
 
             for (id in need) {
@@ -143,7 +150,9 @@ internal class FrequencyLimitManager(
                 )
 
                 val occurrenceEntities = dao.getOccurrences(id) ?: listOf()
-                constraintMap[id] = ConstraintInfo(constraint, occurrenceEntities.toMutableList())
+                lock.withLock {
+                    constraintMap[id] = ConstraintInfo(constraint, occurrenceEntities.toMutableList())
+                }
             }
 
             val frequencyChecker = object: FrequencyChecker {
@@ -163,8 +172,7 @@ internal class FrequencyLimitManager(
      */
     suspend fun setConstraints(constraints: List<FrequencyConstraint>): Result<Unit> {
         return queue.run {
-            savePendingOccurrences()
-
+            writePending()
             try {
                 val existing = dao.getAllConstraints() ?: listOf()
                 val incomingIds = constraints.map { it.identifier }

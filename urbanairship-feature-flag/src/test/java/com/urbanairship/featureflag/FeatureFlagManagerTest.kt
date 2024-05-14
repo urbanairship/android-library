@@ -42,12 +42,11 @@ class FeatureFlagManagerTest {
 
     private val infoProvider: DeviceInfoProvider = mockk {
         coEvery { this@mockk.getPermissionStatuses() } returns mapOf()
-        coEvery { this@mockk.snapshot(any()) } returns this@mockk
-        every { this@mockk.channelId } answers { this@FeatureFlagManagerTest.channelId }
+        coEvery { this@mockk.getChannelId() } answers { this@FeatureFlagManagerTest.channelId }
         coEvery { this@mockk.getStableContactId() } answers { contactId }
-        every { this@mockk.appVersion } returns 1
-        every { this@mockk.userCutOffDate(context) } returns 1
-        every { this@mockk.getUserLocale(context) } returns Locale.US
+        every { this@mockk.appVersionName } returns "1.0.0"
+        every { this@mockk.installDateMilliseconds } returns 1
+        every { this@mockk.locale } returns Locale.US
         every { this@mockk.isNotificationsOptedIn } returns true
     }
 
@@ -66,7 +65,7 @@ class FeatureFlagManagerTest {
         dataStore = PreferenceDataStore.inMemoryStore(context),
         audienceEvaluator = audienceEvaluator,
         remoteData = remoteDataAccess,
-        infoProvider = infoProvider,
+        infoProviderFactory = { infoProvider },
         deferredResolver = deferredResolver,
         featureFlagAnalytics = featureFlagAnalytics,
     )
@@ -940,7 +939,7 @@ class FeatureFlagManagerTest {
             reportingMetadata = reportingMetadata
                 ?: jsonMapOf("flag_id" to "27f26d85-0550-4df5-85f0-7022fa7a5925"),
             contactId = infoProvider.getStableContactId(),
-            channelId = infoProvider.channelId
+            channelId = infoProvider.getChannelId()
         )
     }
 

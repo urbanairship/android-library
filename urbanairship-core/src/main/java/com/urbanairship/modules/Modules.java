@@ -4,7 +4,6 @@ package com.urbanairship.modules;
 
 import android.content.Context;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.PreferenceDataStore;
@@ -13,14 +12,12 @@ import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.AirshipEventFeed;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.cache.AirshipCache;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.contacts.Contact;
 import com.urbanairship.deferred.DeferredResolver;
 import com.urbanairship.experiment.ExperimentManager;
-import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
 import com.urbanairship.modules.aaid.AdIdModuleFactory;
 import com.urbanairship.modules.automation.AutomationModuleFactory;
@@ -103,21 +100,19 @@ public class Modules {
             @NonNull Analytics analytics,
             @NonNull RemoteData remoteData,
             @NonNull ExperimentManager experimentManager,
-            @NonNull DeviceInfoProvider infoProvider,
             @NonNull AirshipMeteredUsage meteredUsage,
             @NonNull Contact contact,
             @NonNull DeferredResolver deferredResolver,
-            @NonNull LocaleManager localeManager,
             @NonNull AirshipEventFeed eventFeed,
             @NonNull ApplicationMetrics metrics
-            ) {
+    ) {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager,
                         airshipChannel, pushManager, analytics, remoteData, experimentManager,
-                        infoProvider, meteredUsage, contact, deferredResolver, localeManager,
-                        eventFeed, metrics, true);
+                        meteredUsage, contact, deferredResolver,
+                        eventFeed, metrics);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Automation module");
@@ -199,7 +194,6 @@ public class Modules {
             @NonNull PreferenceDataStore dataStore,
             @NonNull RemoteData remoteData,
             @NonNull Analytics analytics,
-            @NonNull DeviceInfoProvider infoProvider,
             @NonNull AirshipCache cache,
             @NonNull DeferredResolver resolver,
             @NonNull AirshipEventFeed eventFeed
@@ -208,7 +202,7 @@ public class Modules {
             FeatureFlagsModuleFactory moduleFactory =
                     createFactory(FEATURE_FLAGS_FACTORY, FeatureFlagsModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore, remoteData, analytics, infoProvider,
+                return moduleFactory.build(context, dataStore, remoteData, analytics,
                         cache, resolver, eventFeed);
             }
         } catch (Exception e) {

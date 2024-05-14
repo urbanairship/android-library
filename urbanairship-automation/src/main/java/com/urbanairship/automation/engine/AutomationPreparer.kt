@@ -36,7 +36,7 @@ internal class AutomationPreparer internal constructor(
     private val messagePreparer: AutomationPreparerDelegate<InAppMessage, PreparedInAppMessageData>,
     private val deferredResolver: DeferredResolver,
     private val frequencyLimitManager: FrequencyLimitManager,
-    private val deviceInfoProvider: DeviceInfoProvider,
+    private val deviceInfoProviderFactory: () -> DeviceInfoProvider = { DeviceInfoProvider.newCachingProvider() },
     private val experiments: ExperimentManager,
     private val remoteDataAccess: AutomationRemoteDataAccess,
     private val queues: Queues = Queues()
@@ -64,6 +64,7 @@ internal class AutomationPreparer internal constructor(
         val prepareCache = PrepareCache()
         return queues.queue(schedule.queue).run("Schedule ${schedule.identifier}") {
 
+            val deviceInfoProvider = deviceInfoProviderFactory()
             // Check if we are out of date
             if (remoteDataAccess.requiredUpdate(schedule)) {
                 UALog.v { "Schedule out of date ${schedule.identifier}" }
@@ -98,9 +99,8 @@ internal class AutomationPreparer internal constructor(
             // Audience checks
             schedule.audience?.let {
                 val match = it.audienceSelector.evaluate(
-                    context = context,
                     newEvaluationDate = schedule.created.toLong(),
-                    infoProvider = deviceInfoProvider.snapshot(context),
+                    infoProvider = deviceInfoProvider,
                     contactId = remoteDataAccess.contactIDFor(schedule)
                 )
 
@@ -113,7 +113,7 @@ internal class AutomationPreparer internal constructor(
             }
 
             // Experiment result
-            val experimentResult = evaluateExperiments(schedule).getOrElse { ex ->
+            val experimentResult = evaluateExperiments(schedule, deviceInfoProvider).getOrElse { ex ->
                 UALog.e(ex) { "Failed to evaluate hold out groups ${schedule.identifier}" }
                 remoteDataAccess.notifyOutdated(schedule)
                 return@run RetryingQueue.Result.Retry()
@@ -221,14 +221,17 @@ internal class AutomationPreparer internal constructor(
         }
     }
 
-    private suspend fun evaluateExperiments(schedule: AutomationSchedule): Result<ExperimentResult?> {
+    private suspend fun evaluateExperiments(
+        schedule: AutomationSchedule,
+        deviceInfoProvider: DeviceInfoProvider
+    ): Result<ExperimentResult?> {
         return if (schedule.evaluateExperiments()) {
             experiments.evaluateExperiments(
                 messageInfo = MessageInfo(
                     messageType = schedule.messageType ?: DEFAULT_MESSAGE_TYPE,
                     campaigns = schedule.campaigns
                 ),
-                contactId = deviceInfoProvider.getStableContactId()
+                deviceInfoProvider = deviceInfoProvider
             )
         } else {
             Result.success(null)
@@ -246,19 +249,16 @@ internal class AutomationPreparer internal constructor(
     ): RetryingQueue.Result<SchedulePrepareResult> {
         UALog.v { "Resolving deferred ${schedule.identifier}" }
 
-        val channelID = deviceInfoProvider.channelId
-        if (channelID == null) {
-            UALog.v { "Unable to resolve deferred until channel is created ${schedule.identifier}" }
-            return RetryingQueue.Result.Retry()
-        }
 
         val request = DeferredRequest(
             uri = deferred.url,
-            channelID = channelID,
+            channelID = deviceInfoProvider.getChannelId(),
             triggerContext = triggerContext,
-            locale = deviceInfoProvider.getUserLocale(context),
-            notificationOptIn = deviceInfoProvider.isNotificationsOptedIn
+            locale = deviceInfoProvider.locale,
+            notificationOptIn = deviceInfoProvider.isNotificationsOptedIn,
+            appVersionName = deviceInfoProvider.appVersionName
         )
+
 
         val result = prepareCache.deferredResult ?: deferredResolver.resolve(request, DeferredScheduleResult::fromJson)
         UALog.v { "Deferred result ${schedule.identifier} $result" }

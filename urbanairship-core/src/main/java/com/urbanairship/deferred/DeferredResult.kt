@@ -11,7 +11,6 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
-import com.urbanairship.locale.LocaleManager
 import java.util.Locale
 import kotlin.jvm.Throws
 import kotlinx.coroutines.CoroutineScope
@@ -70,54 +69,13 @@ public data class DeferredTriggerContext(
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class DeferredRequest @JvmOverloads constructor(
+public data class DeferredRequest(
     val uri: Uri,
     val channelID: String,
     val contactID: String? = null,
     val triggerContext: DeferredTriggerContext? = null,
     val locale: Locale,
     val notificationOptIn: Boolean,
-    val appVersion: String = UAirship.getAppVersion().toString(),
+    val appVersionName: String,
     val sdkVersion: String = UAirship.getVersion()
-) {
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public companion object {
-        @JvmStatic
-        public fun automation(
-            uri: Uri,
-            channelID: String,
-            infoProvider: DeviceInfoProvider,
-            triggerType: String?,
-            triggerEvent: JsonValue?,
-            triggerGoal: Double,
-            localeManager: LocaleManager
-        ): PendingResult<DeferredRequest> {
-
-            val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
-            val result = PendingResult<DeferredRequest>()
-            val context: DeferredTriggerContext?
-            if (triggerType != null && triggerEvent != null) {
-                context = DeferredTriggerContext(triggerType, triggerGoal, triggerEvent)
-            } else {
-                context = null
-            }
-
-            scope.launch {
-                result.result = DeferredRequest(
-                    uri = uri,
-                    channelID = channelID,
-                    contactID = infoProvider.getStableContactId(),
-                    triggerContext = context,
-                    locale = localeManager.locale,
-                    notificationOptIn = infoProvider.isNotificationsOptedIn
-                )
-            }
-
-            return result
-        }
-    }
-}
+)

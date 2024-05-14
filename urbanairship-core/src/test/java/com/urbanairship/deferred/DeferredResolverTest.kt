@@ -202,7 +202,7 @@ public class DeferredResolverTest {
             channelID = "channel-id",
             locale = locale,
             notificationOptIn = true,
-            appVersion = "1.2.3",
+            appVersionName = "1.2.3",
             sdkVersion = "4.3.2"
         )
     }

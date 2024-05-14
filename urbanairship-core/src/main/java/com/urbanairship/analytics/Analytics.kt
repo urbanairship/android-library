@@ -408,7 +408,7 @@ public class Analytics @VisibleForTesting public constructor(
         }
     }
 
-    private val isEnabled: Boolean
+    public val isEnabled: Boolean
         /**
          * Returns `true` if [com.urbanairship.AirshipConfigOptions.analyticsEnabled]
          * is set to `true`, and [PrivacyManager.FEATURE_ANALYTICS] is enabled, otherwise `false`.

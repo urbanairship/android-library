@@ -23,7 +23,6 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
         dataStore: PreferenceDataStore,
         remoteData: RemoteData,
         analytics: Analytics,
-        infoProvider: DeviceInfoProvider,
         cache: AirshipCache,
         resolver: DeferredResolver,
         eventFeed: AirshipEventFeed
@@ -31,9 +30,8 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
         val manager = FeatureFlagManager(
             context = context.applicationContext,
             dataStore = dataStore,
-            audienceEvaluator = AudienceEvaluator(context.applicationContext),
+            audienceEvaluator = AudienceEvaluator(),
             remoteData = FeatureFlagRemoteDataAccess(remoteData),
-            infoProvider = infoProvider,
             deferredResolver = FlagDeferredResolver(cache, resolver),
             featureFlagAnalytics = FeatureFlagAnalytics(eventFeed, analytics)
         )

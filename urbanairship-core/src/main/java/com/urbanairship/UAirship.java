@@ -750,14 +750,10 @@ public class UAirship {
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, runtimeConfig, privacyManager, remoteData);
         components.add(this.remoteConfigManager);
 
-        DeviceInfoProvider infoProvider = new DeviceInfoProviderImpl(
-                pushManager::areNotificationsOptedIn, privacyManager::isEnabled, channel::getTags,
-                channel::getId, applicationMetrics::getCurrentAppVersion, permissionsManager,
-                contact::getStableContactId, PlatformUtils.asString(getPlatformType()), localeManager);
 
         // Experiments
         this.experimentManager = new ExperimentManager(application, preferenceDataStore,
-                remoteData, infoProvider, Clock.DEFAULT_CLOCK);
+                remoteData, Clock.DEFAULT_CLOCK);
         components.add(this.experimentManager);
 
         // Debug
@@ -776,8 +772,7 @@ public class UAirship {
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
                 privacyManager, channel, pushManager, analytics, remoteData, this.experimentManager,
-                infoProvider, meteredUsageManager, contact, deferredResolver, localeManager,
-                eventFeed, applicationMetrics);
+                meteredUsageManager, contact, deferredResolver, eventFeed, applicationMetrics);
         processModule(automationModule);
 
         // Ad Id
@@ -793,7 +788,7 @@ public class UAirship {
         processModule(liveUpdateManager);
 
         // Feature flags
-        Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, analytics, infoProvider,
+        Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, analytics,
                 new AirshipCache(application, runtimeConfig), deferredResolver, eventFeed);
         processModule(featureFlags);
 

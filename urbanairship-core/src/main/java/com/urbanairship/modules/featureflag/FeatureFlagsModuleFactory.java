@@ -4,10 +4,8 @@ import android.content.Context;
 
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.PrivacyManager;
 import com.urbanairship.analytics.AirshipEventFeed;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.cache.AirshipCache;
 import com.urbanairship.deferred.DeferredResolver;
 import com.urbanairship.modules.Module;
@@ -30,7 +28,6 @@ public interface FeatureFlagsModuleFactory extends AirshipVersionInfo {
             @NonNull PreferenceDataStore dataStore,
             @NonNull RemoteData remoteData,
             @NonNull Analytics analytics,
-            @NonNull DeviceInfoProvider infoProvider,
             @NonNull AirshipCache cache,
             @NonNull DeferredResolver resolver,
             @NonNull AirshipEventFeed eventFeed
