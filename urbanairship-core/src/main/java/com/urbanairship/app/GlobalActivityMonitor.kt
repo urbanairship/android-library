@@ -149,6 +149,7 @@ public class GlobalActivityMonitor @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) c
             return singleton ?: synchronized(GlobalActivityMonitor::class.java) {
                 singleton ?: GlobalActivityMonitor().also {
                     it.registerListener(context)
+                    singleton = it
                 }
             }
         }

@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -98,6 +99,7 @@ public class AutomationEventFeed(
 
 
     internal val feed: Flow<AutomationEvent> = stream
+        .onSubscription { attach() }
 
     internal fun attach() {
         if (subscription?.isActive == true) { return }

@@ -94,7 +94,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             startDate, endDate ?: this.endDate, audience, delay, interval, data,
             bypassHoldoutGroups, editGracePeriodDays, metadata ?: this.metadata,
             frequencyConstraintIds, messageType, campaigns, reportingContext, productID,
-            minSDKVersion, created)
+            minSDKVersion, created, queue)
     }
 
     /**

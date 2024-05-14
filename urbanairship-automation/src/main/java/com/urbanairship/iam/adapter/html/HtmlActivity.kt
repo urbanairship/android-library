@@ -208,7 +208,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
         if (delay > 0) {
             handler?.postDelayed(delayedLoadRunnable, delay)
         } else {
-            url?.let {
+            this@HtmlActivity.url?.let {
                 UALog.i("Loading url: %s", it)
                 error = null
                 webView?.loadUrl(it)

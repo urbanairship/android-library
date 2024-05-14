@@ -76,12 +76,22 @@ public class AutomationRemoteDataSubscriberTest {
             )
         )
 
+        var upserts = 0
+        val job = Job()
+
         coEvery {
             engine.upsertSchedules(any())
-        } just runs
+        } answers {
+            upserts += 1
+            if (upserts >= 2) {
+                job.complete()
+            }
+        }
 
         subscriber.subscribe()
         updatesFlow.emit(data)
+
+        job.join()
 
         coVerify {
             engine.upsertSchedules(appSchedules)

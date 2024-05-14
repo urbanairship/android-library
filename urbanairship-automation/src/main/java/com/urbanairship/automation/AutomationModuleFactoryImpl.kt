@@ -114,7 +114,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                     applicationMetrics = metrics,
                     activityMonitor = activityMonitor,
                     eventFeed = eventFeed
-                ).also { it.attach() },
+                ),
                 triggerProcessor = AutomationTriggerProcessor(automationStore),
                 delayProcessor = AutomationDelayProcessor(analytics, activityMonitor)
             )
