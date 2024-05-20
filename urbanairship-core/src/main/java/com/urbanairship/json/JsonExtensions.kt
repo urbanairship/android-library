@@ -41,8 +41,11 @@ public inline fun <reified T> JsonMap.requireField(key: String): T {
         String::class -> field.optString() as T
         Boolean::class -> field.getBoolean(false) as T
         Long::class -> field.getLong(0) as T
+        ULong::class -> field.getLong(0).toULong() as T
         Double::class -> field.getDouble(0.0) as T
+        Float::class -> field.getFloat(0f) as T
         Integer::class -> field.getInt(0) as T
+        UInt::class -> field.getInt(0).toUInt() as T
         JsonList::class -> field.optList() as T
         JsonMap::class -> field.optMap() as T
         JsonValue::class -> field.toJsonValue() as T
@@ -64,7 +67,9 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
         Long::class -> field.getLong(0) as T
         ULong::class -> field.getLong(0).toULong() as T
         Double::class -> field.getDouble(0.0) as T
+        Float::class -> field.getFloat(0f) as T
         Integer::class -> field.getInt(0) as T
+        UInt::class -> field.getInt(0).toUInt() as T
         JsonList::class -> field.optList() as T
         JsonMap::class -> field.optMap() as T
         JsonValue::class -> field.toJsonValue() as T

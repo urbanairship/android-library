@@ -9,9 +9,11 @@ import com.urbanairship.iam.info.InAppMessageColor
 import com.urbanairship.iam.info.InAppMessageMediaInfo
 import com.urbanairship.iam.info.InAppMessageTextInfo
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalField
 import org.jetbrains.annotations.VisibleForTesting
 
 /** Display content for banner in-app message. */
@@ -31,7 +33,7 @@ public class Banner @VisibleForTesting internal constructor(
     /**
      * The list of optional buttons.
      */
-    public val buttons: List<InAppMessageButtonInfo> = emptyList(),
+    public val buttons: List<InAppMessageButtonInfo>? = null,
     /**
      * The optional button layout.
      */
@@ -55,7 +57,7 @@ public class Banner @VisibleForTesting internal constructor(
     /**
      * The banner display duration. Default to 15 seconds
      */
-    public val duration: Long = DEFAULT_DURATION_MS,
+    public val durationMs: Long = DEFAULT_DURATION_MS,
     /**
      * The optional banner placement. [Placement]
      */
@@ -63,7 +65,7 @@ public class Banner @VisibleForTesting internal constructor(
     /**
      * The action names and values to be run when the banner is clicked.
      */
-    public val actions: Map<String, JsonValue> = mapOf()
+    public val actions: JsonMap? = null
 ) : JsonSerializable {
     public enum class Template(internal val json: String) : JsonSerializable {
         /**
@@ -151,20 +153,19 @@ public class Banner @VisibleForTesting internal constructor(
                 heading = content.get(HEADING_KEY)?.let(InAppMessageTextInfo::fromJson),
                 body = content.get(BODY_KEY)?.let(InAppMessageTextInfo::fromJson),
                 media = content.get(MEDIA_KEY)?.let(InAppMessageMediaInfo::fromJson),
-                buttons = content.get(BUTTONS_KEY)?.requireList()?.map(InAppMessageButtonInfo::fromJson)
-                    ?: emptyList(),
+                buttons = content.get(BUTTONS_KEY)?.requireList()?.map(InAppMessageButtonInfo::fromJson),
                 buttonLayoutType = content.get(BUTTON_LAYOUT_KEY)?.let(InAppMessageButtonLayoutType::fromJson)
                     ?: InAppMessageButtonLayoutType.SEPARATE,
                 placement = content.get(PLACEMENT_KEY)?.let(Placement::fromJson) ?: Placement.BOTTOM,
                 template = content.get(TEMPLATE_KEY)?.let(Template::fromJson)
                     ?: Template.MEDIA_LEFT,
-                duration = content.opt(DURATION_KEY).getLong(DEFAULT_DURATION_MS),
+                durationMs = content.opt(DURATION_KEY).getLong(DEFAULT_DURATION_MS),
                 backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.WHITE),
                 dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.BLACK),
                 borderRadius = content.opt(BORDER_RADIUS_KEY).getFloat(0F),
-                actions = content.opt(ACTIONS_KEY).optMap().map
+                actions = content.optionalField(ACTIONS_KEY)
             )
         }
     }
@@ -174,7 +175,7 @@ public class Banner @VisibleForTesting internal constructor(
             return false
         }
 
-        if (buttons.size > MAX_BUTTONS) {
+        if (buttons != null && buttons.size > MAX_BUTTONS) {
             return false
         }
         return true
@@ -188,7 +189,7 @@ public class Banner @VisibleForTesting internal constructor(
         BUTTON_LAYOUT_KEY to buttonLayoutType,
         PLACEMENT_KEY to placement,
         TEMPLATE_KEY to template,
-        DURATION_KEY to duration,
+        DURATION_KEY to durationMs,
         BACKGROUND_COLOR_KEY to backgroundColor,
         DISMISS_BUTTON_COLOR_KEY to dismissButtonColor,
         BORDER_RADIUS_KEY to borderRadius,
@@ -212,7 +213,7 @@ public class Banner @VisibleForTesting internal constructor(
         if (backgroundColor != other.backgroundColor) return false
         if (dismissButtonColor != other.dismissButtonColor) return false
         if (borderRadius != other.borderRadius) return false
-        if (duration != other.duration) return false
+        if (durationMs != other.durationMs) return false
         if (placement != other.placement) return false
         return actions == other.actions
     }
@@ -227,7 +228,7 @@ public class Banner @VisibleForTesting internal constructor(
         result = 31 * result + backgroundColor.hashCode()
         result = 31 * result + dismissButtonColor.hashCode()
         result = 31 * result + borderRadius.hashCode()
-        result = 31 * result + duration.hashCode()
+        result = 31 * result + durationMs.hashCode()
         result = 31 * result + placement.hashCode()
         result = 31 * result + actions.hashCode()
         return result

@@ -26,6 +26,7 @@ import com.urbanairship.iam.analytics.events.InAppPermissionResultEvent
 import com.urbanairship.iam.analytics.events.PageViewSummary
 import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.iam.info.InAppMessageButtonInfo
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
@@ -144,7 +145,7 @@ internal class LayoutListener (
             }
         }
 
-        com.urbanairship.iam.InAppActionUtils.runActions(actions, ActionRunRequestFactory { actionName: String ->
+        com.urbanairship.iam.InAppActionUtils.runActions(JsonMap(actions), ActionRunRequestFactory { actionName: String ->
             val bundle = Bundle()
             bundle.putParcelable(
                 PromptPermissionAction.RECEIVER_METADATA,

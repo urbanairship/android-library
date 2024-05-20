@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 internal class AutomationRemoteDataSubscriber (
@@ -33,14 +34,16 @@ internal class AutomationRemoteDataSubscriber (
     private var lock = ReentrantLock()
 
     fun subscribe() {
-        if (lock.withLock { processJob != null }) { return }
+        lock.withLock {
+            if (processJob != null) return@withLock
 
-        processJob = scope.launch {
-            remoteDataAccess.updatesFlow.collect { payloads ->
-                if (!processConstraints(payloads)) {
-                    return@collect
+            processJob = scope.launch {
+                remoteDataAccess.updatesFlow.collect { payloads ->
+                    if (!processConstraints(payloads)) {
+                        return@collect
+                    }
+                    processAutomations(payloads)
                 }
-                processAutomations(payloads)
             }
         }
     }

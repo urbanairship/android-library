@@ -145,7 +145,7 @@ internal class BannerDisplayDelegate(
             }
 
             override fun onBannerClicked(view: BannerView) {
-                if (displayContent.banner.actions.isNotEmpty()) {
+                if (displayContent.banner.actions?.isNotEmpty == true) {
                     com.urbanairship.iam.InAppActionUtils.runActions(displayContent.banner.actions)
                     analyticsListener?.onMessageTapDismissed()
                 }

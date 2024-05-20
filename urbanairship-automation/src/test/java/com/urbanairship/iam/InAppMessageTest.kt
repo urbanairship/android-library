@@ -44,7 +44,6 @@ public class InAppMessageTest {
                 "button_layout" : "stacked",
                 "buttons" : [
                    {
-                      "actions" : {},
                       "background_color" : "#63aff2",
                       "border_color" : "#63aff2",
                       "border_radius" : 2,
@@ -90,49 +89,48 @@ public class InAppMessageTest {
             name = "woot",
             displayContent = InAppMessageDisplayContent.BannerContent(
                 Banner(
-                heading = InAppMessageTextInfo(
-                    text = "Boom",
-                    color = InAppMessageColor(Color.parseColor("#63aff2")),
-                    size = 22F,
-                    fontFamilies = listOf("sans-serif"),
-                    alignment = InAppMessageTextInfo.Alignment.CENTER
-                ),
-                body = InAppMessageTextInfo(
-                    text = "Big body",
-                    color = InAppMessageColor(Color.parseColor("#000000")),
-                    size = 16.0F,
-                    fontFamilies = listOf("sans-serif"),
-                    alignment = InAppMessageTextInfo.Alignment.CENTER
-                ),
-                media = InAppMessageMediaInfo(
-                    url = "some://image",
-                    type = InAppMessageMediaInfo.MediaType.IMAGE,
-                    description = "Image"
-                ),
-                buttons = listOf(
-                    InAppMessageButtonInfo(
-                        identifier = "d17a055c-ed67-4101-b65f-cd28b5904c84",
-                        label = InAppMessageTextInfo(
-                            text = "Touch it",
-                            color = InAppMessageColor(Color.parseColor("#ffffff")),
-                            size = 10F,
-                            fontFamilies = listOf("sans-serif"),
-                            style = listOf(InAppMessageTextInfo.Style.BOLD)
-                        ),
-                        actions = emptyMap(),
-                        backgroundColor = InAppMessageColor(Color.parseColor("#63aff2")),
-                        borderColor = InAppMessageColor(Color.parseColor("#63aff2")),
-                        borderRadius = 2F
-                    )
-                ),
-                buttonLayoutType = InAppMessageButtonLayoutType.STACKED,
-                template = Banner.Template.MEDIA_LEFT,
-                backgroundColor = InAppMessageColor(Color.parseColor("#ffffff")),
-                dismissButtonColor = InAppMessageColor(Color.parseColor("#000000")),
-                borderRadius = 5F,
-                duration = 100,
-                placement = Banner.Placement.TOP
-            )
+                    heading = InAppMessageTextInfo(
+                        text = "Boom",
+                        color = InAppMessageColor(Color.parseColor("#63aff2")),
+                        size = 22F,
+                        fontFamilies = listOf("sans-serif"),
+                        alignment = InAppMessageTextInfo.Alignment.CENTER
+                    ),
+                    body = InAppMessageTextInfo(
+                        text = "Big body",
+                        color = InAppMessageColor(Color.parseColor("#000000")),
+                        size = 16.0F,
+                        fontFamilies = listOf("sans-serif"),
+                        alignment = InAppMessageTextInfo.Alignment.CENTER
+                    ),
+                    media = InAppMessageMediaInfo(
+                        url = "some://image",
+                        type = InAppMessageMediaInfo.MediaType.IMAGE,
+                        description = "Image"
+                    ),
+                    buttons = listOf(
+                        InAppMessageButtonInfo(
+                            identifier = "d17a055c-ed67-4101-b65f-cd28b5904c84",
+                            label = InAppMessageTextInfo(
+                                text = "Touch it",
+                                color = InAppMessageColor(Color.parseColor("#ffffff")),
+                                size = 10F,
+                                fontFamilies = listOf("sans-serif"),
+                                style = listOf(InAppMessageTextInfo.Style.BOLD)
+                            ),
+                            backgroundColor = InAppMessageColor(Color.parseColor("#63aff2")),
+                            borderColor = InAppMessageColor(Color.parseColor("#63aff2")),
+                            borderRadius = 2F
+                        )
+                    ),
+                    buttonLayoutType = InAppMessageButtonLayoutType.STACKED,
+                    template = Banner.Template.MEDIA_LEFT,
+                    backgroundColor = InAppMessageColor(Color.parseColor("#ffffff")),
+                    dismissButtonColor = InAppMessageColor(Color.parseColor("#000000")),
+                    borderRadius = 5F,
+                    durationMs = 100,
+                    placement = Banner.Placement.TOP
+                )
             ),
             source = InAppMessage.InAppMessageSource.REMOTE_DATA,
         )
@@ -161,7 +159,6 @@ public class InAppMessageTest {
                 "button_layout": "stacked",
                 "buttons": [
                     {
-                        "actions": {},
                         "background_color": "#63aff2",
                         "border_color": "#63aff2",
                         "border_radius": 2,
@@ -234,7 +231,6 @@ public class InAppMessageTest {
                                 fontFamilies = listOf("sans-serif"),
                                 style = listOf(InAppMessageTextInfo.Style.BOLD)
                             ),
-                            actions = emptyMap(),
                             backgroundColor = InAppMessageColor(Color.parseColor("#63aff2")),
                             borderColor = InAppMessageColor(Color.parseColor("#63aff2")),
                             borderRadius = 2F
@@ -272,7 +268,6 @@ public class InAppMessageTest {
                 "button_layout" : "stacked",
                 "buttons" : [
                    {
-                      "actions" : {},
                       "background_color" : "#63aff2",
                       "border_color" : "#63aff2",
                       "border_radius" : 2,
@@ -345,7 +340,6 @@ public class InAppMessageTest {
                                 fontFamilies = listOf("sans-serif"),
                                 style = listOf(InAppMessageTextInfo.Style.BOLD)
                             ),
-                            actions = emptyMap(),
                             backgroundColor = InAppMessageColor(Color.parseColor("#63aff2")),
                             borderColor = InAppMessageColor(Color.parseColor("#63aff2")),
                             borderRadius = 2F

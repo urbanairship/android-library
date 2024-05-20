@@ -12,6 +12,7 @@ import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
 import androidx.customview.widget.ViewDragHelper
+import com.urbanairship.UALog
 import com.urbanairship.iam.content.Banner
 import kotlin.math.abs
 import kotlin.math.max
@@ -185,11 +186,12 @@ internal class BannerDismissLayout @JvmOverloads constructor(
             startLeft = view.left
             dragPercent = 0f
             isDismissed = false
+            UALog.e { "Start top: $startTop" }
         }
 
         @SuppressLint("NewApi")
         override fun onViewPositionChanged(view: View, left: Int, top: Int, dx: Int, dy: Int) {
-            val range = height
+            val range = view.height
             val moved = abs(top - startTop)
             if (range > 0) {
                 dragPercent = moved / range.toFloat()

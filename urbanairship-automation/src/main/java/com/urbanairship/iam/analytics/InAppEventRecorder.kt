@@ -14,7 +14,7 @@ internal data class InAppEventData(
     val context: InAppEventContext?,
     val source: InAppEventSource,
     val messageID: InAppEventMessageID,
-    val renderedLocale: Map<String, JsonValue>
+    val renderedLocale: JsonValue?
 )
 
 internal interface InAppEventRecorderInterface {
@@ -42,7 +42,7 @@ private data class AnalyticsEvent(
     val context: InAppEventContext?,
     val conversionSendID: String?,
     val conversionPushMetadata: String?,
-    val renderedLocale: Map<String, JsonValue>?,
+    val renderedLocale: JsonValue?,
     val baseData: JsonSerializable?
 ) : Event() {
     constructor(eventData: InAppEventData, analytics: Analytics) :

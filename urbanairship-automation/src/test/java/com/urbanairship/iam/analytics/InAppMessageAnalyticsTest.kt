@@ -95,7 +95,7 @@ public class InAppMessageAnalyticsTest {
             .recordEvent(TestInAppEvent(), layoutContext = layoutData)
 
         assertEquals(event?.context, expectedContext)
-        assertEquals(event?.renderedLocale, mapOf("US" to JsonValue.wrap("en-US")))
+        assertEquals(event?.renderedLocale, jsonMapOf("US" to "en-US").toJsonValue())
         assertEquals(event?.event?.name, "test_event")
     }
 
@@ -154,7 +154,7 @@ public class InAppMessageAnalyticsTest {
                 name = "name",
                 displayContent = InAppMessageDisplayContent.CustomContent(Custom(JsonValue.wrap("custom"))),
                 source = source,
-                renderedLocale = mapOf("US" to JsonValue.wrap("en-US")),
+                renderedLocale = jsonMapOf("US" to "en-US").toJsonValue(),
                 isReportingEnabled = isReportingEnabled
             ),
             campaigns = campaigns,

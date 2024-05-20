@@ -5,6 +5,7 @@ import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.iam.info.InAppMessageButtonInfo
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 
 /**
@@ -18,7 +19,7 @@ internal object InAppActionUtils {
      * @param buttonInfo The button info.
      */
     fun runActions(buttonInfo: InAppMessageButtonInfo?) {
-        com.urbanairship.iam.InAppActionUtils.runActions(buttonInfo?.actions)
+        runActions(buttonInfo?.actions)
     }
 
     /**
@@ -30,7 +31,7 @@ internal object InAppActionUtils {
      */
     @JvmOverloads
     fun runActions(
-        actionsMap: Map<String, JsonValue>?,
+        actionsMap: JsonMap?,
         requestFactory: ActionRunRequestFactory? = null,
         @Action.Situation situation: Int? = null,
         runSync: Boolean = false

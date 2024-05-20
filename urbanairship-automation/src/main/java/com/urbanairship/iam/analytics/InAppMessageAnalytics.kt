@@ -32,7 +32,7 @@ internal sealed class LoggingInAppMessageAnalytics: InAppMessageAnalyticsInterfa
 internal class InAppMessageAnalytics private constructor(
     private val messageID: InAppEventMessageID,
     private val source: InAppEventSource,
-    private val renderedLocale: Map<String, JsonValue>?,
+    private val renderedLocale: JsonValue?,
     private val reportingMetadata: JsonValue?,
     private val experimentResult: ExperimentResult?,
     private val eventRecorder: InAppEventRecorderInterface,
@@ -103,7 +103,7 @@ internal class InAppMessageAnalytics private constructor(
             ),
             source = source,
             messageID = messageID,
-            renderedLocale = renderedLocale ?: mapOf()
+            renderedLocale = renderedLocale
         )
 
         eventRecorder.recordEvent(data)

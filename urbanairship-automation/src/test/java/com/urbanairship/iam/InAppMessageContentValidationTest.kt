@@ -49,7 +49,7 @@ public class InAppMessageContentValidationTest {
         validMedia = InAppMessageMediaInfo(url = validURL, type = InAppMessageMediaInfo.MediaType.IMAGE, description = validText)
         validButtonLabel = InAppMessageTextInfo(text = validText, color = validColor, size = 10F, fontFamilies = validFontFam, style = listOf(
             InAppMessageTextInfo.Style.BOLD))
-        validButton = InAppMessageButtonInfo(identifier = validIdentifier, label = validButtonLabel, actions = emptyMap(), backgroundColor = validColor, borderColor = validColor, borderRadius = 2F)
+        validButton = InAppMessageButtonInfo(identifier = validIdentifier, label = validButtonLabel, actions = null, backgroundColor = validColor, borderColor = validColor, borderRadius = 2F)
 
         // Empty components
         emptyHeading = InAppMessageTextInfo(text = "", color = validColor, size = 22.0F, fontFamilies = validFontFam, alignment = InAppMessageTextInfo.Alignment.CENTER)
@@ -57,7 +57,7 @@ public class InAppMessageContentValidationTest {
         emptyMedia = InAppMessageMediaInfo(url = "", type = InAppMessageMediaInfo.MediaType.IMAGE, description = "")
         emptyButtonLabel = InAppMessageTextInfo(text = "", color = validColor, size = 10F, fontFamilies = validFontFam, style = listOf(
             InAppMessageTextInfo.Style.BOLD))
-        emptyButton = InAppMessageButtonInfo(identifier = "", label = validButtonLabel, actions = emptyMap(), backgroundColor = validColor, borderColor = validColor, borderRadius = 2F)
+        emptyButton = InAppMessageButtonInfo(identifier = "", label = validButtonLabel, actions = null, backgroundColor = validColor, borderColor = validColor, borderRadius = 2F)
 
         validVideoMedia = InAppMessageMediaInfo(url = validURL, type = InAppMessageMediaInfo.MediaType.VIDEO, description = validText)
         validYoutubeMedia = InAppMessageMediaInfo(url = validURL, type = InAppMessageMediaInfo.MediaType.VIDEO, description = validText)
@@ -75,7 +75,7 @@ public class InAppMessageContentValidationTest {
             backgroundColor =  validColor,
             dismissButtonColor =  validColor,
             borderRadius =  5F,
-            duration =  100,
+            durationMs =  100,
             placement = Banner.Placement.TOP
         ).validate()
         assertTrue(result)
@@ -94,7 +94,7 @@ public class InAppMessageContentValidationTest {
             backgroundColor = validColor,
             dismissButtonColor = validColor,
             borderRadius = 5F,
-            duration = 100,
+            durationMs = 100,
             placement = Banner.Placement.TOP
         )
 
@@ -108,7 +108,7 @@ public class InAppMessageContentValidationTest {
             backgroundColor = validColor,
             dismissButtonColor = validColor,
             borderRadius = 5F,
-            duration = 100,
+            durationMs = 100,
             placement = Banner.Placement.TOP
         )
 

@@ -22,6 +22,7 @@ import com.urbanairship.iam.coordinator.DisplayCoordinator
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 import java.util.UUID
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -72,7 +73,7 @@ public class InAppMessageAutomationExecutorTest {
         message = InAppMessage(
             name = "test",
             displayContent = InAppMessageDisplayContent.CustomContent(Custom(JsonValue.NULL)),
-            actions = mapOf("action" to JsonValue.wrap("payload"))
+            actions = jsonMapOf("action" to "payload")
         ),
         displayAdapter = displayAdapter,
         displayCoordinator = displayCoordinator

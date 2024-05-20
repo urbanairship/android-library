@@ -59,7 +59,7 @@ public class AutomationRemoteDataSubscriberTest {
     )
 
     @Test
-    public fun testSchedulingAutomations(): TestResult = runTest {
+    public fun testSchedulingAutomations(): TestResult = runTest(testDispatcher) {
         val appSchedules = makeSchedules(source = RemoteDataSource.APP)
         val contactSchedules = makeSchedules(source = RemoteDataSource.CONTACT)
 
@@ -100,7 +100,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testEmptyPayloadStopsSchedules(): TestResult = runTest {
+    public fun testEmptyPayloadStopsSchedules(): TestResult = runTest(testDispatcher) {
         val appSchedules = makeSchedules(RemoteDataSource.APP)
         coEvery { engine.getSchedules() } returns appSchedules
 
@@ -116,7 +116,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testIgnoreSchedulesNoLongerScheduled(): TestResult = runTest {
+    public fun testIgnoreSchedulesNoLongerScheduled(): TestResult = runTest(testDispatcher) {
         coEvery { engine.upsertSchedules(any()) } just runs
 
         subscriber.subscribe()
@@ -165,7 +165,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testOlderSchedulesMinSDKVersion(): TestResult = runTest {
+    public fun testOlderSchedulesMinSDKVersion(): TestResult = runTest(testDispatcher) {
         coEvery { engine.upsertSchedules(any()) } just runs
 
         subscriber = AutomationRemoteDataSubscriber(
@@ -221,7 +221,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testSamePayloadSkipsAutomations(): TestResult = runTest {
+    public fun testSamePayloadSkipsAutomations(): TestResult = runTest(testDispatcher) {
         subscriber.subscribe()
 
         clock.currentTimeMillis = 1
@@ -257,7 +257,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testRemoteDataInfoChangeUpdatesSchedules(): TestResult = runTest {
+    public fun testRemoteDataInfoChangeUpdatesSchedules(): TestResult = runTest(testDispatcher) {
         subscriber.subscribe()
 
         val remoteDataInfo = RemoteDataInfo(
@@ -323,7 +323,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testPayloadDateChangeAutomations(): TestResult = runTest {
+    public fun testPayloadDateChangeAutomations(): TestResult = runTest(testDispatcher) {
         subscriber.subscribe()
 
         clock.currentTimeMillis = 1
@@ -377,7 +377,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testConstraints(): TestResult = runTest {
+    public fun testConstraints(): TestResult = runTest(testDispatcher) {
         val appConstraints = listOf(
             FrequencyConstraint("foo", 100, 10u),
             FrequencyConstraint("bar", 100, 10u)

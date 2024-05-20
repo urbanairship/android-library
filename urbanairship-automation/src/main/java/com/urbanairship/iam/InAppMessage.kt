@@ -20,10 +20,10 @@ public class InAppMessage internal constructor(
     public val displayContent: InAppMessageDisplayContent,
     internal var source: InAppMessageSource?,
     public val extras: JsonMap? = null,
-    public val actions: Map<String, JsonValue>? = null,
+    public val actions: JsonMap? = null,
     public val isReportingEnabled: Boolean? = null,
     public val displayBehavior: DisplayBehavior? = null,
-    public val renderedLocale: Map<String, JsonValue>? = null
+    public val renderedLocale: JsonValue? = null
 ) : JsonSerializable {
 
     /** The in-app message display behavior. */
@@ -82,7 +82,7 @@ public class InAppMessage internal constructor(
     }
 
     public constructor(name: String, displayContent: InAppMessageDisplayContent,
-                       extras: JsonMap? = null, actions: Map<String, JsonValue>? = null,
+                       extras: JsonMap? = null, actions: JsonMap? = null,
                        isReportingEnabled: Boolean? = null, displayBehavior: DisplayBehavior? = null)
             : this(
         name = name,
@@ -109,8 +109,6 @@ public class InAppMessage internal constructor(
         private const val DISPLAY_BEHAVIOR_KEY = "display_behavior"
         private const val REPORTING_ENABLED_KEY = "reporting_enabled"
         private const val RENDERED_LOCALE_KEY = "rendered_locale"
-        private const val RENDERED_LOCALE_LANGUAGE_KEY = "language"
-        private const val RENDERED_LOCALE_COUNTRY_KEY = "country"
 
         /**
          * Parses a json value.
@@ -131,23 +129,7 @@ public class InAppMessage internal constructor(
                 throw JsonException("Invalid message name. Must be less than or equal to $MAX_NAME_LENGTH characters.")
             }
 
-            val renderLocale = content.get(RENDERED_LOCALE_KEY)?.requireMap()
-            if (renderLocale != null) {
-                if (!renderLocale.containsKey(RENDERED_LOCALE_LANGUAGE_KEY) && !renderLocale.containsKey(
-                        RENDERED_LOCALE_COUNTRY_KEY
-                    )) {
-                    throw JsonException("Rendered locale must contain one of $RENDERED_LOCALE_LANGUAGE_KEY" +
-                            "or $RENDERED_LOCALE_COUNTRY_KEY fields :$renderLocale")
-                }
-
-                if (renderLocale.get(RENDERED_LOCALE_LANGUAGE_KEY)?.isString == false) {
-                    throw JsonException("Language must be a string: $renderLocale");
-                }
-
-                if (renderLocale.get(RENDERED_LOCALE_COUNTRY_KEY)?.isString == false) {
-                    throw JsonException("Country must be a string:: $renderLocale");
-                }
-            }
+            val renderLocale = content.get(RENDERED_LOCALE_KEY)
 
             return InAppMessage(
                 name = name,
@@ -156,11 +138,10 @@ public class InAppMessage internal constructor(
                 ), type),
                 source = content.get(SOURCE_KEY)?.let(InAppMessageSource.Companion::fromJson),
                 extras = content.optionalField(EXTRA_KEY),
-                actions = content.get(ACTIONS_KEY)?.requireMap()?.map,
+                actions = content.optionalField(ACTIONS_KEY),
                 displayBehavior = content.get(DISPLAY_BEHAVIOR_KEY)?.let(DisplayBehavior.Companion::fromJson),
                 isReportingEnabled = content.optionalField(REPORTING_ENABLED_KEY),
-                renderedLocale = renderLocale?.map,
-
+                renderedLocale = renderLocale,
             )
         }
     }

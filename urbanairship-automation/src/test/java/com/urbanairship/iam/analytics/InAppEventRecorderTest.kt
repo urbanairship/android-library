@@ -26,7 +26,7 @@ public class InAppEventRecorderTest {
     private val reportingMetadata = JsonValue.wrap("reporting info")
     private val scheduleID = "5362C754-17A9-48B8-B101-60D9DC5688A2"
     private val campaigns = jsonMapOf("campaign1" to "data1", "campaign2" to "data2").toJsonValue()
-    private val renderLocales = mapOf("US" to JsonValue.wrap("en-us"))
+    private val renderLocales = jsonMapOf("US" to "en-us").toJsonValue()
     private val experimentResults = ExperimentResult(
         channelId = "some channel",
         contactId = "some contact",

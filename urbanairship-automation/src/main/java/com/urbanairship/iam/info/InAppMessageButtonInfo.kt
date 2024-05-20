@@ -2,9 +2,11 @@ package com.urbanairship.iam.info
 
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import java.util.Objects
 
@@ -24,7 +26,7 @@ public class InAppMessageButtonInfo(
     /**
      * The action names and values to be run when the button is clicked.
      */
-    public val actions: Map<String, JsonValue> = mapOf(),
+    public val actions: JsonMap? = null,
     /**
      * The button's click behavior.
      */
@@ -83,7 +85,7 @@ public class InAppMessageButtonInfo(
         /**
          * Parses an [InAppMessageButtonInfo] from a [JsonValue].
          *
-         * @param value The json value.
+         * @param source The json value.
          * @return The parsed button info.
          * @throws JsonException If the button info was unable to be parsed.
          */
@@ -102,7 +104,7 @@ public class InAppMessageButtonInfo(
                 borderRadius = content.opt(BORDER_RADIUS_KEY).getFloat(0F),
                 borderColor = content.get(BORDER_COLOR_KEY)?.let(InAppMessageColor.Companion::fromJson),
                 backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor.Companion::fromJson),
-                actions = content.get(ACTIONS_KEY)?.requireMap()?.map ?: mapOf()
+                actions = content.optionalField(ACTIONS_KEY)
             )
         }
     }

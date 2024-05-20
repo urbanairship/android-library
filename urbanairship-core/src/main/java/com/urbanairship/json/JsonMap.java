@@ -139,6 +139,16 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
     }
 
     /**
+     * Returns whether this map is not empty.
+     *
+     * @return {@code true} if this map has elements, {@code false}
+     * otherwise.
+     */
+    public boolean isNotEmpty() {
+        return !isEmpty();
+    }
+
+    /**
      * Returns a set of the keys contained in this map. The set is backed by
      * this map so changes to one are reflected by the other. The set does not
      * support adding.

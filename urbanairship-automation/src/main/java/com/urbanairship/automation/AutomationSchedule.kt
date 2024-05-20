@@ -82,7 +82,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     internal val reportingContext: JsonValue? = null,
     internal val productID: String? = null,
     internal val minSDKVersion: String? = null,
-    internal val created: ULong,
+    internal val created: ULong = System.currentTimeMillis().toULong(),
     internal val queue: String? = null
 ) : JsonSerializable {
 

@@ -111,7 +111,7 @@ public class InAppMessageTextInfo(
             return InAppMessageTextInfo(
                 text = content.requireField(TEXT_KEY),
                 color = content.get(COLOR_KEY)?.let(InAppMessageColor.Companion::fromJson),
-                size = content.opt(SIZE_KEY).getFloat(0F),
+                size = content.optionalField(SIZE_KEY),
                 alignment = content.optionalField<String>(ALIGNMENT_KEY)?.let(Alignment.Companion::fromJson),
                 style = content.get(STYLE_KEY)?.requireList()?.map(Style.Companion::fromJson),
                 fontFamilies = content.opt(FONT_FAMILY_KEY).optList().map { it.requireString() },

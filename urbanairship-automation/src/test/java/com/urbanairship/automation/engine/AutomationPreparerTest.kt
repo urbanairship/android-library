@@ -312,7 +312,7 @@ public class AutomationPreparerTest {
                 buttonLayoutType = InAppMessageButtonLayoutType.STACKED,
                 template = Banner.Template.MEDIA_LEFT,
                 borderRadius = 5F,
-                duration = 100L,
+                durationMs = 100L,
                 placement = Banner.Placement.TOP
             )
         )

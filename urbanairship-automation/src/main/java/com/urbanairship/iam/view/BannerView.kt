@@ -41,7 +41,7 @@ internal open class BannerView(
     BannerDismissLayout.Listener {
 
     /** In-app message display timer. */
-    internal val timer: Timer = object : Timer(displayContent.duration) {
+    internal val timer: Timer = object : Timer(displayContent.durationMs) {
         override fun onFinish() {
             dismiss(true)
             val listener = listener
@@ -142,7 +142,7 @@ internal open class BannerView(
         }
 
         // Banner actions
-        if (displayContent.actions.isNotEmpty()) {
+        if (displayContent.actions?.isNotEmpty == true) {
             bannerView.isClickable = true
             bannerView.setOnClickListener(this)
         }
@@ -173,10 +173,10 @@ internal open class BannerView(
 
         // Button Layout
         val buttonLayout = view.findViewById<InAppButtonLayout>(R.id.buttons)
-        if (displayContent.buttons.isEmpty()) {
+        if (displayContent.buttons?.isNotEmpty() == true) {
             buttonLayout.visibility = GONE
         } else {
-            buttonLayout.setButtons(displayContent.buttonLayoutType, displayContent.buttons)
+            buttonLayout.setButtons(displayContent.buttonLayoutType, displayContent.buttons ?: emptyList())
             buttonLayout.setButtonClickListener(this)
         }
 
@@ -349,8 +349,7 @@ internal open class BannerView(
 
     private fun applyLegacyWindowInsetFix(view: View) {
         // Avoid double insets if no other view is consuming the insets
-        val subview = subView ?: return
-        subview.fitsSystemWindows = false
+        view.fitsSystemWindows = false
 
         val isNavigationTranslucent: Boolean
         val isStatusTranslucent: Boolean
@@ -377,7 +376,7 @@ internal open class BannerView(
                 bottom = resources.getDimensionPixelSize(resourceId)
             }
         }
-        ViewCompat.setPaddingRelative(subview, 0, top, 0, bottom)
+        ViewCompat.setPaddingRelative(view, 0, top, 0, bottom)
     }
 
     companion object {

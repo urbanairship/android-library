@@ -34,6 +34,7 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.contacts.Contact
 import com.urbanairship.deferred.DeferredResolver
 import com.urbanairship.experiment.ExperimentManager
+import com.urbanairship.iam.legacy.LegacyAnalytics
 import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.automation.AutomationModuleFactory
@@ -64,80 +65,88 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         eventFeed: AirshipEventFeed,
         metrics: ApplicationMetrics
     ): Module {
+        val assetManager = AssetCacheManager(context)
+        val eventRecorder = InAppEventRecorder(analytics)
+        val scheduleConditionNotifier = ScheduleConditionsChangedNotifier()
+        val remoteDataAccess = AutomationRemoteDataAccess(context, remoteData)
+        val activityMonitor = GlobalActivityMonitor.shared(context)
+        val displayCoordinatorManager = DisplayCoordinatorManager(dataStore, activityMonitor)
+        val frequencyLimits = FrequencyLimitManager(context, runtimeConfig)
+        val automationStore = SerialAccessAutomationStore(
+            AutomationStore.createDatabase(context, runtimeConfig)
+        )
 
-
-        fun registerNewAutomation(): Module {
-            val assetManager = AssetCacheManager(context)
-            val eventRecorder = InAppEventRecorder(analytics)
-            val scheduleConditionNotifier = ScheduleConditionsChangedNotifier()
-            val remoteDataAccess = AutomationRemoteDataAccess(context, remoteData)
-            val activityMonitor = GlobalActivityMonitor.shared(context)
-            val displayCoordinatorManager = DisplayCoordinatorManager(dataStore, activityMonitor)
-            val frequencyLimits = FrequencyLimitManager(context, runtimeConfig)
-            val automationStore = SerialAccessAutomationStore(AutomationStore.createDatabase(context, runtimeConfig))
-
-            // Preparation
-            val actionPreparer = ActionAutomationPreparer()
-            val messagePreparer = InAppMessageAutomationPreparer(
-                assetsManager = assetManager,
-                displayCoordinatorManager = displayCoordinatorManager,
-                displayAdapterFactory = DisplayAdapterFactory(context, NetworkMonitor.shared(context), activityMonitor)
+        // Preparation
+        val actionPreparer = ActionAutomationPreparer()
+        val messagePreparer = InAppMessageAutomationPreparer(
+            assetsManager = assetManager,
+            displayCoordinatorManager = displayCoordinatorManager,
+            displayAdapterFactory = DisplayAdapterFactory(
+                context,
+                NetworkMonitor.shared(context),
+                activityMonitor
             )
+        )
 
-            // Execution
-            val actionExecutor = ActionAutomationExecutor()
-            val messageExecutor = InAppMessageAutomationExecutor(
+        // Execution
+        val actionExecutor = ActionAutomationExecutor()
+        val messageExecutor = InAppMessageAutomationExecutor(
+            context = context,
+            assetManager = assetManager,
+            analyticsFactory = InAppMessageAnalyticsFactory(eventRecorder, meteredUsage),
+            scheduleConditionsChangedNotifier = scheduleConditionNotifier,
+            actionRunnerFactory = ActionRunRequestFactory()
+        )
+
+        val engine = AutomationEngine(
+            context = context,
+            store = automationStore,
+            executor = AutomationExecutor(
+                actionExecutor = actionExecutor,
+                messageExecutor = messageExecutor,
+                remoteDataAccess = remoteDataAccess
+            ),
+            preparer = AutomationPreparer(
+                actionPreparer = actionPreparer,
+                messagePreparer = messagePreparer,
+                deferredResolver = deferredResolver,
+                frequencyLimitManager = frequencyLimits,
+                experiments = experimentManager,
+                remoteDataAccess = remoteDataAccess
+            ),
+            scheduleConditionsChangedNotifier = scheduleConditionNotifier,
+            eventsFeed = AutomationEventFeed(
+                applicationMetrics = metrics,
+                activityMonitor = activityMonitor,
+                eventFeed = eventFeed
+            ),
+            triggerProcessor = AutomationTriggerProcessor(automationStore),
+            delayProcessor = AutomationDelayProcessor(analytics, activityMonitor)
+        )
+
+        val automation = InAppAutomation(
+            engine = engine,
+            inAppMessaging = InAppMessaging(messageExecutor, messagePreparer),
+            legacyInAppMessaging = LegacyInAppMessaging(
                 context = context,
-                assetManager = assetManager,
-                analyticsFactory = InAppMessageAnalyticsFactory(eventRecorder, meteredUsage),
-                scheduleConditionsChangedNotifier = scheduleConditionNotifier,
-                actionRunnerFactory = ActionRunRequestFactory())
-
-            val engine = AutomationEngine(
-                context = context,
-                store = automationStore,
-                executor = AutomationExecutor(
-                    actionExecutor = actionExecutor,
-                    messageExecutor = messageExecutor,
-                    remoteDataAccess = remoteDataAccess
-                ),
-                preparer = AutomationPreparer(
-                    actionPreparer = actionPreparer,
-                    messagePreparer = messagePreparer,
-                    deferredResolver = deferredResolver,
-                    frequencyLimitManager = frequencyLimits,
-                    experiments = experimentManager,
-                    remoteDataAccess = remoteDataAccess
-                ),
-                scheduleConditionsChangedNotifier = scheduleConditionNotifier,
-                eventsFeed = AutomationEventFeed(
-                    applicationMetrics = metrics,
-                    activityMonitor = activityMonitor,
-                    eventFeed = eventFeed
-                ),
-                triggerProcessor = AutomationTriggerProcessor(automationStore),
-                delayProcessor = AutomationDelayProcessor(analytics, activityMonitor)
-            )
-
-            val automation = InAppAutomation(
-                engine = engine,
-                inAppMessaging = InAppMessaging(messageExecutor, messagePreparer),
-                legacyInAppMessaging = LegacyInAppMessaging(pushManager),
-                remoteDataSubscriber = AutomationRemoteDataSubscriber(
-                    dataStore = dataStore,
-                    remoteDataAccess = remoteDataAccess,
-                    engine = engine,
-                    frequencyLimitManager = frequencyLimits),
+                pushManager = pushManager,
+                preferenceDataStore = dataStore,
+                automationEngine = engine,
+                legacyAnalytics = LegacyAnalytics(eventRecorder)
+            ),
+            remoteDataSubscriber = AutomationRemoteDataSubscriber(
                 dataStore = dataStore,
-                privacyManager = privacyManager,
-                config = runtimeConfig
-            )
+                remoteDataAccess = remoteDataAccess,
+                engine = engine,
+                frequencyLimitManager = frequencyLimits
+            ),
+            dataStore = dataStore,
+            privacyManager = privacyManager,
+            config = runtimeConfig
+        )
 
-            val component = InAppAutomationComponent(context, dataStore, automation)
-            return Module.singleComponent(component, R.xml.ua_automation_actions)
-        }
-
-        return  registerNewAutomation()
+        val component = InAppAutomationComponent(context, dataStore, automation)
+        return Module.singleComponent(component, R.xml.ua_automation_actions)
     }
 
     override val airshipVersion: String
