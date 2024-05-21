@@ -1,162 +1,300 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.embedded
 
-import android.animation.AnimatorInflater
+import android.animation.AnimatorInflater.loadAnimator
 import android.animation.LayoutTransition
 import android.content.Context
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.LayoutInflater
-import android.view.View
-import android.widget.FrameLayout
 import android.widget.RelativeLayout
+import android.widget.RelativeLayout.LayoutParams
 import androidx.annotation.AnimatorRes
 import androidx.annotation.LayoutRes
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.AirshipEmbeddedViewManager
-import com.urbanairship.android.layout.R
+import com.urbanairship.android.layout.EmbeddedDisplayRequest
+import com.urbanairship.android.layout.property.ConstrainedSize
+import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.Size.DimensionType.AUTO
 import com.urbanairship.android.layout.property.Size.DimensionType.PERCENT
 import com.urbanairship.android.layout.ui.EmbeddedLayout
+import com.urbanairship.automation.R
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
+import kotlin.math.round
 
-public class AirshipEmbeddedView @JvmOverloads constructor(
+/**
+ * A container that displays embedded content for the given `embeddedId`.
+ */
+public class AirshipEmbeddedView private constructor(
     context: Context,
-    attrs: AttributeSet? = null,
-    defStyle: Int = 0,
-    embeddedViewId: String? = null,
-    @LayoutRes placeholderLayout: Int? = null,
-    @AnimatorRes inAnimation: Int = android.R.animator.fade_in,
-    @AnimatorRes outAnimation: Int = android.R.animator.fade_out,
-    private val manager: AirshipEmbeddedViewManager = EmbeddedViewManager,
+    attrs: AttributeSet?,
+    defStyle: Int,
+    embeddedId: String?,
+    @LayoutRes placeholderRes: Int?,
+    comparator: Comparator<AirshipEmbeddedInfo>?,
+    private val manager: AirshipEmbeddedViewManager
 ) : RelativeLayout(context, attrs, defStyle) {
 
-    public interface Listener {
-        public fun onAvailable(): Boolean
-        public fun onEmpty()
-    }
+    /**
+     * Constructor for inflating from XML.
+     *
+     * @param context The context.
+     * @param attrs The attribute set.
+     * @param defStyle The default style.
+     */
+    @JvmOverloads
+    public constructor(
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyle: Int = 0,
+    ) : this(
+        context = context,
+        attrs = attrs,
+        defStyle = defStyle,
+        embeddedId = null,
+        placeholderRes = null,
+        comparator = null,
+        manager = EmbeddedViewManager
+    )
+
+    /**
+     * Constructs an embedded view that will display content for the given embedded ID.
+     *
+     * @param context a [Context].
+     * @param embeddedId the embedded ID.
+     * @param comparator optional `Comparator` used to sort available embedded contents.
+     * @param placeholderRes optional placeholder layout resource to display when no content is
+     *      available.
+     */
+    @JvmOverloads
+    public constructor(
+        context: Context,
+        embeddedId: String,
+        comparator: Comparator<AirshipEmbeddedInfo>? = null,
+        @LayoutRes placeholderRes: Int? = null,
+    ) : this(
+        context = context,
+        attrs = null,
+        defStyle = 0,
+        embeddedId = embeddedId,
+        placeholderRes = placeholderRes,
+        comparator = comparator,
+        manager = EmbeddedViewManager
+    )
+
+    /**
+     * Supply an alternate width for calculating percentage dimensions.
+     *
+     * When placing an embedded view inside of a scrolling container, this can be used to provide
+     * the width of the scrolling dimension (e.g. the width of the ScrollView's frame).
+     */
+    public var parentWidthProvider: (() -> Int)? = null
+        set(value) {
+            field = value
+            requestLayout()
+            invalidate()
+        }
+
+    /**
+     * Supply an alternate height for calculating percentage dimensions.
+     *
+     * When placing an embedded view inside of a scrolling container, this can be used to provide
+     * the height of the scrolling dimension (e.g. the height of the ScrollView's frame).
+     */
+    public var parentHeightProvider: (() -> Int)? = null
+        set(value) {
+            field = value
+            requestLayout()
+            invalidate()
+        }
+
+    /**
+     * The [Comparator] used to sort available embedded contents.
+     *
+     * If `null` (default), the order (FIFO) of available content will be used.
+     */
+    public var comparator: Comparator<AirshipEmbeddedInfo>? = comparator
+        set(value) {
+            field = value
+            if (isAttachedToWindow) {
+                collectDisplayRequests()
+            }
+        }
 
     private val viewJob = SupervisorJob()
-    private val viewScope = CoroutineScope(Dispatchers.Main.immediate + viewJob)
+    private val viewScope = CoroutineScope(Dispatchers.Main + viewJob)
 
     private val id: String
-    private val placeholderView: View?
+    private val placeholderLayoutRes: Int?
+
+    /**
+     * The job that collects display requests from the embedded manager.
+     *
+     * If a previous job exists, it will be cancelled before the new job value is set.
+     */
+    private var displayRequestsJob: Job? = null
+        set(value) {
+            field?.cancel()
+            field = value
+        }
 
     init {
+        @Suppress("NamedArgsPositionMismatch") // False positive. attrs is the correct type.
         val a = context.obtainStyledAttributes(attrs, R.styleable.AirshipEmbeddedView, defStyle, 0)
 
-        id = embeddedViewId ?: requireNotNull(a.getString(R.styleable.AirshipEmbeddedView_layout_id)) {
+        id = embeddedId ?: requireNotNull(a.getString(R.styleable.AirshipEmbeddedView_airshipEmbeddedId)) {
             "AirshipEmbeddedView requires a layout_id!"
         }
 
-        val placeholderRes = a.getResourceId(R.styleable.AirshipEmbeddedView_placeholder, 0)
-        placeholderView = if (placeholderRes != 0) {
-            LayoutInflater.from(context).inflate(placeholderRes, this, false)
-        } else if (placeholderLayout != null) {
-            LayoutInflater.from(context).inflate(placeholderLayout, this, false)
-        } else {
-            null
-        }
+        val placeholder = a.getResourceId(R.styleable.AirshipEmbeddedView_airshipPlaceholder, placeholderRes ?: 0)
+        placeholderLayoutRes = if (placeholder == 0) null else placeholder
 
-        val animationIn = a.getResourceId(R.styleable.AirshipEmbeddedView_in_animation, inAnimation)
-        val animationOut = a.getResourceId(R.styleable.AirshipEmbeddedView_out_animation, outAnimation)
+        setAnimations(
+            inAnimation = a.getResourceId(R.styleable.AirshipEmbeddedView_airshipInAnimation, 0),
+            outAnimation = a.getResourceId(R.styleable.AirshipEmbeddedView_airshipOutAnimation, 0)
+        )
 
         a.recycle()
+    }
 
-        val layoutTransition: LayoutTransition = LayoutTransition().apply {
-            setAnimator(LayoutTransition.APPEARING, AnimatorInflater.loadAnimator(context, animationIn))
-            setAnimator(LayoutTransition.DISAPPEARING, AnimatorInflater.loadAnimator(context, animationOut))
+    private val logTag: String by lazy { "(embeddedId: \'${id}\')" }
+
+    /**
+     * Sets the layout transition animations that will be used to animate embedded content changes.
+     *
+     * When included inside of a `RecyclerView`, animations should not be set directly on the
+     * embedded view, as they may conflict with the `RecyclerView` animations. Prefer item
+     * animations on the `RecyclerView` instead.
+     *
+     * @param inAnimation The animation resource ID for the in animation.
+     * @param outAnimation The animation resource ID for the out animation.
+     */
+    public fun setAnimations(@AnimatorRes inAnimation: Int?, @AnimatorRes outAnimation: Int?) {
+        val (animIn, animOut) = try {
+            Pair(
+                inAnimation?.let { if (it == 0) null else loadAnimator(context, it) },
+                outAnimation?.let { if (it == 0) null else loadAnimator(context, it) }
+            )
+        } catch (e: Exception) {
+            UALog.e(e) { "Failed to load embedded view animations!" }
+            return
         }
+
+        val layoutTransition: LayoutTransition? =
+            if (animIn == null && animOut == null) {
+                null
+            } else {
+                LayoutTransition().apply {
+                    setAnimator(LayoutTransition.APPEARING, animIn)
+                    setAnimator(LayoutTransition.DISAPPEARING, animOut)
+                }
+            }
 
         setLayoutTransition(layoutTransition)
     }
 
-    /**
-     * Embedded View listener that will be notified when embedded content is available to display
-     * or when no embedded content is currently available.
-     */
-    public var listener: Listener? = object : Listener {
-        override fun onAvailable(): Boolean = true
-        override fun onEmpty() {}
-    }
-
-    /**
-     * Supply an alternate width for calculating percentage dimensions. When placing an embedded
-     * view inside of a scrolling container, this can be used to provide the width of the scrolling
-     * dimension (e.g. the width of the ScrollView's frame).
-     */
-    public  var parentWidthProvider: (() -> Int)? = null
-
-    /**
-     * Supply an alternate height for calculating percentage dimensions. When placing an embedded
-     * view inside of a scrolling container, this can be used to provide the height of the scrolling
-     * dimension (e.g. the height of the ScrollView's frame).
-     */
-    public  var parentHeightProvider: (() -> Int)? = null
-
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        UALog.v { "onAttachedToWindow $logTag" }
 
-        viewScope.launch {
-            manager.displayRequests(embeddedViewId = id)
-                .map { request ->
-                    val displayArgs = request?.displayArgsProvider?.invoke() ?: return@map null
-                    EmbeddedLayout(context, id, displayArgs, manager)
-                }
-                .collect(::update)
-        }
+        collectDisplayRequests()
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
+        UALog.v { "onDetachedFromWindow $logTag" }
+
         viewJob.cancelChildren()
     }
 
-    private fun update(layout: EmbeddedLayout?) {
+    private fun collectDisplayRequests() {
+        displayRequestsJob = viewScope.launch {
+            try {
+                manager.displayRequests(embeddedViewId = id, comparator = comparator)
+                    .collect(::onUpdate)
+            } catch (e: CancellationException) {
+                UALog.v { "Stopped collecting display requests for $logTag" }
+            } catch (e: Exception) {
+                UALog.e(e) { "Failed to collect display requests for $logTag" }
+            }
+        }
+    }
+
+    private fun onUpdate(request: EmbeddedDisplayRequest?) {
+        val displayArgs = request?.displayArgsProvider?.invoke()
+        val layout = displayArgs?.let { args -> EmbeddedLayout(context, id, args, manager) }
+
+        UALog.v {
+            val action = if (layout != null) "available" else "empty"
+            "onUpdate: $action $logTag"
+        }
+
         removeAllViews()
 
-        if (layout != null && (listener == null || listener?.onAvailable() == true)) {
-            val size = layout.getPlacement()?.size ?: return
+        // If we have a layout and the listener is null or the listener returns true,
+        // then we'll display the content. Otherwise, display the placeholder if we have one.
+        if (layout != null) {
+            val (width, height) = layout.getPlacement()?.size
+                ?.toEmbeddedSize(
+                    parentWidthProvider = parentWidthProvider,
+                    parentHeightProvider = parentHeightProvider
+                ) ?: return
 
-            val (widthSpec, fillWidth) = when (size.width.type) {
-                AUTO -> LayoutParams.WRAP_CONTENT to false
-                PERCENT -> parentWidthProvider?.invoke()?.let { parentWidth ->
-                    (size.width.float * parentWidth).roundToInt() to true
-                } ?: (LayoutParams.MATCH_PARENT to false)
-                else -> LayoutParams.MATCH_PARENT to false
-            }
-            val (heightSpec, fillHeight) = when (size.height.type) {
-                AUTO -> LayoutParams.WRAP_CONTENT to false
-                PERCENT -> {
-                    parentHeightProvider?.invoke()?.let { parentHeight ->
-                        (size.width.float * parentHeight).roundToInt() to true
-                    } ?: (LayoutParams.MATCH_PARENT to false)
-                }
-                else -> LayoutParams.MATCH_PARENT to false
-            }
-
-            val frame = FrameLayout(context).apply {
-                layoutParams = LayoutParams(widthSpec, heightSpec)
-            }
-
-            val view = layout.makeView(fillWidth, fillHeight)?.apply {
-                layoutParams = LayoutParams(widthSpec, heightSpec).apply {
+            val view = layout.getOrCreateView(width.fill, height.fill)?.apply {
+                layoutParams = LayoutParams(width.spec, height.spec).apply {
                     gravity = Gravity.CENTER
                 }
             } ?: return
 
-            frame.addView(view)
-            addView(frame)
+            addView(view)
+            UALog.v { "onUpdate: displayed content $logTag" }
         } else {
-            listener?.onEmpty()
-
-            placeholderView?.let { placeholder ->
+            placeholderLayoutRes?.let { resId ->
+                val placeholder = LayoutInflater.from(context).inflate(resId, this, false)
                 addView(placeholder)
+                UALog.v { "onUpdate: displayed placeholder $logTag" }
             }
         }
     }
 }
+
+//
+// Helpers
+//
+
+private fun ConstrainedSize.toEmbeddedSize(
+    parentWidthProvider: (() -> Int)?,
+    parentHeightProvider: (() -> Int)?
+): EmbeddedSize =
+    EmbeddedSize(
+        width = width.toEmbeddedDimension(parentWidthProvider),
+        height = height.toEmbeddedDimension(parentHeightProvider)
+    )
+
+private fun Size.Dimension.toEmbeddedDimension(
+    parentDimensionProvider: (() -> Int)?
+): EmbeddedDimension = when (this.type) {
+    AUTO -> EmbeddedDimension(LayoutParams.WRAP_CONTENT, false)
+    PERCENT -> parentDimensionProvider?.invoke()?.let { parentDimension ->
+        EmbeddedDimension(round(this.float * parentDimension).toInt(), true)
+    }
+    else -> null
+} ?: EmbeddedDimension(LayoutParams.MATCH_PARENT,  false)
+
+private data class EmbeddedSize(
+    val width: EmbeddedDimension,
+    val height: EmbeddedDimension
+)
+
+private data class EmbeddedDimension(
+    val spec: Int,
+    val fill: Boolean
+)

@@ -2,18 +2,16 @@
 
 package com.urbanairship.audience
 
-import android.content.Context
 import androidx.annotation.RestrictTo
-import com.urbanairship.PrivacyManager
 import com.urbanairship.UAirship
-import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
-import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.PlatformUtils
 import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -22,126 +20,154 @@ import kotlinx.coroutines.sync.withLock
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface DeviceInfoProvider {
-    public fun userCutOffDate(context: Context): Long
-    public fun getUserLocale(context: Context): Locale
-    public fun isFeatureEnabled(@PrivacyManager.Feature feature: Int): Boolean
+
     public suspend fun getPermissionStatuses(): Map<Permission, PermissionStatus>
     public suspend fun getStableContactId(): String
+    public suspend fun getChannelId(): String
 
     public val isNotificationsOptedIn: Boolean
     public val channelTags: Set<String>
-    public val appVersion: Long
-    public val channelId: String?
+    public val appVersionName: String
+    public val appVersionCode: Long
     public val platform: String
-
-    public suspend fun snapshot(context: Context): DeviceInfoProvider
+    public val channelCreated: Boolean
+    public val analyticsEnabled: Boolean
+    public val installDateMilliseconds: Long
+    public val locale: Locale
 
     public companion object {
-        public fun legacy(): DeviceInfoProvider = DeviceInfoProviderImpl(
-            notificationStatusFetcher = UAirship.shared().pushManager::areNotificationsOptedIn,
-            privacyFeatureFetcher = UAirship.shared().privacyManager::isEnabled,
-            channelTagsFetcher = UAirship.shared().channel::tags,
-            channelIdFetcher = UAirship.shared().channel::id,
-            versionFetcher = UAirship.shared().applicationMetrics::getCurrentAppVersion,
-            permissionsManager = UAirship.shared().permissionsManager,
-            contactIdFetcher = UAirship.shared().contact::stableContactId,
-            platform = PlatformUtils.asString(UAirship.shared().platformType),
-            localeManager = UAirship.shared().localeManager
-        )
+        @JvmStatic
+        public fun newProvider(): DeviceInfoProvider {
+            return DeviceInfoProviderImpl()
+        }
+
+        @JvmStatic
+        public fun newCachingProvider(): DeviceInfoProvider {
+            return CachingDeviceInfoProvider(DeviceInfoProviderImpl())
+        }
     }
 }
 
-internal class DeviceInfoProviderImpl(
-    private val notificationStatusFetcher: () -> Boolean,
-    private val privacyFeatureFetcher: (Int) -> Boolean,
-    private val channelTagsFetcher: () -> Set<String>,
-    private val channelIdFetcher: () -> String?,
-    private val versionFetcher: () -> Long,
-    private val permissionsManager: PermissionsManager,
-    private val contactIdFetcher: suspend () -> String,
-    override val platform: String,
-    private val localeManager: LocaleManager
-) : DeviceInfoProvider {
+internal class DeviceInfoProviderImpl : DeviceInfoProvider {
 
-    override fun userCutOffDate(context: Context): Long {
-        val packageName = context.packageName
-        return context.packageManager.getPackageInfo(packageName, 0).firstInstallTime
-    }
+    override val installDateMilliseconds: Long
+        get() = UAirship.getPackageInfo()?.firstInstallTime ?: 0
 
     override val isNotificationsOptedIn: Boolean
-        get() = notificationStatusFetcher.invoke()
+        get() = UAirship.shared().pushManager.areNotificationsOptedIn()
 
     override val channelTags: Set<String>
-        get() = channelTagsFetcher.invoke()
+        get() = UAirship.shared().channel.tags
+    override val appVersionName: String
+        get() = UAirship.getPackageInfo()?.versionName ?: ""
+    override val appVersionCode: Long
+        get() = UAirship.getAppVersion()
 
-    override val appVersion: Long
-        get() = versionFetcher.invoke()
+    override val platform: String
+        get() = PlatformUtils.asString(UAirship.shared().platformType)
 
-    override val channelId: String?
-        get() = channelIdFetcher.invoke()
+    override val channelCreated: Boolean
+        get() = UAirship.shared().channel.id == null
+    override val analyticsEnabled: Boolean
+        get() = UAirship.shared().analytics.isEnabled
 
-    override fun isFeatureEnabled(feature: Int): Boolean {
-        return privacyFeatureFetcher.invoke(feature)
-    }
-
-    override fun getUserLocale(context: Context): Locale {
-        return localeManager.locale
-    }
+    override val locale: Locale
+        get() = UAirship.shared().localeManager.locale
 
     override suspend fun getPermissionStatuses(): Map<Permission, PermissionStatus> {
         val resolver: suspend (Permission) -> PermissionStatus = {
             suspendCoroutine { continuation ->
-                val result = permissionsManager.checkPermissionStatus(it).result
+                val result = UAirship.shared().permissionsManager.checkPermissionStatus(it).result
                 continuation.resume(result ?: PermissionStatus.NOT_DETERMINED)
             }
         }
 
-        return permissionsManager.configuredPermissions.associateWith { resolver(it) }
+        return UAirship.shared().permissionsManager.configuredPermissions.associateWith { resolver(it) }
     }
 
-    override suspend fun getStableContactId(): String = contactIdFetcher.invoke()
+    override suspend fun getStableContactId(): String {
+        return UAirship.shared().contact.getStableContactId()
+    }
 
-    override suspend fun snapshot(context: Context): DeviceInfoProvider {
-        return CachedDeviceInfoProvider(
-            cutOffTime = OneTimeValue { userCutOffDate(context) },
-            locale = OneTimeValue { getUserLocale(context) },
-            privacyFeatureFetcher = privacyFeatureFetcher,
-            permissionStatuses = OneTimeValueSus { getPermissionStatuses() },
-            stableContactId = OneTimeValueSus { getStableContactId() },
-            cachedIsNotificationsOptedIn = OneTimeValue { isNotificationsOptedIn },
-            cachedChannelTags = OneTimeValue { channelTags },
-            cachedAppVersion = OneTimeValue { appVersion },
-            cachedChannelId = OneTimeValue { channelId },
-            cachedPlatform = OneTimeValue { platform }
-        )
+    override suspend fun getChannelId(): String {
+        return UAirship.shared().channel.channelIdFlow.filterNotNull().first()
     }
 }
 
-internal class CachedDeviceInfoProvider(
-    private val cutOffTime: OneTimeValue<Long>,
-    private val locale: OneTimeValue<Locale>,
-    private val privacyFeatureFetcher: (Int) -> Boolean,
-    private val permissionStatuses: OneTimeValueSus<Map<Permission, PermissionStatus>>,
-    private val stableContactId: OneTimeValueSus<String>,
-    cachedIsNotificationsOptedIn: OneTimeValue<Boolean>,
-    cachedChannelTags: OneTimeValue<Set<String>>,
-    cachedAppVersion: OneTimeValue<Long>,
-    cachedChannelId: OneTimeValue<String?>,
-    cachedPlatform: OneTimeValue<String>
+internal class CachingDeviceInfoProvider(
+    private val deviceInfoProviderImpl: DeviceInfoProviderImpl,
 ) : DeviceInfoProvider {
-    override fun userCutOffDate(context: Context): Long = cutOffTime.getValue()
-    override fun getUserLocale(context: Context): Locale = locale.getValue()
-    override fun isFeatureEnabled(feature: Int): Boolean = privacyFeatureFetcher(feature)
-    override suspend fun getPermissionStatuses(): Map<Permission, PermissionStatus> = permissionStatuses.getValue()
-    override suspend fun getStableContactId(): String = stableContactId.getValue()
 
-    override val isNotificationsOptedIn: Boolean = cachedIsNotificationsOptedIn.getValue()
-    override val channelTags: Set<String> = cachedChannelTags.getValue()
-    override val appVersion: Long = cachedAppVersion.getValue()
-    override val channelId: String? = cachedChannelId.getValue()
-    override val platform: String = cachedPlatform.getValue()
+    private val cachedPermissionStatus = OneTimeValueSus {
+        deviceInfoProviderImpl.getPermissionStatuses()
+    }
 
-    override suspend fun snapshot(context: Context): DeviceInfoProvider = this
+    private val cachedStableContactId = OneTimeValueSus {
+        deviceInfoProviderImpl.getStableContactId()
+    }
+
+    private val cachedChannelId = OneTimeValueSus {
+        deviceInfoProviderImpl.getChannelId()
+    }
+
+    private val cachedIsNotificationsOptedIn = OneTimeValue {
+        deviceInfoProviderImpl.isNotificationsOptedIn
+    }
+
+    private val cachedChannelTags = OneTimeValue {
+        deviceInfoProviderImpl.channelTags
+    }
+
+    private val cachedAppVersionName = OneTimeValue {
+        deviceInfoProviderImpl.appVersionName
+    }
+
+    private val cachedAppVersionCode = OneTimeValue {
+        deviceInfoProviderImpl.appVersionCode
+    }
+
+    private val cachedPlatform = OneTimeValue {
+        deviceInfoProviderImpl.platform
+    }
+
+    private val cachedChannelCreated = OneTimeValue {
+        deviceInfoProviderImpl.channelCreated
+    }
+
+    private val cachedAnalyticsEnabled = OneTimeValue {
+        deviceInfoProviderImpl.analyticsEnabled
+    }
+
+    private val cachedInstallDateMilliseconds = OneTimeValue {
+        deviceInfoProviderImpl.installDateMilliseconds
+    }
+
+    private val cachedLocale = OneTimeValue {
+        deviceInfoProviderImpl.locale
+    }
+
+    override suspend fun getPermissionStatuses(): Map<Permission, PermissionStatus> = cachedPermissionStatus.getValue()
+    override suspend fun getStableContactId(): String = cachedStableContactId.getValue()
+    override suspend fun getChannelId(): String = cachedChannelId.getValue()
+
+    override val isNotificationsOptedIn: Boolean
+        get() = cachedIsNotificationsOptedIn.getValue()
+    override val channelTags: Set<String>
+        get() = cachedChannelTags.getValue()
+    override val appVersionName: String
+        get() = cachedAppVersionName.getValue()
+    override val appVersionCode: Long
+        get() = cachedAppVersionCode.getValue()
+    override val platform: String
+        get() = cachedPlatform.getValue()
+    override val channelCreated: Boolean
+        get() = cachedChannelCreated.getValue()
+    override val analyticsEnabled: Boolean
+        get() = cachedAnalyticsEnabled.getValue()
+    override val installDateMilliseconds: Long
+        get() = cachedInstallDateMilliseconds.getValue()
+    override val locale: Locale
+        get() = cachedLocale.getValue()
 }
 
 internal class OneTimeValue<T>(

@@ -179,63 +179,6 @@ public class UAirshipTest extends BaseTestCase {
         UAirship.shared();
     }
 
-    /**
-     * Test enabling the DataCollectionOptIn Key in AirshipConfig, and check that DataCollection
-     * is disabled at SDK launch
-     */
-    @Test
-    public void testDataCollectionOptInEnabled() {
-        configOptions = new AirshipConfigOptions.Builder()
-                .setProductionAppKey("0000000000000000000000")
-                .setProductionAppSecret("0000000000000000000000")
-                .setInProduction(true)
-                .setDataCollectionOptInEnabled(true)
-                .build();
-
-        UAirship.takeOff(application, configOptions);
-
-        assertFalse(UAirship.shared().isDataCollectionEnabled());
-    }
-
-    /**
-     * Test disabling the DataCollectionOptIn Key in AirshipConfig, and check that DataCollection
-     * is enabled at SDK launch
-     */
-    @Test
-    public void testDataCollectionOptInDisabled() {
-        configOptions = new AirshipConfigOptions.Builder()
-                .setProductionAppKey("0000000000000000000000")
-                .setProductionAppSecret("0000000000000000000000")
-                .setInProduction(true)
-                .setDataCollectionOptInEnabled(false)
-                .build();
-
-        UAirship.takeOff(application, configOptions);
-
-        assertTrue(UAirship.shared().isDataCollectionEnabled());
-    }
-
-    /**
-     * Test enabling the DataCollection
-     */
-    @Test
-    public void testSetDataCollectionEnabled() {
-        UAirship.takeOff(application, configOptions);
-
-        UAirship.shared().setDataCollectionEnabled(true);
-        assertTrue(UAirship.shared().isDataCollectionEnabled());
-    }
-
-    /**
-     * Test disabling the DataCollection
-     */
-    @Test
-    public void testSetDataCollectionDisabled() {
-        UAirship.takeOff(application, configOptions);
-
-        UAirship.shared().setDataCollectionEnabled(false);
-        assertFalse(UAirship.shared().isDataCollectionEnabled());
-    }
 
     @Test
     public void testDeepLinkListener() {

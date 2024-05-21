@@ -21,7 +21,6 @@ import androidx.core.view.isGone
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.MediaModel
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
@@ -86,19 +85,41 @@ internal class MediaView(
 
         LayoutUtils.applyBorderAndBackground(this, model)
 
-        if (model.mediaType == MediaType.VIDEO) {
-            model.pagerState?.update { state ->
-                state.copyWithMediaPaused(true)
-            }
-        }
-
         when (model.mediaType) {
             MediaType.IMAGE -> configureImageView(model)
             MediaType.VIDEO,
-            MediaType.YOUTUBE -> configureWebView(model)
+            MediaType.YOUTUBE -> {
+                model.pagerState?.update { state ->
+                    state.copyWithMediaPaused(true)
+                }
+                configureWebView(model)
+            }
         }
 
-        model.listener = object : BaseModel.Listener {
+
+        model.listener = object : MediaModel.Listener {
+            // Use javascript to pause/resume the videos instead of webView.onPause()/onResume()
+            // because the WebView triggers an unwanted visibilitychange event.
+            override fun onPause() {
+                if (model.mediaType == MediaType.VIDEO) {
+                    webView?.evaluateJavascript("videoElement.pause();", null)
+                } else if (model.mediaType == MediaType.YOUTUBE) {
+                    webView?.evaluateJavascript("player.pauseVideo();", null)
+                }
+            }
+
+            // Use javascript to pause/resume the videos instead of webView.onPause()/onResume()
+            // because the WebView triggers an unwanted visibilitychange event.
+            override fun onResume() {
+                if (model.video?.autoplay == true) {
+                    if (model.mediaType == MediaType.VIDEO) {
+                        webView?.evaluateJavascript("videoElement.play();", null)
+                    } else if (model.mediaType == MediaType.YOUTUBE) {
+                        webView?.evaluateJavascript("player.playVideo();", null)
+                    }
+                }
+            }
+
             override fun setVisibility(visible: Boolean) {
                 this@MediaView.isGone = visible
             }
@@ -268,12 +289,19 @@ internal class MediaView(
                 when (model.mediaType) {
                     MediaType.VIDEO -> {
                         val video = model.video ?: Video.defaultVideo()
-                        weakWebView.loadData(String.format(VIDEO_HTML_FORMAT,
-                            if (video.showControls) "controls" else "",
-                            if (video.autoplay) "autoplay" else "",
-                            if (video.muted) "muted" else "",
-                            if (video.loop) "loop" else "",
-                            model.url), "text/html", "UTF-8")
+                        weakWebView.loadData(
+                            String.format(
+                                VIDEO_HTML_FORMAT,
+                                if (video.showControls) "controls" else "",
+                                if (video.autoplay) "autoplay" else "",
+                                if (video.muted) "muted" else "",
+                                if (video.loop) "loop" else "",
+                                model.url,
+                                if (video.autoplay) VIDEO_AUTO_PLAYING_JS_CODE else ""
+                            ),
+                            "text/html",
+                            "UTF-8"
+                        )
                     }
                     MediaType.IMAGE -> weakWebView.loadData(
                         String.format(IMAGE_HTML_FORMAT, model.url),
@@ -405,12 +433,28 @@ internal class MediaView(
                 <video id="video" playsinline %s %s %s %s height="100%%" width="100%%" src="%s"></video>
                 <script>
                     let videoElement = document.getElementById("video");
+
+                    document.addEventListener("visibilitychange", () => {
+                      if (document.visibilityState === "visible") {
+                        // Autoplaying code placeholder
+                        %s
+                      } else {
+                        videoElement.pause();
+                      }
+                    });
+
                     videoElement.addEventListener("canplay", (event) => {
-                        VideoListenerInterface.onVideoReady();
+                      VideoListenerInterface.onVideoReady();
                     });
                 </script>
             </body>
             """.trimIndent()
+
+        @Language("HTML")
+        private val VIDEO_AUTO_PLAYING_JS_CODE = """
+            videoElement.currentTime = 0;
+            videoElement.load();
+        """.trimIndent()
 
         @Language("HTML")
         private val IMAGE_HTML_FORMAT = """
@@ -460,6 +504,8 @@ internal class MediaView(
 
                   // 4. The API will call this function when the video player is ready.
                   function onPlayerReady(event) {
+                    VideoListenerInterface.onVideoReady();
+                    // Autoplaying code placeholder
                     %s
                   }
                 </script>
@@ -472,6 +518,7 @@ internal class MediaView(
 
             document.addEventListener("visibilitychange", () => {
               if (document.visibilityState === "visible") {
+                event.target.seekTo(0, false);
                 event.target.playVideo();
               } else {
                 event.target.pauseVideo();

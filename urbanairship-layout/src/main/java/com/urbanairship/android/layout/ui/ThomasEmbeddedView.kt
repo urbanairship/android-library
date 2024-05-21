@@ -28,8 +28,6 @@ internal class ThomasEmbeddedView(
     private val model: AnyModel,
     private val presentation: EmbeddedPresentation,
     private val environment: ViewEnvironment,
-    @AnimatorRes private val animationIn: Int = android.R.animator.fade_in,
-    @AnimatorRes private val animationOut: Int = android.R.animator.fade_out,
     private val fillHeight: Boolean = false,
     private val fillWidth: Boolean = false
 ) : ConstraintLayout(context) {
@@ -77,7 +75,10 @@ internal class ThomasEmbeddedView(
         }
 
         // Make a frame to display the layout in
-        val viewId = makeFrame(size, margin).let { frame ->
+        val viewId = ConstrainedFrameLayout(context, size).apply {
+            id = generateViewId()
+            layoutParams = LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT)
+        }.let { frame ->
             this@ThomasEmbeddedView.frame = frame
 
             LayoutUtils.applyBorderAndBackground(container, placement.border, placement.backgroundColor)
@@ -85,7 +86,7 @@ internal class ThomasEmbeddedView(
             container.addView(model.createView(context, environment))
             frame.addView(container)
 
-            this@ThomasEmbeddedView.addView(frame)
+            addView(frame)
 
             frame.id
         }
@@ -108,63 +109,15 @@ internal class ThomasEmbeddedView(
             .applyTo(this)
     }
 
-    private fun makeFrame(size: ConstrainedSize, margin: Margin?) =
-        ConstrainedFrameLayout(context, size).apply {
-            id = generateViewId()
-            layoutParams = LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT)
-        }
-
     @MainThread
-    fun show(animate: Boolean) {
-        if (animate && animationIn != 0) {
-            clearAnimation()
-            val animator = AnimatorInflater.loadAnimator(context, animationIn)
-            animator.setDuration(300)
-            animator.setTarget(frame)
-            animator.start()
-        } else {
-            frame?.alpha = 1f
+    fun dismiss(isInternal: Boolean) {
+        removeSelf()
+
+        if (!isInternal) {
+            listener?.onDismissed()
         }
     }
 
-    @MainThread
-    fun dismissAnimated() {
-        dismiss(animate = true, isInternal = false)
-    }
-
-    /**
-     * Used to dismiss the message.
-     *
-     * @param animate `true` to animate the view out, otherwise `false`.
-     */
-    @MainThread
-    fun dismiss(animate: Boolean, isInternal: Boolean) {
-        if (animate && frame != null && animationOut != 0) {
-            clearAnimation()
-            val animator = AnimatorInflater.loadAnimator(context, animationOut)
-            animator.setDuration(300)
-            animator.setTarget(frame)
-            animator.addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    removeSelf()
-                    if (!isInternal) {
-                        listener?.onDismissed()
-                    }
-                }
-            })
-            animator.start()
-        } else {
-            removeSelf()
-
-            if (!isInternal) {
-                listener?.onDismissed()
-            }
-        }
-    }
-
-    /**
-     * Helper method to remove the view from the parent.
-     */
     @MainThread
     private fun removeSelf() {
         (this.parent as? ViewGroup)?.let { parent ->

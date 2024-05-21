@@ -23,7 +23,7 @@ class InAppAutomationDisplayIntervalPreferenceDialogFragment : PreferenceDialogF
             minValue = MIN_VALUE
             maxValue = MAX_VALUE
 
-            val seconds = InAppAutomation.shared().inAppMessageManager.displayInterval / 1000L
+            val seconds = InAppAutomation.shared().inAppMessaging.displayInterval / 1000L
             value = seconds.toInt()
         }
     }

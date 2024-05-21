@@ -3,7 +3,6 @@
 package com.urbanairship.automation.storage;
 
 import com.urbanairship.audience.AudienceSelector;
-import com.urbanairship.automation.TriggerContext;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
@@ -40,12 +39,12 @@ public class ScheduleEntity {
     public int count;
     public int executionState;
     public long executionStateChangeDate;
-    public TriggerContext triggerContext;
+    public String triggerContext;
     public int appState;
     public List<String> screens;
     public long seconds;
     public String regionId;
-    public AudienceSelector audience;
+    public String audience;
     public JsonValue campaigns;
     public JsonValue reportingContext;
 

@@ -40,7 +40,7 @@
 -keep public class * implements com.urbanairship.actions.ActionRegistry$Predicate
 
 ## Views that contain descriptor classes
--keep public class com.urbanairship.iam.banner.BannerDismissLayout$Listener
+-keep public class com.urbanairship.iam.view.BannerDismissLayout$Listener
 -keep public class com.urbanairship.iam.view.InAppButtonLayout$ButtonClickListener
 
 ## Optional

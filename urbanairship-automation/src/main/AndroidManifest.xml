@@ -6,7 +6,7 @@
     <application>
 
         <activity
-            android:name="com.urbanairship.iam.html.HtmlActivity"
+            android:name="com.urbanairship.iam.adapter.html.HtmlActivity"
             android:exported="false"
             android:theme="@style/UrbanAirship.InAppHtml.Activity">
             <meta-data
@@ -15,7 +15,7 @@
         </activity>
 
         <activity
-            android:name="com.urbanairship.iam.fullscreen.FullScreenActivity"
+            android:name="com.urbanairship.iam.adapter.fullscreen.FullscreenActivity"
             android:exported="false"
             android:theme="@style/UrbanAirship.InAppFullscreen.Activity">
             <meta-data
@@ -24,7 +24,7 @@
         </activity>
 
         <activity
-            android:name="com.urbanairship.iam.modal.ModalActivity"
+            android:name="com.urbanairship.iam.adapter.modal.ModalActivity"
             android:exported="false"
             android:theme="@style/UrbanAirship.InAppModal.Activity">
             <meta-data
@@ -32,11 +32,5 @@
                 android:value="true" />
         </activity>
 
-        <receiver android:name="com.urbanairship.automation.alarms.AlarmOperationReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.urbanairship.automation.alarms.ALARM_FIRED" />
-            </intent-filter>
-        </receiver>
     </application>
 </manifest>

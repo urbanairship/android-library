@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.android.layout.ui
 
 import android.content.Context
@@ -30,28 +32,26 @@ import com.urbanairship.android.layout.util.ImageCache
 import com.urbanairship.android.layout.util.getActivity
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.webkit.AirshipWebViewClient
-import java.lang.ref.WeakReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
-import java.io.ObjectStreamException
+import java.lang.ref.WeakReference
 import java.util.Objects
 
-// TODO(embedded): make this better, or share with the banner model store if there isn't anything
-//    nicer we can do...
 private object EmbeddedViewModelStore : ViewModelStore()
-// TODO(embedded): this too...
+
 private object EmbeddedViewModelStoreOwner : ViewModelStoreOwner {
     override val viewModelStore: ViewModelStore
         get() = EmbeddedViewModelStore
 }
 
-// TODO: we maybe need to make this public because of the compose transition scope generic type :-/
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class EmbeddedLayout(
     private val context: Context,
@@ -61,17 +61,18 @@ public class EmbeddedLayout(
 ) {
     private val viewJob = SupervisorJob()
     private val layoutScope = CoroutineScope(Dispatchers.Main.immediate + viewJob)
+    private var layoutEventsJob: Job? = null
 
+    private val payload: LayoutInfo = args.payload
     private val activityMonitor: ActivityMonitor = args.inAppActivityMonitor
     private val webViewClientFactory: Factory<AirshipWebViewClient>? = args.webViewClientFactory
-    private val imageCache: ImageCache? = args.imageCache
-    private val payload: LayoutInfo = args.payload
     private val externalListener: ThomasListener = args.listener
-    private val viewModelKey: String = payload.hash.toString()
-    private val reporter: Reporter = ExternalReporter(externalListener)
-    /** @hide **/
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    private val imageCache: ImageCache? = args.imageCache
+
     public val viewInstanceId: String =  payload.hash.toString()
+
+    private val reporter: Reporter = ExternalReporter(externalListener)
+
 
     private var currentView: WeakReference<ThomasEmbeddedView>? = null
     private var displayTimer: DisplayTimer? = null
@@ -82,6 +83,12 @@ public class EmbeddedLayout(
         val presentation = (payload.presentation as? EmbeddedPresentation)
         return presentation?.getResolvedPlacement(context)
     }
+
+    public fun getOrCreateView(
+        fillWidth: Boolean = false,
+        fillHeight: Boolean = false
+    ): View? =
+        currentView?.get() ?: makeView(fillWidth, fillHeight)
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -123,7 +130,7 @@ public class EmbeddedLayout(
         )
 
         val viewModelProvider = ViewModelProvider(EmbeddedViewModelStoreOwner)
-        val viewModel = viewModelProvider[viewModelKey, LayoutViewModel::class.java]
+        val viewModel = viewModelProvider[viewInstanceId, LayoutViewModel::class.java]
 
         displayTimer = timer
 
@@ -146,13 +153,12 @@ public class EmbeddedLayout(
                 fillHeight = fillHeight
             )
 
-            observeLayoutEvents(modelEnvironment.layoutEvents)
+            layoutEventsJob?.cancel()
+            layoutEventsJob = observeLayoutEvents(modelEnvironment.layoutEvents)
 
             embeddedView.listener = object : ThomasEmbeddedView.Listener {
                 override fun onDismissed() {
-                    UALog.v("EmbeddedLayout dismissed! $embeddedViewId")
-                    // Dismiss the view via the manager. This will update the AirshipEmbeddedView.
-                    embeddedViewManager.dismiss(embeddedViewId, viewInstanceId)
+                    dismiss()
                     reportDismissFromOutside()
                 }
             }
@@ -165,14 +171,13 @@ public class EmbeddedLayout(
         }
     }
 
-    private fun dismiss(animate: Boolean = true, isInternal: Boolean = false) {
-        currentView?.get()?.dismiss(animate, isInternal)
+    private fun dismiss() {
+        embeddedViewManager.dismiss(embeddedViewId, viewInstanceId)
     }
 
-    /** Called when the banner is finished displaying. */
     @MainThread
     private fun onDisplayFinished() {
-        UALog.v("EmbeddedLayout finished displaying! $embeddedViewId")
+        UALog.v("Embedded content finished displaying! $embeddedViewId")
         layoutScope.cancel()
         EmbeddedViewModelStore.clear()
     }

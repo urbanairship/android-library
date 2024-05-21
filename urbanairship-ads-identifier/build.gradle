@@ -4,6 +4,10 @@ plugins {
 
 description = "Airship Android SDK Advertising ID plugin"
 
+airshipModule {
+    published = false
+}
+
 dependencies {
     api project(':urbanairship-core')
     implementation(libs.playservices.adsidentifier)

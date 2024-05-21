@@ -1,10 +1,12 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.urbanairship.experiment
 
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestApplication
-import com.urbanairship.audience.DeviceInfoProviderImpl
+import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.experiment.ExperimentManager.Companion.PAYLOAD_TYPE
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
@@ -20,6 +22,7 @@ import io.mockk.every
 import io.mockk.mockk
 import java.util.Date
 import junit.framework.Assert.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -38,26 +41,20 @@ public class ExperimentManagerTest {
     private val remoteData: RemoteData = mockk()
 
     private lateinit var subject: ExperimentManager
-    private var channelId: String? = "default-channel-id"
+    private var channelId: String = "default-channel-id"
     private var contactId: String = "default-contact-id"
     private val messageInfo = MessageInfo("", null)
     private var currentTime = 1L
+
+    private val infoProvider: DeviceInfoProvider = mockk {
+        coEvery { getChannelId() } answers { channelId }
+        coEvery { getStableContactId() } answers { contactId }
+    }
 
     @Before
     public fun setUp() {
         val permissionManager: PermissionsManager = mockk()
         every { permissionManager.configuredPermissions } returns emptySet()
-        val infoProvider = DeviceInfoProviderImpl(
-            notificationStatusFetcher = { true },
-            privacyFeatureFetcher = { true },
-            channelTagsFetcher = { emptySet() },
-            channelIdFetcher = { channelId },
-            versionFetcher = { 1 },
-            permissionsManager = permissionManager,
-            contactIdFetcher = { contactId },
-            platform = "android",
-            mockk()
-        )
 
         val clock: Clock = mockk()
         every { clock.currentTimeMillis() } answers { currentTime }
@@ -66,7 +63,6 @@ public class ExperimentManagerTest {
             context = context,
             dataStore = dataStore,
             remoteData = remoteData,
-            infoProvider = infoProvider,
             clock = clock
         )
     }
@@ -175,7 +171,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo)!!
+        val result = subject.evaluateExperiments(messageInfo, infoProvider).getOrThrow()!!
         assertEquals("fake-id", result.matchedExperimentId)
         assertTrue(result.isMatching)
         assertEquals(contactId, result.contactId)
@@ -204,7 +200,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo, activeContactId)!!
+        val result = subject.evaluateExperiments(messageInfo, infoProvider, activeContactId).getOrThrow()!!
         assertTrue(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
         assertEquals(activeContactId, result.contactId)
@@ -227,7 +223,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo)!!
+        val result = subject.evaluateExperiments(messageInfo, infoProvider).getOrThrow()!!
         assertTrue(result.isMatching)
         assertEquals("first", result.matchedExperimentId)
         assertTrue(result.allEvaluatedExperimentsMetadata.size == 1)
@@ -250,7 +246,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(MessageInfo("transactional", null))!!
+        val result = subject.evaluateExperiments(MessageInfo("transactional", null), infoProvider).getOrThrow()!!
         assert(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
     }
@@ -279,7 +275,7 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo)!!
+        val result = subject.evaluateExperiments(messageInfo, infoProvider).getOrThrow()!!
         assert(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
     }
@@ -288,7 +284,7 @@ public class ExperimentManagerTest {
     public fun testResultExcludesInactiveExperiments(): TestResult = runTest {
         val unmatchedJson = generateExperimentsPayload(
             id = "unmatched",
-            timeCriteria = TimeCriteria(start = 2L, end = Date().time + 4L)
+            timeCriteria = TimeCriteria(start = 3L, end = Date().time + 4L)
         )
             .build()
 
@@ -307,7 +303,7 @@ public class ExperimentManagerTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
         currentTime = 2
 
-        val result = subject.evaluateExperiments(messageInfo)!!
+        val result = subject.evaluateExperiments(messageInfo, infoProvider).getOrThrow()!!
         assert(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
     }

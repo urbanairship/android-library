@@ -199,10 +199,10 @@ public class DeferredResolverTest {
 
         return DeferredRequest(
             uri = Uri.parse("https://example.com"),
-            channelID = "channel-id",
+            channelId = "channel-id",
             locale = locale,
             notificationOptIn = true,
-            appVersion = "1.2.3",
+            appVersionName = "1.2.3",
             sdkVersion = "4.3.2"
         )
     }

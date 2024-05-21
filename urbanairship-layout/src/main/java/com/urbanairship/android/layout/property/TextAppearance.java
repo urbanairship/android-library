@@ -5,14 +5,12 @@ package com.urbanairship.android.layout.property;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonMap;
-import com.urbanairship.reactive.Function;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 public class TextAppearance {
     @NonNull

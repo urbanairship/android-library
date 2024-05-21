@@ -924,6 +924,16 @@ public class PushManager extends AirshipComponent {
     public void addInternalNotificationListener(@NonNull InternalNotificationListener listener) {
         internalNotificationListeners.add(listener);
     }
+    /**
+     * Removes an internal notification listener.
+     *
+     * @param listener The notification listener.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public void removeInternalNotificationListener(@NonNull InternalNotificationListener listener) {
+        internalNotificationListeners.remove(listener);
+    }
 
     /**
      * Gets the notification listener.

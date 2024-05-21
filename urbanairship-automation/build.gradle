@@ -17,8 +17,11 @@ dependencies {
 
     // AndroidX
     implementation(libs.androidx.room.ktx)
+    implementation libs.androidx.test.ext.junitktx
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
 
     // Tests
     testImplementation project(':urbanairship-test')
@@ -30,6 +33,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockito.inline)
     testImplementation(libs.turbine)
 
     testImplementation(libs.androidx.room.testing)

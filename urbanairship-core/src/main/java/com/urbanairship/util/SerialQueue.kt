@@ -4,10 +4,9 @@ package com.urbanairship.util
 
 import androidx.annotation.RestrictTo
 import java.util.concurrent.atomic.AtomicLong
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.yield
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 
 /**
  * Runs suspending blocks completely in FIFO order
@@ -17,31 +16,17 @@ import kotlinx.coroutines.yield
 public class SerialQueue {
 
     private var nextTaskNumber = AtomicLong(0)
-    private var currentTaskNumber = AtomicLong(0)
-    @Volatile
-    private var job: Job? = null
+    private val currentTaskNumber = MutableStateFlow<Long>(0)
 
     public suspend fun <T> run(operation: suspend () -> T): T {
         val myTask = nextTaskNumber.getAndIncrement()
 
         return coroutineScope {
-            while (currentTaskNumber.get() != myTask) {
-                job?.join()
-                if (currentTaskNumber.get() != myTask) {
-                    yield()
-                }
-            }
+            currentTaskNumber.first { it == myTask }
+            val result = operation.invoke()
 
-            val deferred = async {
-                operation.invoke()
-            }
-            job = deferred
-
-            deferred.invokeOnCompletion {
-                currentTaskNumber.incrementAndGet()
-            }
-
-            deferred.await()
+            currentTaskNumber.compareAndSet(myTask, myTask.inc())
+            result
         }
     }
 }

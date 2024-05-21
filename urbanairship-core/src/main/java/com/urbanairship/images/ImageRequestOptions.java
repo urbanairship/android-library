@@ -8,10 +8,14 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.Px;
+import androidx.annotation.RestrictTo;
 
 /**
  * Image request options.
+ *
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class ImageRequestOptions {
 
     private final int placeHolder;
@@ -142,7 +146,5 @@ public final class ImageRequestOptions {
         public ImageRequestOptions build() {
             return new ImageRequestOptions(this);
         }
-
     }
-
 }

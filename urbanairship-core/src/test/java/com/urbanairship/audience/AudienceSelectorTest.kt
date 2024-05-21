@@ -1,12 +1,7 @@
 package com.urbanairship.audience
 
-import android.content.Context
 import android.util.Base64
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PendingResult
-import com.urbanairship.PrivacyManager
-import com.urbanairship.ShadowAirshipExecutorsLegacy
 import com.urbanairship.TestApplication
 import com.urbanairship.UAirship
 import com.urbanairship.json.JsonException
@@ -14,10 +9,8 @@ import com.urbanairship.json.JsonMatcher
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
-import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
-import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.UAStringUtil
 import io.mockk.coEvery
 import io.mockk.every
@@ -29,56 +22,13 @@ import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Shadows
-import org.robolectric.annotation.Config
-import org.robolectric.annotation.LooperMode
 
-@Config(
-    sdk = [28],
-    shadows = [ShadowAirshipExecutorsLegacy::class],
-    application = TestApplication::class
-)
-@LooperMode(LooperMode.Mode.LEGACY)
 @RunWith(AndroidJUnit4::class)
 public class AudienceSelectorTest {
 
-    private val context: Context = ApplicationProvider.getApplicationContext()
-    private lateinit var infoProvider: DeviceInfoProvider
-    private var notificationStatus = true
-    private lateinit var channelTags: MutableSet<String>
-    private var channelId = "channel-id"
-    private var version: Long = 1
-    private var contactIdGetter: suspend () -> String = { "contact-id" }
-    private lateinit var permissions: MutableMap<Permission, PermissionStatus>
-    private lateinit var privacyFeatures: MutableMap<Int, Boolean>
-
-    @Before
-    public fun setUp() {
-        permissions = mutableMapOf()
-        privacyFeatures = mutableMapOf()
-        channelTags = mutableSetOf()
-
-        val permissionManager: PermissionsManager = mockk()
-        coEvery { permissionManager.configuredPermissions } returns permissions.keys
-
-        every { permissionManager.checkPermissionStatus(any()) } answers {
-            val key: Permission = firstArg()
-            val value = permissions[key] ?: PermissionStatus.NOT_DETERMINED
-            val result = PendingResult<PermissionStatus>()
-            result.result = value
-            result
-        }
-
-        val localeManager: LocaleManager = mockk()
-        every { localeManager.locale } answers { Locale.US }
-
-        infoProvider = DeviceInfoProviderImpl(
-            { notificationStatus }, { privacyFeatures[it] ?: false }, { channelTags },
-            { channelId }, { version }, permissionManager, contactIdGetter, "android", localeManager)
-    }
+    private val infoProvider: DeviceInfoProvider = mockk()
 
     @Test
     @Throws(JsonException::class)
@@ -155,29 +105,35 @@ public class AudienceSelectorTest {
 
     @Test
     public fun testNotificationOptIn(): TestResult = runTest {
+
         val requireOptIn = AudienceSelector.newBuilder().setNotificationsOptIn(true).build()
         val requireOptOut = AudienceSelector.newBuilder().setNotificationsOptIn(false).build()
+
+        every { infoProvider.isNotificationsOptedIn } returns true
 
         TestCase.assertTrue(checkAudience(requireOptIn))
         TestCase.assertFalse(checkAudience(requireOptOut))
 
-        notificationStatus = false
+        every { infoProvider.isNotificationsOptedIn } returns false
         TestCase.assertFalse(checkAudience(requireOptIn))
         TestCase.assertTrue(checkAudience(requireOptOut))
     }
 
     @Test
     public fun testLocationOptInRequired(): TestResult = runTest {
+        coEvery { infoProvider.getPermissionStatuses() } returns emptyMap()
+
         val requiresOptIn = AudienceSelector.newBuilder().setLocationOptIn(true).build()
         TestCase.assertFalse(checkAudience(requiresOptIn))
 
-        permissions.put(Permission.LOCATION, PermissionStatus.DENIED)
+        coEvery { infoProvider.getPermissionStatuses() } returns mapOf(Permission.LOCATION to PermissionStatus.DENIED)
+
         TestCase.assertFalse(checkAudience(requiresOptIn))
 
-        permissions.put(Permission.LOCATION, PermissionStatus.GRANTED)
+        coEvery { infoProvider.getPermissionStatuses() } returns mapOf(Permission.LOCATION to PermissionStatus.GRANTED)
         TestCase.assertTrue(checkAudience(requiresOptIn))
 
-        permissions.put(Permission.LOCATION, PermissionStatus.NOT_DETERMINED)
+        coEvery { infoProvider.getPermissionStatuses() } returns mapOf(Permission.LOCATION to PermissionStatus.NOT_DETERMINED)
         TestCase.assertFalse(checkAudience(requiresOptIn))
     }
 
@@ -193,30 +149,34 @@ public class AudienceSelectorTest {
         val audience = AudienceSelector.newBuilder().setPermissionsPredicate(predicate).build()
 
         // Not set
+        coEvery { infoProvider.getPermissionStatuses() } returns emptyMap()
         TestCase.assertFalse(checkAudience(audience))
 
-        permissions[Permission.DISPLAY_NOTIFICATIONS] = PermissionStatus.DENIED
+        coEvery { infoProvider.getPermissionStatuses() } returns mapOf(Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.DENIED)
+
         TestCase.assertFalse(checkAudience(audience))
 
-        permissions[Permission.DISPLAY_NOTIFICATIONS] = PermissionStatus.GRANTED
+        coEvery { infoProvider.getPermissionStatuses() } returns mapOf(Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.GRANTED)
         TestCase.assertTrue(checkAudience(audience))
 
-        permissions[Permission.DISPLAY_NOTIFICATIONS] = PermissionStatus.NOT_DETERMINED
+        coEvery { infoProvider.getPermissionStatuses() } returns mapOf(Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.NOT_DETERMINED)
         TestCase.assertFalse(checkAudience(audience))
     }
 
     @Test
     public fun testRequiresAnalyticsTrue(): TestResult = runTest {
+        every { infoProvider.analyticsEnabled } returns false
+
         val audienceOptIn = AudienceSelector.newBuilder().setRequiresAnalytics(true).build()
         val audienceOptOut = AudienceSelector.newBuilder().setRequiresAnalytics(false).build()
         TestCase.assertFalse(checkAudience(audienceOptIn))
         TestCase.assertTrue(checkAudience(audienceOptOut))
 
-        privacyFeatures[PrivacyManager.FEATURE_ANALYTICS] = true
+        every { infoProvider.analyticsEnabled } returns true
         TestCase.assertTrue(checkAudience(audienceOptIn))
         TestCase.assertTrue(checkAudience(audienceOptOut))
 
-        privacyFeatures[PrivacyManager.FEATURE_ANALYTICS] = false
+        every { infoProvider.analyticsEnabled } returns false
         TestCase.assertFalse(checkAudience(audienceOptIn))
         TestCase.assertTrue(checkAudience(audienceOptOut))
     }
@@ -226,9 +186,7 @@ public class AudienceSelectorTest {
         val requiresNewUser = AudienceSelector.newBuilder().setNewUser(true).build()
         val requiresExistingUser = AudienceSelector.newBuilder().setNewUser(false).build()
 
-        val packageManager = Shadows.shadowOf(TestApplication.getApplication().packageManager)
-        val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
-        info.firstInstallTime = 2
+        every { infoProvider.installDateMilliseconds } returns 2
 
         TestCase.assertFalse(checkAudience(requiresNewUser, timestamp = 3))
         TestCase.assertTrue(checkAudience(requiresExistingUser, timestamp = 3))
@@ -239,13 +197,15 @@ public class AudienceSelectorTest {
 
     @Test
     public fun testTestDevices(): TestResult = runTest {
+
         val bytes = Arrays.copyOf(UAStringUtil.sha256Digest("test channel"), 16)
         val testDevice = Base64.encodeToString(bytes, Base64.DEFAULT)
 
         val withTestDevice = AudienceSelector.newBuilder().addTestDevice(testDevice).build()
         val otherTestDevice = AudienceSelector.newBuilder().addTestDevice(UAStringUtil.sha256("some other channel")!!).build()
 
-        channelId = "test channel"
+        coEvery { infoProvider.getChannelId() } returns "test channel"
+        every { infoProvider.channelCreated } returns true
 
         TestCase.assertTrue(checkAudience(withTestDevice))
         TestCase.assertFalse(checkAudience(otherTestDevice))
@@ -253,21 +213,22 @@ public class AudienceSelectorTest {
 
     @Test
     public fun testTagSelector(): TestResult = runTest {
-        privacyFeatures[PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES] = true
+        every { infoProvider.channelTags } returns emptySet()
+
         val audience = AudienceSelector.newBuilder().setTagSelector(DeviceTagSelector.tag("expected")).build()
 
         TestCase.assertFalse(checkAudience(audience))
 
-        channelTags.add("expected")
+        every { infoProvider.channelTags } returns setOf("expected")
+
         TestCase.assertTrue(checkAudience(audience))
     }
 
     @Test
     public fun testLocales(): TestResult = runTest {
-        /*
-         * No easy way to set the locale in robolectric from the default `en-US`.
-         * https://github.com/robolectric/robolectric/issues/3282
-         */
+
+        every { infoProvider.locale } returns Locale.forLanguageTag("en-US")
+
         var audience = AudienceSelector.newBuilder().addLanguageTag("en-US").build()
 
         TestCase.assertTrue(checkAudience(audience))
@@ -292,35 +253,39 @@ public class AudienceSelectorTest {
             .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 2.0))
             .build()
 
-        version = 1
+        every { infoProvider.appVersionCode } returns 1
+
         TestCase.assertTrue(checkAudience(audience))
 
-        version = 2
+        every { infoProvider.appVersionCode } returns 2
         TestCase.assertTrue(checkAudience(audience))
 
-        version = 3
+        every { infoProvider.appVersionCode } returns 3
         TestCase.assertFalse(checkAudience(audience))
     }
 
     @Test
     public fun testDeviceTypes(): TestResult = runTest {
+        every { infoProvider.platform } returns "android"
         val audience = AudienceSelector.newBuilder().setDeviceTypes(listOf("ios", "android")).build()
         assert(checkAudience(audience))
     }
 
     @Test
     public fun testDeviceTypesNoAndroid(): TestResult = runTest {
+        every { infoProvider.platform } returns "android"
         val audience = AudienceSelector.newBuilder().setDeviceTypes(listOf("ios")).build()
         assertFalse(checkAudience(audience))
     }
 
     @Test
     public fun testDeviceTypesEmpty(): TestResult = runTest {
+        every { infoProvider.platform } returns "android"
         val audience = AudienceSelector.newBuilder().setDeviceTypes(listOf()).build()
         assertFalse(checkAudience(audience))
     }
 
     private suspend fun checkAudience(audience: AudienceSelector, timestamp: Long = 0, contactId: String? = null): Boolean {
-        return audience.evaluate(context, timestamp, infoProvider, contactId)
+        return audience.evaluate(timestamp, infoProvider, contactId)
     }
 }

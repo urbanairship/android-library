@@ -114,7 +114,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
-        verify(analytics).addEvent(argumentCaptor.capture());
+        verify(analytics).recordCustomEvent(argumentCaptor.capture());
 
         // Validate the resulting event
         CustomEvent event = argumentCaptor.getValue();
@@ -143,7 +143,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
-        verify(analytics).addEvent(argumentCaptor.capture());
+        verify(analytics).recordCustomEvent(argumentCaptor.capture());
 
         // Validate the resulting event
         CustomEvent event = argumentCaptor.getValue();
@@ -171,7 +171,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
-        verify(analytics).addEvent(argumentCaptor.capture());
+        verify(analytics).recordCustomEvent(argumentCaptor.capture());
 
         // Validate the resulting event
         CustomEvent event = argumentCaptor.getValue();
@@ -221,7 +221,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
-        verify(analytics).addEvent(argumentCaptor.capture());
+        verify(analytics).recordCustomEvent(argumentCaptor.capture());
 
         // Validate the resulting event
         CustomEvent event = argumentCaptor.getValue();
@@ -263,7 +263,7 @@ public class AddCustomEventActionTest extends BaseTestCase {
 
         // Verify the event was added
         ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
-        verify(analytics).addEvent(argumentCaptor.capture());
+        verify(analytics).recordCustomEvent(argumentCaptor.capture());
 
         // Validate the resulting event
         CustomEvent event = argumentCaptor.getValue();

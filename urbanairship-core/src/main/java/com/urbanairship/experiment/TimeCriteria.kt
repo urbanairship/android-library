@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.experiment
 
 import androidx.annotation.RestrictTo
@@ -7,8 +9,11 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 
+/**
+ * @hide
+ */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-public class TimeCriteria(
+public data class TimeCriteria(
     private val start: Long?,
     private val end: Long?,
 ) : JsonSerializable {
@@ -27,7 +32,7 @@ public class TimeCriteria(
     }
 
     public fun meets(date: Long): Boolean {
-        val meetsStart = start?.let { it < date } ?: true
+        val meetsStart = start?.let { it <= date } ?: true
         val meetsEnd = end?.let { it >= date } ?: true
         return meetsStart && meetsEnd
     }

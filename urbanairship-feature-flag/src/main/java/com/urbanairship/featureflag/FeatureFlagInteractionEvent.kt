@@ -3,6 +3,7 @@
 package com.urbanairship.featureflag
 
 import com.urbanairship.analytics.Event
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 
@@ -10,7 +11,7 @@ internal class FeatureFlagInteractionEvent private constructor(
     val data: JsonMap
 ) : Event() {
 
-    @Throws
+    @Throws(JsonException::class)
     internal constructor(flag: FeatureFlag) : this(
         jsonMapOf(
             "flag_name" to flag.name,

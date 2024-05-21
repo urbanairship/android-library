@@ -8,9 +8,7 @@ import com.urbanairship.android.layout.info.ViewInfo;
 import com.urbanairship.android.layout.info.WebViewInfo;
 import com.urbanairship.android.layout.property.Image;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
@@ -28,9 +26,19 @@ public class UrlInfo {
     @NonNull
     private final String url;
 
-    UrlInfo(@NonNull UrlType type, @NonNull String url) {
+    @NonNull
+    private final Boolean requiresNetwork;
+
+    public UrlInfo(@NonNull UrlType type, @NonNull String url) {
         this.type = type;
         this.url = url;
+        this.requiresNetwork = true;
+    }
+
+    public UrlInfo(@NonNull UrlType type, @NonNull String url, @NonNull Boolean requiresNetwork) {
+        this.type = type;
+        this.url = url;
+        this.requiresNetwork = requiresNetwork;
     }
 
     @NonNull
@@ -41,6 +49,11 @@ public class UrlInfo {
     @NonNull
     public String getUrl() {
         return url;
+    }
+
+    @NonNull
+    public Boolean getRequiresNetwork() {
+        return requiresNetwork;
     }
 
     @NonNull

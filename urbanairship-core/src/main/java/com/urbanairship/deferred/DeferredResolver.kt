@@ -37,13 +37,14 @@ public class DeferredResolver internal constructor(
     public suspend fun <T> resolve(request: DeferredRequest, parser: (JsonValue) -> T): DeferredResult<T> {
         return doResolve(
             uri = locationMap[request.uri] ?: request.uri,
-            channelID = request.channelID,
-            contactID = request.contactID,
+            channelId = request.channelId,
+            contactId = request.contactId,
             stateOverrides = StateOverrides(request),
-            audienceOverrides = audienceOverridesProvider.channelOverrides(request.channelID, request.contactID),
+            audienceOverrides = audienceOverridesProvider.channelOverrides(request.channelId, request.contactId),
             triggerContext = request.triggerContext,
             resultParser = parser,
-            allowRetry = true)
+            allowRetry = true
+        )
     }
 
     public fun <T> resolveAsPendingResult(request: DeferredRequest, parser: (JsonValue) -> T): PendingResult<DeferredResult<T>> {
@@ -57,8 +58,8 @@ public class DeferredResolver internal constructor(
 
     private suspend fun <T> doResolve(
         uri: Uri,
-        channelID: String,
-        contactID: String?,
+        channelId: String,
+        contactId: String?,
         stateOverrides: StateOverrides,
         audienceOverrides: AudienceOverrides.Channel,
         triggerContext: DeferredTriggerContext?,
@@ -70,8 +71,8 @@ public class DeferredResolver internal constructor(
         try {
             response = apiClient.resolve(
                 uri = uri,
-                channelID = channelID,
-                contactID = contactID,
+                channelId = channelId,
+                contactId = contactId,
                 stateOverrides = stateOverrides,
                 audienceOverrides = audienceOverrides,
                 triggerContext = triggerContext
@@ -113,13 +114,14 @@ public class DeferredResolver internal constructor(
                 if (allowRetry) {
                     return doResolve(
                         uri = redirect,
-                        channelID = channelID,
-                        contactID = contactID,
+                        channelId = channelId,
+                        contactId = contactId,
                         stateOverrides = stateOverrides,
                         audienceOverrides = audienceOverrides,
                         triggerContext = triggerContext,
                         resultParser = resultParser,
-                        allowRetry = false)
+                        allowRetry = false
+                    )
                 }
 
                 return DeferredResult.RetriableError<T>()

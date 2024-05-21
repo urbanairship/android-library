@@ -5,8 +5,10 @@ package com.urbanairship.modules.automation;
 import android.content.Context;
 
 import com.urbanairship.AirshipVersionInfo;
+import com.urbanairship.ApplicationMetrics;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.analytics.AirshipEventFeed;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
@@ -33,19 +35,21 @@ import androidx.annotation.RestrictTo;
 public interface AutomationModuleFactory extends AirshipVersionInfo {
 
     @NonNull
-    Module build(@NonNull Context context,
-                 @NonNull PreferenceDataStore dataStore,
-                 @NonNull AirshipRuntimeConfig runtimeConfig,
-                 @NonNull PrivacyManager privacyManager,
-                 @NonNull AirshipChannel airshipChannel,
-                 @NonNull PushManager pushManager,
-                 @NonNull Analytics analytics,
-                 @NonNull RemoteData remoteData,
-                 @NonNull ExperimentManager experimentManager,
-                 @NonNull DeviceInfoProvider infoProvider,
-                 @NonNull AirshipMeteredUsage meteredUsage,
-                 @NonNull Contact contact,
-                 @NonNull DeferredResolver deferredResolver,
-                 @NonNull LocaleManager localeManager);
+    Module build(
+            @NonNull Context context,
+            @NonNull PreferenceDataStore dataStore,
+            @NonNull AirshipRuntimeConfig runtimeConfig,
+            @NonNull PrivacyManager privacyManager,
+            @NonNull AirshipChannel airshipChannel,
+            @NonNull PushManager pushManager,
+            @NonNull Analytics analytics,
+            @NonNull RemoteData remoteData,
+            @NonNull ExperimentManager experimentManager,
+            @NonNull AirshipMeteredUsage meteredUsage,
+            @NonNull Contact contact,
+            @NonNull DeferredResolver deferredResolver,
+            @NonNull AirshipEventFeed eventFeed,
+            @NonNull ApplicationMetrics metrics
+    );
 
     }

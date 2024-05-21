@@ -16,6 +16,7 @@ import android.provider.Settings;
 
 import com.urbanairship.actions.ActionRegistry;
 import com.urbanairship.actions.DeepLinkListener;
+import com.urbanairship.analytics.AirshipEventFeed;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.audience.AudienceOverridesProvider;
@@ -29,7 +30,7 @@ import com.urbanairship.contacts.Contact;
 import com.urbanairship.deferred.DeferredResolver;
 import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.http.DefaultRequestSession;
-import com.urbanairship.images.DefaultImageLoader;
+import com.urbanairship.images.AirshipGlideImageLoader;
 import com.urbanairship.images.ImageLoader;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
@@ -659,7 +660,7 @@ public class UAirship {
     @NonNull
     public ImageLoader getImageLoader() {
         if (imageLoader == null) {
-            imageLoader = new DefaultImageLoader(getApplicationContext());
+            imageLoader = AirshipGlideImageLoader.INSTANCE;
         }
         return imageLoader;
     }
@@ -674,15 +675,6 @@ public class UAirship {
     @NonNull
     public AirshipRuntimeConfig getRuntimeConfig() {
         return runtimeConfig;
-    }
-
-    /**
-     * Sets the image loader.
-     *
-     * @param imageLoader The image loader.
-     */
-    public void setImageLoader(@NonNull ImageLoader imageLoader) {
-        this.imageLoader = imageLoader;
     }
 
     /**
@@ -727,8 +719,10 @@ public class UAirship {
         this.actionRegistry = new ActionRegistry();
         this.actionRegistry.registerDefaultActions(getApplicationContext());
 
+        AirshipEventFeed eventFeed = new AirshipEventFeed(privacyManager, airshipConfigOptions.analyticsEnabled);
+
         // Airship components
-        this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, permissionsManager);
+        this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, permissionsManager, eventFeed);
         components.add(this.analytics);
 
         //noinspection deprecation
@@ -756,14 +750,10 @@ public class UAirship {
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, runtimeConfig, privacyManager, remoteData);
         components.add(this.remoteConfigManager);
 
-        DeviceInfoProvider infoProvider = new DeviceInfoProviderImpl(
-                pushManager::areNotificationsOptedIn, privacyManager::isEnabled, channel::getTags,
-                channel::getId, applicationMetrics::getCurrentAppVersion, permissionsManager,
-                contact::getStableContactId, PlatformUtils.asString(getPlatformType()), localeManager);
 
         // Experiments
         this.experimentManager = new ExperimentManager(application, preferenceDataStore,
-                remoteData, infoProvider, Clock.DEFAULT_CLOCK);
+                remoteData, Clock.DEFAULT_CLOCK);
         components.add(this.experimentManager);
 
         // Debug
@@ -782,7 +772,7 @@ public class UAirship {
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
                 privacyManager, channel, pushManager, analytics, remoteData, this.experimentManager,
-                infoProvider, meteredUsageManager, contact, deferredResolver, localeManager);
+                meteredUsageManager, contact, deferredResolver, eventFeed, applicationMetrics);
         processModule(automationModule);
 
         // Ad Id
@@ -798,8 +788,8 @@ public class UAirship {
         processModule(liveUpdateManager);
 
         // Feature flags
-        Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, analytics, infoProvider,
-                new AirshipCache(application, runtimeConfig), deferredResolver);
+        Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, analytics,
+                new AirshipCache(application, runtimeConfig), deferredResolver, eventFeed);
         processModule(featureFlags);
 
         for (AirshipComponent component : components) {
@@ -1084,38 +1074,6 @@ public class UAirship {
             default:
                 return false;
         }
-    }
-
-    /**
-     * Deprecated. Use {@link PrivacyManager} instead.
-     *
-     * When enabled it will enable all privacy manager features. When disabled it will disable
-     * all.
-     *
-     * @param enabled {@code true} to enable, {@code false} to disable.
-     * @deprecated Enable/disable by using {@link PrivacyManager}.
-     * This will enable or disable {@link PrivacyManager#FEATURE_ALL} features.
-     */
-    public void setDataCollectionEnabled(boolean enabled) {
-        if (enabled) {
-            this.privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ALL);
-        } else {
-            this.privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
-        }
-    }
-
-    /**
-     * Deprecated. Use {@link PrivacyManager} instead.
-     *
-     * Checks if any features are enabled in the privacy manager.
-     *
-     * @return {@code true} if any feature is enabled, otherwise `false`.
-     * @deprecated Enable/disable by using {@link PrivacyManager}.
-     * This will call through to the privacy manager to check if any features are enabled.
-     */
-    @Deprecated
-    public boolean isDataCollectionEnabled() {
-        return privacyManager.isAnyFeatureEnabled();
     }
 
     /**

@@ -81,11 +81,10 @@ public abstract class FileUtils {
      * @param url The URL image.
      * @param file The file path where the image will be downloaded.
      * @return The download result.
-     * @throws IOException if output steam read or write operation fails.
      */
     @NonNull
     @WorkerThread
-    public static DownloadResult downloadFile(@NonNull URL url, @NonNull File file) throws IOException {
+    public static DownloadResult downloadFile(@NonNull URL url, @NonNull File file) {
         UALog.v("Downloading file from: %s to: %s", url, file.getAbsolutePath());
 
         InputStream inputStream = null;
@@ -126,7 +125,7 @@ public abstract class FileUtils {
             }
 
             return new DownloadResult(false, statusCode);
-        } catch (IOException | IllegalStateException e) {
+        } catch (Exception e) {
             // the file may have been partially created - delete it
             file.delete();
             UALog.e(e, "Failed to download file from: %s", url);

@@ -3,23 +3,18 @@
 package com.urbanairship.featureflag
 
 import android.content.Context
+import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestApplication
-import com.urbanairship.analytics.Analytics
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
-import com.urbanairship.experiment.ResolutionType
-import com.urbanairship.experiment.TimeCriteria
-import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
-import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataInfo
-import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.remotedata.RemoteDataSource
-import com.urbanairship.util.Clock
+import java.util.Locale
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -29,49 +24,51 @@ import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class FeatureFlagManagerTest {
 
-    private val payloadType = "feature_flags"
-
     private val context: Context = TestApplication.getApplication()
-    private val remoteData: RemoteData = mockk()
-    private val analytics: Analytics = mockk()
+    private val featureFlagAnalytics: FeatureFlagAnalytics = mockk()
+
     private val deferredResolver: FlagDeferredResolver = mockk()
 
-    private lateinit var featureFlags: FeatureFlagManager
-    private val infoProvider: DeviceInfoProvider = mockk()
-
-    private var currentTime = 2L
     private var channelId = "test-channel"
     private var contactId = "contact-id"
 
-    @Before
-    fun setUp() {
-        val clock: Clock = mockk()
-        every { clock.currentTimeMillis() } answers { currentTime }
-
-        featureFlags = FeatureFlagManager(
-            context = context,
-            dataStore = PreferenceDataStore.inMemoryStore(context),
-            remoteData = remoteData,
-            analytics = analytics,
-            infoProvider = infoProvider,
-            deferredResolver = deferredResolver,
-            clock = clock
-        )
-
-        coEvery { infoProvider.getPermissionStatuses() } returns mapOf()
-        coEvery { infoProvider.snapshot(any()) } returns infoProvider
-        every { infoProvider.channelId } answers { channelId }
-        coEvery { infoProvider.getStableContactId() } answers { contactId }
-        every { infoProvider.appVersion } returns 1
-        every { infoProvider.userCutOffDate(context) } returns 1
+    private val infoProvider: DeviceInfoProvider = mockk {
+        coEvery { this@mockk.getPermissionStatuses() } returns mapOf()
+        coEvery { this@mockk.getChannelId() } answers { this@FeatureFlagManagerTest.channelId }
+        coEvery { this@mockk.getStableContactId() } answers { contactId }
+        every { this@mockk.appVersionName } returns "1.0.0"
+        every { this@mockk.installDateMilliseconds } returns 1
+        every { this@mockk.locale } returns Locale.US
+        every { this@mockk.isNotificationsOptedIn } returns true
     }
+
+    private val audienceMissedSelector = AudienceSelector.newBuilder().setNewUser(true).build()
+    private val audienceMatchSelector = AudienceSelector.newBuilder().setNewUser(false).build()
+
+    private val audienceEvaluator: AudienceEvaluator = mockk {
+        coEvery { this@mockk.evaluate(audienceMissedSelector, any(), any()) } returns false
+        coEvery { this@mockk.evaluate(audienceMatchSelector, any(), any()) } returns true
+    }
+
+    private val remoteDataAccess: FeatureFlagRemoteDataAccess = mockk()
+
+    private val featureFlags = FeatureFlagManager(
+        context = context,
+        dataStore = PreferenceDataStore.inMemoryStore(context),
+        audienceEvaluator = audienceEvaluator,
+        remoteData = remoteDataAccess,
+        infoProviderFactory = { infoProvider },
+        deferredResolver = deferredResolver,
+        featureFlagAnalytics = featureFlagAnalytics,
+    )
 
     @Test
     fun testModuleIsWorking() {
@@ -80,515 +77,879 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testFlagsEvaluationWorks(): TestResult = runTest {
+    fun testNoFlags(): TestResult = runTest {
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(emptyList())
 
-        val audience = AudienceSelector.fromJson(
-            jsonMapOf(
-                "hash" to jsonMapOf(
-                    "audience_hash" to jsonMapOf(
-                        "hash_prefix" to "27f26d85-0550-4df5-85f0-7022fa7a5925:",
-                        "num_hash_buckets" to 16384,
-                        "hash_identifier" to "contact",
-                        "hash_algorithm" to "farm_hash"
-                    ),
-                    "audience_subset" to jsonMapOf(
-                        "min_hash_bucket" to 0, "max_hash_bucket" to 10090
-                    ),
-                )
-            ).toJsonValue()
-        )
-
-        val data = RemoteDataPayload(
-            type = payloadType, timestamp = 1L, data = jsonMapOf(
-                payloadType to jsonListOf(
-                    generateFeatureFlagPayload(
-                        "test-id", "test-ff", audience = audience
-                    )
-                )
-            ), remoteDataInfo = RemoteDataInfo(
-                url = "https://sample.url",
-                lastModified = null,
-                source = RemoteDataSource.APP,
-            )
-        )
-
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
-
-        val expected = FeatureFlag.createFlag("test-ff", true, createReportingInfo())
-        assert(expected == flag)
-    }
-
-    @Test
-    public fun testFeatureFlagWaitsToRefreshesRemoteData(): TestResult = runTest {
-
-        nicelyMockStatusRefresh()
-        coEvery { remoteData.payloads(payloadType) } returns listOf()
-
-        featureFlags.flag("non-existing")
-
-        coVerify { remoteData.waitForRefresh(RemoteDataSource.APP, 15000) }
-    }
-
-    @Test
-    fun testNoFlags(): TestResult = runTest {
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
-        coEvery { remoteData.payloads(payloadType) } returns listOf()
-
-        val flag = featureFlags.flag("delusional").getOrThrow()
-
-        val expected = FeatureFlag.createMissingFlag("delusional")
-        assert(expected == flag)
-    }
-
-    @Test
-    fun testFlagNoAudience(): TestResult = runTest {
-        val data = RemoteDataPayload(
-            type = payloadType, timestamp = 1L, data = jsonMapOf(
-                payloadType to jsonListOf(
-                    generateFeatureFlagPayload(
-                        "test-id", "no-audience-flag"
-                    )
-                )
-            ), remoteDataInfo = RemoteDataInfo(
-                url = "https://sample.url",
-                lastModified = null,
-                source = RemoteDataSource.APP,
-            )
+        val expected = FeatureFlag.createMissingFlag(
+            name = "test-ff"
         )
 
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
-
-        val flag = featureFlags.flag("no-audience-flag").getOrThrow()
-        val expected = FeatureFlag.createFlag("no-audience-flag", true, createReportingInfo())
-
-        assert(expected == flag)
+        assertEquals(expected, flag)
     }
 
     @Test
-    fun testFlagAudienceNotMatch(): TestResult = runTest {
-        val audience = generateAudience(true)
-
-        val data = RemoteDataPayload(
-            type = payloadType, timestamp = 1L, data = jsonMapOf(
-                payloadType to jsonListOf(
-                    generateFeatureFlagPayload(
-                        "test-id", "unmatched", audience = audience
-                    )
-                )
-            ), remoteDataInfo = RemoteDataInfo(
-                url = "https://sample.url",
-                lastModified = null,
-                source = RemoteDataSource.APP,
-            )
+    fun testStaticNoVariables(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.StaticPayload()
         )
 
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
 
-        val flag = featureFlags.flag("unmatched").getOrThrow()
-        val expected = FeatureFlag.createFlag("unmatched", false, createReportingInfo())
-        assert(expected == flag)
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            isEligible = true,
+            reportingInfo = generateReportingInfo(flagInfo.reportingContext)
+        )
+
+        assertEquals(expected, flag)
     }
 
     @Test
-    fun testMultipleFeatureFlagsWithSameName(): TestResult = runTest {
-
-        val data = RemoteDataPayload(
-            type = payloadType, timestamp = 1L, data = jsonMapOf(
-                payloadType to jsonListOf(
-                    generateFeatureFlagPayload(
-                        "test-id", "same-name", audience = generateAudience(true)
-                    ), generateFeatureFlagPayload(
-                        flagId = "test-id-2",
-                        flagName = "same-name",
-                        audience = generateAudience(false),
-                        variablesType = FeatureFlagVariablesType.VARIANTS,
-                        variables = listOf(
-                            VariablesVariant(
-                                "fake",
-                                generateAudience(false),
-                                jsonMapOf("reporting" to "data"),
-                                jsonMapOf("sample" to "data")
-                            )
+    fun testStaticVariantVariables(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.StaticPayload(
+                variables = FeatureFlagVariables.Variant(
+                    listOf(
+                        VariablesVariant(
+                            id = "1",
+                            selector = audienceMissedSelector,
+                            reportingMetadata = jsonMapOf("reporting" to "variable 1"),
+                            data = jsonMapOf("var" to 1)
+                        ),
+                        VariablesVariant(
+                            id = "2",
+                            selector = audienceMatchSelector,
+                            reportingMetadata = jsonMapOf("reporting" to "variable 2"),
+                            data = jsonMapOf("var" to 2)
+                        ),
+                        VariablesVariant(
+                            id = "3",
+                            selector = audienceMatchSelector,
+                            reportingMetadata = jsonMapOf("reporting" to "variable 3"),
+                            data = jsonMapOf("var" to 3)
                         )
                     )
                 )
-            ), remoteDataInfo = RemoteDataInfo(
-                url = "https://sample.url",
-                lastModified = null,
-                source = RemoteDataSource.APP,
             )
         )
 
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
 
-        val flag = featureFlags.flag("same-name").getOrThrow()
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
-            "same-name",
-            true,
-            createReportingInfo(jsonMapOf("reporting" to "data")),
-            jsonMapOf("sample" to "data")
+            name = "test-ff",
+            variables = jsonMapOf("var" to 2),
+            isEligible = true,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "variable 2"))
         )
 
-        assert(expected == flag)
+        assertEquals(expected, flag)
     }
 
     @Test
-    fun testMultipleFeatureFlagsWithSameNameNoMatch(): TestResult = runTest {
-
-        val data = RemoteDataPayload(
-            type = payloadType, timestamp = 1L, data = jsonMapOf(
-                payloadType to jsonListOf(
-                    generateFeatureFlagPayload(
-                        flagId = "test-id",
-                        flagName = "same-name",
-                        audience = generateAudience(true),
-                        reportingMetadata = jsonMapOf("flag" to "first")
-                    ), generateFeatureFlagPayload(
-                        flagId = "test-id-2",
-                        flagName = "same-name",
-                        audience = generateAudience(true),
-                        reportingMetadata = jsonMapOf("flag" to "second"),
-                        variablesType = FeatureFlagVariablesType.VARIANTS,
-                        variables = listOf(
-                            VariablesVariant(
-                                "fake",
-                                generateAudience(false),
-                                jsonMapOf("reporting" to "data"),
-                                jsonMapOf("sample" to "data")
-                            )
+    fun testStaticVariantVariablesMissedLocalAudienceCheck(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            audience = audienceMissedSelector,
+            payload = FeatureFlagPayload.StaticPayload(
+                variables = FeatureFlagVariables.Variant(
+                    listOf(
+                        VariablesVariant(
+                            id = "1",
+                            selector = audienceMissedSelector,
+                            reportingMetadata = jsonMapOf("reporting" to "variable 1"),
+                            data = jsonMapOf("var" to 1)
+                        ),
+                        VariablesVariant(
+                            id = "2",
+                            selector = audienceMatchSelector,
+                            reportingMetadata = jsonMapOf("reporting" to "variable 2"),
+                            data = jsonMapOf("var" to 2)
+                        ),
+                        VariablesVariant(
+                            id = "3",
+                            selector = audienceMatchSelector,
+                            reportingMetadata = jsonMapOf("reporting" to "variable 3"),
+                            data = jsonMapOf("var" to 3)
                         )
                     )
                 )
-            ), remoteDataInfo = RemoteDataInfo(
-                url = "https://sample.url",
-                lastModified = null,
-                source = RemoteDataSource.APP,
             )
         )
 
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
 
-        val flag = featureFlags.flag("same-name").getOrThrow()
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
-            "same-name", false, createReportingInfo(jsonMapOf("flag" to "second"))
+            name = "test-ff",
+            variables = jsonMapOf("var" to 2),
+            isEligible = false,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "variable 2"))
         )
 
-        assert(expected == flag)
+        assertEquals(expected, flag)
     }
 
     @Test
-    fun testVariantVariablesNotMatch(): TestResult = runTest {
-        val data = RemoteDataPayload(
-            type = payloadType, timestamp = 1L, data = jsonMapOf(
-                payloadType to jsonListOf(
-                    generateFeatureFlagPayload(
-                        "test-id", "same-name", audience = generateAudience(true)
-                    ), generateFeatureFlagPayload(
-                        flagId = "test-id-2",
-                        flagName = "same-name",
-                        audience = generateAudience(false),
-                        variablesType = FeatureFlagVariablesType.VARIANTS,
-                        variables = listOf(
+    fun testStaticFixedVariables(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.StaticPayload(
+                variables = FeatureFlagVariables.Fixed(
+                    jsonMapOf("var" to 1)
+                )
+            )
+        )
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            variables = jsonMapOf("var" to 1),
+            isEligible = true,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "flag"))
+        )
+
+        assertEquals(expected, flag)
+    }
+
+    @Test
+    fun testStaticFixedVariablesMissedLocalAudienceCheck(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            audience = audienceMissedSelector,
+            payload = FeatureFlagPayload.StaticPayload(
+                variables = FeatureFlagVariables.Fixed(
+                    jsonMapOf("var" to 1)
+                )
+            )
+        )
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            variables = jsonMapOf("var" to 1),
+            isEligible = false,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "flag"))
+        )
+
+        assertEquals(expected, flag)
+    }
+
+    @Test
+    fun testDeferredNoVariables(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
+        )
+
+        coEvery { deferredResolver.resolve(any(), flagInfo) } returns Result.success(
+            DeferredFlag.Found(
+                DeferredFlagInfo(
+                    isEligible = true,
+                    variables = null,
+                    reportingMetadata = jsonMapOf("reporting" to "deferred")
+                )
+            )
+        )
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            isEligible = true,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "deferred"))
+        )
+
+        assertEquals(expected, flag)
+    }
+
+    @Test
+    fun testDeferredVariantVariables(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
+        )
+
+        coEvery { deferredResolver.resolve(any(), flagInfo) } returns Result.success(
+            DeferredFlag.Found(
+                DeferredFlagInfo(
+                    isEligible = true,
+                    variables = FeatureFlagVariables.Variant(
+                        listOf(
                             VariablesVariant(
-                                "fake",
-                                generateAudience(true),
-                                jsonMapOf("reporting" to "data"),
-                                jsonMapOf("sample" to "data")
+                                id = "1",
+                                selector = audienceMissedSelector,
+                                reportingMetadata = jsonMapOf("reporting" to "variable 1"),
+                                data = jsonMapOf("var" to 1)
+                            ),
+                            VariablesVariant(
+                                id = "2",
+                                selector = audienceMatchSelector,
+                                reportingMetadata = jsonMapOf("reporting" to "variable 2"),
+                                data = jsonMapOf("var" to 2)
+                            ),
+                            VariablesVariant(
+                                id = "3",
+                                selector = audienceMissedSelector,
+                                reportingMetadata = jsonMapOf("reporting" to "variable 3"),
+                                data = jsonMapOf("var" to 3)
                             )
                         )
-                    )
-                )
-            ), remoteDataInfo = RemoteDataInfo(
-                url = "https://sample.url",
-                lastModified = null,
-                source = RemoteDataSource.APP,
-            )
-        )
-
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
-
-        val flag = featureFlags.flag("same-name").getOrThrow()
-        val expected = FeatureFlag.createFlag(
-            "same-name", true, createReportingInfo(), null
-        )
-
-        assert(expected == flag)
-    }
-
-    @Test
-    fun testDeferredIgnored(): TestResult = runTest {
-        val data = RemoteDataPayload(
-            type = payloadType, timestamp = 1L, data = jsonMapOf(
-                payloadType to jsonListOf(
-                    generateFeatureFlagPayload(
-                        "test-id", "deferred", resolutionType = ResolutionType.DEFERRED
                     ),
+                    reportingMetadata = jsonMapOf("reporting" to "deferred")
                 )
             )
         )
 
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
 
-        val actual = featureFlags.flag("deferred").getOrThrow()
-        val expected = FeatureFlag.createMissingFlag("deferred")
-        assert(expected == actual)
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            variables = jsonMapOf("var" to 2),
+            isEligible = true,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "variable 2"))
+        )
+
+        assertEquals(expected, flag)
     }
 
     @Test
-    fun featureFlagRespectsTimeCriteria(): TestResult = runTest {
-        val data = RemoteDataPayload(
-            type = payloadType, timestamp = 1L, data = jsonMapOf(
-                payloadType to jsonListOf(
-                    generateFeatureFlagPayload(
-                        flagId = "test-id", flagName = "timed", timeCriteria = TimeCriteria(1, 3)
+    fun testDeferredFixedVariables(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
+        )
+
+        coEvery { deferredResolver.resolve(any(), flagInfo) } returns Result.success(
+            DeferredFlag.Found(
+                DeferredFlagInfo(
+                    isEligible = true,
+                    variables = FeatureFlagVariables.Fixed(
+                        jsonMapOf("var" to 1)
                     ),
+                    reportingMetadata = jsonMapOf("reporting" to "deferred")
                 )
-            ), remoteDataInfo = RemoteDataInfo(
-                url = "https://sample.url",
-                lastModified = null,
-                source = RemoteDataSource.APP,
             )
         )
 
-        val expectedReportingInfo = createReportingInfo()
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.UP_TO_DATE
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
 
-        // not started
-        currentTime = 1
-        var flag = featureFlags.flag("timed").getOrThrow()
-        assert(
-            FeatureFlag.createMissingFlag("timed") == flag
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            variables = jsonMapOf("var" to 1),
+            isEligible = true,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "deferred"))
         )
 
-        // started
-        currentTime = 2
-        flag = featureFlags.flag("timed").getOrThrow()
-        assert(
-            FeatureFlag.createFlag("timed", true, expectedReportingInfo) == flag
+        assertEquals(expected, flag)
+    }
+
+    @Test
+    fun testDeferredNotEligible(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
         )
 
-        // outdated
-        currentTime = 4
-        flag = featureFlags.flag("timed").getOrThrow()
-
-        assert(
-            FeatureFlag.createMissingFlag("timed") == flag
+        coEvery { deferredResolver.resolve(any(), flagInfo) } returns Result.success(
+            DeferredFlag.Found(
+                DeferredFlagInfo(
+                    isEligible = false,
+                    variables = FeatureFlagVariables.Fixed(
+                        jsonMapOf("var" to 1)
+                    ),
+                    reportingMetadata = jsonMapOf("reporting" to "deferred")
+                )
+            )
         )
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            variables = jsonMapOf("var" to 1),
+            isEligible = false,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "deferred"))
+        )
+
+        assertEquals(expected, flag)
+    }
+
+    @Test
+    fun testDeferredLocalAudienceCheckMiss(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            audience = audienceMissedSelector,
+            payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
+        )
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            variables = null,
+            isEligible = false,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "flag"))
+        )
+
+        assertEquals(expected, flag)
+    }
+
+    @Test
+    fun testDeferredNoFlag(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
+        )
+
+        coEvery { deferredResolver.resolve(any(), flagInfo) } returns Result.success(
+            DeferredFlag.NotFound
+        )
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createMissingFlag("test-ff")
+
+        assertEquals(expected, flag)
+    }
+
+    @Test
+    fun testDeferredError(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
+        )
+
+        coEvery { deferredResolver.resolve(any(), flagInfo) } returns Result.failure(
+            Exception("test")
+        )
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val result = featureFlags.flag("test-ff")
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun testMultipleFlagsSameName(): TestResult = runTest {
+        val flags = listOf(
+            FeatureFlagInfo(
+                id = "some-id_1",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                reportingContext = jsonMapOf("reporting" to "flag1"),
+                audience = audienceMissedSelector,
+                payload = FeatureFlagPayload.StaticPayload()
+            ),
+            FeatureFlagInfo(
+                id = "some-id_2",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                reportingContext = jsonMapOf("reporting" to "flag2"),
+                payload = FeatureFlagPayload.StaticPayload()
+            ),
+            FeatureFlagInfo(
+                id = "some-id_3",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                reportingContext = jsonMapOf("reporting" to "flag3"),
+                audience = audienceMissedSelector,
+                payload = FeatureFlagPayload.StaticPayload()
+            )
+        )
+
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(flags)
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            isEligible = true,
+            reportingInfo = generateReportingInfo(flags[1].reportingContext)
+        )
+
+        assertEquals(expected, flag)
+    }
+
+    @Test
+    fun testMultipleFlagsSameNameNoMatch(): TestResult = runTest {
+        val flags = listOf(
+            FeatureFlagInfo(
+                id = "some-id_1",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                reportingContext = jsonMapOf("reporting" to "flag1"),
+                audience = audienceMissedSelector,
+                payload = FeatureFlagPayload.StaticPayload()
+            ),
+            FeatureFlagInfo(
+                id = "some-id_2",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                audience = audienceMissedSelector,
+                reportingContext = jsonMapOf("reporting" to "flag2"),
+                payload = FeatureFlagPayload.StaticPayload()
+            ),
+            FeatureFlagInfo(
+                id = "some-id_3",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                reportingContext = jsonMapOf("reporting" to "flag3"),
+                audience = audienceMissedSelector,
+                payload = FeatureFlagPayload.StaticPayload()
+            )
+        )
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(flags)
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            isEligible = false,
+            reportingInfo = generateReportingInfo(flags[2].reportingContext)
+        )
+
+        assertEquals(expected, flag)
+    }
+
+    @Test
+    fun testMultipleFlagsSameNameDeferred(): TestResult = runTest {
+        val flags = listOf(
+            FeatureFlagInfo(
+                id = "some-id_1",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                reportingContext = jsonMapOf("reporting" to "flag1"),
+                audience = audienceMissedSelector,
+                payload = FeatureFlagPayload.StaticPayload()
+            ),
+            FeatureFlagInfo(
+                id = "some-id_2",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                reportingContext = jsonMapOf("reporting" to "flag2"),
+                payload = FeatureFlagPayload.DeferredPayload(url = Uri.EMPTY)
+            ),
+            FeatureFlagInfo(
+                id = "some-id_3",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                reportingContext = jsonMapOf("reporting" to "flag3"),
+                audience = audienceMissedSelector,
+                payload = FeatureFlagPayload.StaticPayload()
+            )
+        )
+
+        coEvery { deferredResolver.resolve(any(), flags[1]) } returns Result.success(
+            DeferredFlag.Found(
+                DeferredFlagInfo(
+                    isEligible = false,
+                    variables = FeatureFlagVariables.Fixed(
+                        jsonMapOf("var" to 1)
+                    ),
+                    reportingMetadata = jsonMapOf("reporting" to "deferred")
+                )
+            )
+        )
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(flags)
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            variables = jsonMapOf("var" to 1),
+            isEligible = false,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "deferred"))
+        )
+
+        assertEquals(expected, flag)
     }
 
     @Test
     fun testStaleNotDefined(): TestResult = runTest {
-        val data = RemoteDataPayload(
-            type = payloadType, timestamp = 1L, data = jsonMapOf(
-                payloadType to jsonListOf(
-                    generateFeatureFlagPayload(
-                        flagId = "test-id", flagName = "stale"
-                    ),
-                )
-            ), remoteDataInfo = RemoteDataInfo(
-                url = "https://sample.url",
-                lastModified = null,
-                source = RemoteDataSource.APP,
-            )
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.StaticPayload()
         )
 
-        coEvery { remoteData.waitForRefresh(any(), any()) } just runs
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.STALE
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
+        val payload = generateRemoteData(listOf(flagInfo))
 
-        val actual = featureFlags.flag("stale").getOrThrow()
-        assert(
-            FeatureFlag.createFlag("stale", true, createReportingInfo()) == actual
-        )
-    }
+        coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
+        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
 
-    @Test
-    fun testStaleAllowed(): TestResult = runTest {
-        val data = RemoteDataPayload(
-            type = payloadType, timestamp = 1L, data = jsonMapOf(
-                payloadType to jsonListOf(
-                    generateFeatureFlagPayload(
-                        flagId = "test-id",
-                        flagName = "stale",
-                        evaluationOptions = EvaluationOptions(false, null)
-                    ),
-                )
-            ), remoteDataInfo = RemoteDataInfo(
-                url = "https://sample.url",
-                lastModified = null,
-                source = RemoteDataSource.APP,
-            )
-        )
+        every { remoteDataAccess.status } returns RemoteData.Status.STALE
 
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.STALE
-        coEvery { remoteData.waitForRefresh(any(), any()) } just runs
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns payload
 
-        val actual = featureFlags.flag("stale").getOrThrow()
-        assert(
-            FeatureFlag.createFlag("stale", true, createReportingInfo()) == actual
-        )
-    }
+        val result = featureFlags.flag("test-ff")
+        assertTrue(result.isSuccess)
 
-    @Test(expected = FeatureFlagException::class)
-    fun testStaleNotAllowed(): TestResult = runTest {
-        val data = RemoteDataPayload(
-            type = payloadType, timestamp = 1L, data = jsonMapOf(
-                payloadType to jsonListOf(
-                    generateFeatureFlagPayload(
-                        flagId = "test-id",
-                        flagName = "stale",
-                        evaluationOptions = EvaluationOptions(true, null)
-                    ),
-                )
-            )
-        )
-
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.STALE
-        coEvery { remoteData.waitForRefresh(any(), any()) } just runs
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
-
-        featureFlags.flag("stale").getOrThrow()
-    }
-
-    @Test(expected = FeatureFlagException::class)
-    fun testStaleNotAllowedMultipleFlags(): TestResult = runTest {
-        val data = RemoteDataPayload(
-            type = payloadType, timestamp = 1L, data = jsonMapOf(
-                payloadType to jsonListOf(
-                    generateFeatureFlagPayload(
-                        flagId = "test-id",
-                        flagName = "stale",
-                        evaluationOptions = EvaluationOptions(false, null)
-                    ),
-                    generateFeatureFlagPayload(
-                        flagId = "test-id-2",
-                        flagName = "stale",
-                        evaluationOptions = EvaluationOptions(true, null)
-                    ),
-                )
-            )
-        )
-
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.STALE
-        coEvery { remoteData.waitForRefresh(any(), any()) } just runs
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
-
-        featureFlags.flag("stale").getOrThrow()
-    }
-
-    @Test(expected = FeatureFlagException::class)
-    fun testOutdatedRemoteThrows(): TestResult = runTest {
-        val data = RemoteDataPayload(type = payloadType, timestamp = 1L, data = jsonMapOf())
-
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } returns RemoteData.Status.OUT_OF_DATE
-        coEvery { remoteData.waitForRefresh(any(), any()) } just runs
-        coEvery { remoteData.payloads(payloadType) } returns listOf(data)
-
-        featureFlags.flag("stale").getOrThrow()
-    }
-
-    @Test
-    fun testTrackInteraction(): TestResult = runTest {
-        every { analytics.addEvent(any()) } just runs
-
-        val flag = FeatureFlag.createFlag("some-flag", true, createReportingInfo())
-        featureFlags.trackInteraction(flag)
-
-        verify {
-            analytics.addEvent(withArg {
-                // The event has a different time stamp so we are just comparing the data
-                assert(it.eventData == FeatureFlagInteractionEvent(flag).data)
-            })
+        coVerify(exactly = 0) {
+            remoteDataAccess.waitForRemoteDataRefresh()
+            remoteDataAccess.notifyOutOfDate(payload.remoteDataInfo)
         }
     }
 
     @Test
-    fun testTrackInteractionFlagDoesNotExist(): TestResult = runTest {
-        val flag = FeatureFlag(false, false, JsonMap.EMPTY_MAP)
-        featureFlags.trackInteraction(flag)
+    fun testStaleNotAllowed(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.StaticPayload(),
+            evaluationOptions = EvaluationOptions(disallowStaleValues = true, null)
+        )
 
-        verify(exactly = 0) { analytics.addEvent(any()) }
+        val payload = generateRemoteData(listOf(flagInfo))
+
+        coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
+        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
+
+        every { remoteDataAccess.status } returns RemoteData.Status.STALE
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns payload
+
+        val result = featureFlags.flag("test-ff")
+        assertTrue(result.isFailure)
+
+        coVerify {
+            remoteDataAccess.waitForRemoteDataRefresh()
+        }
     }
 
     @Test
-    fun testTrackInteractionMissingReportingInfo(): TestResult = runTest {
-        val flag = FeatureFlag.createMissingFlag("some-flag")
+    fun testStaleNotAllowedSingleFlag(): TestResult = runTest {
+        val flags = listOf(
+            FeatureFlagInfo(
+                id = "some-id_1",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                reportingContext = jsonMapOf("reporting" to "flag1"),
+                payload = FeatureFlagPayload.StaticPayload()
+            ),
+            FeatureFlagInfo(
+                id = "some-id_3",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                reportingContext = jsonMapOf("reporting" to "flag3"),
+                audience = audienceMissedSelector,
+                payload = FeatureFlagPayload.StaticPayload(),
+                evaluationOptions = EvaluationOptions(disallowStaleValues = true, null)
+            )
+        )
+
+        coEvery { deferredResolver.resolve(any(), flags[1]) } returns Result.success(
+            DeferredFlag.Found(
+                DeferredFlagInfo(
+                    isEligible = false,
+                    variables = FeatureFlagVariables.Fixed(
+                        jsonMapOf("var" to 1)
+                    ),
+                    reportingMetadata = jsonMapOf("reporting" to "deferred")
+                )
+            )
+        )
+
+        val payload = generateRemoteData(flags)
+
+        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
+
+        every { remoteDataAccess.status } returns RemoteData.Status.STALE
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns payload
+
+        val result = featureFlags.flag("test-ff")
+        assertTrue(result.isFailure)
+
+        coVerify {
+            remoteDataAccess.waitForRemoteDataRefresh()
+        }
+    }
+
+    @Test
+    fun testFlagOutOfDateRemoteDataFailedToRefresh(): TestResult = runTest {
+        val payload = generateRemoteData(listOf())
+
+        coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
+        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
+
+        every { remoteDataAccess.status } returns RemoteData.Status.OUT_OF_DATE
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("non-existing")
+        } returns payload
+
+
+        val result = featureFlags.flag("non-existing")
+        assertTrue(result.isFailure)
+
+        coVerify {
+            remoteDataAccess.waitForRemoteDataRefresh()
+            remoteDataAccess.notifyOutOfDate(payload.remoteDataInfo)
+        }
+    }
+
+    @Test
+    fun testFlagOutOfDateRemoteDataSuccessRefresh(): TestResult = runTest {
+        val payload = generateRemoteData(listOf())
+
+        coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
+        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
+
+        every { remoteDataAccess.status } returnsMany  listOf(RemoteData.Status.OUT_OF_DATE, RemoteData.Status.UP_TO_DATE)
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("non-existing")
+        } returns payload
+
+
+        val result = featureFlags.flag("non-existing")
+        assertTrue(result.isSuccess)
+
+        coVerify {
+            remoteDataAccess.waitForRemoteDataRefresh()
+            remoteDataAccess.notifyOutOfDate(payload.remoteDataInfo)
+        }
+    }
+
+    @Test
+    fun testFlagOutOfDateRemoteDataSuccessRefreshToStale(): TestResult = runTest {
+        val payload = generateRemoteData(listOf())
+
+        coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
+        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
+
+        every { remoteDataAccess.status } returnsMany listOf(RemoteData.Status.OUT_OF_DATE, RemoteData.Status.STALE)
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("non-existing")
+        } returns payload
+
+        val result = featureFlags.flag("non-existing")
+        assertTrue(result.isFailure)
+
+        coVerify {
+            remoteDataAccess.waitForRemoteDataRefresh()
+            remoteDataAccess.notifyOutOfDate(payload.remoteDataInfo)
+        }
+    }
+
+    @Test
+    fun testStaleDataNoFlag(): TestResult = runTest {
+        val payload = generateRemoteData(listOf())
+
+        coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
+        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
+
+        every { remoteDataAccess.status } returns RemoteData.Status.STALE
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("non-existing")
+        } returns payload
+
+        val result = featureFlags.flag("non-existing")
+        assertTrue(result.isFailure)
+
+        coVerify {
+            remoteDataAccess.waitForRemoteDataRefresh()
+            remoteDataAccess.notifyOutOfDate(payload.remoteDataInfo)
+        }
+    }
+
+    @Test
+    fun testUpToDateNoFlag(): TestResult = runTest {
+        val payload = generateRemoteData(listOf())
+
+        every { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("non-existing")
+        } returns payload
+
+        val result = featureFlags.flag("non-existing")
+        assertTrue(result.isSuccess)
+
+        val flag = featureFlags.flag("non-existing").getOrThrow()
+        val expected = FeatureFlag.createMissingFlag("non-existing")
+
+        assertEquals(expected, flag)
+    }
+
+    @Test
+    fun testTrackInteraction(): TestResult = runTest {
+        every { featureFlagAnalytics.trackInteraction(any()) } just runs
+
+        val flag = FeatureFlag.createFlag("some name", false, generateReportingInfo())
         featureFlags.trackInteraction(flag)
 
-        verify(exactly = 0) { analytics.addEvent(any()) }
+        verify(exactly = 1) { featureFlagAnalytics.trackInteraction(flag) }
     }
 
-    private fun generateAudience(isNewUser: Boolean): AudienceSelector {
-        return AudienceSelector.fromJson(
-            jsonMapOf(
-                "new_user" to isNewUser, "hash" to jsonMapOf(
-                    "audience_hash" to jsonMapOf(
-                        "hash_prefix" to "27f26d85-0550-4df5-85f0-7022fa7a5925:",
-                        "num_hash_buckets" to 16384,
-                        "hash_identifier" to "contact",
-                        "hash_algorithm" to "farm_hash"
-                    ),
-                    "audience_subset" to jsonMapOf(
-                        "min_hash_bucket" to 0, "max_hash_bucket" to 10090
-                    ),
-                )
-            ).toJsonValue()
-        )
-    }
 
-    private fun nicelyMockStatusRefresh() {
-        val statuses =
-            RemoteDataSource.values().associateWith { RemoteData.Status.STALE }.toMutableMap()
-
-        coEvery { remoteData.status(eq(RemoteDataSource.APP)) } answers { statuses[firstArg()]!! }
-        coEvery { remoteData.waitForRefresh(eq(RemoteDataSource.APP), eq(15000)) } just runs
-    }
-
-    private suspend fun createReportingInfo(reportingMetadata: JsonMap? = null): FeatureFlag.ReportingInfo {
+    private suspend fun generateReportingInfo(reportingMetadata: JsonMap? = null): FeatureFlag.ReportingInfo {
         return FeatureFlag.ReportingInfo(
             reportingMetadata = reportingMetadata
                 ?: jsonMapOf("flag_id" to "27f26d85-0550-4df5-85f0-7022fa7a5925"),
             contactId = infoProvider.getStableContactId(),
-            channelId = infoProvider.channelId
+            channelId = infoProvider.getChannelId()
         )
     }
 
-    private fun generateFeatureFlagPayload(
-        flagId: String,
-        flagName: String,
-        resolutionType: ResolutionType = ResolutionType.STATIC,
-        audience: AudienceSelector? = null,
-        variablesType: FeatureFlagVariablesType = FeatureFlagVariablesType.FIXED,
-        variables: List<VariablesVariant>? = null,
-        reportingMetadata: JsonMap? = null,
-        timeCriteria: TimeCriteria? = null,
-        evaluationOptions: EvaluationOptions? = null
-    ): JsonMap {
-        return jsonMapOf("flag_id" to flagId,
-            "created" to "2023-05-23T19:07:34.000",
-            "last_updated" to "2023-05-23T19:07:35.000",
-            "platforms" to jsonListOf("android"),
-            "flag" to jsonMapOf("name" to flagName,
-                "type" to resolutionType.jsonValue,
-                "reporting_metadata" to (reportingMetadata
-                    ?: jsonMapOf("flag_id" to "27f26d85-0550-4df5-85f0-7022fa7a5925")),
-                "audience_selector" to audience,
-                "time_criteria" to timeCriteria,
-                "variables" to jsonMapOf("type" to variablesType.jsonValue,
-                    "variants" to variables?.map { it.toJsonValue() }?.let { JsonList(it) }),
-                "evaluation_options" to evaluationOptions
+    private fun generateRemoteData(flags: List<FeatureFlagInfo>): RemoteDataFeatureFlagInfo {
+        return RemoteDataFeatureFlagInfo(
+            flagInfoList = flags,
+            remoteDataInfo = RemoteDataInfo(
+                url = "https://sample.url",
+                lastModified = null,
+                source = RemoteDataSource.APP,
             )
         )
     }

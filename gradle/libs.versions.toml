@@ -66,6 +66,12 @@ playservices-location = '21.1.0'
 # Firebase
 firebase-messaging = '23.4.1'
 
+# OkHttp (for WebSocket support in airship-chat)
+okhttp = '4.12.0'
+
+# Glide (image loader)
+glide = '4.16.0'
+
 # LeakCanary (for dev/debug builds)
 leakcanary = '2.9.1'
 
@@ -80,7 +86,7 @@ mockk = '1.13.5'
 
 # Doc Dependencies
 doclava = '1.0.6'
-dokka = '1.4.32'
+dokka = '1.9.20'
 
 [plugins]
 
@@ -139,7 +145,6 @@ androidx-navigation-fragmentktx = { module = "androidx.navigation:navigation-fra
 androidx-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "androidx-navigation" }
 androidx-navigation-ui = { module = "androidx.navigation:navigation-ui", version.ref = "androidx-navigation" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "androidx-navigation" }
-
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "androidx-paging" }
 androidx-paging-runtimektx = { module = "androidx.paging:paging-runtime-ktx", version.ref = "androidx-paging" }
 androidx-preference = { module = "androidx.preference:preference", version.ref = "androidx-preference" }
@@ -180,6 +185,10 @@ playservices-adsidentifier = { module = "com.google.android.gms:play-services-ad
 # Firebase
 firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebase-messaging"}
 
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary"}
 
 # Testing
@@ -190,6 +199,7 @@ google-truth = { module = "com.google.truth:truth", version.ref = "google-truth"
 robolectric-core = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 robolectric-annotations = { module = "org.robolectric:annotations", version.ref = "robolectric"}
 
+mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-android = { module = "org.mockito:mockito-android", version.ref = "mockito" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }

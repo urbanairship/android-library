@@ -20,6 +20,7 @@ import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.view.MediaView
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 internal class MediaModel(
@@ -37,7 +38,7 @@ internal class MediaModel(
     enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment,
     properties: ModelProperties
-) : BaseModel<MediaView, BaseModel.Listener>(
+) : BaseModel<MediaView, MediaModel.Listener>(
     viewType = ViewType.MEDIA,
     backgroundColor = backgroundColor,
     border = border,
@@ -66,6 +67,11 @@ internal class MediaModel(
 
     val mediaViewId: Int = View.generateViewId()
 
+    interface Listener : BaseModel.Listener {
+        fun onPause()
+        fun onResume()
+    }
+
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
         MediaView(context, this, viewEnvironment).apply {
             id = viewId
@@ -75,6 +81,20 @@ internal class MediaModel(
         if (eventHandlers.hasTapHandler()) {
             viewScope.launch {
                 view.taps().collect { handleViewEvent(EventHandler.Type.TAP) }
+            }
+        }
+
+        modelScope.launch {
+            if (mediaType == MediaType.VIDEO || mediaType == MediaType.YOUTUBE) {
+                pagerState?.changes
+                    ?.distinctUntilChanged { old, new -> old.isStoryPaused == new.isStoryPaused }
+                    ?.collect {
+                        if (it.isStoryPaused) {
+                            listener?.onPause()
+                        } else {
+                            listener?.onResume()
+                        }
+                    }
             }
         }
     }

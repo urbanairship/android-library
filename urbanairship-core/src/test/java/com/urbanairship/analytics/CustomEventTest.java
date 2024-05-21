@@ -146,8 +146,8 @@ public class CustomEventTest extends BaseTestCase {
         CustomEvent event = CustomEvent.newBuilder("event name").build();
         event.track();
 
-        ArgumentCaptor<Event> argument = ArgumentCaptor.forClass(Event.class);
-        verify(analytics).addEvent(argument.capture());
+        ArgumentCaptor<CustomEvent> argument = ArgumentCaptor.forClass(CustomEvent.class);
+        verify(analytics).recordCustomEvent(argument.capture());
 
         assertEquals("Add event should add the event.", event, argument.getValue());
     }

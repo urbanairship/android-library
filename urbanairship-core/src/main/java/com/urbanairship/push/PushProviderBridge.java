@@ -47,26 +47,6 @@ public abstract class PushProviderBridge {
     }
 
     /**
-     * Triggers a registration update.
-     *
-     * @param context The application context.
-     * @deprecated Use {@link #requestRegistrationUpdate(Context, Class, String)} instead.
-     */
-    @Deprecated
-    public static void requestRegistrationUpdate(@NonNull Context context) {
-        Autopilot.automaticTakeOff(context);
-
-        if (UAirship.isFlying() || UAirship.isTakingOff()) {
-            UAirship.shared(new UAirship.OnReadyCallback() {
-                @Override
-                public void onAirshipReady(@NonNull UAirship airship) {
-                    airship.getPushManager().onTokenChanged(null, null);
-                }
-            });
-        }
-    }
-
-    /**
      * Creates a new request to process an incoming push message.
      *
      * @param provider The provider's class.

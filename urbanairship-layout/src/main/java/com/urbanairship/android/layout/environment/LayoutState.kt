@@ -74,7 +74,8 @@ internal sealed class State {
         val pageIds: List<String> = emptyList(),
         val durations: List<Int?> = emptyList(),
         val progress: Int = 0,
-        val isMediaPaused: Boolean = false
+        val isMediaPaused: Boolean = false,
+        val isStoryPaused: Boolean = false
     ) : State() {
         val hasNext
             get() = pageIndex < pageIds.size - 1
@@ -113,6 +114,9 @@ internal sealed class State {
 
         fun copyWithMediaPaused(isMediaPaused: Boolean) =
             copy(isMediaPaused = isMediaPaused)
+
+        fun copyWithStoryPaused(isStoryPaused: Boolean) =
+            copy(isStoryPaused = isStoryPaused)
 
         fun reportingContext(): PagerData =
             PagerData(identifier, pageIndex, pageIds.getOrElse(pageIndex) { "NULL!" }, pageIds.size, completed)

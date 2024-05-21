@@ -2,20 +2,56 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
-## Version 17.7.3, Feb 16, 2024
+## Version 17.8.1, May 13, 2024
+Patch release that improves first run display times for Scenes, Surveys, and In-App Automations.
+
+### Changes
+- Fixed checking for channel ID being created when preparing a IAX to display causing messages to be delayed late on first run.
+- Experiments and IAX that use either personalization or server side segmentation will now block and wait for the channel to become available instead of retrying after 30 seconds.
+- Fixed server side segmentation & personalization for the device property `app version` to use the version name instead of the version code for IAX and Feature Flags. This was a regression introduced in 17.0.0. The local audience app version selector will continue to use version code.
+
+## Version 18.0.0-alpha, May 3, 2024
+Initial alpha release of SDK 18.0.0. This version is not suitable for a production app, but we encourage testing out the new APIs and providing us feedback so we can make changes before the final SDK 18 release.
+
+The Airship SDK now requires `compileSdk` version 34 (Android 14) or higher.
+
+### Changes
+- Improved image loading for In-App messages, Scenes, and Surveys
+- Reset GIF animations on visibility change in Scenes and Surveys
+- Pause Story progress while videos are loading
+- Migrated to non-transitive R classes
+- Check schedule’s start date before executing, to better handle updates to the scheduled start date
+- Removed `urbanairship-ads-identifier` and `urbanairship-preference` modules
+
+See the [Migration Guide](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-17-18.md) for further details.
+
+## Version 17.8.0, April 11, 2024
+Minor release that fixes potential crashes when evaluating experiments before a Channel ID has been created. Apps that make use of experiments or holdout groups should update to this version or later.
+
+### Changes
+- Avoid NPE in `ExperimentManager` when evaluating experiments before a Channel ID has been created.
+
+## Version 17.7.4, April 5, 2024
+Patch release that fixes a potential crash on Android 13 (API 33) channel ID creation delay after enabling a feature when none was enabled. The SDK will new create the channel ID without having to relaunch the app. Apps that have no features enabled at launch should update to this version or later.
+
+### Changes
+- Fixed channel ID creation delay after enabling a feature when none was enabled.
+- Fixed a potential NPE when reading from intent extras on API 33.
+
+## Version 17.7.3, February 16, 2024
 Patch release that adjusts locale targeting behavior for In-App Automation and messaging. The SDK will now check the device's primary language against the target locale, instead of checking whether any user selected languages match the target locale.
 
 ### Changes
 - Adjust locale targeting behavior to only consider the primary locale selection.
 
-## Version 17.7.2, Jan 29, 2024
+## Version 17.7.2, January 29, 2024
 Patch release that fixes an issue with message limits not being respected in certain cases. Apps that make use of limits should update to this version or later.
 
 ### Changes
 - Fixed message limits not being respected in certain cases.
 - Improvements for images and GIFs in Surveys and Scenes.
 
-## Version 16.11.2, Jan 29, 2024
+## Version 16.11.2, January 29, 2024
 Patch release that fixes an issue with message limits not being respected in certain cases. Apps on SDK v16 that make use of limits should update to this version or the latest 17.x release.
 
 ### Changes

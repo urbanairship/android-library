@@ -95,4 +95,10 @@ public abstract class AutomationDatabase extends RoomDatabase {
 
     }
 
+    public static AutomationDatabase createInMemoryDatabase(@NonNull Context context) {
+        return Room.inMemoryDatabaseBuilder(context, AutomationDatabase.class)
+                   .allowMainThreadQueries()
+                   .build();
+    }
+
 }
