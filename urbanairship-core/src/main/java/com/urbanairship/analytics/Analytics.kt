@@ -84,8 +84,6 @@ public class Analytics @VisibleForTesting public constructor(
      */
     public val events: SharedFlow<AirshipEventData> = _events.asSharedFlow()
 
-    private val analyticsListeners: MutableList<AnalyticsListener> = CopyOnWriteArrayList()
-
     private val listener: ApplicationListener =  object : ApplicationListener {
         override fun onForeground(time: Long) {
             this@Analytics.onForeground(time)
@@ -321,53 +319,9 @@ public class Analytics @VisibleForTesting public constructor(
                 timeMs = (event.time.toDouble() * 1000).toLong()
             )
         )
-        applyListeners(event)
         return true
     }
 
-
-    /**
-     * Adds an [AnalyticsListener] for analytics events.
-     *
-     * @param analyticsListener The [AnalyticsListener].
-     */
-    public fun addAnalyticsListener(analyticsListener: AnalyticsListener) {
-        analyticsListeners.add(analyticsListener)
-    }
-
-    /**
-     * Removes an [AnalyticsListener] for analytics events.
-     *
-     * @param analyticsListener The [AnalyticsListener].
-     */
-    public fun removeAnalyticsListener(analyticsListener: AnalyticsListener) {
-        analyticsListeners.remove(analyticsListener)
-    }
-
-    /**
-     * Applies the set [AnalyticsListener] instances to an event.
-     *
-     * @param event The event.
-     */
-    private fun applyListeners(event: Event) {
-        for (listener in analyticsListeners) {
-            when (event.getType()) {
-                CustomEvent.TYPE -> if (event is CustomEvent) {
-                    listener.onCustomEventAdded(event)
-                }
-
-                RegionEvent.TYPE -> if (event is RegionEvent) {
-                    listener.onRegionEventAdded(event)
-                }
-
-                EXTERNAL_EVENT_FEATURE_FLAG_INTERACTED -> listener.onFeatureFlagInteractedEventAdded(
-                    event
-                )
-
-                else -> {}
-            }
-        }
-    }
     /**
      * Called when the app is foregrounded.
      *
@@ -517,13 +471,6 @@ public class Analytics @VisibleForTesting public constructor(
             addEvent(ste)
         }
 
-        // TODO: Remove this after IAA rewrite is done
-        if (screen != null) {
-            for (listener in analyticsListeners) {
-                listener.onScreenTracked(screen)
-            }
-        }
-
         _currentScreen.value = screen
         screenStartTime = clock.currentTimeMillis()
         if (screen != null) {
@@ -623,7 +570,6 @@ public class Analytics @VisibleForTesting public constructor(
         sdkExtensions.add("${extension.extensionName}:$normalizedVersion")
     }
 
-
     public companion object {
 
         /**
@@ -631,9 +577,5 @@ public class Analytics @VisibleForTesting public constructor(
          */
         private const val SCHEDULE_SEND_DELAY_SECONDS: Long = 10
         private const val ASSOCIATED_IDENTIFIERS_KEY = "com.urbanairship.analytics.ASSOCIATED_IDENTIFIERS"
-
-        // TODO: Remove this once IAA rewrite is primary path
-        private const val EXTERNAL_EVENT_FEATURE_FLAG_INTERACTED = "feature_flag_interaction"
-
     }
 }

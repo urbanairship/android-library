@@ -20,6 +20,4 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="UrbanAirship.HelperActivity" parent="UrbanAirship.PermissionsActivity" />
-
 </resources>

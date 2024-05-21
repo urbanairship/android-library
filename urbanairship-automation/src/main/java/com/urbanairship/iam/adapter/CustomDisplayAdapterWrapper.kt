@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.adapter
 
 import android.content.Context
@@ -7,7 +9,11 @@ import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.automation.utils.ActiveTimer
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  *  Wraps a custom display adapter as a DisplayAdapter
@@ -16,7 +22,13 @@ internal class CustomDisplayAdapterWrapper (
     val adapter: CustomDisplayAdapter
 ) : DisplayAdapter {
 
-    override val isReady: StateFlow<Boolean> = adapter.isReady
+    override val isReady: StateFlow<Boolean>
+        get() {
+            return when(adapter) {
+                is CustomDisplayAdapter.CallbackAdapter -> MutableStateFlow(true).asStateFlow()
+                is CustomDisplayAdapter.SuspendingAdapter -> adapter.isReady
+            }
+        }
 
     override suspend fun display(context: Context, analytics: InAppMessageAnalyticsInterface): DisplayResult {
         analytics.recordEvent(InAppDisplayEvent(), layoutContext = null)
@@ -24,7 +36,17 @@ internal class CustomDisplayAdapterWrapper (
 
         val timer = ActiveTimer(GlobalActivityMonitor.shared(context))
         timer.start()
-        val result = adapter.display(context)
+        val result: CustomDisplayResolution =  when(adapter) {
+            is CustomDisplayAdapter.CallbackAdapter -> {
+                suspendCoroutine { continuation ->
+                    val callback = DisplayFinishedCallback.newCallback {
+                        continuation.resume(it)
+                    }
+                    adapter.display(context, callback)
+                }
+            }
+            is CustomDisplayAdapter.SuspendingAdapter -> adapter.display(context)
+        }
         timer.stop()
 
         return when(result) {

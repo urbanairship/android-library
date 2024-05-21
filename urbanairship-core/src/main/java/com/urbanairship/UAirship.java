@@ -1077,38 +1077,6 @@ public class UAirship {
     }
 
     /**
-     * Deprecated. Use {@link PrivacyManager} instead.
-     *
-     * When enabled it will enable all privacy manager features. When disabled it will disable
-     * all.
-     *
-     * @param enabled {@code true} to enable, {@code false} to disable.
-     * @deprecated Enable/disable by using {@link PrivacyManager}.
-     * This will enable or disable {@link PrivacyManager#FEATURE_ALL} features.
-     */
-    public void setDataCollectionEnabled(boolean enabled) {
-        if (enabled) {
-            this.privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ALL);
-        } else {
-            this.privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE);
-        }
-    }
-
-    /**
-     * Deprecated. Use {@link PrivacyManager} instead.
-     *
-     * Checks if any features are enabled in the privacy manager.
-     *
-     * @return {@code true} if any feature is enabled, otherwise `false`.
-     * @deprecated Enable/disable by using {@link PrivacyManager}.
-     * This will call through to the privacy manager to check if any features are enabled.
-     */
-    @Deprecated
-    public boolean isDataCollectionEnabled() {
-        return privacyManager.isAnyFeatureEnabled();
-    }
-
-    /**
      * Returns the privacy manager.
      *
      * @return The privacy manager.

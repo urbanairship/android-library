@@ -57,17 +57,6 @@ public class AirshipFirebaseIntegration {
      * Called to handle new tokens.
      *
      * @param context The application context.
-     * @deprecated Use {@link #processNewToken(Context, String)} instead.
-     */
-    @Deprecated
-    public static void processNewToken(@NonNull Context context) {
-        processNewToken(context, null);
-    }
-
-    /**
-     * Called to handle new tokens.
-     *
-     * @param context The application context.
      * @param token The new token.
      */
     public static void processNewToken(@NonNull Context context, @Nullable String token) {

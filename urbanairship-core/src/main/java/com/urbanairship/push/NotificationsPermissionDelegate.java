@@ -4,18 +4,15 @@ package com.urbanairship.push;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
 
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.app.ActivityMonitor;
-import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.app.SimpleActivityListener;
 import com.urbanairship.permission.PermissionDelegate;
 import com.urbanairship.permission.PermissionRequestResult;
 import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsActivity;
 import com.urbanairship.push.notifications.NotificationChannelRegistry;
-import com.urbanairship.util.HelperActivity;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;

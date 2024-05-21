@@ -14,7 +14,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class CustomDisplayAdapterWrapperTest {
     private val adapterIsReady = MutableStateFlow(true)
-    private val displayAdapter: CustomDisplayAdapter = mockk {
+    private val displayAdapter: CustomDisplayAdapter.SuspendingAdapter = mockk {
         every { isReady } returns  adapterIsReady
     }
 
