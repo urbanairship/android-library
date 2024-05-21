@@ -36,7 +36,7 @@ public class InAppMessageAnalyticsTest {
         isMatching = true,
         allEvaluatedExperimentsMetadata = listOf(jsonMapOf("reporting" to "metadata"))
     )
-    private val scheduleID = UUID.randomUUID().toString()
+    private val scheduleId = UUID.randomUUID().toString()
     private val reportingMetadata = JsonValue.wrap("reporting info")
     private val eventRecorder: InAppEventRecorderInterface = mockk()
     private val impressionRecorder: AirshipMeteredUsage = mockk()
@@ -55,25 +55,25 @@ public class InAppMessageAnalyticsTest {
         val analytics = makeAnalytics()
         analytics.recordEvent(TestInAppEvent(), layoutContext = null)
 
-        assertEquals(event?.messageID, InAppEventMessageID.AirshipID(scheduleID, campaigns))
+        assertEquals(event?.messageId, InAppEventMessageId.AirshipId(scheduleId, campaigns))
         assertEquals(event?.source, InAppEventSource.AIRSHIP)
     }
 
     @Test
     public fun testAppDefined(): TestResult = runTest {
-        val analytics = makeAnalytics(source = InAppMessage.InAppMessageSource.APP_DEFINED)
+        val analytics = makeAnalytics(source =  InAppMessage.Source.APP_DEFINED)
         analytics.recordEvent(TestInAppEvent(), layoutContext = null)
 
-        assertEquals(event?.messageID, InAppEventMessageID.AppDefined(scheduleID))
+        assertEquals(event?.messageId, InAppEventMessageId.AppDefined(scheduleId))
         assertEquals(event?.source, InAppEventSource.APP_DEFINED)
     }
 
     @Test
-    public fun testLegacyMessageID(): TestResult = runTest {
-        val analytics = makeAnalytics(source = InAppMessage.InAppMessageSource.LEGACY_PUSH)
+    public fun testLegacyMessageId(): TestResult = runTest {
+        val analytics = makeAnalytics(source =  InAppMessage.Source.LEGACY_PUSH)
         analytics.recordEvent(TestInAppEvent(), layoutContext = null)
 
-        assertEquals(event?.messageID, InAppEventMessageID.Legacy(scheduleID))
+        assertEquals(event?.messageId, InAppEventMessageId.Legacy(scheduleId))
         assertEquals(event?.source, InAppEventSource.AIRSHIP)
     }
 
@@ -91,7 +91,7 @@ public class InAppMessageAnalyticsTest {
             layoutContext = layoutData
         )
 
-        makeAnalytics(source = InAppMessage.InAppMessageSource.LEGACY_PUSH)
+        makeAnalytics(source =  InAppMessage.Source.LEGACY_PUSH)
             .recordEvent(TestInAppEvent(), layoutContext = layoutData)
 
         assertEquals(event?.context, expectedContext)
@@ -101,8 +101,8 @@ public class InAppMessageAnalyticsTest {
 
     @Test
     public fun testImpression(): TestResult = runTest {
-        val productID = "test-product-id"
-        val contactID = "test-contact-id"
+        val productId = "test-product-id"
+        val contactId = "test-contact-id"
 
         clock.currentTimeMillis = 0
 
@@ -110,17 +110,17 @@ public class InAppMessageAnalyticsTest {
         coEvery { impressionRecorder.addEvent(any()) } answers { impression = firstArg() }
 
         makeAnalytics(
-            source = InAppMessage.InAppMessageSource.LEGACY_PUSH,
-            productID = productID,
-            contactID = contactID)
+            source =  InAppMessage.Source.LEGACY_PUSH,
+            productId = productId,
+            contactId = contactId)
             .recordImpression()
 
-        assertEquals(scheduleID, impression?.entityId)
+        assertEquals(scheduleId, impression?.entityId)
         assertEquals(MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION, impression?.type)
-        assertEquals(productID, impression?.product)
+        assertEquals(productId, impression?.product)
         assertEquals(reportingMetadata, impression?.reportingContext)
         assertEquals(0L, impression?.timestamp)
-        assertEquals(contactID, impression?.contactId)
+        assertEquals(contactId, impression?.contactId)
     }
 
     @Test
@@ -129,7 +129,7 @@ public class InAppMessageAnalyticsTest {
         coEvery { impressionRecorder.addEvent(any()) } answers { impression = firstArg() }
 
         val analytics = makeAnalytics(
-            source = InAppMessage.InAppMessageSource.LEGACY_PUSH,
+            source =  InAppMessage.Source.LEGACY_PUSH,
             isReportingEnabled = false
         )
 
@@ -141,15 +141,15 @@ public class InAppMessageAnalyticsTest {
     }
 
     private fun makeAnalytics(
-        source: InAppMessage.InAppMessageSource = InAppMessage.InAppMessageSource.REMOTE_DATA,
-        productID: String? = null,
-        contactID: String? = null,
+        source:  InAppMessage.Source =  InAppMessage.Source.REMOTE_DATA,
+        productId: String? = null,
+        contactId: String? = null,
         isReportingEnabled: Boolean? = null
     ): InAppMessageAnalytics {
         return InAppMessageAnalytics(
-            scheduleID = scheduleID,
-            productID = productID,
-            contactID = contactID,
+            scheduleId = scheduleId,
+            productId = productId,
+            contactId = contactId,
             message = InAppMessage(
                 name = "name",
                 displayContent = InAppMessageDisplayContent.CustomContent(Custom(JsonValue.wrap("custom"))),

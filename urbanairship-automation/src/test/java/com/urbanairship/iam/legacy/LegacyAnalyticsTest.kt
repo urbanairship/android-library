@@ -7,7 +7,7 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestClock
 import com.urbanairship.automation.AutomationEngineInterface
-import com.urbanairship.iam.analytics.InAppEventMessageID
+import com.urbanairship.iam.analytics.InAppEventMessageId
 import com.urbanairship.iam.analytics.InAppEventRecorderInterface
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.push.PushManager
@@ -37,7 +37,7 @@ public class LegacyAnalyticsTest {
 
                 it.event.data == expectedData &&
                         it.event.name == "in_app_resolution" &&
-                        it.messageID == InAppEventMessageID.Legacy("some-schedule-id")
+                        it.messageId == InAppEventMessageId.Legacy("some-schedule-id")
             })
         }
     }
@@ -53,7 +53,7 @@ public class LegacyAnalyticsTest {
                     "replacement_id" to "some-other-schedule-id"
                 )
 
-                it.event.data == expectedData && it.event.name == "in_app_resolution" && it.messageID == InAppEventMessageID.Legacy(
+                it.event.data == expectedData && it.event.name == "in_app_resolution" && it.messageId == InAppEventMessageId.Legacy(
                     "some-schedule-id"
                 )
             })

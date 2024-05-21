@@ -71,8 +71,8 @@ public data class DeferredTriggerContext(
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class DeferredRequest(
     val uri: Uri,
-    val channelID: String,
-    val contactID: String? = null,
+    val channelId: String,
+    val contactId: String? = null,
     val triggerContext: DeferredTriggerContext? = null,
     val locale: Locale,
     val notificationOptIn: Boolean,

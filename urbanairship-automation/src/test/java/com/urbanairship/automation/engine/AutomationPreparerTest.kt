@@ -156,7 +156,7 @@ public class AutomationPreparerTest {
             )
         )
 
-        coEvery { remoteDataAccess.contactIDFor(any()) } answers {
+        coEvery { remoteDataAccess.contactIdFor(any()) } answers {
             assertEquals(schedule, firstArg())
             null
         }
@@ -185,7 +185,7 @@ public class AutomationPreparerTest {
             )
         )
 
-        coEvery { remoteDataAccess.contactIDFor(any()) } answers {
+        coEvery { remoteDataAccess.contactIdFor(any()) } answers {
             assertEquals(schedule, firstArg())
             null
         }
@@ -214,7 +214,7 @@ public class AutomationPreparerTest {
             )
         )
 
-        coEvery { remoteDataAccess.contactIDFor(any()) } answers {
+        coEvery { remoteDataAccess.contactIdFor(any()) } answers {
             assertEquals(schedule, firstArg())
             null
         }
@@ -235,7 +235,7 @@ public class AutomationPreparerTest {
     }
 
     @Test
-    public fun testContactIDAudienceChecks(): TestResult = runTest {
+    public fun testcontactIdAudienceChecks(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(
                 audienceSelector = audienceSelector,
@@ -243,7 +243,7 @@ public class AutomationPreparerTest {
             )
         )
 
-        coEvery { remoteDataAccess.contactIDFor(any()) } answers {
+        coEvery { remoteDataAccess.contactIdFor(any()) } answers {
             assertEquals(schedule, firstArg())
             "contact id"
         }
@@ -274,7 +274,7 @@ public class AutomationPreparerTest {
         )
 
         coEvery { deviceInfoProvider.getStableContactId() } returns "contact id"
-        coEvery { remoteDataAccess.contactIDFor(any()) } returns "contact id"
+        coEvery { remoteDataAccess.contactIdFor(any()) } returns "contact id"
         coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
         coEvery { audienceSelector.evaluate(any(), any(), any()) } returns true
@@ -284,15 +284,15 @@ public class AutomationPreparerTest {
         coEvery { messagePreparer.prepare(any(), any()) } answers  {
             val info: PreparedScheduleInfo = secondArg()
             assertEquals(schedule.data, AutomationSchedule.ScheduleData.InAppMessageData(firstArg()))
-            assertEquals(schedule.identifier, info.scheduleID)
+            assertEquals(schedule.identifier, info.scheduleId)
             assertEquals(schedule.campaigns, info.campaigns)
-            assertEquals("contact id", info.contactID)
+            assertEquals("contact id", info.contactId)
             return@answers Result.success(preparedMessageData)
         }
 
         val result = preparer.prepare(context, schedule, triggerContext)
         if (result is SchedulePrepareResult.Prepared) {
-            assertEquals(schedule.identifier, result.schedule.info.scheduleID)
+            assertEquals(schedule.identifier, result.schedule.info.scheduleId)
             assertEquals(schedule.campaigns, result.schedule.info.campaigns)
             assertEquals(result.schedule.data, PreparedScheduleData.InAppMessage(preparedMessageData))
         } else {
@@ -361,16 +361,16 @@ public class AutomationPreparerTest {
         coEvery { actionPreparer.prepare(any(), any()) } answers {
             val info: PreparedScheduleInfo = secondArg()
             assertEquals(schedule.data, AutomationSchedule.ScheduleData.Actions(firstArg()))
-            assertEquals(schedule.identifier, info.scheduleID)
+            assertEquals(schedule.identifier, info.scheduleId)
             assertEquals(schedule.campaigns, info.campaigns)
-            assertEquals("contact id", info.contactID)
+            assertEquals("contact id", info.contactId)
 
             return@answers Result.success(firstArg())
         }
 
         val result = preparer.prepare(context, schedule, triggerContext)
         if (result is SchedulePrepareResult.Prepared) {
-            assertEquals(schedule.identifier, result.schedule.info.scheduleID)
+            assertEquals(schedule.identifier, result.schedule.info.scheduleId)
             assertEquals(schedule.campaigns, result.schedule.info.campaigns)
             assertEquals(result.schedule.data, PreparedScheduleData.Action(JsonValue.wrap("action payload")))
         } else {
@@ -414,8 +414,8 @@ public class AutomationPreparerTest {
             val request: DeferredRequest = firstArg()
 
             assertEquals(request.uri, Uri.parse("https://sample.url"))
-            assertEquals(request.channelID, "channel-id")
-            assertNull(request.contactID) //TODO: is that correct. do we ignore contact id for deferred?
+            assertEquals(request.channelId, "channel-id")
+            assertNull(request.contactId) //TODO: is that correct. do we ignore contact id for deferred?
             assertEquals(request.triggerContext, triggerContext)
 
             return@answers DeferredResult.Success(
@@ -429,9 +429,9 @@ public class AutomationPreparerTest {
         coEvery { actionPreparer.prepare(any(), any()) } answers {
             val info: PreparedScheduleInfo = secondArg()
             assertEquals(actions, firstArg())
-            assertEquals(schedule.identifier, info.scheduleID)
+            assertEquals(schedule.identifier, info.scheduleId)
             assertEquals(schedule.campaigns, info.campaigns)
-            assertEquals("contact id", info.contactID)
+            assertEquals("contact id", info.contactId)
 
             return@answers Result.success(firstArg())
         }
@@ -439,7 +439,7 @@ public class AutomationPreparerTest {
 
         val result = preparer.prepare(context, schedule, triggerContext)
         if (result is SchedulePrepareResult.Prepared) {
-            assertEquals(schedule.identifier, result.schedule.info.scheduleID)
+            assertEquals(schedule.identifier, result.schedule.info.scheduleId)
             assertEquals(schedule.campaigns, result.schedule.info.campaigns)
             assertEquals(result.schedule.data, PreparedScheduleData.Action(actions))
         } else {
@@ -454,7 +454,7 @@ public class AutomationPreparerTest {
         val message = InAppMessage(
             name = "some name",
             displayContent = InAppMessageDisplayContent.CustomContent(Custom(JsonValue.wrap("content"))),
-            source = InAppMessage.InAppMessageSource.REMOTE_DATA
+            source =  InAppMessage.Source.REMOTE_DATA
         )
 
         val schedule = makeSchedule(
@@ -487,8 +487,8 @@ public class AutomationPreparerTest {
             val request: DeferredRequest = firstArg()
 
             assertEquals(request.uri, Uri.parse("https://sample.url"))
-            assertEquals(request.channelID, "channel-id")
-            assertNull(request.contactID) //TODO: is that correct. do we ignore contact id for deferred?
+            assertEquals(request.channelId, "channel-id")
+            assertNull(request.contactId) //TODO: is that correct. do we ignore contact id for deferred?
             assertEquals(request.triggerContext, triggerContext)
 
             return@answers DeferredResult.Success(
@@ -503,7 +503,7 @@ public class AutomationPreparerTest {
             message = InAppMessage(
                 name = "some name",
                 displayContent = InAppMessageDisplayContent.CustomContent(Custom(JsonValue.wrap("content"))),
-                source = InAppMessage.InAppMessageSource.REMOTE_DATA),
+                source =  InAppMessage.Source.REMOTE_DATA),
             displayAdapter = mockk(relaxed = true),
             displayCoordinator = mockk(relaxed = true)
         )
@@ -511,9 +511,9 @@ public class AutomationPreparerTest {
         coEvery { messagePreparer.prepare(any(), any()) } answers {
             val info: PreparedScheduleInfo = secondArg()
             assertEquals(message, firstArg())
-            assertEquals(schedule.identifier, info.scheduleID)
+            assertEquals(schedule.identifier, info.scheduleId)
             assertEquals(schedule.campaigns, info.campaigns)
-            assertEquals("contact id", info.contactID)
+            assertEquals("contact id", info.contactId)
 
             return@answers Result.success(preparedMessageData)
         }
@@ -524,7 +524,7 @@ public class AutomationPreparerTest {
 
         val result = preparer.prepare(context, schedule, triggerContext)
         if (result is SchedulePrepareResult.Prepared) {
-            assertEquals(schedule.identifier, result.schedule.info.scheduleID)
+            assertEquals(schedule.identifier, result.schedule.info.scheduleId)
             assertEquals(schedule.campaigns, result.schedule.info.campaigns)
             if (result.schedule.data is PreparedScheduleData.InAppMessage) {
                 assertEquals(result.schedule.data.message.message, message)
@@ -612,7 +612,7 @@ public class AutomationPreparerTest {
 
         coEvery { messagePreparer.prepare(any(), any()) } answers {
             val info: PreparedScheduleInfo = secondArg()
-            assertEquals(schedule.identifier, info.scheduleID)
+            assertEquals(schedule.identifier, info.scheduleId)
             assertEquals(info.experimentResult, experimentResult)
 
             return@answers Result.success(preparedMessageData)
@@ -665,7 +665,7 @@ public class AutomationPreparerTest {
 
         coEvery { messagePreparer.prepare(any(), any()) } answers {
             val info: PreparedScheduleInfo = secondArg()
-            assertEquals(schedule.identifier, info.scheduleID)
+            assertEquals(schedule.identifier, info.scheduleId)
             assertEquals(info.experimentResult, experimentResult)
 
             return@answers Result.success(preparedMessageData)
@@ -712,7 +712,7 @@ public class AutomationPreparerTest {
 
         coEvery { messagePreparer.prepare(any(), any()) } answers {
             val info: PreparedScheduleInfo = secondArg()
-            assertEquals(schedule.identifier, info.scheduleID)
+            assertEquals(schedule.identifier, info.scheduleId)
             assertNull(info.experimentResult)
 
             return@answers Result.success(preparedMessageData)
@@ -753,7 +753,7 @@ public class AutomationPreparerTest {
 
         coEvery { actionPreparer.prepare(any(), any()) } answers {
             val info: PreparedScheduleInfo = secondArg()
-            assertEquals(schedule.identifier, info.scheduleID)
+            assertEquals(schedule.identifier, info.scheduleId)
             assertNull(info.experimentResult)
 
             return@answers Result.success(firstArg())

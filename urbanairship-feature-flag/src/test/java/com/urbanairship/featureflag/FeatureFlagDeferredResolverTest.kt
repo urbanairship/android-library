@@ -438,8 +438,8 @@ class FeatureFlagDeferredResolverTest {
     private fun makeDeferredRequest(): DeferredRequest {
         return DeferredRequest(
             uri = Uri.parse("https://example.co"),
-            channelID = "channel-id",
-            contactID = "contact-id",
+            channelId = "channel-id",
+            contactId = "contact-id",
             triggerContext = DeferredTriggerContext("type", 1.0, JsonValue.wrap(1)),
             locale = Locale.ENGLISH,
             notificationOptIn = false,
@@ -467,7 +467,7 @@ class FeatureFlagDeferredResolverTest {
     }
 
     private fun calculateItemId(info: FeatureFlagInfo, request: DeferredRequest): String {
-        return listOf(info.name, info.id, info.lastUpdated, request.contactID ?: "", request.uri.toString())
+        return listOf(info.name, info.id, info.lastUpdated, request.contactId ?: "", request.uri.toString())
             .joinToString(":")
     }
 }

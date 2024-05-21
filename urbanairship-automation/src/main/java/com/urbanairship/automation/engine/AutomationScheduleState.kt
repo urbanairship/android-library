@@ -1,9 +1,6 @@
 package com.urbanairship.automation.engine
 
-import androidx.annotation.RestrictTo
-
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public enum class AutomationScheduleState(internal val json: String) {
+internal enum class AutomationScheduleState(internal val json: String) {
     IDLE("idle"),
     TRIGGERED("triggered"),
     PREPARED("prepared"),

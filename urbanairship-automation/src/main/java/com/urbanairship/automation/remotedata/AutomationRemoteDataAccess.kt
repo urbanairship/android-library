@@ -3,7 +3,6 @@ package com.urbanairship.automation.remotedata
 import android.content.Context
 import com.urbanairship.UALog
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.automation.limits.FrequencyConstraint
 import com.urbanairship.json.JsonException
@@ -28,7 +27,7 @@ internal interface AutomationRemoteDataAccessInterface {
     suspend fun waitForFullRefresh(schedule: AutomationSchedule)
     suspend fun bestEffortRefresh(schedule: AutomationSchedule): Boolean
     suspend fun notifyOutdated(schedule: AutomationSchedule)
-    fun contactIDFor(schedule: AutomationSchedule): String?
+    fun contactIdFor(schedule: AutomationSchedule): String?
     fun sourceFor(schedule: AutomationSchedule): RemoteDataSource?
 }
 
@@ -107,7 +106,7 @@ internal class AutomationRemoteDataAccess(
         remoteData.notifyOutdated(info)
     }
 
-    override fun contactIDFor(schedule: AutomationSchedule): String? {
+    override fun contactIdFor(schedule: AutomationSchedule): String? {
         return remoteDataInfo(schedule)?.contactId
     }
 
@@ -129,7 +128,7 @@ internal class AutomationRemoteDataAccess(
         // legacy way
         when(schedule.data) {
             is AutomationSchedule.ScheduleData.InAppMessageData -> {
-                return schedule.data.message.source == InAppMessage.InAppMessageSource.REMOTE_DATA
+                return schedule.data.message.source == InAppMessage.Source.REMOTE_DATA
             }
             else -> {}
         }
@@ -221,19 +220,9 @@ internal class InAppRemoteData(
 
                 when(result.data) {
                     is AutomationSchedule.ScheduleData.InAppMessageData ->  {
-                        result.data.message.source = InAppMessage.InAppMessageSource.REMOTE_DATA
+                        result.data.message.source = InAppMessage.Source.REMOTE_DATA
                     }
                     else -> {}
-                }
-
-                result.triggers.forEach { trigger ->
-                    if (trigger.shouldBackfill) {
-                        trigger.backfilledIdentifier(TriggerExecutionType.EXECUTION)
-                    }
-                }
-
-                result.delay?.cancellationTriggers?.forEach { trigger ->
-                    trigger.backfilledIdentifier(TriggerExecutionType.DELAY_CANCELLATION)
                 }
 
                 result

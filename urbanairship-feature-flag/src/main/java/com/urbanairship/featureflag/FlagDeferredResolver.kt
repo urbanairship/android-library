@@ -32,7 +32,7 @@ internal class FlagDeferredResolver(
     private val backOffIntervals: MutableMap<String, Long> = mutableMapOf()
 
     suspend fun resolve(request: DeferredRequest, flagInfo: FeatureFlagInfo): Result<DeferredFlag> {
-        val requestId = listOf(flagInfo.name, flagInfo.id, flagInfo.lastUpdated, request.contactID ?: "", request.uri.toString())
+        val requestId = listOf(flagInfo.name, flagInfo.id, flagInfo.lastUpdated, request.contactId ?: "", request.uri.toString())
             .joinToString(":")
 
         return withContext(dispatcher) {

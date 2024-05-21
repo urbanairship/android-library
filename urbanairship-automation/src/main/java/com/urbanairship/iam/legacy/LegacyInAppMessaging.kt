@@ -176,7 +176,7 @@ internal class LegacyInAppMessaging(
                     buttons = buttons
                 )
             ),
-            source = InAppMessage.InAppMessageSource.LEGACY_PUSH,
+            source = InAppMessage.Source.LEGACY_PUSH,
             extras = legacyInAppMessage.extras,
         ).let {
             messageExtender?.invoke(it) ?: it

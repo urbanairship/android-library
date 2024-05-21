@@ -3,6 +3,7 @@ package com.urbanairship.automation
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.automation.engine.AutomationDelayProcessor
 import com.urbanairship.automation.engine.AutomationPreparer
@@ -11,12 +12,15 @@ import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
+import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.automation.utils.TaskSleeper
 import com.urbanairship.json.JsonValue
+import com.urbanairship.remoteconfig.RemoteAirshipConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
@@ -48,7 +52,6 @@ public class AutomationEngineTest {
     private val clock = TestClock()
 
     private val testDispatcher = StandardTestDispatcher()
-
     private val schedule: AutomationSchedule
         get() = AutomationSchedule(
             identifier = "test",
@@ -74,6 +77,7 @@ public class AutomationEngineTest {
 
     private val triggerProcessor: AutomationTriggerProcessor = mockk(relaxed = true)
 
+    private val automationStoreMigrator: AutomationStoreMigrator = mockk(relaxUnitFun = true)
 
     private val store: AutomationStore = mockk(relaxUnitFun = true) {
         coEvery { getSchedules() } answers { listOf(scheduleData) }
@@ -98,7 +102,9 @@ public class AutomationEngineTest {
         triggerProcessor = triggerProcessor,
         delayProcessor = delayProcessor,
         clock = clock,
-        sleeper = TaskSleeper.default
+        sleeper = TaskSleeper.default,
+        dispatcher = testDispatcher,
+        automationStoreMigrator = automationStoreMigrator
     )
 
     @Before
@@ -142,6 +148,7 @@ public class AutomationEngineTest {
         coEvery { store.getSchedule(eq("test")) } answers { scheduleData }
 
         engine.start()
+        advanceUntilIdle()
 
         coVerifyOrder {
             store.getSchedules()

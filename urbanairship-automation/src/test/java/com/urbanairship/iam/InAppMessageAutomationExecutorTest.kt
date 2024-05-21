@@ -62,10 +62,10 @@ public class InAppMessageAutomationExecutorTest {
     )
 
     private val preparedInfo = PreparedScheduleInfo(
-        scheduleID = UUID.randomUUID().toString(),
-        productID = UUID.randomUUID().toString(),
+        scheduleId = UUID.randomUUID().toString(),
+        productId = UUID.randomUUID().toString(),
         campaigns = JsonValue.wrap(UUID.randomUUID().toString()),
-        contactID = UUID.randomUUID().toString(),
+        contactId = UUID.randomUUID().toString(),
         reportingContext = JsonValue.wrap(UUID.randomUUID().toString())
     )
 
@@ -84,9 +84,9 @@ public class InAppMessageAutomationExecutorTest {
         every { analyticsFactory.makeAnalytics(any(), any()) } returns analytics
 
         every { analyticsFactory.makeAnalytics(any(), any(), any(), any(), any(), any(), any()) } answers {
-            assertEquals(preparedInfo.scheduleID, args[0])
-            assertEquals(preparedInfo.productID, args[1])
-            assertEquals(preparedInfo.contactID, args[2])
+            assertEquals(preparedInfo.scheduleId, args[0])
+            assertEquals(preparedInfo.productId, args[1])
+            assertEquals(preparedInfo.contactId, args[2])
             assertEquals(preparedData.message, args[3])
             assertEquals(preparedInfo.campaigns, args[4])
             assertEquals(preparedInfo.reportingContext, args[5])
@@ -128,7 +128,7 @@ public class InAppMessageAutomationExecutorTest {
         var isDelegateReady = true
         every { delegate.isMessageReadyToDisplay(any(), any()) } answers {
             assertEquals(preparedData.message, firstArg())
-            assertEquals(preparedInfo.scheduleID, secondArg())
+            assertEquals(preparedInfo.scheduleId, secondArg())
             isDelegateReady
         }
 
@@ -141,7 +141,7 @@ public class InAppMessageAutomationExecutorTest {
     @Test
     public fun testInterrupted(): TestResult = runTest {
         val schedule = AutomationSchedule(
-            identifier = preparedInfo.scheduleID,
+            identifier = preparedInfo.scheduleId,
             triggers = listOf(),
             data = AutomationSchedule.ScheduleData.InAppMessageData(preparedData.message),
             created = 0u
@@ -153,7 +153,7 @@ public class InAppMessageAutomationExecutorTest {
         }
 
         coEvery { assetManager.clearCache(any()) } answers {
-            assertEquals(preparedInfo.scheduleID, firstArg())
+            assertEquals(preparedInfo.scheduleId, firstArg())
         }
 
         executor.interrupted(schedule, preparedInfo)
@@ -204,10 +204,10 @@ public class InAppMessageAutomationExecutorTest {
         )
 
         val info = PreparedScheduleInfo(
-            scheduleID = preparedInfo.scheduleID,
-            productID = preparedInfo.productID,
+            scheduleId = preparedInfo.scheduleId,
+            productId = preparedInfo.productId,
             campaigns = preparedInfo.campaigns,
-            contactID = preparedInfo.contactID,
+            contactId = preparedInfo.contactId,
             reportingContext = preparedInfo.reportingContext,
             experimentResult = experimentResult
         )
@@ -228,11 +228,11 @@ public class InAppMessageAutomationExecutorTest {
         val delegate: InAppMessageDisplayDelegate = mockk()
         every { delegate.messageWillDisplay(any(), any()) } answers {
             assertEquals(preparedData.message, firstArg())
-            assertEquals(preparedInfo.scheduleID, secondArg())
+            assertEquals(preparedInfo.scheduleId, secondArg())
         }
         every { delegate.messageFinishedDisplaying(any(), any()) } answers {
             assertEquals(preparedData.message, firstArg())
-            assertEquals(preparedInfo.scheduleID, secondArg())
+            assertEquals(preparedInfo.scheduleId, secondArg())
         }
 
         every { displayCoordinator.messageWillDisplay(any()) } just runs

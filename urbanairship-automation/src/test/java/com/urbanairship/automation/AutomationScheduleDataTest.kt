@@ -26,7 +26,7 @@ public class AutomationScheduleDataTest {
         date = clock.currentTimeMillis
     )
 
-    private val preparedScheduleInfo = PreparedScheduleInfo(scheduleID = UUID.randomUUID().toString())
+    private val preparedScheduleInfo = PreparedScheduleInfo(scheduleId = UUID.randomUUID().toString())
 
     @Test
     public fun testIsInState() {
@@ -662,7 +662,7 @@ public class AutomationScheduleDataTest {
         messageType: String? = null,
         campaigns: JsonValue? = null,
         reportingContext: JsonValue? = null,
-        productID: String? = null,
+        productId: String? = null,
         minSDKVersion: String? = null,
         created: ULong = clock.currentTimeMillis.toULong(),
         queue: String? = null,
@@ -674,7 +674,7 @@ public class AutomationScheduleDataTest {
             schedule = AutomationSchedule(identifier, triggers, group, priority, limit, startDate,
                 endDate, audience, delay, interval, data, bypassHoldoutGroups, editGracePeriodDays,
                 metadata, frequencyConstraintIDs, messageType, campaigns, reportingContext,
-                productID, minSDKVersion, created, queue),
+                productId, minSDKVersion, created, queue),
             scheduleState = scheduleState,
             scheduleStateChangeDate = clock.currentTimeMillis(),
             executionCount = 0,

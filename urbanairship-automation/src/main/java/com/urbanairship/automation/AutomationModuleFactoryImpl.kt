@@ -27,6 +27,8 @@ import com.urbanairship.iam.legacy.LegacyInAppMessaging
 import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
+import com.urbanairship.automation.storage.AutomationDatabase
+import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.utils.NetworkMonitor
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.channel.AirshipChannel
@@ -121,7 +123,11 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 eventFeed = eventFeed
             ),
             triggerProcessor = AutomationTriggerProcessor(automationStore),
-            delayProcessor = AutomationDelayProcessor(analytics, activityMonitor)
+            delayProcessor = AutomationDelayProcessor(analytics, activityMonitor),
+            automationStoreMigrator = AutomationStoreMigrator(
+                legacyDatabase = AutomationDatabase.createDatabase(context, runtimeConfig),
+                automationStore
+            )
         )
 
         val automation = InAppAutomation(

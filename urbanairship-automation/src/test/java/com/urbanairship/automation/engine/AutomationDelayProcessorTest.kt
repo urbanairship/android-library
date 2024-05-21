@@ -74,7 +74,7 @@ public class AutomationDelayProcessorTest {
         val delay = AutomationDelay(
             seconds = 100,
             screens = listOf("screen1", "screen2"),
-            regionID = "region1",
+            regionId = "region1",
             appState = AutomationAppState.FOREGROUND
         )
 
@@ -166,7 +166,7 @@ public class AutomationDelayProcessorTest {
 
     @Test
     public fun testRegionCondition(): TestResult = runTest {
-        val delay = AutomationDelay(regionID = "foo")
+        val delay = AutomationDelay(regionId = "foo")
         assertFalse(processor.areConditionsMet(delay))
 
         regionState.value = setOf("foo")

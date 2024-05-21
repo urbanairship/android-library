@@ -96,7 +96,7 @@ internal class AutomationExecutor(
                 }
             }
         } catch (ex: Exception) {
-            UALog.e(ex) { "Failed to execute automation: ${preparedSchedule.info.scheduleID}" }
+            UALog.e(ex) { "Failed to execute automation: ${preparedSchedule.info.scheduleId}" }
             ScheduleExecuteResult.RETRY
         }
     }

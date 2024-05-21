@@ -42,9 +42,9 @@ public class InAppMessageAutomationPreparerTest {
         )
     )
     private val preparedScheduleInfo = PreparedScheduleInfo(
-        scheduleID = UUID.randomUUID().toString(),
+        scheduleId = UUID.randomUUID().toString(),
         campaigns = JsonValue.wrap("campaigns"),
-        contactID = UUID.randomUUID().toString()
+        contactId = UUID.randomUUID().toString()
     )
 
     private val preparer = InAppMessageAutomationPreparer(assetsManager, coordinatorManager, adapterFactory)
@@ -54,7 +54,7 @@ public class InAppMessageAutomationPreparerTest {
     public fun testPrepare(): TestResult = runTest {
         val cachedAsset: AirshipCachedAssets = mockk()
         coEvery { assetsManager.cacheAsset(any(), any()) } answers {
-            assertEquals(preparedScheduleInfo.scheduleID, firstArg())
+            assertEquals(preparedScheduleInfo.scheduleId, firstArg())
             assertEquals(listOf("https://banner.url"), secondArg())
             Result.success(cachedAsset)
         }

@@ -43,7 +43,7 @@ internal class InAppMessageAutomationExecutor(
         preparedScheduleInfo: PreparedScheduleInfo
     ): ScheduleReadyResult {
         if (!data.displayAdapter.isReady.value) {
-            UALog.i { "Schedule ${preparedScheduleInfo.scheduleID} display adapter not ready" }
+            UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} display adapter not ready" }
             scope.launch {
                 data.displayAdapter.isReady.first { it }
                 scheduleConditionsChangedNotifier.notifyChanged()
@@ -52,7 +52,7 @@ internal class InAppMessageAutomationExecutor(
         }
 
         if (!data.displayCoordinator.isReady.value) {
-            UALog.i { "Schedule ${preparedScheduleInfo.scheduleID} display coordinator not ready" }
+            UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} display coordinator not ready" }
             scope.launch {
                 data.displayCoordinator.isReady.first { it }
                 scheduleConditionsChangedNotifier.notifyChanged()
@@ -60,11 +60,11 @@ internal class InAppMessageAutomationExecutor(
             return ScheduleReadyResult.NOT_READY
         }
 
-        val isReady = displayDelegate?.isMessageReadyToDisplay(data.message, preparedScheduleInfo.scheduleID)
+        val isReady = displayDelegate?.isMessageReadyToDisplay(data.message, preparedScheduleInfo.scheduleId)
             ?: true
 
         if (!isReady) {
-            UALog.i { "Schedule ${preparedScheduleInfo.scheduleID} InAppMessageDisplayDelegate not ready" }
+            UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} InAppMessageDisplayDelegate not ready" }
             return ScheduleReadyResult.NOT_READY
         }
 
@@ -76,7 +76,7 @@ internal class InAppMessageAutomationExecutor(
         preparedScheduleInfo: PreparedScheduleInfo
     ): ScheduleExecuteResult = withContext(Dispatchers.Main.immediate) {
         // Display
-        displayDelegate?.messageWillDisplay(data.message, preparedScheduleInfo.scheduleID)
+        displayDelegate?.messageWillDisplay(data.message, preparedScheduleInfo.scheduleId)
         data.displayCoordinator.messageWillDisplay(data.message)
 
         val analytics = analyticsFactory.makeAnalytics(
@@ -93,7 +93,7 @@ internal class InAppMessageAutomationExecutor(
             )
         } else {
             try {
-                UALog.i { "Displaying message ${preparedScheduleInfo.scheduleID}" }
+                UALog.i { "Displaying message ${preparedScheduleInfo.scheduleId}" }
                 result = when(data.displayAdapter.display(context, analytics)) {
                     DisplayResult.CANCEL -> ScheduleExecuteResult.CANCEL
                     DisplayResult.FINISHED -> ScheduleExecuteResult.FINISHED
@@ -107,13 +107,13 @@ internal class InAppMessageAutomationExecutor(
             } finally {
                 // Finished
                 data.displayCoordinator.messageFinishedDisplaying(data.message)
-                displayDelegate?.messageFinishedDisplaying(data.message, preparedScheduleInfo.scheduleID)
+                displayDelegate?.messageFinishedDisplaying(data.message, preparedScheduleInfo.scheduleId)
             }
         }
 
         // Clean up assets
         if (result != ScheduleExecuteResult.RETRY) {
-            assetManager.clearCache(preparedScheduleInfo.scheduleID)
+            assetManager.clearCache(preparedScheduleInfo.scheduleId)
         }
 
         return@withContext result
@@ -133,7 +133,7 @@ internal class InAppMessageAutomationExecutor(
                     .makeAnalytics(schedule.data.message, preparedScheduleInfo)
                     .recordEvent(InAppResolutionEvent.interrupted(), null)
 
-                assetManager.clearCache(preparedScheduleInfo.scheduleID)
+                assetManager.clearCache(preparedScheduleInfo.scheduleId)
 
                 return InterruptedBehavior.FINISH
             }

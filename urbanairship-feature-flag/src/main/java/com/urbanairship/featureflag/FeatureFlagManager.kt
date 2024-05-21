@@ -233,8 +233,8 @@ public class FeatureFlagManager
         val chanelId = deviceInfoProvider.getChannelId()
         val request = DeferredRequest(
             uri = deferredPayload.url,
-            channelID = chanelId,
-            contactID = contactId,
+            channelId = chanelId,
+            contactId = contactId,
             locale = deviceInfoProvider.locale,
             notificationOptIn = deviceInfoProvider.isNotificationsOptedIn,
             appVersionName = deviceInfoProvider.appVersionName

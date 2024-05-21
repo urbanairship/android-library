@@ -1,5 +1,6 @@
 package com.urbanairship.automation
 
+import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -47,7 +48,7 @@ public class AutomationDelay(
     /**
      * The execution region ID.
      */
-    public val regionID: String? = null,
+    public val regionId: String? = null,
     /**
      * The execution app state.
      */
@@ -99,10 +100,10 @@ public class AutomationDelay(
                 seconds = content.optionalField(SECONDS_KEY),
                 appState = content.get(APP_STATE_KEY)?.let(AutomationAppState.Companion::fromJson),
                 screens = screens,
-                regionID = content.optionalField(REGION_ID_KEY),
-                cancellationTriggers = content.get(CANCELLATION_TRIGGERS_KEY)?.requireList()?.map(
-                    AutomationTrigger.Companion::fromJson
-                )
+                regionId = content.optionalField(REGION_ID_KEY),
+                cancellationTriggers = content.get(CANCELLATION_TRIGGERS_KEY)?.requireList()?.map {
+                    AutomationTrigger.fromJson(it, TriggerExecutionType.DELAY_CANCELLATION)
+                }
             )
         }
     }
@@ -111,7 +112,7 @@ public class AutomationDelay(
         SECONDS_KEY to seconds,
         APP_STATE_KEY to appState,
         SCREEN_KEY to screens,
-        REGION_ID_KEY to regionID,
+        REGION_ID_KEY to regionId,
         CANCELLATION_TRIGGERS_KEY to cancellationTriggers
     ).toJsonValue()
 
@@ -125,7 +126,7 @@ public class AutomationDelay(
 
         if (seconds != other.seconds) return false
         if (screens != other.screens) return false
-        if (regionID != other.regionID) return false
+        if (regionId != other.regionId) return false
         if (appState != other.appState) return false
         return cancellationTriggers == other.cancellationTriggers
     }
@@ -133,7 +134,7 @@ public class AutomationDelay(
     override fun hashCode(): Int {
         var result = seconds?.hashCode() ?: 0
         result = 31 * result + (screens?.hashCode() ?: 0)
-        result = 31 * result + (regionID?.hashCode() ?: 0)
+        result = 31 * result + (regionId?.hashCode() ?: 0)
         result = 31 * result + (appState?.hashCode() ?: 0)
         result = 31 * result + (cancellationTriggers?.hashCode() ?: 0)
         return result

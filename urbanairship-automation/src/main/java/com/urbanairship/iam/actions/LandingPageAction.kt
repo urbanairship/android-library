@@ -113,7 +113,7 @@ public class LandingPageAction(
             triggers = listOf(AutomationTrigger.activeSession(1u)),
             priority = Int.MIN_VALUE,
             bypassHoldoutGroups = true,
-            productID = PRODUCT_ID,
+            productId = PRODUCT_ID,
             queue = QUEUE,
             created = clock.currentTimeMillis().toULong()
         )

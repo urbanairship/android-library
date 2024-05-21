@@ -8,7 +8,7 @@ import java.util.Objects
 import java.util.concurrent.TimeUnit
 import org.jetbrains.annotations.VisibleForTesting
 
-public class AutomationScheduleData(
+internal class AutomationScheduleData(
     schedule: AutomationSchedule,
     scheduleState: AutomationScheduleState,
     scheduleStateChangeDate: Long,
@@ -16,17 +16,17 @@ public class AutomationScheduleData(
     triggerInfo: TriggeringInfo? = null,
     preparedScheduleInfo: PreparedScheduleInfo? = null
 ) {
-    public var schedule: AutomationSchedule = schedule
+    var schedule: AutomationSchedule = schedule
         private set
-    public var scheduleState: AutomationScheduleState = scheduleState
+    var scheduleState: AutomationScheduleState = scheduleState
         private set
-    public var scheduleStateChangeDate: Long = scheduleStateChangeDate
+    var scheduleStateChangeDate: Long = scheduleStateChangeDate
         private set
-    public var executionCount: Int = executionCount
+    var executionCount: Int = executionCount
         private set
-    public var triggerInfo: TriggeringInfo? = triggerInfo
+    var triggerInfo: TriggeringInfo? = triggerInfo
         private set
-    public var preparedScheduleInfo: PreparedScheduleInfo? = preparedScheduleInfo
+    var preparedScheduleInfo: PreparedScheduleInfo? = preparedScheduleInfo
         private set
 
     internal fun setSchedule(schedule: AutomationSchedule): AutomationScheduleData {
@@ -281,6 +281,18 @@ public class AutomationScheduleData(
         preparedScheduleInfo = data
     }
 
+
+    override fun hashCode(): Int {
+        return Objects.hash(schedule, scheduleState, scheduleStateChangeDate, executionCount,
+            triggerInfo, preparedScheduleInfo)
+    }
+
+    override fun toString(): String {
+        return "AutomationScheduleData(schedule=$schedule, scheduleState=$scheduleState, " +
+                "scheduleStateChangeDate=$scheduleStateChangeDate, executionCount=$executionCount, " +
+                "triggerInfo=$triggerInfo, preparedScheduleInfo=$preparedScheduleInfo)"
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -292,12 +304,8 @@ public class AutomationScheduleData(
         if (scheduleStateChangeDate != other.scheduleStateChangeDate) return false
         if (executionCount != other.executionCount) return false
         if (triggerInfo != other.triggerInfo) return false
-        return preparedScheduleInfo == other.preparedScheduleInfo
-    }
+        if (preparedScheduleInfo != other.preparedScheduleInfo) return false
 
-    override fun hashCode(): Int {
-        return Objects.hash(schedule, scheduleState, scheduleStateChangeDate, executionCount,
-            triggerInfo, preparedScheduleInfo)
+        return true
     }
-
 }

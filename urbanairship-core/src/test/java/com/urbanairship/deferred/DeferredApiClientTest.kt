@@ -115,8 +115,8 @@ public class DeferredApiClientTest {
 
         val response = apiClient.resolve(
             uri = expectedRequest.url!!,
-            channelID = channelId,
-            contactID = contactId,
+            channelId = channelId,
+            contactId = contactId,
             stateOverrides = stateOverrides,
             audienceOverrides = AudienceOverrides.Channel(
                 tags = tagOverrides, attributes = attributesOverrides
@@ -164,8 +164,8 @@ public class DeferredApiClientTest {
 
         val response = apiClient.resolve(
             uri = expectedRequest.url!!,
-            channelID = channelId,
-            contactID = null,
+            channelId = channelId,
+            contactId = null,
             stateOverrides = stateOverrides,
             audienceOverrides = null,
             triggerContext = null

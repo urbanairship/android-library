@@ -36,11 +36,11 @@ internal class InAppMessageAutomationPreparer(
         data: InAppMessage,
         preparedScheduleInfo: PreparedScheduleInfo
     ): Result<PreparedInAppMessageData> {
-        val assets = prepareAssets(data, preparedScheduleInfo.scheduleID).getOrElse {
+        val assets = prepareAssets(data, preparedScheduleInfo.scheduleId).getOrElse {
             return Result.failure(it)
         }
 
-        UALog.v { "Making display coordinator ${preparedScheduleInfo.scheduleID}" }
+        UALog.v { "Making display coordinator ${preparedScheduleInfo.scheduleId}" }
         val coordinator = displayCoordinatorManager.displayCoordinator(data)
 
         val adapter = displayAdapterFactory.makeAdapter(data, assets).getOrElse {

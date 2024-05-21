@@ -3,6 +3,7 @@ package com.urbanairship.automation
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.isInAppMessage
 import com.urbanairship.automation.engine.AutomationScheduleState
+import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
@@ -71,7 +72,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
      */
     public val bypassHoldoutGroups: Boolean? = null,
     /**
-     * The edit grace period in ms.
+     * The edit grace period in days.
      */
     public val editGracePeriodDays: ULong? = null,
 
@@ -80,7 +81,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     internal val messageType: String? = null,
     internal val campaigns: JsonValue? = null,
     internal val reportingContext: JsonValue? = null,
-    internal val productID: String? = null,
+    internal val productId: String? = null,
     internal val minSDKVersion: String? = null,
     internal val created: ULong = System.currentTimeMillis().toULong(),
     internal val queue: String? = null
@@ -93,7 +94,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         return AutomationSchedule(identifier, triggers, group ?: this.group, priority, limit,
             startDate, endDate ?: this.endDate, audience, delay, interval, data,
             bypassHoldoutGroups, editGracePeriodDays, metadata ?: this.metadata,
-            frequencyConstraintIds, messageType, campaigns, reportingContext, productID,
+            frequencyConstraintIds, messageType, campaigns, reportingContext, productId,
             minSDKVersion, created, queue)
     }
 
@@ -205,7 +206,9 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
 
             return AutomationSchedule(
                 identifier = content.requireField(IDENTIFIER),
-                triggers = content.require(TRIGGERS).requireList().map(AutomationTrigger.Companion::fromJson),
+                triggers = content.require(TRIGGERS).requireList().map {
+                    AutomationTrigger.fromJson(it, TriggerExecutionType.EXECUTION)
+                },
                 group = content.optionalField(GROUP),
                 metadata = content.get(METADATA),
                 priority = content.optionalField(PRIORITY),
@@ -217,7 +220,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 interval = content.optionalField(INTERVAL),
                 campaigns = content.get(CAMPAIGNS),
                 reportingContext = content.get(REPORTING_CONTEXT),
-                productID = content.get(PRODUCT_ID)?.requireString(),
+                productId = content.get(PRODUCT_ID)?.requireString(),
                 bypassHoldoutGroups = content.optionalField(BYPASS_HOLDOUT_GROUPS),
                 editGracePeriodDays = content.optionalField(EDIT_GRACE_PERIOD_DAYS),
                 frequencyConstraintIds = content.get(FREQUENCY_CONSTRAINT_IDS)?.requireList()?.map { it.requireString() },
@@ -246,11 +249,12 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(INTERVAL, interval?.toLong())
         .putOpt(CAMPAIGNS, campaigns)
         .putOpt(METADATA, metadata)
-        .putOpt(PRODUCT_ID, productID)
+        .putOpt(PRODUCT_ID, productId)
         .putOpt(BYPASS_HOLDOUT_GROUPS, bypassHoldoutGroups)
         .putOpt(EDIT_GRACE_PERIOD_DAYS, editGracePeriodDays?.toLong())
         .putOpt(FREQUENCY_CONSTRAINT_IDS, frequencyConstraintIds)
         .putOpt(MESSAGE_TYPE, messageType)
+        .putOpt(REPORTING_CONTEXT, reportingContext)
         .putOpt(MIN_SDK_VERSION, minSDKVersion)
         .putOpt(QUEUE, queue)
         .put(CREATED, created.toLong().let(DateUtils::createIso8601TimeStamp))
@@ -281,7 +285,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         if (messageType != other.messageType) return false
         if (campaigns != other.campaigns) return false
         if (reportingContext != other.reportingContext) return false
-        if (productID != other.productID) return false
+        if (productId != other.productId) return false
         if (minSDKVersion != other.minSDKVersion) return false
         if (created != other.created) return false
         if (queue != other.queue) return false
@@ -292,7 +296,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     override fun hashCode(): Int {
         return Objects.hash(identifier, triggers, group, priority, limit, startDate, audience, delay,
             interval, data, bypassHoldoutGroups, editGracePeriodDays, frequencyConstraintIds, messageType,
-            campaigns, reportingContext, productID, minSDKVersion, created, queue, metadata, endDate)
+            campaigns, reportingContext, productId, minSDKVersion, created, queue, metadata, endDate)
     }
 }
 

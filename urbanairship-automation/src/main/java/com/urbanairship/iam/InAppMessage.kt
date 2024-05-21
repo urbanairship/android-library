@@ -18,7 +18,7 @@ import java.util.Objects
 public class InAppMessage internal constructor(
     public val name: String,
     public val displayContent: InAppMessageDisplayContent,
-    internal var source: InAppMessageSource?,
+    internal var source: Source?,
     public val extras: JsonMap? = null,
     public val actions: JsonMap? = null,
     public val isReportingEnabled: Boolean? = null,
@@ -52,7 +52,7 @@ public class InAppMessage internal constructor(
         override fun toJsonValue(): JsonValue = JsonValue.wrap(json)
     }
 
-    internal enum class InAppMessageSource(val json: String) : JsonSerializable {
+    internal enum class Source(val json: String) : JsonSerializable {
         /**
          * In-app message from the remote-data service.
          */
@@ -71,7 +71,7 @@ public class InAppMessage internal constructor(
         companion object {
 
             @Throws(JsonException::class)
-            fun fromJson(value: JsonValue): InAppMessageSource {
+            fun fromJson(value: JsonValue): Source {
                 val content = value.requireString()
                 return entries.firstOrNull { it.json == content }
                     ?: throw JsonException("Invalid message source value $content")
@@ -87,7 +87,7 @@ public class InAppMessage internal constructor(
             : this(
         name = name,
         displayContent = displayContent,
-        source = InAppMessageSource.APP_DEFINED,
+        source = Source.APP_DEFINED,
         extras = extras,
         actions = actions,
         isReportingEnabled = isReportingEnabled,
@@ -136,10 +136,10 @@ public class InAppMessage internal constructor(
                 displayContent = InAppMessageDisplayContent.fromJson(content.require(
                     DISPLAY_CONTENT_KEY
                 ), type),
-                source = content.get(SOURCE_KEY)?.let(InAppMessageSource.Companion::fromJson),
+                source = content.get(SOURCE_KEY)?.let(Source::fromJson),
                 extras = content.optionalField(EXTRA_KEY),
                 actions = content.optionalField(ACTIONS_KEY),
-                displayBehavior = content.get(DISPLAY_BEHAVIOR_KEY)?.let(DisplayBehavior.Companion::fromJson),
+                displayBehavior = content.get(DISPLAY_BEHAVIOR_KEY)?.let(DisplayBehavior::fromJson),
                 isReportingEnabled = content.optionalField(REPORTING_ENABLED_KEY),
                 renderedLocale = renderLocale,
             )

@@ -44,7 +44,7 @@ public class InAppEventRecorderTest {
                 experimentReportingData = experimentResults.allEvaluatedExperimentsMetadata
             ),
             source = InAppEventSource.AIRSHIP,
-            messageID = InAppEventMessageID.AirshipID(scheduleID, campaigns),
+            messageId = InAppEventMessageId.AirshipId(scheduleID, campaigns),
             renderedLocale = renderLocales
         )
 
@@ -100,7 +100,7 @@ public class InAppEventRecorderTest {
                 experimentReportingData = experimentResults.allEvaluatedExperimentsMetadata
             ),
             source = InAppEventSource.AIRSHIP,
-            messageID = InAppEventMessageID.AirshipID(scheduleID, campaigns),
+            messageId = InAppEventMessageId.AirshipId(scheduleID, campaigns),
             renderedLocale = renderLocales
         )
 
@@ -151,7 +151,7 @@ public class InAppEventRecorderTest {
                 experimentReportingData = experimentResults.allEvaluatedExperimentsMetadata
             ),
             source = InAppEventSource.AIRSHIP,
-            messageID = InAppEventMessageID.AirshipID(scheduleID, campaigns),
+            messageId = InAppEventMessageId.AirshipId(scheduleID, campaigns),
             renderedLocale = renderLocales
         )
 

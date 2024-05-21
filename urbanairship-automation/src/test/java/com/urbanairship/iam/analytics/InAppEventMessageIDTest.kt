@@ -9,20 +9,20 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class InAppEventMessageIDTest {
+public class InAppEventMessageIdTest {
     private val scheduleID = UUID.randomUUID().toString()
     private val campaigns = jsonMapOf("campaign1" to "data1", "campaign2" to "data2").toJsonValue()
 
     @Test
     public fun testLegacy() {
-        val messageID = InAppEventMessageID.Legacy(scheduleID)
+        val messageID = InAppEventMessageId.Legacy(scheduleID)
         val json = """ "$scheduleID" """.trimIndent()
         assertEquals(JsonValue.parseString(json), messageID.toJsonValue())
     }
 
     @Test
     public fun testAppDefined() {
-        val messageID = InAppEventMessageID.AppDefined(scheduleID)
+        val messageID = InAppEventMessageId.AppDefined(scheduleID)
         val json = """
             {
               "message_id": "$scheduleID"
@@ -33,7 +33,7 @@ public class InAppEventMessageIDTest {
 
     @Test
     public fun testAirship() {
-        val messageID = InAppEventMessageID.AirshipID(scheduleID, campaigns)
+        val messageID = InAppEventMessageId.AirshipId(scheduleID, campaigns)
         val json = """
             {
               "message_id":"$scheduleID",
@@ -46,7 +46,7 @@ public class InAppEventMessageIDTest {
 
     @Test
     public fun testAirshipNoCampaigns() {
-        val messageID = InAppEventMessageID.AirshipID(scheduleID, campaigns = null)
+        val messageID = InAppEventMessageId.AirshipId(scheduleID, campaigns = null)
         val json = """
             {
               "message_id":"$scheduleID"

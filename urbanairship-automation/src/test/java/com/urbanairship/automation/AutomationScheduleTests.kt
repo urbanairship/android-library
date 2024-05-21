@@ -208,7 +208,7 @@ public class AutomationScheduleTests {
             displayContent = InAppMessageDisplayContent.CustomContent(
                 Custom(jsonMapOf("cool" to "story").toJsonValue())
             ),
-            source = InAppMessage.InAppMessageSource.APP_DEFINED
+            source =  InAppMessage.Source.APP_DEFINED
         )
 
         val expected = AutomationSchedule(

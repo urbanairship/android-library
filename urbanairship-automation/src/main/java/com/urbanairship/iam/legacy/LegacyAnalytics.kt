@@ -1,7 +1,7 @@
 package com.urbanairship.iam.legacy
 
 import com.urbanairship.iam.analytics.InAppEventData
-import com.urbanairship.iam.analytics.InAppEventMessageID
+import com.urbanairship.iam.analytics.InAppEventMessageId
 import com.urbanairship.iam.analytics.InAppEventRecorderInterface
 import com.urbanairship.iam.analytics.InAppEventSource
 import com.urbanairship.iam.analytics.events.InAppEvent
@@ -14,7 +14,7 @@ internal class LegacyAnalytics(private val eventRecorder: InAppEventRecorderInte
             InAppEventData(
                 event = LegacyResolutionEvent.replaced(replacementID),
                 context = null,
-                messageID = InAppEventMessageID.Legacy(scheduleID),
+                messageId = InAppEventMessageId.Legacy(scheduleID),
                 source = InAppEventSource.AIRSHIP,
                 renderedLocale = null
             )
@@ -26,7 +26,7 @@ internal class LegacyAnalytics(private val eventRecorder: InAppEventRecorderInte
             InAppEventData(
                 event = LegacyResolutionEvent.directOpen(),
                 context = null,
-                messageID = InAppEventMessageID.Legacy(scheduleID),
+                messageId = InAppEventMessageId.Legacy(scheduleID),
                 source = InAppEventSource.AIRSHIP,
                 renderedLocale = null
             )

@@ -32,6 +32,8 @@ import com.urbanairship.util.SerialQueue
 import java.io.File
 import org.jetbrains.annotations.VisibleForTesting
 
+internal interface AutomationStoreInterface: ScheduleStoreInterface, TriggerStoreInterface {}
+
 internal interface ScheduleStoreInterface {
     suspend fun getSchedules(): List<AutomationScheduleData>
     suspend fun updateSchedule(
@@ -61,8 +63,7 @@ internal interface TriggerStoreInterface {
     suspend fun deleteTriggers(scheduleID: String, triggerIDs: Set<String>)
 }
 
-internal class SerialAccessAutomationStore(private val store: AutomationStore): ScheduleStoreInterface,
-    TriggerStoreInterface {
+internal class SerialAccessAutomationStore(private val store: AutomationStoreInterface): AutomationStoreInterface {
 
     private val queue = SerialQueue()
     override suspend fun getSchedules(): List<AutomationScheduleData> = queue.run { store.getSchedules() }
@@ -98,8 +99,7 @@ internal class SerialAccessAutomationStore(private val store: AutomationStore): 
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Database(entities = [ScheduleEntity::class, TriggerEntity::class], version = 1)
-public abstract class AutomationStore : RoomDatabase(), ScheduleStoreInterface,
-    TriggerStoreInterface {
+internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterface {
     internal abstract val dao: AutomationDao
 
     internal companion object {

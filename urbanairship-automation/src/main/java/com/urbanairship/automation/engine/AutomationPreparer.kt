@@ -101,7 +101,7 @@ internal class AutomationPreparer internal constructor(
                 val match = it.audienceSelector.evaluate(
                     newEvaluationDate = schedule.created.toLong(),
                     infoProvider = deviceInfoProvider,
-                    contactId = remoteDataAccess.contactIDFor(schedule)
+                    contactId = remoteDataAccess.contactIdFor(schedule)
                 )
 
                 if (!match) {
@@ -120,10 +120,10 @@ internal class AutomationPreparer internal constructor(
             }
 
             val scheduleInfo = PreparedScheduleInfo(
-                scheduleID = schedule.identifier,
-                productID = schedule.productID,
+                scheduleId = schedule.identifier,
+                productId = schedule.productId,
                 campaigns = schedule.campaigns,
-                contactID = deviceInfoProvider.getStableContactId(),
+                contactId = deviceInfoProvider.getStableContactId(),
                 experimentResult = experimentResult,
                 reportingContext = schedule.reportingContext
             )
@@ -252,7 +252,7 @@ internal class AutomationPreparer internal constructor(
 
         val request = DeferredRequest(
             uri = deferred.url,
-            channelID = deviceInfoProvider.getChannelId(),
+            channelId = deviceInfoProvider.getChannelId(),
             triggerContext = triggerContext,
             locale = deviceInfoProvider.locale,
             notificationOptIn = deviceInfoProvider.isNotificationsOptedIn,

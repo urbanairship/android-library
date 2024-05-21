@@ -10,8 +10,6 @@ import com.urbanairship.automation.isNewSchedule
 import com.urbanairship.automation.limits.FrequencyConstraint
 import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.remotedata.RemoteDataSource
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -30,29 +28,34 @@ internal class AutomationRemoteDataSubscriber (
 
     private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
     private val sourceInfoStore = AutomationSourceInfoStore(dataStore)
-    private var processJob: Job? = null
-    private var lock = ReentrantLock()
+    private val subscriptionState = MutableStateFlow(false)
 
-    fun subscribe() {
-        lock.withLock {
-            if (processJob != null) return@withLock
-
-            processJob = scope.launch {
-                remoteDataAccess.updatesFlow.collect { payloads ->
-                    if (!processConstraints(payloads)) {
-                        return@collect
+    init {
+        scope.launch {
+            var subscription: Job? = null
+            subscriptionState.collect {
+                if (it) {
+                    subscription = scope.launch {
+                        remoteDataAccess.updatesFlow.collect { payloads ->
+                            if (!processConstraints(payloads)) {
+                                return@collect
+                            }
+                            processAutomations(payloads)
+                        }
                     }
-                    processAutomations(payloads)
+                } else {
+                    subscription?.cancel()
                 }
             }
         }
     }
 
+    fun subscribe() {
+        subscriptionState.compareAndSet(expect = false, update = true)
+    }
+
     fun unsubscribe() {
-        lock.withLock {
-            processJob?.cancel()
-            processJob = null
-        }
+        subscriptionState.compareAndSet(expect = true, update = false)
     }
 
     private suspend fun processAutomations(data: InAppRemoteData) {

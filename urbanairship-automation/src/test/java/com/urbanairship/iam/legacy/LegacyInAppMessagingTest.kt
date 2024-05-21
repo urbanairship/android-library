@@ -126,7 +126,7 @@ public class LegacyInAppMessagingTest {
                     )
                 )
             ),
-            source = InAppMessage.InAppMessageSource.LEGACY_PUSH,
+            source =  InAppMessage.Source.LEGACY_PUSH,
             extras = message.extras,
         )
 
@@ -162,7 +162,7 @@ public class LegacyInAppMessagingTest {
                     buttonLayoutType = InAppMessageButtonLayoutType.SEPARATE
                 )
             ),
-            source = InAppMessage.InAppMessageSource.LEGACY_PUSH
+            source =  InAppMessage.Source.LEGACY_PUSH
         )
 
         coVerify {
@@ -210,7 +210,7 @@ public class LegacyInAppMessagingTest {
                     buttonLayoutType = InAppMessageButtonLayoutType.SEPARATE
                 )
             ),
-            source = InAppMessage.InAppMessageSource.LEGACY_PUSH
+            source =  InAppMessage.Source.LEGACY_PUSH
         )
 
         val extended = InAppMessage(
@@ -218,7 +218,7 @@ public class LegacyInAppMessagingTest {
             displayContent =  InAppMessageDisplayContent.CustomContent(
                 Custom(jsonMapOf("cool" to true).toJsonValue())
             ),
-            source = InAppMessage.InAppMessageSource.LEGACY_PUSH
+            source =  InAppMessage.Source.LEGACY_PUSH
         )
 
         messaging.messageExtender = {

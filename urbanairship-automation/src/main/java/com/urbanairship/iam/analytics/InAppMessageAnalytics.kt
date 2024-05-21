@@ -30,7 +30,7 @@ internal sealed class LoggingInAppMessageAnalytics: InAppMessageAnalyticsInterfa
 }
 
 internal class InAppMessageAnalytics private constructor(
-    private val messageID: InAppEventMessageID,
+    private val messageId: InAppEventMessageId,
     private val source: InAppEventSource,
     private val renderedLocale: JsonValue?,
     private val reportingMetadata: JsonValue?,
@@ -38,14 +38,14 @@ internal class InAppMessageAnalytics private constructor(
     private val eventRecorder: InAppEventRecorderInterface,
     private val impressionRecorder: AirshipMeteredUsage,
     private val isReportingEnabled: Boolean,
-    private val productID: String?,
-    private val contactID: String?,
+    private val productId: String?,
+    private val contactId: String?,
     private val clock: Clock
 ): InAppMessageAnalyticsInterface {
 
-    constructor(scheduleID: String,
-                productID: String?,
-                contactID: String?,
+    constructor(scheduleId: String,
+                productId: String?,
+                contactId: String?,
                 message: InAppMessage,
                 campaigns: JsonValue?,
                 reportingMetadata: JsonValue?,
@@ -54,10 +54,10 @@ internal class InAppMessageAnalytics private constructor(
                 impressionRecorder: AirshipMeteredUsage,
                 clock: Clock = Clock.DEFAULT_CLOCK) :
             this(
-                messageID = makeMessageID(message, scheduleID, campaigns),
+                messageId = makeMessageID(message, scheduleId, campaigns),
                 source = makeEventSource(message),
-                productID = productID,
-                contactID = contactID,
+                productId = productId,
+                contactId = contactId,
                 renderedLocale = message.renderedLocale,
                 reportingMetadata = reportingMetadata,
                 experimentResult = experimentResult,
@@ -68,22 +68,22 @@ internal class InAppMessageAnalytics private constructor(
             )
 
     private companion object {
-        fun makeMessageID(message: InAppMessage, scheduleID: String, campaigns: JsonValue?): InAppEventMessageID {
-            return when(message.source ?: InAppMessage.InAppMessageSource.REMOTE_DATA) {
-                InAppMessage.InAppMessageSource.REMOTE_DATA -> InAppEventMessageID.AirshipID(
+        fun makeMessageID(message: InAppMessage, scheduleID: String, campaigns: JsonValue?): InAppEventMessageId {
+            return when(message.source ?:  InAppMessage.Source.REMOTE_DATA) {
+                 InAppMessage.Source.REMOTE_DATA -> InAppEventMessageId.AirshipId(
                     scheduleID,
                     campaigns
                 )
-                InAppMessage.InAppMessageSource.APP_DEFINED -> InAppEventMessageID.AppDefined(
+                 InAppMessage.Source.APP_DEFINED -> InAppEventMessageId.AppDefined(
                     scheduleID
                 )
-                InAppMessage.InAppMessageSource.LEGACY_PUSH -> InAppEventMessageID.Legacy(scheduleID)
+                 InAppMessage.Source.LEGACY_PUSH -> InAppEventMessageId.Legacy(scheduleID)
             }
         }
 
         fun makeEventSource(message: InAppMessage): InAppEventSource {
-             return when(message.source ?: InAppMessage.InAppMessageSource.REMOTE_DATA) {
-                InAppMessage.InAppMessageSource.APP_DEFINED -> InAppEventSource.APP_DEFINED
+             return when(message.source ?:  InAppMessage.Source.REMOTE_DATA) {
+                 InAppMessage.Source.APP_DEFINED -> InAppEventSource.APP_DEFINED
                 else -> InAppEventSource.AIRSHIP
             }
         }
@@ -102,7 +102,7 @@ internal class InAppMessageAnalytics private constructor(
                 layoutContext = layoutContext
             ),
             source = source,
-            messageID = messageID,
+            messageId = messageId,
             renderedLocale = renderedLocale
         )
 
@@ -110,16 +110,16 @@ internal class InAppMessageAnalytics private constructor(
     }
 
     override suspend fun recordImpression() {
-        val productID = productID ?: return
+        val productId = productId ?: return
 
         val impression = MeteredUsageEventEntity(
             eventId = UUID.randomUUID().toString(),
-            entityId = messageID.identifier,
+            entityId = messageId.identifier,
             type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
-            product = productID,
+            product = productId,
             reportingContext = reportingMetadata,
             timestamp = clock.currentTimeMillis(),
-            contactId = contactID
+            contactId = contactId
         )
 
         impressionRecorder.addEvent(impression)

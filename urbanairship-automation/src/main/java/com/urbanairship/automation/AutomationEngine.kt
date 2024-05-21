@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
+import com.urbanairship.UAirship
 import com.urbanairship.automation.engine.AutomationDelayProcessorInterface
 import com.urbanairship.automation.engine.AutomationPreparer
 import com.urbanairship.automation.engine.AutomationScheduleState
@@ -12,8 +13,10 @@ import com.urbanairship.automation.engine.SchedulePrepareResult
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
+import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.automation.utils.TaskSleeper
+import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.util.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
@@ -59,6 +62,7 @@ internal class AutomationEngine(
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val sleeper: TaskSleeper = TaskSleeper.default,
     private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
+    private val automationStoreMigrator: AutomationStoreMigrator
 ) : AutomationEngineInterface {
 
     private companion object {
@@ -102,6 +106,7 @@ internal class AutomationEngine(
         restoreState.value = ScheduleRestoreState.IN_PROGRESS
 
         scope.launch {
+            automationStoreMigrator.migrateData()
             restoreSchedules()
             restoreState.value = ScheduleRestoreState.RESTORED
 
@@ -431,17 +436,17 @@ internal class AutomationEngine(
                     }
                 }
 
-                UALog.v { "Executing schedule ${preparedSchedule.info.scheduleID}" }
+                UALog.v { "Executing schedule ${preparedSchedule.info.scheduleId}" }
 
                 val updateStateJob = async(dispatcher) {
-                    updateState(preparedSchedule.info.scheduleID) { it.executing(clock.currentTimeMillis()) }
+                    updateState(preparedSchedule.info.scheduleId) { it.executing(clock.currentTimeMillis()) }
                 }
 
                 val result = executor.execute(preparedSchedule)
 
                 updateStateJob.join()
 
-                UALog.v { "Executing result ${preparedSchedule.info.scheduleID} $result" }
+                UALog.v { "Executing result ${preparedSchedule.info.scheduleId} $result" }
 
                 when(result) {
                     ScheduleExecuteResult.CANCEL -> {

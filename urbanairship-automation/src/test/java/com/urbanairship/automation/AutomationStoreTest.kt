@@ -79,10 +79,10 @@ public class AutomationStoreTest {
         )
 
         val preparedInfo = PreparedScheduleInfo(
-            scheduleID = "full",
-            productID = "some product",
+            scheduleId = "full",
+            productId = "some product",
             campaigns = JsonValue.wrap("campaigns"),
-            contactID = "some contact",
+            contactId = "some contact",
             experimentResult = ExperimentResult(
                 channelId = "some channel",
                 contactId = "some contact",
@@ -127,10 +127,10 @@ public class AutomationStoreTest {
 
         schedule.setPreparedScheduleInfo(
             PreparedScheduleInfo(
-                scheduleID = "full",
-                productID = "some product",
+                scheduleId = "full",
+                productId = "some product",
                 campaigns = JsonValue.wrap("campaigns"),
-                contactID = "some contact",
+                contactId = "some contact",
                 experimentResult = ExperimentResult(
                     channelId = "some channel",
                     contactId = "some contact",

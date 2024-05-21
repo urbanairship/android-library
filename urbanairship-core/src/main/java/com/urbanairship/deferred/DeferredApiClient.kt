@@ -21,8 +21,8 @@ internal class DeferredApiClient(
 
     suspend fun resolve(
         uri: Uri,
-        channelID: String,
-        contactID: String?,
+        channelId: String,
+        contactId: String?,
         stateOverrides: StateOverrides,
         audienceOverrides: AudienceOverrides.Channel?,
         triggerContext: DeferredTriggerContext?
@@ -30,12 +30,12 @@ internal class DeferredApiClient(
         val request = Request(
             url = uri,
             method = "POST",
-            auth = RequestAuth.ChannelTokenAuth(channelID),
+            auth = RequestAuth.ChannelTokenAuth(channelId),
             headers = mapOf("Accept" to "application/vnd.urbanairship+json; version=3;"),
             body = RequestBody.Json(jsonMapOf(
                 KEY_PLATFORM to PlatformUtils.asString(config.platform),
-                KEY_CHANNEL_ID to channelID,
-                KEY_CONTACT_ID to contactID,
+                KEY_CHANNEL_ID to channelId,
+                KEY_CONTACT_ID to contactId,
                 KEY_STATE_OVERRIDES to stateOverrides,
                 KEY_TRIGGER_CONTEXT to triggerContext,
                 KEY_TAG_OVERRIDES to JsonValue.wrapOpt(audienceOverrides?.tags),

@@ -81,23 +81,16 @@ public sealed class AutomationTrigger(
     public val id: String,
     public val goal: Double,
     public val type: String,
-    internal val shouldBackfill: Boolean
 ) : JsonSerializable {
 
-    internal open fun backfilledIdentifier(executionType: TriggerExecutionType) {}
-
     public class Event(internal val trigger: EventAutomationTrigger) :
-        AutomationTrigger(trigger.id, trigger.goal, trigger.type.value, trigger.allowBackfill) {
+        AutomationTrigger(trigger.id, trigger.goal, trigger.type.value) {
 
         override fun toJsonValue(): JsonValue = trigger.toJsonValue()
-
-        override fun backfilledIdentifier(executionType: TriggerExecutionType) {
-            trigger.backfillIdentifier(executionType)
-        }
     }
 
     public class Compound(internal val trigger: CompoundAutomationTrigger) :
-        AutomationTrigger(trigger.id, trigger.goal, trigger.type.value, false) {
+        AutomationTrigger(trigger.id, trigger.goal, trigger.type.value) {
 
         override fun toJsonValue(): JsonValue = trigger.toJsonValue()
     }
@@ -105,7 +98,8 @@ public sealed class AutomationTrigger(
     internal fun matchEvent(
         event: AutomationEvent,
         data: TriggerData,
-        resetOnTrigger: Boolean): MatchResult? {
+        resetOnTrigger: Boolean
+    ): MatchResult? {
 
         val result = when(this) {
             is Compound -> trigger.matchEvent(event, data)
@@ -130,25 +124,30 @@ public sealed class AutomationTrigger(
         }
     }
 
+
     internal companion object {
         private const val KEY_TYPE = "type"
 
         @Throws(JsonException::class)
-        fun fromJson(value: JsonValue): AutomationTrigger {
+        fun fromJson(
+            value: JsonValue,
+            executionType: TriggerExecutionType
+        ): AutomationTrigger {
+
             val type = CompoundAutomationTriggerType.fromJson(value.requireMap().require(KEY_TYPE))
 
             return if (type != null) {
-                Compound(CompoundAutomationTrigger.fromJson(value))
+                Compound(CompoundAutomationTrigger.fromJson(value, executionType))
             } else {
-                Event(EventAutomationTrigger.fromJson(value))
+                Event(EventAutomationTrigger.fromJson(value, executionType))
             }
         }
 
         fun activeSession(count: UInt): AutomationTrigger {
             return Event(
                 EventAutomationTrigger(
-                type = EventAutomationTriggerType.ACTIVE_SESSION,
-                goal = count.toDouble()
+                    type = EventAutomationTriggerType.ACTIVE_SESSION,
+                    goal = count.toDouble()
                 )
             )
         }
@@ -161,6 +160,20 @@ public sealed class AutomationTrigger(
                 )
             )
         }
+
+        internal fun generateStableId(type: String, goal: Double, predicate: JsonPredicate? = null, executionType: TriggerExecutionType): String {
+            val components = mutableListOf(type, goal.toString(), executionType.value)
+            predicate?.let {
+                components.add(it.toJsonValue().toString(true))
+            }
+
+            return UAStringUtil.sha256(components.joinToString(":"))
+                ?: throw RuntimeException("failed to generate sha256 hash")
+        }
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(id, goal, type)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -172,37 +185,28 @@ public sealed class AutomationTrigger(
         if (id != other.id) return false
         if (goal != other.goal) return false
         if (type != other.type) return false
-        return shouldBackfill == other.shouldBackfill
-    }
 
-    override fun hashCode(): Int {
-        return Objects.hash(id, goal, type, shouldBackfill)
+        return true
     }
 }
 
 public class EventAutomationTrigger internal constructor(
+    public val id: String,
     public val type: EventAutomationTriggerType,
     public var goal: Double,
-    public val predicate: JsonPredicate?,
-    public var id: String,
-    allowBackfill: Boolean = false
+    public val predicate: JsonPredicate?
 ) : JsonSerializable {
-
-    internal var allowBackfill: Boolean = allowBackfill
 
     public constructor(
         type: EventAutomationTriggerType,
         goal: Double,
         predicate: JsonPredicate? = null
     ) : this (
+        id = UUID.randomUUID().toString(),
         type = type,
         goal = goal,
         predicate = predicate,
-        id = UUID.randomUUID().toString(),
-        // Programatically generated triggers should not allow backfilling the ID
-        // even though we generated an ID. These triggers are not created from
-        // remote-data so we just need to ensure they are unique.
-        allowBackfill = false)
+    )
 
     internal companion object {
         private const val KEY_ID = "id"
@@ -211,19 +215,22 @@ public class EventAutomationTrigger internal constructor(
         private const val KEY_PREDICATE = "predicate"
 
         @Throws(JsonException::class)
-        fun fromJson(value: JsonValue): EventAutomationTrigger {
+        fun fromJson(
+            value: JsonValue,
+            executionType: TriggerExecutionType
+        ): EventAutomationTrigger {
             val json = value.requireMap()
             val type = EventAutomationTriggerType.from(json.requireField(KEY_TYPE))
                 ?: throw JsonException("invalid compound trigger type $json")
 
-            val id: String? = json.optionalField(KEY_ID)
+            val goal = json.requireField<Double>(KEY_GOAL)
+            val predicate =  json.get(KEY_PREDICATE)?.let(JsonPredicate::parse)
 
             return EventAutomationTrigger(
+                id = json.optionalField(KEY_ID) ?: AutomationTrigger.generateStableId(type.value, goal, predicate, executionType),
                 type = type,
-                goal = json.requireField(KEY_GOAL),
-                predicate = json.get(KEY_PREDICATE)?.let(JsonPredicate::parse),
-                id = id ?: UUID.randomUUID().toString(),
-                allowBackfill = id == null
+                goal = goal,
+                predicate = predicate
             )
         }
     }
@@ -372,19 +379,6 @@ public class EventAutomationTrigger internal constructor(
         KEY_GOAL to goal,
         KEY_PREDICATE to predicate
     ).toJsonValue()
-
-    internal fun backfillIdentifier(executionType: TriggerExecutionType) {
-        if (!allowBackfill) { return }
-
-        val components = mutableListOf(type.value, goal.toString(), executionType.value)
-        if (predicate != null) {
-            components.add(predicate.toJsonValue().toString(true))
-        }
-
-        id = UAStringUtil.sha256(components.joinToString(":"))
-            ?: throw RuntimeException("failed to generate sha256 hash")
-        allowBackfill = false
-    }
 }
 
 public class CompoundAutomationTrigger internal constructor(
@@ -404,10 +398,13 @@ public class CompoundAutomationTrigger internal constructor(
             private const val KEY_RESET_ON_INCREMENT = "reset_on_increment"
 
             @Throws(JsonException::class)
-            fun fromJson(value: JsonValue): Child {
+            fun fromJson(
+                value: JsonValue,
+                executionType: TriggerExecutionType
+            ): Child {
                 val json = value.requireMap()
                 return Child(
-                    trigger = AutomationTrigger.fromJson(json.require(KEY_TRIGGER)),
+                    trigger = AutomationTrigger.fromJson(json.require(KEY_TRIGGER), executionType),
                     isSticky = json.optionalField(KEY_IS_STICKY),
                     resetOnIncrement = json.optionalField(KEY_RESET_ON_INCREMENT)
                 )
@@ -511,17 +508,23 @@ public class CompoundAutomationTrigger internal constructor(
         private const val KEY_CHILDREN = "children"
 
         @Throws(JsonException::class)
-        fun fromJson(value: JsonValue): CompoundAutomationTrigger {
+        fun fromJson(
+            value: JsonValue,
+            executionType: TriggerExecutionType
+        ): CompoundAutomationTrigger {
             val json = value.requireMap()
 
             val type = CompoundAutomationTriggerType.fromJson(json.require(KEY_TYPE))
                 ?: throw JsonException("invalid compound trigger type $json")
 
+            val goal = json.requireField<Double>(KEY_GOAL)
+
+
             return CompoundAutomationTrigger(
-                id = json.requireField(KEY_ID),
+                id = json.optionalField(KEY_ID) ?: AutomationTrigger.generateStableId(type.value, goal, null, executionType),
                 type = type,
-                goal = json.requireField(KEY_GOAL),
-                children = json.require(KEY_CHILDREN).requireList().map(Child.Companion::fromJson)
+                goal = goal,
+                children = json.require(KEY_CHILDREN).requireList().map { Child.fromJson(it, executionType) }
             )
         }
     }

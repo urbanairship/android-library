@@ -132,7 +132,7 @@ public class InAppMessageTest {
                     placement = Banner.Placement.TOP
                 )
             ),
-            source = InAppMessage.InAppMessageSource.REMOTE_DATA,
+            source =  InAppMessage.Source.REMOTE_DATA,
         )
 
         verify(json, expected)
@@ -243,7 +243,7 @@ public class InAppMessageTest {
                     allowFullscreenDisplay = true
                 )
             ),
-            source = InAppMessage.InAppMessageSource.APP_DEFINED
+            source =  InAppMessage.Source.APP_DEFINED
         )
 
         verify(json, expected)
@@ -352,7 +352,7 @@ public class InAppMessageTest {
                     footer = null
                 )
             ),
-            source = InAppMessage.InAppMessageSource.APP_DEFINED
+            source =  InAppMessage.Source.APP_DEFINED
         )
 
         verify(json, expected)
@@ -409,7 +409,7 @@ public class InAppMessageTest {
             displayContent = InAppMessageDisplayContent.CustomContent(
                 Custom(jsonMapOf("cool" to "story").toJsonValue())
             ),
-            source = InAppMessage.InAppMessageSource.APP_DEFINED
+            source =  InAppMessage.Source.APP_DEFINED
         )
 
         verify(json, expected)
@@ -454,7 +454,7 @@ public class InAppMessageTest {
             displayContent = InAppMessageDisplayContent.AirshipLayoutContent(
                 expectedLayout
             ),
-            source = InAppMessage.InAppMessageSource.REMOTE_DATA
+            source =  InAppMessage.Source.REMOTE_DATA
         )
 
         verify(json, expected)

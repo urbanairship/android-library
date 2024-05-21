@@ -63,7 +63,7 @@ internal class AutomationDelayProcessor(
 
             if (!isRegionMatch(delay)) {
                 analytics.regionState.filter {
-                    it.contains(delay.regionID)
+                    it.contains(delay.regionId)
                 }.first()
             }
         }
@@ -85,8 +85,8 @@ internal class AutomationDelayProcessor(
     }
 
     private fun isRegionMatch(delay: AutomationDelay): Boolean {
-        if (delay.regionID.isNullOrEmpty()) { return true }
-        return analytics.regionState.value.contains(delay.regionID)
+        if (delay.regionId.isNullOrEmpty()) { return true }
+        return analytics.regionState.value.contains(delay.regionId)
     }
 
     private fun remainingSeconds(delay: AutomationDelay, triggerDate: Long): Long {

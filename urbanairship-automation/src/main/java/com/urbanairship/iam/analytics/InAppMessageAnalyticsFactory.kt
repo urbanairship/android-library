@@ -20,9 +20,9 @@ internal class InAppMessageAnalyticsFactory(
         experimentResult: ExperimentResult?
     ) : InAppMessageAnalyticsInterface {
         return InAppMessageAnalytics(
-            scheduleID = scheduleID,
-            productID = productID,
-            contactID = contactID,
+            scheduleId = scheduleID,
+            productId = productID,
+            contactId = contactID,
             message = message,
             campaigns = campaigns,
             reportingMetadata = reportingContext,
@@ -37,9 +37,9 @@ internal class InAppMessageAnalyticsFactory(
         preparedScheduleInfo: PreparedScheduleInfo
     ) : InAppMessageAnalyticsInterface {
         return InAppMessageAnalytics(
-            scheduleID = preparedScheduleInfo.scheduleID,
-            productID = preparedScheduleInfo.productID,
-            contactID = preparedScheduleInfo.contactID,
+            scheduleId = preparedScheduleInfo.scheduleId,
+            productId = preparedScheduleInfo.productId,
+            contactId = preparedScheduleInfo.contactId,
             message = message,
             campaigns = preparedScheduleInfo.campaigns,
             reportingMetadata = preparedScheduleInfo.reportingContext,

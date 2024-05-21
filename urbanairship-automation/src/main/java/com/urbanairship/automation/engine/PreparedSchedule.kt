@@ -29,10 +29,10 @@ internal sealed class PreparedScheduleData {
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class PreparedScheduleInfo(
-    internal val scheduleID: String,
-    internal val productID: String? = null,
+    internal val scheduleId: String,
+    internal val productId: String? = null,
     internal val campaigns: JsonValue? = null,
-    internal val contactID: String? = null,
+    internal val contactId: String? = null,
     internal val experimentResult: ExperimentResult? = null,
     internal val reportingContext: JsonValue? = null
 ) : JsonSerializable {
@@ -48,10 +48,10 @@ public data class PreparedScheduleInfo(
         fun fromJson(value: JsonValue): PreparedScheduleInfo {
             val content = value.requireMap()
             return PreparedScheduleInfo(
-                scheduleID = content.requireField(SCHEDULE_ID),
-                productID = content.optionalField(PRODUCT_ID),
+                scheduleId = content.requireField(SCHEDULE_ID),
+                productId = content.optionalField(PRODUCT_ID),
                 campaigns = content.get(CAMPAIGNS),
-                contactID = content.optionalField(CONTACT_ID),
+                contactId = content.optionalField(CONTACT_ID),
                 experimentResult = content.get(EXPERIMENT_RESULT)?.let { ExperimentResult.fromJson(it.requireMap()) },
                 reportingContext = content.get(REPORTING_CONTEXT)
             )
@@ -59,10 +59,10 @@ public data class PreparedScheduleInfo(
     }
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
-        SCHEDULE_ID to scheduleID,
-        PRODUCT_ID to productID,
+        SCHEDULE_ID to scheduleId,
+        PRODUCT_ID to productId,
         CAMPAIGNS to campaigns,
-        CONTACT_ID to contactID,
+        CONTACT_ID to contactId,
         EXPERIMENT_RESULT to experimentResult,
         REPORTING_CONTEXT to reportingContext
     ).toJsonValue()

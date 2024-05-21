@@ -4,7 +4,7 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 
-internal sealed class InAppEventMessageID : JsonSerializable {
+internal sealed class InAppEventMessageId : JsonSerializable {
     companion object {
         private const val MESSAGE_ID = "message_id"
         private const val CAMPAIGNS = "campaigns"
@@ -12,18 +12,18 @@ internal sealed class InAppEventMessageID : JsonSerializable {
 
     abstract val identifier: String
 
-    data class Legacy(override val identifier: String) : InAppEventMessageID() {
+    data class Legacy(override val identifier: String) : InAppEventMessageId() {
         override fun toJsonValue(): JsonValue = JsonValue.wrap(identifier)
     }
 
-    data class AppDefined(override val identifier: String) : InAppEventMessageID() {
+    data class AppDefined(override val identifier: String) : InAppEventMessageId() {
         override fun toJsonValue(): JsonValue = jsonMapOf(MESSAGE_ID to identifier).toJsonValue()
     }
 
-    data class AirshipID(
+    data class AirshipId(
         override val identifier: String,
         val campaigns: JsonValue?
-    ) : InAppEventMessageID() {
+    ) : InAppEventMessageId() {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             MESSAGE_ID to identifier,
