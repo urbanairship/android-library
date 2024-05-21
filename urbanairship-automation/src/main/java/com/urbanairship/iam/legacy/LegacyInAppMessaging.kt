@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.legacy
 
 import android.content.Context
@@ -5,7 +7,7 @@ import android.content.res.Resources
 import android.graphics.Color
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
-import com.urbanairship.automation.AutomationEngineInterface
+import com.urbanairship.automation.engine.AutomationEngineInterface
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.AutomationTrigger
 import com.urbanairship.iam.InAppMessage

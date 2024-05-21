@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.engine
 
 import androidx.annotation.RestrictTo
@@ -19,9 +21,9 @@ import kotlinx.coroutines.yield
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface AutomationDelayProcessorInterface {
-    public suspend fun process(delay: AutomationDelay?, triggerDate: Long)
-    public fun areConditionsMet(delay: AutomationDelay?): Boolean
+internal interface AutomationDelayProcessorInterface {
+    suspend fun process(delay: AutomationDelay?, triggerDate: Long)
+    fun areConditionsMet(delay: AutomationDelay?): Boolean
 }
 
 internal class AutomationDelayProcessor(
@@ -30,7 +32,6 @@ internal class AutomationDelayProcessor(
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val sleeper: TaskSleeper = TaskSleeper.default
 ) : AutomationDelayProcessorInterface {
-
 
     override suspend fun process(delay: AutomationDelay?, triggerDate: Long) = withContext(Dispatchers.Main.immediate) {
         if (delay == null) {

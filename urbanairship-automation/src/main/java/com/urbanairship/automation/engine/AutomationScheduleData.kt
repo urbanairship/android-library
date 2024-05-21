@@ -1,8 +1,8 @@
-package com.urbanairship.automation
+/* Copyright Airship and Contributors */
 
-import com.urbanairship.automation.engine.AutomationScheduleState
-import com.urbanairship.automation.engine.PreparedScheduleInfo
-import com.urbanairship.automation.engine.TriggeringInfo
+package com.urbanairship.automation.engine
+
+import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.deferred.DeferredTriggerContext
 import java.util.Objects
 import java.util.concurrent.TimeUnit

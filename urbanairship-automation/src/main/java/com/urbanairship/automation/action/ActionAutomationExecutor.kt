@@ -1,11 +1,13 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.action
 
 import com.urbanairship.actions.Action
-import com.urbanairship.automation.AutomationExecutorDelegate
+import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.automation.InterruptedBehavior
-import com.urbanairship.automation.ScheduleExecuteResult
-import com.urbanairship.automation.ScheduleReadyResult
+import com.urbanairship.automation.engine.InterruptedBehavior
+import com.urbanairship.automation.engine.ScheduleExecuteResult
+import com.urbanairship.automation.engine.ScheduleReadyResult
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.iam.InAppActionUtils
 import com.urbanairship.json.JsonValue

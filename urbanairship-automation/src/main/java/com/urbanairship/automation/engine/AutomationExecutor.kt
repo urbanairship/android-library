@@ -1,35 +1,27 @@
-package com.urbanairship.automation
+/* Copyright Airship and Contributors */
+
+package com.urbanairship.automation.engine
 
 import androidx.annotation.MainThread
-import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
-import com.urbanairship.automation.engine.PreparedSchedule
-import com.urbanairship.automation.engine.PreparedScheduleData
-import com.urbanairship.automation.engine.PreparedScheduleInfo
+import com.urbanairship.automation.AutomationSchedule
+import com.urbanairship.automation.isInAppMessageType
 import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.json.JsonValue
 
-/** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal enum class ScheduleReadyResult {
     READY, INVALIDATE, NOT_READY, SKIP
 }
 
-/** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal enum class ScheduleExecuteResult {
     CANCEL, FINISHED, RETRY
 }
 
-/** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal enum class InterruptedBehavior {
     RETRY, FINISH
 }
 
-/** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface AutomationExecutorInterface {
     suspend fun isReadyPrecheck(schedule: AutomationSchedule): ScheduleReadyResult
 

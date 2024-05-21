@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.legacy
 
 import com.urbanairship.iam.analytics.InAppEventData

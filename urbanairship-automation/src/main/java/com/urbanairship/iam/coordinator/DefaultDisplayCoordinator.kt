@@ -1,8 +1,10 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.coordinator
 
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.app.ActivityMonitor
-import com.urbanairship.automation.combineStates
+import com.urbanairship.automation.utils.combineStates
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.automation.utils.TaskSleeper
 import kotlin.time.Duration

@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.engine
 
 import androidx.annotation.RestrictTo
@@ -10,7 +12,7 @@ import com.urbanairship.json.requireField
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class TriggeringInfo(
+internal data class TriggeringInfo(
     val context: DeferredTriggerContext?,
     val date: Long
 ) : JsonSerializable {

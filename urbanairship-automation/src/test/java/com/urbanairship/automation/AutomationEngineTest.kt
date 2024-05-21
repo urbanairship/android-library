@@ -3,11 +3,16 @@ package com.urbanairship.automation
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.automation.engine.AutomationDelayProcessor
+import com.urbanairship.automation.engine.AutomationEngine
+import com.urbanairship.automation.engine.AutomationEvent
+import com.urbanairship.automation.engine.AutomationEventFeed
+import com.urbanairship.automation.engine.AutomationExecutor
 import com.urbanairship.automation.engine.AutomationPreparer
+import com.urbanairship.automation.engine.AutomationScheduleData
 import com.urbanairship.automation.engine.AutomationScheduleState
+import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
@@ -19,8 +24,6 @@ import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.automation.utils.TaskSleeper
 import com.urbanairship.json.JsonValue
-import com.urbanairship.remoteconfig.RemoteAirshipConfig
-import com.urbanairship.remoteconfig.RemoteConfig
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder

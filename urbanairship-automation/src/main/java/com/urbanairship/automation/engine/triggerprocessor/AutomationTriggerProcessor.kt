@@ -2,14 +2,13 @@
 
 package com.urbanairship.automation.engine.triggerprocessor
 
-import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
-import com.urbanairship.automation.AutomationEvent
+import com.urbanairship.automation.engine.AutomationEvent
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.automation.AutomationScheduleData
+import com.urbanairship.automation.engine.AutomationScheduleData
 import com.urbanairship.automation.AutomationTrigger
-import com.urbanairship.automation.TriggerStoreInterface
-import com.urbanairship.automation.TriggerableState
+import com.urbanairship.automation.engine.TriggerStoreInterface
+import com.urbanairship.automation.engine.TriggerableState
 import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.util.Clock
@@ -240,8 +239,7 @@ internal class AutomationTriggerProcessor(
     }
 }
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class TriggerResult(
+internal data class TriggerResult(
     val scheduleId: String,
     var triggerExecutionType: TriggerExecutionType,
     var triggerInfo: TriggeringInfo

@@ -5,8 +5,8 @@ import com.urbanairship.automation.AutomationAppState
 import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.AutomationDelay
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.automation.AutomationScheduleData
-import com.urbanairship.automation.AutomationStoreInterface
+import com.urbanairship.automation.engine.AutomationScheduleData
+import com.urbanairship.automation.engine.AutomationStoreInterface
 import com.urbanairship.automation.AutomationTrigger
 import com.urbanairship.automation.EventAutomationTrigger
 import com.urbanairship.automation.EventAutomationTriggerType
@@ -219,8 +219,8 @@ internal class AutomationStoreMigrator(
             }
 
             TriggerData(
-                scheduleID = it.parentScheduleId,
-                triggerID = AutomationTrigger.generateStableId(type.value, it.goal, it.jsonPredicate, executionType),
+                scheduleId = it.parentScheduleId,
+                triggerId = AutomationTrigger.generateStableId(type.value, it.goal, it.jsonPredicate, executionType),
                 triggerCount = it.progress,
                 children = emptyMap(),
                 lastTriggerableState = null

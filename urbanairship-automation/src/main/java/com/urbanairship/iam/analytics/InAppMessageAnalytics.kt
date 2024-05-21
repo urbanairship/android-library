@@ -1,6 +1,7 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.analytics
 
-import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.iam.InAppMessage
@@ -13,20 +14,9 @@ import com.urbanairship.meteredusage.MeteredUsageType
 import com.urbanairship.util.Clock
 import java.util.UUID
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface InAppMessageAnalyticsInterface {
-    public fun recordEvent(event: InAppEvent, layoutContext: LayoutData?)
-    public suspend fun recordImpression()
-}
-
-internal sealed class LoggingInAppMessageAnalytics: InAppMessageAnalyticsInterface {
-    override fun recordEvent(event: InAppEvent, layoutContext: LayoutData?) {
-        UALog.d { "recording event $event with context: $layoutContext" }
-    }
-
-    override suspend fun recordImpression() {
-        UALog.d { "Logging impression" }
-    }
+internal interface InAppMessageAnalyticsInterface {
+    fun recordEvent(event: InAppEvent, layoutContext: LayoutData?)
+    suspend fun recordImpression()
 }
 
 internal class InAppMessageAnalytics private constructor(

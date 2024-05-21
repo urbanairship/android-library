@@ -1,6 +1,10 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation
 
 import com.urbanairship.analytics.AirshipEventFeed
+import com.urbanairship.automation.engine.AutomationEvent
+import com.urbanairship.automation.engine.TriggerableState
 import com.urbanairship.automation.engine.triggerprocessor.MatchResult
 import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
@@ -15,6 +19,9 @@ import com.urbanairship.util.UAStringUtil
 import java.util.Objects
 import java.util.UUID
 
+/**
+ * Event automation trigger types.
+ */
 public enum class EventAutomationTriggerType(internal val value: String) : JsonSerializable {
     /// Foreground
     FOREGROUND("foreground"),
@@ -60,6 +67,9 @@ public enum class EventAutomationTriggerType(internal val value: String) : JsonS
     override fun toJsonValue(): JsonValue = JsonValue.wrap(value)
 }
 
+/**
+ * Compound automation trigger types.
+ */
 public enum class CompoundAutomationTriggerType(internal val value: String) : JsonSerializable {
     OR("or"),
     AND("and"),
@@ -77,18 +87,27 @@ public enum class CompoundAutomationTriggerType(internal val value: String) : Js
     override fun toJsonValue(): JsonValue = JsonValue.wrap(value)
 }
 
+/**
+ * Automation trigger
+ */
 public sealed class AutomationTrigger(
     public val id: String,
     public val goal: Double,
-    public val type: String,
+    public val type: String
 ) : JsonSerializable {
 
+    /**
+     * Event trigger
+     */
     public class Event(internal val trigger: EventAutomationTrigger) :
         AutomationTrigger(trigger.id, trigger.goal, trigger.type.value) {
 
         override fun toJsonValue(): JsonValue = trigger.toJsonValue()
     }
 
+    /**
+     * Compount trigger
+     */
     public class Compound(internal val trigger: CompoundAutomationTrigger) :
         AutomationTrigger(trigger.id, trigger.goal, trigger.type.value) {
 
@@ -190,6 +209,9 @@ public sealed class AutomationTrigger(
     }
 }
 
+/**
+ * Event automation trigger
+ */
 public class EventAutomationTrigger internal constructor(
     public val id: String,
     public val type: EventAutomationTriggerType,

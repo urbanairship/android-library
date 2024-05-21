@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.content
 
 import androidx.annotation.VisibleForTesting
@@ -5,6 +7,9 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 
+/**
+ * Custom In-App content.
+ */
 public class Custom @VisibleForTesting internal constructor(
     public val value: JsonValue
 ) : JsonSerializable {

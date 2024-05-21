@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.adapter
 
 import android.app.Activity
@@ -6,7 +8,7 @@ import androidx.annotation.MainThread
 import com.urbanairship.Predicate
 import com.urbanairship.android.layout.util.UrlInfo
 import com.urbanairship.app.ActivityMonitor
-import com.urbanairship.automation.DerivedStateFlow
+import com.urbanairship.automation.utils.DerivedStateFlow
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.assets.AirshipCachedAssets

@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.adapter
 
 import android.content.Context
@@ -13,7 +15,6 @@ import com.urbanairship.iam.adapter.modal.ModalDisplayDelegate
 import com.urbanairship.automation.utils.NetworkMonitor
 
 private typealias AdapterBuilder = (Context, InAppMessage, AirshipCachedAssets) -> CustomDisplayAdapter?
-
 
 internal class DisplayAdapterFactory(
     private val context: Context,

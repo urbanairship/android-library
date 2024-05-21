@@ -5,7 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestClock
-import com.urbanairship.automation.AutomationEngineInterface
+import com.urbanairship.automation.engine.AutomationEngineInterface
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.AutomationTrigger
 import com.urbanairship.automation.limits.FrequencyConstraint

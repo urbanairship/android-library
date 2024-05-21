@@ -1,3 +1,4 @@
+/* Copyright Airship and Contributors */
 package com.urbanairship.iam
 
 import com.urbanairship.android.layout.util.UrlInfo
@@ -124,10 +125,8 @@ public class InAppMessage internal constructor(
             val type = InAppMessageDisplayContent.DisplayType.fromJson(content.require(
                 DISPLAY_TYPE_KEY
             ))
-            val name: String = content.requireField(NAME_KEY)
-            if (name.length > MAX_NAME_LENGTH) {
-                throw JsonException("Invalid message name. Must be less than or equal to $MAX_NAME_LENGTH characters.")
-            }
+
+            val name: String = content.optionalField<String>(NAME_KEY) ?: ""
 
             val renderLocale = content.get(RENDERED_LOCALE_KEY)
 

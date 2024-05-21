@@ -1,22 +1,19 @@
-package com.urbanairship.automation
+/* Copyright Airship and Contributors */
+
+package com.urbanairship.automation.engine
 
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
-import com.urbanairship.automation.engine.AutomationDelayProcessorInterface
-import com.urbanairship.automation.engine.AutomationPreparer
-import com.urbanairship.automation.engine.AutomationScheduleState
-import com.urbanairship.automation.engine.PreparedSchedule
-import com.urbanairship.automation.engine.SchedulePrepareResult
+import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.storage.AutomationStoreMigrator
+import com.urbanairship.automation.updateOrCreate
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.automation.utils.TaskSleeper
-import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.util.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher

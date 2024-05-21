@@ -1,4 +1,6 @@
-package com.urbanairship.automation
+/* Copyright Airship and Contributors */
+
+package com.urbanairship.automation.utils
 
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow

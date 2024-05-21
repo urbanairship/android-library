@@ -1,4 +1,6 @@
-package com.urbanairship.automation
+/* Copyright Airship and Contributors */
+
+package com.urbanairship.automation.engine
 
 import android.content.Context
 import androidx.annotation.RestrictTo
@@ -18,12 +20,9 @@ import androidx.room.TypeConverters
 import androidx.room.Update
 import androidx.room.Upsert
 import com.urbanairship.UALog
-import com.urbanairship.automation.engine.AutomationScheduleState
-import com.urbanairship.automation.engine.PreparedScheduleInfo
-import com.urbanairship.automation.engine.TriggeringInfo
+import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.config.AirshipRuntimeConfig
-import com.urbanairship.db.SuspendingBatchedQueryHelper
 import com.urbanairship.db.SuspendingBatchedQueryHelper.runBatched
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonTypeConverters
@@ -63,7 +62,8 @@ internal interface TriggerStoreInterface {
     suspend fun deleteTriggers(scheduleID: String, triggerIDs: Set<String>)
 }
 
-internal class SerialAccessAutomationStore(private val store: AutomationStoreInterface): AutomationStoreInterface {
+internal class SerialAccessAutomationStore(private val store: AutomationStoreInterface):
+    AutomationStoreInterface {
 
     private val queue = SerialQueue()
     override suspend fun getSchedules(): List<AutomationScheduleData> = queue.run { store.getSchedules() }
@@ -353,8 +353,8 @@ internal data class TriggerEntity(
 ) {
 
     constructor(triggerData: TriggerData) : this(
-        triggerId = triggerData.triggerID,
-        scheduleId = triggerData.scheduleID,
+        triggerId = triggerData.triggerId,
+        scheduleId = triggerData.scheduleId,
         state = triggerData.toJsonValue()
     )
 

@@ -1,7 +1,8 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.engine.triggerprocessor
 
-import androidx.annotation.RestrictTo
-import com.urbanairship.automation.TriggerableState
+import com.urbanairship.automation.engine.TriggerableState
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -10,19 +11,17 @@ import com.urbanairship.json.requireField
 import java.util.Objects
 import kotlin.jvm.Throws
 
-/** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class TriggerData(
-    public val scheduleID: String,
-    public val triggerID: String,
+internal class TriggerData(
+    internal val scheduleId: String,
+    internal val triggerId: String,
     private var triggerCount: Double = .0,
     children: Map<String, TriggerData> = emptyMap(),
-    public var lastTriggerableState: TriggerableState? = null
+    internal var lastTriggerableState: TriggerableState? = null
 ) : JsonSerializable {
 
     private val mutableChildren: MutableMap<String, TriggerData> = children.toMutableMap()
-    public val children: Map<String, TriggerData> get() { return mutableChildren.toMap() }
-    public val count: Double get() { return triggerCount }
+    val children: Map<String, TriggerData> get() { return mutableChildren.toMap() }
+    val count: Double get() { return triggerCount }
 
     internal fun incrementCount(value: Double) {
         triggerCount += value
@@ -37,13 +36,13 @@ public class TriggerData(
     }
 
     internal fun childDate(triggerID: String): TriggerData {
-        return mutableChildren.getOrPut(triggerID) { TriggerData(scheduleID, triggerID, 0.0) }
+        return mutableChildren.getOrPut(triggerID) { TriggerData(scheduleId, triggerID, 0.0) }
     }
 
     internal fun copy(): TriggerData {
         return TriggerData(
-            scheduleID = scheduleID,
-            triggerID = triggerID,
+            scheduleId = scheduleId,
+            triggerId = triggerId,
             triggerCount = triggerCount,
             children = mutableChildren.mapValues { it.value.copy() }.toMap(),
             lastTriggerableState = lastTriggerableState
@@ -68,8 +67,8 @@ public class TriggerData(
                 .mapValues { fromJson(it.value) }
 
             return TriggerData(
-                scheduleID = content.requireField(SCHEDULE_ID),
-                triggerID = content.requireField(TRIGGER_ID),
+                scheduleId = content.requireField(SCHEDULE_ID),
+                triggerId = content.requireField(TRIGGER_ID),
                 triggerCount = content.requireField(COUNT),
                 children = children,
                 lastTriggerableState = content.get(LAST_TRIGGERABLE_STATE)?.let(TriggerableState::fromJson)
@@ -78,8 +77,8 @@ public class TriggerData(
     }
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
-        SCHEDULE_ID to scheduleID,
-        TRIGGER_ID to triggerID,
+        SCHEDULE_ID to scheduleId,
+        TRIGGER_ID to triggerId,
         COUNT to count,
         CHILDREN to children,
         LAST_TRIGGERABLE_STATE to lastTriggerableState
@@ -91,8 +90,8 @@ public class TriggerData(
 
         other as TriggerData
 
-        if (scheduleID != other.scheduleID) return false
-        if (triggerID != other.triggerID) return false
+        if (scheduleId != other.scheduleId) return false
+        if (triggerId != other.triggerId) return false
         if (lastTriggerableState != other.lastTriggerableState) return false
         if (count != other.count) return false
         if (mutableChildren != other.mutableChildren) return false
@@ -100,6 +99,6 @@ public class TriggerData(
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(scheduleID, triggerID, lastTriggerableState, count, children)
+        return Objects.hash(scheduleId, triggerId, lastTriggerableState, count, children)
     }
 }

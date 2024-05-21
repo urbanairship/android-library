@@ -1,4 +1,5 @@
 /* Copyright Airship and Contributors */
+
 package com.urbanairship.automation
 
 import android.content.Context
@@ -13,7 +14,12 @@ import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.automation.action.ActionAutomationExecutor
 import com.urbanairship.automation.action.ActionAutomationPreparer
 import com.urbanairship.automation.engine.AutomationDelayProcessor
+import com.urbanairship.automation.engine.AutomationEngine
+import com.urbanairship.automation.engine.AutomationEventFeed
+import com.urbanairship.automation.engine.AutomationExecutor
 import com.urbanairship.automation.engine.AutomationPreparer
+import com.urbanairship.automation.engine.AutomationStore
+import com.urbanairship.automation.engine.SerialAccessAutomationStore
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.iam.InAppMessageAutomationExecutor
 import com.urbanairship.iam.InAppMessageAutomationPreparer

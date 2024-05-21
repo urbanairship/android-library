@@ -1,9 +1,12 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UAirship
+import com.urbanairship.automation.engine.AutomationEngine
 import com.urbanairship.iam.InAppMessagingInterface
 import com.urbanairship.iam.legacy.LegacyInAppMessagingInterface
 import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber

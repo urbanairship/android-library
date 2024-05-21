@@ -4,15 +4,11 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.BaseTestCase
 import com.urbanairship.TestClock
-import com.urbanairship.automation.AutomationEvent
-import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.automation.AutomationScheduleData
-import com.urbanairship.automation.AutomationStore
-import com.urbanairship.automation.AutomationTrigger
-import com.urbanairship.automation.EventAutomationTrigger
-import com.urbanairship.automation.EventAutomationTriggerType
-import com.urbanairship.automation.TriggerStoreInterface
-import com.urbanairship.automation.TriggerableState
+import com.urbanairship.automation.engine.AutomationEvent
+import com.urbanairship.automation.engine.AutomationScheduleData
+import com.urbanairship.automation.engine.AutomationStore
+import com.urbanairship.automation.engine.TriggerStoreInterface
+import com.urbanairship.automation.engine.TriggerableState
 import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
@@ -39,8 +35,8 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
     public fun testRestoreSchedules(): TestResult = runTest {
         store.upsertTriggers(listOf(
             TriggerData(
-                scheduleID = "unused-schedule-id",
-                triggerID = "unused-trigger-id",
+                scheduleId = "unused-schedule-id",
+                triggerId = "unused-trigger-id",
                 triggerCount = 0.0,
             )
         ))
@@ -67,11 +63,11 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
             assertEquals(TriggerExecutionType.EXECUTION, result.triggerExecutionType)
             assertEquals(
                 TriggeringInfo(
-                context = DeferredTriggerContext(
-                    type = "active_session",
-                    goal = 1.0,
-                    event = JsonValue.NULL),
-                date = clock.currentTimeMillis()), result.triggerInfo)
+                    context = DeferredTriggerContext(
+                        type = "active_session",
+                        goal = 1.0,
+                        event = JsonValue.NULL),
+                    date = clock.currentTimeMillis()), result.triggerInfo)
         }
     }
 
@@ -101,11 +97,11 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
             assertEquals(TriggerExecutionType.EXECUTION, result.triggerExecutionType)
             assertEquals(
                 TriggeringInfo(
-                context = DeferredTriggerContext(
-                    type = "active_session",
-                    goal = 1.0,
-                    event = JsonValue.NULL),
-                date = clock.currentTimeMillis()), result.triggerInfo)
+                    context = DeferredTriggerContext(
+                        type = "active_session",
+                        goal = 1.0,
+                        event = JsonValue.NULL),
+                    date = clock.currentTimeMillis()), result.triggerInfo)
         }
     }
 
@@ -118,10 +114,10 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
 
             assertEquals(
                 TriggerData(
-                scheduleID = "schedule-id",
-                triggerID = "default-trigger",
-                triggerCount = 1.0,
-            ), store.getTrigger("schedule-id", "default-trigger"))
+                    scheduleId = "schedule-id",
+                    triggerId = "default-trigger",
+                    triggerCount = 1.0,
+                ), store.getTrigger("schedule-id", "default-trigger"))
 
             processor.cancel(listOf("schedule-id"))
 
@@ -154,10 +150,10 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
 
             assertEquals(
                 TriggerData(
-                scheduleID = "schedule-id",
-                triggerID = "trigger-id-2",
-                triggerCount = 1.0,
-            ), store.getTrigger("schedule-id", "trigger-id-2"))
+                    scheduleId = "schedule-id",
+                    triggerId = "trigger-id-2",
+                    triggerCount = 1.0,
+                ), store.getTrigger("schedule-id", "trigger-id-2"))
 
             processor.cancel("test-group")
             assertNull(store.getTrigger("schedule-id", "trigger-id-2"))
@@ -183,10 +179,10 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
             processor.processEvent(AutomationEvent.AppInit)
             assertEquals(
                 TriggerData(
-                scheduleID = "schedule-id",
-                triggerID = "trigger-id-2",
-                triggerCount = 0.0,
-            ), store.getTrigger("schedule-id", "trigger-id-2"))
+                    scheduleId = "schedule-id",
+                    triggerId = "trigger-id-2",
+                    triggerCount = 0.0,
+                ), store.getTrigger("schedule-id", "trigger-id-2"))
 
             awaitItem()
         }

@@ -1,7 +1,10 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation
 
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.isInAppMessage
+import com.urbanairship.automation.engine.AutomationScheduleData
 import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.iam.InAppMessage

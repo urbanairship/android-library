@@ -6,8 +6,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.automation.ScheduleExecuteResult
-import com.urbanairship.automation.ScheduleReadyResult
+import com.urbanairship.automation.engine.ScheduleExecuteResult
+import com.urbanairship.automation.engine.ScheduleReadyResult
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface

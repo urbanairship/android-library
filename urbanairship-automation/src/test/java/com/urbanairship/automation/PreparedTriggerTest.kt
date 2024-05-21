@@ -4,6 +4,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.BaseTestCase
 import com.urbanairship.TestClock
 import com.urbanairship.analytics.AirshipEventFeed
+import com.urbanairship.automation.engine.AutomationEvent
+import com.urbanairship.automation.engine.TriggerableState
 import com.urbanairship.automation.engine.triggerprocessor.PreparedTrigger
 import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
@@ -27,7 +29,7 @@ public class PreparedTriggerTest: BaseTestCase() {
 
     @Test
     public fun testScheduleDatesUpdate(): TestResult = runTest {
-        var trigger = EventAutomationTrigger(
+        val trigger = EventAutomationTrigger(
             type = EventAutomationTriggerType.APP_INIT,
             goal = 1.0
         )
@@ -52,8 +54,8 @@ public class PreparedTriggerTest: BaseTestCase() {
     @Test
     public fun testActivateTrigger(): TestResult = runTest  {
         val initialState = TriggerData(
-            scheduleID = "test",
-            triggerID = "trigger-id",
+            scheduleId = "test",
+            triggerId = "trigger-id",
             triggerCount = 1.0,
         )
 
@@ -67,7 +69,7 @@ public class PreparedTriggerTest: BaseTestCase() {
         assertFalse(cancellation.isActive)
         cancellation.activate()
         assertTrue(cancellation.isActive)
-        assertEquals(0.0, cancellation.triggerData?.count)
+        assertEquals(0.0, cancellation.triggerData.count)
     }
 
     @Test
@@ -87,7 +89,7 @@ public class PreparedTriggerTest: BaseTestCase() {
         val instance = makeTrigger(trigger = AutomationTrigger.Event(trigger), type = TriggerExecutionType.EXECUTION)
         instance.activate()
 
-        assertEquals(0.0, instance.triggerData?.count)
+        assertEquals(0.0, instance.triggerData.count)
         var result = instance.process(event = AutomationEvent.AppInit)
         assertEquals(1.0, result?.triggerData?.count)
         assertNull(result?.triggerResult)
@@ -230,8 +232,8 @@ public class PreparedTriggerTest: BaseTestCase() {
         var foreground = state?.triggerData?.children?.get("foreground")
         assertEquals(1.0, foreground?.count)
 
-        var appinit = state?.triggerData?.children?.get("init")
-        assertEquals(0.0, appinit?.count)
+        var appInit = state?.triggerData?.children?.get("init")
+        assertEquals(0.0, appInit?.count)
 
         state = instance.process(AutomationEvent.AppInit)
         assertNull(state?.triggerResult)
@@ -239,8 +241,8 @@ public class PreparedTriggerTest: BaseTestCase() {
 
         foreground = state?.triggerData?.children?.get("foreground")
         assertEquals(0.0, foreground?.count)
-        appinit = state?.triggerData?.children?.get("init")
-        assertEquals(0.0, appinit?.count)
+        appInit = state?.triggerData?.children?.get("init")
+        assertEquals(0.0, appInit?.count)
 
         state = instance.process(AutomationEvent.Foreground)
         assertNull(state?.triggerResult)
@@ -298,8 +300,8 @@ public class PreparedTriggerTest: BaseTestCase() {
         var foreground = state?.triggerData?.children?.get("foreground")
         assertEquals(1.0, foreground?.count)
 
-        var appinit = state?.triggerData?.children?.get("init")
-        assertEquals(0.0, appinit?.count)
+        var appInit = state?.triggerData?.children?.get("init")
+        assertEquals(0.0, appInit?.count)
 
         state = instance.process(AutomationEvent.AppInit)
         assertNull(state?.triggerResult)
@@ -307,8 +309,8 @@ public class PreparedTriggerTest: BaseTestCase() {
 
         foreground = state?.triggerData?.children?.get("foreground")
         assertEquals(0.0, foreground?.count)
-        appinit = state?.triggerData?.children?.get("init")
-        assertEquals(0.0, appinit?.count)
+        appInit = state?.triggerData?.children?.get("init")
+        assertEquals(0.0, appInit?.count)
 
         instance.process(AutomationEvent.Foreground)
         state = instance.process(AutomationEvent.AppInit)
@@ -806,29 +808,18 @@ public class PreparedTriggerTest: BaseTestCase() {
                             startDate: ULong? = null,
                             endDate: ULong? = null,
                             state: TriggerData? = null) : PreparedTrigger {
-        val automationTrigger: AutomationTrigger
         val triggerData: TriggerData?
-        if (trigger != null) {
-            automationTrigger = trigger
-        } else {
-            automationTrigger = AutomationTrigger.Event(
-                EventAutomationTrigger(
-                    type = EventAutomationTriggerType.APP_INIT,
-                    goal = 1.0
-                )
+        val automationTrigger = trigger ?: AutomationTrigger.Event(
+            EventAutomationTrigger(
+                type = EventAutomationTriggerType.APP_INIT, goal = 1.0
             )
-        }
+        )
 
-        if (state == null) {
-            triggerData = TriggerData(
-                scheduleID = "test-schedule",
-                triggerID = automationTrigger.id,
-                triggerCount = 0.0,
-            )
-        } else {
-            triggerData = state
-        }
-
+        triggerData = state ?: TriggerData(
+            scheduleId = "test-schedule",
+            triggerId = automationTrigger.id,
+            triggerCount = 0.0,
+        )
 
         return PreparedTrigger(
             scheduleId = "test-schedule",

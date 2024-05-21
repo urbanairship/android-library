@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.coordinator
 
 import com.urbanairship.app.ActivityMonitor

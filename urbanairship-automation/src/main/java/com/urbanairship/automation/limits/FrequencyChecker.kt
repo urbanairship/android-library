@@ -1,9 +1,9 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.limits
 
-import androidx.annotation.RestrictTo
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface FrequencyChecker {
-    public fun isOverLimit(): Boolean
-    public fun checkAndIncrement(): Boolean
+internal interface FrequencyChecker {
+    fun isOverLimit(): Boolean
+    fun checkAndIncrement(): Boolean
 }

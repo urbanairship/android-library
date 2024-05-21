@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.adapter
 
 import com.urbanairship.AirshipDispatchers

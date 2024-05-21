@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.engine
 
 internal enum class AutomationScheduleState(internal val json: String) {

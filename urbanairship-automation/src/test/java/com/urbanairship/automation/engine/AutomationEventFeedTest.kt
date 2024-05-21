@@ -4,9 +4,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.ApplicationMetrics
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.app.ActivityMonitor
-import com.urbanairship.automation.AutomationEvent
-import com.urbanairship.automation.AutomationEventFeed
-import com.urbanairship.automation.TriggerableState
 import com.urbanairship.json.jsonMapOf
 import app.cash.turbine.test
 import io.mockk.every

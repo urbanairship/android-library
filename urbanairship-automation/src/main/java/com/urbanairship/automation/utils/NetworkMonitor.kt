@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.utils
 
 import android.content.Context
@@ -8,7 +10,6 @@ import android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET
 import android.net.NetworkRequest
 import android.os.Build
 import com.urbanairship.UALog
-import com.urbanairship.automation.DerivedStateFlow
 import com.urbanairship.util.Network
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.StateFlow

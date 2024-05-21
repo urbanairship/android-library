@@ -1,6 +1,8 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.engine.triggerprocessor
 
-import com.urbanairship.automation.AutomationEvent
+import com.urbanairship.automation.engine.AutomationEvent
 import com.urbanairship.automation.AutomationTrigger
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.deferred.DeferredTriggerContext

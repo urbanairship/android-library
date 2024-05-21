@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.action
 
 import com.urbanairship.automation.engine.AutomationPreparerDelegate

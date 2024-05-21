@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.analytics
 
 import com.urbanairship.json.JsonSerializable

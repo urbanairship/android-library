@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.engine
 
 import androidx.annotation.RestrictTo

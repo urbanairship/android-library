@@ -1,4 +1,6 @@
-package com.urbanairship.automation
+/* Copyright Airship and Contributors */
+
+package com.urbanairship.automation.engine
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
@@ -24,9 +26,7 @@ import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class TriggerableState(
+internal data class TriggerableState(
     val appSessionID: String? = null,
     val versionUpdated: String? = null
 ) : JsonSerializable {

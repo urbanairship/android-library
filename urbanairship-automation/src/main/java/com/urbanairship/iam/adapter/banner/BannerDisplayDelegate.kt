@@ -1,4 +1,5 @@
 /* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.adapter.banner
 
 import android.app.Activity

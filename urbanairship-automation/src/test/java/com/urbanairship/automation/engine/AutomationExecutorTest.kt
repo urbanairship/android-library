@@ -1,12 +1,7 @@
 package com.urbanairship.automation.engine
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.automation.AutomationExecutor
-import com.urbanairship.automation.AutomationExecutorDelegate
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.automation.InterruptedBehavior
-import com.urbanairship.automation.ScheduleExecuteResult
-import com.urbanairship.automation.ScheduleReadyResult
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.iam.content.Custom

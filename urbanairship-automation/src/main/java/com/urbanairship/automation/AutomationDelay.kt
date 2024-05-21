@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation
 
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType

@@ -1,12 +1,11 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.engine.triggerprocessor
 
-import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 
-/** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public enum class TriggerExecutionType(internal val value: String) {
+internal enum class TriggerExecutionType(internal val value: String) {
     EXECUTION("execution"),
     DELAY_CANCELLATION("delay_cancellation");
 

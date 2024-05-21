@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.analytics.events
 
 import com.urbanairship.android.layout.reporting.PagerData

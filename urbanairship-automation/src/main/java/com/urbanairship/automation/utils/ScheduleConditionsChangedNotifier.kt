@@ -1,12 +1,12 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.utils
 
-import androidx.annotation.RestrictTo
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class ScheduleConditionsChangedNotifier {
+internal class ScheduleConditionsChangedNotifier {
     private val waitingList = mutableListOf<Continuation<Unit>>()
 
     internal fun notifyChanged() {

@@ -1,14 +1,16 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam
 
 import android.content.Context
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionRunRequestFactory
-import com.urbanairship.automation.AutomationExecutorDelegate
+import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.automation.InterruptedBehavior
-import com.urbanairship.automation.ScheduleExecuteResult
-import com.urbanairship.automation.ScheduleReadyResult
+import com.urbanairship.automation.engine.InterruptedBehavior
+import com.urbanairship.automation.engine.ScheduleExecuteResult
+import com.urbanairship.automation.engine.ScheduleReadyResult
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent

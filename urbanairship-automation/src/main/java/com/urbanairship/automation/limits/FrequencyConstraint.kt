@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.limits
 
 import com.urbanairship.automation.limits.storage.ConstraintEntity

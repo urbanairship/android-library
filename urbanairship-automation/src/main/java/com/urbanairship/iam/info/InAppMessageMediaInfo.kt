@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.info
 
 import com.urbanairship.json.JsonException

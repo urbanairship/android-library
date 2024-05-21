@@ -1,9 +1,14 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.info
 
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 
+/**
+ * Button layout type.
+ */
 public enum class InAppMessageButtonLayoutType(internal val json: String) : JsonSerializable {
     /**
      * Buttons are stacked.

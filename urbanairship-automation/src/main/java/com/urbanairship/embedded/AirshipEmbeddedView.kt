@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.embedded
 
 import android.animation.AnimatorInflater.loadAnimator

@@ -1,4 +1,5 @@
 /* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.limits.storage
 
 import androidx.room.Entity

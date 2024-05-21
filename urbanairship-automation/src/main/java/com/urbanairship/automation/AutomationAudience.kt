@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation
 
 import com.urbanairship.audience.AudienceSelector
@@ -7,8 +9,17 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import java.util.Objects
 
+/**
+ * Automation aduience selector.
+ */
 public class AutomationAudience(
+    /**
+     * Audience selector.
+     */
     internal val audienceSelector: AudienceSelector,
+    /**
+     * Miss behavior. Defaults to [MissBehavior.PENALIZE] if not set.
+     */
     internal val missBehavior: MissBehavior? = null
 ) : JsonSerializable {
 

@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.iam.actions
 
 import com.urbanairship.actions.Action
