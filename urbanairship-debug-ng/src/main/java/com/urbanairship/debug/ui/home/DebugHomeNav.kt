@@ -8,6 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.urbanairship.debug.ui.TopLevelScreens
+import com.urbanairship.debug.ui.appinfo.appInfoNav
 import com.urbanairship.debug.ui.deviceinfo.DeviceInfoScreen
 import com.urbanairship.debug.ui.deviceinfo.deviceInfoNav
 
@@ -32,6 +33,7 @@ internal fun DebugNavHost(
         }
 
         deviceInfoNav(navController = navController)
+        appInfoNav(navController = navController)
 
         composable(route = TopLevelScreens.Automations.route) {
             // TODO

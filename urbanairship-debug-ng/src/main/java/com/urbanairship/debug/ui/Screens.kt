@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.EventNote
 import androidx.compose.material.icons.automirrored.rounded.Message
 import androidx.compose.material.icons.rounded.Checklist
+import androidx.compose.material.icons.rounded.ContactPage
 import androidx.compose.material.icons.rounded.Contacts
 import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.SmartToy
@@ -72,9 +73,16 @@ internal enum class TopLevelScreens(
     Contacts(
         titleRes = R.string.ua_debug_contacts_title,
         descRes = R.string.ua_debug_contacts_desc,
-        icon = Icons.Rounded.Contacts,
+        icon = Icons.Rounded.ContactPage,
+        isTopLevel = true,
+    ),
+    AppInfo(
+        titleRes = R.string.ua_debug_app_info_title,
+        descRes = R.string.ua_debug_app_info_desc,
+        icon = Icons.Rounded.Smartphone,
         isTopLevel = true,
     );
+
 
     val route: String = this.name
 

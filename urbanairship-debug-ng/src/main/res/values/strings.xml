@@ -26,6 +26,9 @@
     <string name="ua_debug_contacts_title">Contacts</string>
     <string name="ua_debug_contacts_desc">Register platforms to the contact</string>
 
+    <string name="ua_debug_app_info_title">App Info</string>
+    <string name="ua_debug_app_info_desc">View application info</string>
+
     //
     // Device info screens
     //
