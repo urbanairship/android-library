@@ -11,10 +11,17 @@ internal fun NavGraphBuilder.deviceInfoNav(navController: NavController) {
         route = TopLevelScreens.DeviceInfo.route,
         startDestination = DeviceInfoScreens.rootScreen.route,
     ) {
+
         composable(DeviceInfoScreens.rootScreen.route) {
             DeviceInfoScreen(
                 onNavigateUp = { navController.popBackStack() },
                 onNavigate = { route -> navController.navigate(route) }
+            )
+        }
+
+        composable(DeviceInfoScreens.EditTags.route) {
+            EditTagsScreen(
+                onNavigateUp = { navController.popBackStack() },
             )
         }
     }

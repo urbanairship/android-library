@@ -33,14 +33,6 @@ internal fun DebugNavHost(
 
         deviceInfoNav(navController = navController)
 
-        composable(route = TopLevelScreens.Events.route) {
-            // TODO
-            DeviceInfoScreen(
-                onNavigateUp = { navController.popBackStack() },
-                onNavigate = { route -> navController.navigate(route) }
-            )
-        }
-
         composable(route = TopLevelScreens.Automations.route) {
             // TODO
             DeviceInfoScreen(
@@ -80,5 +72,7 @@ internal fun DebugNavHost(
                 onNavigate = { route -> navController.navigate(route) }
             )
         }
+
+
     }
 }
