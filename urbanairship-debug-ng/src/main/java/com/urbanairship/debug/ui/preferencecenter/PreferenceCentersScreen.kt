@@ -12,16 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.DebugSettingItem
 import com.urbanairship.debug.ui.components.TopBarNavigation
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 internal fun PreferenceCentersScreen(
-    viewModel: ViewModel = DefaultViewModel(),
+    viewModel: PreferenceCenterViewModel = viewModel<DefaultPreferenceCenterViewModel>(),
     onNavigateUp: () -> Unit = {},
     onNavigate: (String) -> Unit = {},
 ) {
@@ -30,9 +30,7 @@ internal fun PreferenceCentersScreen(
         navigation = TopBarNavigation.Back(onNavigateUp)
     ) {
         PreferenceCentersScreenContent(
-            viewModel = viewModel,
-            onNavigateUp = onNavigateUp,
-            onNavigate = onNavigate,
+            viewModel = viewModel
         )
     }
 }
@@ -41,9 +39,7 @@ internal fun PreferenceCentersScreen(
 @Composable
 internal fun PreferenceCentersScreenContent(
     modifier: Modifier = Modifier.fillMaxSize(),
-    viewModel: ViewModel = DefaultViewModel(),
-    onNavigateUp: () -> Unit,
-    onNavigate: (String) -> Unit,
+    viewModel: PreferenceCenterViewModel
 ) {
     val items by viewModel.preferenceCenters.collectAsState(initial = listOf())
     val context = LocalContext.current
@@ -72,16 +68,7 @@ internal fun PreferenceCentersScreenContent(
 private fun AppInfoScreenPreview() {
     AirshipDebugTheme {
         PreferenceCentersScreen(
-            viewModel = object : ViewModel {
-                override val preferenceCenters: Flow<List<PrefCenter>> = MutableStateFlow(
-                    listOf(
-                        PrefCenter("one", "Preference Center")
-                    )
-                )
-
-                override fun openPreferenceCenter(context: Context, id: String) {
-                }
-            }
+            viewModel = PreferenceCenterViewModel.forPreview()
         )
     }
 }
