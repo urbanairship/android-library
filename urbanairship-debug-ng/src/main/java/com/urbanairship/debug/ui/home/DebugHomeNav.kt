@@ -11,6 +11,7 @@ import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.ui.appinfo.appInfoNav
 import com.urbanairship.debug.ui.deviceinfo.DeviceInfoScreen
 import com.urbanairship.debug.ui.deviceinfo.deviceInfoNav
+import com.urbanairship.debug.ui.preferencecenter.preferenceCenterNav
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +35,7 @@ internal fun DebugNavHost(
 
         deviceInfoNav(navController = navController)
         appInfoNav(navController = navController)
+        preferenceCenterNav(navController = navController)
 
         composable(route = TopLevelScreens.Automations.route) {
             // TODO
@@ -52,14 +54,6 @@ internal fun DebugNavHost(
         }
 
         composable(route = TopLevelScreens.Pushes.route) {
-            // TODO
-            DeviceInfoScreen(
-                onNavigateUp = { navController.popBackStack() },
-                onNavigate = { route -> navController.navigate(route) }
-            )
-        }
-
-        composable(route = TopLevelScreens.PrefCenters.route) {
             // TODO
             DeviceInfoScreen(
                 onNavigateUp = { navController.popBackStack() },

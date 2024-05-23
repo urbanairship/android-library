@@ -1,3 +1,5 @@
 package com.urbanairship.debug
 
-internal object AirshipDebug
+internal class AirshipDebug {
+
+}

@@ -757,7 +757,7 @@ public class UAirship {
         components.add(this.experimentManager);
 
         // Debug
-        Module debugModule = Modules.debug(application, preferenceDataStore);
+        Module debugModule = Modules.debug(application, preferenceDataStore, remoteData);
         processModule(debugModule);
 
         // Message Center

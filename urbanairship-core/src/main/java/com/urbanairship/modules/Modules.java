@@ -121,12 +121,15 @@ public class Modules {
     }
 
     @Nullable
-    public static Module debug(@NonNull Context context,
-                               @NonNull PreferenceDataStore dataStore) {
+    public static Module debug(
+            @NonNull Context context,
+            @NonNull PreferenceDataStore dataStore,
+            @NonNull RemoteData remoteData
+    ) {
         try {
             DebugModuleFactory moduleFactory = createFactory(DEBUG_MODULE_FACTORY, DebugModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore);
+                return moduleFactory.build(context, dataStore, remoteData);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Debug module");

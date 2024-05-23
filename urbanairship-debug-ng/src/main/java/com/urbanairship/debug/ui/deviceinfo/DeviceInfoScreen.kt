@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -14,32 +13,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.urbanairship.UAirship
-import com.urbanairship.debug.AirshipDebug
 import com.urbanairship.debug.ui.components.DebugCategoryHeader
+import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.DebugSettingItem
 import com.urbanairship.debug.ui.components.DebugSwitchItem
-import com.urbanairship.debug.ui.components.TopAppBar
+import com.urbanairship.debug.ui.components.TopBarNavigation
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import java.util.UUID
 
 @Composable
 internal fun DeviceInfoScreen(
-    modifier: Modifier = Modifier.fillMaxSize(),
     onNavigateUp: () -> Unit = {},
     onNavigate: (String) -> Unit = {},
 ) {
 
-    Scaffold(
-        topBar = {
-            AirshipDebug.TopAppBar(
-                title = stringResource(id = DeviceInfoScreens.rootScreen.titleRes),
-                onNavigateUp = onNavigateUp
-            )
-        },
-        modifier = Modifier.fillMaxSize()
-    ) { padding ->
+    DebugScreen(
+        title = stringResource(id = DeviceInfoScreens.Root.titleRes),
+        navigation = TopBarNavigation.Back(onNavigateUp)
+    ) {
         DeviceInfoScreenContent(
-            modifier = modifier.padding(padding),
             onNavigateUp = onNavigateUp,
             onNavigate = onNavigate,
         )
@@ -49,7 +41,7 @@ internal fun DeviceInfoScreen(
 
 @Composable
 internal fun DeviceInfoScreenContent(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.fillMaxSize(),
     onNavigateUp: () -> Unit,
     onNavigate: (String) -> Unit,
 ) {

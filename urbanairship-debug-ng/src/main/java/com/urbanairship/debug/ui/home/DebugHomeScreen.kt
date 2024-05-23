@@ -18,8 +18,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.urbanairship.debug.AirshipDebug
 import com.urbanairship.debug.ui.TopLevelScreens
+import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.IconDecoration
-import com.urbanairship.debug.ui.components.TopAppBar
+import com.urbanairship.debug.ui.components.TopBarNavigation
+import com.urbanairship.debug.ui.deviceinfo.DeviceInfoScreens
+import com.urbanairship.debug.ui.deviceinfo.EditTagScreenContent
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import com.urbanairship.debug2.R
 
@@ -28,24 +31,19 @@ internal fun DebugHomeScreen(
     modifier: Modifier = Modifier.fillMaxSize(),
     onNavigate: (String) -> Unit = {},
 ) {
-    Scaffold(
-        topBar = {
-            AirshipDebug.TopAppBar(
-                title = stringResource(id = R.string.ua_debug_label)
-            )
-        },
-        modifier = Modifier.fillMaxSize()
-    ) { padding ->
+
+    DebugScreen(
+        title = stringResource(id = TopLevelScreens.Root.titleRes)
+    ) {
         DebugHomeScreenContent(
-            modifier = modifier.padding(padding),
-            onNavigate = onNavigate,
+            onNavigate = onNavigate
         )
     }
 }
 
 @Composable
 internal fun DebugHomeScreenContent(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.fillMaxSize(),
     onNavigate: (String) -> Unit,
 ) {
     val topLevelScreens = remember { TopLevelScreens.topLevelScreens }
