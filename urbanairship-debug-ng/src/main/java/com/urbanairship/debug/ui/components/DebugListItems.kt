@@ -62,30 +62,6 @@ internal fun DebugSwitchItem(
     )
 }
 
-// TODO: do we even need checkboxes, or can we just use switches?
-@Composable
-internal fun DebugCheckboxItem(
-    title: String,
-    description: String? = null,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentHeight(),
-) {
-    ListItem(
-        headlineContent = {
-            Text(text = title, fontWeight = FontWeight.Medium)
-        },
-        supportingContent = { description?.let { Text(it) } },
-        trailingContent = {
-            Checkbox(
-                checked = checked,
-                onCheckedChange = onCheckedChange
-            )
-        }
-    )
-}
 
 /**
  * Generic debug menu item.

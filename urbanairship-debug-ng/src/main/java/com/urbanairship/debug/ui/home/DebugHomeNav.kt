@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.ui.appinfo.appInfoNav
+import com.urbanairship.debug.ui.automations.automationNav
 import com.urbanairship.debug.ui.deviceinfo.DeviceInfoScreen
 import com.urbanairship.debug.ui.deviceinfo.deviceInfoNav
 import com.urbanairship.debug.ui.preferencecenter.preferenceCenterNav
@@ -36,14 +37,8 @@ internal fun DebugNavHost(
         deviceInfoNav(navController = navController)
         appInfoNav(navController = navController)
         preferenceCenterNav(navController = navController)
+        automationNav(navController = navController)
 
-        composable(route = TopLevelScreens.Automations.route) {
-            // TODO
-            DeviceInfoScreen(
-                onNavigateUp = { navController.popBackStack() },
-                onNavigate = { route -> navController.navigate(route) }
-            )
-        }
 
         composable(route = TopLevelScreens.FeatureFlags.route) {
             // TODO

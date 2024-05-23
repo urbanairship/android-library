@@ -1,11 +1,11 @@
-package com.urbanairship.debug.ui.preferencecenter
+package com.urbanairship.debug.ui.automations
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug2.R
 import com.urbanairship.debug.ui.Screen as BaseScreen
 
-internal enum class PreferenceCenterScreens(
+internal enum class AutomationScreens(
     override val titleRes: Int,
     override val descRes: Int? = null,
     override val icon: ImageVector? = null,
@@ -13,11 +13,13 @@ internal enum class PreferenceCenterScreens(
 ) : BaseScreen {
     // Root screen
     Root(
-        titleRes = R.string.ua_debug_pref_centers_title,
+        titleRes = R.string.ua_debug_automations_title,
         isRoot = true
-    );
+    ),
+    Details(titleRes = 0);
+
 
     override val isTopLevel: Boolean = false
 
-    val route: String = TopLevelScreens.PrefCenters.route + "/$name"
+    val route: String = TopLevelScreens.Automations.route + "/$name"
 }
