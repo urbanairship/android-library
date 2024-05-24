@@ -8,10 +8,10 @@ import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.json.JsonMap
-import com.urbanairship.liveupdate.CallbackLiveUpdateNotificationHandler.LiveUpdateResultCallback
 import com.urbanairship.liveupdate.CallbackLiveUpdateNotificationHandler.NotificationResult
 import com.urbanairship.liveupdate.LiveUpdateProcessor.HandlerCallback
 import com.urbanairship.liveupdate.LiveUpdateProcessor.Operation
@@ -47,7 +47,7 @@ internal class LiveUpdateRegistrar(
     private val job = SupervisorJob()
     private val scope: CoroutineScope = CoroutineScope(dispatcher + job)
     @VisibleForTesting
-    internal val handlers = ConcurrentHashMap<String, BaseLiveUpdateHandler>()
+    internal val handlers = ConcurrentHashMap<String, LiveUpdateHandler>()
 
     init {
         // Handle callbacks from the processor.
@@ -66,11 +66,7 @@ internal class LiveUpdateRegistrar(
             .launchIn(scope)
     }
 
-    fun register(type: String, handler: LiveUpdateHandler<*>) {
-        handlers[type] = handler
-    }
-
-    fun register(type: String, handler: AsyncLiveUpdateNotificationHandler) {
+    fun register(type: String, handler: LiveUpdateHandler) {
         handlers[type] = handler
     }
 
@@ -178,12 +174,7 @@ internal class LiveUpdateRegistrar(
                 dao.getAllActive()
                     // Filter out any LUs that use custom handlers or have active notifications
                     .filter { (update, _) ->
-                        val isNotificationHandler =
-                            handlers[update.type] is LiveUpdateNotificationHandler
-                        val isAsyncNotificationHandler =
-                            handlers[update.type] is AsyncLiveUpdateNotificationHandler
-
-                        (isNotificationHandler || isAsyncNotificationHandler) &&
+                        handlers[update.type] is NotificationLiveUpdateHandler &&
                                 notificationTag(update.type, update.name) !in activeNotifications
                     }
                     // End any Live Updates that are no longer displayed
@@ -204,16 +195,12 @@ internal class LiveUpdateRegistrar(
         }
 
         when (handler) {
-            is LiveUpdateHandler<*> -> withContext(Dispatchers.Main) {
-                val result = handler.onUpdate(context, action, update)
-                handleResult(action, result, handler, update, message)
-            }
             is SuspendLiveUpdateNotificationHandler -> withContext(Dispatchers.Default) {
                 val result = handler.onUpdate(context, action, update)
                 handleResult(action, result, handler, update, message)
             }
             is CallbackLiveUpdateNotificationHandler -> withContext(Dispatchers.Default) {
-                handler.onUpdate(context, action, update, object : LiveUpdateResultCallback {
+                handler.onUpdate(context, action, update, object : CallbackLiveUpdateNotificationHandler.LiveUpdateResultCallback {
                     override fun ok(builder: NotificationCompat.Builder): NotificationResult? {
                         val result = LiveUpdateResult.ok(builder)
                         return handleResult(action, result, handler, update, message)
@@ -224,27 +211,48 @@ internal class LiveUpdateRegistrar(
                     }
                 })
             }
+            is CallbackLiveUpdateCustomHandler -> withContext(Dispatchers.Default) {
+                handler.onUpdate(context, action, update, object : CallbackLiveUpdateCustomHandler.LiveUpdateResultCallback {
+                    override fun ok() {
+                        handleResult(action, LiveUpdateResult.ok<Nothing>(), handler, update, message)
+                    }
+
+                    override fun cancel() {
+                        handleResult(action, LiveUpdateResult.cancel<Nothing>(), handler, update, message)
+                    }
+                })
+            }
+            is SuspendLiveUpdateCustomHandler -> withContext(Dispatchers.Default) {
+                val result = handler.onUpdate(context, action, update)
+                handleResult(action, result, handler, update, message)
+            }
         }
     }
 
     private fun handleResult(
         action: LiveUpdateEvent,
         result: LiveUpdateResult<*>,
-        handler: BaseLiveUpdateHandler,
+        handler: LiveUpdateHandler,
         update: LiveUpdate,
         message: PushMessage?
     ): NotificationResult? {
-        val isNotificationHandler = handler is LiveUpdateNotificationHandler ||
-                handler is AsyncLiveUpdateNotificationHandler
-
-        when (result) {
-            is LiveUpdateResult.Ok ->
-                if (isNotificationHandler && result.value is NotificationCompat.Builder) {
+        when (handler) {
+            is NotificationLiveUpdateHandler ->  when (result) {
+                is LiveUpdateResult.Ok -> if (result.value is NotificationCompat.Builder) {
                     return postNotification(context, update, result.value, result.extender, message)
                 }
-
-            is LiveUpdateResult.Cancel -> {
-                cancelNotification(update.notificationTag)
+                is LiveUpdateResult.Cancel -> {
+                    stop(update.name, update.content, System.currentTimeMillis(), null, message)
+                    cancelNotification(update.notificationTag)
+                }
+            }
+            is CustomLiveUpdateHandler -> when (result) {
+                is LiveUpdateResult.Ok -> {
+                    // No-op. Custom handlers are responsible doing something with the update.
+                }
+                is LiveUpdateResult.Cancel -> {
+                    stop(update.name, update.content, System.currentTimeMillis(), null, null)
+                }
             }
         }
 

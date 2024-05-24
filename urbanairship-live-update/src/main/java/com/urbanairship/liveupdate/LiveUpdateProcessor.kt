@@ -1,6 +1,7 @@
 package com.urbanairship.liveupdate
 
 import androidx.annotation.VisibleForTesting
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.channel.LiveUpdateMutation
 import com.urbanairship.json.JsonMap
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
 
 internal class LiveUpdateProcessor(
     private val dao: LiveUpdateDao,
-    dispatcher: CoroutineDispatcher = AirshipDispatchers.newSingleThreadDispatcher(),
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
 ) {
     private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
 

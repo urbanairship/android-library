@@ -54,17 +54,7 @@ internal constructor(
      * @param type The handler type.
      * @param handler A [LiveUpdateHandler].
      */
-    public fun register(type: String, handler: LiveUpdateHandler<*>) {
-        registrar.register(type, handler)
-    }
-
-    /**
-     * Registers a [handler] for the given [type].
-     *
-     * @param type The handler type.
-     * @param handler A [SuspendLiveUpdateHandler].
-     */
-    public fun register(type: String, handler: AsyncLiveUpdateNotificationHandler) {
+    public fun register(type: String, handler: LiveUpdateHandler) {
         registrar.register(type, handler)
     }
 
@@ -96,6 +86,7 @@ internal constructor(
      * @param name The live update name.
      * @param content A [JsonMap] with updated content.
      * @param timestamp The update timestamp, used to filter out-of-order events (default: now).
+     * @param dismissTimestamp Optional timestamp, when to end this Live Update (default: null).
      */
     @JvmOverloads
     public fun update(
@@ -113,7 +104,9 @@ internal constructor(
      * Ends tracking for the Live Update with the given [name].
      *
      * @param name The live update name.
+     * @param content A [JsonMap] with final updated content.
      * @param timestamp The end timestamp, used to filter out-of-order events (default: now).
+     * @param dismissTimestamp Optional timestamp, when to end this Live Update (default: null).
      */
     @JvmOverloads
     public fun end(
