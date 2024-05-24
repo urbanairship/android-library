@@ -57,25 +57,24 @@ public class ExperimentManager internal constructor(
      *
      * @param messageInfo The message info.
      * @param deviceInfoProvider The device info provider.
-     * @param contactId The contact ID. If not provided, the stable contact ID will be used.
      * @return The experiments result. If no experiment matches, null is returned.
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public suspend fun evaluateExperiments(messageInfo: MessageInfo, deviceInfoProvider: DeviceInfoProvider, contactId: String? = null): Result<ExperimentResult?> {
+    public suspend fun evaluateExperiments(messageInfo: MessageInfo, deviceInfoProvider: DeviceInfoProvider): Result<ExperimentResult?> {
         val activeExperiments = getActiveExperiments(messageInfo)
         if (activeExperiments.isEmpty()) {
             return Result.success(null)
         }
 
         val channelId = deviceInfoProvider.getChannelId()
-        val evaluationContactId = contactId ?: deviceInfoProvider.getStableContactId()
+        val contactId = deviceInfoProvider.getStableContactInfo().contactId
 
         val allExperimentsMetadata: MutableList<JsonMap> = mutableListOf()
         var matchedExperiment: Experiment? = null
 
         for (experiment in activeExperiments) {
             val isMatching = getResolutionFunction(experiment)
-                .invoke(experiment, deviceInfoProvider, evaluationContactId)
+                .invoke(experiment, deviceInfoProvider)
 
             allExperimentsMetadata.add(experiment.reportingMetadata)
 
@@ -88,7 +87,7 @@ public class ExperimentManager internal constructor(
         return Result.success(
             ExperimentResult(
                 channelId = channelId,
-                contactId = evaluationContactId,
+                contactId = contactId,
                 matchedExperimentId = matchedExperiment?.id,
                 isMatching = (matchedExperiment != null),
                 allEvaluatedExperimentsMetadata = allExperimentsMetadata
@@ -106,17 +105,15 @@ public class ExperimentManager internal constructor(
     private suspend fun resolveDeferred(
         experiment: Experiment,
         infoProvider: DeviceInfoProvider,
-        contactId: String
     ): Boolean {
         return false
     }
 
     private suspend fun resolveStatic(
         experiment: Experiment,
-        infoProvider: DeviceInfoProvider,
-        contactId: String
+        infoProvider: DeviceInfoProvider
     ): Boolean {
-        return experiment.audience.evaluate(experiment.created, infoProvider, contactId)
+        return experiment.audience.evaluate(experiment.created, infoProvider)
     }
 
     private suspend fun getActiveExperiments(messageInfo: MessageInfo): List<Experiment> {
@@ -139,4 +136,4 @@ public class ExperimentManager internal constructor(
     }
 }
 
-private typealias ResolutionFunction = suspend (Experiment, DeviceInfoProvider, String) -> Boolean
+private typealias ResolutionFunction = suspend (Experiment, DeviceInfoProvider) -> Boolean

@@ -37,7 +37,14 @@ public class RemoteConfigTest {
                   "max_cra_resolve_age_ms":300,
                   "foreground_resolve_interval_ms":400
                },
-               "fetch_contact_remote_data":true
+               "fetch_contact_remote_data":true,
+               "in_app_config": {
+                    "additional_audience_check": {
+                        "enabled": true,
+                        "context": "json-value",
+                        "url": "https://test.url"
+                    }
+                }
             }
         """
 
@@ -58,7 +65,15 @@ public class RemoteConfigTest {
                 foregroundIntervalMs = 400,
                 channelRegistrationMaxResolveAgeMs = 300
             ),
-            fetchContactRemoteData = true
+            fetchContactRemoteData = true,
+            iaaConfig = IAAConfig(
+                retryingQueue = null,
+                additionalAudienceCheck = AdditionalAudienceCheckConfig(
+                    isEnabled = true,
+                    context = JsonValue.wrap("json-value"),
+                    url = "https://test.url"
+                )
+            )
         )
 
         assert(expected == RemoteConfig.fromJson(JsonValue.parseString(json)))

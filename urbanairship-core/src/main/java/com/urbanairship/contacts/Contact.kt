@@ -150,8 +150,8 @@ public class Contact internal constructor(
     public val lastContactId: String?
         get() = contactManager.lastContactId
 
-    internal suspend fun stableContactId(): String {
-        return contactManager.stableContactIdUpdate().contactId
+    internal suspend fun stableContactInfo(): StableContactInfo {
+        return contactManager.stableContactIdUpdate().toContactInfo()
     }
 
     private suspend fun stableVerifiedContactId(): String {
@@ -464,7 +464,7 @@ public class Contact internal constructor(
             )
         }
 
-        val contactId = stableContactId()
+        val contactId = stableContactInfo().contactId
 
         // Get the subscription lists from the in-memory cache, if available.
         val result = fetchContactSubscriptionList(contactId)
@@ -522,7 +522,7 @@ public class Contact internal constructor(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public suspend fun getStableContactId(): String = stableContactId()
+    public suspend fun getStableContactInfo(): StableContactInfo = stableContactInfo()
 
     private suspend fun fetchContactSubscriptionList(contactId: String): Result<Map<String, Set<Scope>>> {
         return subscriptionFetchQueue.run {

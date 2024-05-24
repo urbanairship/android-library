@@ -145,7 +145,7 @@ public class RemoteDataTest {
     @Test
     public fun testContactIDChangesDispatchesUpdate(): TestResult = runTest {
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
-        contactIdUpdates.emit(ContactIdUpdate("some contact", false, 0))
+        contactIdUpdates.emit(ContactIdUpdate("some contact", null, false, 0))
         testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
     }

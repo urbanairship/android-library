@@ -2,11 +2,14 @@
 package com.urbanairship.remoteconfig
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
+import com.urbanairship.json.requireField
+import kotlin.jvm.Throws
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -14,14 +17,16 @@ public data class RemoteConfig @JvmOverloads constructor(
     public val airshipConfig: RemoteAirshipConfig? = null,
     public val meteredUsageConfig: MeteredUsageConfig? = null,
     public val fetchContactRemoteData: Boolean? = null,
-    public val contactConfig: ContactConfig? = null
+    public val contactConfig: ContactConfig? = null,
+    public val iaaConfig: IAAConfig? = null
 ) : JsonSerializable {
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
         AIRSHIP_CONFIG_KEY to airshipConfig?.toJsonValue(),
         METERED_USAGE_CONFIG_KEY to meteredUsageConfig?.toJsonValue(),
         FETCH_CONTACT_REMOTE_DATA_KEY to fetchContactRemoteData,
-        CONTACT_CONFIG_KEY to contactConfig?.toJsonValue()
+        CONTACT_CONFIG_KEY to contactConfig?.toJsonValue(),
+        IAA_CONFIG to iaaConfig
     ).toJsonValue()
 
     public companion object {
@@ -29,12 +34,14 @@ public data class RemoteConfig @JvmOverloads constructor(
         private const val METERED_USAGE_CONFIG_KEY = "metered_usage"
         private const val FETCH_CONTACT_REMOTE_DATA_KEY = "fetch_contact_remote_data"
         private const val CONTACT_CONFIG_KEY = "contact_config"
+        private const val IAA_CONFIG = "in_app_config"
 
         internal val TOP_LEVEL_KEYS = setOf(
             AIRSHIP_CONFIG_KEY,
             METERED_USAGE_CONFIG_KEY,
             FETCH_CONTACT_REMOTE_DATA_KEY,
-            CONTACT_CONFIG_KEY
+            CONTACT_CONFIG_KEY,
+            IAA_CONFIG
         )
 
         @JvmStatic
@@ -49,7 +56,8 @@ public data class RemoteConfig @JvmOverloads constructor(
                 fetchContactRemoteData = json.optionalField<Boolean>(FETCH_CONTACT_REMOTE_DATA_KEY),
                 contactConfig = json.optionalField<JsonValue>(CONTACT_CONFIG_KEY)?.let {
                     ContactConfig.fromJson(it)
-                }
+                },
+                iaaConfig = json.get(IAA_CONFIG)?.let(IAAConfig::fromJson)
             )
         }
 
@@ -158,4 +166,99 @@ public data class MeteredUsageConfig internal constructor(
         public val DEFAULT: MeteredUsageConfig =
             MeteredUsageConfig(false, DEFAULT_INITIAL_DELAY, DEFAULT_INTERVAL)
     }
+}
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class IAAConfig (
+    public val retryingQueue: RetryingQueueConfig? = null,
+    public val additionalAudienceCheck: AdditionalAudienceCheckConfig? = null
+) : JsonSerializable {
+
+    internal companion object {
+        private const val RETRYING_QUEUE = "queue"
+        private const val ADDITIONAL_AUDIENCE_CONFIG = "additional_audience_check"
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): IAAConfig {
+            val content = value.requireMap()
+
+            return IAAConfig(
+                retryingQueue = content.get(RETRYING_QUEUE)
+                    ?.let(RetryingQueueConfig::fromJson),
+                additionalAudienceCheck = content.get(ADDITIONAL_AUDIENCE_CONFIG)
+                    ?.let(AdditionalAudienceCheckConfig::fromJson)
+            )
+        }
+    }
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        RETRYING_QUEUE to retryingQueue,
+        ADDITIONAL_AUDIENCE_CONFIG to additionalAudienceCheck
+    ).toJsonValue()
+}
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class RetryingQueueConfig (
+    public val maxConcurrentOperations: UInt?,
+    public val maxPendingResults: UInt?,
+    public val initialBackoff: Long?,
+    public val maxBackOff: Long?
+) : JsonSerializable {
+
+    internal companion object {
+        private const val MAX_CONCURRENT_OPERATIONS = "max_concurrent_operations"
+        private const val MAX_PENDING_RESULTS = "max_pending_results"
+        private const val INITIAL_BACKOFF = "initial_back_off_seconds"
+        private const val MAX_BACK_OFF = "max_back_off_seconds"
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): RetryingQueueConfig {
+            val content = value.requireMap()
+
+            return RetryingQueueConfig(
+                maxConcurrentOperations = content.get(MAX_CONCURRENT_OPERATIONS)?.getInt(0)?.toUInt(),
+                maxPendingResults = content.get(MAX_PENDING_RESULTS)?.getInt(0)?.toUInt(),
+                initialBackoff = content.optionalField(INITIAL_BACKOFF),
+                maxBackOff = content.optionalField(MAX_BACK_OFF)
+            )
+        }
+    }
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        MAX_CONCURRENT_OPERATIONS to maxConcurrentOperations,
+        MAX_PENDING_RESULTS to maxPendingResults,
+        INITIAL_BACKOFF to initialBackoff,
+        MAX_BACK_OFF to maxBackOff
+    ).toJsonValue()
+}
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class AdditionalAudienceCheckConfig(
+    public val isEnabled: Boolean,
+    public val context: JsonValue?,
+    public val url: String?
+) : JsonSerializable {
+
+    internal companion object {
+        private const val IS_ENABLED = "enabled"
+        private const val CONTEXT = "context"
+        private const val URL = "url"
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): AdditionalAudienceCheckConfig {
+            val content = value.requireMap()
+
+            return AdditionalAudienceCheckConfig(
+                isEnabled = content.requireField(IS_ENABLED),
+                context = content.get(CONTEXT),
+                url = content.optionalField(URL)
+            )
+        }
+    }
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        IS_ENABLED to isEnabled,
+        CONTEXT to context,
+        URL to url
+    ).toJsonValue()
 }

@@ -128,11 +128,19 @@ public class ContactTest {
 
         coEvery {
             mockContactManager.stableContactIdUpdate()
-        } returns ContactIdUpdate("some stable not verified id", true, testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) - 1)
+        } returns ContactIdUpdate(
+            contactId = "some stable not verified id",
+            namedUserId = null,
+            isStable = true,
+            resolveDateMs = testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) - 1)
 
         coEvery {
             mockContactManager.stableContactIdUpdate(testClock.currentTimeMillis())
-        } returns ContactIdUpdate("some contact id", true, testClock.currentTimeMillis)
+        } returns ContactIdUpdate(
+            contactId = "some contact id",
+            namedUserId = null,
+            isStable = true,
+            resolveDateMs = testClock.currentTimeMillis)
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
@@ -158,7 +166,7 @@ public class ContactTest {
 
         coEvery {
             mockContactManager.stableContactIdUpdate()
-        } returns ContactIdUpdate("some stable verified id", true, testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) + 1)
+        } returns ContactIdUpdate("some stable verified id", null, true, testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) + 1)
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
@@ -190,11 +198,11 @@ public class ContactTest {
 
         coEvery {
             mockContactManager.stableContactIdUpdate()
-        } returns ContactIdUpdate("some stable not verified id", true, testClock.currentTimeMillis() - 100)
+        } returns ContactIdUpdate("some stable not verified id", null, true, testClock.currentTimeMillis() - 100)
 
         coEvery {
             mockContactManager.stableContactIdUpdate(testClock.currentTimeMillis())
-        } returns ContactIdUpdate("some stable verified id", true, testClock.currentTimeMillis)
+        } returns ContactIdUpdate("some stable verified id", null, true, testClock.currentTimeMillis)
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
@@ -315,16 +323,16 @@ public class ContactTest {
         assertEquals(0, count)
         testDispatcher.scheduler.advanceUntilIdle()
 
-        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", true, 0))
+        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", null, true, 0))
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(1, count)
 
         // Different update, same contact id
-        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", true, 0))
+        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", null, true, 0))
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(1, count)
 
-        contactIdUpdates.tryEmit(ContactIdUpdate("some  other contact id", false, 0))
+        contactIdUpdates.tryEmit(ContactIdUpdate("some  other contact id", null, false, 0))
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(2, count)
     }
@@ -741,7 +749,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptions(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", true, 0)
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", null, true, 0)
         val networkResult = RequestResult(
             status = 200, value = mapOf(
                 "foo" to setOf(Scope.APP, Scope.SMS), "bar" to setOf(Scope.EMAIL)
@@ -756,7 +764,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionsCache(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", true, 0)
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", null, true, 0)
 
         val networkResult = RequestResult(
             status = 200, value = mapOf(
@@ -773,7 +781,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionsError(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", true, 0)
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", null, true, 0)
 
         val networkResult = RequestResult<Map<String, Set<Scope>>>(
             status = 404, value = null, body = null, headers = emptyMap()
@@ -786,8 +794,8 @@ public class ContactTest {
     @Test
     public fun testFetchSubscriptionsIgnoresCacheContactIdChanges(): TestResult = runTest {
         coEvery { mockContactManager.stableContactIdUpdate() } returnsMany listOf(
-            ContactIdUpdate("first", true, 0),
-            ContactIdUpdate("second", true, 1)
+            ContactIdUpdate("first", null, true, 0),
+            ContactIdUpdate("second", null, true, 1)
         )
 
         val firstResult = RequestResult(
@@ -810,7 +818,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionListCacheTime(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", true, 0)
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", null, true, 0)
 
         val firstResult = RequestResult(
             status = 200, value = mapOf(
@@ -867,7 +875,7 @@ public class ContactTest {
             )
         )
 
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", true, 0)
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", null, true, 0)
         coEvery { mockAudienceOverridesProvider.contactOverrides("some id") } returns overrides
 
         val networkResult = RequestResult(

@@ -750,6 +750,7 @@ public class UAirship {
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, runtimeConfig, privacyManager, remoteData);
         components.add(this.remoteConfigManager);
 
+        AirshipCache cache = new AirshipCache(application, runtimeConfig);
 
         // Experiments
         this.experimentManager = new ExperimentManager(application, preferenceDataStore,
@@ -772,7 +773,7 @@ public class UAirship {
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
                 privacyManager, channel, pushManager, analytics, remoteData, this.experimentManager,
-                meteredUsageManager, contact, deferredResolver, eventFeed, applicationMetrics);
+                meteredUsageManager, deferredResolver, eventFeed, applicationMetrics, cache);
         processModule(automationModule);
 
         // Ad Id
@@ -789,7 +790,7 @@ public class UAirship {
 
         // Feature flags
         Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, analytics,
-                new AirshipCache(application, runtimeConfig), deferredResolver, eventFeed);
+                cache, deferredResolver, eventFeed);
         processModule(featureFlags);
 
         for (AirshipComponent component : components) {

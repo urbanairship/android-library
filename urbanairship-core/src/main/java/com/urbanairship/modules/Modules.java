@@ -101,18 +101,18 @@ public class Modules {
             @NonNull RemoteData remoteData,
             @NonNull ExperimentManager experimentManager,
             @NonNull AirshipMeteredUsage meteredUsage,
-            @NonNull Contact contact,
             @NonNull DeferredResolver deferredResolver,
             @NonNull AirshipEventFeed eventFeed,
-            @NonNull ApplicationMetrics metrics
+            @NonNull ApplicationMetrics metrics,
+            @NonNull AirshipCache cache
     ) {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager,
                         airshipChannel, pushManager, analytics, remoteData, experimentManager,
-                        meteredUsage, contact, deferredResolver,
-                        eventFeed, metrics);
+                        meteredUsage, deferredResolver,
+                        eventFeed, metrics, cache);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Automation module");

@@ -152,9 +152,10 @@ internal class ContactManager(
             } == null
 
             return ContactIdUpdate(
-                    contactId = lastIdentity.contactId,
-                    isStable = isStable,
-                    resolveDateMs = lastIdentity.resolveDateMs ?: 0
+                contactId = lastIdentity.contactId,
+                namedUserId = lastIdentity.namedUserId,
+                isStable = isStable,
+                resolveDateMs = lastIdentity.resolveDateMs ?: 0
             )
         }
 

@@ -180,7 +180,7 @@ internal class AutomationStoreMigrator(
         )
     }
 
-    private fun getPreparedScheduleInfo(schedule: ScheduleEntity): PreparedScheduleInfo? {
+    private fun getPreparedScheduleInfo(schedule: ScheduleEntity, audienceCheck: Boolean = true): PreparedScheduleInfo? {
         if (schedule.executionState == ScheduleState.PREPARING_SCHEDULE ||
             schedule.executionState == ScheduleState.EXECUTING) {
             return PreparedScheduleInfo(
@@ -189,7 +189,8 @@ internal class AutomationStoreMigrator(
                 campaigns = schedule.campaigns,
                 contactId = null,
                 experimentResult = null,
-                reportingContext = schedule.reportingContext
+                reportingContext = schedule.reportingContext,
+                additionalAudienceCheckResult = audienceCheck
             )
         }
         return null

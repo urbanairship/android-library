@@ -74,6 +74,15 @@ internal class InAppResolutionEvent(
                 )
             )
         }
+
+        fun audienceExcluded(): InAppResolutionEvent {
+            return InAppResolutionEvent(
+                ResolutionData(
+                    resolutionType = ResolutionData.ResolutionType.AudienceExcluded,
+                    displayTime = 0L
+                )
+            )
+        }
     }
 
 
@@ -124,6 +133,7 @@ internal class InAppResolutionEvent(
                 private const val TIMED_OUT = "timed_out"
                 private const val INTERRUPTED = "interrupted"
                 private const val CONTROL = "control"
+                private const val AUDIENCE_EXCLUDED = "audience_check_excluded"
             }
             data class ButtonTap(val identifier: String, val description: String) : ResolutionType() {
 
@@ -147,6 +157,9 @@ internal class InAppResolutionEvent(
             }
             data object Control : ResolutionType() {
                 override fun toJsonValue(): JsonValue = jsonMapOf(RESOLUTION_TYPE to CONTROL).toJsonValue()
+            }
+            data object AudienceExcluded: ResolutionType() {
+                override fun toJsonValue(): JsonValue = jsonMapOf(RESOLUTION_TYPE to AUDIENCE_EXCLUDED).toJsonValue()
             }
         }
     }

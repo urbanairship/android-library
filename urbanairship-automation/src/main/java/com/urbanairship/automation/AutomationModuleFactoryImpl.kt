@@ -13,6 +13,7 @@ import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.automation.action.ActionAutomationExecutor
 import com.urbanairship.automation.action.ActionAutomationPreparer
+import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolver
 import com.urbanairship.automation.engine.AutomationDelayProcessor
 import com.urbanairship.automation.engine.AutomationEngine
 import com.urbanairship.automation.engine.AutomationEventFeed
@@ -37,9 +38,9 @@ import com.urbanairship.automation.storage.AutomationDatabase
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.utils.NetworkMonitor
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
+import com.urbanairship.cache.AirshipCache
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
-import com.urbanairship.contacts.Contact
 import com.urbanairship.deferred.DeferredResolver
 import com.urbanairship.experiment.ExperimentManager
 import com.urbanairship.iam.legacy.LegacyAnalytics
@@ -68,10 +69,10 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         remoteData: RemoteData,
         experimentManager: ExperimentManager,
         meteredUsage: AirshipMeteredUsage,
-        contact: Contact,
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
-        metrics: ApplicationMetrics
+        metrics: ApplicationMetrics,
+        cache: AirshipCache
     ): Module {
         val assetManager = AssetCacheManager(context)
         val eventRecorder = InAppEventRecorder(analytics)
@@ -120,7 +121,11 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 deferredResolver = deferredResolver,
                 frequencyLimitManager = frequencyLimits,
                 experiments = experimentManager,
-                remoteDataAccess = remoteDataAccess
+                remoteDataAccess = remoteDataAccess,
+                additionalAudienceResolver = AdditionalAudienceCheckerResolver(
+                    config = runtimeConfig,
+                    cache = cache
+                )
             ),
             scheduleConditionsChangedNotifier = scheduleConditionNotifier,
             eventsFeed = AutomationEventFeed(

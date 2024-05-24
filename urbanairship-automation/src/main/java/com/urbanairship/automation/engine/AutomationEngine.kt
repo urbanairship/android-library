@@ -362,7 +362,7 @@ internal class AutomationEngine(
     private suspend fun prepareSchedule(data: AutomationScheduleData): Pair<AutomationScheduleData, PreparedSchedule>? {
         UALog.v { "Preparing schedule $data" }
 
-        val result = preparer.prepare(context, data.schedule, data.triggerInfo?.context)
+        val result = preparer.prepare(data.schedule, data.triggerInfo?.context)
         UALog.v { "Preparing schedule $data result: $result" }
 
         val updated = updateState(data.schedule.identifier) {

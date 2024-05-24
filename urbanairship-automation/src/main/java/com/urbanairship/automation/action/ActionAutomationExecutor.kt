@@ -21,6 +21,11 @@ internal class ActionAutomationExecutor : AutomationExecutorDelegate<JsonValue> 
     override suspend fun execute(
         data: JsonValue, preparedScheduleInfo: PreparedScheduleInfo
     ): ScheduleExecuteResult {
+
+        if (!preparedScheduleInfo.additionalAudienceCheckResult) {
+            return ScheduleExecuteResult.FINISHED
+        }
+
         InAppActionUtils.runActions(data.optMap(), situation = Action.SITUATION_AUTOMATION)
         return ScheduleExecuteResult.FINISHED
     }

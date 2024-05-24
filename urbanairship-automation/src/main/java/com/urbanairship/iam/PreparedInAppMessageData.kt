@@ -38,7 +38,11 @@ internal class InAppMessageAutomationPreparer(
         data: InAppMessage,
         preparedScheduleInfo: PreparedScheduleInfo
     ): Result<PreparedInAppMessageData> {
-        val assets = prepareAssets(data, preparedScheduleInfo.scheduleId).getOrElse {
+        val assets = prepareAssets(
+            message = data,
+            scheduleID = preparedScheduleInfo.scheduleId,
+            skip = !preparedScheduleInfo.additionalAudienceCheckResult || preparedScheduleInfo.experimentResult?.isMatching == true
+        ).getOrElse {
             return Result.failure(it)
         }
 
@@ -64,7 +68,15 @@ internal class InAppMessageAutomationPreparer(
         displayAdapterFactory.setAdapterFactoryBlock(type, factoryBlock)
     }
 
-    private suspend fun prepareAssets(message: InAppMessage, scheduleID: String): Result<AirshipCachedAssets> {
+    private suspend fun prepareAssets(
+        message: InAppMessage,
+        scheduleID: String,
+        skip: Boolean): Result<AirshipCachedAssets> {
+
+        if (skip) {
+            return assetsManager.cacheAsset(scheduleID, listOf())
+        }
+
         val imageUrls = message
             .getUrlInfos()
             .mapNotNull {

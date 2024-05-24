@@ -36,8 +36,10 @@ public data class PreparedScheduleInfo(
     internal val campaigns: JsonValue? = null,
     internal val contactId: String? = null,
     internal val experimentResult: ExperimentResult? = null,
-    internal val reportingContext: JsonValue? = null
+    internal val reportingContext: JsonValue? = null,
+    internal val additionalAudienceCheckResult: Boolean = true
 ) : JsonSerializable {
+
     internal companion object {
         private const val SCHEDULE_ID = "schedule_id"
         private const val PRODUCT_ID = "product_id"
@@ -45,6 +47,7 @@ public data class PreparedScheduleInfo(
         private const val CONTACT_ID = "contact_id"
         private const val EXPERIMENT_RESULT = "experiment_result"
         private const val REPORTING_CONTEXT = "reporting_context"
+        private const val ADDITIONAL_AUDIENCE_CHECK_RESULT = "additional_audience_check_result"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): PreparedScheduleInfo {
@@ -55,7 +58,8 @@ public data class PreparedScheduleInfo(
                 campaigns = content.get(CAMPAIGNS),
                 contactId = content.optionalField(CONTACT_ID),
                 experimentResult = content.get(EXPERIMENT_RESULT)?.let { ExperimentResult.fromJson(it.requireMap()) },
-                reportingContext = content.get(REPORTING_CONTEXT)
+                reportingContext = content.get(REPORTING_CONTEXT),
+                additionalAudienceCheckResult = content.requireField(ADDITIONAL_AUDIENCE_CHECK_RESULT)
             )
         }
     }
@@ -66,6 +70,7 @@ public data class PreparedScheduleInfo(
         CAMPAIGNS to campaigns,
         CONTACT_ID to contactId,
         EXPERIMENT_RESULT to experimentResult,
-        REPORTING_CONTEXT to reportingContext
+        REPORTING_CONTEXT to reportingContext,
+        ADDITIONAL_AUDIENCE_CHECK_RESULT to additionalAudienceCheckResult
     ).toJsonValue()
 }

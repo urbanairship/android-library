@@ -501,25 +501,10 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
      * Evaluation
      */
 
-    public fun evaluateAsPendingResult(
-        newEvaluationDate: Long,
-        infoProvider: DeviceInfoProvider,
-        contactId: String? = null
-    ): PendingResult<Boolean> {
-
-        val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
-        val result = PendingResult<Boolean>()
-        scope.launch {
-            result.result = evaluate(newEvaluationDate, infoProvider, contactId)
-        }
-
-        return result
-    }
 
     public suspend fun evaluate(
         newEvaluationDate: Long,
-        infoProvider: DeviceInfoProvider,
-        contactId: String? = null
+        infoProvider: DeviceInfoProvider
     ): Boolean {
 
         if (!checkDeviceType(infoProvider)) { return false }
@@ -531,7 +516,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         if (!checkPermissions(infoProvider)) { return false }
         if (!checkVersion(infoProvider)) { return false }
         if (!checkNewUser(infoProvider, newEvaluationDate)) { return false }
-        if (!checkHash(infoProvider, contactId)) { return false }
+        if (!checkHash(infoProvider)) { return false }
 
         return true
     }
@@ -650,11 +635,11 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         return required == (infoProvider.installDateMilliseconds >= cutOffDate)
     }
 
-    private suspend fun checkHash(infoProvider: DeviceInfoProvider, contactId: String?): Boolean {
+    private suspend fun checkHash(infoProvider: DeviceInfoProvider): Boolean {
         val selector = hashSelector ?: return true
 
         val channelId = infoProvider.getChannelId()
-        val useContactId = contactId ?: infoProvider.getStableContactId()
+        val useContactId = infoProvider.getStableContactInfo().contactId
 
         return selector.evaluate(channelId, useContactId)
     }

@@ -4,6 +4,7 @@ package com.urbanairship.audience
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.UAirship
+import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.util.PlatformUtils
@@ -22,7 +23,7 @@ import kotlinx.coroutines.sync.withLock
 public interface DeviceInfoProvider {
 
     public suspend fun getPermissionStatuses(): Map<Permission, PermissionStatus>
-    public suspend fun getStableContactId(): String
+    public suspend fun getStableContactInfo(): StableContactInfo
     public suspend fun getChannelId(): String
 
     public val isNotificationsOptedIn: Boolean
@@ -37,18 +38,18 @@ public interface DeviceInfoProvider {
 
     public companion object {
         @JvmStatic
-        public fun newProvider(): DeviceInfoProvider {
-            return DeviceInfoProviderImpl()
+        public fun newProvider(contactId: String? = null): DeviceInfoProvider {
+            return DeviceInfoProviderImpl(contactId)
         }
 
         @JvmStatic
-        public fun newCachingProvider(): DeviceInfoProvider {
-            return CachingDeviceInfoProvider(DeviceInfoProviderImpl())
+        public fun newCachingProvider(contactId: String? = null): DeviceInfoProvider {
+            return CachingDeviceInfoProvider(DeviceInfoProviderImpl(contactId))
         }
     }
 }
 
-internal class DeviceInfoProviderImpl : DeviceInfoProvider {
+internal class DeviceInfoProviderImpl(private val contactId: String? = null) : DeviceInfoProvider {
 
     override val installDateMilliseconds: Long
         get() = UAirship.getPackageInfo()?.firstInstallTime ?: 0
@@ -85,8 +86,14 @@ internal class DeviceInfoProviderImpl : DeviceInfoProvider {
         return UAirship.shared().permissionsManager.configuredPermissions.associateWith { resolver(it) }
     }
 
-    override suspend fun getStableContactId(): String {
-        return UAirship.shared().contact.getStableContactId()
+    override suspend fun getStableContactInfo(): StableContactInfo {
+        return UAirship.shared().contact.getStableContactInfo().let {
+            if (contactId != null && it.contactId != contactId) {
+                StableContactInfo(contactId, null)
+            } else {
+                it
+            }
+        }
     }
 
     override suspend fun getChannelId(): String {
@@ -102,8 +109,8 @@ internal class CachingDeviceInfoProvider(
         deviceInfoProviderImpl.getPermissionStatuses()
     }
 
-    private val cachedStableContactId = OneTimeValueSus {
-        deviceInfoProviderImpl.getStableContactId()
+    private val cachedStableContactInfo = OneTimeValueSus {
+        deviceInfoProviderImpl.getStableContactInfo()
     }
 
     private val cachedChannelId = OneTimeValueSus {
@@ -147,7 +154,7 @@ internal class CachingDeviceInfoProvider(
     }
 
     override suspend fun getPermissionStatuses(): Map<Permission, PermissionStatus> = cachedPermissionStatus.getValue()
-    override suspend fun getStableContactId(): String = cachedStableContactId.getValue()
+    override suspend fun getStableContactInfo(): StableContactInfo = cachedStableContactInfo.getValue()
     override suspend fun getChannelId(): String = cachedChannelId.getValue()
 
     override val isNotificationsOptedIn: Boolean

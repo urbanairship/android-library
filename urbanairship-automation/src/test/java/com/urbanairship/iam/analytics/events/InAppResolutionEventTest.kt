@@ -108,4 +108,20 @@ public class InAppResolutionEventTest {
         assertEquals("in_app_resolution", event.name)
         assertEquals(JsonValue.parseString(expected), event.data?.toJsonValue())
     }
+
+    @Test
+    public fun testAudienceExcludedEvent() {
+        val event = InAppResolutionEvent.audienceExcluded()
+        val expected = """
+            {
+            "resolution": {
+               "display_time":0,
+               "type":"audience_check_excluded"
+            }
+         }
+        """.trimIndent()
+
+        assertEquals("in_app_resolution", event.name)
+        assertEquals(JsonValue.parseString(expected), event.data?.toJsonValue())
+    }
 }

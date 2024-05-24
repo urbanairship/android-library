@@ -27,7 +27,7 @@ public class AutomationScheduleDataTest {
         date = clock.currentTimeMillis
     )
 
-    private val preparedScheduleInfo = PreparedScheduleInfo(scheduleId = UUID.randomUUID().toString())
+    private val preparedScheduleInfo = PreparedScheduleInfo(scheduleId = UUID.randomUUID().toString(), additionalAudienceCheckResult = true)
 
     @Test
     public fun testIsInState() {

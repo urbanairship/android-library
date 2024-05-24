@@ -9,6 +9,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestApplication
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
+import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteData
@@ -43,7 +44,7 @@ class FeatureFlagManagerTest {
     private val infoProvider: DeviceInfoProvider = mockk {
         coEvery { this@mockk.getPermissionStatuses() } returns mapOf()
         coEvery { this@mockk.getChannelId() } answers { this@FeatureFlagManagerTest.channelId }
-        coEvery { this@mockk.getStableContactId() } answers { contactId }
+        coEvery { this@mockk.getStableContactInfo() } answers { StableContactInfo(contactId, null) }
         every { this@mockk.appVersionName } returns "1.0.0"
         every { this@mockk.installDateMilliseconds } returns 1
         every { this@mockk.locale } returns Locale.US
@@ -214,9 +215,9 @@ class FeatureFlagManagerTest {
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
             name = "test-ff",
-            variables = jsonMapOf("var" to 2),
+            variables = null,
             isEligible = false,
-            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "variable 2"))
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "flag"))
         )
 
         assertEquals(expected, flag)
@@ -279,7 +280,7 @@ class FeatureFlagManagerTest {
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
             name = "test-ff",
-            variables = jsonMapOf("var" to 1),
+            variables = null,
             isEligible = false,
             reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "flag"))
         )
@@ -455,7 +456,7 @@ class FeatureFlagManagerTest {
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
             name = "test-ff",
-            variables = jsonMapOf("var" to 1),
+            variables = null,
             isEligible = false,
             reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "deferred"))
         )
@@ -666,8 +667,7 @@ class FeatureFlagManagerTest {
                 lastUpdated = 0,
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag3"),
-                audience = audienceMissedSelector,
-                payload = FeatureFlagPayload.StaticPayload()
+                payload = FeatureFlagPayload.DeferredPayload(url = Uri.EMPTY)
             )
         )
 
@@ -683,6 +683,18 @@ class FeatureFlagManagerTest {
             )
         )
 
+        coEvery { deferredResolver.resolve(any(), flags[2]) } returns Result.success(
+            DeferredFlag.Found(
+                DeferredFlagInfo(
+                    isEligible = true,
+                    variables = FeatureFlagVariables.Fixed(
+                        jsonMapOf("var" to 2)
+                    ),
+                    reportingMetadata = jsonMapOf("reporting" to "deferred 2")
+                )
+            )
+        )
+
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(flags)
@@ -692,9 +704,9 @@ class FeatureFlagManagerTest {
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
             name = "test-ff",
-            variables = jsonMapOf("var" to 1),
-            isEligible = false,
-            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "deferred"))
+            variables = jsonMapOf("var" to 2),
+            isEligible = true,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "deferred 2"))
         )
 
         assertEquals(expected, flag)
@@ -938,7 +950,7 @@ class FeatureFlagManagerTest {
         return FeatureFlag.ReportingInfo(
             reportingMetadata = reportingMetadata
                 ?: jsonMapOf("flag_id" to "27f26d85-0550-4df5-85f0-7022fa7a5925"),
-            contactId = infoProvider.getStableContactId(),
+            contactId = infoProvider.getStableContactInfo().contactId,
             channelId = infoProvider.getChannelId()
         )
     }

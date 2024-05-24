@@ -44,7 +44,8 @@ public class InAppMessageAutomationPreparerTest {
     private val preparedScheduleInfo = PreparedScheduleInfo(
         scheduleId = UUID.randomUUID().toString(),
         campaigns = JsonValue.wrap("campaigns"),
-        contactId = UUID.randomUUID().toString()
+        contactId = UUID.randomUUID().toString(),
+        additionalAudienceCheckResult = true
     )
 
     private val preparer = InAppMessageAutomationPreparer(assetsManager, coordinatorManager, adapterFactory)

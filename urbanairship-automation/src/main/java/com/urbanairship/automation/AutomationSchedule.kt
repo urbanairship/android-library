@@ -87,7 +87,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     internal val productId: String? = null,
     internal val minSDKVersion: String? = null,
     internal val created: ULong = System.currentTimeMillis().toULong(),
-    internal val queue: String? = null
+    internal val queue: String? = null,
+    internal val audienceCheckOverrides: AudienceCheckOverrides? = null
 ) : JsonSerializable {
 
     internal fun copyWith(
@@ -98,7 +99,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             startDate, endDate ?: this.endDate, audience, delay, interval, data,
             bypassHoldoutGroups, editGracePeriodDays, metadata ?: this.metadata,
             frequencyConstraintIds, messageType, campaigns, reportingContext, productId,
-            minSDKVersion, created, queue)
+            minSDKVersion, created, queue, audienceCheckOverrides)
     }
 
     /**
@@ -194,6 +195,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private const val MESSAGE_TYPE = "message_type"
         private const val MIN_SDK_VERSION = "min_sdk_version"
         private const val QUEUE = "queue"
+        private const val AUDIENCE_CHECK_OVERRIDES = "audience_check_overrides"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): AutomationSchedule {
@@ -226,12 +228,15 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 productId = content.get(PRODUCT_ID)?.requireString(),
                 bypassHoldoutGroups = content.optionalField(BYPASS_HOLDOUT_GROUPS),
                 editGracePeriodDays = content.optionalField(EDIT_GRACE_PERIOD_DAYS),
-                frequencyConstraintIds = content.get(FREQUENCY_CONSTRAINT_IDS)?.requireList()?.map { it.requireString() },
+                frequencyConstraintIds = content.get(FREQUENCY_CONSTRAINT_IDS)
+                    ?.requireList()?.map { it.requireString() },
                 messageType = content.optionalField(MESSAGE_TYPE),
                 minSDKVersion = content.optionalField(MIN_SDK_VERSION),
                 queue = content.optionalField(QUEUE),
                 data = ScheduleData.fromJson(value),
-                created = created
+                created = created,
+                audienceCheckOverrides = content.get(AUDIENCE_CHECK_OVERRIDES)
+                    ?.let(AudienceCheckOverrides::fromJson)
             )
         }
     }
@@ -261,6 +266,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(MIN_SDK_VERSION, minSDKVersion)
         .putOpt(QUEUE, queue)
         .put(CREATED, created.toLong().let(DateUtils::createIso8601TimeStamp))
+        .putOpt(AUDIENCE_CHECK_OVERRIDES, audienceCheckOverrides)
         .build()
         .toJsonValue()
 

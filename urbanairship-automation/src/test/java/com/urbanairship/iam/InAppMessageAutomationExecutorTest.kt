@@ -268,6 +268,24 @@ public class InAppMessageAutomationExecutorTest {
     }
 
     @Test
+    public fun testAdditionalAudienceCheckMiss(): TestResult = runTest {
+
+        coEvery { displayAdapter.display(any(), any()) } coAnswers {
+            throw IllegalArgumentException()
+        }
+
+        coEvery { analytics.recordEvent(any(), any()) } answers {
+            val event: InAppEvent = firstArg()
+            assertEquals(event.name, InAppResolutionEvent.audienceExcluded().name)
+        }
+
+        val result = execute(preparedInfo.copy(additionalAudienceCheckResult = false))
+        assertEquals(ScheduleExecuteResult.FINISHED, result)
+
+        coVerify { analytics.recordEvent(any(), any()) }
+    }
+
+    @Test
     public fun testExecuteCancel(): TestResult = runTest {
         every { displayCoordinator.messageWillDisplay(any()) } just runs
         every { displayCoordinator.messageFinishedDisplaying(any()) } just runs

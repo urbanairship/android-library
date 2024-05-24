@@ -48,7 +48,7 @@ internal class ContactRemoteDataProvider(
         randomValue: Int,
         lastRemoteDataInfo: RemoteDataInfo?
     ): RequestResult<RemoteDataApiClient.Result> {
-        val contactId = contact.stableContactId()
+        val contactId = contact.stableContactInfo().contactId
         val url = createUrl(contactId, locale, randomValue)
         var lastModified: String? = null
         if (lastRemoteDataInfo?.url == url.toString()) {

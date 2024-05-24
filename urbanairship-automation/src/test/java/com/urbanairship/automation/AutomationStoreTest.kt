@@ -90,7 +90,8 @@ public class AutomationStoreTest {
                 contactId = "some contact",
                 isMatching = true,
                 allEvaluatedExperimentsMetadata = listOf(jsonMapOf("full" to "reporting"))
-            )
+            ),
+            additionalAudienceCheckResult = true
         )
 
         val date = 1L
@@ -138,7 +139,8 @@ public class AutomationStoreTest {
                     contactId = "some contact",
                     isMatching = true,
                     allEvaluatedExperimentsMetadata = listOf(jsonMapOf("full" to "reporting"))
-                )
+                ),
+                additionalAudienceCheckResult = true
             )
         )
 

@@ -4,9 +4,13 @@ package com.urbanairship.automation.engine
 
 import android.content.Context
 import com.urbanairship.UALog
+import com.urbanairship.analytics.Analytics
+import com.urbanairship.analytics.Event
 import com.urbanairship.audience.DeviceInfoProvider
+import com.urbanairship.automation.AudienceCheckOverrides
 import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.AutomationSchedule
+import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolver
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.DeferredScheduleResult
 import com.urbanairship.iam.InAppMessage
@@ -23,7 +27,9 @@ import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.experiment.ExperimentManager
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.experiment.MessageInfo
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.time.Duration.Companion.seconds
@@ -38,10 +44,11 @@ internal class AutomationPreparer internal constructor(
     private val messagePreparer: AutomationPreparerDelegate<InAppMessage, PreparedInAppMessageData>,
     private val deferredResolver: DeferredResolver,
     private val frequencyLimitManager: FrequencyLimitManager,
-    private val deviceInfoProviderFactory: () -> DeviceInfoProvider = { DeviceInfoProvider.newCachingProvider() },
+    private val deviceInfoProviderFactory: (String?) -> DeviceInfoProvider = { DeviceInfoProvider.newCachingProvider(contactId = it) },
     private val experiments: ExperimentManager,
     private val remoteDataAccess: AutomationRemoteDataAccess,
-    private val queues: Queues = Queues()
+    private val queues: Queues = Queues(),
+    private val additionalAudienceResolver: AdditionalAudienceCheckerResolver
 ) {
 
     internal companion object {
@@ -57,7 +64,6 @@ internal class AutomationPreparer internal constructor(
     }
 
     suspend fun prepare(
-        context: Context,
         schedule: AutomationSchedule,
         deferredContext: DeferredTriggerContext?
     ): SchedulePrepareResult {
@@ -66,7 +72,7 @@ internal class AutomationPreparer internal constructor(
         val prepareCache = PrepareCache()
         return queues.queue(schedule.queue).run("Schedule ${schedule.identifier}") {
 
-            val deviceInfoProvider = deviceInfoProviderFactory()
+            val deviceInfoProvider = deviceInfoProviderFactory(remoteDataAccess.contactIdFor(schedule))
             // Check if we are out of date
             if (remoteDataAccess.requiredUpdate(schedule)) {
                 UALog.v { "Schedule out of date ${schedule.identifier}" }
@@ -102,8 +108,7 @@ internal class AutomationPreparer internal constructor(
             schedule.audience?.let {
                 val match = it.audienceSelector.evaluate(
                     newEvaluationDate = schedule.created.toLong(),
-                    infoProvider = deviceInfoProvider,
-                    contactId = remoteDataAccess.contactIdFor(schedule)
+                    infoProvider = deviceInfoProvider
                 )
 
                 if (!match) {
@@ -121,41 +126,92 @@ internal class AutomationPreparer internal constructor(
                 return@run RetryingQueue.Result.Retry()
             }
 
-            val scheduleInfo = PreparedScheduleInfo(
-                scheduleId = schedule.identifier,
-                productId = schedule.productId,
-                campaigns = schedule.campaigns,
-                contactId = deviceInfoProvider.getStableContactId(),
-                experimentResult = experimentResult,
-                reportingContext = schedule.reportingContext
-            )
-
             prepareData(
-                context = context,
                 prepareCache = prepareCache,
                 data = schedule.data,
-                triggerContext = deferredContext,
-                deviceInfoProvider = deviceInfoProvider,
-                scheduleInfo = scheduleInfo,
-                frequencyChecker = frequencyChecker,
                 schedule = schedule,
+                onDeferredRequest = {
+                    deferredRequest(it, triggerContext = deferredContext, deviceInfoProvider)
+                },
+                onPrepareInfo = {
+                    prepareInfo(schedule, experimentResult, deviceInfoProvider)
+                },
+                onPrepareSchedule = { info, data ->
+                    prepareSchedule(info, data, frequencyChecker)
+                }
             )
         }
     }
 
-    private suspend fun prepareData(
-        context: Context,
-        prepareCache: PrepareCache,
-        data: AutomationSchedule.ScheduleData,
+    private suspend fun prepareInfo(
+        schedule: AutomationSchedule,
+        experimentResult: ExperimentResult?,
+        deviceInfoProvider: DeviceInfoProvider
+    ): Result<PreparedScheduleInfo> {
+        val additionalAudienceCheckResult = additionalAudienceResolver.resolve(
+            deviceInfoProvider = deviceInfoProvider,
+            audienceCheckOverrides = schedule.audienceCheckOverrides
+        ).getOrElse {
+            return Result.failure(it)
+        }
+
+        return Result.success(
+            PreparedScheduleInfo(
+                scheduleId = schedule.identifier,
+                productId = schedule.productId,
+                campaigns = schedule.campaigns,
+                contactId = deviceInfoProvider.getStableContactInfo().contactId,
+                experimentResult = experimentResult,
+                reportingContext = schedule.reportingContext,
+                additionalAudienceCheckResult = additionalAudienceCheckResult
+            )
+        )
+    }
+
+    private fun prepareSchedule(
+        info: PreparedScheduleInfo,
+        data: PreparedScheduleData,
+        frequencyChecker: FrequencyChecker?
+    ): PreparedSchedule {
+        return PreparedSchedule(
+            info = info,
+            data = data,
+            frequencyChecker = frequencyChecker
+        )
+    }
+
+    private suspend fun deferredRequest(
+        deferred: DeferredAutomationData,
         triggerContext: DeferredTriggerContext?,
         deviceInfoProvider: DeviceInfoProvider,
-        scheduleInfo: PreparedScheduleInfo,
-        frequencyChecker: FrequencyChecker?,
+    ): DeferredRequest {
+        return DeferredRequest(
+            uri = deferred.url,
+            channelId = deviceInfoProvider.getChannelId(),
+            triggerContext = triggerContext,
+            locale = deviceInfoProvider.locale,
+            notificationOptIn = deviceInfoProvider.isNotificationsOptedIn,
+            appVersionName = deviceInfoProvider.appVersionName
+        )
+    }
+
+    private suspend fun prepareData(
+        prepareCache: PrepareCache,
+        data: AutomationSchedule.ScheduleData,
         schedule: AutomationSchedule,
+        onDeferredRequest: suspend (DeferredAutomationData) -> DeferredRequest,
+        onPrepareInfo: suspend () -> Result<PreparedScheduleInfo>,
+        onPrepareSchedule: (PreparedScheduleInfo, PreparedScheduleData) -> PreparedSchedule,
     ): RetryingQueue.Result<SchedulePrepareResult> {
-        return when(data) {
+
+        when(data) {
             is AutomationSchedule.ScheduleData.Actions -> {
-                actionPreparer.prepare(data.actions, scheduleInfo).fold(
+                val info = onPrepareInfo().getOrElse {
+                    UALog.e(it) { "Failed to prepare schedule data" }
+                    return RetryingQueue.Result.Retry()
+                }
+
+                return actionPreparer.prepare(data.actions, info).fold(
                     onFailure = {
                         UALog.e(it) { "Failed to prepare actions" }
                         RetryingQueue.Result.Retry()
@@ -163,11 +219,7 @@ internal class AutomationPreparer internal constructor(
                     onSuccess = {
                         RetryingQueue.Result.Success(
                             SchedulePrepareResult.Prepared(
-                                PreparedSchedule(
-                                    info = scheduleInfo,
-                                    data = PreparedScheduleData.Action(it),
-                                    frequencyChecker = frequencyChecker
-                                )
+                                onPrepareSchedule(info, PreparedScheduleData.Action(it))
                             )
                         )
                     }
@@ -177,45 +229,43 @@ internal class AutomationPreparer internal constructor(
             is AutomationSchedule.ScheduleData.InAppMessageData -> {
                 if (!data.message.displayContent.validate()) {
                     UALog.d { "⚠️ Message did not pass validation: ${data.message.name} - skipping(${schedule.identifier})." }
-                    RetryingQueue.Result.Success(SchedulePrepareResult.Skip)
-                } else {
-                    messagePreparer.prepare(data.message, scheduleInfo).fold(
-                        onFailure = {
-                            UALog.e(it) { "Failed to prepare message" }
-                            RetryingQueue.Result.Retry()
-                        },
-                        onSuccess = {
-                            RetryingQueue.Result.Success(
-                                SchedulePrepareResult.Prepared(
-                                    PreparedSchedule(
-                                        info = scheduleInfo,
-                                        data = PreparedScheduleData.InAppMessage(it),
-                                        frequencyChecker = frequencyChecker
-                                    )
-                                )
-                            )
-                        }
-                    )
+                    return RetryingQueue.Result.Success(SchedulePrepareResult.Skip)
                 }
+
+                val info = onPrepareInfo().getOrElse {
+                    UALog.e(it) { "Failed to prepare schedule data" }
+                    return RetryingQueue.Result.Retry()
+                }
+
+                return messagePreparer.prepare(data.message, info).fold(
+                    onFailure = {
+                        UALog.e(it) { "Failed to prepare message" }
+                        RetryingQueue.Result.Retry()
+                    },
+                    onSuccess = {
+                        RetryingQueue.Result.Success(
+                            SchedulePrepareResult.Prepared(
+                                onPrepareSchedule(info, PreparedScheduleData.InAppMessage(it))
+                            )
+                        )
+                    }
+                )
             }
 
             is AutomationSchedule.ScheduleData.Deferred -> {
-                prepareDeferred(context = context,
+                return prepareDeferred(
                     prepareCache = prepareCache,
                     deferred = data.deferred,
-                    triggerContext = triggerContext,
-                    deviceInfoProvider = deviceInfoProvider,
+                    deferredRequest = onDeferredRequest(data.deferred),
                     schedule = schedule,
                     onResult = {
                         prepareData(
-                            context = context,
                             prepareCache = prepareCache,
                             data = it,
-                            triggerContext = triggerContext,
-                            deviceInfoProvider = deviceInfoProvider,
-                            scheduleInfo = scheduleInfo,
-                            frequencyChecker = frequencyChecker,
-                            schedule = schedule
+                            schedule = schedule,
+                            onDeferredRequest = onDeferredRequest,
+                            onPrepareInfo = onPrepareInfo,
+                            onPrepareSchedule = onPrepareSchedule,
                         )
                     }
                 )
@@ -241,28 +291,15 @@ internal class AutomationPreparer internal constructor(
     }
 
     private suspend fun prepareDeferred(
-        context: Context,
         prepareCache: PrepareCache,
         deferred: DeferredAutomationData,
-        triggerContext: DeferredTriggerContext?,
-        deviceInfoProvider: DeviceInfoProvider,
+        deferredRequest: DeferredRequest,
         schedule: AutomationSchedule,
         onResult: suspend (AutomationSchedule.ScheduleData) -> RetryingQueue.Result<SchedulePrepareResult>
     ): RetryingQueue.Result<SchedulePrepareResult> {
         UALog.v { "Resolving deferred ${schedule.identifier}" }
 
-
-        val request = DeferredRequest(
-            uri = deferred.url,
-            channelId = deviceInfoProvider.getChannelId(),
-            triggerContext = triggerContext,
-            locale = deviceInfoProvider.locale,
-            notificationOptIn = deviceInfoProvider.isNotificationsOptedIn,
-            appVersionName = deviceInfoProvider.appVersionName
-        )
-
-
-        val result = prepareCache.deferredResult ?: deferredResolver.resolve(request, DeferredScheduleResult::fromJson)
+        val result = prepareCache.deferredResult ?: deferredResolver.resolve(deferredRequest, DeferredScheduleResult::fromJson)
         UALog.v { "Deferred result ${schedule.identifier} $result" }
 
         return when(result) {

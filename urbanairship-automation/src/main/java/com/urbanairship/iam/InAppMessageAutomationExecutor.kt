@@ -77,14 +77,23 @@ internal class InAppMessageAutomationExecutor(
         data: PreparedInAppMessageData,
         preparedScheduleInfo: PreparedScheduleInfo
     ): ScheduleExecuteResult = withContext(Dispatchers.Main.immediate) {
-        // Display
-        displayDelegate?.messageWillDisplay(data.message, preparedScheduleInfo.scheduleId)
-        data.displayCoordinator.messageWillDisplay(data.message)
 
         val analytics = analyticsFactory.makeAnalytics(
             message = data.message,
             preparedScheduleInfo = preparedScheduleInfo
         )
+
+        if (!preparedScheduleInfo.additionalAudienceCheckResult) {
+            analytics.recordEvent(
+                event = InAppResolutionEvent.audienceExcluded(),
+                layoutContext = null
+            )
+            return@withContext ScheduleExecuteResult.FINISHED
+        }
+
+        // Display
+        displayDelegate?.messageWillDisplay(data.message, preparedScheduleInfo.scheduleId)
+        data.displayCoordinator.messageWillDisplay(data.message)
 
         var result = ScheduleExecuteResult.FINISHED
 
