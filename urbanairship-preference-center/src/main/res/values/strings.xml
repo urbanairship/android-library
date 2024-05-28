@@ -21,4 +21,7 @@
     <!-- Example: "Tap to subscribe" / "Tap to unsubscribe" -->
     <string name="ua_preference_center_action_subscribe">subscribe</string>
     <string name="ua_preference_center_action_unsubscribe">unsubscribe</string>
+
+    <!-- Contact channel management -->
+    <string name="ua_preference_center_contact_management_pending">Pending verification</string>
 </resources>

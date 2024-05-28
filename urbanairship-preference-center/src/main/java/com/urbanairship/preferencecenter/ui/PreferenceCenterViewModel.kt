@@ -10,26 +10,41 @@ import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.contacts.Contact
+import com.urbanairship.contacts.ContactChannel
+import com.urbanairship.contacts.ContactChannel.Pending.PendingInfo
 import com.urbanairship.contacts.Scope
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.ConditionStateMonitor
 import com.urbanairship.preferencecenter.PreferenceCenter
 import com.urbanairship.preferencecenter.data.Condition
 import com.urbanairship.preferencecenter.data.Item
+import com.urbanairship.preferencecenter.data.Item.ContactManagement.RegistrationOptions
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.data.evaluate
+import com.urbanairship.preferencecenter.ui.item.AlertItem
+import com.urbanairship.preferencecenter.ui.item.ChannelSubscriptionItem
+import com.urbanairship.preferencecenter.ui.item.ContactManagementItem
+import com.urbanairship.preferencecenter.ui.item.ContactSubscriptionGroupItem
+import com.urbanairship.preferencecenter.ui.item.ContactSubscriptionItem
+import com.urbanairship.preferencecenter.ui.item.PrefCenterItem
+import com.urbanairship.preferencecenter.ui.item.SectionBreakItem
+import com.urbanairship.preferencecenter.ui.item.SectionItem
 import com.urbanairship.preferencecenter.util.execute
 import com.urbanairship.preferencecenter.util.scanConcat
+import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
+import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
@@ -40,7 +55,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.zip
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 @OpenForTesting
@@ -68,8 +83,11 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
 
     private val stateFlow: MutableStateFlow<State> = MutableStateFlow(State.Loading)
     private val actions: MutableSharedFlow<Action> = MutableSharedFlow()
+    private val effectsChannel = Channel<Effect>()
 
     val states: StateFlow<State> = stateFlow.asStateFlow()
+    val effects: Flow<Effect> = effectsChannel.receiveAsFlow()
+        .onEach { UALog.v("! $it")}
 
     init {
         viewModelScope.launch {
@@ -109,7 +127,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         viewModelScope.launch { actions.emit(action) }
     }
 
-    private fun map(action: Action): Flow<Change> =
+    private suspend fun map(action: Action): Flow<Change> =
         when (action) {
             is Action.Refresh ->
                 refresh()
@@ -130,9 +148,48 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             }
             is Action.ConditionStateChanged ->
                 flowOf(Change.UpdateConditionState(action.state))
+            is Action.AddChannel -> {
+                effectsChannel.send(
+                    Effect.ShowContactManagementAddDialog(action.item)
+                )
+                emptyFlow()
+            }
+            is Action.ConfirmAddChannel -> {
+                effectsChannel.send(
+                    Effect.ShowContactManagementAddConfirmDialog(action.item, action.result)
+                )
+                emptyFlow()
+            }
+            is Action.RemoveChannel -> {
+                effectsChannel.send(
+                    Effect.ShowContactManagementRemoveDialog(action.item, action.channel)
+                )
+                emptyFlow()
+            }
+            is Action.RegisterChannel -> {
+                // TODO: wire up API calls to actually register channels!
+
+                val contactChannel = ContactChannel.Pending(
+                    address = action.address,
+                    info = when (action) {
+                        is Action.RegisterChannel.Email -> PendingInfo.Email
+                        is Action.RegisterChannel.Sms -> PendingInfo.Sms(
+                            senderId = action.senderId
+                        )
+                    }
+                )
+
+                flowOf(Change.AddContactChannel(contactChannel))
+            }
+            is Action.UnregisterChannel -> {
+
+                // TODO: wire up API calls to actually unregister channels!
+
+                flowOf(Change.RemoveContactChannel(action.channel))
+            }
         }
 
-    private fun reduce(state: State, change: Change): Flow<State> =
+    private suspend fun reduce(state: State, change: Change): Flow<State> =
         when (change) {
             is Change.ShowContent -> change.state
             is Change.UpdateSubscriptions -> when (state) {
@@ -172,48 +229,41 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 else -> state
             }
             is Change.ShowError -> State.Error(error = change.error)
-            is Change.ShowLoading -> {
-                State.Loading
+            is Change.ShowLoading -> State.Loading
+
+            is Change.AddContactChannel -> when (state) {
+                is State.Content -> {
+                    state.copy(contactChannels = state.contactChannels + change.channel)
+                }
+                else -> state
             }
+
+            is Change.RemoveContactChannel -> when (state) {
+                is State.Content -> {
+                    state.copy(contactChannels = state.contactChannels - change.channel)
+                }
+                else -> state
+            }
+
+            // TODO: wire up API calls and update state, as needed!
+            is Change.AssociateContactChannel -> state
+            is Change.DisassociateContactChannel -> state
         }.let { flowOf(it) }
 
-    @OptIn(FlowPreview::class)
+    private data class EnrichedConfig(
+        val config: PreferenceCenterConfig,
+        val channelSubscriptions: Set<String> = emptySet(),
+        val contactSubscriptions: Map<String, Set<Scope>> = emptyMap(),
+        val contactChannels: Set<ContactChannel> = emptySet()
+    )
+
     private fun refresh(): Flow<Change> = flow {
         emit(Change.ShowLoading)
 
-        val configFlow = flow { emit(getConfig(preferenceCenterId)) }
-        val channelSubscriptionsFlow = flow { emit(getChannelSubscriptions()) }
-        val contactSubscriptionsFlow = flow { emit(getContactSubscriptions()) }
-
         emitAll(
             // Fetch config first to determine which subscriptions are needed and flat map them into the flow.
-            configFlow.flatMapConcat { config ->
-
-                val mergeChannelDataToContact = config.options?.mergeChannelDataToContact ?: false
-                val fetchChannelSubscriptions = config.hasChannelSubscriptions || mergeChannelDataToContact
-                val fetchContactSubscriptions = config.hasContactSubscriptions
-
-                when {
-                    fetchChannelSubscriptions && fetchContactSubscriptions ->
-                        channelSubscriptionsFlow.zip(contactSubscriptionsFlow) { channelSubs, contactSubs ->
-                            if (mergeChannelDataToContact) {
-                                Triple(config, channelSubs, mergeSubscriptions(channelSubs, contactSubs))
-                            } else {
-                                Triple(config, channelSubs, contactSubs)
-                            }
-                        }
-                    fetchChannelSubscriptions ->
-                        channelSubscriptionsFlow.map { channelSubs ->
-                            Triple(config, channelSubs, emptyMap())
-                        }
-                    fetchContactSubscriptions ->
-                        contactSubscriptionsFlow.map { contactSubs ->
-                            Triple(config, emptySet(), contactSubs)
-                        }
-                    else -> // We shouldn't ever get here, unless backend somehow serves a pref center with no items.
-                        flowOf(Triple(config, emptySet(), emptyMap()))
-                }
-            }.map { (config, channelSubscriptions, contactSubscriptions) ->
+            enrichedConfig()
+            .map { (config, channelSubscriptions, contactSubscriptions, contactChannels) ->
                 val conditionState = conditionMonitor.currentState
                 val filteredItems = config.filterByConditions(conditionState).asPrefCenterItems()
                 val display = config.display
@@ -225,6 +275,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                         subtitle = display.description,
                         channelSubscriptions = channelSubscriptions,
                         contactSubscriptions = contactSubscriptions,
+                        contactChannels = contactChannels,
                         conditionState = conditionState
                     )
                 )
@@ -275,14 +326,85 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
 
                 emit(Change.UpdateScopedSubscriptions(subscriptionId, scopes, isEnabled))
             }
-            is Item.Alert -> {} // No-op.
-            is Item.EmailChannelManagementItem -> {}
-            is Item.SmsChannelManagementItem -> {}
+            else -> Unit // No-op.
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun enrichedConfig(): Flow<EnrichedConfig> =
+        // Fetch config first to determine which subscriptions are needed and flat map them into the flow.
+        getConfig(preferenceCenterId)
+            .map(::EnrichedConfig)
+            .flatMapConcat { enrichedConfig ->
+                val config = enrichedConfig.config
+                val mergeChannelDataToContact = config.options?.mergeChannelDataToContact ?: false
+                val fetchChannelSubscriptions = config.hasChannelSubscriptions || mergeChannelDataToContact
+                val fetchContactSubscriptions = config.hasContactSubscriptions
+                val fetchContactChannels = config.hasContactManagement
+
+                combine(
+                    if (fetchChannelSubscriptions) getChannelSubscriptions() else flowOf(emptySet()),
+                    if (fetchContactSubscriptions) getContactSubscriptions() else flowOf(emptyMap()),
+                    if (fetchContactChannels) getAssociatedChannels() else flowOf(emptySet())
+                ) { channelSubs, contactSubs, contactChannels ->
+                    enrichedConfig.copy(
+                        channelSubscriptions = channelSubs,
+                        contactSubscriptions = if (mergeChannelDataToContact) mergeSubscriptions(channelSubs, contactSubs) else contactSubs,
+                        contactChannels = contactChannels
+                    )
+                }
+            }
+
+    private fun getConfig(preferenceCenterId: String): Flow<PreferenceCenterConfig> = flow {
+        emit(preferenceCenter.getConfig(preferenceCenterId) ?: throw IllegalStateException("Null preference center for id: $preferenceCenterId"))
+    }
+
+    private fun getChannelSubscriptions(): Flow<Set<String>> = flow {
+        emit(channel.fetchSubscriptionLists().getOrThrow())
+    }
+
+    private fun getContactSubscriptions(): Flow<Map<String, Set<Scope>>> = flow {
+        emit(contact.fetchSubscriptionLists().getOrThrow())
+    }
+
+    private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = flow {
+        // TODO: Implement this!
+        emit(
+            setOf(
+                ContactChannel.Registered(
+                    channelId = UUID.randomUUID().toString(),
+                    maskedAddress = "tim@apple.com".maskEmail(),
+                    info = ContactChannel.Registered.RegisteredInfo.Email(
+                        transactionalOptedIn = null,
+                        transactionalOptedOut = null,
+                        commercialOptedIn = 0L,
+                        commercialOptedOut = null
+                    )
+                ),
+                ContactChannel.Pending(
+                    address = "sundar@google.com",
+                    info = PendingInfo.Email
+                ),
+                ContactChannel.Registered(
+                    channelId = UUID.randomUUID().toString(),
+                    maskedAddress = "+12345678901".maskPhoneNumber(),
+                    info = ContactChannel.Registered.RegisteredInfo.SMS(
+                        isOptIn = true,
+                        senderID = "12345"
+                    )
+                ),
+                ContactChannel.Pending(
+                    address = "+15039578484",
+                    info = PendingInfo.Sms(
+                        senderId = "31415"
+                    )
+                )
+            )
+        )
+    }
+
     internal sealed class State {
-        object Loading : State()
+        data object Loading : State()
         data class Error(val message: String? = null, val error: Throwable? = null) : State()
         data class Content(
             val config: PreferenceCenterConfig,
@@ -291,37 +413,69 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             val subtitle: String?,
             val channelSubscriptions: Set<String>,
             val contactSubscriptions: Map<String, Set<Scope>>,
-            val conditionState: Condition.State
-        ) : State()
+            val contactChannels: Set<ContactChannel>,
+            val conditionState: Condition.State,
+        ) : State() {
+
+            override fun toString(): String {
+                return "Content(title=$title, subtitle=$subtitle, channelSubscriptions=$channelSubscriptions, contactSubscriptions=$contactSubscriptions, contactChannels=$contactChannels, conditionState=$conditionState)"
+            }
+        }
     }
 
-    internal sealed class Action {
-        object Refresh : Action()
+    internal sealed class Action { data object Refresh : Action()
         data class PreferenceItemChanged(val item: Item, val isEnabled: Boolean) : Action()
-        data class ScopedPreferenceItemChanged(val item: Item, val scopes: Set<Scope>, val isEnabled: Boolean) : Action()
+        data class ScopedPreferenceItemChanged(
+            val item: Item,
+            val scopes: Set<Scope>,
+            val isEnabled: Boolean
+        ) : Action()
+
         data class ButtonActions(val actions: Map<String, JsonValue>) : Action()
         data class ConditionStateChanged(val state: Condition.State) : Action()
+
+        // Contact Management
+        data class AddChannel(val item: Item.ContactManagement) : Action()
+        data class RemoveChannel(val item: Item.ContactManagement, val channel: ContactChannel) : Action()
+
+        data class ConfirmAddChannel(
+            val item: Item.ContactManagement,
+            val result: ContactChannelDialogInputView.DialogResult
+        ): Action()
+
+        sealed class RegisterChannel : Action() {
+            abstract val address: String
+
+            data class Email(override val address: String) : RegisterChannel()
+
+            data class Sms(override val address: String, val senderId: String) : RegisterChannel()
+        }
+
+        data class UnregisterChannel(val channel: ContactChannel) : Action()
     }
 
     internal sealed class Change {
-        object ShowLoading : Change()
+        data object ShowLoading : Change()
         data class ShowError(val message: String? = null, val error: Throwable? = null) : Change()
         data class ShowContent(val state: State.Content) : Change()
         data class UpdateSubscriptions(val subscriptionId: String, val isSubscribed: Boolean) : Change()
         data class UpdateScopedSubscriptions(val subscriptionId: String, val scopes: Set<Scope>, val isSubscribed: Boolean) : Change()
         data class UpdateConditionState(val state: Condition.State) : Change()
+
+        // Contact Management
+        data class AddContactChannel(val channel: ContactChannel) : Change()
+        data class RemoveContactChannel(val channel: ContactChannel) : Change()
+        data class AssociateContactChannel(val address: String, val options: RegistrationOptions) : Change()
+        data class DisassociateContactChannel(val channel: ContactChannel) : Change()
     }
 
-    private suspend fun getConfig(preferenceCenterId: String): PreferenceCenterConfig {
-        return preferenceCenter.getConfig(preferenceCenterId) ?: throw IllegalStateException("Null preference center for id: $preferenceCenterId")
-    }
-
-    private suspend fun getChannelSubscriptions(): Set<String> {
-        return channel.fetchSubscriptionLists().getOrThrow()
-    }
-
-    private suspend fun getContactSubscriptions(): Map<String, Set<Scope>> {
-        return contact.fetchSubscriptionLists().getOrThrow()
+    internal sealed class Effect {
+        data class ShowContactManagementAddDialog(val item: Item.ContactManagement) : Effect()
+        data class ShowContactManagementAddConfirmDialog(
+            val item: Item.ContactManagement,
+            val result: ContactChannelDialogInputView.DialogResult
+        ) : Effect()
+        data class ShowContactManagementRemoveDialog(val item: Item.ContactManagement, val channel: ContactChannel) : Effect()
     }
 }
 
@@ -352,31 +506,47 @@ internal fun PreferenceCenterConfig.filterByConditions(
 internal fun PreferenceCenterConfig.asPrefCenterItems(): List<PrefCenterItem> =
     sections.flatMap { section ->
         when (section) {
-            is Section.SectionBreak -> listOf(PrefCenterItem.SectionBreakItem(section))
+            is Section.SectionBreak -> listOf(SectionBreakItem(section))
             is Section.Common -> {
                 if (section.display.isEmpty()) {
                     // Ignore sections with no title and subtitle to avoid unwanted whitespace in
                     // the list if a section has no title/description and is being used as a
                     // container for an alert.
-                    emptyList()
+                    emptyList<PrefCenterItem>()
                 } else {
-                    listOf(PrefCenterItem.SectionItem(section))
+                    listOf(SectionItem(section))
                 } + section.items.map { item ->
                     when (item) {
-                        is Item.ChannelSubscription ->
-                            PrefCenterItem.ChannelSubscriptionItem(item)
-                        is Item.ContactSubscription ->
-                            PrefCenterItem.ContactSubscriptionItem(item)
-                        is Item.ContactSubscriptionGroup ->
-                            PrefCenterItem.ContactSubscriptionGroupItem(item)
-                        is Item.Alert ->
-                            PrefCenterItem.AlertItem(item)
-                        is Item.SmsChannelManagementItem ->
-                            PrefCenterItem.SmsChannelManagementItem(item)
-                        is Item.EmailChannelManagementItem ->
-                            PrefCenterItem.EmailChannelManagementItem(item)
+                        is Item.ChannelSubscription -> ChannelSubscriptionItem(item)
+                        is Item.ContactSubscription -> ContactSubscriptionItem(item)
+                        is Item.ContactSubscriptionGroup -> ContactSubscriptionGroupItem(item)
+                        is Item.Alert -> AlertItem(item)
+                        is Item.ContactManagement -> ContactManagementItem(item)
                     }
                 }
             }
         }
     }
+
+// TODO: for stubbing out pref center views. remove these!
+private fun String.maskEmail(): String {
+    if (isNotEmpty()) {
+        val firstLetter = take(1)
+        if (contains("@")) {
+            val parts = split("@")
+            val suffix = parts.last()
+            val maskedLength = parts.first().length - 1
+            val mask = "●".repeat(maskedLength)
+            return "${firstLetter}${mask}@${suffix}"
+        }
+    }
+    return this
+}
+
+private fun String.maskPhoneNumber(): String {
+    return if (isNotEmpty() && length > 4) {
+        "●".repeat(7) + takeLast(4)
+    } else {
+        this
+    }
+}

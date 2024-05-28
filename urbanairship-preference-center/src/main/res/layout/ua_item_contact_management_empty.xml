@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/UrbanAirship.PreferenceCenter.Item.OptInInfo.Empty"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/ua_pref_icon"
+        style = "@style/UrbanAirship.PreferenceCenter.Item.OptInInfo.Icon" />
+
+    <TextView
+        android:id="@+id/ua_optin_empty_label"
+        style = "@style/UrbanAirship.PreferenceCenter.Item.OptInInfo.EmptyText"
+        tools:text="No SMS Added" />
+
+</LinearLayout>

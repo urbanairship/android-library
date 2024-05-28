@@ -9,6 +9,8 @@ import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.SubscriptionListEditor
 import com.urbanairship.contacts.Contact
+import com.urbanairship.contacts.ContactChannel
+import com.urbanairship.contacts.ContactChannel.Pending.PendingInfo
 import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListEditor
 import com.urbanairship.json.JsonValue
@@ -17,7 +19,7 @@ import com.urbanairship.preferencecenter.PreferenceCenter
 import com.urbanairship.preferencecenter.data.Button
 import com.urbanairship.preferencecenter.data.CommonDisplay
 import com.urbanairship.preferencecenter.data.Condition
-import com.urbanairship.preferencecenter.data.Condition.NotificationOptIn.Status
+import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status
 import com.urbanairship.preferencecenter.data.IconDisplay
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Item.ContactSubscriptionGroup.Component
@@ -25,8 +27,11 @@ import com.urbanairship.preferencecenter.data.Options
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Action
+import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Effect
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
+import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
 import kotlin.time.ExperimentalTime
+import io.mockk.mockk
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,6 +44,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -192,13 +199,13 @@ class PreferenceCenterViewModelTest {
                             conditions = emptyList()
                         )
                     ),
-                    conditions = listOf(Condition.NotificationOptIn(status = Status.OPT_OUT))
+                    conditions = listOf(Condition.OptInStatus(status = Status.OPT_OUT))
                 ),
                 Section.Common(
                     id = "section-2",
                     display = CommonDisplay("section-2-title", "section-2-subtitle"),
                     items = listOf(CONTACT_SUBSCRIPTION_ITEM_1, CONTACT_SUBSCRIPTION_ITEM_2),
-                    conditions = listOf(Condition.NotificationOptIn(status = Status.OPT_IN))
+                    conditions = listOf(Condition.OptInStatus(status = Status.OPT_IN))
                 ),
             )
         )
@@ -279,6 +286,7 @@ class PreferenceCenterViewModelTest {
         val config = spy(CHANNEL_SUBSCRIPTION_CONFIG)
         whenever(config.hasChannelSubscriptions).doReturn(true)
         whenever(config.hasContactSubscriptions).doReturn(true)
+        whenever(config.hasContactManagement).doReturn(true)
 
         viewModel(config = config).run {
             states.test {
@@ -288,6 +296,8 @@ class PreferenceCenterViewModelTest {
 
                 verify(channel).fetchSubscriptionLists()
                 verify(contact).fetchSubscriptionLists()
+
+                // TODO: verify that we fetched contact channels once implemented!
 
                 cancel()
             }
@@ -318,6 +328,7 @@ class PreferenceCenterViewModelTest {
         val config = spy(CHANNEL_SUBSCRIPTION_CONFIG)
         whenever(config.hasChannelSubscriptions).doReturn(false)
         whenever(config.hasContactSubscriptions).doReturn(true)
+        whenever(config.hasContactManagement).doReturn(true)
 
         viewModel(config = config).run {
             states.test {
@@ -327,6 +338,8 @@ class PreferenceCenterViewModelTest {
 
                 verify(channel, never()).fetchSubscriptionLists()
                 verify(contact).fetchSubscriptionLists()
+
+                // TODO: verify that we fetched contact channels once implemented!
 
                 cancel()
             }
@@ -338,6 +351,7 @@ class PreferenceCenterViewModelTest {
         val config = spy(CHANNEL_SUBSCRIPTION_CONFIG)
         whenever(config.hasChannelSubscriptions).doReturn(true)
         whenever(config.hasContactSubscriptions).doReturn(false)
+        whenever(config.hasContactManagement).doReturn(true)
 
         viewModel(config = config).run {
             states.test {
@@ -347,6 +361,31 @@ class PreferenceCenterViewModelTest {
 
                 verify(channel).fetchSubscriptionLists()
                 verify(contact, never()).fetchSubscriptionLists()
+
+                // TODO: verify that we fetched contact channels once implemented!
+
+                cancel()
+            }
+        }
+    }
+
+    @Test
+    fun handlesRefreshActionWithoutContactChannels() = runBlocking {
+        val config = spy(CHANNEL_SUBSCRIPTION_CONFIG)
+        whenever(config.hasChannelSubscriptions).doReturn(true)
+        whenever(config.hasContactSubscriptions).doReturn(true)
+        whenever(config.hasContactManagement).doReturn(false)
+
+        viewModel(config = config).run {
+            states.test {
+                handle(Action.Refresh)
+                assertThat(awaitItem()).isEqualTo(State.Loading)
+                assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
+
+                verify(channel).fetchSubscriptionLists()
+                verify(contact).fetchSubscriptionLists()
+
+                // TODO: verify that we never fetched contact channels once implemented!
 
                 cancel()
             }
@@ -768,10 +807,139 @@ class PreferenceCenterViewModelTest {
         assertEquals(3, filteredItems)
     }
 
+    //
+    // Contact Channel Management
+    //
+
+    @Test
+    fun testAddContactChannel(): Unit = runBlocking {
+        val mockItem: Item.ContactManagement = mockk {}
+        viewModel().run {
+            states.test {
+                assertThat(awaitItem()).isEqualTo(State.Loading)
+                handle(Action.Refresh)
+                assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
+                ensureAllEventsConsumed()
+            }
+
+            effects.test {
+                handle(Action.AddChannel(mockItem))
+                assertThat(awaitItem()).isEqualTo(Effect.ShowContactManagementAddDialog(mockItem))
+                ensureAllEventsConsumed()
+            }
+        }
+    }
+
+    @Test
+    fun testConfirmAddContactChannel(): Unit = runBlocking {
+        val mockItem: Item.ContactManagement = mockk {}
+        val dialogResult: ContactChannelDialogInputView.DialogResult = mockk {}
+
+        viewModel().run {
+            states.test {
+                assertThat(awaitItem()).isEqualTo(State.Loading)
+                handle(Action.Refresh)
+                assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
+                ensureAllEventsConsumed()
+            }
+
+            effects.test {
+                handle(Action.ConfirmAddChannel(mockItem, dialogResult))
+                assertThat(awaitItem()).isEqualTo(Effect.ShowContactManagementAddConfirmDialog(mockItem, dialogResult))
+                ensureAllEventsConsumed()
+            }
+        }
+    }
+
+    @Test
+    fun testRemoveContactChannel(): Unit = runBlocking {
+        val msisdn = "15038675309"
+        val senderId = "123456"
+
+        val contactChannel = ContactChannel.Pending(
+            address = msisdn,
+            info = PendingInfo.Sms(senderId = senderId)
+        )
+
+        val mockItem: Item.ContactManagement = mockk {}
+
+        viewModel().run {
+            states.test {
+                assertThat(awaitItem()).isEqualTo(State.Loading)
+                handle(Action.Refresh)
+                assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
+                ensureAllEventsConsumed()
+            }
+
+            effects.test {
+                handle(Action.RemoveChannel(mockItem, contactChannel))
+                assertThat(awaitItem()).isEqualTo(Effect.ShowContactManagementRemoveDialog(mockItem, contactChannel))
+                ensureAllEventsConsumed()
+            }
+        }
+    }
+
+    @Test
+    fun testRegisterUnregisterSmsChannel(): Unit = runBlocking {
+        val msisdn = "15038675309"
+        val senderId = "123456"
+
+        val contactChannel = ContactChannel.Pending(
+            address = msisdn,
+            info = PendingInfo.Sms(senderId = senderId)
+        )
+
+        viewModel().run {
+            states.test {
+                assertThat(awaitItem()).isEqualTo(State.Loading)
+                handle(Action.Refresh)
+                val initialState = awaitItem() as State.Content
+                assertThat(initialState.contactChannels).isEmpty()
+
+                handle(Action.RegisterChannel.Sms(msisdn, senderId))
+                val registeredState = awaitItem() as State.Content
+                assertThat(registeredState.contactChannels).containsExactly(contactChannel)
+
+                handle(Action.UnregisterChannel(contactChannel))
+                val unregisteredState = awaitItem() as State.Content
+                assertThat(unregisteredState.contactChannels).isEmpty()
+
+                ensureAllEventsConsumed()
+            }
+        }
+    }
+
+    @Test
+    fun testRegisterUnregisterEmailChannel(): Unit = runBlocking {
+        val address = "someone@example.com"
+
+        val contactChannel = ContactChannel.Pending(address = address, info = PendingInfo.Email)
+
+        viewModel().run {
+            states.test {
+                assertThat(awaitItem()).isEqualTo(State.Loading)
+                handle(Action.Refresh)
+                val initialState = awaitItem() as State.Content
+                assertThat(initialState.contactChannels).isEmpty()
+
+                handle(Action.RegisterChannel.Email(address))
+                val registeredState = awaitItem() as State.Content
+                assertThat(registeredState.contactChannels).containsExactly(contactChannel)
+
+                handle(Action.UnregisterChannel(contactChannel))
+                val unregisteredState = awaitItem() as State.Content
+                assertThat(unregisteredState.contactChannels).isEmpty()
+
+                ensureAllEventsConsumed()
+            }
+        }
+    }
+
     private fun viewModel(
         config: PreferenceCenterConfig = CHANNEL_SUBSCRIPTION_CONFIG,
         channelSubscriptions: Set<String> = emptySet(),
         contactSubscriptions: Map<String, Set<Scope>> = emptyMap(),
+        contactChannels: List<ContactChannel> = emptyList(),
         preferenceCenterId: String = config.id,
         ioDispatcher: CoroutineDispatcher = testDispatcher,
         actionRunRequestFactory: ActionRunRequestFactory = testActionRunRequestFactory,

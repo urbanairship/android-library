@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/UrbanAirship.PreferenceCenter.Item.OptIn"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false">
+
+    <TextView
+        android:id="@+id/ua_pref_title"
+        style="@style/UrbanAirship.PreferenceCenter.Item.OptInTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="Notifications are turned off" />
+
+    <TextView
+        android:id="@+id/ua_pref_description"
+        style="@style/UrbanAirship.PreferenceCenter.Item.OptInDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="You will not receive any notifications from this app." />
+
+    <LinearLayout
+        android:id="@+id/ua_pref_widget"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/ua_pref_button"
+        style="@style/UrbanAirship.PreferenceCenter.Item.OptInButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="Add email" />
+
+</LinearLayout>

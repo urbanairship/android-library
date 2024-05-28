@@ -4,9 +4,9 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.requireField
-import com.urbanairship.preferencecenter.data.Condition.NotificationOptIn.Status
-import com.urbanairship.preferencecenter.data.Condition.NotificationOptIn.Status.OPT_IN
-import com.urbanairship.preferencecenter.data.Condition.NotificationOptIn.Status.OPT_OUT
+import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status
+import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status.OPT_IN
+import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status.OPT_OUT
 
 typealias Conditions = List<Condition>
 
@@ -24,7 +24,7 @@ fun Conditions.evaluate(state: Condition.State): Boolean =
 sealed class Condition(private val type: String) {
 
     /** Notification opt-in status condition. */
-    data class NotificationOptIn(
+    data class OptInStatus(
         val status: Status
     ) : Condition(TYPE_NOTIFICATION_OPT_IN) {
 
@@ -67,21 +67,23 @@ sealed class Condition(private val type: String) {
         private const val KEY_TYPE = "type"
         private const val KEY_STATUS = "when_status"
 
+        @Throws(JsonException::class)
         internal fun parse(json: JsonMap): Condition {
             return when (val type = json.get(KEY_TYPE)?.string) {
-                TYPE_NOTIFICATION_OPT_IN -> NotificationOptIn(
+                TYPE_NOTIFICATION_OPT_IN -> OptInStatus(
                     status = json.requireField<String>(KEY_STATUS).let { Status.parse(it) }
                 )
-                TYPE_SMS_OPT_IN -> NotificationOptIn(
+                TYPE_SMS_OPT_IN -> OptInStatus(
                     status = json.requireField<String>(KEY_STATUS).let { Status.parse(it) }
                 )
-                TYPE_EMAIL_OPT_IN -> NotificationOptIn(
+                TYPE_EMAIL_OPT_IN -> OptInStatus(
                     status = json.requireField<String>(KEY_STATUS).let { Status.parse(it) }
                 )
                 else -> throw JsonException("Unknown Condition type: '$type'")
             }
         }
 
+        @Throws(JsonException::class)
         internal fun parse(json: JsonValue?): Conditions =
             json?.list?.map { parse(it.optMap()) } ?: emptyList()
     }

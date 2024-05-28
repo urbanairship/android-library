@@ -24,9 +24,15 @@ sealed class Section(private val type: String) {
     internal val hasChannelSubscriptions: Boolean by lazy {
         items.any { it.hasChannelSubscriptions }
     }
+
     /** Returns `true` if this section contains contact subscription items. */
     internal val hasContactSubscriptions: Boolean by lazy {
         items.any { it.hasContactSubscriptions }
+    }
+
+    /** Returns `true` if this section contains contact management items. */
+    internal val hasContactManagement: Boolean by lazy {
+        items.any { it.hasContactManagement }
     }
 
     /**
@@ -70,6 +76,7 @@ sealed class Section(private val type: String) {
          * @hide
          * @throws JsonException
          */
+        @Throws(JsonException::class)
         internal fun parse(json: JsonMap): Section {
             val id = json.requireField<String>(KEY_ID)
             val display = CommonDisplay.parse(json.get(KEY_DISPLAY))

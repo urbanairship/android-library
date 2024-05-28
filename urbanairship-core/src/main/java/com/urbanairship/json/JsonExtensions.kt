@@ -78,6 +78,47 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
 }
 
 /**
+ * Gets a map with the given [key] from the [JsonMap].
+ *
+ * @throws JsonException if the field is undefined or is not a valid [JsonMap].
+ */
+@Throws(JsonException::class)
+public fun JsonMap.requireMap(key: String): JsonMap {
+    return requireField(key)
+}
+
+/**
+ * Gets a list with the given [key] from the [JsonMap].
+ *
+ * @throws JsonException if the field is undefined or is not a valid [JsonList].
+ */
+@Throws(JsonException::class)
+public fun JsonMap.requireList(key: String): JsonList {
+    return requireField(key)
+}
+
+
+/**
+ * Gets a map with the given [key] from the [JsonMap], or an `null` if not defined.
+ *
+ * @throws JsonException if the field is undefined or is not a valid [JsonMap].
+ */
+@Throws(JsonException::class)
+public fun JsonMap.optionalMap(key: String): JsonMap? {
+    return optionalField<JsonMap>(key)
+}
+
+/**
+ * Gets a list with the given [key] from the [JsonMap], or an `null` if not defined.
+ *
+ * @throws JsonException if the field is undefined or is not a valid [JsonList].
+ */
+@Throws(JsonException::class)
+public fun JsonMap.optionalList(key: String): JsonList? {
+    return optionalField<JsonList>(key)
+}
+
+/**
  * Gets the field with the given [key] from the [JsonMap] and convert it using [builder] function,
  * or `null` if not defined.
  */
