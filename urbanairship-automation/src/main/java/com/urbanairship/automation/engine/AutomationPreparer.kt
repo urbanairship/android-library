@@ -20,6 +20,7 @@ import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.automation.utils.RetryingQueue
+import com.urbanairship.base.Supplier
 import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.deferred.DeferredResolver
 import com.urbanairship.deferred.DeferredResult
@@ -30,6 +31,7 @@ import com.urbanairship.experiment.MessageInfo
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.remoteconfig.RetryingQueueConfig
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.time.Duration.Companion.seconds
@@ -47,8 +49,9 @@ internal class AutomationPreparer internal constructor(
     private val deviceInfoProviderFactory: (String?) -> DeviceInfoProvider = { DeviceInfoProvider.newCachingProvider(contactId = it) },
     private val experiments: ExperimentManager,
     private val remoteDataAccess: AutomationRemoteDataAccess,
-    private val queues: Queues = Queues(),
-    private val additionalAudienceResolver: AdditionalAudienceCheckerResolver
+    private val additionalAudienceResolver: AdditionalAudienceCheckerResolver,
+    queueConfigSupplier: Supplier<RetryingQueueConfig?>? = null,
+    private val queues: Queues = Queues(queueConfigSupplier),
 ) {
 
     internal companion object {
@@ -375,8 +378,10 @@ private fun AutomationSchedule.evaluateExperiments(): Boolean {
     return isInAppMessageType() && bypassHoldoutGroups != true
 }
 
-internal class Queues {
-    private val defaultQueue = RetryingQueue()
+internal class Queues(
+    private val configSupplier: Supplier<RetryingQueueConfig?>?
+) {
+    private val defaultQueue: RetryingQueue by lazy { RetryingQueue(config = configSupplier?.get()) }
     private var queues = mutableMapOf<String, RetryingQueue>()
     private val lock = ReentrantLock()
 
@@ -385,7 +390,7 @@ internal class Queues {
             defaultQueue
         } else {
             lock.withLock {
-                queues.getOrPut(name) { RetryingQueue() }
+                queues.getOrPut(name) { RetryingQueue(config = configSupplier?.get()) }
             }
         }
     }

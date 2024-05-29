@@ -199,8 +199,8 @@ public data class IAAConfig (
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class RetryingQueueConfig (
-    public val maxConcurrentOperations: UInt?,
-    public val maxPendingResults: UInt?,
+    public val maxConcurrentOperations: Int?,
+    public val maxPendingResults: Int?,
     public val initialBackoff: Long?,
     public val maxBackOff: Long?
 ) : JsonSerializable {
@@ -216,8 +216,8 @@ public data class RetryingQueueConfig (
             val content = value.requireMap()
 
             return RetryingQueueConfig(
-                maxConcurrentOperations = content.get(MAX_CONCURRENT_OPERATIONS)?.getInt(0)?.toUInt(),
-                maxPendingResults = content.get(MAX_PENDING_RESULTS)?.getInt(0)?.toUInt(),
+                maxConcurrentOperations = content.optionalField(MAX_CONCURRENT_OPERATIONS),
+                maxPendingResults = content.optionalField(MAX_PENDING_RESULTS),
                 initialBackoff = content.optionalField(INITIAL_BACKOFF),
                 maxBackOff = content.optionalField(MAX_BACK_OFF)
             )

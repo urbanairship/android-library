@@ -43,6 +43,12 @@ public class RemoteConfigTest {
                         "enabled": true,
                         "context": "json-value",
                         "url": "https://test.url"
+                    },
+                    "queue": {
+                        "max_concurrent_operations": 3,
+                        "max_pending_results": 4,
+                        "initial_back_off_seconds": 5,
+                        "max_back_off_seconds": 6
                     }
                 }
             }
@@ -67,7 +73,12 @@ public class RemoteConfigTest {
             ),
             fetchContactRemoteData = true,
             iaaConfig = IAAConfig(
-                retryingQueue = null,
+                retryingQueue = RetryingQueueConfig(
+                    maxConcurrentOperations = 3,
+                    maxPendingResults = 4,
+                    initialBackoff = 5,
+                    maxBackOff = 6
+                ),
                 additionalAudienceCheck = AdditionalAudienceCheckConfig(
                     isEnabled = true,
                     context = JsonValue.wrap("json-value"),
