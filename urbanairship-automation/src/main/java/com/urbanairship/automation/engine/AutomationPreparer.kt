@@ -2,12 +2,9 @@
 
 package com.urbanairship.automation.engine
 
-import android.content.Context
 import com.urbanairship.UALog
-import com.urbanairship.analytics.Analytics
-import com.urbanairship.analytics.Event
 import com.urbanairship.audience.DeviceInfoProvider
-import com.urbanairship.automation.AudienceCheckOverrides
+import com.urbanairship.automation.AdditionalAudienceCheckOverrides
 import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolver
@@ -153,7 +150,7 @@ internal class AutomationPreparer internal constructor(
     ): Result<PreparedScheduleInfo> {
         val additionalAudienceCheckResult = additionalAudienceResolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
-            audienceCheckOverrides = schedule.audienceCheckOverrides
+            overrides = schedule.additionalAudienceCheckOverrides
         ).getOrElse {
             return Result.failure(it)
         }

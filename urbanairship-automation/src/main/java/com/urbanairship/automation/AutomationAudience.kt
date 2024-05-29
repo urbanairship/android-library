@@ -80,7 +80,7 @@ public class AutomationAudience(
     }
 }
 
-internal data class AudienceCheckOverrides(
+internal data class AdditionalAudienceCheckOverrides(
     val bypass: Boolean?,
     val context: JsonValue?,
     val url: String?
@@ -92,10 +92,10 @@ internal data class AudienceCheckOverrides(
         private const val URL = "url"
 
         @Throws(JsonException::class)
-        fun fromJson(value: JsonValue): AudienceCheckOverrides {
+        fun fromJson(value: JsonValue): AdditionalAudienceCheckOverrides {
             val content = value.requireMap()
 
-            return AudienceCheckOverrides(
+            return AdditionalAudienceCheckOverrides(
                 bypass = content.optionalField(BYPASS),
                 context = content.get(CONTEXT),
                 url = content.optionalField(URL)

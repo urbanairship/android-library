@@ -6,7 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.audience.DeviceInfoProvider
-import com.urbanairship.automation.AudienceCheckOverrides
+import com.urbanairship.automation.AdditionalAudienceCheckOverrides
 import com.urbanairship.cache.AirshipCache
 import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.http.RequestResult
@@ -101,7 +101,7 @@ public class AdditionalAudienceCheckerResolverTest {
 
         val result = resolver.resolve(
             deviceInfoProvider,
-            audienceCheckOverrides = AudienceCheckOverrides(
+            overrides = AdditionalAudienceCheckOverrides(
                 bypass = false,
                 context = JsonValue.wrap("default context"),
                 url = null
@@ -125,7 +125,7 @@ public class AdditionalAudienceCheckerResolverTest {
 
         var result = resolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
-            audienceCheckOverrides = AudienceCheckOverrides(
+            overrides = AdditionalAudienceCheckOverrides(
                 bypass = false,
                 context = JsonValue.wrap("default context"),
                 url = null
@@ -144,7 +144,7 @@ public class AdditionalAudienceCheckerResolverTest {
 
         result = resolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
-            audienceCheckOverrides = AudienceCheckOverrides(
+            overrides = AdditionalAudienceCheckOverrides(
                 bypass = false,
                 context = JsonValue.wrap("default context"),
                 url = null
@@ -172,7 +172,7 @@ public class AdditionalAudienceCheckerResolverTest {
 
         var result = resolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
-            audienceCheckOverrides = AudienceCheckOverrides(
+            overrides = AdditionalAudienceCheckOverrides(
                 bypass = false,
                 context = JsonValue.wrap("default context"),
                 url = null
@@ -185,7 +185,7 @@ public class AdditionalAudienceCheckerResolverTest {
         makeResolver(AdditionalAudienceCheckConfig(true, JsonValue.NULL, null))
         result = resolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
-            audienceCheckOverrides = AudienceCheckOverrides(
+            overrides = AdditionalAudienceCheckOverrides(
                 bypass = false,
                 context = JsonValue.wrap("default context"),
                 url = "https://test.url"
@@ -196,7 +196,7 @@ public class AdditionalAudienceCheckerResolverTest {
         clock.currentTimeMillis += 2
         result = resolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
-            audienceCheckOverrides = AudienceCheckOverrides(
+            overrides = AdditionalAudienceCheckOverrides(
                 bypass = false,
                 context = JsonValue.wrap("default context"),
                 url = null
@@ -217,7 +217,7 @@ public class AdditionalAudienceCheckerResolverTest {
 
         val result = resolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
-            audienceCheckOverrides = AudienceCheckOverrides(
+            overrides = AdditionalAudienceCheckOverrides(
                 bypass = true,
                 context = JsonValue.NULL,
                 url = null
@@ -246,7 +246,7 @@ public class AdditionalAudienceCheckerResolverTest {
 
         val result = resolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
-            audienceCheckOverrides = AudienceCheckOverrides(
+            overrides = AdditionalAudienceCheckOverrides(
                 bypass = false,
                 context = null,
                 url = null
@@ -285,7 +285,7 @@ public class AdditionalAudienceCheckerResolverTest {
 
         val result = resolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
-            audienceCheckOverrides = AudienceCheckOverrides(
+            overrides = AdditionalAudienceCheckOverrides(
                 bypass = false,
                 context = JsonValue.wrap("default context"),
                 url = null
@@ -321,7 +321,7 @@ public class AdditionalAudienceCheckerResolverTest {
 
         val result = resolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
-            audienceCheckOverrides = AudienceCheckOverrides(
+            overrides = AdditionalAudienceCheckOverrides(
                 bypass = false,
                 context = JsonValue.wrap("default context"),
                 url = null
@@ -350,7 +350,7 @@ public class AdditionalAudienceCheckerResolverTest {
 
         val result = resolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
-            audienceCheckOverrides = AudienceCheckOverrides(
+            overrides = AdditionalAudienceCheckOverrides(
                 bypass = false,
                 context = JsonValue.wrap("default context"),
                 url = null

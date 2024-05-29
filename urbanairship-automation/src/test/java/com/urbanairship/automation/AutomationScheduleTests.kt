@@ -200,7 +200,7 @@ public class AutomationScheduleTests {
                "message_type": "test_type",
                "last_updated": "2023-12-20T12:30:00Z",
                "created": "2023-12-20T12:00:00Z",
-               "audience_check_overrides": {
+               "additional_audience_check_overrides": {
                     "bypass": true,
                     "context": "json-context",
                     "url": "https://result.url"
@@ -243,7 +243,7 @@ public class AutomationScheduleTests {
             metadata = jsonMapOf().toJsonValue(),
             frequencyConstraintIds = listOf("constraint1", "constraint2"),
             messageType = "test_type",
-            audienceCheckOverrides = AudienceCheckOverrides(
+            additionalAudienceCheckOverrides = AdditionalAudienceCheckOverrides(
                 bypass = true,
                 context = JsonValue.wrap("json-context"),
                 url = "https://result.url"

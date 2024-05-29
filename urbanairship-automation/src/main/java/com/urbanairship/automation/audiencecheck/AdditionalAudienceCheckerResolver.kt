@@ -2,7 +2,7 @@ package com.urbanairship.automation.audiencecheck
 
 import com.urbanairship.UALog
 import com.urbanairship.audience.DeviceInfoProvider
-import com.urbanairship.automation.AudienceCheckOverrides
+import com.urbanairship.automation.AdditionalAudienceCheckOverrides
 import com.urbanairship.cache.AirshipCache
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.RequestException
@@ -22,18 +22,18 @@ internal class AdditionalAudienceCheckerResolver internal constructor(
 
     suspend fun resolve(
         deviceInfoProvider: DeviceInfoProvider,
-        audienceCheckOverrides: AudienceCheckOverrides?
+        overrides: AdditionalAudienceCheckOverrides?
     ): Result<Boolean> {
         val config = audienceCheckConfig ?: return Result.success(true)
         if (!config.isEnabled) { return Result.success(true) }
 
-        val url = audienceCheckOverrides?.url
+        val url = overrides?.url
             ?: config.url
             ?: return Result.failure(
                 IllegalArgumentException("Missing additional audience check url")
             )
 
-        if (audienceCheckOverrides?.bypass == true) {
+        if (overrides?.bypass == true) {
             UALog.v { "Additional audience check is bypassed " }
             return Result.success(true)
         }
@@ -41,7 +41,7 @@ internal class AdditionalAudienceCheckerResolver internal constructor(
         return queue.run {
             doResolve(
                 url = url,
-                context = audienceCheckOverrides?.context ?: config.context,
+                context = overrides?.context ?: config.context,
                 deviceInfoProvider = deviceInfoProvider
             )
         }
