@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.Provider
 import com.urbanairship.UALog
 import com.urbanairship.contacts.ContactChannel
-import com.urbanairship.contacts.type
 import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.data.Conditions
 import com.urbanairship.preferencecenter.data.Item
@@ -84,7 +83,7 @@ internal data class ContactManagementItem(
             descriptionView.setTextOrHide(item.display.description)
 
             val channels = contactChannelsProvider.get()
-                .filter { it.type == item.platform.toChannelType() }
+                .filter { it.channelType == item.platform.toChannelType() }
 
             UALog.e { "ContactManagementItem BIND!!! channels: $channels" }
 
@@ -152,7 +151,7 @@ internal data class ContactManagementItem(
                         }
                     )
 
-                    pending.isVisible = channel is ContactChannel.Pending
+                    pending.isVisible = !channel.isRegistered
 
                     text.text = channel.maskedAddress
 

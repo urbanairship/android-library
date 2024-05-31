@@ -39,9 +39,11 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -62,21 +64,21 @@ public class Contact internal constructor(
     private val clock: Clock,
     private val subscriptionListApiClient: SubscriptionListApiClient,
     private val contactManager: ContactManager,
-    subscriptionListDispatcher: CoroutineDispatcher
+    contactChannelsProvider: ContactChannelsProvider = ContactChannelsProvider(
+        config,
+        audienceOverridesProvider,
+        contactManager.contactIdUpdates
+    ),
+    subscriptionListDispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) : AirshipComponent(context, preferenceDataStore) {
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public constructor(
+    internal constructor(
         context: Context,
         preferenceDataStore: PreferenceDataStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,
         localeManager: LocaleManager,
-        audienceOverridesProvider: AudienceOverridesProvider
+        audienceOverridesProvider: AudienceOverridesProvider,
     ) : this(
         context,
         preferenceDataStore,
@@ -94,8 +96,7 @@ public class Contact internal constructor(
             ContactApiClient(config),
             localeManager,
             audienceOverridesProvider
-        ),
-        AirshipDispatchers.newSerialDispatcher(),
+        )
     )
     /**
      * @hide
@@ -338,6 +339,7 @@ public class Contact internal constructor(
                 }
 
                 contactManager.addOperation(ContactOperation.Update(tags = collapsedMutations))
+                audienceOverridesProvider.notifyPendingChanged()
             }
         }
     }
@@ -354,6 +356,7 @@ public class Contact internal constructor(
             return
         }
         contactManager.addOperation(ContactOperation.RegisterEmail(address, options))
+        audienceOverridesProvider.notifyPendingChanged()
     }
 
     /**
@@ -368,6 +371,7 @@ public class Contact internal constructor(
             return
         }
         contactManager.addOperation(ContactOperation.RegisterSms(msisdn, options))
+        audienceOverridesProvider.notifyPendingChanged()
     }
 
     /**
@@ -382,6 +386,7 @@ public class Contact internal constructor(
             return
         }
         contactManager.addOperation(ContactOperation.RegisterOpen(address, options))
+        audienceOverridesProvider.notifyPendingChanged()
     }
 
     /**
@@ -396,7 +401,35 @@ public class Contact internal constructor(
             return
         }
         contactManager.addOperation(ContactOperation.AssociateChannel(channelId, channelType))
+        audienceOverridesProvider.notifyPendingChanged()
     }
+
+    /**
+     * Disassociates the contact channel.
+     * @param contactChannel The channel.
+     * @param optOut If the channel should also be opted out.
+     */
+    public fun disassociateChannel(contactChannel: ContactChannel, optOut: Boolean = true) {
+        if (!privacyManager.isContactsEnabled) {
+            UALog.w { "Ignoring disassociate channel request while contacts are disabled." }
+            return
+        }
+        contactManager.addOperation(ContactOperation.DisassociateChannel(contactChannel, optOut))
+        audienceOverridesProvider.notifyPendingChanged()
+    }
+
+    /**
+     * Resends double-opt in for the given contact channel.
+     * @param contactChannel The channel.
+     */
+    public fun resendDoubleOptIn(contactChannel: ContactChannel) {
+        if (!privacyManager.isContactsEnabled) {
+            UALog.w { "Ignoring resend double opt-in request while contacts are disabled." }
+            return
+        }
+        contactManager.addOperation(ContactOperation.Resend(contactChannel))
+    }
+
 
     /**
      * Edit the attributes associated with this Contact.
@@ -416,6 +449,7 @@ public class Contact internal constructor(
                 }
 
                 contactManager.addOperation(ContactOperation.Update(attributes = collapsedMutations))
+                audienceOverridesProvider.notifyPendingChanged()
             }
         }
     }
@@ -438,6 +472,7 @@ public class Contact internal constructor(
                 }
 
                 contactManager.addOperation(ContactOperation.Update(subscriptions = mutations))
+                audienceOverridesProvider.notifyPendingChanged()
             }
         }
     }
@@ -485,6 +520,8 @@ public class Contact internal constructor(
         return Result.success(subscriptions)
     }
 
+    public val channelContacts: SharedFlow<Result<List<ContactChannel>>> = contactChannelsProvider.contactChannels
+
     /**
      * Returns the current set of subscription lists for the current contact.
      *
@@ -517,12 +554,6 @@ public class Contact internal constructor(
         }
         return pendingResult
     }
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public suspend fun getStableContactInfo(): StableContactInfo = stableContactInfo()
 
     private suspend fun fetchContactSubscriptionList(contactId: String): Result<Map<String, Set<Scope>>> {
         return subscriptionFetchQueue.run {

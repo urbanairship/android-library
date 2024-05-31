@@ -2,58 +2,58 @@
 
 package com.urbanairship.audience
 
-import androidx.annotation.RestrictTo
-import androidx.annotation.WorkerThread
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.SubscriptionListMutation
 import com.urbanairship.channel.TagGroupsMutation
+import com.urbanairship.contacts.ContactChannelMutation
 import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListMutation
 import com.urbanairship.util.CachedList
 import com.urbanairship.util.Clock
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.update
 
-/**
- * Tracks and provides audience overrides.
- * @hide
- */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
-
-    public companion object {
+internal class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
+    companion object {
         internal const val EXPIRY_MS: Long = 600000 // 10 minutes
     }
 
-    public var stableContactIdDelegate: (suspend () -> String)? = null
-    public var pendingChannelOverridesDelegate: ((String) -> AudienceOverrides.Channel)? = null
-    public var pendingContactOverridesDelegate: ((String) -> AudienceOverrides.Contact)? = null
+    var stableContactIdDelegate: (suspend () -> String)? = null
+    var pendingChannelOverridesDelegate: ((String) -> AudienceOverrides.Channel)? = null
+    var pendingContactOverridesDelegate: ((String) -> AudienceOverrides.Contact)? = null
 
-    private val updates = CachedList<Record<*>>(clock)
+    private val records = CachedList<Record<*>>(clock)
 
-    public fun setSyncStableContactIdDelegate(delegate: () -> String) {
-        stableContactIdDelegate = {
-            delegate()
-        }
+    private val _updates = MutableStateFlow(0U)
+    val updates: SharedFlow<UInt> = _updates.asSharedFlow()
+
+    fun notifyPendingChanged() {
+       _updates.update { it.inc() }
     }
 
-    public fun recordContactUpdate(
+    fun recordContactUpdate(
         contactId: String,
         tags: List<TagGroupsMutation>? = null,
         attributes: List<AttributeMutation>? = null,
-        subscriptions: List<ScopedSubscriptionListMutation>? = null
+        subscriptions: List<ScopedSubscriptionListMutation>? = null,
+        channel: ContactChannelMutation? = null
     ) {
-        val overrides = AudienceOverrides.Contact(tags, attributes, subscriptions)
-        updates.append(Record(contactId, overrides), EXPIRY_MS)
+        val overrides = AudienceOverrides.Contact(tags, attributes, subscriptions, channel?.let { listOf(it) })
+        records.append(Record(contactId, overrides), EXPIRY_MS)
+        notifyPendingChanged()
     }
 
-    public fun recordChannelUpdate(
+    fun recordChannelUpdate(
         channelId: String,
         tags: List<TagGroupsMutation>? = null,
         attributes: List<AttributeMutation>? = null,
         subscriptions: List<SubscriptionListMutation>? = null
     ) {
         val overrides = AudienceOverrides.Channel(tags, attributes, subscriptions)
-        updates.append(Record(channelId, overrides), EXPIRY_MS)
+        records.append(Record(channelId, overrides), EXPIRY_MS)
+        notifyPendingChanged()
     }
 
     private fun convertAppScopes(scoped: List<ScopedSubscriptionListMutation>): List<SubscriptionListMutation> {
@@ -66,27 +66,22 @@ public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
         }
     }
 
-    @WorkerThread
-    public fun contactOverridesSync(contactId: String): AudienceOverrides.Contact {
-        return runBlocking {
-            contactOverrides(contactId)
-        }
-    }
-
-    public suspend fun contactOverrides(contactId: String?): AudienceOverrides.Contact {
+    suspend fun contactOverrides(contactId: String?): AudienceOverrides.Contact {
         val resolvedContactId = contactId ?: stableContactIdDelegate?.invoke() ?: return AudienceOverrides.Contact()
         val pendingContact = pendingContactOverridesDelegate?.invoke(resolvedContactId)
 
         val tags = mutableListOf<TagGroupsMutation>()
         val attributes = mutableListOf<AttributeMutation>()
         val subscriptions = mutableListOf<ScopedSubscriptionListMutation>()
+        val channels = mutableListOf<ContactChannelMutation>()
 
         // Apply only contact updates
-        this.updates.values.forEach { record ->
+        this.records.values.forEach { record ->
             if (record.overrides is AudienceOverrides.Contact && record.identifier == resolvedContactId) {
                 record.overrides.tags?.let { tags += it }
                 record.overrides.attributes?.let { attributes += it }
                 record.overrides.subscriptions?.let { subscriptions += it }
+                record.overrides.channels?.let { channels += it }
             }
         }
 
@@ -94,22 +89,17 @@ public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
         pendingContact?.tags?.let { tags += it }
         pendingContact?.attributes?.let { attributes += it }
         pendingContact?.subscriptions?.let { subscriptions += it }
+        pendingContact?.channels?.let { channels += it }
 
         return AudienceOverrides.Contact(
             tags.ifEmpty { null },
             attributes.ifEmpty { null },
-            subscriptions.ifEmpty { null })
+            subscriptions.ifEmpty { null },
+            channels.ifEmpty { null }
+        )
     }
 
-    @JvmOverloads
-    @WorkerThread
-    public fun channelOverridesSync(channelId: String, contactId: String? = null): AudienceOverrides.Channel {
-        return runBlocking {
-             channelOverrides(channelId, contactId)
-        }
-    }
-
-    public suspend fun channelOverrides(channelId: String, contactId: String? = null): AudienceOverrides.Channel {
+    suspend fun channelOverrides(channelId: String, contactId: String? = null): AudienceOverrides.Channel {
         val resolvedContactId = contactId ?: stableContactIdDelegate?.invoke()
         val pendingChannel = pendingChannelOverridesDelegate?.invoke(channelId)
         val pendingContact = resolvedContactId?.let { pendingContactOverridesDelegate?.invoke(it) }
@@ -119,7 +109,7 @@ public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
         val subscriptions = mutableListOf<SubscriptionListMutation>()
 
         // Apply both contact and channel updates first
-        this.updates.values.forEach { record ->
+        this.records.values.forEach { record ->
             when (record.overrides) {
                 is AudienceOverrides.Channel -> {
                     if (record.identifier == channelId) {

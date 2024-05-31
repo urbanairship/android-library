@@ -47,15 +47,6 @@ public class DeferredResolver internal constructor(
         )
     }
 
-    public fun <T> resolveAsPendingResult(request: DeferredRequest, parser: (JsonValue) -> T): PendingResult<DeferredResult<T>> {
-        val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
-        val result = PendingResult<DeferredResult<T>>()
-        scope.launch {
-            result.result = resolve(request, parser)
-        }
-        return result
-    }
-
     private suspend fun <T> doResolve(
         uri: Uri,
         channelId: String,

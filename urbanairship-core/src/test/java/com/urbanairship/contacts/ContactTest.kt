@@ -30,7 +30,9 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.resetMain
@@ -54,6 +56,11 @@ public class ContactTest {
     private val mockChannel = mockk<AirshipChannel>(relaxed = true)
     private val mockSubscriptionListApiClient = mockk<SubscriptionListApiClient>()
     private val mockAudienceOverridesProvider = mockk<AudienceOverridesProvider>(relaxed = true)
+
+    private val contactChannelFlow = MutableSharedFlow<Result<List<ContactChannel>>>()
+    private val mockChannelsContactProvider = mockk<ContactChannelsProvider>(relaxed = true) {
+        every { contactChannels } returns contactChannelFlow.asSharedFlow()
+    }
 
     private val conflictEvents = Channel<ConflictEvent>(Channel.UNLIMITED)
     private val currentNamedUserIdUpdates = MutableStateFlow<String?>(null)
@@ -84,6 +91,7 @@ public class ContactTest {
             testClock,
             mockSubscriptionListApiClient,
             mockContactManager,
+            mockChannelsContactProvider,
             testDispatcher
         )
     }
@@ -389,6 +397,7 @@ public class ContactTest {
         )
 
         verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(tags = expectedMutations)) }
+        verify { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
@@ -400,6 +409,7 @@ public class ContactTest {
             TagGroupsMutation.newSetTagsMutation("some group", setOf("some tag"))
         )
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Update(tags = expectedMutations)) }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
@@ -411,6 +421,7 @@ public class ContactTest {
             TagGroupsMutation.newSetTagsMutation("some group", setOf("some tag"))
         )
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Update(tags = expectedMutations)) }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
@@ -424,6 +435,7 @@ public class ContactTest {
         )
 
         verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(attributes = expectedMutations)) }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
@@ -452,6 +464,8 @@ public class ContactTest {
         )
 
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Update(attributes = expectedMutations)) }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
@@ -465,6 +479,8 @@ public class ContactTest {
         )
 
         verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(subscriptions = expectedMutations)) }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
@@ -479,6 +495,8 @@ public class ContactTest {
         )
 
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Update(subscriptions = expectedMutations)) }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
@@ -493,6 +511,8 @@ public class ContactTest {
         )
 
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Update(subscriptions = expectedMutations)) }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
@@ -509,6 +529,8 @@ public class ContactTest {
                 )
             )
         }
+
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
@@ -527,6 +549,8 @@ public class ContactTest {
                 )
             )
         }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
@@ -543,6 +567,8 @@ public class ContactTest {
                 )
             )
         }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
@@ -561,6 +587,7 @@ public class ContactTest {
                 )
             )
         }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
@@ -577,6 +604,8 @@ public class ContactTest {
                 )
             )
         }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
@@ -595,6 +624,8 @@ public class ContactTest {
                 )
             )
         }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
@@ -894,4 +925,68 @@ public class ContactTest {
 
         assertEquals(expected, contact.fetchSubscriptionLists().getOrThrow())
     }
+
+    @Test
+    public fun testResendOptIn(): TestResult = runTest {
+        val channel = ContactChannel.Email(
+            ContactChannel.Email.RegistrationInfo.Pending(
+                address = "email@email.email",
+                registrationOptions = EmailRegistrationOptions.options(null, null, true)
+            )
+        )
+        contact.resendDoubleOptIn(channel)
+        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Resend(channel)) }
+    }
+
+    @Test
+    public fun testResendOptInContactsDisabled(): TestResult = runTest {
+        privacyManager.disable(PrivacyManager.FEATURE_CONTACTS)
+        val channel = ContactChannel.Email(
+            ContactChannel.Email.RegistrationInfo.Pending(
+                address = "email@email.email",
+                registrationOptions = EmailRegistrationOptions.options(null, null, true)
+            )
+        )
+        contact.resendDoubleOptIn(channel)
+        verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Resend(channel)) }
+    }
+
+    @Test
+    public fun testDisassociate(): TestResult = runTest {
+        val channel = ContactChannel.Email(
+            ContactChannel.Email.RegistrationInfo.Pending(
+                address = "email@email.email",
+                registrationOptions = EmailRegistrationOptions.options(null, null, true)
+            )
+        )
+        contact.disassociateChannel(channel)
+        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.DisassociateChannel(channel, true)) }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
+    }
+
+    @Test
+    public fun testDisassociateOptOutFalse(): TestResult = runTest {
+        val channel = ContactChannel.Email(
+            ContactChannel.Email.RegistrationInfo.Pending(
+                address = "email@email.email",
+                registrationOptions = EmailRegistrationOptions.options(null, null, true)
+            )
+        )
+        contact.disassociateChannel(channel, false)
+        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.DisassociateChannel(channel, false)) }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
+    }
+
+    @Test
+    public fun testDisassociateContactsDisabled(): TestResult = runTest {
+        privacyManager.disable(PrivacyManager.FEATURE_CONTACTS)
+        val channel = ContactChannel.Email(
+            ContactChannel.Email.RegistrationInfo.Pending(
+                address = "email@email.email",
+                registrationOptions = EmailRegistrationOptions.options(null, null, true)
+            )
+        )
+        contact.disassociateChannel(channel)
+        verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.DisassociateChannel(channel, true)) }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }    }
 }

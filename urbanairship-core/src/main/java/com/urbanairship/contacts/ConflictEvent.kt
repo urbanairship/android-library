@@ -25,6 +25,7 @@ public class ConflictEvent(
      * Contact subscription lists.
      */
     public val subscriptionLists: Map<String, Set<Scope>> = emptyMap(),
+
     /**
      * A list of associated contacts.
      */

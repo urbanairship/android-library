@@ -9,6 +9,7 @@ import com.urbanairship.channel.SubscriptionListMutation
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListMutation
+import app.cash.turbine.test
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
@@ -16,7 +17,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class AudienceOverridesProviderTest {
 
@@ -192,5 +192,41 @@ public class AudienceOverridesProviderTest {
         assertEquals(
             AudienceOverrides.Channel(), provider.channelOverrides("some channel", "some contact")
         )
+    }
+
+    @Test
+    public fun testNotifyPendingChangedUpdate(): TestResult = runTest {
+        provider.updates.test {
+            this.awaitItem()
+
+            provider.notifyPendingChanged()
+            this.awaitItem()
+
+            provider.notifyPendingChanged()
+            this.awaitItem()
+
+            this.ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    public fun testRecordUpdates(): TestResult = runTest {
+        provider.updates.test {
+            this.awaitItem()
+
+            provider.recordChannelUpdate(
+                "some other channel",
+                tags = listOf(TagGroupsMutation.newAddTagsMutation("some other group", setOf("foo"))),
+            )
+            this.awaitItem()
+
+            provider.recordContactUpdate(
+                "some other channel",
+                tags = listOf(TagGroupsMutation.newAddTagsMutation("some other group", setOf("foo"))),
+            )
+            this.awaitItem()
+
+            this.ensureAllEventsConsumed()
+        }
     }
 }

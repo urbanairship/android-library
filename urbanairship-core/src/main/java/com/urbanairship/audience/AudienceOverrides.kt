@@ -2,25 +2,21 @@
 
 package com.urbanairship.audience
 
-import androidx.annotation.RestrictTo
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.SubscriptionListMutation
 import com.urbanairship.channel.TagGroupsMutation
+import com.urbanairship.contacts.ContactChannelMutation
 import com.urbanairship.contacts.ScopedSubscriptionListMutation
 
-/**
- * Audience overrides.
- * @hide
- */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public sealed class AudienceOverrides {
-    public data class Contact(
+internal sealed class AudienceOverrides {
+    data class Contact(
         val tags: List<TagGroupsMutation>? = null,
         val attributes: List<AttributeMutation>? = null,
-        val subscriptions: List<ScopedSubscriptionListMutation>? = null
+        val subscriptions: List<ScopedSubscriptionListMutation>? = null,
+        val channels: List<ContactChannelMutation>? = null
     ) : AudienceOverrides()
 
-    public data class Channel(
+    data class Channel(
         val tags: List<TagGroupsMutation>? = null,
         val attributes: List<AttributeMutation>? = null,
         val subscriptions: List<SubscriptionListMutation>? = null

@@ -11,8 +11,9 @@ import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.contacts.Contact
 import com.urbanairship.contacts.ContactChannel
-import com.urbanairship.contacts.ContactChannel.Pending.PendingInfo
+import com.urbanairship.contacts.EmailRegistrationOptions
 import com.urbanairship.contacts.Scope
+import com.urbanairship.contacts.SmsRegistrationOptions
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.ConditionStateMonitor
 import com.urbanairship.preferencecenter.PreferenceCenter
@@ -33,7 +34,6 @@ import com.urbanairship.preferencecenter.ui.item.SectionItem
 import com.urbanairship.preferencecenter.util.execute
 import com.urbanairship.preferencecenter.util.scanConcat
 import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
-import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -54,6 +54,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -167,25 +168,26 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 emptyFlow()
             }
             is Action.RegisterChannel -> {
-                // TODO: wire up API calls to actually register channels!
-
-                val contactChannel = ContactChannel.Pending(
-                    address = action.address,
-                    info = when (action) {
-                        is Action.RegisterChannel.Email -> PendingInfo.Email
-                        is Action.RegisterChannel.Sms -> PendingInfo.Sms(
-                            senderId = action.senderId
+                when (action) {
+                    is Action.RegisterChannel.Email -> {
+                        contact.registerEmail(
+                            action.address,
+                            EmailRegistrationOptions.options(doubleOptIn = true)
                         )
                     }
-                )
+                    is Action.RegisterChannel.Sms -> {
+                        contact.registerSms(
+                            action.address,
+                            SmsRegistrationOptions.options(action.senderId)
+                        )
+                    }
+                }
 
-                flowOf(Change.AddContactChannel(contactChannel))
+                emptyFlow()
             }
             is Action.UnregisterChannel -> {
-
-                // TODO: wire up API calls to actually unregister channels!
-
-                flowOf(Change.RemoveContactChannel(action.channel))
+                contact.disassociateChannel(action.channel)
+                emptyFlow()
             }
         }
 
@@ -367,40 +369,8 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         emit(contact.fetchSubscriptionLists().getOrThrow())
     }
 
-    private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = flow {
-        // TODO: Implement this!
-        emit(
-            setOf(
-                ContactChannel.Registered(
-                    channelId = UUID.randomUUID().toString(),
-                    maskedAddress = "tim@apple.com".maskEmail(),
-                    info = ContactChannel.Registered.RegisteredInfo.Email(
-                        transactionalOptedIn = null,
-                        transactionalOptedOut = null,
-                        commercialOptedIn = 0L,
-                        commercialOptedOut = null
-                    )
-                ),
-                ContactChannel.Pending(
-                    address = "sundar@google.com",
-                    info = PendingInfo.Email
-                ),
-                ContactChannel.Registered(
-                    channelId = UUID.randomUUID().toString(),
-                    maskedAddress = "+12345678901".maskPhoneNumber(),
-                    info = ContactChannel.Registered.RegisteredInfo.SMS(
-                        isOptIn = true,
-                        senderID = "12345"
-                    )
-                ),
-                ContactChannel.Pending(
-                    address = "+15039578484",
-                    info = PendingInfo.Sms(
-                        senderId = "31415"
-                    )
-                )
-            )
-        )
+    private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = contact.channelContacts.mapNotNull {
+        it.getOrThrow().toSet()
     }
 
     internal sealed class State {
@@ -527,26 +497,3 @@ internal fun PreferenceCenterConfig.asPrefCenterItems(): List<PrefCenterItem> =
             }
         }
     }
-
-// TODO: for stubbing out pref center views. remove these!
-private fun String.maskEmail(): String {
-    if (isNotEmpty()) {
-        val firstLetter = take(1)
-        if (contains("@")) {
-            val parts = split("@")
-            val suffix = parts.last()
-            val maskedLength = parts.first().length - 1
-            val mask = "●".repeat(maskedLength)
-            return "${firstLetter}${mask}@${suffix}"
-        }
-    }
-    return this
-}
-
-private fun String.maskPhoneNumber(): String {
-    return if (isNotEmpty() && length > 4) {
-        "●".repeat(7) + takeLast(4)
-    } else {
-        this
-    }
-}

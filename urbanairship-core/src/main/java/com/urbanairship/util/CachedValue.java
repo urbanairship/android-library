@@ -2,7 +2,6 @@
 
 package com.urbanairship.util;
 
-import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -29,7 +28,6 @@ public class CachedValue<T> {
     public CachedValue(@NonNull Clock clock) {
         this.clock = clock;
     }
-
     public void set(@Nullable T value, long expiryDateMs) {
         synchronized (lock) {
             this.value = value;
@@ -51,6 +49,14 @@ public class CachedValue<T> {
                 this.expiration = 0;
             }
         }
+    }
+
+    public long remainingCacheTimeMillis() {
+        long remaining = expiration - clock.currentTimeMillis();
+        if (remaining >= 0) {
+            return remaining;
+        }
+        return 0;
     }
 
     @Nullable

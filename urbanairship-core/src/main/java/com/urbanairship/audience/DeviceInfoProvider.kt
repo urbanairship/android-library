@@ -87,7 +87,7 @@ internal class DeviceInfoProviderImpl(private val contactId: String? = null) : D
     }
 
     override suspend fun getStableContactInfo(): StableContactInfo {
-        return UAirship.shared().contact.getStableContactInfo().let {
+        return UAirship.shared().contact.stableContactInfo().let {
             if (contactId != null && it.contactId != contactId) {
                 StableContactInfo(contactId, null)
             } else {

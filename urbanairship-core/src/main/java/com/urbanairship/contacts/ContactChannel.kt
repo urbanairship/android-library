@@ -1,137 +1,497 @@
-@file:Suppress("ConvertObjectToDataObject")
+/* Copyright Airship and Contributors */
 
+@file:Suppress("ConvertObjectToDataObject")
 package com.urbanairship.contacts
 
-import com.urbanairship.contacts.ContactChannel.Pending.PendingInfo
-import com.urbanairship.contacts.ContactChannel.Registered.RegisteredInfo
-import java.util.Objects
+import androidx.core.util.ObjectsCompat
+import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonSerializable
+import com.urbanairship.json.JsonValue
+import com.urbanairship.json.isoDateAsMilliseconds
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireField
+import com.urbanairship.util.DateUtils
 
-// TODO: not implemented from the swift version yet...
-//      - RegistrationOptions and associated EmailRegistrationOptions and SMSRegistrationOptions
-//      - ContactChannelUpdates
+/**
+ * Channels associated with a contact.
+ */
+public sealed class ContactChannel: JsonSerializable {
 
-/** Representation of a channel and its registration state after being associated to a contact. */
-public sealed class ContactChannel {
+    /**
+     * Masked address.
+     */
     public abstract val maskedAddress: String
 
-    public class Registered(
-        public val channelId: String,
-        public override val maskedAddress: String,
-        public val info: RegisteredInfo
-    ): ContactChannel() {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is Registered) return false
-            return channelId == other.channelId && maskedAddress == other.maskedAddress && info == other.info
+    /**
+     * Channel type.
+     */
+    public abstract val channelType: ChannelType
+
+    /**
+     * If the channel is registered with the contact.
+     */
+    public abstract val isRegistered: Boolean
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        TYPE_KEY to this.channelType.name,
+        INFO_KEY to when (this) {
+            is Sms -> this.registrationInfo
+            is Email -> this.registrationInfo
+        }
+    ).toJsonValue()
+
+    public companion object {
+
+        private const val INFO_KEY = "info"
+        private const val TYPE_KEY = "type"
+
+        private const val PENDING_TYPE = "pending"
+        private const val REGISTERED_TYPE = "registered"
+
+        private const val ADDRESS_KEY = "address"
+        private const val OPTIONS_KEY = "options"
+        private const val CHANNEL_ID_KEY = "channel_id"
+
+        // EMAIL
+        private const val COMMERCIAL_OPTED_IN_KEY = "commercial_opted_in"
+        private const val COMMERCIAL_OPTED_OUT_KEY = "commercial_opted_out"
+        private const val TRANSACTIONAL_OPTED_IN_KEY = "transactional_opted_in"
+        private const val TRANSACTIONAL_OPTED_OUT_KEY = "transactional_opted_out"
+
+        // SMS
+        private const val OPT_IN_KEY = "opt_in"
+        private const val SENDER_ID_KEY = "sender"
+
+        /**
+         * Parses channel contact from JSON.
+         * @param jsonValue The json value.
+         * @return Contact channel.
+         * @throws JsonException
+         */
+        @Throws(JsonException::class)
+        public fun fromJson(jsonValue: JsonValue): ContactChannel {
+            val map = jsonValue.requireMap()
+            return when (val type = ChannelType.fromJson(map.require(TYPE_KEY))) {
+                ChannelType.SMS -> Sms(
+                    registrationInfo = Sms.RegistrationInfo.fromJson(
+                        map.require(INFO_KEY)
+                    )
+                )
+                ChannelType.EMAIL-> Email(
+                    registrationInfo = Email.RegistrationInfo.fromJson(
+                        map.require(INFO_KEY)
+                    )
+                )
+                else -> throw JsonException("unexpected type $type")
+            }
+        }
+    }
+
+    /**
+     * Sms channel.
+     */
+    public class Sms(
+        /**
+         * Registration info.
+         */
+        public val registrationInfo: RegistrationInfo
+    ) : ContactChannel() {
+
+        public override val channelType: ChannelType = ChannelType.SMS
+
+        public override val maskedAddress: String
+            get() {
+                return when (this.registrationInfo) {
+                    is RegistrationInfo.Pending -> this.registrationInfo.address.maskPhoneNumber()
+                    is RegistrationInfo.Registered -> this.registrationInfo.maskedAddress
+                }
+            }
+
+        public override val isRegistered: Boolean
+            get() {
+                return when (this.registrationInfo) {
+                    is RegistrationInfo.Pending -> false
+                    is RegistrationInfo.Registered -> true
+                }
+            }
+
+        /**
+         * Sender ID.
+         */
+        public val senderId: String
+            get() {
+                return when (this.registrationInfo) {
+                    is RegistrationInfo.Pending -> this.registrationInfo.registrationOptions.senderId
+                    is RegistrationInfo.Registered -> this.registrationInfo.senderId
+                }
+            }
+
+
+
+
+        /**
+         * Sms registration info.
+         */
+        public sealed class RegistrationInfo : JsonSerializable {
+
+            /**
+             * Indicates the SMS has been registered.
+             */
+            public class Registered(
+                /**
+                 * Channel ID.
+                 */
+                public val channelId: String,
+
+                /**
+                 * Masked MSISDN address.
+                 */
+                public val maskedAddress: String,
+
+                /**
+                 * If its opted in or not.
+                 */
+                public val isOptIn: Boolean,
+
+                /**
+                 * Sender ID.
+                 */
+                public val senderId: String
+            ) : RegistrationInfo() {
+
+                override fun equals(other: Any?): Boolean {
+                    if (this === other) return true
+                    if (javaClass != other?.javaClass) return false
+
+                    other as Registered
+
+                    if (channelId != other.channelId) return false
+                    if (maskedAddress != other.maskedAddress) return false
+                    if (isOptIn != other.isOptIn) return false
+                    if (senderId != other.senderId) return false
+
+                    return true
+                }
+
+                override fun hashCode(): Int = ObjectsCompat.hash(
+                    channelId, maskedAddress, isOptIn, senderId
+                )
+
+                override fun toString(): String {
+                    return "Registered(channelId='$channelId', maskedAddress='$maskedAddress', isOptIn=$isOptIn, senderId='$senderId')"
+                }
+
+            }
+
+            /**
+             * Indicates the SMS is pending registration.
+             */
+            public class Pending(
+                /**
+                 * The MSISDN address.
+                 */
+                public val address: String,
+
+                /**
+                 * Registration options.
+                 */
+                public val registrationOptions: SmsRegistrationOptions
+            ) : RegistrationInfo() {
+
+                override fun equals(other: Any?): Boolean {
+                    if (this === other) return true
+                    if (javaClass != other?.javaClass) return false
+
+                    other as Pending
+
+                    if (address != other.address) return false
+                    if (registrationOptions != other.registrationOptions) return false
+
+                    return true
+                }
+
+                override fun hashCode(): Int = ObjectsCompat.hash(
+                    address, registrationOptions
+                )
+
+                override fun toString(): String {
+                    return "Pending(address='$address', registrationOptions=$registrationOptions)"
+                }
+            }
+
+            override fun toJsonValue(): JsonValue = when (this) {
+                is Pending -> jsonMapOf(
+                    TYPE_KEY to PENDING_TYPE,
+                    ADDRESS_KEY to address,
+                    OPTIONS_KEY to registrationOptions
+                )
+
+                is Registered -> jsonMapOf(
+                    TYPE_KEY to REGISTERED_TYPE,
+                    ADDRESS_KEY to maskedAddress,
+                    OPT_IN_KEY to isOptIn,
+                    CHANNEL_ID_KEY to channelId,
+                    SENDER_ID_KEY to senderId
+                )
+            }.toJsonValue()
+
+            public companion object {
+
+                /**
+                 * Parses registration info from JSON.
+                 * @param jsonValue The json value.
+                 * @return Registration info.
+                 * @throws JsonException
+                 */
+                @Throws(JsonException::class)
+                public fun fromJson(jsonValue: JsonValue): RegistrationInfo {
+                    val map = jsonValue.requireMap()
+                    return when (val type = map.requireField<String>(TYPE_KEY)) {
+                        PENDING_TYPE -> Pending(
+                            address = map.requireField(ADDRESS_KEY),
+                            registrationOptions = SmsRegistrationOptions.fromJson(
+                                map.require(OPTIONS_KEY)
+                            )
+                        )
+
+                        REGISTERED_TYPE -> Registered(
+                            maskedAddress = map.requireField(ADDRESS_KEY),
+                            isOptIn = map.requireField(OPT_IN_KEY),
+                            channelId = map.requireField(CHANNEL_ID_KEY),
+                            senderId = map.requireField(SENDER_ID_KEY)
+                        )
+
+                        else -> throw JsonException("Unexpected type $type")
+                    }
+                }
+            }
         }
 
-        override fun hashCode(): Int = Objects.hash(channelId, maskedAddress, info)
+        override fun toString(): String {
+            return "Sms(registrationInfo=$registrationInfo)"
+        }
 
-        /** Registration info for a channel. */
-        public sealed class RegisteredInfo() {
-            /** Email registration info. */
-            public class Email(
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Sms
+
+            if (registrationInfo != other.registrationInfo) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int = ObjectsCompat.hash(
+            registrationInfo
+        )
+
+    }
+
+    /**
+     * Email channel
+     */
+    public class Email(
+        /**
+         * Registration info.
+         */
+        public val registrationInfo: RegistrationInfo
+    ) : ContactChannel() {
+
+        public override val channelType: ChannelType = ChannelType.EMAIL
+
+        public override val maskedAddress: String
+            get() {
+                return when (this.registrationInfo) {
+                    is RegistrationInfo.Pending -> this.registrationInfo.address.maskEmail()
+                    is RegistrationInfo.Registered -> this.registrationInfo.maskedAddress
+                }
+            }
+
+        public override val isRegistered: Boolean
+            get() {
+                return when (this.registrationInfo) {
+                    is RegistrationInfo.Pending -> false
+                    is RegistrationInfo.Registered -> true
+                }
+            }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Email
+
+            if (registrationInfo != other.registrationInfo) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int = ObjectsCompat.hashCode(registrationInfo)
+        override fun toString(): String {
+            return "Email(registrationInfo=$registrationInfo)"
+        }
+
+        /**
+         * Email registration info.
+         */
+        public sealed class RegistrationInfo : JsonSerializable {
+
+            /**
+             * Indicates the Email is registered.
+             */
+            public class Registered(
+                /**
+                 * Channel ID.
+                 */
+                public val channelId: String,
+
+                /**
+                 * Masked email address.
+                 */
+                public val maskedAddress: String,
+
                 /** Date the user opted in to transactional emails. */
-                public val transactionalOptedIn: Long?,
+                public val transactionalOptedIn: Long? = null,
+
                 /** Date the user opted out of transactional emails. */
-                public val transactionalOptedOut: Long?,
+                public val transactionalOptedOut: Long? = null,
                 /**
                  * Date the user opted in to commercial emails.
                  *
                  * This field determines the email opted-in state.
                  */
-                public val commercialOptedIn: Long?,
+                public val commercialOptedIn: Long? = null,
+
                 /** Date the user opted out of commercial emails. */
-                public val commercialOptedOut: Long?
-            ) : RegisteredInfo() {
+                public val commercialOptedOut: Long? = null
+            ) : RegistrationInfo() {
+
                 override fun equals(other: Any?): Boolean {
                     if (this === other) return true
-                    if (other !is Email) return false
-                    return transactionalOptedIn == other.transactionalOptedIn &&
-                            transactionalOptedOut == other.transactionalOptedOut &&
-                            commercialOptedIn == other.commercialOptedIn &&
-                            commercialOptedOut == other.commercialOptedOut
+                    if (javaClass != other?.javaClass) return false
+
+                    other as Registered
+
+                    if (channelId != other.channelId) return false
+                    if (maskedAddress != other.maskedAddress) return false
+                    if (transactionalOptedIn != other.transactionalOptedIn) return false
+                    if (transactionalOptedOut != other.transactionalOptedOut) return false
+                    if (commercialOptedIn != other.commercialOptedIn) return false
+                    if (commercialOptedOut != other.commercialOptedOut) return false
+
+                    return true
                 }
 
-                override fun hashCode(): Int = Objects.hash(
-                    transactionalOptedIn, transactionalOptedOut, commercialOptedIn, commercialOptedOut
+                override fun hashCode(): Int = ObjectsCompat.hash(
+                    channelId, maskedAddress, transactionalOptedIn, transactionalOptedOut,
+                    commercialOptedIn, commercialOptedOut
+                )
+
+                override fun toString(): String {
+                    return "Registered(channelId='$channelId', maskedAddress='$maskedAddress', transactionalOptedIn=$transactionalOptedIn, transactionalOptedOut=$transactionalOptedOut, commercialOptedIn=$commercialOptedIn, commercialOptedOut=$commercialOptedOut)"
+                }
+            }
+
+            /**
+             * Indicates the Email is pending registration.
+             */
+            public class Pending(
+                /**
+                 * Email address.
+                 */
+                public val address: String,
+                /**
+                 * Registration options.
+                 */
+                public val registrationOptions: EmailRegistrationOptions
+            ) : RegistrationInfo() {
+
+                override fun toString(): String {
+                    return "Pending(address='$address', registrationOptions=$registrationOptions)"
+                }
+
+                override fun equals(other: Any?): Boolean {
+                    if (this === other) return true
+                    if (javaClass != other?.javaClass) return false
+
+                    other as Pending
+
+                    if (address != other.address) return false
+                    if (registrationOptions != other.registrationOptions) return false
+
+                    return true
+                }
+
+                override fun hashCode(): Int = ObjectsCompat.hash(
+                    address, registrationOptions
                 )
             }
 
-            /** SMS registration info. */
-            public class SMS(
-                public val isOptIn: Boolean,
-                public val senderID: String
-            ) : RegisteredInfo() {
-                override fun equals(other: Any?): Boolean {
-                    if (this === other) return true
-                    if (other !is SMS) return false
-                    return isOptIn == other.isOptIn && senderID == other.senderID
+            override fun toJsonValue(): JsonValue = when (this) {
+                is Pending -> jsonMapOf(
+                    TYPE_KEY to PENDING_TYPE,
+                    ADDRESS_KEY to address,
+                    OPTIONS_KEY to registrationOptions
+                )
+
+                is Registered -> jsonMapOf(TYPE_KEY to REGISTERED_TYPE,
+                    ADDRESS_KEY to maskedAddress,
+                    CHANNEL_ID_KEY to channelId,
+                    COMMERCIAL_OPTED_IN_KEY to this.commercialOptedIn?.let {
+                        DateUtils.createIso8601TimeStamp(it)
+                    },
+                    COMMERCIAL_OPTED_OUT_KEY to this.commercialOptedOut?.let {
+                        DateUtils.createIso8601TimeStamp(it)
+                    },
+                    TRANSACTIONAL_OPTED_IN_KEY to this.transactionalOptedIn?.let {
+                        DateUtils.createIso8601TimeStamp(it)
+                    },
+                    TRANSACTIONAL_OPTED_OUT_KEY to this.transactionalOptedOut?.let {
+                        DateUtils.createIso8601TimeStamp(it)
+                    })
+            }.toJsonValue()
+
+            public companion object {
+
+                /**
+                 * Parses registration info from JSON.
+                 * @param jsonValue The json value.
+                 * @return Registration info.
+                 * @throws JsonException
+                 */
+                @Throws(JsonException::class)
+                public fun fromJson(jsonValue: JsonValue): RegistrationInfo {
+                    val map = jsonValue.requireMap()
+                    return when (val type = map.requireField<String>(TYPE_KEY)) {
+                        PENDING_TYPE -> Pending(
+                            address = map.requireField(ADDRESS_KEY),
+                            registrationOptions = EmailRegistrationOptions.fromJson(
+                                map.require(OPTIONS_KEY)
+                            )
+                        )
+
+                        REGISTERED_TYPE -> Registered(
+                            maskedAddress = map.requireField(ADDRESS_KEY),
+                            channelId = map.requireField(CHANNEL_ID_KEY),
+                            commercialOptedIn = map.isoDateAsMilliseconds(COMMERCIAL_OPTED_IN_KEY),
+                            commercialOptedOut = map.isoDateAsMilliseconds(COMMERCIAL_OPTED_OUT_KEY),
+                            transactionalOptedIn = map.isoDateAsMilliseconds(
+                                TRANSACTIONAL_OPTED_IN_KEY
+                            ),
+                            transactionalOptedOut = map.isoDateAsMilliseconds(
+                                TRANSACTIONAL_OPTED_OUT_KEY
+                            )
+                        )
+
+                        else -> throw JsonException("Unexpected type $type")
+                    }
                 }
-
-                override fun hashCode(): Int = Objects.hash(isOptIn, senderID)
-            }
-        }
-    }
-
-    public class Pending(
-        /** The email or phone number that is being registered. */
-        public val address: String,
-        public val info: PendingInfo
-    ): ContactChannel() {
-
-        public override val maskedAddress: String
-            get() = when (info) {
-                is PendingInfo.Email -> address.maskEmail()
-                is PendingInfo.Sms -> address.maskPhoneNumber()
             }
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is Pending) return false
-            return address == other.address && maskedAddress == other.maskedAddress && info == other.info
-        }
-
-        override fun hashCode(): Int = Objects.hash(address, maskedAddress, info)
-
-        /** Pending registration info for a channel. */
-        public sealed class PendingInfo {
-
-            /** Pending email registration info. */
-            public object Email : PendingInfo() {
-                override fun equals(other: Any?): Boolean = other is Email
-                override fun hashCode(): Int = Email::class.hashCode()
-            }
-
-            /** Pending SMS registration info. */
-            public class Sms(
-                /** Identifier from which the SMS opt-in message is received. */
-                public val senderId: String
-            ) : PendingInfo() {
-                override fun equals(other: Any?): Boolean {
-                    if (this === other) return true
-                    if (other !is Sms) return false
-                    return senderId == other.senderId
-                }
-
-                override fun hashCode(): Int = Objects.hash(senderId)
-            }
         }
     }
 }
-
-/** Returns the underlying type of a contact channel. */
-public val ContactChannel.type: ChannelType
-    get() = when (this) {
-        is ContactChannel.Registered -> when (info) {
-            is RegisteredInfo.Email -> ChannelType.EMAIL
-            is RegisteredInfo.SMS -> ChannelType.SMS
-        }
-        is ContactChannel.Pending -> when (info) {
-            is PendingInfo.Email -> ChannelType.EMAIL
-            is PendingInfo.Sms -> ChannelType.SMS
-        }
-    }
 
 private fun String.maskEmail(): String {
     if (isNotEmpty()) {

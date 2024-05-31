@@ -1,6 +1,8 @@
 package com.urbanairship.json
 
 import com.urbanairship.UALog
+import com.urbanairship.util.DateUtils
+import java.text.ParseException
 
 @Throws(JsonException::class)
 public fun jsonMapOf(vararg fields: Pair<String, *>): JsonMap =
@@ -74,6 +76,23 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
         JsonMap::class -> field.optMap() as T
         JsonValue::class -> field.toJsonValue() as T
         else -> throw JsonException("Invalid type '${T::class.java.simpleName}' for field '$key'")
+    }
+}
+
+
+/**
+ * Gets the field with the given [key] and parses it as a ISO date string.
+ *
+ * @throws JsonException if the value is not a valid date string.
+ */
+@Throws(JsonException::class)
+public fun JsonMap.isoDateAsMilliseconds(key: String): Long? {
+    return try {
+        optionalField<String>(key)?.let {
+            DateUtils.parseIso8601(it)
+        }
+    } catch (e: Exception) {
+        throw JsonException("Unable to parse value as date: ${get(key)}", e)
     }
 }
 
