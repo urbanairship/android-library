@@ -706,8 +706,8 @@ public class UAirship {
         Supplier<PushProviders> pushProviders = PushProviders.lazyLoader(application, airshipConfigOptions);
 
         AudienceOverridesProvider audienceOverridesProvider = new AudienceOverridesProvider();
-        DeferredPlatformProvider platformProvider = new DeferredPlatformProvider(getApplicationContext(), preferenceDataStore, privacyManager, pushProviders);
-        DefaultRequestSession requestSession = new DefaultRequestSession(airshipConfigOptions, platformProvider.get());
+        DeferredPlatformProvider platformProvider = new DeferredPlatformProvider(application, preferenceDataStore, privacyManager, pushProviders);
+        DefaultRequestSession requestSession = new DefaultRequestSession(airshipConfigOptions, platformProvider);
 
         this.runtimeConfig = new AirshipRuntimeConfig(() -> airshipConfigOptions, requestSession, preferenceDataStore, platformProvider);
         this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, localeManager, audienceOverridesProvider);
