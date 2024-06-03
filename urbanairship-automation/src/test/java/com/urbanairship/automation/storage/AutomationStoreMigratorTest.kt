@@ -7,12 +7,12 @@ import com.urbanairship.automation.AutomationAppState
 import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.AutomationDelay
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.automation.engine.AutomationScheduleData
-import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.AutomationTrigger
 import com.urbanairship.automation.EventAutomationTrigger
 import com.urbanairship.automation.EventAutomationTriggerType
+import com.urbanairship.automation.engine.AutomationScheduleData
 import com.urbanairship.automation.engine.AutomationScheduleState
+import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
@@ -23,6 +23,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -91,7 +92,8 @@ public class AutomationStoreMigratorTest {
             triggerInfo = TriggeringInfo(
                 context = null,
                 date = 0
-            )
+            ),
+            triggerSessionId = UUID.randomUUID().toString()
         )
 
         val migrated = requireNotNull(automationStore.getSchedule("some-schedule"))
@@ -223,16 +225,18 @@ public class AutomationStoreMigratorTest {
                 campaigns = jsonMapOf("campaigns" to "campaigns").toJsonValue(),
                 contactId = null,
                 experimentResult = null,
-                reportingContext = jsonMapOf("reporting" to "context").toJsonValue()
+                reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
+                triggerSessionId = UUID.randomUUID().toString()
             ),
             triggerInfo = TriggeringInfo(
                 context = null,
                 date = 100
-            )
+            ),
+            triggerSessionId = UUID.randomUUID().toString()
         )
 
         val migrated = requireNotNull(automationStore.getSchedule("some-schedule"))
-        assertEquals(expected, migrated)
+        verifySchedule(expected, migrated)
     }
 
     @Test
@@ -360,16 +364,18 @@ public class AutomationStoreMigratorTest {
                 campaigns = jsonMapOf("campaigns" to "campaigns").toJsonValue(),
                 contactId = null,
                 experimentResult = null,
-                reportingContext = jsonMapOf("reporting" to "context").toJsonValue()
+                reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
+                triggerSessionId = UUID.randomUUID().toString()
             ),
             triggerInfo = TriggeringInfo(
                 context = null,
                 date = 100
-            )
+            ),
+            triggerSessionId = UUID.randomUUID().toString()
         )
 
         val migrated = requireNotNull(automationStore.getSchedule("some-schedule"))
-        assertEquals(expected, migrated)
+        verifySchedule(expected, migrated)
     }
 
     @Test
@@ -499,16 +505,18 @@ public class AutomationStoreMigratorTest {
                 campaigns = jsonMapOf("campaigns" to "campaigns").toJsonValue(),
                 contactId = null,
                 experimentResult = null,
-                reportingContext = jsonMapOf("reporting" to "context").toJsonValue()
+                reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
+                triggerSessionId = UUID.randomUUID().toString()
             ),
             triggerInfo = TriggeringInfo(
                 context = null,
                 date = 100
-            )
+            ),
+            triggerSessionId = UUID.randomUUID().toString()
         )
 
         val migrated = requireNotNull(automationStore.getSchedule("some-schedule"))
-        assertEquals(expected, migrated)
+        verifySchedule(expected, migrated)
     }
 
     @Test
@@ -552,7 +560,8 @@ public class AutomationStoreMigratorTest {
             triggerInfo = TriggeringInfo(
                 context = null,
                 date = 0
-            )
+            ),
+            triggerSessionId = UUID.randomUUID().toString()
         )
 
         val migrated = requireNotNull(automationStore.getSchedule("some-schedule"))
@@ -625,5 +634,23 @@ public class AutomationStoreMigratorTest {
                 .put("deferred", makeDeferredData())
                 .put("type", "deferred")
                 .build().toJsonValue())
+    }
+
+    /**
+     * Verify the migration went well. Just ignore verifying triggerSessionId as it's random.
+     */
+    private fun verifySchedule(expected: AutomationScheduleData, migrated: AutomationScheduleData) {
+        assertEquals(expected.schedule, migrated.schedule)
+        assertEquals(expected.scheduleState, migrated.scheduleState)
+        assertEquals(expected.scheduleStateChangeDate, migrated.scheduleStateChangeDate)
+        assertEquals(expected.executionCount, migrated.executionCount)
+        assertEquals(expected.triggerInfo, migrated.triggerInfo)
+        assertEquals(expected.preparedScheduleInfo?.scheduleId, migrated.preparedScheduleInfo?.scheduleId)
+        assertEquals(expected.preparedScheduleInfo?.productId, migrated.preparedScheduleInfo?.productId)
+        assertEquals(expected.preparedScheduleInfo?.campaigns, migrated.preparedScheduleInfo?.campaigns)
+        assertEquals(expected.preparedScheduleInfo?.contactId, migrated.preparedScheduleInfo?.contactId)
+        assertEquals(expected.preparedScheduleInfo?.experimentResult, migrated.preparedScheduleInfo?.experimentResult)
+        assertEquals(expected.preparedScheduleInfo?.reportingContext, migrated.preparedScheduleInfo?.reportingContext)
+        assertEquals(expected.preparedScheduleInfo?.additionalAudienceCheckResult, migrated.preparedScheduleInfo?.additionalAudienceCheckResult)
     }
 }

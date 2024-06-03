@@ -16,6 +16,7 @@ import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.json.JsonValue
+import java.util.UUID
 import app.cash.turbine.test
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
@@ -246,7 +247,8 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
             ),
             scheduleState = AutomationScheduleState.IDLE,
             scheduleStateChangeDate = clock.currentTimeMillis(),
-            executionCount = 0
+            executionCount = 0,
+            triggerSessionId = UUID.randomUUID().toString()
         )
     }
 }

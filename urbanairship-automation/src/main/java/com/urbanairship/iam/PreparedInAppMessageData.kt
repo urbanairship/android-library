@@ -14,6 +14,8 @@ import com.urbanairship.iam.adapter.CustomDisplayAdapter
 import com.urbanairship.iam.adapter.CustomDisplayAdapterType
 import com.urbanairship.iam.adapter.DisplayAdapter
 import com.urbanairship.iam.adapter.DisplayAdapterFactory
+import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
+import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.coordinator.DisplayCoordinator
 import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
 
@@ -21,13 +23,15 @@ import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
 internal data class PreparedInAppMessageData(
     val message: InAppMessage,
     val displayAdapter: DisplayAdapter,
-    val displayCoordinator: DisplayCoordinator
+    val displayCoordinator: DisplayCoordinator,
+    val analytics: InAppMessageAnalyticsInterface
 )
 
 internal class InAppMessageAutomationPreparer(
     private val assetsManager: AssetCacheManager,
     private val displayCoordinatorManager: DisplayCoordinatorManager,
-    private val displayAdapterFactory: DisplayAdapterFactory
+    private val displayAdapterFactory: DisplayAdapterFactory,
+    private val analyticsFactory: InAppMessageAnalyticsFactory
 ) : AutomationPreparerDelegate<InAppMessage, PreparedInAppMessageData> {
 
     var displayInterval: Long
@@ -53,7 +57,13 @@ internal class InAppMessageAutomationPreparer(
             return Result.failure(it)
         }
 
-        return Result.success(PreparedInAppMessageData(data, adapter, coordinator))
+        return Result.success(
+            PreparedInAppMessageData(
+                data,
+                adapter,
+                coordinator,
+                analyticsFactory.makeAnalytics(data, preparedScheduleInfo))
+        )
     }
 
     override suspend fun cancelled(scheduleID: String) {

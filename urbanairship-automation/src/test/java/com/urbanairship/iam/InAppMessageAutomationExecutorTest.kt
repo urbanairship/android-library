@@ -9,6 +9,10 @@ import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
 import com.urbanairship.automation.engine.PreparedScheduleInfo
+import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
+import com.urbanairship.experiment.ExperimentResult
+import com.urbanairship.iam.adapter.DisplayAdapter
+import com.urbanairship.iam.adapter.DisplayResult
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.analytics.events.InAppEvent
@@ -16,11 +20,7 @@ import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.assets.AssetCacheManager
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
-import com.urbanairship.iam.adapter.DisplayAdapter
-import com.urbanairship.iam.adapter.DisplayResult
 import com.urbanairship.iam.coordinator.DisplayCoordinator
-import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
-import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.util.UUID
@@ -66,7 +66,8 @@ public class InAppMessageAutomationExecutorTest {
         productId = UUID.randomUUID().toString(),
         campaigns = JsonValue.wrap(UUID.randomUUID().toString()),
         contactId = UUID.randomUUID().toString(),
-        reportingContext = JsonValue.wrap(UUID.randomUUID().toString())
+        reportingContext = JsonValue.wrap(UUID.randomUUID().toString()),
+        triggerSessionId = UUID.randomUUID().toString()
     )
 
     private val preparedData = PreparedInAppMessageData(
@@ -76,22 +77,13 @@ public class InAppMessageAutomationExecutorTest {
             actions = jsonMapOf("action" to "payload")
         ),
         displayAdapter = displayAdapter,
-        displayCoordinator = displayCoordinator
+        displayCoordinator = displayCoordinator,
+        analytics = analytics
     )
 
     @Before
     public fun setup() {
-        every { analyticsFactory.makeAnalytics(any(), any()) } returns analytics
-
-        every { analyticsFactory.makeAnalytics(any(), any(), any(), any(), any(), any(), any()) } answers {
-            assertEquals(preparedInfo.scheduleId, args[0])
-            assertEquals(preparedInfo.productId, args[1])
-            assertEquals(preparedInfo.contactId, args[2])
-            assertEquals(preparedData.message, args[3])
-            assertEquals(preparedInfo.campaigns, args[4])
-            assertEquals(preparedInfo.reportingContext, args[5])
-            analytics
-        }
+        coEvery { analyticsFactory.makeAnalytics(any(), any()) } returns analytics
     }
 
     @Test
@@ -165,7 +157,6 @@ public class InAppMessageAutomationExecutorTest {
     @Test
     public fun testExecute(): TestResult = runTest {
 
-        coEvery { analytics.recordImpression() } just runs
         every { displayCoordinator.messageWillDisplay(any()) } answers {
             assertEquals(preparedData.message, firstArg())
         }
@@ -177,7 +168,6 @@ public class InAppMessageAutomationExecutorTest {
         coEvery { displayAdapter.display(any(), any()) } coAnswers {
             assertEquals(context, firstArg())
             assertEquals(analytics, secondArg())
-            analytics.recordImpression()
             DisplayResult.FINISHED
         }
 
@@ -187,7 +177,6 @@ public class InAppMessageAutomationExecutorTest {
 
         val result = execute()
 
-        coVerify(exactly = 1) { analytics.recordImpression() }
         coVerify { displayAdapter.display(any(), any()) }
         verify { displayCoordinator.messageWillDisplay(any()) }
         verify { displayCoordinator.messageFinishedDisplaying(any()) }
@@ -209,7 +198,8 @@ public class InAppMessageAutomationExecutorTest {
             campaigns = preparedInfo.campaigns,
             contactId = preparedInfo.contactId,
             reportingContext = preparedInfo.reportingContext,
-            experimentResult = experimentResult
+            experimentResult = experimentResult,
+            triggerSessionId = UUID.randomUUID().toString()
         )
 
         every { displayCoordinator.messageWillDisplay(any()) } just runs
@@ -290,12 +280,9 @@ public class InAppMessageAutomationExecutorTest {
         every { displayCoordinator.messageWillDisplay(any()) } just runs
         every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
 
-        coEvery { analytics.recordImpression() } just runs
-
         coEvery { displayAdapter.display(any(), any()) } coAnswers {
             assertEquals(context, firstArg())
             assertEquals(analytics, secondArg())
-            analytics.recordImpression()
             DisplayResult.CANCEL
         }
 

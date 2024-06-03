@@ -17,7 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ModalPresentation
 import com.urbanairship.android.layout.ModelFactoryException
-import com.urbanairship.android.layout.ThomasListener
+import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgsLoader
 import com.urbanairship.android.layout.display.DisplayArgsLoader.LoadException
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment
@@ -48,7 +48,7 @@ public class ModalActivity : AppCompatActivity() {
     }
 
     private lateinit var loader: DisplayArgsLoader
-    private lateinit var externalListener: ThomasListener
+    private lateinit var externalListener: ThomasListenerInterface
     private lateinit var reporter: Reporter
     private lateinit var displayTimer: DisplayTimer
 

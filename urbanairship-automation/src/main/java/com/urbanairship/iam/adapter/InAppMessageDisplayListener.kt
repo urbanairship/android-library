@@ -2,35 +2,21 @@
 
 package com.urbanairship.iam.adapter
 
-import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.automation.utils.ActiveTimer
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.info.InAppMessageButtonInfo
-import com.urbanairship.automation.utils.ActiveTimer
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 internal class InAppMessageDisplayListener(
     val analytics: InAppMessageAnalyticsInterface,
     private val timer: ActiveTimer,
     private var onDismiss: ((DisplayResult) -> Unit)?,
-    private var  isFirstDisplay: Boolean = true,
-    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) {
-    private val supervisorJob = SupervisorJob()
-    private val scope: CoroutineScope = CoroutineScope(dispatcher + supervisorJob)
 
     fun onAppear() {
-        if (!isFirstDisplay) { return }
-        isFirstDisplay = false
-
-        scope.launch { analytics.recordImpression() }
-
         timer.start()
         analytics.recordEvent(InAppDisplayEvent(), null)
     }
@@ -110,7 +96,6 @@ internal class InAppMessageDisplayListener(
         }
 
         timer.stop()
-        supervisorJob.complete()
         val result = block.invoke(timer.time)
         dismiss(result)
         onDismiss = null

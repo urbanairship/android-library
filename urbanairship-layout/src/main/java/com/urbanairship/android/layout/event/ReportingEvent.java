@@ -5,8 +5,8 @@ package com.urbanairship.android.layout.event;
 import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.android.layout.reporting.FormInfo;
+import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
-import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.util.Map;
@@ -28,6 +28,8 @@ public abstract class ReportingEvent {
         BUTTON_DISMISS,
         FORM_RESULT,
         FORM_DISPLAY,
+        TIMED_OUT,
+        VISIBILITY_CHANGED
     }
 
     @NonNull
@@ -354,6 +356,58 @@ public abstract class ReportingEvent {
             return "PageAction{" +
                     "actionId='" + actionId + '\'' +
                     ", reportingMetadata=" + reportingMetadata +
+                    '}';
+        }
+    }
+
+    public static class TimedOut extends ReportingEvent {
+
+        @Nullable
+        private final LayoutData layoutData;
+
+        public TimedOut(@Nullable LayoutData layoutData) {
+            super(ReportType.TIMED_OUT);
+            this.layoutData = layoutData;
+        }
+
+        @Nullable
+        public LayoutData getLayoutData() {
+            return layoutData;
+        }
+
+        @NonNull
+        public String toString() {
+            return "ReportingEvent.TimedOut{" +
+                    "layoutData=" + layoutData +
+                    '}';
+        }
+    }
+
+    public static class VisibilityChanged extends ReportingEvent {
+
+        private final boolean isVisible;
+
+        private final boolean isForegrounded;
+
+        public VisibilityChanged(boolean isVisible, boolean isForegrounded) {
+            super(ReportType.VISIBILITY_CHANGED);
+            this.isVisible = isVisible;
+            this.isForegrounded = isForegrounded;
+        }
+
+        public boolean isVisible() {
+            return isVisible;
+        }
+
+        public boolean isForegrounded() {
+            return isForegrounded;
+        }
+
+        @NonNull
+        public String toString() {
+            return "ReportingEvent.VisibilityChanged{" +
+                    "isVisible=" + isVisible +
+                    ", isForegrounded=" + isForegrounded +
                     '}';
         }
     }

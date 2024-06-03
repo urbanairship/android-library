@@ -751,7 +751,7 @@ public class UAirship {
         this.remoteData = new RemoteData(application, runtimeConfig, preferenceDataStore, privacyManager, localeManager,  pushManager, pushProviders, contact);
         components.add(this.remoteData);
 
-        this.meteredUsageManager = new AirshipMeteredUsage(application, preferenceDataStore, runtimeConfig, privacyManager);
+        this.meteredUsageManager = new AirshipMeteredUsage(application, preferenceDataStore, runtimeConfig, privacyManager, contact);
         components.add(this.meteredUsageManager);
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, runtimeConfig, privacyManager, remoteData);

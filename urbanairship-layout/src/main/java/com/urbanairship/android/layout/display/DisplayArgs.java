@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
-import com.urbanairship.android.layout.ThomasListener;
+import com.urbanairship.android.layout.ThomasListenerInterface;
 import com.urbanairship.android.layout.info.LayoutInfo;
 import com.urbanairship.android.layout.util.Factory;
 import com.urbanairship.android.layout.util.ImageCache;
@@ -22,7 +22,7 @@ public class DisplayArgs {
     @NonNull
     private final LayoutInfo payload;
     @NonNull
-    private final ThomasListener listener;
+    private final ThomasListenerInterface listener;
     @NonNull
     private final ActivityMonitor inAppActivityMonitor;
     @Nullable
@@ -32,7 +32,7 @@ public class DisplayArgs {
 
     public DisplayArgs(
         @NonNull LayoutInfo payload,
-        @NonNull ThomasListener listener,
+        @NonNull ThomasListenerInterface listener,
         @NonNull ActivityMonitor inAppActivityMonitor,
         @Nullable Factory<AirshipWebViewClient> webViewClientFactory,
         @Nullable ImageCache imageCache
@@ -45,7 +45,7 @@ public class DisplayArgs {
     }
 
     @NonNull
-    public ThomasListener getListener() {
+    public ThomasListenerInterface getListener() {
         return listener;
     }
 

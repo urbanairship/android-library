@@ -12,6 +12,7 @@ import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.contacts.Contact
 import com.urbanairship.http.RequestResult
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
@@ -35,6 +36,7 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
     private val privacyManager: PrivacyManager,
     private val store: EventsDao = EventsDatabase.persistent(context).eventsDao(),
     private val client: MeteredUsageApiClient = MeteredUsageApiClient(config),
+    private val contact: Contact,
     private val jobDispatcher: JobDispatcher = JobDispatcher.shared(context),
 ) : AirshipComponent(context, dataStore) {
 
@@ -84,14 +86,18 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
     }
 
     @WorkerThread
-    public fun addEvent(event: MeteredUsageEventEntity) {
+    public suspend fun addEvent(event: MeteredUsageEventEntity) {
         if (!usageConfig.get().isEnabled) {
             return
         }
 
-        val eventToStore = when (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
-            true -> event
-            false -> event.withAnalyticsDisabled()
+        var eventToStore = event
+        if (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
+            if (eventToStore.contactId == null) {
+                eventToStore = event.copyWithContactId(contact.stableContactInfo().contactId)
+            }
+        } else {
+            eventToStore = event.withAnalyticsDisabled()
         }
 
         store.addEvent(eventToStore)

@@ -2,7 +2,7 @@ package com.urbanairship.android.layout.ui
 
 import android.os.Parcel
 import com.urbanairship.TestActivityMonitor
-import com.urbanairship.android.layout.ThomasListener
+import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.display.DisplayArgsLoader
 import com.urbanairship.android.layout.info.LayoutInfo
@@ -21,7 +21,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 public class DisplayArgsLoaderTest : TestCase() {
 
-    private val listener = mockk<ThomasListener>()
+    private val listener = mockk<ThomasListenerInterface>()
 
     private val activityMonitor = TestActivityMonitor()
 

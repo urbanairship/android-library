@@ -6,17 +6,17 @@ import android.content.Context
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionRunRequestFactory
-import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.AutomationSchedule
+import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.engine.InterruptedBehavior
+import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
-import com.urbanairship.automation.engine.PreparedScheduleInfo
+import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
+import com.urbanairship.iam.adapter.DisplayResult
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.assets.AssetCacheManager
-import com.urbanairship.iam.adapter.DisplayResult
-import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -98,14 +98,14 @@ internal class InAppMessageAutomationExecutor(
         var result = ScheduleExecuteResult.FINISHED
 
         if (preparedScheduleInfo.experimentResult?.isMatching == true) {
-            analytics.recordEvent(
+            data.analytics.recordEvent(
                 event = InAppResolutionEvent.control(preparedScheduleInfo.experimentResult),
                 layoutContext = null
             )
         } else {
             try {
                 UALog.i { "Displaying message ${preparedScheduleInfo.scheduleId}" }
-                result = when(data.displayAdapter.display(context, analytics)) {
+                result = when(data.displayAdapter.display(context, data.analytics)) {
                     DisplayResult.CANCEL -> ScheduleExecuteResult.CANCEL
                     DisplayResult.FINISHED -> ScheduleExecuteResult.FINISHED
                 }

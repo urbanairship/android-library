@@ -32,7 +32,6 @@ internal class CustomDisplayAdapterWrapper (
 
     override suspend fun display(context: Context, analytics: InAppMessageAnalyticsInterface): DisplayResult {
         analytics.recordEvent(InAppDisplayEvent(), layoutContext = null)
-        analytics.recordImpression()
 
         val timer = ActiveTimer(GlobalActivityMonitor.shared(context))
         timer.start()

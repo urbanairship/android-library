@@ -15,7 +15,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.AirshipEmbeddedViewManager
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.ModelFactoryException
-import com.urbanairship.android.layout.ThomasListener
+import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment
 import com.urbanairship.android.layout.environment.ExternalReporter
@@ -31,18 +31,22 @@ import com.urbanairship.android.layout.util.Factory
 import com.urbanairship.android.layout.util.ImageCache
 import com.urbanairship.android.layout.util.getActivity
 import com.urbanairship.app.ActivityMonitor
+import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.webkit.AirshipWebViewClient
+import java.lang.ref.WeakReference
+import java.util.Objects
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
-import java.lang.ref.WeakReference
-import java.util.Objects
 
 private object EmbeddedViewModelStore : ViewModelStore()
 
@@ -66,16 +70,19 @@ public class EmbeddedLayout(
     private val payload: LayoutInfo = args.payload
     private val activityMonitor: ActivityMonitor = args.inAppActivityMonitor
     private val webViewClientFactory: Factory<AirshipWebViewClient>? = args.webViewClientFactory
-    private val externalListener: ThomasListener = args.listener
+    private val externalListener: ThomasListenerInterface = args.listener
     private val imageCache: ImageCache? = args.imageCache
 
     public val viewInstanceId: String =  payload.hash.toString()
 
     private val reporter: Reporter = ExternalReporter(externalListener)
 
-
     private var currentView: WeakReference<ThomasEmbeddedView>? = null
     private var displayTimer: DisplayTimer? = null
+
+    private val _isVisible = MutableStateFlow(false)
+
+    private val isVisible: StateFlow<Boolean> = _isVisible.asStateFlow()
 
     /** @hide **/
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -121,6 +128,24 @@ public class EmbeddedLayout(
             }
         })
 
+        activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
+            override fun onForeground(time: Long) {
+                super.onForeground(time)
+                reporter.report(
+                    ReportingEvent.VisibilityChanged(isVisible.value, true),
+                    LayoutData.empty()
+                )
+            }
+
+            override fun onBackground(time: Long) {
+                super.onBackground(time)
+                reporter.report(
+                    ReportingEvent.VisibilityChanged(isVisible.value, false),
+                    LayoutData.empty()
+                )
+            }
+        })
+
         val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
             activity,
             activityMonitor,
@@ -152,6 +177,26 @@ public class EmbeddedLayout(
                 fillWidth = fillWidth,
                 fillHeight = fillHeight
             )
+
+            embeddedView.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) {
+                    val updated = true
+                    reporter.report(
+                        ReportingEvent.VisibilityChanged(updated, activityMonitor.isAppForegrounded),
+                        LayoutData.empty()
+                    )
+                    _isVisible.value = updated
+                }
+
+                override fun onViewDetachedFromWindow(v: View) {
+                    val updated = false
+                    reporter.report(
+                        ReportingEvent.VisibilityChanged(updated, activityMonitor.isAppForegrounded),
+                        LayoutData.empty()
+                    )
+                    _isVisible.value = updated
+                }
+            })
 
             layoutEventsJob?.cancel()
             layoutEventsJob = observeLayoutEvents(modelEnvironment.layoutEvents)

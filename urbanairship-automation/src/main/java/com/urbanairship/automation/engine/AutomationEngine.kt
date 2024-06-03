@@ -266,7 +266,7 @@ internal class AutomationEngine(
                     data?.let { preparer.cancelled(it.schedule) }
                 }
                 TriggerExecutionType.EXECUTION -> {
-                    updateState(result.scheduleId) { it.triggered(result.triggerInfo.context, date)}
+                    updateState(result.scheduleId) { it.triggered(result.triggerInfo, date)}
                     startTaskToProcessTriggeredSchedule(result.scheduleId)
                 }
             }
@@ -362,7 +362,7 @@ internal class AutomationEngine(
     private suspend fun prepareSchedule(data: AutomationScheduleData): Pair<AutomationScheduleData, PreparedSchedule>? {
         UALog.v { "Preparing schedule $data" }
 
-        val result = preparer.prepare(data.schedule, data.triggerInfo?.context)
+        val result = preparer.prepare(data.schedule, data.triggerInfo?.context, data.triggerSessionId)
         UALog.v { "Preparing schedule $data result: $result" }
 
         val updated = updateState(data.schedule.identifier) {

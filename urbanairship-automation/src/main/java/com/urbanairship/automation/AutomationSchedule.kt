@@ -19,6 +19,7 @@ import com.urbanairship.json.toJsonList
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.VersionUtils
 import java.util.Objects
+import java.util.UUID
 import org.jetbrains.annotations.VisibleForTesting
 
 /**
@@ -317,7 +318,8 @@ internal fun AutomationSchedule.updateOrCreate(data: AutomationScheduleData?, ti
             scheduleStateChangeDate = timestamp,
             executionCount = 0,
             triggerInfo = null,
-            preparedScheduleInfo = null
+            preparedScheduleInfo = null,
+            triggerSessionId = UUID.randomUUID().toString()
         )
     }
 

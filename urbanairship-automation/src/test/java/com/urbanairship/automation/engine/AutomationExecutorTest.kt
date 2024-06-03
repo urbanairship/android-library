@@ -2,13 +2,15 @@ package com.urbanairship.automation.engine
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.iam.InAppMessage
-import com.urbanairship.iam.PreparedInAppMessageData
-import com.urbanairship.iam.content.Custom
-import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
+import com.urbanairship.iam.InAppMessage
+import com.urbanairship.iam.PreparedInAppMessageData
+import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
+import com.urbanairship.iam.content.Custom
+import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.json.JsonValue
+import java.util.UUID
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -23,6 +25,7 @@ public class AutomationExecutorTest {
     private val actionExecutor: AutomationExecutorDelegate<JsonValue> = mockk()
     private val messageExecutor: AutomationExecutorDelegate<PreparedInAppMessageData> = mockk()
     private val remoteDataAccess: AutomationRemoteDataAccess = mockk()
+    private val messageAnalytics: InAppMessageAnalyticsInterface = mockk()
 
     private val preparedMessageData = PreparedInAppMessageData(
         message = InAppMessage(
@@ -30,7 +33,8 @@ public class AutomationExecutorTest {
             displayContent = InAppMessageDisplayContent.CustomContent(Custom(JsonValue.wrap("custom")))
         ),
         displayAdapter = mockk(),
-        displayCoordinator = mockk()
+        displayCoordinator = mockk(),
+        analytics = messageAnalytics
     )
 
     private val executor = AutomationExecutor(actionExecutor, messageExecutor, remoteDataAccess)
@@ -197,7 +201,7 @@ public class AutomationExecutorTest {
             created = 0U
         )
 
-        val preparedScheduleInfo = PreparedScheduleInfo("prepared schedule id")
+        val preparedScheduleInfo = PreparedScheduleInfo(scheduleId = "prepared schedule id", triggerSessionId = UUID.randomUUID().toString())
 
         coEvery { actionExecutor.interrupted(any(), any()) } answers {
             assertEquals(schedule, firstArg())
@@ -223,7 +227,7 @@ public class AutomationExecutorTest {
             created = 0U
         )
 
-        val preparedScheduleInfo = PreparedScheduleInfo("prepared schedule id")
+        val preparedScheduleInfo = PreparedScheduleInfo(scheduleId = "prepared schedule id", triggerSessionId = UUID.randomUUID().toString())
 
         coEvery { messageExecutor.interrupted(any(), any()) } answers {
             assertEquals(schedule, firstArg())
@@ -239,7 +243,7 @@ public class AutomationExecutorTest {
         val scheduleData = data ?: PreparedScheduleData.Action(JsonValue.wrap("neat"))
 
         return PreparedSchedule(
-            info = PreparedScheduleInfo("schedule id"),
+            info = PreparedScheduleInfo(scheduleId = "schedule id", triggerSessionId = UUID.randomUUID().toString()),
             data = scheduleData,
             frequencyChecker = checker
         )

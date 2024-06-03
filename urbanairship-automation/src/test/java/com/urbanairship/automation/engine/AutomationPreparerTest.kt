@@ -32,6 +32,7 @@ import com.urbanairship.iam.info.InAppMessageButtonLayoutType
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.util.Locale
+import java.util.UUID
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -84,7 +85,8 @@ public class AutomationPreparerTest {
                 name = "some name",
                 displayContent = InAppMessageDisplayContent.CustomContent(Custom(JsonValue.wrap("custom")))),
             displayAdapter = mockk(relaxed = true),
-            displayCoordinator = mockk(relaxed = true)
+            displayCoordinator = mockk(relaxed = true),
+            analytics = mockk(relaxed = true)
         )
 
         coEvery { audienceResolver.resolve(any(), any()) } returns Result.success(true)
@@ -114,7 +116,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule, firstArg<AutomationSchedule>())
         }
 
-        val result = preparer.prepare(schedule, triggerContext)
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
         assertEquals(result, SchedulePrepareResult.Invalidate)
 
         coVerify { remoteDataAccess.waitForFullRefresh(eq(schedule)) }
@@ -130,7 +132,7 @@ public class AutomationPreparerTest {
             false
         }
 
-        val result = preparer.prepare(schedule, triggerContext)
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
         assertEquals(result, SchedulePrepareResult.Invalidate)
 
         coVerify { remoteDataAccess.bestEffortRefresh(eq(schedule)) }
@@ -151,7 +153,7 @@ public class AutomationPreparerTest {
         coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
 
-        assertEquals(SchedulePrepareResult.Skip, preparer.prepare(schedule, triggerContext))
+        assertEquals(SchedulePrepareResult.Skip, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
 
         verify { frequencyChecker.isOverLimit() }
         coVerify { frequencyLimitManager.getFrequencyChecker(constraints) }
@@ -180,7 +182,7 @@ public class AutomationPreparerTest {
             false
         }
 
-        assertEquals(SchedulePrepareResult.Skip, preparer.prepare(schedule, triggerContext))
+        assertEquals(SchedulePrepareResult.Skip, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
 
         coVerify { audienceSelector.evaluate(any(), any()) }
     }
@@ -208,7 +210,7 @@ public class AutomationPreparerTest {
             false
         }
 
-        assertEquals(SchedulePrepareResult.Penalize, preparer.prepare(schedule, triggerContext))
+        assertEquals(SchedulePrepareResult.Penalize, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
 
         coVerify { audienceSelector.evaluate(any(), any()) }
     }
@@ -251,7 +253,7 @@ public class AutomationPreparerTest {
             return@answers Result.success(preparedMessageData)
         }
 
-        val preparedResult = preparer.prepare(schedule, triggerContext) as? SchedulePrepareResult.Prepared
+        val preparedResult = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()) as? SchedulePrepareResult.Prepared
         assertNotNull(preparedResult)
         assertTrue(preparedResult?.schedule?.info?.additionalAudienceCheckResult == false)
 
@@ -281,7 +283,35 @@ public class AutomationPreparerTest {
             false
         }
 
-        assertEquals(SchedulePrepareResult.Cancel, preparer.prepare(schedule, triggerContext))
+        assertEquals(SchedulePrepareResult.Cancel, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
+
+        coVerify { audienceSelector.evaluate(any(), any()) }
+    }
+
+    @Test
+    public fun testContactIdAudienceChecks(): TestResult = runTest {
+        val schedule = makeSchedule(
+            audience = AutomationAudience(
+                audienceSelector = audienceSelector,
+                missBehavior = AutomationAudience.MissBehavior.PENALIZE
+            )
+        )
+
+        coEvery { remoteDataAccess.contactIdFor(any()) } answers {
+            assertEquals(schedule, firstArg())
+            "contact id"
+        }
+
+        coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
+        coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
+
+        coEvery { audienceSelector.evaluate(any(), any()) } coAnswers {
+            assertEquals("contact id", (secondArg() as DeviceInfoProvider).getStableContactInfo().contactId)
+            false
+        }
+
+        assertEquals(SchedulePrepareResult.Penalize, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
 
         coVerify { audienceSelector.evaluate(any(), any()) }
     }
@@ -314,10 +344,12 @@ public class AutomationPreparerTest {
             return@answers Result.success(preparedMessageData)
         }
 
-        val result = preparer.prepare(schedule, triggerContext)
+        val triggerSessionId = UUID.randomUUID().toString()
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId)
         if (result is SchedulePrepareResult.Prepared) {
             assertEquals(schedule.identifier, result.schedule.info.scheduleId)
             assertEquals(schedule.campaigns, result.schedule.info.campaigns)
+            assertEquals(triggerSessionId, result.schedule.info.triggerSessionId)
             assertEquals(result.schedule.data, PreparedScheduleData.InAppMessage(preparedMessageData))
         } else {
             fail()
@@ -358,7 +390,7 @@ public class AutomationPreparerTest {
 
         mockExperimentsManager()
 
-        val result = preparer.prepare(schedule, triggerContext)
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
         assertEquals(SchedulePrepareResult.Skip, result)
         coVerify(exactly = 0) { messagePreparer.prepare(any(), any()) }
     }
@@ -392,7 +424,7 @@ public class AutomationPreparerTest {
             return@answers Result.success(firstArg())
         }
 
-        val result = preparer.prepare(schedule, triggerContext)
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
         if (result is SchedulePrepareResult.Prepared) {
             assertEquals(schedule.identifier, result.schedule.info.scheduleId)
             assertEquals(schedule.campaigns, result.schedule.info.campaigns)
@@ -461,7 +493,7 @@ public class AutomationPreparerTest {
         }
 
 
-        val result = preparer.prepare(schedule, triggerContext)
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
         if (result is SchedulePrepareResult.Prepared) {
             assertEquals(schedule.identifier, result.schedule.info.scheduleId)
             assertEquals(schedule.campaigns, result.schedule.info.campaigns)
@@ -529,7 +561,8 @@ public class AutomationPreparerTest {
                 displayContent = InAppMessageDisplayContent.CustomContent(Custom(JsonValue.wrap("content"))),
                 source =  InAppMessage.Source.REMOTE_DATA),
             displayAdapter = mockk(relaxed = true),
-            displayCoordinator = mockk(relaxed = true)
+            displayCoordinator = mockk(relaxed = true),
+            analytics = mockk(relaxed = true)
         )
 
         coEvery { messagePreparer.prepare(any(), any()) } answers {
@@ -546,7 +579,7 @@ public class AutomationPreparerTest {
         every { UAirship.getAppVersion() } returns 123
         every { UAirship.getVersion() } returns "1"
 
-        val result = preparer.prepare(schedule, triggerContext)
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
         if (result is SchedulePrepareResult.Prepared) {
             assertEquals(schedule.identifier, result.schedule.info.scheduleId)
             assertEquals(schedule.campaigns, result.schedule.info.campaigns)
@@ -602,7 +635,7 @@ public class AutomationPreparerTest {
         every { UAirship.getAppVersion() } returns 123
         every { UAirship.getVersion() } returns "1"
 
-        assertEquals(SchedulePrepareResult.Skip, preparer.prepare(schedule, triggerContext))
+        assertEquals(SchedulePrepareResult.Skip, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
     }
 
     @Test
@@ -642,7 +675,7 @@ public class AutomationPreparerTest {
             return@answers Result.success(preparedMessageData)
         }
 
-        val result = preparer.prepare(schedule, triggerContext)
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
         if (result is SchedulePrepareResult.Prepared) {
             assertEquals(result.schedule.info.experimentResult, experimentResult)
         } else {
@@ -695,7 +728,7 @@ public class AutomationPreparerTest {
             return@answers Result.success(preparedMessageData)
         }
 
-        val result = preparer.prepare(schedule, triggerContext)
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
         if (result is SchedulePrepareResult.Prepared) {
             assertEquals(result.schedule.info.experimentResult, experimentResult)
         } else {
@@ -742,7 +775,7 @@ public class AutomationPreparerTest {
             return@answers Result.success(preparedMessageData)
         }
 
-        val result = preparer.prepare(schedule, triggerContext)
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
         if (result is SchedulePrepareResult.Prepared) {
             assertNull(result.schedule.info.experimentResult)
         } else {
@@ -783,7 +816,7 @@ public class AutomationPreparerTest {
             return@answers Result.success(firstArg())
         }
 
-        val result = preparer.prepare(schedule, triggerContext)
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
         if (result is SchedulePrepareResult.Prepared) {
             assertNull(result.schedule.info.experimentResult)
         } else {

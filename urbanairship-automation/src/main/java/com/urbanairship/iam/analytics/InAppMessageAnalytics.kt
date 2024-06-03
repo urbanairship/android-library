@@ -2,63 +2,83 @@
 
 package com.urbanairship.iam.analytics
 
-import com.urbanairship.UALog
+import androidx.annotation.RestrictTo
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.iam.InAppMessage
+import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppEvent
-import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.json.JsonValue
-import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.meteredusage.MeteredUsageEventEntity
 import com.urbanairship.meteredusage.MeteredUsageType
 import com.urbanairship.util.Clock
 import java.util.UUID
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-internal interface InAppMessageAnalyticsInterface {
-    fun recordEvent(event: InAppEvent, layoutContext: LayoutData?)
-    suspend fun recordImpression()
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public interface InAppMessageAnalyticsInterface {
+    public fun recordEvent(event: InAppEvent, layoutContext: LayoutData?)
 }
 
 internal class InAppMessageAnalytics private constructor(
+    private val preparedScheduleInfo: PreparedScheduleInfo,
     private val messageId: InAppEventMessageId,
     private val source: InAppEventSource,
     private val renderedLocale: JsonValue?,
-    private val reportingMetadata: JsonValue?,
-    private val experimentResult: ExperimentResult?,
     private val eventRecorder: InAppEventRecorderInterface,
-    private val impressionRecorder: AirshipMeteredUsage,
     private val isReportingEnabled: Boolean,
-    private val productId: String?,
-    private val contactId: String?,
-    private val clock: Clock
+    private val historyStore: MessageDisplayHistoryStoreInterface,
+    private val displayImpressionRule: InAppDisplayImpressionRule,
+    private var _displayHistory: MutableStateFlow<MessageDisplayHistory>,
+    private var _displayContext: MutableStateFlow<InAppEventContext.Display>,
+    private val clock: Clock,
+    dispatcher: CoroutineDispatcher
 ): InAppMessageAnalyticsInterface {
 
-    constructor(scheduleId: String,
-                productId: String?,
-                contactId: String?,
+    constructor(preparedScheduleInfo: PreparedScheduleInfo,
                 message: InAppMessage,
-                campaigns: JsonValue?,
-                reportingMetadata: JsonValue?,
-                experimentResult: ExperimentResult?,
                 eventRecorder: InAppEventRecorderInterface,
-                impressionRecorder: AirshipMeteredUsage,
-                clock: Clock = Clock.DEFAULT_CLOCK) :
+                historyStore: MessageDisplayHistoryStoreInterface,
+                displayImpressionRule: InAppDisplayImpressionRule,
+                displayHistory: MessageDisplayHistory,
+                clock: Clock = Clock.DEFAULT_CLOCK,
+                dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()) :
             this(
-                messageId = makeMessageID(message, scheduleId, campaigns),
+                preparedScheduleInfo = preparedScheduleInfo,
+                messageId = makeMessageId(message, preparedScheduleInfo.scheduleId, preparedScheduleInfo.campaigns),
                 source = makeEventSource(message),
-                productId = productId,
-                contactId = contactId,
                 renderedLocale = message.renderedLocale,
-                reportingMetadata = reportingMetadata,
-                experimentResult = experimentResult,
                 eventRecorder = eventRecorder,
-                impressionRecorder = impressionRecorder,
                 isReportingEnabled = message.isReportingEnabled ?: true,
-                clock = clock
+                historyStore = historyStore,
+                displayImpressionRule = displayImpressionRule,
+                _displayHistory = MutableStateFlow(displayHistory),
+                _displayContext = MutableStateFlow(
+                    InAppEventContext.Display(
+                        triggerSessionId = preparedScheduleInfo.triggerSessionId,
+                        isFirstDisplay = displayHistory.lastDisplay == null,
+                        isFirstDisplayTriggerSessionId = preparedScheduleInfo.triggerSessionId != displayHistory.lastDisplay?.triggerSessionId
+                    )
+                ),
+                clock = clock,
+                dispatcher = dispatcher
             )
 
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
+
+    private val displayHistory: StateFlow<MessageDisplayHistory> = _displayHistory.asStateFlow()
+    private val displayContext: StateFlow<InAppEventContext.Display> = _displayContext.asStateFlow()
+
     private companion object {
-        fun makeMessageID(message: InAppMessage, scheduleID: String, campaigns: JsonValue?): InAppEventMessageId {
+        fun makeMessageId(message: InAppMessage, scheduleID: String, campaigns: JsonValue?): InAppEventMessageId {
             return when(message.source ?:  InAppMessage.Source.REMOTE_DATA) {
                  InAppMessage.Source.REMOTE_DATA -> InAppEventMessageId.AirshipId(
                     scheduleID,
@@ -80,6 +100,51 @@ internal class InAppMessageAnalytics private constructor(
     }
 
     override fun recordEvent(event: InAppEvent, layoutContext: LayoutData?) {
+        val now = clock.currentTimeMillis()
+
+        if (event is InAppDisplayEvent) {
+            val lastDisplay = displayHistory.value.lastDisplay
+            lastDisplay?.let {
+                if (preparedScheduleInfo.triggerSessionId == it.triggerSessionId) {
+                    _displayContext.update { value ->
+                        value.isFirstDisplay = false
+                        value.isFirstDisplayTriggerSessionId = false
+                        value
+                    }
+                } else {
+                    _displayContext.update { value ->
+                        value.isFirstDisplay = false
+                        value
+                    }
+                }
+            }
+
+            if (recordImpression(now)) {
+                _displayHistory.update { value ->
+                    MessageDisplayHistory(
+                        lastImpression = MessageDisplayHistory.LastImpression(
+                            now,
+                            preparedScheduleInfo.triggerSessionId
+                        ),
+                        lastDisplay = value.lastDisplay
+                    )
+                }
+            }
+
+            _displayHistory.update { value ->
+                MessageDisplayHistory(
+                    lastImpression = value.lastImpression,
+                    lastDisplay = MessageDisplayHistory.LastDisplay(
+                        preparedScheduleInfo.triggerSessionId
+                    )
+                )
+            }
+
+            scope.launch {
+                historyStore.set(displayHistory.value, preparedScheduleInfo.scheduleId)
+            }
+        }
+
         if (!isReportingEnabled) {
             return
         }
@@ -87,9 +152,10 @@ internal class InAppMessageAnalytics private constructor(
         val data = InAppEventData(
             event = event,
             context = InAppEventContext.makeContext(
-                reportingContext = reportingMetadata,
-                experimentResult = experimentResult,
-                layoutContext = layoutContext
+                reportingContext = preparedScheduleInfo.reportingContext,
+                experimentResult = preparedScheduleInfo.experimentResult,
+                layoutContext = layoutContext,
+                displayContext = displayContext.value
             ),
             source = source,
             messageId = messageId,
@@ -99,19 +165,40 @@ internal class InAppMessageAnalytics private constructor(
         eventRecorder.recordEvent(data)
     }
 
-    override suspend fun recordImpression() {
-        val productId = productId ?: return
+    private fun shouldRecordImpression(): Boolean {
+        val lastImpression = displayHistory.value.lastImpression ?: return true
 
-        val impression = MeteredUsageEventEntity(
+        if (preparedScheduleInfo.triggerSessionId != lastImpression.triggerSessionId) {
+             return true
+        }
+
+        return when (displayImpressionRule) {
+            is InAppDisplayImpressionRule.Interval -> {
+                (clock.currentTimeMillis() - lastImpression.date) >= displayImpressionRule.value
+            }
+            is InAppDisplayImpressionRule.Once -> false
+        }
+    }
+
+    private fun recordImpression(date: Long): Boolean {
+        if (!shouldRecordImpression()) {
+            return false
+        }
+
+        val productId = preparedScheduleInfo.productId ?: return false
+
+        val event = MeteredUsageEventEntity(
             eventId = UUID.randomUUID().toString(),
             entityId = messageId.identifier,
             type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
             product = productId,
-            reportingContext = reportingMetadata,
-            timestamp = clock.currentTimeMillis(),
-            contactId = contactId
+            reportingContext = preparedScheduleInfo.reportingContext,
+            timestamp = date,
+            contactId = preparedScheduleInfo.contactId
         )
 
-        impressionRecorder.addEvent(impression)
+        eventRecorder.recordImpressionEvent(event)
+
+        return true
     }
 }

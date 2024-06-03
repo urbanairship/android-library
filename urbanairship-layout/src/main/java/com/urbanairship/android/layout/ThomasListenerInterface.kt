@@ -10,7 +10,7 @@ import com.urbanairship.json.JsonValue
 
 /** Thomas listener. */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface ThomasListener {
+public interface ThomasListenerInterface {
 
     /**
      * Called when a pager changes its page.
@@ -118,4 +118,19 @@ public interface ThomasListener {
         reportingMetadata: JsonValue?,
         state: LayoutData
     )
+
+    /**
+     * Called whenever the view visibility changes
+     *
+     * @param isVisible The visibility state.
+     * @param isForegrounded The app state.
+     */
+    public fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean)
+
+    /**
+     * Called when a view is dismissed because it timed out.
+     *
+     * @param state Optional layout state.
+     */
+    public fun onTimedOut(state: LayoutData?)
 }

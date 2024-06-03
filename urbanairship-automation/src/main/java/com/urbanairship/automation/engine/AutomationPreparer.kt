@@ -4,14 +4,11 @@ package com.urbanairship.automation.engine
 
 import com.urbanairship.UALog
 import com.urbanairship.audience.DeviceInfoProvider
-import com.urbanairship.automation.AdditionalAudienceCheckOverrides
 import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolver
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.DeferredScheduleResult
-import com.urbanairship.iam.InAppMessage
-import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.automation.isInAppMessageType
 import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.automation.limits.FrequencyLimitManager
@@ -25,9 +22,9 @@ import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.experiment.ExperimentManager
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.experiment.MessageInfo
-import com.urbanairship.json.JsonMap
+import com.urbanairship.iam.InAppMessage
+import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.RetryingQueueConfig
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -65,7 +62,8 @@ internal class AutomationPreparer internal constructor(
 
     suspend fun prepare(
         schedule: AutomationSchedule,
-        deferredContext: DeferredTriggerContext?
+        deferredContext: DeferredTriggerContext?,
+        triggerSessionId: String
     ): SchedulePrepareResult {
         UALog.v { "Preparing ${schedule.identifier}" }
 
@@ -134,7 +132,7 @@ internal class AutomationPreparer internal constructor(
                     deferredRequest(it, triggerContext = deferredContext, deviceInfoProvider)
                 },
                 onPrepareInfo = {
-                    prepareInfo(schedule, experimentResult, deviceInfoProvider)
+                    prepareInfo(schedule, experimentResult, deviceInfoProvider, triggerSessionId)
                 },
                 onPrepareSchedule = { info, data ->
                     prepareSchedule(info, data, frequencyChecker)
@@ -146,7 +144,8 @@ internal class AutomationPreparer internal constructor(
     private suspend fun prepareInfo(
         schedule: AutomationSchedule,
         experimentResult: ExperimentResult?,
-        deviceInfoProvider: DeviceInfoProvider
+        deviceInfoProvider: DeviceInfoProvider,
+        triggerSessionId: String
     ): Result<PreparedScheduleInfo> {
         val additionalAudienceCheckResult = additionalAudienceResolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
@@ -163,6 +162,7 @@ internal class AutomationPreparer internal constructor(
                 contactId = deviceInfoProvider.getStableContactInfo().contactId,
                 experimentResult = experimentResult,
                 reportingContext = schedule.reportingContext,
+                triggerSessionId = triggerSessionId,
                 additionalAudienceCheckResult = additionalAudienceCheckResult
             )
         )

@@ -5,18 +5,19 @@ import com.urbanairship.automation.AutomationAppState
 import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.AutomationDelay
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.automation.engine.AutomationScheduleData
-import com.urbanairship.automation.engine.AutomationStoreInterface
 import com.urbanairship.automation.AutomationTrigger
 import com.urbanairship.automation.EventAutomationTrigger
 import com.urbanairship.automation.EventAutomationTriggerType
+import com.urbanairship.automation.engine.AutomationScheduleData
 import com.urbanairship.automation.engine.AutomationScheduleState
+import com.urbanairship.automation.engine.AutomationStoreInterface
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 internal class AutomationStoreMigrator(
@@ -84,7 +85,8 @@ internal class AutomationStoreMigrator(
                         fullSchedule.schedule.executionStateChangeDate,
                         fullSchedule.schedule.count,
                         getTriggeringInfo(fullSchedule.schedule),
-                        getPreparedScheduleInfo(fullSchedule.schedule)
+                        getPreparedScheduleInfo(fullSchedule.schedule),
+                        triggerSessionId = UUID.randomUUID().toString()
                     ), convertTriggers(fullSchedule.triggers)
                 )
             } catch (e: Exception) {
@@ -190,6 +192,7 @@ internal class AutomationStoreMigrator(
                 contactId = null,
                 experimentResult = null,
                 reportingContext = schedule.reportingContext,
+                triggerSessionId = UUID.randomUUID().toString(),
                 additionalAudienceCheckResult = audienceCheck
             )
         }

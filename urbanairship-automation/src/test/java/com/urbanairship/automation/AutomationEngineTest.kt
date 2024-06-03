@@ -18,12 +18,13 @@ import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProc
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.storage.AutomationStoreMigrator
+import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
+import com.urbanairship.automation.utils.TaskSleeper
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
-import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
-import com.urbanairship.automation.utils.TaskSleeper
 import com.urbanairship.json.JsonValue
+import java.util.UUID
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
@@ -72,10 +73,11 @@ public class AutomationEngineTest {
 
     private val scheduleData: AutomationScheduleData
         get() = AutomationScheduleData(
-        schedule = schedule,
-        scheduleState = AutomationScheduleState.IDLE,
-        scheduleStateChangeDate = clock.currentTimeMillis,
-        executionCount = 0
+            schedule = schedule,
+            scheduleState = AutomationScheduleState.IDLE,
+            scheduleStateChangeDate = clock.currentTimeMillis,
+            executionCount = 0,
+            triggerSessionId = UUID.randomUUID().toString()
     )
 
     private val triggerProcessor: AutomationTriggerProcessor = mockk(relaxed = true)

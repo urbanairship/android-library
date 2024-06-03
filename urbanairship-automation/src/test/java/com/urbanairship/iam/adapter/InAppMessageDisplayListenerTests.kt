@@ -4,18 +4,15 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestClock
 import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.automation.utils.ActiveTimer
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.iam.info.InAppMessageTextInfo
-import com.urbanairship.automation.utils.ActiveTimer
-import io.mockk.coEvery
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
@@ -32,15 +29,13 @@ public class InAppMessageDisplayListenerTests {
     private val clock = TestClock()
     private val timer = ActiveTimer(activityMonitor, clock)
     private var displayResult: DisplayResult? = null
-    private val listener = InAppMessageDisplayListener(analytics, timer, { displayResult = it })
+    private val listener = InAppMessageDisplayListener(analytics, timer) { displayResult = it }
 
     @Before
     public fun setup() {
         every { analytics.recordEvent(any(), any()) } answers {
             recordedEvents.add(Pair(firstArg(), secondArg()))
         }
-
-        coEvery { analytics.recordImpression() } just runs
     }
 
     @Test
@@ -52,7 +47,7 @@ public class InAppMessageDisplayListenerTests {
         assertTrue(timer.isStarted)
 
         listener.onAppear()
-        verifyEvents(listOf(InAppDisplayEvent()))
+        verifyEvents(listOf(InAppDisplayEvent(), InAppDisplayEvent()))
         assertNull(displayResult)
     }
 

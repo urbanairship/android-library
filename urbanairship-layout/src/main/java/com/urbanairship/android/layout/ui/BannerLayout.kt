@@ -19,7 +19,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.R
-import com.urbanairship.android.layout.ThomasListener
+import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment
 import com.urbanairship.android.layout.environment.ExternalReporter
@@ -65,7 +65,7 @@ internal class BannerLayout(
     private val webViewClientFactory: Factory<AirshipWebViewClient>? = args.webViewClientFactory
     private val imageCache: ImageCache? = args.imageCache
     private val payload: LayoutInfo = args.payload
-    private val externalListener: ThomasListener = args.listener
+    private val externalListener: ThomasListenerInterface = args.listener
     private val viewModelKey: String = args.hashCode().toString()
     private val reporter: Reporter = ExternalReporter(externalListener)
 

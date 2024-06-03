@@ -37,6 +37,7 @@ public data class PreparedScheduleInfo(
     internal val contactId: String? = null,
     internal val experimentResult: ExperimentResult? = null,
     internal val reportingContext: JsonValue? = null,
+    internal val triggerSessionId: String,
     internal val additionalAudienceCheckResult: Boolean = true
 ) : JsonSerializable {
 
@@ -47,6 +48,7 @@ public data class PreparedScheduleInfo(
         private const val CONTACT_ID = "contact_id"
         private const val EXPERIMENT_RESULT = "experiment_result"
         private const val REPORTING_CONTEXT = "reporting_context"
+        private const val TRIGGER_SESSION_ID = "trigger_session_id"
         private const val ADDITIONAL_AUDIENCE_CHECK_RESULT = "additional_audience_check_result"
 
         @Throws(JsonException::class)
@@ -59,6 +61,7 @@ public data class PreparedScheduleInfo(
                 contactId = content.optionalField(CONTACT_ID),
                 experimentResult = content.get(EXPERIMENT_RESULT)?.let { ExperimentResult.fromJson(it.requireMap()) },
                 reportingContext = content.get(REPORTING_CONTEXT),
+                triggerSessionId = content.requireField(TRIGGER_SESSION_ID),
                 additionalAudienceCheckResult = content.requireField(ADDITIONAL_AUDIENCE_CHECK_RESULT)
             )
         }
@@ -71,6 +74,7 @@ public data class PreparedScheduleInfo(
         CONTACT_ID to contactId,
         EXPERIMENT_RESULT to experimentResult,
         REPORTING_CONTEXT to reportingContext,
+        TRIGGER_SESSION_ID to triggerSessionId,
         ADDITIONAL_AUDIENCE_CHECK_RESULT to additionalAudienceCheckResult
     ).toJsonValue()
 }

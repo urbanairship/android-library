@@ -13,6 +13,7 @@ internal data class InAppEventContext(
     val pager: Pager? = null,
     val button: Button? = null,
     val form: Form? = null,
+    val display: Display? = null,
     val reportingContext: JsonValue? = null,
     val experimentReportingData: List<JsonMap>? = null
 ) : JsonSerializable {
@@ -77,20 +78,40 @@ internal data class InAppEventContext(
         private const val KEY_PAGER = "pager"
         private const val KEY_BUTTON = "button"
         private const val KEY_FORM = "form"
+        private const val KEY_DISPLAY = "display"
         private const val KEY_REPORTING_CONTEXT = "reporting_context"
         private const val KEY_EXPERIMENTS_REPORTING_DATA = "experiments"
+    }
+
+    data class Display(
+        val triggerSessionId: String,
+        var isFirstDisplay: Boolean,
+        var isFirstDisplayTriggerSessionId: Boolean
+    ) : JsonSerializable {
+        companion object {
+            private const val KEY_TRIGGER_SESSION_ID = "trigger_session_id"
+            private const val KEY_IS_FIRST_DISPLAY = "is_first_display"
+            private const val KEY_IS_FIRST_DISPLAY_TRIGGER_SESSION_ID = "is_first_display_trigger_session"
+        }
+
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            KEY_TRIGGER_SESSION_ID to triggerSessionId,
+            KEY_IS_FIRST_DISPLAY to isFirstDisplay,
+            KEY_IS_FIRST_DISPLAY_TRIGGER_SESSION_ID to isFirstDisplayTriggerSessionId
+        ).toJsonValue()
     }
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
         KEY_PAGER to pager,
         KEY_BUTTON to button,
         KEY_FORM to form,
+        KEY_DISPLAY to display,
         KEY_REPORTING_CONTEXT to reportingContext,
         KEY_EXPERIMENTS_REPORTING_DATA to experimentReportingData
     ).toJsonValue()
 
     internal fun isValid(): Boolean {
-        return pager != null || button != null || form != null || reportingContext != null ||
+        return pager != null || button != null || form != null || display != null || reportingContext != null ||
                 (experimentReportingData?.isNotEmpty() ?: false)
     }
 }
@@ -98,12 +119,14 @@ internal data class InAppEventContext(
 internal fun InAppEventContext.Companion.makeContext(
     reportingContext: JsonValue?,
     experimentResult: ExperimentResult?,
-    layoutContext: LayoutData?
+    layoutContext: LayoutData?,
+    displayContext: InAppEventContext.Display?
 ) : InAppEventContext? {
     val result = InAppEventContext(
         pager = makePagerContext(layoutContext),
         button = makeButtonContext(layoutContext),
         form = makeFormContext(layoutContext),
+        display = displayContext,
         reportingContext = reportingContext,
         experimentReportingData = experimentResult?.allEvaluatedExperimentsMetadata
     )

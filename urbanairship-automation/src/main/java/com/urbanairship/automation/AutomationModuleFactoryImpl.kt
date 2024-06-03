@@ -44,6 +44,8 @@ import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.deferred.DeferredResolver
 import com.urbanairship.experiment.ExperimentManager
+import com.urbanairship.iam.analytics.DefaultInAppDisplayImpressionRuleProvider
+import com.urbanairship.iam.analytics.MessageDisplayHistoryStore
 import com.urbanairship.iam.legacy.LegacyAnalytics
 import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.modules.Module
@@ -77,7 +79,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         cache: AirshipCache
     ): Module {
         val assetManager = AssetCacheManager(context)
-        val eventRecorder = InAppEventRecorder(analytics)
+        val eventRecorder = InAppEventRecorder(analytics, meteredUsage)
         val scheduleConditionNotifier = ScheduleConditionsChangedNotifier()
         val remoteDataAccess = AutomationRemoteDataAccess(context, remoteData)
         val activityMonitor = GlobalActivityMonitor.shared(context)
@@ -85,6 +87,11 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         val frequencyLimits = FrequencyLimitManager(context, runtimeConfig)
         val automationStore = SerialAccessAutomationStore(
             AutomationStore.createDatabase(context, runtimeConfig)
+        )
+        val analyticsFactory = InAppMessageAnalyticsFactory(
+            eventRecorder = eventRecorder,
+            displayHistoryStore = MessageDisplayHistoryStore(automationStore),
+            displayImpressionRuleProvider = DefaultInAppDisplayImpressionRuleProvider()
         )
 
         // Preparation
@@ -96,7 +103,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 context,
                 NetworkMonitor.shared(context),
                 activityMonitor
-            )
+            ),
+            analyticsFactory = analyticsFactory
         )
 
         // Execution
@@ -104,7 +112,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         val messageExecutor = InAppMessageAutomationExecutor(
             context = context,
             assetManager = assetManager,
-            analyticsFactory = InAppMessageAnalyticsFactory(eventRecorder, meteredUsage),
+            analyticsFactory = analyticsFactory,
             scheduleConditionsChangedNotifier = scheduleConditionNotifier,
             actionRunnerFactory = ActionRunRequestFactory()
         )

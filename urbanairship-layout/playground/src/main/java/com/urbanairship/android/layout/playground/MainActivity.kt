@@ -15,11 +15,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionRunRequest
-import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.actions.PermissionResultReceiver
 import com.urbanairship.actions.PromptPermissionAction
 import com.urbanairship.android.layout.Thomas
-import com.urbanairship.android.layout.ThomasListener
+import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
 import com.urbanairship.android.layout.playground.embedded.EmbeddedActivity
@@ -135,7 +134,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private val thomasListener = object : ThomasListener {
+    private val thomasListener = object : ThomasListenerInterface {
         private val events = mutableListOf<String>()
 
         override fun onPageView(pagerData: PagerData, state: LayoutData, displayedAt: Long) {
@@ -234,6 +233,20 @@ class MainActivity : AppCompatActivity() {
                 events.add(it)
                 UALog.d(it)
             } }
+
+        override fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean) {
+            "onVisibilityChanged(isVisible: $isVisible, isForegrounded: $isForegrounded)".let {
+                events.add(it)
+                UALog.d(it)
+            }
+        }
+
+        override fun onTimedOut(state: LayoutData?) {
+            "onTimedOut(layoutContext: $state)".let {
+                events.add(it)
+                UALog.d(it)
+            }
+        }
 
         private fun dumpEvents() {
             UALog.d("\n")
