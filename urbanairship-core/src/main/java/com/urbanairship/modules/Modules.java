@@ -196,14 +196,17 @@ public class Modules {
             @NonNull Analytics analytics,
             @NonNull AirshipCache cache,
             @NonNull DeferredResolver resolver,
-            @NonNull AirshipEventFeed eventFeed
+            @NonNull AirshipEventFeed eventFeed,
+            @NonNull PrivacyManager privacyManager
     ) {
         try {
             FeatureFlagsModuleFactory moduleFactory =
                     createFactory(FEATURE_FLAGS_FACTORY, FeatureFlagsModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore, remoteData, analytics,
-                        cache, resolver, eventFeed);
+                return moduleFactory.build(
+                        context, dataStore, remoteData, analytics,
+                        cache, resolver, eventFeed, privacyManager
+                );
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Feature Flags module");

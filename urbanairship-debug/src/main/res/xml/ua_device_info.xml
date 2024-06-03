@@ -33,6 +33,12 @@
             app:key="tags_and_attributes"
             app:persistent="false"
             app:title="Tags &amp; Attributes" />
+
+        <com.urbanairship.debug.deviceinfo.preferences.EnableFeaturePreference
+            app:key="feature_flags"
+            app:persistent="false"
+            app:title="Feature Flags" />
+
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory android:title="@string/ua_user_settings_category">

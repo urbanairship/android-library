@@ -99,6 +99,12 @@ public class AirshipConfigOptions {
     public static final String FEATURE_NONE = "none";
 
     /**
+     * Maps to the feature {@link PrivacyManager.Feature#FEATURE_FLAGS} when used in the properties or xml config.
+     */
+    @NonNull
+    public static final String FEATURE_FEATURE_FLAGS = "feature_flags";
+
+    /**
      * Maps to the feature {@link PrivacyManager.Feature#ALL} when used in the properties or xml config.
      */
     @NonNull
@@ -341,6 +347,7 @@ public class AirshipConfigOptions {
      * - {@link #FEATURE_TAGS_AND_ATTRIBUTES}
      * - {@link #FEATURE_IN_APP_AUTOMATION}
      * - {@link #FEATURE_CONTACTS}
+     * - {@link #FEATURE_FEATURE_FLAGS}
      * - {@link #FEATURE_ANALYTICS}
      * - {@link #FEATURE_PUSH}
      */

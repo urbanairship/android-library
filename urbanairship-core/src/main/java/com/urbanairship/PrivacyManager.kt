@@ -3,15 +3,12 @@ package com.urbanairship
 
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.base.Supplier
-import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.PrivacyManager.Feature
 import com.urbanairship.config.RemoteConfigObserver
-import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.Volatile
 import kotlin.concurrent.withLock
 
 /**
@@ -35,7 +32,6 @@ import kotlin.concurrent.withLock
  * - SDK version
  * - Push provider (HMS, FCM, ADM)
  * - Manufacturer (if Huawei)
- * - Accengage Device ID (when using the Accengage module for migration)
  */
 public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOverloads constructor(
     private val dataStore: PreferenceDataStore,
@@ -339,6 +335,9 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
             if (this.contains(CONTACTS)) {
                 items.add("Contacts")
             }
+            if (this.contains(FEATURE_FLAGS)) {
+                items.add("Feature Flags")
+            }
 
             return "AirshipFeature: [${items.joinToString(", ")}]"
         }
@@ -393,6 +392,8 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
             @JvmField
             public val PUSH: Feature = Feature(rawValue = 1 shl 2)
 
+            /// Avoid using shl 3, it was used by CHAT
+
             /**
              * Enables analytics.
              *
@@ -431,6 +432,15 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
             @JvmField
             public val CONTACTS: Feature = Feature(rawValue = 1 shl 6)
 
+            /// Avoid using shl 7, it was used by LOCATION
+
+            /**
+             * Enables feature flags.
+             *
+             */
+            @JvmField
+            public val FEATURE_FLAGS: Feature = Feature(rawValue = 1 shl 8)
+
             /**
              * Helper flag that can be used to set enabled features to none.
              */
@@ -442,7 +452,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
              */
             @JvmField
             public val ALL: Feature = IN_APP_AUTOMATION or ANALYTICS or MESSAGE_CENTER or
-                PUSH or ANALYTICS or TAGS_AND_ATTRIBUTES or CONTACTS
+                PUSH or ANALYTICS or TAGS_AND_ATTRIBUTES or CONTACTS or FEATURE_FLAGS
 
             private val nameMap = mapOf(
                 "push" to PUSH,
@@ -451,6 +461,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
                 "analytics" to ANALYTICS,
                 "tags_and_attributes" to TAGS_AND_ATTRIBUTES,
                 "in_app_automation" to IN_APP_AUTOMATION,
+                "feature_flags" to FEATURE_FLAGS,
                 "all" to ALL,
                 "none" to NONE
             )

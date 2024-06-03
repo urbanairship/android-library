@@ -9,6 +9,8 @@ import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.PrivacyManager
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.audience.AudienceSelector
@@ -16,6 +18,7 @@ import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.json.JsonMap
 import com.urbanairship.remotedata.RemoteData
+import java.lang.IllegalStateException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
@@ -34,7 +37,8 @@ public class FeatureFlagManager
         DeviceInfoProvider.newCachingProvider()
     },
     private val deferredResolver: FlagDeferredResolver,
-    private val featureFlagAnalytics: FeatureFlagAnalytics
+    private val featureFlagAnalytics: FeatureFlagAnalytics,
+    private val privacyManager: PrivacyManager
 ) : AirshipComponent(context, dataStore) {
 
     companion object {
@@ -62,7 +66,9 @@ public class FeatureFlagManager
     }
 
     /**
-     * Gets and evaluates a feature flag and returns it as a PendingResult.
+     * Gets and evaluates a feature flag and returns it as a PendingResult. The [PrivacyManager.Feature.FEATURE_FLAGS]
+     * must be enabled or this method will return null.
+     *
      * @param name The flag name
      * @return an instance of `PendingResult<FeatureFlag>`.
      */
@@ -75,7 +81,8 @@ public class FeatureFlagManager
     }
 
     /**
-     * Gets and evaluates  a feature flag
+     * Gets and evaluates a feature flag. The [PrivacyManager.Feature.FEATURE_FLAGS]
+     * must be enabled or this method will return an error.
      * @param name The flag name
      * @return an instance of `Result<FeatureFlag>`.
      */
@@ -84,6 +91,10 @@ public class FeatureFlagManager
     }
 
     private suspend fun flag(name: String, allowRefresh: Boolean): Result<FeatureFlag> {
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS)) {
+            return Result.failure(IllegalStateException("Feature flags are disabled"))
+        }
+
         val remoteDataInfo = remoteData.fetchFlagRemoteInfo(name)
         val result = evaluate(name, remoteDataInfo)
         if (result.isSuccess) {
@@ -138,7 +149,15 @@ public class FeatureFlagManager
         }
     }
 
+    /**
+     * Tracks an interaction on a [FeatureFlag]. The [PrivacyManager.Feature.FEATURE_FLAGS]
+     * must be enabled or this method will no-op.
+     */
     fun trackInteraction(flag: FeatureFlag) {
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS)) {
+            UALog.w { "Feature flags are disabled, unable to track interaction" }
+            return
+        }
         featureFlagAnalytics.trackInteraction(flag)
     }
 

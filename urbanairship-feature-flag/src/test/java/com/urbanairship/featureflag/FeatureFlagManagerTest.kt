@@ -6,6 +6,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
@@ -35,8 +36,10 @@ class FeatureFlagManagerTest {
 
     private val context: Context = TestApplication.getApplication()
     private val featureFlagAnalytics: FeatureFlagAnalytics = mockk()
-
     private val deferredResolver: FlagDeferredResolver = mockk()
+    private val privacyManager: PrivacyManager = mockk {
+        every { this@mockk.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS) } returns true
+    }
 
     private var channelId = "test-channel"
     private var contactId = "contact-id"
@@ -69,6 +72,7 @@ class FeatureFlagManagerTest {
         infoProviderFactory = { infoProvider },
         deferredResolver = deferredResolver,
         featureFlagAnalytics = featureFlagAnalytics,
+        privacyManager = privacyManager
     )
 
     @Test
@@ -85,6 +89,28 @@ class FeatureFlagManagerTest {
         )
 
         assertEquals(expected, flag)
+    }
+
+    @Test
+    fun testFlagDisabledFeatureFlags(): TestResult = runTest {
+        every { privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS) } returns false
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.StaticPayload()
+        )
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val result = featureFlags.flag("test-ff")
+        assertTrue(result.isFailure)
     }
 
     @Test
@@ -939,6 +965,15 @@ class FeatureFlagManagerTest {
         verify(exactly = 1) { featureFlagAnalytics.trackInteraction(flag) }
     }
 
+    @Test
+    fun testTrackInteractionDisabledFeatureFlags(): TestResult = runTest {
+        every { privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS) } returns false
+
+        val flag = FeatureFlag.createFlag("some name", false, generateReportingInfo())
+        featureFlags.trackInteraction(flag)
+
+        verify(exactly = 0) { featureFlagAnalytics.trackInteraction(flag) }
+    }
 
     private suspend fun generateReportingInfo(reportingMetadata: JsonMap? = null): FeatureFlag.ReportingInfo {
         return FeatureFlag.ReportingInfo(

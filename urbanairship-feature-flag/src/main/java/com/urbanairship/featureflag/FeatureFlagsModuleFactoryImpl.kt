@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.annotation.Keep
 import com.urbanairship.BuildConfig
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.PrivacyManager
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.audience.DeviceInfoProvider
@@ -25,7 +26,8 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
         analytics: Analytics,
         cache: AirshipCache,
         resolver: DeferredResolver,
-        eventFeed: AirshipEventFeed
+        eventFeed: AirshipEventFeed,
+        privacyManager: PrivacyManager
     ): Module {
         val manager = FeatureFlagManager(
             context = context.applicationContext,
@@ -33,7 +35,8 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
             audienceEvaluator = AudienceEvaluator(),
             remoteData = FeatureFlagRemoteDataAccess(remoteData),
             deferredResolver = FlagDeferredResolver(cache, resolver),
-            featureFlagAnalytics = FeatureFlagAnalytics(eventFeed, analytics)
+            featureFlagAnalytics = FeatureFlagAnalytics(eventFeed, analytics),
+            privacyManager = privacyManager
         )
         return Module.singleComponent(manager, 0)
     }

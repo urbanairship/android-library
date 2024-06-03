@@ -27,6 +27,7 @@ class EnableFeaturePreference : SwitchPreference {
             AirshipConfigOptions.FEATURE_MESSAGE_CENTER -> PrivacyManager.Feature.MESSAGE_CENTER
             AirshipConfigOptions.FEATURE_PUSH -> PrivacyManager.Feature.PUSH
             AirshipConfigOptions.FEATURE_TAGS_AND_ATTRIBUTES -> PrivacyManager.Feature.TAGS_AND_ATTRIBUTES
+            AirshipConfigOptions.FEATURE_FEATURE_FLAGS -> PrivacyManager.Feature.FEATURE_FLAGS
             else -> throw IllegalArgumentException("Invalid tag: $key")
         }
     }

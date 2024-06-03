@@ -797,7 +797,7 @@ public class UAirship {
 
         // Feature flags
         Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, analytics,
-                cache, deferredResolver, eventFeed);
+                cache, deferredResolver, eventFeed, privacyManager);
         processModule(featureFlags);
 
         for (AirshipComponent component : components) {
