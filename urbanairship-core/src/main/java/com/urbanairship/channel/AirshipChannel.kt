@@ -136,13 +136,15 @@ public class AirshipChannel internal constructor(
         _isChannelCreationDelayEnabled =
             channelRegistrar.channelId == null && runtimeConfig.configOptions.channelCreationDelayEnabled
 
-        privacyManager.addListener {
-            if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
-                tagLock.withLock { dataStore.remove(TAGS_KEY) }
-                channelManager.clearPending()
+        privacyManager.addListener(object : PrivacyManager.Listener {
+            override fun onEnabledFeaturesChanged() {
+                if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
+                    tagLock.withLock { dataStore.remove(TAGS_KEY) }
+                    channelManager.clearPending()
+                }
+                updateRegistration()
             }
-            updateRegistration()
-        }
+        })
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
             override fun onForeground(time: Long) {
@@ -204,10 +206,6 @@ public class AirshipChannel internal constructor(
 
     private val isRegistrationAllowed: Boolean
         get() {
-            if (!isComponentEnabled) {
-                return false
-            }
-
             if (id != null) {
                 return true
             }
@@ -256,15 +254,6 @@ public class AirshipChannel internal constructor(
     override fun getComponentGroup(): Int = AirshipComponentGroups.CHANNEL
 
     /**
-     * {@inheritDoc}
-     *
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public override fun onComponentEnableChange(isEnabled: Boolean) {
-    }
-
-    /**
      * Gets the channel identifier. This Id is created asynchronously, so initially it may be null.
      * To be notified when the channel is updated, add a listener with [.addChannelListener].
      *
@@ -304,7 +293,7 @@ public class AirshipChannel internal constructor(
                 tagsToRemove: Set<String>
             ) {
                 tagLock.withLock {
-                    if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                    if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
                         UALog.w { "AirshipChannel - Unable to apply tag group edits when opted out of tags and attributes." }
                         return
                     }
@@ -334,7 +323,7 @@ public class AirshipChannel internal constructor(
             }
 
             override fun onApply(collapsedMutations: List<TagGroupsMutation>) {
-                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
                     UALog.w { "Unable to apply channel tag edits when opted out of tags and attributes." }
                     return
                 }
@@ -355,7 +344,7 @@ public class AirshipChannel internal constructor(
     public fun editAttributes(): AttributeEditor {
         return object : AttributeEditor(clock) {
             override fun onApply(mutations: List<AttributeMutation>) {
-                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
                     UALog.w { "AirshipChannel - Unable to apply attribute edits when opted out of tags and attributes." }
                     return
                 }
@@ -381,7 +370,7 @@ public class AirshipChannel internal constructor(
     public var tags: Set<String>
         get() {
             tagLock.withLock {
-                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
                     return emptySet()
                 }
 
@@ -399,7 +388,7 @@ public class AirshipChannel internal constructor(
         }
         set(tags) {
             tagLock.withLock {
-                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
                     UALog.w { "AirshipChannel - Unable to apply attribute edits when opted out of tags and attributes." }
                     return
                 }
@@ -433,7 +422,7 @@ public class AirshipChannel internal constructor(
      */
     @JvmSynthetic
     public suspend fun fetchSubscriptionLists(): Result<Set<String>> {
-        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
             return Result.failure(
                 IllegalStateException("Unable to fetch subscriptions when FEATURE_TAGS_AND_ATTRIBUTES are disabled")
             )
@@ -457,7 +446,7 @@ public class AirshipChannel internal constructor(
     public fun editSubscriptionLists(): SubscriptionListEditor {
         return object : SubscriptionListEditor(clock) {
             override fun onApply(collapsedMutations: List<SubscriptionListMutation>) {
-                if (!privacyManager.isEnabled(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)) {
+                if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
                     UALog.w { "AirshipChannel - Unable to apply subscription list edits when opted out of tags and attributes." }
                     return
                 }
@@ -532,7 +521,7 @@ public class AirshipChannel internal constructor(
             UAirship.AMAZON_PLATFORM -> builder.setDeviceType(ChannelRegistrationPayload.AMAZON_DEVICE_TYPE)
             else -> throw IllegalStateException("Unable to get platform")
         }
-        if (privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+        if (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
             UAirship.getPackageInfo()?.versionName?.let {
                 builder.setAppVersion(it)
             }

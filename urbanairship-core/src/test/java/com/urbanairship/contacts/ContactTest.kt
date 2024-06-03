@@ -77,7 +77,7 @@ public class ContactTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
-    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL)
+    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL)
 
     private val contact: Contact by lazy {
         Contact(
@@ -357,7 +357,7 @@ public class ContactTest {
         contact
 
         // Privacy manager change will trigger a reset
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Reset) }
 
         contact.reset()
@@ -372,14 +372,14 @@ public class ContactTest {
 
     @Test
     public fun testIdentifyContactsDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         contact.identify("some named user id")
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Identify("some named user id")) }
     }
 
     @Test
     public fun testNotifyRemoteLogin(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.CONTACTS)
         contact.notifyRemoteLogin()
         verify(exactly = 1) {
             mockContactManager.addOperation(match<ContactOperation.Verify> {
@@ -402,7 +402,7 @@ public class ContactTest {
 
     @Test
     public fun testEditTagsContactDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         contact.editTagGroups().setTag("some group", "some tag").apply()
 
         val expectedMutations = listOf(
@@ -414,7 +414,7 @@ public class ContactTest {
 
     @Test
     public fun testEditTagsTagsAndAttributesDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.CONTACTS)
         contact.editTagGroups().setTag("some group", "some tag").apply()
 
         val expectedMutations = listOf(
@@ -440,7 +440,7 @@ public class ContactTest {
 
     @Test
     public fun testEditAttributesContactDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         contact.editAttributes().setAttribute("some attribute", "some value").apply()
 
         val expectedMutations = listOf(
@@ -454,7 +454,7 @@ public class ContactTest {
 
     @Test
     public fun testEditAttributesTagsAndAttributesDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.CONTACTS)
         contact.editAttributes().setAttribute("some attribute", "some value").apply()
 
         val expectedMutations = listOf(
@@ -485,7 +485,7 @@ public class ContactTest {
 
     @Test
     public fun testEditSubscriptionsContactDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply()
 
         val expectedMutations = listOf(
@@ -501,7 +501,7 @@ public class ContactTest {
 
     @Test
     public fun testEditSubscriptionsTagsAndAttributesDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.CONTACTS)
         contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply()
 
         val expectedMutations = listOf(
@@ -535,7 +535,7 @@ public class ContactTest {
 
     @Test
     public fun testRegisterEmailContactsDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
         val address = "some address"
         val options = EmailRegistrationOptions.options(null, null, true)
@@ -573,7 +573,7 @@ public class ContactTest {
 
     @Test
     public fun testRegisterSmsContactsDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
         val address = "some address"
         val options = SmsRegistrationOptions.options("some sender id")
@@ -610,7 +610,7 @@ public class ContactTest {
 
     @Test
     public fun testRegisterOpenContactsDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
         val address = "some address"
         val options = OpenChannelRegistrationOptions.options("some platform")
@@ -643,7 +643,7 @@ public class ContactTest {
 
     @Test
     public fun testAssociateChannelContactsDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
         contact.associateChannel("channel id", ChannelType.OPEN)
 
@@ -708,7 +708,7 @@ public class ContactTest {
 
     @Test
     public fun testMigrateTagsAndAttributesDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.CONTACTS)
 
         val namedUserId = UUID.randomUUID().toString()
         val tags = listOf(
@@ -744,7 +744,7 @@ public class ContactTest {
 
     @Test
     public fun testMigrateContactsDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
         val namedUserId = UUID.randomUUID().toString()
         val tags = listOf(
@@ -940,7 +940,7 @@ public class ContactTest {
 
     @Test
     public fun testResendOptInContactsDisabled(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.FEATURE_CONTACTS)
+        privacyManager.disable(PrivacyManager.Feature.CONTACTS)
         val channel = ContactChannel.Email(
             ContactChannel.Email.RegistrationInfo.Pending(
                 address = "email@email.email",
@@ -979,7 +979,7 @@ public class ContactTest {
 
     @Test
     public fun testDisassociateContactsDisabled(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.FEATURE_CONTACTS)
+        privacyManager.disable(PrivacyManager.Feature.CONTACTS)
         val channel = ContactChannel.Email(
             ContactChannel.Email.RegistrationInfo.Pending(
                 address = "email@email.email",

@@ -42,7 +42,7 @@ public class ApplicationMetrics extends AirshipComponent {
         this.listener = new SimpleApplicationListener() {
             @Override
             public void onForeground(long time) {
-                if (privacyManager.isAnyEnabled(PrivacyManager.FEATURE_ANALYTICS, PrivacyManager.FEATURE_IN_APP_AUTOMATION)) {
+                if (privacyManager.isAnyEnabled(PrivacyManager.Feature.ANALYTICS, PrivacyManager.Feature.IN_APP_AUTOMATION)) {
                     getDataStore().put(LAST_OPEN_KEY, time);
                 }
             }
@@ -117,7 +117,7 @@ public class ApplicationMetrics extends AirshipComponent {
     }
 
     private void updateData() {
-        if (privacyManager.isAnyEnabled(PrivacyManager.FEATURE_IN_APP_AUTOMATION, PrivacyManager.FEATURE_ANALYTICS)) {
+        if (privacyManager.isAnyEnabled(PrivacyManager.Feature.IN_APP_AUTOMATION, PrivacyManager.Feature.ANALYTICS)) {
             long currentAppVersion = UAirship.getAppVersion();
             long lastAppVersion = getLastAppVersion();
 

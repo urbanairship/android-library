@@ -59,7 +59,7 @@ public class AnalyticsTest() {
     private val executor = Executor { obj: Runnable -> obj.run() }
     private val runtimeConfig = TestAirshipRuntimeConfig()
     private val activityMonitor = TestActivityMonitor()
-    private val privacyManager = PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL)
+    private val privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL)
 
 
     private val testDispatcher = StandardTestDispatcher()
@@ -188,7 +188,7 @@ public class AnalyticsTest() {
      */
     @Test
     public fun testAddEventDisabledAnalytics() {
-        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS)
+        privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         analytics.addEvent(AppForegroundEvent(100))
         verify(exactly = 0) { mockEventManager.addEvent(any(), any())  }
     }
@@ -216,7 +216,7 @@ public class AnalyticsTest() {
      */
     @Test
     public fun testDisableAnalytics() {
-        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS)
+        privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         verify { mockEventManager.deleteEvents() }
     }
 
@@ -324,7 +324,7 @@ public class AnalyticsTest() {
         // Verify identifiers are stored
         assertThat(analytics.associatedIdentifiers.ids).isEqualTo(mapOf("customKey" to "customValue"))
 
-        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS)
+        privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         assertThat(analytics.associatedIdentifiers.ids).isEmpty()
 
         analytics.editAssociatedIdentifiers().addIdentifier("customKey", "customValue").apply()
@@ -365,7 +365,7 @@ public class AnalyticsTest() {
      */
     @Test
     public fun testSendingWithAnalyticsDisabled() {
-        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS)
+        privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         every { mockChannel.id } returns "channel"
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()

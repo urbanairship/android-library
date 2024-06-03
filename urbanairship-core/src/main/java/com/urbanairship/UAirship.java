@@ -26,6 +26,7 @@ import com.urbanairship.base.Supplier;
 import com.urbanairship.cache.AirshipCache;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.config.RemoteConfigObserver;
 import com.urbanairship.contacts.Contact;
 import com.urbanairship.deferred.DeferredResolver;
 import com.urbanairship.experiment.ExperimentManager;
@@ -695,9 +696,14 @@ public class UAirship {
         // Create and init the preference data store first
         this.preferenceDataStore = PreferenceDataStore.loadDataStore(getApplicationContext(), airshipConfigOptions);
 
-        this.privacyManager = new PrivacyManager(preferenceDataStore, airshipConfigOptions.enabledFeatures);
-        this.privacyManager.migrateData();
+        RemoteConfigObserver remoteConfigObserver = new RemoteConfigObserver(this.preferenceDataStore);
 
+        this.privacyManager = new PrivacyManager(
+                preferenceDataStore,
+                airshipConfigOptions.enabledFeatures,
+                remoteConfigObserver,
+                airshipConfigOptions.resetEnabledFeatures
+        );
 
         this.permissionsManager = PermissionsManager.newPermissionsManager(application);
 
@@ -709,7 +715,8 @@ public class UAirship {
         DeferredPlatformProvider platformProvider = new DeferredPlatformProvider(application, preferenceDataStore, privacyManager, pushProviders);
         DefaultRequestSession requestSession = new DefaultRequestSession(airshipConfigOptions, platformProvider);
 
-        this.runtimeConfig = new AirshipRuntimeConfig(() -> airshipConfigOptions, requestSession, preferenceDataStore, platformProvider);
+        this.runtimeConfig = new AirshipRuntimeConfig(() -> airshipConfigOptions, requestSession, remoteConfigObserver, platformProvider);
+
         this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, localeManager, audienceOverridesProvider);
         requestSession.setChannelAuthTokenProvider(this.channel.getAuthTokenProvider());
 

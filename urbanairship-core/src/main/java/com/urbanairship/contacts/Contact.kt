@@ -169,7 +169,7 @@ public class Contact internal constructor(
     }
 
     private val channelExtender = AirshipChannel.Extender.Suspending { builder ->
-        if (privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+        if (privacyManager.isEnabled(PrivacyManager.Feature.CONTACTS)) {
             if (airshipChannel.id != null) {
                 builder.setContactId(stableVerifiedContactId())
             } else {
@@ -216,7 +216,10 @@ public class Contact internal constructor(
 
         airshipChannel.addChannelRegistrationPayloadExtender(channelExtender)
 
-        privacyManager.addListener { checkPrivacyManager() }
+        privacyManager.addListener(object : PrivacyManager.Listener {
+            override fun onEnabledFeaturesChanged() = checkPrivacyManager()
+        })
+
         checkPrivacyManager()
         contactManager.isEnabled = true
     }
@@ -268,17 +271,6 @@ public class Contact internal constructor(
     @AirshipComponentGroups.Group
     override fun getComponentGroup(): Int {
         return AirshipComponentGroups.CONTACT
-    }
-
-    /**
-     * @param isEnabled `true` if the component is enabled, otherwise `false`.
-     * @hide
-     */
-    override fun onComponentEnableChange(isEnabled: Boolean) {
-        super.onComponentEnableChange(isEnabled)
-        if (contactManager.isEnabled != isEnabled) {
-            contactManager.isEnabled = isEnabled
-        }
     }
 
     /**
@@ -607,5 +599,5 @@ public class Contact internal constructor(
     )
 }
 
-private val PrivacyManager.isContactsEnabled get() = this.isEnabled(PrivacyManager.FEATURE_CONTACTS)
-private val PrivacyManager.isContactsAudienceEnabled get() = this.isEnabled(PrivacyManager.FEATURE_CONTACTS, PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+private val PrivacyManager.isContactsEnabled get() = this.isEnabled(PrivacyManager.Feature.CONTACTS)
+private val PrivacyManager.isContactsAudienceEnabled get() = this.isEnabled(PrivacyManager.Feature.CONTACTS, PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)

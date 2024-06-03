@@ -3,6 +3,7 @@
 package com.urbanairship.remoteconfig
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.PrivacyManager
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import org.junit.Test
@@ -38,6 +39,8 @@ public class RemoteConfigTest {
                   "foreground_resolve_interval_ms":400
                },
                "fetch_contact_remote_data":true,
+               "disabled_features": ["push", "analytics"],
+               "remote_data_refresh_interval": 21,
                "in_app_config": {
                     "additional_audience_check": {
                         "enabled": true,
@@ -72,6 +75,8 @@ public class RemoteConfigTest {
                 channelRegistrationMaxResolveAgeMs = 300
             ),
             fetchContactRemoteData = true,
+            disabledFeatures = PrivacyManager.Feature.PUSH or PrivacyManager.Feature.ANALYTICS,
+            remoteDataRefreshInterval = 21L,
             iaaConfig = IAAConfig(
                 retryingQueue = RetryingQueueConfig(
                     maxConcurrentOperations = 3,

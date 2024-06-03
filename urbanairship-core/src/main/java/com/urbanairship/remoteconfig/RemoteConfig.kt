@@ -2,6 +2,7 @@
 package com.urbanairship.remoteconfig
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.PrivacyManager
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
@@ -18,6 +19,8 @@ public data class RemoteConfig @JvmOverloads constructor(
     public val meteredUsageConfig: MeteredUsageConfig? = null,
     public val fetchContactRemoteData: Boolean? = null,
     public val contactConfig: ContactConfig? = null,
+    public val disabledFeatures: PrivacyManager.Feature? = null,
+    public val remoteDataRefreshInterval: Long? = null,
     public val iaaConfig: IAAConfig? = null
 ) : JsonSerializable {
 
@@ -26,6 +29,8 @@ public data class RemoteConfig @JvmOverloads constructor(
         METERED_USAGE_CONFIG_KEY to meteredUsageConfig?.toJsonValue(),
         FETCH_CONTACT_REMOTE_DATA_KEY to fetchContactRemoteData,
         CONTACT_CONFIG_KEY to contactConfig?.toJsonValue(),
+        DISABLED_FEATURES_KEY to disabledFeatures,
+        REMOTE_DATA_REFRESH_INTERVAL_KEY to remoteDataRefreshInterval,
         IAA_CONFIG to iaaConfig
     ).toJsonValue()
 
@@ -34,15 +39,9 @@ public data class RemoteConfig @JvmOverloads constructor(
         private const val METERED_USAGE_CONFIG_KEY = "metered_usage"
         private const val FETCH_CONTACT_REMOTE_DATA_KEY = "fetch_contact_remote_data"
         private const val CONTACT_CONFIG_KEY = "contact_config"
+        private const val DISABLED_FEATURES_KEY = "disabled_features"
+        private const val REMOTE_DATA_REFRESH_INTERVAL_KEY = "remote_data_refresh_interval"
         private const val IAA_CONFIG = "in_app_config"
-
-        internal val TOP_LEVEL_KEYS = setOf(
-            AIRSHIP_CONFIG_KEY,
-            METERED_USAGE_CONFIG_KEY,
-            FETCH_CONTACT_REMOTE_DATA_KEY,
-            CONTACT_CONFIG_KEY,
-            IAA_CONFIG
-        )
 
         @JvmStatic
         public fun fromJson(json: JsonMap): RemoteConfig {
@@ -57,6 +56,8 @@ public data class RemoteConfig @JvmOverloads constructor(
                 contactConfig = json.optionalField<JsonValue>(CONTACT_CONFIG_KEY)?.let {
                     ContactConfig.fromJson(it)
                 },
+                disabledFeatures = json.get(DISABLED_FEATURES_KEY)?.let(PrivacyManager.Feature::fromJson),
+                remoteDataRefreshInterval = json.optionalField(REMOTE_DATA_REFRESH_INTERVAL_KEY),
                 iaaConfig = json.get(IAA_CONFIG)?.let(IAAConfig::fromJson)
             )
         }

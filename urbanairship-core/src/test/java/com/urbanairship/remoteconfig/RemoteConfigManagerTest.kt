@@ -6,11 +6,14 @@ import com.urbanairship.BaseTestCase
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
+import com.urbanairship.UAirship.ANDROID_PLATFORM
+import com.urbanairship.UAirship.Platform
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
+import kotlin.time.Duration
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -31,7 +34,6 @@ import org.junit.Test
 public class RemoteConfigManagerTest : BaseTestCase() {
     private val testDispatcher = StandardTestDispatcher()
 
-    private var testModuleAdapter: TestModuleAdapter = TestModuleAdapter()
     private val updates: MutableStateFlow<List<RemoteDataPayload>> = MutableStateFlow(emptyList())
     private val config: AirshipRuntimeConfig = mockk(relaxed = true)
 
@@ -41,7 +43,7 @@ public class RemoteConfigManagerTest : BaseTestCase() {
 
     private var privacyManager: PrivacyManager = PrivacyManager(
         TestApplication.getApplication().preferenceDataStore,
-        PrivacyManager.FEATURE_ALL
+        PrivacyManager.Feature.ALL
     )
 
     private var remoteConfigManager: RemoteConfigManager = RemoteConfigManager(
@@ -50,7 +52,6 @@ public class RemoteConfigManagerTest : BaseTestCase() {
         config,
         privacyManager,
         remoteData,
-        testModuleAdapter,
         testDispatcher
     )
 
@@ -84,45 +85,6 @@ public class RemoteConfigManagerTest : BaseTestCase() {
 
         verify { config.updateRemoteConfig(RemoteConfig(airshipConfig = airshipConfig)) }
         assertEquals("https://metered.usage.test", airshipConfig.meteredUsageUrl)
-    }
-
-    @Test
-    public fun testDisableComponents(): TestResult = runTest {
-        val common = createDisablePayload("app_config", 0, Modules.PUSH_MODULE)
-        var platform = createDisablePayload("app_config:android", 0, Modules.ALL_MODULES)
-
-        // Notify the updates
-        updates.emit(listOf(common, platform))
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Verify they are all disabled
-        assertTrue(testModuleAdapter.disabledModules.containsAll(Modules.ALL_MODULES))
-
-        // Clear common
-        platform = createRemoteDataPayload("app_config:android", 0, JsonMap.EMPTY_MAP)
-        testModuleAdapter.reset()
-
-        // Notify the updates
-        updates.emit(listOf(common, platform))
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Verify only push is disabled
-        val modules: MutableList<String> = ArrayList(Modules.ALL_MODULES)
-        modules.remove(Modules.PUSH_MODULE)
-        assertTrue(testModuleAdapter.enabledModules.containsAll(modules))
-        assertTrue(testModuleAdapter.disabledModules.contains(Modules.PUSH_MODULE))
-    }
-
-    @Test
-    public fun testRemoteDataForegroundRefreshInterval(): TestResult = runTest {
-        val common = createDisablePayload("app_config", 9, Modules.ALL_MODULES)
-        val platform = createDisablePayload("app_config:android", 10, Modules.PUSH_MODULE)
-
-        // Notify the updates
-        updates.emit(listOf(common, platform))
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        verify { remoteData.foregroundRefreshInterval = 10000 }
     }
 
     @Test
@@ -161,71 +123,11 @@ public class RemoteConfigManagerTest : BaseTestCase() {
         verify { config.updateRemoteConfig(expected) }
     }
 
-    @Test
-    public fun testSubscription(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE)
-        val common = createDisablePayload("app_config", 9, Modules.ALL_MODULES)
-        updates.emit(listOf(common))
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        assertTrue(testModuleAdapter.disabledModules.isEmpty())
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ANALYTICS)
-        updates.emit(listOf(common))
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        assertFalse(testModuleAdapter.disabledModules.isEmpty())
-    }
-
     private fun createRemoteDataPayload(
         type: String,
         timeStamp: Long,
         data: JsonMap
     ): RemoteDataPayload {
         return RemoteDataPayload(type, timeStamp, data, null)
-    }
-
-    private fun createDisablePayload(
-        type: String,
-        refreshInterval: Long,
-        modules: Collection<String>
-    ): RemoteDataPayload {
-        val disable = jsonMapOf(
-            "modules" to modules,
-            "remote_data_refresh_interval" to refreshInterval
-        )
-
-        val data = jsonMapOf("disable_features" to listOf(disable))
-
-        return createRemoteDataPayload(type, System.currentTimeMillis(), data)
-    }
-
-    private fun createDisablePayload(
-        type: String,
-        refreshInterval: Long,
-        vararg modules: String
-    ): RemoteDataPayload {
-        return createDisablePayload(type, refreshInterval, modules.toList())
-    }
-
-    /**
-     * Module adapter that just tracks calls from the data manager to the adapter.
-     */
-    private inner class TestModuleAdapter : ModuleAdapter() {
-
-        var enabledModules: MutableList<String> = ArrayList()
-        var disabledModules: MutableList<String> = ArrayList()
-
-        override fun setComponentEnabled(module: String, enabled: Boolean) {
-            if (enabled) {
-                enabledModules.add(module)
-            } else {
-                disabledModules.add(module)
-            }
-        }
-
-        fun reset() {
-            enabledModules.clear()
-            disabledModules.clear()
-        }
     }
 }

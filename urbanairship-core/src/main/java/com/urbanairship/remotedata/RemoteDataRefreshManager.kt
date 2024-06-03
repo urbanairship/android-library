@@ -36,7 +36,7 @@ internal class RemoteDataRefreshManager(
     ): JobResult {
         refreshPending.set(false)
         return withContext(AirshipDispatchers.IO) {
-            if (!privacyManager.isAnyFeatureEnabled) {
+            if (!privacyManager.isAnyFeatureEnabled(ignoringRemoteConfig = true)) {
                 providers.forEach {
                     _refreshFlow.emit(Pair(it.source, RemoteDataProvider.RefreshResult.SKIPPED))
                 }

@@ -89,7 +89,7 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
             return
         }
 
-        val eventToStore = when (privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+        val eventToStore = when (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
             true -> event
             false -> event.withAnalyticsDisabled()
         }
@@ -111,7 +111,7 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
         }
 
         var channelId = airship.channel.id
-        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
             channelId = null
             events = events.map { it.withAnalyticsDisabled() }
         }

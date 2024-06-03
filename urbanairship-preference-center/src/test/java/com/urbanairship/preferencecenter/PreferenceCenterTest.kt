@@ -56,7 +56,7 @@ class PreferenceCenterTest {
 
     private val context: Context = TestApplication.getApplication()
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
-    private val privacyManager = PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL)
+    private val privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL)
 
     private val remoteData: RemoteData = mockk()
 

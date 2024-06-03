@@ -203,16 +203,19 @@ public class Analytics @VisibleForTesting public constructor(
             onForeground(clock.currentTimeMillis())
         }
         airshipChannel.addChannelListener { uploadEvents() }
-        privacyManager.addListener {
-            if (!privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
-                clearPendingEvents()
-                synchronized(associatedIdentifiersLock) {
-                    dataStore.remove(
-                        ASSOCIATED_IDENTIFIERS_KEY
-                    )
+
+        privacyManager.addListener(object : PrivacyManager.Listener {
+            override fun onEnabledFeaturesChanged() {
+                if (!privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
+                    clearPendingEvents()
+                    synchronized(associatedIdentifiersLock) {
+                        dataStore.remove(
+                            ASSOCIATED_IDENTIFIERS_KEY
+                        )
+                    }
                 }
             }
-        }
+        })
     }
 
     /**
@@ -350,7 +353,7 @@ public class Analytics @VisibleForTesting public constructor(
         addEvent(AppBackgroundEvent(timeMS))
         conversionSendId = null
         conversionMetadata = null
-        if (privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+        if (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
             eventManager.scheduleEventUpload(0, TimeUnit.MILLISECONDS)
         }
     }
@@ -365,7 +368,7 @@ public class Analytics @VisibleForTesting public constructor(
     public val isEnabled: Boolean
         /**
          * Returns `true` if [com.urbanairship.AirshipConfigOptions.analyticsEnabled]
-         * is set to `true`, and [PrivacyManager.FEATURE_ANALYTICS] is enabled, otherwise `false`.
+         * is set to `true`, and [PrivacyManager.Feature.ANALYTICS] is enabled, otherwise `false`.
          *
          *
          * Features that depend on analytics being enabled may not work properly if it's disabled (reports,
@@ -374,9 +377,8 @@ public class Analytics @VisibleForTesting public constructor(
          * @return `true` if analytics is enabled, otherwise `false`.
          */
         get() {
-            return isComponentEnabled && runtimeConfig.configOptions.analyticsEnabled && privacyManager.isEnabled(
-                PrivacyManager.FEATURE_ANALYTICS
-            )
+            return runtimeConfig.configOptions.analyticsEnabled &&
+                    privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)
         }
 
     /**
@@ -483,7 +485,7 @@ public class Analytics @VisibleForTesting public constructor(
      * battery life. Normally apps should not call this method directly.
      */
     public fun uploadEvents() {
-        if (privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+        if (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
             eventManager.scheduleEventUpload(SCHEDULE_SEND_DELAY_SECONDS, TimeUnit.SECONDS)
         }
     }

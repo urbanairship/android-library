@@ -6,6 +6,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.Checks;
@@ -56,49 +57,49 @@ public class AirshipConfigOptions {
     }
 
     /**
-     * Maps to the feature {@link PrivacyManager#FEATURE_IN_APP_AUTOMATION} when used in the properties or xml config.
+     * Maps to the feature {@link PrivacyManager.Feature#IN_APP_AUTOMATION} when used in the properties or xml config.
      */
     @NonNull
     public static final String FEATURE_IN_APP_AUTOMATION = "in_app_automation";
 
     /**
-     * Maps to the feature {@link PrivacyManager#FEATURE_TAGS_AND_ATTRIBUTES} when used in the properties or xml config.
+     * Maps to the feature {@link PrivacyManager.Feature#TAGS_AND_ATTRIBUTES} when used in the properties or xml config.
      */
     @NonNull
     public static final String FEATURE_TAGS_AND_ATTRIBUTES = "tags_and_attributes";
 
     /**
-     * Maps to the feature {@link PrivacyManager#FEATURE_MESSAGE_CENTER} when used in the properties or xml config.
+     * Maps to the feature {@link PrivacyManager.Feature#MESSAGE_CENTER} when used in the properties or xml config.
      */
     @NonNull
     public static final String FEATURE_MESSAGE_CENTER = "message_center";
 
     /**
-     * Maps to the feature {@link PrivacyManager#FEATURE_ANALYTICS} when used in the properties or xml config.
+     * Maps to the feature {@link PrivacyManager.Feature#ANALYTICS} when used in the properties or xml config.
      */
     @NonNull
     public static final String FEATURE_ANALYTICS = "analytics";
 
     /**
-     * Maps to the feature {@link PrivacyManager#FEATURE_PUSH} when used in the properties or xml config.
+     * Maps to the feature {@link PrivacyManager.Feature#PUSH} when used in the properties or xml config.
      */
     @NonNull
     public static final String FEATURE_PUSH = "push";
 
     /**
-     * Maps to the feature {@link PrivacyManager#FEATURE_CONTACTS} when used in the properties or xml config.
+     * Maps to the feature {@link PrivacyManager.Feature#CONTACTS} when used in the properties or xml config.
      */
     @NonNull
     public static final String FEATURE_CONTACTS = "contacts";
 
     /**
-     * Maps to the feature {@link PrivacyManager#FEATURE_NONE} when used in the properties or xml config.
+     * Maps to the feature {@link PrivacyManager.Feature#NONE} when used in the properties or xml config.
      */
     @NonNull
     public static final String FEATURE_NONE = "none";
 
     /**
-     * Maps to the feature {@link PrivacyManager#FEATURE_ALL} when used in the properties or xml config.
+     * Maps to the feature {@link PrivacyManager.Feature#ALL} when used in the properties or xml config.
      */
     @NonNull
     public static final String FEATURE_ALL = "all";
@@ -330,7 +331,7 @@ public class AirshipConfigOptions {
 
     /**
      * Default enabled Airship features for the app. For more details, see {@link PrivacyManager}.
-     * Defaults to {@link PrivacyManager#FEATURE_ALL}.
+     * Defaults to {@link PrivacyManager.Feature#ALL}.
      *
      * When specifying the features in either xml or a properties file, use one of the
      * names for convenience:
@@ -343,8 +344,13 @@ public class AirshipConfigOptions {
      * - {@link #FEATURE_ANALYTICS}
      * - {@link #FEATURE_PUSH}
      */
-    @PrivacyManager.Feature
-    public final int enabledFeatures;
+    public final PrivacyManager.Feature enabledFeatures;
+
+    /**
+     * Allows resetting enabled features to match the runtime config defaults on each takeOff
+     * Defaults to <code>false</code>.
+     */
+    public final boolean resetEnabledFeatures;
 
     /**
      * Flag indicating whether or not to perform extended broadcasts.
@@ -467,6 +473,7 @@ public class AirshipConfigOptions {
         this.appStoreUri = builder.appStoreUri;
         this.dataCollectionOptInEnabled = builder.dataCollectionOptInEnabled;
         this.enabledFeatures = builder.enabledFeatures;
+        this.resetEnabledFeatures = builder.resetEnabledFeatures;
         this.extendedBroadcastsEnabled = builder.extendedBroadcastsEnabled;
         this.requireInitialRemoteConfigEnabled = builder.requireInitialRemoteConfigEnabled;
         this.fcmFirebaseAppName = builder.fcmFirebaseAppName;
@@ -638,6 +645,7 @@ public class AirshipConfigOptions {
         private static final String FIELD_EXTENDED_BROADCASTS_ENABLED = "extendedBroadcastsEnabled";
         private static final String FIELD_REQUIRE_INITIAL_REMOTE_CONFIG_ENABLED = "requireInitialRemoteConfigEnabled";
         private static final String FIELD_ENABLED_FEATURES = "enabledFeatures";
+        private static final String FIELD_RESET_ENABLED_FEATURES = "resetEnabledFeatures";
         private static final String FIELD_INITIAL_CONFIG_URL = "initialConfigUrl";
         private static final String FIELD_IS_PROMPT_FOR_PERMISSION_ON_USER_NOTIFICATIONS_ENABLED = "isPromptForPermissionOnUserNotificationsEnabled";
         private static final String FIELD_AUTO_PAUSE_IN_APP_AUTOMATION_ON_LAUNCH = "autoPauseInAppAutomationOnLaunch";
@@ -678,8 +686,8 @@ public class AirshipConfigOptions {
         private @Site
         String site = SITE_US;
 
-        @PrivacyManager.Feature
-        public int enabledFeatures = PrivacyManager.FEATURE_ALL;
+        public PrivacyManager.Feature enabledFeatures = PrivacyManager.Feature.ALL;
+        public boolean resetEnabledFeatures = false;
 
         private boolean requireInitialRemoteConfigEnabled = true;
         private String fcmFirebaseAppName;
@@ -1072,17 +1080,19 @@ public class AirshipConfigOptions {
                             }
 
                             if (value != -1) {
-                                this.setEnabledFeatures(value);
+                                this.setEnabledFeatures(new PrivacyManager.Feature(value));
                             } else {
                                 String[] features = configParser.getStringArray(name);
                                 if (features == null) {
                                     throw new IllegalArgumentException("Unable to parse enableFeatures: " + configParser.getString(name));
                                 }
-                                @PrivacyManager.Feature
-                                int converted = convertFeatureNames(features);
-                                this.setEnabledFeatures(converted);
+
+                                this.setEnabledFeatures(convertFeatureNames(features));
                             }
 
+                            break;
+                        case FIELD_RESET_ENABLED_FEATURES:
+                            this.setResetEnabledFeatures(configParser.getBoolean(name, false));
                             break;
 
                     }
@@ -1097,40 +1107,13 @@ public class AirshipConfigOptions {
             }
         }
 
-        @PrivacyManager.Feature
-        private int convertFeatureNames(@NonNull String[] features) {
-            int enabledFeatures = PrivacyManager.FEATURE_NONE;
-            for (String feature : features) {
-                if (feature == null || feature.isEmpty()) {
-                    continue;
-                }
-
-                switch (feature) {
-                    case FEATURE_IN_APP_AUTOMATION:
-                        enabledFeatures |= PrivacyManager.FEATURE_IN_APP_AUTOMATION;
-                        break;
-                    case FEATURE_ANALYTICS:
-                        enabledFeatures |= PrivacyManager.FEATURE_ANALYTICS;
-                        break;
-                    case FEATURE_CONTACTS:
-                        enabledFeatures |= PrivacyManager.FEATURE_CONTACTS;
-                        break;
-                    case FEATURE_MESSAGE_CENTER:
-                        enabledFeatures |= PrivacyManager.FEATURE_MESSAGE_CENTER;
-                        break;
-                    case FEATURE_PUSH:
-                        enabledFeatures |= PrivacyManager.FEATURE_PUSH;
-                        break;
-                    case FEATURE_TAGS_AND_ATTRIBUTES:
-                        enabledFeatures |= PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES;
-                        break;
-                    case FEATURE_ALL:
-                        enabledFeatures |= PrivacyManager.FEATURE_ALL;
-                        break;
-                }
+        private PrivacyManager.Feature convertFeatureNames(@NonNull String[] features) {
+            try {
+                return PrivacyManager.Feature.fromJson(JsonValue.wrap(features));
+            } catch (Exception ex) {
+                UALog.e(ex, "Failed to parse features array " + String.join(",", features));
+                return PrivacyManager.Feature.NONE;
             }
-
-            return enabledFeatures;
         }
 
         /**
@@ -1620,8 +1603,8 @@ public class AirshipConfigOptions {
          * @return The config options builder.
          */
         @NonNull
-        public Builder setEnabledFeatures(@PrivacyManager.Feature int... enabledFeatures) {
-            this.enabledFeatures = PrivacyManager.combine(enabledFeatures);
+        public Builder setEnabledFeatures(PrivacyManager.Feature... enabledFeatures) {
+            this.enabledFeatures = PrivacyManager.Feature.combined(enabledFeatures);
             return this;
         }
 
@@ -1678,6 +1661,18 @@ public class AirshipConfigOptions {
         }
 
         /**
+         * Set the reset enabled features option.
+         *
+         * @param resetEnabledFeatures {@code true} to reset enabled features on launch, otherwise {@code false}.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setResetEnabledFeatures(boolean resetEnabledFeatures) {
+            this.resetEnabledFeatures = resetEnabledFeatures;
+            return this;
+        }
+
+        /**
          * Builds the config options.
          *
          * @return The built config options.
@@ -1698,8 +1693,8 @@ public class AirshipConfigOptions {
 
             if (dataCollectionOptInEnabled) {
                 UALog.w("dataCollectionOptInEnabled is deprecated. Use enabledFeatures instead.");
-                if (enabledFeatures == PrivacyManager.FEATURE_ALL) {
-                    enabledFeatures = PrivacyManager.FEATURE_NONE;
+                if (enabledFeatures == PrivacyManager.Feature.ALL) {
+                    enabledFeatures = PrivacyManager.Feature.NONE;
                 }
             }
 

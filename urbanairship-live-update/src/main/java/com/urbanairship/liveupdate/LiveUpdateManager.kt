@@ -9,7 +9,6 @@ import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
-import com.urbanairship.PrivacyManager.FEATURE_PUSH
 import com.urbanairship.UAirship
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -37,7 +36,7 @@ internal constructor(
 ) : AirshipComponent(context, dataStore) {
 
     private val isFeatureEnabled: Boolean
-        get() = privacyManager.isEnabled(FEATURE_PUSH)
+        get() = privacyManager.isEnabled(PrivacyManager.Feature.PUSH)
 
     public constructor(
         context: Context,
@@ -155,7 +154,9 @@ internal constructor(
         super.init()
 
         channel.addChannelListener { updateLiveActivityEnablement() }
-        privacyManager.addListener { updateLiveActivityEnablement() }
+        privacyManager.addListener (object : PrivacyManager.Listener {
+            override fun onEnabledFeaturesChanged() = updateLiveActivityEnablement()
+        })
 
         pushManager.addPushListener { message, _ ->
             message.liveUpdatePayload
@@ -165,11 +166,6 @@ internal constructor(
 
         updateLiveActivityEnablement()
     }
-
-    /** @hide */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onComponentEnableChange(isEnabled: Boolean): Unit =
-        updateLiveActivityEnablement()
 
     private fun updateLiveActivityEnablement() {
         if (isFeatureEnabled) {

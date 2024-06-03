@@ -10,7 +10,6 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
-import com.urbanairship.PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.json.JsonValue
@@ -69,7 +68,7 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
     var openListener: OnOpenListener? = null
 
     private val isFeatureEnabled: Boolean
-        get() = privacyManager.isEnabled(FEATURE_TAGS_AND_ATTRIBUTES)
+        get() = privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
     /**
      * @hide

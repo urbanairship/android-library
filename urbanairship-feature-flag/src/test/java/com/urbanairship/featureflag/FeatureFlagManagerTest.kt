@@ -72,12 +72,6 @@ class FeatureFlagManagerTest {
     )
 
     @Test
-    fun testModuleIsWorking() {
-        featureFlags.init()
-        assert(featureFlags.isComponentEnabled)
-    }
-
-    @Test
     fun testNoFlags(): TestResult = runTest {
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")

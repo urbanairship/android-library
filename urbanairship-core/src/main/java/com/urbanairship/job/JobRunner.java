@@ -37,12 +37,6 @@ interface JobRunner {
                     return;
                 }
 
-                if (!component.isComponentEnabled()) {
-                    UALog.d("Component disabled. Dropping jobInfo: %s", jobInfo);
-                    resultConsumer.accept(JobResult.SUCCESS);
-                    return;
-                }
-
                 component.getJobExecutor(jobInfo).execute(() -> {
                     JobResult result = component.onPerformJob(airship, jobInfo);
                     UALog.v("Finished: %s with result: %s", jobInfo, result);

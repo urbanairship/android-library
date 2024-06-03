@@ -34,7 +34,7 @@ public class PushEnablePreference extends UACheckBoxPreference {
 
     @Override
     protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
-        return airship.getPushManager().getUserNotificationsEnabled() && airship.getPrivacyManager().isEnabled(PrivacyManager.FEATURE_PUSH);
+        return airship.getPushManager().getUserNotificationsEnabled() && airship.getPrivacyManager().isEnabled(PrivacyManager.Feature.PUSH);
     }
 
     @Override

@@ -28,7 +28,7 @@ public class ApplicationMetricsTest extends BaseTestCase {
         dataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext());
         activityMonitor = new TestActivityMonitor();
         packageManager = shadowOf(TestApplication.getApplication().getPackageManager());
-        privacyManager = new PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL);
+        privacyManager = new PrivacyManager(dataStore, PrivacyManager.Feature.ALL);
         metrics = new ApplicationMetrics(TestApplication.getApplication(), dataStore, privacyManager, activityMonitor);
     }
 

@@ -55,14 +55,6 @@ public abstract class AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @CallSuper
     protected void init() {
-        dataStore.addListener(new PreferenceDataStore.PreferenceChangeListener() {
-            @Override
-            public void onPreferenceChange(@NonNull String key) {
-                if (key.equals(enableKey)) {
-                    onComponentEnableChange(isComponentEnabled());
-                }
-            }
-        });
     }
 
     /**
@@ -111,40 +103,6 @@ public abstract class AirshipComponent {
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected void onAirshipReady(@NonNull UAirship airship) {
-    }
-
-    /**
-     * Called when the component is enabled or disabled.
-     *
-     * @param isEnabled {@code true} if the component is enabled, otherwise {@code false}.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected void onComponentEnableChange(boolean isEnabled) {
-    }
-
-    /**
-     * Enables/disables the component.
-     * Disabled components not receive calls to {@link #onPerformJob(UAirship, JobInfo)}.
-     *
-     * @param enabled {@code true} to enable the component, {@code false} to disable.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void setComponentEnabled(boolean enabled) {
-        if (isComponentEnabled() != enabled) {
-            dataStore.put(enableKey, enabled);
-        }
-    }
-    /**
-     * Checks if the component is enabled.
-     *
-     * @return {@code true} if enabled, otherwise {@code false}.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public boolean isComponentEnabled() {
-        return dataStore.getBoolean(enableKey, true);
     }
 
     /**

@@ -62,7 +62,7 @@ public class AirshipChannelTest {
             )
         )
     )
-    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL)
+    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL)
     private val testDispatcher = StandardTestDispatcher()
     private val mockLocaleManager = mockk<LocaleManager>() {
         every { this@mockk.addListener(capture(localeChangeListeners)) } just runs
@@ -142,13 +142,13 @@ public class AirshipChannelTest {
 
     @Test
     public fun testPrivacyManagerChangeUpdatesRegistration(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS)
+        privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         verify { mockJobDispatcher.dispatch(keepJob) }
     }
 
     @Test
     public fun testDisableTagsClearsPendingUpdates(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         verify { mockBatchUpdateManager.clearPending() }
         verify { mockJobDispatcher.dispatch(keepJob) }
     }
@@ -168,7 +168,7 @@ public class AirshipChannelTest {
         channel.editTags().addTag("foo").apply()
         assertEquals(channel.tags, setOf("foo"))
 
-        privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         assertEquals(channel.tags, emptySet<String>())
     }
 
@@ -202,7 +202,7 @@ public class AirshipChannelTest {
 
     @Test
     public fun testSetTagsFeatureDisabled(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         channel.tags = setOf("foo")
         assertEquals(channel.tags, emptySet<String>())
     }
@@ -216,7 +216,7 @@ public class AirshipChannelTest {
 
     @Test
     public fun testEditTagsFeatureDisabled(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         channel.editTags().addTag("foo").apply()
         assertEquals(channel.tags, emptySet<String>())
     }
@@ -236,7 +236,7 @@ public class AirshipChannelTest {
 
     @Test
     public fun testEditTagGroupsFeatureDisabled(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         channel.editTagGroups().addTags("some group", setOf("foo")).apply()
         verify(exactly = 0) { mockBatchUpdateManager.addUpdate(tags = any()) }
     }
@@ -262,7 +262,7 @@ public class AirshipChannelTest {
 
     @Test
     public fun testEditSubscriptionsFeatureDisabled(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         channel.editSubscriptionLists().subscribe("some list").apply()
         verify(exactly = 0) { mockBatchUpdateManager.addUpdate(subscriptions = any()) }
     }
@@ -302,7 +302,7 @@ public class AirshipChannelTest {
 
     @Test
     public fun testEditAttributesFeatureDisabled(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         channel.editAttributes().removeAttribute("some attribute").apply()
         verify(exactly = 0) { mockBatchUpdateManager.addUpdate(attributes = any()) }
     }
@@ -326,7 +326,7 @@ public class AirshipChannelTest {
 
     @Test
     public fun testFetchSubscriptionListsFeatureDisabled(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         assertTrue(channel.fetchSubscriptionLists().isFailure)
     }
 
@@ -388,7 +388,7 @@ public class AirshipChannelTest {
 
     @Test
     public fun testCraPayloadAnalyticsDisabled(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS)
+        privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
 
         every {
             mockLocaleManager.locale
@@ -412,7 +412,7 @@ public class AirshipChannelTest {
 
     @Test
     public fun testCraPayloadAllFeaturesDisabled(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.FEATURE_ALL)
+        privacyManager.disable(PrivacyManager.Feature.ALL)
 
         every {
             mockLocaleManager.locale

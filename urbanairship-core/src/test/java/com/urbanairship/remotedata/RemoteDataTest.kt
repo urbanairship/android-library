@@ -57,7 +57,7 @@ public class RemoteDataTest {
     )
 
     private val privacyManager: PrivacyManager = PrivacyManager(
-        dataStore, PrivacyManager.FEATURE_ALL
+        dataStore, PrivacyManager.Feature.ALL
     )
 
     private val localListener = mutableListOf<LocaleChangedListener>()
@@ -126,10 +126,23 @@ public class RemoteDataTest {
     }
 
     @Test
+    public fun testSettingRefreshInterval(): TestResult = runTest {
+        every { mockContactRemoteDataProvider.isEnabled } returns false
+
+        assertEquals(10000L, remoteData.getRefreshInterval())
+        config.updateRemoteConfig(
+            RemoteConfig(
+                remoteDataRefreshInterval = 21L
+            )
+        )
+        assertEquals(21L, remoteData.getRefreshInterval())
+    }
+
+    @Test
     public fun testPrivacyManagerChangesDispatchesUpdate(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.NONE)
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ANALYTICS)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.ANALYTICS)
         testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
     }
@@ -173,7 +186,7 @@ public class RemoteDataTest {
         testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
 
-        testClock.currentTimeMillis += remoteData.foregroundRefreshInterval - 1
+        testClock.currentTimeMillis += remoteData.getRefreshInterval() - 1
         testActivityMonitor.background()
         testActivityMonitor.foreground()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -363,10 +376,10 @@ public class RemoteDataTest {
     public fun testRefreshWithPrivacyManager(): TestResult = runTest {
         coEvery { mockRefreshManager.performRefresh(any(), any(), any()) } returns JobResult.SUCCESS
 
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_NONE)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.NONE)
         assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(mockk(), jobInfo))
 
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_ANALYTICS)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.ANALYTICS)
         assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(mockk(), jobInfo))
 
         coVerify(exactly = 2) { mockRefreshManager.performRefresh(any(), any(), any()) }

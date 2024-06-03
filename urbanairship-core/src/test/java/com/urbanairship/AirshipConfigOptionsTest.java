@@ -68,7 +68,7 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertTrue(production.extendedBroadcastsEnabled);
         assertTrue(production.requireInitialRemoteConfigEnabled);
         assertEquals("config://", production.initialConfigUrl);
-        assertEquals(PrivacyManager.FEATURE_NONE, production.enabledFeatures);
+        assertEquals(PrivacyManager.Feature.NONE, production.enabledFeatures);
     }
 
     /**
@@ -137,7 +137,7 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertFalse(defaultConfig.dataCollectionOptInEnabled);
         assertFalse(defaultConfig.extendedBroadcastsEnabled);
         assertTrue(defaultConfig.requireInitialRemoteConfigEnabled);
-        assertEquals(PrivacyManager.FEATURE_ALL, defaultConfig.enabledFeatures);
+        assertEquals(PrivacyManager.Feature.ALL, defaultConfig.enabledFeatures);
     }
 
     @Test
@@ -211,22 +211,22 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
     @Test
     public void testEnabledFeaturesMigration() {
         AirshipConfigOptions configOptions = AirshipConfigOptions.newBuilder()
-                                                                 .setEnabledFeatures(PrivacyManager.FEATURE_PUSH)
+                                                                 .setEnabledFeatures(PrivacyManager.Feature.PUSH)
                                                                  .setDataCollectionOptInEnabled(true)
                                                                  .build();
 
-        assertEquals(PrivacyManager.FEATURE_PUSH, configOptions.enabledFeatures);
+        assertEquals(PrivacyManager.Feature.PUSH, configOptions.enabledFeatures);
 
         configOptions = AirshipConfigOptions.newBuilder()
                                             .setDataCollectionOptInEnabled(true)
                                             .build();
 
-        assertEquals(PrivacyManager.FEATURE_NONE, configOptions.enabledFeatures);
+        assertEquals(PrivacyManager.Feature.NONE, configOptions.enabledFeatures);
 
         configOptions = AirshipConfigOptions.newBuilder()
                                             .build();
 
-        assertEquals(PrivacyManager.FEATURE_ALL, configOptions.enabledFeatures);
+        assertEquals(PrivacyManager.Feature.ALL, configOptions.enabledFeatures);
     }
 
     Properties getProperties(String file) throws IOException {

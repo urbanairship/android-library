@@ -20,19 +20,30 @@ import java.util.concurrent.CopyOnWriteArrayList
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @OpenForTesting
-public class AirshipRuntimeConfig(
+public class AirshipRuntimeConfig internal constructor (
     private val configOptionsProvider: Provider<AirshipConfigOptions>,
     public val requestSession: RequestSession,
-    dataStore: PreferenceDataStore,
+    internal val configObserver: RemoteConfigObserver,
     private val platformProvider: Provider<Int>
 ) {
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public constructor(
+        configOptionsProvider: Provider<AirshipConfigOptions>,
+        requestSession: RequestSession,
+        dataStore: PreferenceDataStore,
+        platformProvider: Provider<Int>
+    ): this(
+        configOptionsProvider, requestSession, RemoteConfigObserver(dataStore), platformProvider
+    )
 
     public fun interface ConfigChangeListener {
         public fun onConfigUpdated()
     }
 
-    private val remoteConfigListeners: MutableList<ConfigChangeListener> = CopyOnWriteArrayList()
-    private val remoteConfigCache: RemoteConfigCache = RemoteConfigCache(dataStore)
     private val allowUrlFallback: Boolean = determineUrlFallback(configOptionsProvider.get())
 
     @get:UAirship.Platform
@@ -40,7 +51,7 @@ public class AirshipRuntimeConfig(
         get() = platformProvider.get()
 
     public val remoteConfig: RemoteConfig
-        get() = remoteConfigCache.config
+        get() = configObserver.remoteConfig
 
     public val configOptions: AirshipConfigOptions
         get() = configOptionsProvider.get()
@@ -147,19 +158,17 @@ public class AirshipRuntimeConfig(
 
     /** Adds a remote config listener. */
     public fun addConfigListener(listener: ConfigChangeListener) {
-        remoteConfigListeners.add(listener)
+        configObserver.addConfigListener(listener)
     }
 
     /** Removes a URL config listener. */
     public fun removeRemoteConfigListener(listener: ConfigChangeListener) {
-        remoteConfigListeners.remove(listener)
+        configObserver.removeRemoteConfigListener(listener)
     }
 
     @VisibleForTesting
     public fun updateRemoteConfig(config: RemoteConfig) {
-        if (this.remoteConfigCache.updateConfig(config)) {
-            this.remoteConfigListeners.forEach { it.onConfigUpdated() }
-        }
+        configObserver.updateRemoteConfig(config)
     }
 
     public companion object {
@@ -173,6 +182,33 @@ public class AirshipRuntimeConfig(
             }
 
             return configOptions.initialConfigUrl == null
+        }
+    }
+}
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class RemoteConfigObserver(dataStore: PreferenceDataStore) {
+    private val remoteConfigListeners: MutableList<AirshipRuntimeConfig.ConfigChangeListener> = CopyOnWriteArrayList()
+    private val remoteConfigCache: RemoteConfigCache = RemoteConfigCache(dataStore)
+
+    public val remoteConfig: RemoteConfig
+        get() = remoteConfigCache.config
+
+
+    /** Adds a remote config listener. */
+    public fun addConfigListener(listener: AirshipRuntimeConfig.ConfigChangeListener) {
+        remoteConfigListeners.add(listener)
+    }
+
+    /** Removes a URL config listener. */
+    public fun removeRemoteConfigListener(listener: AirshipRuntimeConfig.ConfigChangeListener) {
+        remoteConfigListeners.remove(listener)
+    }
+
+    @VisibleForTesting
+    public fun updateRemoteConfig(config: RemoteConfig) {
+        if (this.remoteConfigCache.updateConfig(config)) {
+            this.remoteConfigListeners.forEach { it.onConfigUpdated() }
         }
     }
 }

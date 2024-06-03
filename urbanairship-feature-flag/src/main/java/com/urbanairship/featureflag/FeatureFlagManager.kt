@@ -84,10 +84,6 @@ public class FeatureFlagManager
     }
 
     private suspend fun flag(name: String, allowRefresh: Boolean): Result<FeatureFlag> {
-        if (!isComponentEnabled) {
-            return Result.failure(FeatureFlagException.FailedToFetch())
-        }
-
         val remoteDataInfo = remoteData.fetchFlagRemoteInfo(name)
         val result = evaluate(name, remoteDataInfo)
         if (result.isSuccess) {

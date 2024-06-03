@@ -103,7 +103,10 @@ internal constructor(
         engine.setExecutionPaused(isPaused)
         engine.start()
 
-        val listener = PrivacyManager.Listener { privacyManagerUpdated() }
+        val listener = object : PrivacyManager.Listener {
+            override fun onEnabledFeaturesChanged() = privacyManagerUpdated()
+        }
+
         privacyManager.addListener(listener)
 
         subscriptions.add { privacyManager.removeListener(listener) }
@@ -116,7 +119,7 @@ internal constructor(
     }
 
     private fun privacyManagerUpdated() {
-        if (privacyManager.isEnabled(PrivacyManager.FEATURE_IN_APP_AUTOMATION)) {
+        if (privacyManager.isEnabled(PrivacyManager.Feature.IN_APP_AUTOMATION)) {
             engine.setEnginePaused(false)
             remoteDataSubscriber.subscribe()
         } else {

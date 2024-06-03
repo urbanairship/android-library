@@ -117,7 +117,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
         synchronized (this) {
             getDataStore().put(ENABLED_KEY, isEnabled);
 
-            if (!privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+            if (!privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
                 UALog.w("AdvertisingIdTracker - Unable to track advertising ID when analytics is disabled.");
                 return;
             }
@@ -141,7 +141,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
     }
 
     private void update() {
-        if (!isEnabled() || !privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+        if (!isEnabled() || !privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
             return;
         }
 
@@ -175,7 +175,7 @@ public class AdvertisingIdTracker extends AirshipComponent {
                         break;
                 }
 
-                if (!isEnabled() || !privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+                if (!isEnabled() || !privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
                     return;
                 }
 

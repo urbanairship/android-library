@@ -2,26 +2,17 @@
 
 package com.urbanairship.messagecenter;
 
-import static com.urbanairship.PrivacyManager.FEATURE_MESSAGE_CENTER;
-
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipExecutors;
-import com.urbanairship.UALog;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -33,6 +24,12 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 
 /**
  * Airship Message Center.
@@ -168,7 +165,7 @@ public class MessageCenter extends AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     void updateInboxEnabledState() {
-        boolean isEnabled = privacyManager.isEnabled(FEATURE_MESSAGE_CENTER);
+        boolean isEnabled = privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER);
 
         inbox.setEnabled(isEnabled);
         inbox.updateEnabledState();
@@ -202,7 +199,7 @@ public class MessageCenter extends AirshipComponent {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
     public JobResult onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
-        if (privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)) {
+        if (privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
             return inbox.onPerformJob(airship, jobInfo);
         } else {
             return JobResult.SUCCESS;
@@ -290,7 +287,7 @@ public class MessageCenter extends AirshipComponent {
      * @param messageId The message ID.
      */
     public void showMessageCenter(@Nullable String messageId) {
-        if (!privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)) {
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
             UALog.w("Unable to show Message Center. FEATURE_MESSAGE_CENTER is not enabled in PrivacyManager.");
             return;
         }

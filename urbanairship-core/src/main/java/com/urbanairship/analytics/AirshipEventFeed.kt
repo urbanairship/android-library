@@ -35,7 +35,7 @@ public class AirshipEventFeed(
     public val events: SharedFlow<Event> = _events.asSharedFlow()
 
     public fun emit(event: Event) {
-        if (isAnalyticsEnabled && privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS)) {
+        if (isAnalyticsEnabled && privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
             _events.tryEmit(event)
         }
     }

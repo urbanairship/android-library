@@ -58,10 +58,10 @@ public class DataCollectionEnabledPreference extends UACheckBoxPreference {
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         if (enabled) {
             if (!airship.getPrivacyManager().isAnyFeatureEnabled()) {
-                airship.getPrivacyManager().enable(PrivacyManager.FEATURE_ALL);
+                airship.getPrivacyManager().enable(PrivacyManager.Feature.ALL);
             }
         } else {
-            airship.getPrivacyManager().disable(PrivacyManager.FEATURE_ALL);
+            airship.getPrivacyManager().disable(PrivacyManager.Feature.ALL);
         }
     }
 

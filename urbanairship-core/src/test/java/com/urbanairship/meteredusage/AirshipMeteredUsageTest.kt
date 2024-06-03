@@ -61,7 +61,7 @@ public class AirshipMeteredUsageTest {
 
     @Test
     public fun testConfigUpdate(): TestResult = runTest {
-        every { privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS) } returns true
+        every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns true
 
         testConfig.updateRemoteConfig(
             RemoteConfig(
@@ -111,7 +111,7 @@ public class AirshipMeteredUsageTest {
         var events = eventsStore.getAllEvents()
         assert(events.isEmpty())
 
-        every { privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS) } returns true
+        every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns true
 
         val event = MeteredUsageEventEntity(
             eventId = "event-id",
@@ -132,7 +132,7 @@ public class AirshipMeteredUsageTest {
 
         eventsStore.deleteAll()
 
-        every { privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS) } returns false
+        every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns false
         manager.addEvent(event)
         verify(exactly = 2) { mockJobDispatcher.dispatch(makeJobInfo(0)) }
 
@@ -147,7 +147,7 @@ public class AirshipMeteredUsageTest {
 
     @Test
     public fun testAddEventDisabledConfig(): TestResult = runTest {
-        every { privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS) } returns true
+        every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns true
 
         testConfig.updateRemoteConfig(
             RemoteConfig(
@@ -224,7 +224,7 @@ public class AirshipMeteredUsageTest {
         every { airship.channel } returns channel
         every { channel.id } returns "test-channel-id"
 
-        every { privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS) } returns true
+        every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns true
         coEvery { apiClient.uploadEvents(any(), any()) } returns RequestResult(200, null, null, null)
 
         val jobResult = manager.onPerformJob(airship, makeJobInfo())
@@ -258,7 +258,7 @@ public class AirshipMeteredUsageTest {
         every { airship.channel } returns channel
         every { channel.id } returns "test-channel-id"
 
-        every { privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS) } returns false
+        every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns false
         coEvery { apiClient.uploadEvents(any(), any()) } returns RequestResult(200, null, null, null)
 
         val jobResult = manager.onPerformJob(airship, makeJobInfo())
@@ -292,7 +292,7 @@ public class AirshipMeteredUsageTest {
         every { airship.channel } returns channel
         every { channel.id } returns "test-channel-id"
 
-        every { privacyManager.isEnabled(PrivacyManager.FEATURE_ANALYTICS) } returns false
+        every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns false
         coEvery { apiClient.uploadEvents(any(), any()) } returns RequestResult(Throwable())
 
         val jobResult = manager.onPerformJob(airship, makeJobInfo())
