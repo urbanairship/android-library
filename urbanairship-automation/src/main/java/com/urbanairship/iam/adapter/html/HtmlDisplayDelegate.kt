@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import com.urbanairship.Predicate
+import com.urbanairship.actions.ActionRunner
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.iam.adapter.InAppDisplayArgs
 import com.urbanairship.iam.adapter.InAppDisplayArgsLoader
@@ -29,7 +30,8 @@ internal class HtmlDisplayDelegate(
     private val displayContent: InAppMessageDisplayContent.HTMLContent,
     private val assets: AirshipCachedAssets?,
     private val messageExtras: JsonMap?,
-    private val activityMonitor: ActivityMonitor
+    private val activityMonitor: ActivityMonitor,
+    private val actionRunner: ActionRunner
 ) : DelegatingDisplayAdapter.Delegate {
 
     private var continuation: CancellableContinuation<DisplayResult>? = null
@@ -51,7 +53,8 @@ internal class HtmlDisplayDelegate(
             displayContent = displayContent,
             assets = assets,
             displayListener = displayListener,
-            extras = messageExtras
+            extras = messageExtras,
+            actionRunner = actionRunner
         )
 
         val loader = InAppDisplayArgsLoader.newLoader(displayArgs)

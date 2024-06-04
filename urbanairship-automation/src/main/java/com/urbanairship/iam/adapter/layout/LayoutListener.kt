@@ -2,15 +2,8 @@
 
 package com.urbanairship.iam.adapter.layout
 
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
-import com.urbanairship.actions.ActionRunRequest
-import com.urbanairship.actions.ActionRunRequestFactory
-import com.urbanairship.actions.PermissionResultReceiver
-import com.urbanairship.actions.PromptPermissionAction
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.FormInfo
@@ -33,7 +26,6 @@ import com.urbanairship.iam.analytics.events.InAppPagerSummaryEvent
 import com.urbanairship.iam.analytics.events.InAppPermissionResultEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.analytics.events.PageViewSummary
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
@@ -159,28 +151,6 @@ internal class LayoutListener (
         )
     }
 
-    override fun onRunActions(actions: Map<String, JsonValue>, state: LayoutData) {
-
-        val permissionResultReceiver = object : PermissionResultReceiver(Handler(Looper.getMainLooper())) {
-            override fun onResult(
-                permission: Permission,
-                before: PermissionStatus,
-                after: PermissionStatus
-            ) {
-                onPromptPermissionResult(permission, before, after, state)
-            }
-        }
-
-        com.urbanairship.iam.InAppActionUtils.runActions(JsonMap(actions), ActionRunRequestFactory { actionName: String ->
-            val bundle = Bundle()
-            bundle.putParcelable(
-                PromptPermissionAction.RECEIVER_METADATA,
-                permissionResultReceiver
-            )
-            ActionRunRequest.createRequest(actionName).setMetadata(bundle)
-        })
-    }
-
     override fun onPagerGesture(
         gestureId: String,
         reportingMetadata: JsonValue?,
@@ -222,17 +192,6 @@ internal class LayoutListener (
         }
     }
 
-    internal fun onPromptPermissionResult(
-        permission: Permission,
-        before: PermissionStatus,
-        after: PermissionStatus,
-        layoutContext: LayoutData
-    ) {
-        analytics.recordEvent(
-            event = InAppPermissionResultEvent(permission, before, after),
-            layoutContext = layoutContext
-        )
-    }
 
     /**
      * Updates the pager page view count map.

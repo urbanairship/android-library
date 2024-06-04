@@ -3,16 +3,18 @@
 package com.urbanairship.automation.action
 
 import com.urbanairship.actions.Action
+import com.urbanairship.actions.ActionRunner
+import com.urbanairship.actions.DefaultActionRunner
+import com.urbanairship.actions.runSuspending
 import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.InterruptedBehavior
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
 import com.urbanairship.automation.engine.PreparedScheduleInfo
-import com.urbanairship.iam.InAppActionUtils
 import com.urbanairship.json.JsonValue
 
-internal class ActionAutomationExecutor : AutomationExecutorDelegate<JsonValue> {
+internal class ActionAutomationExecutor(val actionRunner: ActionRunner = DefaultActionRunner) : AutomationExecutorDelegate<JsonValue> {
 
     override fun isReady(
         data: JsonValue, preparedScheduleInfo: PreparedScheduleInfo
@@ -26,7 +28,7 @@ internal class ActionAutomationExecutor : AutomationExecutorDelegate<JsonValue> 
             return ScheduleExecuteResult.FINISHED
         }
 
-        InAppActionUtils.runActions(data.optMap(), situation = Action.SITUATION_AUTOMATION)
+        actionRunner.runSuspending(data.optMap().map, Action.SITUATION_AUTOMATION)
         return ScheduleExecuteResult.FINISHED
     }
 

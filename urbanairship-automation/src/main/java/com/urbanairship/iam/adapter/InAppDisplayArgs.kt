@@ -4,6 +4,7 @@ package com.urbanairship.iam.adapter
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.urbanairship.actions.ActionRunner
 import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.json.JsonMap
@@ -14,7 +15,8 @@ internal data class InAppDisplayArgs<T: InAppMessageDisplayContent>(
     val displayContent: T,
     val assets: AirshipCachedAssets?,
     val displayListener: InAppMessageDisplayListener,
-    val extras: JsonMap? = null
+    val extras: JsonMap? = null,
+    val actionRunner: ActionRunner
 )
 
 /**

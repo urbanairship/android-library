@@ -2,11 +2,11 @@
 package com.urbanairship.android.layout.model
 
 import app.cash.turbine.test
-import com.urbanairship.android.layout.environment.ActionsRunner
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.util.PagerScrollEvent
 import com.urbanairship.android.layout.util.pagerScrolls
@@ -42,7 +42,7 @@ public class PagerModelTest {
     private val scrollsFlow = MutableSharedFlow<PagerScrollEvent>()
 
     private val mockReporter: Reporter = mockk(relaxed = true)
-    private val mockActionsRunner: ActionsRunner = mockk(relaxed = true)
+    private val mockActionsRunner: ThomasActionRunner = mockk(relaxed = true)
     private val mockEnv: ModelEnvironment = mockk(relaxed = true) {
         every { reporter } returns mockReporter
         every { actionsRunner } returns mockActionsRunner

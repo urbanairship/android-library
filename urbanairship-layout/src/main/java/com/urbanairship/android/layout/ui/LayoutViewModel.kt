@@ -7,7 +7,7 @@ import com.urbanairship.android.layout.ModelFactory
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.ThomasModelFactory
-import com.urbanairship.android.layout.environment.ExternalActionsRunner
+import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
@@ -26,14 +26,14 @@ internal class LayoutViewModel : ViewModel() {
     @JvmOverloads
     fun getOrCreateEnvironment(
         reporter: Reporter,
-        listener: ThomasListenerInterface,
         displayTimer: DisplayTimer,
+        actionRunner: ThomasActionRunner,
         layoutState: LayoutState = LayoutState.EMPTY
     ): ModelEnvironment =
         environment ?: ModelEnvironment(
             layoutState = layoutState,
             reporter = reporter,
-            actionsRunner = ExternalActionsRunner(listener),
+            actionsRunner = actionRunner,
             displayTimer = displayTimer,
         ).also {
             environment = it

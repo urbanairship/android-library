@@ -96,8 +96,8 @@ public class ModalActivity : AppCompatActivity() {
 
             val modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
-                listener = externalListener,
-                displayTimer = displayTimer,
+                actionRunner = args.actionRunner,
+                displayTimer = displayTimer
             )
 
             val model = viewModel.getOrCreateModel(args.payload.view, modelEnvironment)

@@ -6,7 +6,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
-import com.urbanairship.actions.ActionRunRequestFactory
+import com.urbanairship.actions.ActionRunner
+import com.urbanairship.actions.DefaultActionRunner
+import com.urbanairship.actions.run
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.contacts.Contact
@@ -31,7 +33,6 @@ import com.urbanairship.preferencecenter.ui.item.ContactSubscriptionItem
 import com.urbanairship.preferencecenter.ui.item.PrefCenterItem
 import com.urbanairship.preferencecenter.ui.item.SectionBreakItem
 import com.urbanairship.preferencecenter.ui.item.SectionItem
-import com.urbanairship.preferencecenter.util.execute
 import com.urbanairship.preferencecenter.util.scanConcat
 import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
 import kotlinx.coroutines.CoroutineDispatcher
@@ -66,7 +67,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
     private val channel: AirshipChannel = UAirship.shared().channel,
     private val contact: Contact = UAirship.shared().contact,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val actionRunRequestFactory: ActionRunRequestFactory = ActionRunRequestFactory(),
+    private val actionRunner: ActionRunner = DefaultActionRunner,
     private val conditionMonitor: ConditionStateMonitor = ConditionStateMonitor()
 ) : ViewModel() {
     class PreferenceCenterViewModelFactory(
@@ -144,7 +145,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                     isEnabled = action.isEnabled
                 )
             is Action.ButtonActions -> with(action) {
-                actions.execute(requestFactory = actionRunRequestFactory)
+                actionRunner.run(actions)
                 emptyFlow()
             }
             is Action.ConditionStateChanged ->

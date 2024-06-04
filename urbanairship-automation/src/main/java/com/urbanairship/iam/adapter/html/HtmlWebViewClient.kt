@@ -25,9 +25,7 @@ internal abstract class HtmlWebViewClient : InAppMessageWebViewClient {
      */
     constructor(messageExtras: JsonMap?) : super(messageExtras)
 
-    @VisibleForTesting
-    protected constructor(nativeBridge: NativeBridge, messageExtras: JsonMap?)
-            : super(nativeBridge, messageExtras)
+    constructor(nativeBridge: NativeBridge, messageExtras: JsonMap?) : super(nativeBridge, messageExtras)
 
     /**
      * Called when the dismiss command is invoked from the native bridge. Override to

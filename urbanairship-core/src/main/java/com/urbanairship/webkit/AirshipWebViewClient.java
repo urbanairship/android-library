@@ -21,7 +21,6 @@ import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestExtender;
-import com.urbanairship.actions.ActionRunRequestFactory;
 import com.urbanairship.javascript.JavaScriptEnvironment;
 import com.urbanairship.javascript.JavaScriptExecutor;
 import com.urbanairship.javascript.NativeBridge;
@@ -62,23 +61,19 @@ public class AirshipWebViewClient extends WebViewClient {
         boolean onClose(@NonNull WebView view);
     }
 
-    private List<Listener> listeners = new CopyOnWriteArrayList<>();
+    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     /**
      * Default constructor.
      */
     public AirshipWebViewClient() {
-        this(new ActionRunRequestFactory());
-    }
-
-    public AirshipWebViewClient(@NonNull ActionRunRequestFactory requestFactory) {
-        this(new NativeBridge(requestFactory));
+        this(new NativeBridge());
     }
 
     /**
-     * @hide
+     * Web view client
+     * @param nativeBridge The native bridge to inject.
      */
-    @VisibleForTesting
     protected AirshipWebViewClient(@NonNull NativeBridge nativeBridge) {
         this.nativeBridge = nativeBridge;
     }

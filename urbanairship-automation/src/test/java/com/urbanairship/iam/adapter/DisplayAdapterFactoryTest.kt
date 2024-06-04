@@ -19,6 +19,7 @@ import com.urbanairship.iam.adapter.html.HtmlDisplayDelegate
 import com.urbanairship.iam.adapter.layout.AirshipLayoutDisplayDelegate
 import com.urbanairship.iam.adapter.modal.ModalDisplayDelegate
 import com.urbanairship.automation.utils.NetworkMonitor
+import com.urbanairship.iam.actions.InAppActionRunner
 import com.urbanairship.json.JsonValue
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
@@ -34,6 +35,7 @@ public class DisplayAdapterFactoryTest {
     private val cachedAsset: AirshipCachedAssets = mockk(relaxed = true)
     private val activityMonitor: ActivityMonitor = mockk(relaxed = true)
     private val networkMonitor: NetworkMonitor = mockk(relaxed = true)
+    private val actionRunner: InAppActionRunner = mockk()
 
     private lateinit var factory: DisplayAdapterFactory
 
@@ -143,13 +145,13 @@ public class DisplayAdapterFactoryTest {
             )
         )
 
-        assertTrue(factory.makeAdapter(message, cachedAsset).isFailure)
+        assertTrue(factory.makeAdapter(message, cachedAsset, actionRunner).isFailure)
     }
 
     private fun <T : DelegatingDisplayAdapter.Delegate> verifyAirshipAdapter(content: InAppMessageDisplayContent) {
         val message = InAppMessage(name = "test", displayContent = content)
 
-        val adapter = factory.makeAdapter(message, cachedAsset).getOrThrow()
+        val adapter = factory.makeAdapter(message, cachedAsset, actionRunner).getOrThrow()
         val unwrappedAdapter = adapter as? DelegatingDisplayAdapter
         @Suppress("UNCHECKED_CAST")
         if (unwrappedAdapter == null || (unwrappedAdapter.delegate as? T) == null) {
@@ -171,7 +173,7 @@ public class DisplayAdapterFactoryTest {
             expected
         }
 
-        val actual = factory.makeAdapter(message, cachedAsset).getOrThrow()
+        val actual = factory.makeAdapter(message, cachedAsset, actionRunner).getOrThrow()
         val unwrapped = actual as? CustomDisplayAdapterWrapper
         if (unwrapped == null || unwrapped.adapter != expected) {
             fail()

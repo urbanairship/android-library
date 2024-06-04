@@ -90,14 +90,6 @@ public interface ThomasListenerInterface {
     public fun onFormDisplay(formInfo: FormInfo, state: LayoutData)
 
     /**
-     * Called when actions should be run.
-     *
-     * @param actions The actions payload.
-     * @param state The layout sate.
-     */
-    public fun onRunActions(actions: Map<String, @JvmSuppressWildcards JsonValue>, state: LayoutData)
-
-    /**
      * Called when a pager changes its page due to a tap.
      *
      * @param gestureId The gesture Id.

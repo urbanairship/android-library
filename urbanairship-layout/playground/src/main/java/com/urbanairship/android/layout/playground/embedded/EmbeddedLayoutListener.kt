@@ -65,10 +65,6 @@ internal class EmbeddedLayoutListener(
         UALog.d { "$layoutName - onFormDisplay(formInfo: $formInfo, state: $state)" }
     }
 
-    override fun onRunActions(actions: Map<String, JsonValue>, state: LayoutData) {
-        UALog.d { "$layoutName - onRunActions(actions: $actions, state: $state)" }
-    }
-
     override fun onPagerGesture(
         gestureId: String,
         reportingMetadata: JsonValue?,

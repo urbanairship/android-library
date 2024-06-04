@@ -34,7 +34,8 @@ public class AutomationExecutorTest {
         ),
         displayAdapter = mockk(),
         displayCoordinator = mockk(),
-        analytics = messageAnalytics
+        analytics = messageAnalytics,
+        actionRunner = mockk()
     )
 
     private val executor = AutomationExecutor(actionExecutor, messageExecutor, remoteDataAccess)

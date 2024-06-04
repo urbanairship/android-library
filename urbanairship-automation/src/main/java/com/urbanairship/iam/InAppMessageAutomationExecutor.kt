@@ -5,7 +5,9 @@ package com.urbanairship.iam
 import android.content.Context
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
-import com.urbanairship.actions.ActionRunRequestFactory
+import com.urbanairship.actions.Action
+import com.urbanairship.actions.Action.Situation
+import com.urbanairship.actions.run
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.engine.InterruptedBehavior
@@ -30,7 +32,6 @@ internal class InAppMessageAutomationExecutor(
     private val assetManager: AssetCacheManager,
     private val analyticsFactory: InAppMessageAnalyticsFactory,
     private val scheduleConditionsChangedNotifier: ScheduleConditionsChangedNotifier,
-    private val actionRunnerFactory: ActionRunRequestFactory,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) : AutomationExecutorDelegate<PreparedInAppMessageData> {
 
@@ -110,7 +111,7 @@ internal class InAppMessageAutomationExecutor(
                     DisplayResult.FINISHED -> ScheduleExecuteResult.FINISHED
                 }
                 data.message.actions?.let {
-                    com.urbanairship.iam.InAppActionUtils.runActions(it, actionRunnerFactory)
+                    data.actionRunner.run(it.map, Action.SITUATION_AUTOMATION)
                 }
             } catch (ex: Exception) {
                 UALog.e(ex) { "Failed to display message" }

@@ -21,6 +21,7 @@ import com.urbanairship.android.layout.environment.DefaultViewEnvironment
 import com.urbanairship.android.layout.environment.ExternalReporter
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.Reporter
+import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.LayoutInfo
@@ -72,6 +73,7 @@ public class EmbeddedLayout(
     private val webViewClientFactory: Factory<AirshipWebViewClient>? = args.webViewClientFactory
     private val externalListener: ThomasListenerInterface = args.listener
     private val imageCache: ImageCache? = args.imageCache
+    private val actionRunner: ThomasActionRunner = args.actionRunner
 
     public val viewInstanceId: String =  payload.hash.toString()
 
@@ -162,7 +164,7 @@ public class EmbeddedLayout(
         try {
             val modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
-                listener = externalListener,
+                actionRunner = actionRunner,
                 displayTimer = timer
             )
             val model = viewModel.getOrCreateModel(

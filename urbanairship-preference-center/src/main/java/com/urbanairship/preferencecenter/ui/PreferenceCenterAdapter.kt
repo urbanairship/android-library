@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.Provider
 import com.urbanairship.contacts.ContactChannel
 import com.urbanairship.contacts.Scope
+import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.ui.item.AlertItem
@@ -28,7 +29,6 @@ import com.urbanairship.preferencecenter.ui.item.PrefCenterItem.Companion.TYPE_S
 import com.urbanairship.preferencecenter.ui.item.PrefCenterItem.Companion.TYPE_SECTION_BREAK
 import com.urbanairship.preferencecenter.ui.item.SectionBreakItem
 import com.urbanairship.preferencecenter.ui.item.SectionItem
-import com.urbanairship.preferencecenter.util.ActionsMap
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -78,7 +78,7 @@ internal class PreferenceCenterAdapter(
         ) : ItemEvent()
 
         data class ButtonClick(
-            val actions: ActionsMap
+            val actions: Map<String, JsonValue>
         ) : ItemEvent()
 
         data class ContactManagementAddClick(
@@ -258,7 +258,7 @@ internal class PreferenceCenterAdapter(
         }
     }
 
-    private fun emitActions(actions: ActionsMap) {
+    private fun emitActions(actions: Map<String, JsonValue>) {
         scopeProvider().launch {
             itemEventsFlow.emit(ItemEvent.ButtonClick(actions))
         }

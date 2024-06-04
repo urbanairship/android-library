@@ -272,30 +272,6 @@ public class LayoutAdapterListenerTest {
         assertNull(displayResult)
     }
 
-    @Test
-    public fun testPromptPermissionResult() {
-        timer.start()
-
-        listener.onPromptPermissionResult(
-            permission = Permission.DISPLAY_NOTIFICATIONS,
-            before = PermissionStatus.DENIED,
-            after = PermissionStatus.GRANTED,
-            layoutContext = defaultLayoutData)
-
-        verifyEvents(listOf(
-            Pair(
-                InAppPermissionResultEvent(
-                    permission = Permission.DISPLAY_NOTIFICATIONS,
-                    startingStatus = PermissionStatus.DENIED,
-                    endingStatus = PermissionStatus.GRANTED
-                ),
-                defaultLayoutData
-            )
-        ))
-
-        assertTrue(timer.isStarted)
-        assertNull(displayResult)
-    }
 
     @Test
     public fun testDismissPagerSummary() {

@@ -86,7 +86,8 @@ public class AutomationPreparerTest {
                 displayContent = InAppMessageDisplayContent.CustomContent(Custom(JsonValue.wrap("custom")))),
             displayAdapter = mockk(relaxed = true),
             displayCoordinator = mockk(relaxed = true),
-            analytics = mockk(relaxed = true)
+            analytics = mockk(relaxed = true),
+            actionRunner = mockk()
         )
 
         coEvery { audienceResolver.resolve(any(), any()) } returns Result.success(true)
@@ -562,7 +563,8 @@ public class AutomationPreparerTest {
                 source =  InAppMessage.Source.REMOTE_DATA),
             displayAdapter = mockk(relaxed = true),
             displayCoordinator = mockk(relaxed = true),
-            analytics = mockk(relaxed = true)
+            analytics = mockk(relaxed = true),
+            actionRunner = mockk()
         )
 
         coEvery { messagePreparer.prepare(any(), any()) } answers {

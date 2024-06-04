@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.analytics.events
 
+import androidx.core.util.ObjectsCompat
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -40,4 +41,19 @@ internal class InAppPermissionResultEvent(
             ENDING_STATUS to endingStatus
         ).toJsonValue()
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as InAppPermissionResultEvent
+
+        if (reportData != other.reportData) return false
+        if (name != other.name) return false
+        if (data != other.data) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int = ObjectsCompat.hash(name, data)
 }

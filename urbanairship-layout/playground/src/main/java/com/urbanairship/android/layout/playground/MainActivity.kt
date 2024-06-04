@@ -14,11 +14,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import com.urbanairship.UALog
+import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionRunRequest
+import com.urbanairship.actions.DefaultActionRunner
 import com.urbanairship.actions.PermissionResultReceiver
 import com.urbanairship.actions.PromptPermissionAction
+import com.urbanairship.actions.run
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.ThomasListenerInterface
+import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
 import com.urbanairship.android.layout.playground.embedded.EmbeddedActivity
@@ -124,10 +128,14 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             val payload = LayoutInfo(jsonMap)
-            Thomas.prepareDisplay(payload, emptyJsonMap(), EmbeddedViewManager)
-                .setInAppActivityMonitor(GlobalActivityMonitor.shared(applicationContext))
-                .setListener(thomasListener)
-                .display(this)
+            Thomas.prepareDisplay(
+                payload = payload,
+                extras = emptyJsonMap(),
+                activityMonitor = GlobalActivityMonitor.shared(applicationContext),
+                listener = thomasListener,
+                actionRunner = actionRunner,
+                embeddedViewManager = EmbeddedViewManager
+            ).display(this)
         } catch (e: Exception) {
             UALog.e(e)
             Toast.makeText(this, "Error trying to display layout", Toast.LENGTH_LONG).show()
@@ -188,31 +196,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        override fun onRunActions(actions: Map<String, JsonValue>, state: LayoutData) {
-            "onRunActions(actions: $actions, state: $state)".let {
-                events.add(it)
-                UALog.d(it)
-            }
-
-            val permissionResultReceiver = object : PermissionResultReceiver(Handler(Looper.getMainLooper())) {
-                override fun onResult(permission: Permission, before: PermissionStatus, after: PermissionStatus) {
-                    "onPermissionResult(permission: $permission, before: $before, after: $after, state: $state)".let {
-                        events.add(it)
-                        UALog.d(it)
-                    }
-                }
-            }
-
-            actions.forEach {
-                val bundle = Bundle()
-                bundle.putParcelable(
-                    PromptPermissionAction.RECEIVER_METADATA,
-                    permissionResultReceiver
-                )
-                ActionRunRequest.createRequest(it.key).setMetadata(bundle).setValue(it.value).run()
-            }
-        }
-
         override fun onPagerGesture(
             gestureId: String,
             reportingMetadata: JsonValue?,
@@ -255,6 +238,12 @@ class MainActivity : AppCompatActivity() {
             UALog.d("-----------------------")
             UALog.d("\n")
             events.clear()
+        }
+    }
+
+    private val actionRunner: ThomasActionRunner = object: ThomasActionRunner {
+        override fun run(actions: Map<String, JsonValue>, state: LayoutData) {
+            DefaultActionRunner.run(actions, Action.SITUATION_AUTOMATION)
         }
     }
 }

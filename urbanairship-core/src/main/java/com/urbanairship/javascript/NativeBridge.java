@@ -22,8 +22,9 @@ import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestExtender;
-import com.urbanairship.actions.ActionRunRequestFactory;
+import com.urbanairship.actions.ActionRunner;
 import com.urbanairship.actions.ActionValue;
+import com.urbanairship.actions.DefaultActionRunner;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.util.UAStringUtil;
@@ -97,7 +98,7 @@ public class NativeBridge {
 
     private ActionCompletionCallback actionCompletionCallback;
     private final Executor executor;
-    private final ActionRunRequestFactory actionRunRequestFactory;
+    private final ActionRunner actionRunner;
 
     public interface CommandDelegate {
         void onClose();
@@ -105,16 +106,16 @@ public class NativeBridge {
     }
 
     public NativeBridge() {
-        this(new ActionRunRequestFactory(), AirshipExecutors.newSerialExecutor());
+        this(DefaultActionRunner.INSTANCE, AirshipExecutors.newSerialExecutor());
     }
 
-    public NativeBridge(@NonNull ActionRunRequestFactory actionRunRequestFactory) {
-        this(actionRunRequestFactory, AirshipExecutors.newSerialExecutor());
+    public NativeBridge(@NonNull ActionRunner actionRunner) {
+        this(actionRunner, AirshipExecutors.newSerialExecutor());
     }
 
     @VisibleForTesting
-    NativeBridge(ActionRunRequestFactory actionRunRequestFactory, @NonNull Executor executor) {
-        this.actionRunRequestFactory = actionRunRequestFactory;
+    NativeBridge(ActionRunner actionRunner, @NonNull Executor executor) {
+        this.actionRunner = actionRunner;
         this.executor = executor;
     }
 
@@ -213,21 +214,13 @@ public class NativeBridge {
         UALog.i("Loading Airship Javascript interface.");
 
         final PendingResult<String> pendingLoad = new PendingResult<>();
-        pendingLoad.addResultCallback(Looper.myLooper(), new ResultCallback<String>() {
-            @Override
-            public void onResult(@Nullable String javaScript) {
-                if (javaScript != null) {
-                    javaScriptExecutor.executeJavaScript(javaScript);
-                }
+        pendingLoad.addResultCallback(Looper.myLooper(), javaScript -> {
+            if (javaScript != null) {
+                javaScriptExecutor.executeJavaScript(javaScript);
             }
         });
 
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                pendingLoad.setResult(javaScriptEnvironment.getJavaScript(context));
-            }
-        });
+        executor.execute(() -> pendingLoad.setResult(javaScriptEnvironment.getJavaScript(context)));
 
         return pendingLoad;
     }
@@ -238,8 +231,10 @@ public class NativeBridge {
      * @param actionRunRequestExtender The action request extender.
      * @param arguments Map of action to action arguments to run.
      */
-    private void runActions(@NonNull ActionRunRequestExtender actionRunRequestExtender,
-                            @Nullable Map<String, List<ActionValue>> arguments) {
+    private void runActions(
+            @NonNull ActionRunRequestExtender actionRunRequestExtender,
+            @Nullable Map<String, List<ActionValue>> arguments
+    ) {
         if (arguments == null) {
             return;
         }
@@ -249,21 +244,15 @@ public class NativeBridge {
             if (args == null) {
                 continue;
             }
-            for (ActionValue arg : args) {
-                ActionRunRequest request = actionRunRequestFactory.createActionRequest(actionName)
-                                                                  .setValue(arg)
-                                                                  .setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
 
-                request = actionRunRequestExtender.extend(request);
-                request.run(new ActionCompletionCallback() {
-                    @Override
-                    public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
-                        ActionCompletionCallback callback = actionCompletionCallback;
-                        if (callback != null) {
-                            callback.onFinish(arguments, result);
-                        }
-                    }
-                });
+            for (ActionValue arg : args) {
+                actionRunner.run(
+                        actionName,
+                        arg,
+                        Action.SITUATION_WEB_VIEW_INVOCATION,
+                        actionRunRequestExtender,
+                        actionCompletionCallback
+                );
             }
         }
     }
@@ -292,44 +281,46 @@ public class NativeBridge {
             return;
         }
 
-        // Run the action
-        ActionRunRequest request = actionRunRequestFactory.createActionRequest(name)
-                                                          .setValue(actionValue)
-                                                          .setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
 
-        request = actionRunRequestExtender.extend(request);
 
-        request.run(new ActionCompletionCallback() {
-            @Override
-            public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
+        actionRunner.run(
+                name,
+                actionValue,
+                Action.SITUATION_WEB_VIEW_INVOCATION,
+                actionRunRequestExtender,
+                new ActionCompletionCallback() {
+                    @Override
+                    public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
 
-                String errorMessage = null;
-                switch (result.getStatus()) {
-                    case ActionResult.STATUS_COMPLETED:
-                        break;
-                    case ActionResult.STATUS_ACTION_NOT_FOUND:
-                        errorMessage = String.format("Action %s not found", name);
-                        break;
-                    case ActionResult.STATUS_REJECTED_ARGUMENTS:
-                        errorMessage = String.format("Action %s rejected its arguments", name);
-                        break;
-                    case ActionResult.STATUS_EXECUTION_ERROR:
-                        if (result.getException() != null) {
-                            errorMessage = result.getException().getMessage();
-                        } else {
-                            errorMessage = String.format("Action %s failed with unspecified error", name);
+                        String errorMessage = null;
+                        switch (result.getStatus()) {
+                            case ActionResult.STATUS_COMPLETED:
+                                break;
+                            case ActionResult.STATUS_ACTION_NOT_FOUND:
+                                errorMessage = String.format("Action %s not found", name);
+                                break;
+                            case ActionResult.STATUS_REJECTED_ARGUMENTS:
+                                errorMessage = String.format("Action %s rejected its arguments", name);
+                                break;
+                            case ActionResult.STATUS_EXECUTION_ERROR:
+                                if (result.getException() != null) {
+                                    errorMessage = result.getException().getMessage();
+                                } else {
+                                    errorMessage = String.format("Action %s failed with unspecified error", name);
+                                }
                         }
-                }
 
-                triggerCallback(javaScriptExecutor, errorMessage, result.getValue(), callbackKey);
+                        triggerCallback(javaScriptExecutor, errorMessage, result.getValue(), callbackKey);
 
-                synchronized (this) {
-                    if (actionCompletionCallback != null) {
-                        actionCompletionCallback.onFinish(arguments, result);
+                        synchronized (this) {
+                            if (actionCompletionCallback != null) {
+                                actionCompletionCallback.onFinish(arguments, result);
+                            }
+                        }
                     }
                 }
-            }
-        });
+        );
+
     }
 
     /**

@@ -20,8 +20,7 @@ internal open class InAppMessageWebViewClient: AirshipWebViewClient {
         this.messageExtras= messageExtras
     }
 
-    @VisibleForTesting
-    internal constructor(nativeBridge: NativeBridge, extras: JsonMap?) : super(nativeBridge) {
+    constructor(nativeBridge: NativeBridge, extras: JsonMap?) : super(nativeBridge) {
         messageExtras = extras
     }
 

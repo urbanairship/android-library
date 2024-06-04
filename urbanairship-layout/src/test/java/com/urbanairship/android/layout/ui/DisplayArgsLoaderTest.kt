@@ -67,7 +67,7 @@ public class DisplayArgsLoaderTest : TestCase() {
     public fun testParcelable() {
         val imageCache = ImageCache { null }
         val clientFactory: Factory<AirshipWebViewClient> = Factory { AirshipWebViewClient() }
-        val displayArgs = DisplayArgs(layoutInfo, listener, activityMonitor, clientFactory, imageCache)
+        val displayArgs = DisplayArgs(layoutInfo, listener, activityMonitor,  mockk(), clientFactory, imageCache)
         val loader: DisplayArgsLoader = DisplayArgsLoader.newLoader(displayArgs)
 
         // Write
@@ -97,7 +97,7 @@ public class DisplayArgsLoaderTest : TestCase() {
     @Test(expected = DisplayArgsLoader.LoadException::class)
     @Throws(DisplayArgsLoader.LoadException::class)
     public fun testDismiss() {
-        val displayArgs = DisplayArgs(layoutInfo, listener, activityMonitor, null, null)
+        val displayArgs = DisplayArgs(layoutInfo, listener, activityMonitor,  mockk(), null, null)
         val loader: DisplayArgsLoader = DisplayArgsLoader.newLoader(displayArgs)
         loader.dispose()
         loader.displayArgs
@@ -106,7 +106,7 @@ public class DisplayArgsLoaderTest : TestCase() {
     @Test(expected = DisplayArgsLoader.LoadException::class)
     @Throws(DisplayArgsLoader.LoadException::class)
     public fun testDismissParcel() {
-        val displayArgs = DisplayArgs(layoutInfo, listener, activityMonitor, null, null)
+        val displayArgs = DisplayArgs(layoutInfo, listener, activityMonitor,  mockk(), null, null)
         val loader: DisplayArgsLoader = DisplayArgsLoader.newLoader(displayArgs)
         val parcel = Parcel.obtain()
         loader.writeToParcel(parcel, 0)

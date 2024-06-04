@@ -9,11 +9,13 @@ import com.urbanairship.android.layout.display.DisplayException
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.embedded.EmbeddedViewManager
 import com.urbanairship.iam.InAppMessageWebViewClient
+import com.urbanairship.iam.actions.InAppActionRunner
 import com.urbanairship.iam.adapter.DelegatingDisplayAdapter
 import com.urbanairship.iam.adapter.DisplayResult
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.InAppMessageDisplayContent
+import com.urbanairship.javascript.NativeBridge
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.emptyJsonMap
 import java.net.MalformedURLException
@@ -27,7 +29,8 @@ internal class AirshipLayoutDisplayDelegate(
     private val displayContent: InAppMessageDisplayContent.AirshipLayoutContent,
     private val assets: AirshipCachedAssets?,
     private val messageExtras: JsonMap?,
-    private val activityMonitor: ActivityMonitor
+    private val activityMonitor: ActivityMonitor,
+    private val actionRunner: InAppActionRunner
 ) : DelegatingDisplayAdapter.Delegate {
 
     override val activityPredicate: Predicate<Activity>? = null
@@ -48,12 +51,16 @@ internal class AirshipLayoutDisplayDelegate(
 
         val extras = messageExtras ?: emptyJsonMap()
 
-        val request =
-            Thomas.prepareDisplay(displayContent.layout.layoutInfo, extras, EmbeddedViewManager)
-                .setListener(displayListener)
-                .setImageCache { url -> assets?.cacheUri(url)?.path }
-                .setWebViewClientFactory { InAppMessageWebViewClient(messageExtras) }
-                .setInAppActivityMonitor(activityMonitor)
+        val request = Thomas.prepareDisplay(
+            payload = displayContent.layout.layoutInfo,
+            listener = displayListener,
+            activityMonitor = activityMonitor,
+            actionRunner = actionRunner,
+            webViewClientFactory = { InAppMessageWebViewClient( NativeBridge(actionRunner), messageExtras) },
+            extras = extras,
+            imageCache = { url -> assets?.cacheUri(url)?.path },
+            embeddedViewManager = EmbeddedViewManager
+        )
 
         return withContext(Dispatchers.Main) {
             suspendCancellableCoroutine {

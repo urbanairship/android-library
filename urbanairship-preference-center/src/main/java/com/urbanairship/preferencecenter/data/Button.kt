@@ -2,10 +2,10 @@ package com.urbanairship.preferencecenter.data
 
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
-import com.urbanairship.preferencecenter.util.ActionsMap
 
 /**
  * Button attributes.
@@ -13,7 +13,7 @@ import com.urbanairship.preferencecenter.util.ActionsMap
 data class Button(
     val text: String,
     val contentDescription: String?,
-    val actions: ActionsMap
+    val actions: Map<String, JsonValue>
 ) {
     companion object {
         private const val KEY_TEXT = "text"

@@ -7,11 +7,11 @@ import android.widget.Button
 import android.widget.ImageView
 import androidx.annotation.LayoutRes
 import androidx.core.view.isVisible
+import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.data.Conditions
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.ui.CommonViewHolder
-import com.urbanairship.preferencecenter.util.ActionsMap
 import com.urbanairship.preferencecenter.util.loadImageOrHide
 import com.urbanairship.preferencecenter.util.setTextOrHide
 
@@ -26,7 +26,7 @@ internal data class AlertItem(val item: Item.Alert) :
         fun createViewHolder(
             parent: ViewGroup,
             inflater: LayoutInflater = LayoutInflater.from(parent.context),
-            onClick: (actions: ActionsMap) -> Unit
+            onClick: (actions: Map<String, JsonValue>) -> Unit
         ): ViewHolder {
             val view = inflater.inflate(LAYOUT, parent, false)
             return ViewHolder(view, onClick)
@@ -56,7 +56,7 @@ internal data class AlertItem(val item: Item.Alert) :
 
     class ViewHolder(
         itemView: View,
-        private val onClick: (actions: ActionsMap) -> Unit
+        private val onClick: (actions: Map<String, JsonValue>) -> Unit
     ) : CommonViewHolder<AlertItem>(itemView) {
 
         private val iconView: ImageView = itemView.findViewById(R.id.ua_pref_icon)

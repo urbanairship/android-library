@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import com.urbanairship.Predicate
+import com.urbanairship.actions.ActionRunner
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.iam.adapter.InAppDisplayArgs
 import com.urbanairship.iam.adapter.InAppDisplayArgsLoader
@@ -27,7 +28,8 @@ import kotlinx.coroutines.withContext
 internal class FullscreenDisplayDelegate(
     private val displayContent: InAppMessageDisplayContent.FullscreenContent,
     private val assets: AirshipCachedAssets?,
-    private val activityMonitor: ActivityMonitor
+    private val activityMonitor: ActivityMonitor,
+    private val actionRunner: ActionRunner
 ) : DelegatingDisplayAdapter.Delegate {
 
     override val activityPredicate: Predicate<Activity>? = null
@@ -48,7 +50,8 @@ internal class FullscreenDisplayDelegate(
         val displayArgs = InAppDisplayArgs(
             displayContent = displayContent,
             assets = assets,
-            displayListener = displayListener
+            displayListener = displayListener,
+            actionRunner = actionRunner
         )
 
         val loader = InAppDisplayArgsLoader.newLoader(displayArgs)

@@ -5,26 +5,24 @@ package com.urbanairship.javascript;
 import android.net.Uri;
 
 import com.urbanairship.BaseTestCase;
-import com.urbanairship.StubbedActionRunRequest;
 import com.urbanairship.TestApplication;
-import com.urbanairship.UAirship;
 import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionCompletionCallback;
 import com.urbanairship.actions.ActionResult;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionRunRequestExtender;
-import com.urbanairship.actions.ActionRunRequestFactory;
+import com.urbanairship.actions.ActionRunner;
 import com.urbanairship.actions.ActionTestUtils;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.actions.ActionValueException;
 import com.urbanairship.contacts.Contact;
+import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,44 +30,39 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import androidx.annotation.NonNull;
+
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 public class NativeBridgeTest extends BaseTestCase {
 
+    private ActionRunner actionRunner = mock(ActionRunner.class);
+    private ActionRunRequestExtender runRequestExtender = new ActionRunRequestExtender() {
+        @NonNull
+        @Override
+        public ActionRunRequest extend(@NonNull ActionRunRequest request) {
+            return request;
+        }
+    };
 
-    private ActionRunRequestFactory runRequestFactory = mock(ActionRunRequestFactory.class);
-    private ActionRunRequestExtender runRequestExtender = mock(ActionRunRequestExtender.class);
     private JavaScriptExecutor javaScriptExecutor = mock(JavaScriptExecutor.class);
     private NativeBridge.CommandDelegate commandDelegate = mock(NativeBridge.CommandDelegate.class);
     private Contact contact = mock(Contact.class);
 
-    private Executor executor = new Executor() {
-        @Override
-        public void execute(Runnable runnable) {
-            runnable.run();
-        }
-    };
+    private Executor executor = Runnable::run;
 
     private NativeBridge nativeBridge;
 
     @Before
     public void setup() {
-        when(runRequestExtender.extend(any(ActionRunRequest.class))).then(new Answer<ActionRunRequest>() {
-            @Override
-            public ActionRunRequest answer(InvocationOnMock invocation) {
-                return (ActionRunRequest) invocation.getArgument(0);
-            }
-        });
         TestApplication.getApplication().setContact(contact);
-        nativeBridge = new NativeBridge(runRequestFactory, executor);
+        nativeBridge = new NativeBridge(actionRunner, executor);
     }
 
     /**
@@ -77,27 +70,14 @@ public class NativeBridgeTest extends BaseTestCase {
      */
     @Test
     public void testRunBasicActionsCommand() {
-        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("action")).thenReturn(actionRunRequest);
-
-        ActionRunRequest anotherActionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("anotherAction")).thenReturn(anotherActionRunRequest);
-
         String url = "uairship://run-basic-actions?action=value&anotherAction=anotherValue";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         // Verify that the action runner ran the "action" action
-        verify(actionRunRequest).setValue(ActionValue.wrap("value"));
-        verify(actionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
-        verify(actionRunRequest).run(any(ActionCompletionCallback.class));
+        verify(actionRunner).run("action", ActionValue.wrap("value"), Action.SITUATION_WEB_VIEW_INVOCATION, runRequestExtender, null);
 
         // Verify that the action runner ran the "anotherAction" action
-        verify(anotherActionRunRequest).setValue(eq(ActionValue.wrap("anotherValue")));
-        verify(anotherActionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
-        verify(anotherActionRunRequest).run(any(ActionCompletionCallback.class));
-
-        verify(runRequestExtender).extend(actionRunRequest);
-        verify(runRequestExtender).extend(anotherActionRunRequest);
+        verify(actionRunner).run("anotherAction", ActionValue.wrap("anotherValue"), Action.SITUATION_WEB_VIEW_INVOCATION, runRequestExtender, null);
 
         verifyNoInteractions(javaScriptExecutor, commandDelegate);
     }
@@ -107,27 +87,16 @@ public class NativeBridgeTest extends BaseTestCase {
      */
     @Test
     public void testRunBasicActionsCommandEncodedParameters() {
-        ActionRunRequest removeTagRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        ActionRunRequest addTagRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("^-t")).thenReturn(removeTagRunRequest);
-        when(runRequestFactory.createActionRequest("^+t")).thenReturn(addTagRunRequest);
-
         // uairship://run-basic-actions?^+t=addTag&^-t=removeTag
         String encodedUrl = "uairship://run-basic-actions?%5E%2Bt=addTag&%5E-t=removeTag";
         assertTrue(nativeBridge.onHandleCommand(encodedUrl, javaScriptExecutor, runRequestExtender, commandDelegate));
 
+
         // Verify that the action runner ran the removeTag action
-        verify(removeTagRunRequest).setValue(ActionValue.wrap("removeTag"));
-        verify(removeTagRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
-        verify(removeTagRunRequest).run(any(ActionCompletionCallback.class));
+        verify(actionRunner).run("^-t", ActionValue.wrap("removeTag"), Action.SITUATION_WEB_VIEW_INVOCATION, runRequestExtender, null);
 
         // Verify that the action runner ran the addTag action
-        verify(addTagRunRequest).setValue(ActionValue.wrap("addTag"));
-        verify(addTagRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
-        verify(addTagRunRequest).run(any(ActionCompletionCallback.class));
-
-        verify(runRequestExtender).extend(removeTagRunRequest);
-        verify(runRequestExtender).extend(addTagRunRequest);
+        verify(actionRunner).run("^+t", ActionValue.wrap("addTag"), Action.SITUATION_WEB_VIEW_INVOCATION, runRequestExtender, null);
 
         verifyNoInteractions(javaScriptExecutor, commandDelegate);
     }
@@ -142,7 +111,7 @@ public class NativeBridgeTest extends BaseTestCase {
         assertTrue(nativeBridge.onHandleCommand(encodedUrl, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         // Verify action were not executed
-        verify(runRequestFactory, never()).createActionRequest(Mockito.anyString());
+        verifyNoInteractions(actionRunner);
     }
 
     /**
@@ -150,16 +119,11 @@ public class NativeBridgeTest extends BaseTestCase {
      */
     @Test
     public void testRunBasicActionsCommandNoActionArgs() {
-        ActionRunRequest addTagRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("addTag")).thenReturn(addTagRunRequest);
-
         String url = "uairship://run-basic-actions?addTag";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
         // Verify that the action runner ran the addTag action
-        verify(addTagRunRequest).setValue(new ActionValue());
-        verify(addTagRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
-        verify(addTagRunRequest).run(any(ActionCompletionCallback.class));
+        verify(actionRunner).run("addTag", ActionValue.wrap(JsonValue.NULL), Action.SITUATION_WEB_VIEW_INVOCATION, runRequestExtender, null);
     }
 
     /**
@@ -170,7 +134,7 @@ public class NativeBridgeTest extends BaseTestCase {
         String url = "uairship://run-basic-actions";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
-        verify(runRequestFactory, never()).createActionRequest(Mockito.anyString());
+        verifyNoInteractions(actionRunner);
     }
 
     /**
@@ -178,12 +142,6 @@ public class NativeBridgeTest extends BaseTestCase {
      */
     @Test
     public void testRunActionsCommand() throws ActionValueException {
-        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("action")).thenReturn(actionRunRequest);
-
-        ActionRunRequest anotherActionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("anotherAction")).thenReturn(anotherActionRunRequest);
-
         // uairship://run-actions?action={"key":"value"}&anotherAction=["one","two"]
         String url = "uairship://run-actions?action=%7B%20%22key%22%3A%22value%22%20%7D&anotherAction=%5B%22one%22%2C%22two%22%5D";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
@@ -191,20 +149,15 @@ public class NativeBridgeTest extends BaseTestCase {
         // Verify the action "action" ran with a map
         Map<String, Object> expectedMap = new HashMap<>();
         expectedMap.put("key", "value");
-        verify(actionRunRequest).setValue(ActionValue.wrap(expectedMap));
-        verify(actionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
-        verify(actionRunRequest).run(any(ActionCompletionCallback.class));
+
+        verify(actionRunner).run("action", ActionValue.wrap(expectedMap), Action.SITUATION_WEB_VIEW_INVOCATION, runRequestExtender, null);
 
         // Verify that action "anotherAction" ran with a list
         List<String> expectedList = new ArrayList<>();
         expectedList.add("one");
         expectedList.add("two");
-        verify(anotherActionRunRequest).setValue(ActionValue.wrap(expectedList));
-        verify(anotherActionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
-        verify(anotherActionRunRequest).run(any(ActionCompletionCallback.class));
+        verify(actionRunner).run("anotherAction", ActionValue.wrap(expectedList), Action.SITUATION_WEB_VIEW_INVOCATION, runRequestExtender, null);
 
-        verify(runRequestExtender).extend(actionRunRequest);
-        verify(runRequestExtender).extend(anotherActionRunRequest);
 
         verifyNoInteractions(javaScriptExecutor, commandDelegate);
     }
@@ -218,7 +171,7 @@ public class NativeBridgeTest extends BaseTestCase {
         String url = "uairship://run-actions";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
 
-        verify(runRequestFactory, never()).createActionRequest(Mockito.anyString());
+        verifyNoInteractions(actionRunner);
     }
 
     /**
@@ -226,18 +179,9 @@ public class NativeBridgeTest extends BaseTestCase {
      */
     @Test
     public void testRunActionsCommandNoActionArgs() {
-        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("action")).thenReturn(actionRunRequest);
-
         String url = "uairship://run-actions?action";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
-
-        verify(actionRunRequest).setValue(new ActionValue());
-        verify(actionRunRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
-        verify(actionRunRequest).run(any(ActionCompletionCallback.class));
-
-        verify(runRequestExtender).extend(actionRunRequest);
-
+        verify(actionRunner).run("action", new ActionValue(), Action.SITUATION_WEB_VIEW_INVOCATION, runRequestExtender, null);
         verifyNoInteractions(javaScriptExecutor, commandDelegate);
     }
 
@@ -252,18 +196,14 @@ public class NativeBridgeTest extends BaseTestCase {
         ActionCompletionCallback completionCallback = mock(ActionCompletionCallback.class);
         nativeBridge.setActionCompletionCallback(completionCallback);
 
-        ActionRunRequest addTagRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("addTag")).thenReturn(addTagRunRequest);
+        doAnswer(invocation -> {
+            Object[] args = invocation.getArguments();
+            ActionCompletionCallback callback = (ActionCompletionCallback) args[4];
+            callback.onFinish(arguments, result);
+            return null;
 
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) {
-                Object[] args = invocation.getArguments();
-                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(arguments, result);
-                return null;
-            }
-        }).when(addTagRunRequest).run(any(ActionCompletionCallback.class));
+        }).when(actionRunner).run(eq("addTag"), eq(ActionValue.wrap("what")), eq(Action.SITUATION_WEB_VIEW_INVOCATION), eq(runRequestExtender), any(ActionCompletionCallback.class));
+
 
         String url = "uairship://run-basic-actions?addTag=what";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
@@ -293,19 +233,14 @@ public class NativeBridgeTest extends BaseTestCase {
         final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.STATUS_ACTION_NOT_FOUND);
         final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
-        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
+        doAnswer(invocation -> {
+            Object[] args = invocation.getArguments();
+            ActionCompletionCallback callback = (ActionCompletionCallback) args[4];
+            callback.onFinish(arguments, result);
+            return null;
 
-        // Call the action completion handler on run
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) {
-                Object[] args = invocation.getArguments();
-                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(arguments, result);
-                return null;
-            }
-        }).when(runRequest).run(any(ActionCompletionCallback.class));
+        }).when(actionRunner).run(eq("actionName"), eq(ActionValue.wrap(true)), eq(Action.SITUATION_WEB_VIEW_INVOCATION), eq(runRequestExtender), any(ActionCompletionCallback.class));
+
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
@@ -322,19 +257,14 @@ public class NativeBridgeTest extends BaseTestCase {
         final ActionResult result = ActionTestUtils.createResult(null, null, ActionResult.STATUS_REJECTED_ARGUMENTS);
         final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
-        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
+        doAnswer(invocation -> {
+            Object[] args = invocation.getArguments();
+            ActionCompletionCallback callback = (ActionCompletionCallback) args[4];
+            callback.onFinish(arguments, result);
+            return null;
 
-        // Call the action completion handler on run
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) {
-                Object[] args = invocation.getArguments();
-                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(arguments, result);
-                return null;
-            }
-        }).when(runRequest).run(any(ActionCompletionCallback.class));
+        }).when(actionRunner).run(eq("actionName"), eq(ActionValue.wrap(true)), eq(Action.SITUATION_WEB_VIEW_INVOCATION), eq(runRequestExtender), any(ActionCompletionCallback.class));
+
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
@@ -350,19 +280,14 @@ public class NativeBridgeTest extends BaseTestCase {
         final ActionResult result = ActionTestUtils.createResult(null, new Exception("error!"), ActionResult.STATUS_EXECUTION_ERROR);
         final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
-        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
+        doAnswer(invocation -> {
+            Object[] args = invocation.getArguments();
+            ActionCompletionCallback callback = (ActionCompletionCallback) args[4];
+            callback.onFinish(arguments, result);
+            return null;
 
-        // Call the action completion handler on run
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) {
-                Object[] args = invocation.getArguments();
-                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(arguments, result);
-                return null;
-            }
-        }).when(runRequest).run(any(ActionCompletionCallback.class));
+        }).when(actionRunner).run(eq("actionName"), eq(ActionValue.wrap(true)), eq(Action.SITUATION_WEB_VIEW_INVOCATION), eq(runRequestExtender), any());
+
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
@@ -379,19 +304,13 @@ public class NativeBridgeTest extends BaseTestCase {
         final ActionResult result = ActionTestUtils.createResult("action_result", null, ActionResult.STATUS_COMPLETED);
         final ActionArguments arguments = ActionTestUtils.createArgs(Action.SITUATION_WEB_VIEW_INVOCATION, "what");
 
-        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
+        doAnswer(invocation -> {
+            Object[] args = invocation.getArguments();
+            ActionCompletionCallback callback = (ActionCompletionCallback) args[4];
+            callback.onFinish(arguments, result);
+            return null;
+        }).when(actionRunner).run(eq("actionName"), eq(ActionValue.wrap(true)), eq(Action.SITUATION_WEB_VIEW_INVOCATION), eq(runRequestExtender), any());
 
-        // Call the action completion handler on run
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) {
-                Object[] args = invocation.getArguments();
-                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(arguments, result);
-                return null;
-            }
-        }).when(runRequest).run(any(ActionCompletionCallback.class));
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
@@ -400,9 +319,7 @@ public class NativeBridgeTest extends BaseTestCase {
                 .executeJavaScript("UAirship.finishAction(null, \"action_result\", 'callbackId');");
 
         // Verify the action request
-        verify(runRequest).run(any(ActionCompletionCallback.class));
-        verify(runRequest).setSituation(Action.SITUATION_WEB_VIEW_INVOCATION);
-        verify(runRequest).setValue(ActionValue.wrap(true));
+        verify(actionRunner).run(eq("actionName"), eq(ActionValue.wrap(true)), eq(Action.SITUATION_WEB_VIEW_INVOCATION), eq(runRequestExtender), any(ActionCompletionCallback.class));
     }
 
     /**
@@ -416,19 +333,14 @@ public class NativeBridgeTest extends BaseTestCase {
         ActionCompletionCallback completionCallback = mock(ActionCompletionCallback.class);
         nativeBridge.setActionCompletionCallback(completionCallback);
 
-        ActionRunRequest runRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("actionName")).thenReturn(runRequest);
+        doAnswer(invocation -> {
+            Object[] args = invocation.getArguments();
+            ActionCompletionCallback callback = (ActionCompletionCallback) args[4];
+            callback.onFinish(arguments, result);
+            return null;
 
-        // Call the action completion handler on run
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) {
-                Object[] args = invocation.getArguments();
-                ActionCompletionCallback callback = (ActionCompletionCallback) args[0];
-                callback.onFinish(arguments, result);
-                return null;
-            }
-        }).when(runRequest).run(any(ActionCompletionCallback.class));
+        }).when(actionRunner).run(eq("actionName"), eq(ActionValue.wrap(true)), eq(Action.SITUATION_WEB_VIEW_INVOCATION), eq(runRequestExtender), any(ActionCompletionCallback.class));
+
 
         String url = "uairship://run-action-cb/actionName/true/callbackId";
         assertTrue(nativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));
@@ -465,12 +377,6 @@ public class NativeBridgeTest extends BaseTestCase {
     @Test
     public void testMultiCommand() {
         NativeBridge spyNativeBridge = Mockito.spy(nativeBridge);
-
-        ActionRunRequest actionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("add_tags_action")).thenReturn(actionRunRequest);
-
-        ActionRunRequest secondActionRunRequest = Mockito.mock(StubbedActionRunRequest.class, Mockito.CALLS_REAL_METHODS);
-        when(runRequestFactory.createActionRequest("remove_tags_action")).thenReturn(secondActionRunRequest);
 
         String url = "uairship://multi?uairship%3A%2F%2Frun-basic-actions%3Fadd_tags_action%3Dcoffee%26remove_tags_action%3Dtea&uairship%3A%2F%2Frun-actions%3Fadd_tags_action%3D%255B%2522foo%2522%252C%2522bar%2522%255D&uairship%3A%2F%2Fclose";
         assertTrue(spyNativeBridge.onHandleCommand(url, javaScriptExecutor, runRequestExtender, commandDelegate));

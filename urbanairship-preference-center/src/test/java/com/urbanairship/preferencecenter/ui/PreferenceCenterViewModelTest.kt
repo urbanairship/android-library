@@ -5,12 +5,11 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.urbanairship.PendingResult
 import com.urbanairship.actions.ActionRunRequest
-import com.urbanairship.actions.ActionRunRequestFactory
+import com.urbanairship.actions.ActionRunner
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.SubscriptionListEditor
 import com.urbanairship.contacts.Contact
 import com.urbanairship.contacts.ContactChannel
-import com.urbanairship.contacts.EmailRegistrationOptions
 import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListEditor
 import com.urbanairship.contacts.SmsRegistrationOptions
@@ -45,8 +44,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -218,9 +215,7 @@ class PreferenceCenterViewModelTest {
     private lateinit var contact: Contact
     private lateinit var conditionMonitor: ConditionStateMonitor
 
-    private val testActionRunRequestFactory: ActionRunRequestFactory = mock {
-        on { createActionRequest(any()) } doReturn ActionRunRequest.createRequest("test-action")
-    }
+    private val actionRunner: ActionRunner = mock()
 
     @Before
     fun setUp() {
@@ -776,7 +771,10 @@ class PreferenceCenterViewModelTest {
             }
         }
 
-        verify(testActionRunRequestFactory, times(3)).createActionRequest(any())
+        actions.forEach {
+            verify(actionRunner, times(1)).run(name = it.key, value = it.value)
+        }
+
     }
 
     //
@@ -958,7 +956,6 @@ class PreferenceCenterViewModelTest {
         contactChannels: List<ContactChannel> = emptyList(),
         preferenceCenterId: String = config.id,
         ioDispatcher: CoroutineDispatcher = testDispatcher,
-        actionRunRequestFactory: ActionRunRequestFactory = testActionRunRequestFactory,
         mockPreferenceCenter: (PreferenceCenter.() -> Unit)? = {},
         mockChannel: (AirshipChannel.() -> Unit)? = {},
         mockContact: (Contact.() -> Unit)? = {},
@@ -1006,7 +1003,7 @@ class PreferenceCenterViewModelTest {
             channel = channel,
             contact = contact,
             ioDispatcher = ioDispatcher,
-            actionRunRequestFactory = actionRunRequestFactory,
+            actionRunner = actionRunner,
             conditionMonitor = conditionMonitor
         )
     }
