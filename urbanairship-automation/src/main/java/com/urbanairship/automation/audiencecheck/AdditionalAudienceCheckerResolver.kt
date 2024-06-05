@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.automation.audiencecheck
 
 import com.urbanairship.UALog

@@ -9,7 +9,9 @@ import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppEvent
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 import com.urbanairship.meteredusage.MeteredUsageEventEntity
 import com.urbanairship.meteredusage.MeteredUsageType
 import com.urbanairship.util.Clock
@@ -23,9 +25,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface InAppMessageAnalyticsInterface {
-    public fun recordEvent(event: InAppEvent, layoutContext: LayoutData?)
+internal interface InAppMessageAnalyticsInterface {
+    fun recordEvent(event: InAppEvent, layoutContext: LayoutData?)
+    fun customEventContext(state: LayoutData?): InAppCustomEventContext
 }
 
 internal class InAppMessageAnalytics private constructor(
@@ -163,6 +165,18 @@ internal class InAppMessageAnalytics private constructor(
         )
 
         eventRecorder.recordEvent(data)
+    }
+
+    override fun customEventContext(state: LayoutData?): InAppCustomEventContext {
+        return InAppCustomEventContext(
+            id = messageId,
+            context = InAppEventContext.makeContext(
+                reportingContext = preparedScheduleInfo.reportingContext,
+                experimentResult = preparedScheduleInfo.experimentResult,
+                layoutContext = state,
+                displayContext = displayContext.value
+            )
+        )
     }
 
     private fun shouldRecordImpression(): Boolean {

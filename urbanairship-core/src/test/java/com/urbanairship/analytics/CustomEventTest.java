@@ -50,7 +50,7 @@ public class CustomEventTest extends BaseTestCase {
      * Test creating a custom event.
      */
     @Test
-    public void testCustomEvent() throws JSONException {
+    public void testCustomEvent() {
         String eventName = createFixedSizeString('a', 255);
         String interactionId = createFixedSizeString('b', 255);
         String interactionType = createFixedSizeString('c', 255);
@@ -62,6 +62,7 @@ public class CustomEventTest extends BaseTestCase {
                                        .setInteraction(interactionType, interactionId)
                                        .setEventValue(100.123456)
                                        .setTemplateType(templateType)
+                                       .setInAppContext(JsonValue.wrap("some in-app context"))
                                        .build();
 
         EventTestUtils.validateEventValue(event, "event_name", eventName);
@@ -70,6 +71,8 @@ public class CustomEventTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, "interaction_id", interactionId);
         EventTestUtils.validateEventValue(event, "interaction_type", interactionType);
         EventTestUtils.validateEventValue(event, "template_type", templateType);
+        EventTestUtils.validateEventValue(event, "in_app", "some in-app context");
+
     }
 
     /**

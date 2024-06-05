@@ -8,6 +8,7 @@ import com.urbanairship.actions.ActionCompletionCallback
 import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ActionRunRequestExtender
 import com.urbanairship.actions.ActionRunner
+import com.urbanairship.actions.AddCustomEventAction
 import com.urbanairship.actions.PermissionResultReceiver
 import com.urbanairship.actions.PromptPermissionAction
 import com.urbanairship.android.layout.environment.ThomasActionRunner
@@ -19,7 +20,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
 
-public class InAppActionRunner(
+internal class InAppActionRunner(
     private val analytics: InAppMessageAnalyticsInterface,
     private val trackPermissionResults: Boolean,
     private val actionRequestFactory: (String) -> ActionRunRequest = { ActionRunRequest.createRequest(it) }
@@ -87,6 +88,11 @@ public class InAppActionRunner(
                 receiver
             )
         }
+
+        bundle.putString(
+            AddCustomEventAction.IN_APP_CONTEXT_METADATA_KEY,
+            analytics.customEventContext(state).toJsonValue().toString()
+        )
 
         return bundle
     }
