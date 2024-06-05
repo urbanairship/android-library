@@ -230,6 +230,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
                                                .setValue(99.99)
                                                .setTransactionId("123")
                                                .setBrand("nike")
+                                               .setCurrency("USD")
                                                .setNewItem(true)
                                                .createEvent();
 
@@ -242,6 +243,7 @@ public class RetailEventTemplateTest extends BaseTestCase {
         EventTestUtils.validateNestedEventValue(event, "properties", "id", "purchased-product-ID 1");
         EventTestUtils.validateNestedEventValue(event, "properties", "description", "This is a purchased retail event.");
         EventTestUtils.validateNestedEventValue(event, "properties", "brand", "nike");
+        EventTestUtils.validateNestedEventValue(event, "properties", "currency", "USD");
     }
 
     /**
