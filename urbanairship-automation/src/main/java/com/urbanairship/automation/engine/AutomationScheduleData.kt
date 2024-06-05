@@ -292,9 +292,7 @@ internal class AutomationScheduleData(
     }
 
     override fun toString(): String {
-        return "AutomationScheduleData(schedule=$schedule, scheduleState=$scheduleState, " +
-                "scheduleStateChangeDate=$scheduleStateChangeDate, executionCount=$executionCount, " +
-                "triggerInfo=$triggerInfo, preparedScheduleInfo=$preparedScheduleInfo)"
+        return "AutomationScheduleData(scheduleId=${schedule.identifier}, scheduleState=$scheduleState)"
     }
 
     override fun equals(other: Any?): Boolean {

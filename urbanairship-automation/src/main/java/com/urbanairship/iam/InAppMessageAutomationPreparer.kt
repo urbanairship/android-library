@@ -41,13 +41,12 @@ internal class InAppMessageAutomationPreparer(
         }
 
 
-        UALog.v { "Making display coordinator ${preparedScheduleInfo.scheduleId}" }
         val coordinator = displayCoordinatorManager.displayCoordinator(data)
-
         val analytics = analyticsFactory.makeAnalytics(data, preparedScheduleInfo)
         val actionRunner = actionRunnerFactory.makeRunner(analytics = analytics, inAppMessage = data)
 
         val adapter = displayAdapterFactory.makeAdapter(data, assets, actionRunner).getOrElse {
+            UALog.w(it) { "Failed to resolve adapter ${preparedScheduleInfo.scheduleId}" }
             return Result.failure(it)
         }
 

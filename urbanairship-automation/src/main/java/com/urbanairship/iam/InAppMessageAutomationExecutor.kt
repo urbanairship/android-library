@@ -79,13 +79,15 @@ internal class InAppMessageAutomationExecutor(
         preparedScheduleInfo: PreparedScheduleInfo
     ): ScheduleExecuteResult = withContext(Dispatchers.Main.immediate) {
 
-        val analytics = analyticsFactory.makeAnalytics(
-            message = data.message,
-            preparedScheduleInfo = preparedScheduleInfo
-        )
+        /**
+         * Suspending calls until before the message starts to display should be avoided otherwise
+         * the display will happen on another run loop and any guarantees about the state of the
+         * app are lost.
+         */
 
         if (!preparedScheduleInfo.additionalAudienceCheckResult) {
-            analytics.recordEvent(
+            UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} missed additional audience check." }
+            data.analytics.recordEvent(
                 event = InAppResolutionEvent.audienceExcluded(),
                 layoutContext = null
             )
@@ -99,6 +101,7 @@ internal class InAppMessageAutomationExecutor(
         var result = ScheduleExecuteResult.FINISHED
 
         if (preparedScheduleInfo.experimentResult?.isMatching == true) {
+            UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} part of experiment." }
             data.analytics.recordEvent(
                 event = InAppResolutionEvent.control(preparedScheduleInfo.experimentResult),
                 layoutContext = null

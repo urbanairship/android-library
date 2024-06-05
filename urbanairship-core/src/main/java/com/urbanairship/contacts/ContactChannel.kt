@@ -3,6 +3,8 @@
 @file:Suppress("ConvertObjectToDataObject")
 package com.urbanairship.contacts
 
+import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
 import androidx.core.util.ObjectsCompat
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
@@ -90,7 +92,7 @@ public sealed class ContactChannel: JsonSerializable {
     /**
      * Sms channel.
      */
-    public class Sms(
+    public class Sms @VisibleForTesting @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
         /**
          * Registration info.
          */
@@ -137,7 +139,7 @@ public sealed class ContactChannel: JsonSerializable {
             /**
              * Indicates the SMS has been registered.
              */
-            public class Registered(
+            public class Registered @VisibleForTesting @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
                 /**
                  * Channel ID.
                  */
@@ -186,7 +188,7 @@ public sealed class ContactChannel: JsonSerializable {
             /**
              * Indicates the SMS is pending registration.
              */
-            public class Pending(
+            public class Pending @VisibleForTesting @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
                 /**
                  * The MSISDN address.
                  */
@@ -291,7 +293,7 @@ public sealed class ContactChannel: JsonSerializable {
     /**
      * Email channel
      */
-    public class Email(
+    public class Email @VisibleForTesting @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
         /**
          * Registration info.
          */
@@ -340,7 +342,7 @@ public sealed class ContactChannel: JsonSerializable {
             /**
              * Indicates the Email is registered.
              */
-            public class Registered(
+            public class Registered @VisibleForTesting @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
                 /**
                  * Channel ID.
                  */
@@ -396,7 +398,7 @@ public sealed class ContactChannel: JsonSerializable {
             /**
              * Indicates the Email is pending registration.
              */
-            public class Pending(
+            public class Pending @VisibleForTesting @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
                 /**
                  * Email address.
                  */

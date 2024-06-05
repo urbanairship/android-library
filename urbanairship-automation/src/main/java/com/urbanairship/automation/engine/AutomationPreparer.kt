@@ -110,6 +110,7 @@ internal class AutomationPreparer internal constructor(
                 )
 
                 if (!match) {
+                    UALog.v { "Local audience miss for schedule ${schedule.identifier}" }
                     return@run RetryingQueue.Result.Success(
                         result = schedule.missedAudiencePrepareResult(),
                         ignoreReturnOrder = true
@@ -151,6 +152,7 @@ internal class AutomationPreparer internal constructor(
             deviceInfoProvider = deviceInfoProvider,
             overrides = schedule.additionalAudienceCheckOverrides
         ).getOrElse {
+            UALog.v(it) { "Additional audience check failed ${schedule.identifier}" }
             return Result.failure(it)
         }
 

@@ -328,19 +328,19 @@ internal class AutomationEngine(
         }
     }
 
-    private suspend fun startTaskToProcessTriggeredSchedule(scheduleID: String) {
+    private suspend fun startTaskToProcessTriggeredSchedule(scheduleId: String) {
         scope.launch {
-            UALog.v { "Processing triggered schedule $scheduleID" }
-            processTriggeredSchedule(scheduleID)
+            UALog.v { "Processing triggered schedule $scheduleId" }
+            processTriggeredSchedule(scheduleId)
         }
         // Give the task above a chance to run
         yield()
     }
 
-    private suspend fun processTriggeredSchedule(scheduleID: String) {
-        val data = store.getSchedule(scheduleID)
+    private suspend fun processTriggeredSchedule(scheduleId: String) {
+        val data = store.getSchedule(scheduleId)
         if (data == null) {
-            UALog.v { "Aborting processing schedule $scheduleID, no longer in database." }
+            UALog.v { "Aborting processing schedule $scheduleId, no longer in database." }
             return
         }
 
