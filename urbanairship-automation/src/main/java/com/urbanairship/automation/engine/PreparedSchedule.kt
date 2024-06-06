@@ -12,6 +12,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
+import java.util.UUID
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -61,7 +62,8 @@ public data class PreparedScheduleInfo(
                 contactId = content.optionalField(CONTACT_ID),
                 experimentResult = content.get(EXPERIMENT_RESULT)?.let { ExperimentResult.fromJson(it.requireMap()) },
                 reportingContext = content.get(REPORTING_CONTEXT),
-                triggerSessionId = content.requireField(TRIGGER_SESSION_ID),
+                // Default to a UUID for backwards compatibility
+                triggerSessionId = content.optionalField(TRIGGER_SESSION_ID) ?: UUID.randomUUID().toString(),
                 additionalAudienceCheckResult = content.requireField(ADDITIONAL_AUDIENCE_CHECK_RESULT)
             )
         }
