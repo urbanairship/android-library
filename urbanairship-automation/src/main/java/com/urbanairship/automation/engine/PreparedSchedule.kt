@@ -3,9 +3,9 @@
 package com.urbanairship.automation.engine
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.experiment.ExperimentResult
+import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue

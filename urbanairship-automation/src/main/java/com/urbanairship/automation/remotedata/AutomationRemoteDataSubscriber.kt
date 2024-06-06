@@ -6,8 +6,8 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
-import com.urbanairship.automation.engine.AutomationEngineInterface
 import com.urbanairship.automation.AutomationSchedule
+import com.urbanairship.automation.engine.AutomationEngineInterface
 import com.urbanairship.automation.isNewSchedule
 import com.urbanairship.automation.limits.FrequencyConstraint
 import com.urbanairship.automation.limits.FrequencyLimitManager

@@ -16,7 +16,6 @@ import com.urbanairship.automation.R
 import com.urbanairship.iam.InAppMessageActivity
 import com.urbanairship.iam.content.InAppMessageDisplayContent.ModalContent
 import com.urbanairship.iam.content.Modal
-import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.iam.info.InAppMessageTextInfo
 import com.urbanairship.iam.view.BackgroundDrawableBuilder
@@ -25,7 +24,6 @@ import com.urbanairship.iam.view.BoundedLinearLayout
 import com.urbanairship.iam.view.InAppButtonLayout
 import com.urbanairship.iam.view.InAppViewUtils
 import com.urbanairship.iam.view.MediaView
-import com.urbanairship.util.parcelableExtra
 import com.urbanairship.webkit.AirshipWebChromeClient
 import kotlin.math.max
 

@@ -3,13 +3,13 @@
 package com.urbanairship.automation.engine.triggerprocessor
 
 import com.urbanairship.UALog
-import com.urbanairship.automation.engine.AutomationEvent
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.automation.engine.AutomationScheduleData
 import com.urbanairship.automation.AutomationTrigger
+import com.urbanairship.automation.engine.AutomationEvent
+import com.urbanairship.automation.engine.AutomationScheduleData
+import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.TriggerStoreInterface
 import com.urbanairship.automation.engine.TriggerableState
-import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.util.Clock
 import kotlinx.coroutines.flow.Flow

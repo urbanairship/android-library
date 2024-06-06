@@ -52,7 +52,6 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class AutomationEngineTest {
-    private val context: Context = ApplicationProvider.getApplicationContext()
     private val clock = TestClock()
 
     private val testDispatcher = StandardTestDispatcher()
@@ -98,7 +97,6 @@ public class AutomationEngineTest {
     private val delayProcessor: AutomationDelayProcessor = mockk(relaxed = true)
 
     private val engine: AutomationEngine = AutomationEngine(
-        context = context,
         store = store,
         executor = executor,
         preparer = preparer,

@@ -7,9 +7,9 @@ import android.content.res.Resources
 import android.graphics.Color
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
-import com.urbanairship.automation.engine.AutomationEngineInterface
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.AutomationTrigger
+import com.urbanairship.automation.engine.AutomationEngineInterface
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.Banner
 import com.urbanairship.iam.content.InAppMessageDisplayContent

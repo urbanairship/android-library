@@ -10,7 +10,6 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
-import com.urbanairship.json.requireField
 import java.util.Objects
 
 /**

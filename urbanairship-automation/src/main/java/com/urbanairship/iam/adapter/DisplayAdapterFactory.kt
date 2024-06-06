@@ -4,16 +4,16 @@ package com.urbanairship.iam.adapter
 
 import android.content.Context
 import com.urbanairship.app.ActivityMonitor
+import com.urbanairship.automation.utils.NetworkMonitor
 import com.urbanairship.iam.InAppMessage
-import com.urbanairship.iam.assets.AirshipCachedAssets
-import com.urbanairship.iam.content.InAppMessageDisplayContent
+import com.urbanairship.iam.actions.InAppActionRunner
 import com.urbanairship.iam.adapter.banner.BannerDisplayDelegate
 import com.urbanairship.iam.adapter.fullscreen.FullscreenDisplayDelegate
 import com.urbanairship.iam.adapter.html.HtmlDisplayDelegate
 import com.urbanairship.iam.adapter.layout.AirshipLayoutDisplayDelegate
 import com.urbanairship.iam.adapter.modal.ModalDisplayDelegate
-import com.urbanairship.automation.utils.NetworkMonitor
-import com.urbanairship.iam.actions.InAppActionRunner
+import com.urbanairship.iam.assets.AirshipCachedAssets
+import com.urbanairship.iam.content.InAppMessageDisplayContent
 
 private typealias AdapterBuilder = (Context, InAppMessage, AirshipCachedAssets) -> CustomDisplayAdapter?
 

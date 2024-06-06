@@ -4,7 +4,6 @@ package com.urbanairship.iam.adapter.html
 import android.net.Uri
 import android.webkit.WebView
 import androidx.annotation.RestrictTo
-import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.iam.InAppMessageWebViewClient
 import com.urbanairship.javascript.NativeBridge

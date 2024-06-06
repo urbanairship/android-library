@@ -7,7 +7,6 @@ import android.util.AttributeSet
 import android.widget.LinearLayout
 import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
-import androidx.annotation.RestrictTo
 
 /** LinearLayout that supports max width. */
 internal open class BoundedLinearLayout @JvmOverloads constructor(

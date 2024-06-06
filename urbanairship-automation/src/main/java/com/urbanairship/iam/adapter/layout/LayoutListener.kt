@@ -23,12 +23,9 @@ import com.urbanairship.iam.analytics.events.InAppPageSwipeEvent
 import com.urbanairship.iam.analytics.events.InAppPageViewEvent
 import com.urbanairship.iam.analytics.events.InAppPagerCompletedEvent
 import com.urbanairship.iam.analytics.events.InAppPagerSummaryEvent
-import com.urbanairship.iam.analytics.events.InAppPermissionResultEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.analytics.events.PageViewSummary
 import com.urbanairship.json.JsonValue
-import com.urbanairship.permission.Permission
-import com.urbanairship.permission.PermissionStatus
 
 @VisibleForTesting
 internal class LayoutListener (

@@ -6,12 +6,12 @@ import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionRunner
 import com.urbanairship.actions.DefaultActionRunner
 import com.urbanairship.actions.runSuspending
-import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.AutomationSchedule
+import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.engine.InterruptedBehavior
+import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
-import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.json.JsonValue
 
 internal class ActionAutomationExecutor(val actionRunner: ActionRunner = DefaultActionRunner) : AutomationExecutorDelegate<JsonValue> {

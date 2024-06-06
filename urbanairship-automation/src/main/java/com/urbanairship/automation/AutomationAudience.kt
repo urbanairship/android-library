@@ -3,6 +3,7 @@
 package com.urbanairship.automation
 
 import com.urbanairship.audience.AudienceSelector
+import com.urbanairship.automation.AutomationAudience.MissBehavior
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable

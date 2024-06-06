@@ -7,10 +7,10 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UAirship
 import com.urbanairship.automation.engine.AutomationEngine
-import com.urbanairship.iam.InAppMessagingInterface
-import com.urbanairship.iam.legacy.LegacyInAppMessagingInterface
 import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.iam.InAppMessagingInterface
+import com.urbanairship.iam.legacy.LegacyInAppMessagingInterface
 
 /**
  * Provides a control interface for creating, canceling and executing in-app automations.

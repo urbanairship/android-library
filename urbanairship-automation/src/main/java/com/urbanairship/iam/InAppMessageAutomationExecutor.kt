@@ -6,7 +6,6 @@ import android.content.Context
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.actions.Action
-import com.urbanairship.actions.Action.Situation
 import com.urbanairship.actions.run
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.AutomationExecutorDelegate

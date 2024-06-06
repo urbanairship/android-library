@@ -2,7 +2,6 @@
 
 package com.urbanairship.automation.storage;
 
-import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 

@@ -14,7 +14,6 @@ import android.view.ViewTreeObserver
 import android.webkit.WebView
 import android.widget.ImageButton
 import android.widget.ProgressBar
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.urbanairship.UALog
 import com.urbanairship.UAirship

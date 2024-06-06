@@ -3,7 +3,6 @@ package com.urbanairship.iam
 
 import android.webkit.WebView
 import androidx.annotation.CallSuper
-import androidx.annotation.VisibleForTesting
 import com.urbanairship.javascript.JavaScriptEnvironment
 import com.urbanairship.javascript.NativeBridge
 import com.urbanairship.json.JsonMap

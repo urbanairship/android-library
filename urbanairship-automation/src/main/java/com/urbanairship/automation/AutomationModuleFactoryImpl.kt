@@ -21,15 +21,6 @@ import com.urbanairship.automation.engine.AutomationPreparer
 import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.SerialAccessAutomationStore
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
-import com.urbanairship.iam.InAppMessageAutomationExecutor
-import com.urbanairship.iam.InAppMessageAutomationPreparer
-import com.urbanairship.iam.InAppMessaging
-import com.urbanairship.iam.analytics.InAppEventRecorder
-import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
-import com.urbanairship.iam.assets.AssetCacheManager
-import com.urbanairship.iam.adapter.DisplayAdapterFactory
-import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
-import com.urbanairship.iam.legacy.LegacyInAppMessaging
 import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
@@ -42,9 +33,18 @@ import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.deferred.DeferredResolver
 import com.urbanairship.experiment.ExperimentManager
+import com.urbanairship.iam.InAppMessageAutomationExecutor
+import com.urbanairship.iam.InAppMessageAutomationPreparer
+import com.urbanairship.iam.InAppMessaging
+import com.urbanairship.iam.adapter.DisplayAdapterFactory
 import com.urbanairship.iam.analytics.DefaultInAppDisplayImpressionRuleProvider
+import com.urbanairship.iam.analytics.InAppEventRecorder
+import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.iam.analytics.MessageDisplayHistoryStore
+import com.urbanairship.iam.assets.AssetCacheManager
+import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
 import com.urbanairship.iam.legacy.LegacyAnalytics
+import com.urbanairship.iam.legacy.LegacyInAppMessaging
 import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.automation.AutomationModuleFactory
@@ -114,7 +114,6 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         )
 
         val engine = AutomationEngine(
-            context = context,
             store = automationStore,
             executor = AutomationExecutor(
                 actionExecutor = actionExecutor,

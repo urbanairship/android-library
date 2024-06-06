@@ -9,7 +9,6 @@ import android.widget.TextView
 import androidx.annotation.LayoutRes
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.ViewCompat
-import com.urbanairship.actions.ActionRunner
 import com.urbanairship.actions.run
 import com.urbanairship.automation.R
 import com.urbanairship.iam.InAppMessageActivity

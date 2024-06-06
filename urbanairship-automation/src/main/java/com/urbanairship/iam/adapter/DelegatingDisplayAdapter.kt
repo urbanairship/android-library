@@ -6,16 +6,15 @@ import android.app.Activity
 import android.content.Context
 import androidx.annotation.MainThread
 import com.urbanairship.Predicate
-import com.urbanairship.actions.ActionRunner
 import com.urbanairship.android.layout.util.UrlInfo
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.utils.DerivedStateFlow
+import com.urbanairship.automation.utils.NetworkMonitor
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.getUrlInfos
 import com.urbanairship.iam.resumedActivitiesUpdates
-import com.urbanairship.automation.utils.NetworkMonitor
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 

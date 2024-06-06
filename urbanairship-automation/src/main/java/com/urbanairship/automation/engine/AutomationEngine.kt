@@ -2,7 +2,6 @@
 
 package com.urbanairship.automation.engine
 
-import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
@@ -48,7 +47,6 @@ internal interface AutomationEngineInterface {
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class AutomationEngine(
-    private val context: Context,
     private val store: ScheduleStoreInterface,
     private val executor: AutomationExecutorInterface,
     private val preparer: AutomationPreparer,
