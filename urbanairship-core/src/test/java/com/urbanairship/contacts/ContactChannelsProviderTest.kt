@@ -4,13 +4,19 @@ import com.urbanairship.TestClock
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.http.RequestResult
+import com.urbanairship.util.TaskSleeper
 import java.util.UUID
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -26,6 +32,12 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 public class ContactChannelsProviderTest {
     private val apiClient: ContactChannelsApiClient = mockk()
+    private val taskSleeper: TaskSleeper = mockk {
+        coEvery { sleep(any()) } coAnswers {
+            val milliseconds = it.invocation.args.first() as Long
+            delay(milliseconds.milliseconds)
+        }
+    }
 
     private val audienceOverridesUpdates = MutableStateFlow(0U)
     private val audienceOverridesProvider: AudienceOverridesProvider = mockk {
@@ -38,7 +50,7 @@ public class ContactChannelsProviderTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val provider = ContactChannelsProvider(
-        apiClient, audienceOverridesProvider, contactUpdates, clock, testDispatcher
+        apiClient, audienceOverridesProvider, contactUpdates, clock, taskSleeper, testDispatcher
     )
 
     @Test
@@ -240,10 +252,56 @@ public class ContactChannelsProviderTest {
             assertTrue(this.awaitItem().isFailure)
             ensureAllEventsConsumed()
 
-            clock.currentTimeMillis += 30.seconds.inWholeMilliseconds
-            advanceTimeBy(30.seconds)
+            clock.currentTimeMillis += 10.seconds.inWholeMilliseconds
+            advanceTimeBy(10.seconds)
 
             assertEquals(secondResponse + channelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    public fun testBackoff(): TestResult = runTest(testDispatcher) {
+        val response = listOf(
+            makeRegisteredSmsChannel(),
+        )
+
+        coEvery { apiClient.fetch("some-contact-id") } returnsMany listOf(
+            makeFailedRequest(),
+            makeFailedRequest(),
+            makeFailedRequest(),
+            makeFailedRequest(),
+            makeRequestResult(response),
+        )
+
+        val channelOverrides = listOf(
+            ContactChannelMutation.Associate(makePendingSmsChannel()),
+            ContactChannelMutation.Associate(makePendingEmailChannel())
+        )
+
+        coEvery { audienceOverridesProvider.contactOverrides("some-contact-id") } returns AudienceOverrides.Contact(
+            channels = channelOverrides
+        )
+
+        provider.contactChannels.test {
+            ensureAllEventsConsumed()
+
+            contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDateMs = 0)
+            assertTrue(this.awaitItem().isFailure)
+
+            clock.currentTimeMillis += 130.seconds.inWholeMilliseconds
+            advanceTimeBy(130.seconds)
+            assertEquals(response + channelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
+
+            ensureAllEventsConsumed()
+        }
+
+        coVerifyOrder {
+            taskSleeper.sleep(10.seconds)
+            taskSleeper.sleep(20.seconds)
+            taskSleeper.sleep(40.seconds)
+            taskSleeper.sleep(1.minutes)
+            taskSleeper.sleep(10.minutes)
         }
     }
 

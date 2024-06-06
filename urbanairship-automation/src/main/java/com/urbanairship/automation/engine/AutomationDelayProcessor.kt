@@ -7,7 +7,7 @@ import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.AutomationAppState
 import com.urbanairship.automation.AutomationDelay
-import com.urbanairship.automation.utils.TaskSleeper
+import com.urbanairship.util.TaskSleeper
 import com.urbanairship.util.Clock
 import java.util.concurrent.TimeUnit
 import kotlin.math.max

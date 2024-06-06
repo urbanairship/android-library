@@ -4,6 +4,7 @@ package com.urbanairship.automation.utils
 
 import com.urbanairship.UALog
 import com.urbanairship.remoteconfig.RetryingQueueConfig
+import com.urbanairship.util.TaskSleeper
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds

@@ -12,7 +12,7 @@ import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.updateOrCreate
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
-import com.urbanairship.automation.utils.TaskSleeper
+import com.urbanairship.util.TaskSleeper
 import com.urbanairship.util.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher

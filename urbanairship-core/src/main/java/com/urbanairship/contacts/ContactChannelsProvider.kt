@@ -7,8 +7,10 @@ import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.util.CachedValue
 import com.urbanairship.util.Clock
+import com.urbanairship.util.TaskSleeper
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -32,6 +34,7 @@ internal class ContactChannelsProvider(
     private val audienceOverridesProvider: AudienceOverridesProvider,
     private val contactUpdates: StateFlow<ContactIdUpdate?>,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
+    private val taskSleeper: TaskSleeper = TaskSleeper.default,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) {
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
@@ -40,6 +43,7 @@ internal class ContactChannelsProvider(
     /// Map to cache address to channels to make matching easier
     private val addressToChannelIdMap = mutableMapOf<String, String>()
     private val lock = ReentrantLock()
+
 
     internal constructor(
         config: AirshipRuntimeConfig,
@@ -56,19 +60,24 @@ internal class ContactChannelsProvider(
         if (it?.isStable == true) { it.contactId } else { null }
     }.flatMapLatest { contactId ->
         val fetchUpdates = flow {
-            emit(fetch(contactId))
+
+            var backoff: Duration = initialBackoff
+            var isFirstFetch = true
 
             while (true) {
-                val remainingDelay = cachedResponse.remainingCacheTimeMillis().milliseconds.coerceAtLeast(
-                    minDelay
-                )
-                delay(remainingDelay)
-
-                fetch(contactId).apply {
-                    if (isSuccess) {
-                        emit(this)
+                val fetched = fetch(contactId)
+                backoff = if (fetched.isSuccess) {
+                    emit(fetched)
+                    taskSleeper.sleep(cachedResponse.remainingCacheTimeMillis().milliseconds)
+                    initialBackoff
+                } else {
+                    if (isFirstFetch) {
+                        emit(fetched)
                     }
+                    taskSleeper.sleep(backoff)
+                    backoff.times(2).coerceAtMost(maxBackoff)
                 }
+                isFirstFetch = false
             }
         }
 
@@ -185,7 +194,8 @@ internal class ContactChannelsProvider(
 
     companion object {
         private val maxCacheAge = 10.minutes
-        private val minDelay = 30.seconds
+        private val initialBackoff = 10.seconds
+        private val maxBackoff = 1.minutes
     }
 }
 

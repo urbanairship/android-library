@@ -1,7 +1,5 @@
 package com.urbanairship.automation
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.automation.engine.AutomationDelayProcessor
@@ -19,7 +17,7 @@ import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
-import com.urbanairship.automation.utils.TaskSleeper
+import com.urbanairship.util.TaskSleeper
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
