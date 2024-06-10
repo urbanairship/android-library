@@ -6,12 +6,12 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.urbanairship.Provider
 import com.urbanairship.contacts.ContactChannel
 import com.urbanairship.contacts.Scope
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.data.Item
+import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State.Content.ContactChannelState
 import com.urbanairship.preferencecenter.ui.item.AlertItem
 import com.urbanairship.preferencecenter.ui.item.ChannelSubscriptionItem
 import com.urbanairship.preferencecenter.ui.item.ContactManagementItem
@@ -55,7 +55,7 @@ internal class PreferenceCenterAdapter(
 
     private val channelSubscriptions: MutableSet<String> = mutableSetOf()
     private val contactSubscriptions: MutableMap<String, Set<Scope>> = mutableMapOf()
-    private val contactChannels: MutableSet<ContactChannel> = mutableSetOf()
+    private val contactChannels: MutableMap<ContactChannel, ContactChannelState> = mutableMapOf()
 
     private var descriptionItem: DescriptionItem? = null
 
@@ -86,6 +86,11 @@ internal class PreferenceCenterAdapter(
         ) : ItemEvent()
 
         data class ContactManagementRemoveClick(
+            val item: Item.ContactManagement,
+            val channel: ContactChannel
+        ) : ItemEvent()
+
+        data class ContactManagementResendClick(
             val item: Item.ContactManagement,
             val channel: ContactChannel
         ) : ItemEvent()
@@ -131,6 +136,7 @@ internal class PreferenceCenterAdapter(
                 contactChannelsProvider = { contactChannels },
                 onAddClick = ::emitContactManagementAddEvent,
                 onRemoveClick = ::emitContactManagementRemoveEvent,
+                onResendClick = ::emitContactManagementResendVerificationEvent
             )
         }
         else -> throw IllegalArgumentException("Unsupported view type: $viewType")
@@ -148,7 +154,7 @@ internal class PreferenceCenterAdapter(
         items: List<PrefCenterItem>,
         channelSubscriptions: Set<String>,
         contactSubscriptions: Map<String, Set<Scope>>,
-        contactChannels: Set<ContactChannel>
+        contactChannels: Map<ContactChannel, ContactChannelState>
     ) {
         setSubscriptions(
             channelSubscriptions = channelSubscriptions,
@@ -164,34 +170,50 @@ internal class PreferenceCenterAdapter(
     private fun setSubscriptions(
         channelSubscriptions: Set<String>,
         contactSubscriptions: Map<String, Set<Scope>>,
-        contactChannels: Set<ContactChannel>,
+        contactChannels: Map<ContactChannel, ContactChannelState>,
         notify: Boolean = true
     ) {
-        var changed = false
         if (this.channelSubscriptions != channelSubscriptions) {
             with(this.channelSubscriptions) {
                 clear()
                 addAll(channelSubscriptions)
             }
-            changed = true
+
+            if (notify) {
+                currentList.forEachIndexed { index, item ->
+                    if (item is ChannelSubscriptionItem) {
+                        notifyItemChanged(index)
+                    }
+                }
+            }
         }
         if (this.contactSubscriptions != contactSubscriptions) {
             with(this.contactSubscriptions) {
                 clear()
                 putAll(contactSubscriptions)
             }
-            changed = true
+
+            if (notify) {
+                currentList.forEachIndexed { index, item ->
+                    if (item is ContactSubscriptionItem || item is ContactSubscriptionGroupItem) {
+                        notifyItemChanged(index)
+                    }
+                }
+            }
         }
         if (this.contactChannels != contactChannels) {
             with(this.contactChannels) {
                 clear()
-                addAll(contactChannels)
+                putAll(contactChannels)
             }
-            changed = true
-        }
 
-        if (changed && notify) {
-            notifyDataSetChanged()
+            if (notify) {
+                currentList.forEachIndexed { index, item ->
+                    if (item is ContactManagementItem) {
+                        notifyItemChanged(index)
+                    }
+                }
+            }
         }
     }
 
@@ -277,6 +299,14 @@ internal class PreferenceCenterAdapter(
 
         scopeProvider().launch {
             itemEventsFlow.emit(ItemEvent.ContactManagementRemoveClick(item.item, channel))
+        }
+    }
+
+    private fun emitContactManagementResendVerificationEvent(position: Int, channel: ContactChannel) {
+        val item = getItem(position) as? ContactManagementItem ?: return
+
+        scopeProvider().launch {
+            itemEventsFlow.emit(ItemEvent.ContactManagementResendClick(item.item, channel))
         }
     }
 }

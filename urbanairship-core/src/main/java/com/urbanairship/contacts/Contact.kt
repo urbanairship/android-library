@@ -20,8 +20,11 @@ import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.channel.AirshipSmsValidator
 import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.channel.AttributeMutation
+import com.urbanairship.channel.SmsValidationHandler
+import com.urbanairship.channel.SmsValidator
 import com.urbanairship.channel.TagGroupsEditor
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -39,11 +42,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -64,6 +65,7 @@ public class Contact internal constructor(
     private val clock: Clock,
     private val subscriptionListApiClient: SubscriptionListApiClient,
     private val contactManager: ContactManager,
+    private val smsValidator: SmsValidator,
     contactChannelsProvider: ContactChannelsProvider = ContactChannelsProvider(
         config,
         audienceOverridesProvider,
@@ -96,8 +98,10 @@ public class Contact internal constructor(
             ContactApiClient(config),
             localeManager,
             audienceOverridesProvider
-        )
+        ),
+        AirshipSmsValidator(config)
     )
+
     /**
      * @hide
      */
@@ -105,7 +109,7 @@ public class Contact internal constructor(
     public val authTokenProvider: AuthTokenProvider = this.contactManager
 
     private val subscriptionListCache: CachedValue<Subscriptions> = CachedValue(clock)
-    private val scope = CoroutineScope(subscriptionListDispatcher + SupervisorJob())
+    private val subscriptionsScope = CoroutineScope(subscriptionListDispatcher + SupervisorJob())
     private val subscriptionFetchQueue = SerialQueue()
 
     /**
@@ -192,7 +196,7 @@ public class Contact internal constructor(
             }
         })
 
-        scope.launch {
+        subscriptionsScope.launch {
             for (conflict in contactManager.conflictEvents) {
                 contactConflictListener?.onConflict(conflict)
             }
@@ -204,7 +208,7 @@ public class Contact internal constructor(
             }
         }
 
-        scope.launch {
+        subscriptionsScope.launch {
             contactManager.contactIdUpdates
                 .drop(1)
                 .mapNotNull { it?.contactId }
@@ -422,6 +426,25 @@ public class Contact internal constructor(
         contactManager.addOperation(ContactOperation.Resend(contactChannel))
     }
 
+    /**
+     * Validates an SMS number.
+     *
+     * @param msisdn The MSISDN (phone number) to validate.
+     * @param sender The identifier given to the sender of the SMS message.
+     * @return `true` if the MSISDN and sender combination are valid, otherwise `false`.
+     */
+    public suspend fun validateSms(msisdn: String, sender: String): Boolean {
+        return smsValidator.validateSms(msisdn, sender)
+    }
+
+    /**
+     * Sets the SMS validation handler, to allow overriding of the default Airship validation.
+     *
+     * @param handler An implementation of [SmsValidationHandler], or `null` to remove the existing handler.
+     */
+    public fun setSmsValidationHandler(handler: SmsValidationHandler?) {
+        smsValidator.handler = handler
+    }
 
     /**
      * Edit the attributes associated with this Contact.
@@ -512,7 +535,7 @@ public class Contact internal constructor(
         return Result.success(subscriptions)
     }
 
-    public val channelContacts: SharedFlow<Result<List<ContactChannel>>> = contactChannelsProvider.contactChannels
+    public val channelContacts: Flow<Result<List<ContactChannel>>> = contactChannelsProvider.contactChannels
 
     /**
      * Returns the current set of subscription lists for the current contact.
@@ -524,7 +547,7 @@ public class Contact internal constructor(
      */
     public fun fetchSubscriptionListsPendingResult(): PendingResult<Map<String, Set<Scope>>?> {
         val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
-        scope.launch {
+        subscriptionsScope.launch {
             pendingResult.result = fetchSubscriptionLists().getOrNull()
         }
         return pendingResult
@@ -541,7 +564,7 @@ public class Contact internal constructor(
     @Deprecated("Use fetchSubscriptionListsPendingResult() instead")
     public fun getSubscriptionLists(): PendingResult<Map<String, Set<Scope>>?> {
         val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
-        scope.launch {
+        subscriptionsScope.launch {
             pendingResult.result = fetchSubscriptionLists().getOrNull()
         }
         return pendingResult

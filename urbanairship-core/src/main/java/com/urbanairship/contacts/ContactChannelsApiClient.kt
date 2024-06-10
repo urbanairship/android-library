@@ -10,15 +10,18 @@ import com.urbanairship.http.RequestResult
 import com.urbanairship.http.SuspendingRequestSession
 import com.urbanairship.http.log
 import com.urbanairship.http.toSuspendingRequestSession
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.isoDateAsMilliseconds
 import com.urbanairship.json.requireField
 import com.urbanairship.util.UAHttpStatusUtil
+import kotlin.jvm.Throws
 
 internal class ContactChannelsApiClient(
     private val runtimeConfig: AirshipRuntimeConfig,
     private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
 ) {
+
     internal suspend fun fetch(contactId: String): RequestResult<List<ContactChannel>> {
         val url = runtimeConfig.deviceUrl.appendEncodedPath(PATH + contactId).build()
 
@@ -46,6 +49,7 @@ internal class ContactChannelsApiClient(
         }
     }
 
+    @Throws(JsonException::class)
     private fun parseChannels(responseBody: String?): List<ContactChannel> {
         return JsonValue.parseString(responseBody).requireMap().require(CHANNELS_KEY).requireList()
             .map { it.requireMap() }

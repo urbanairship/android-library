@@ -125,7 +125,6 @@ public class ContactChannelsApiClientTest {
             400, "nope"
         )
 
-
         val result = client.fetch(contactId)
         assertEquals(400, result.status)
         assertNull(result.value)

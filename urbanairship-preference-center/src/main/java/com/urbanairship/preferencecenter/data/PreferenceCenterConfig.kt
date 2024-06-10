@@ -1,10 +1,13 @@
 package com.urbanairship.preferencecenter.data
 
+import android.os.Parcel
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonList
+import kotlinx.parcelize.Parceler
 
 /**
  * Preference Center Configuration.
@@ -71,4 +74,17 @@ data class PreferenceCenterConfig(
         KEY_DISPLAY to display.toJson(),
         KEY_OPTIONS to options?.toJson()
     )
+}
+
+internal object PreferenceCenterConfigParceler : Parceler<PreferenceCenterConfig> {
+    @Throws(JsonException::class)
+    override fun create(parcel: Parcel): PreferenceCenterConfig {
+        val config = JsonValue.parseString(parcel.readString()).requireMap()
+        return PreferenceCenterConfig.parse(config)
+    }
+
+    @Throws(JsonException::class)
+    override fun PreferenceCenterConfig.write(parcel: Parcel, flags: Int) {
+        parcel.writeString(toJson().toString())
+    }
 }

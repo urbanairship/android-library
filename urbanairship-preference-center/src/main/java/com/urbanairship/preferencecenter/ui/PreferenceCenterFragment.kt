@@ -9,7 +9,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,17 +20,21 @@ import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.Bu
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ChannelSubscriptionChange
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactManagementAddClick
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactManagementRemoveClick
+import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactManagementResendClick
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactSubscriptionChange
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactSubscriptionGroupChange
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Action
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Effect
-import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.PreferenceCenterViewModelFactory
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
 import com.urbanairship.preferencecenter.widget.SectionDividerDecoration
 import com.urbanairship.preferencecenter.widget.showContactManagementAddConfirmDialog
 import com.urbanairship.preferencecenter.widget.showContactManagementAddDialog
 import com.urbanairship.preferencecenter.widget.showContactManagementRemoveDialog
+import com.urbanairship.preferencecenter.widget.showContactManagementResentDialog
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -69,17 +73,12 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
         fun onDisplayPreferenceCenter(title: String?, description: String?): Boolean
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    protected val viewModelFactory: ViewModelProvider.Factory by lazy {
-        PreferenceCenterViewModelFactory(preferenceCenterId)
-    }
-
     private val preferenceCenterId: String by lazy {
         requireNotNull(arguments?.getString(ARG_ID)) { "Missing required argument: PreferenceCenterFragment.ARG_ID" }
     }
 
-    private val viewModel: PreferenceCenterViewModel by lazy {
-        ViewModelProvider(this, viewModelFactory)[PreferenceCenterViewModel::class.java]
+    private val viewModel: PreferenceCenterViewModel by activityViewModels {
+        PreferenceCenterViewModel.factory(preferenceCenterId)
     }
 
     @VisibleForTesting
@@ -92,6 +91,9 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     private lateinit var views: Views
 
     private var onDisplayListener: OnDisplayPreferenceCenterListener? = null
+
+    private val contactManagementDialogErrors = Channel<String>(Channel.UNLIMITED)
+    private val contactManagementDialogDismisses = MutableSharedFlow<Unit>()
 
     private data class Views(
         val view: View,
@@ -161,9 +163,11 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
                     is ButtonClick ->
                         Action.ButtonActions(event.actions)
                     is ContactManagementAddClick ->
-                        Action.AddChannel(event.item)
+                        Action.RequestAddChannel(event.item)
                     is ContactManagementRemoveClick ->
-                        Action.RemoveChannel(event.item, event.channel)
+                        Action.RequestRemoveChannel(event.item, event.channel)
+                    is ContactManagementResendClick ->
+                        Action.ResendChannelVerification(event.item, event.channel)
                 }
             }
             .onEach { action -> viewModel.handle(action) }
@@ -195,12 +199,6 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     private fun render(state: State): Unit = when (state) {
         is State.Loading -> {
             views.showLoading()
-            adapter.submit(
-                items = emptyList(),
-                channelSubscriptions = emptySet(),
-                contactSubscriptions = emptyMap(),
-                contactChannels = emptySet()
-            )
         }
         is State.Error -> views.showError()
         is State.Content -> {
@@ -214,23 +212,34 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
                 items = state.listItems,
                 channelSubscriptions = state.channelSubscriptions,
                 contactSubscriptions = state.contactSubscriptions,
-                contactChannels = state.contactChannels
+                contactChannels = state.contactChannelState
             )
 
             views.showContent()
         }
     }
 
-    private fun handle(effect: Effect) {
-        when (effect) {
-            is Effect.ShowContactManagementAddDialog ->
-                showContactManagementAddDialog(effect.item, viewModel::handle)
-            is Effect.ShowContactManagementAddConfirmDialog ->
-                effect.item.addPrompt.prompt.onSuccess?.let {
-                    showContactManagementAddConfirmDialog(it, effect.result, viewModel::handle)
-                }
-            is Effect.ShowContactManagementRemoveDialog ->
-                showContactManagementRemoveDialog(effect.item, effect.channel, viewModel::handle)
-        }
+    private suspend fun handle(effect: Effect) = when (effect) {
+        is Effect.ShowContactManagementAddDialog ->
+            showContactManagementAddDialog(
+                item = effect.item,
+                onHandleAction = viewModel::handle,
+                errors = contactManagementDialogErrors.consumeAsFlow(),
+                dismisses = contactManagementDialogDismisses
+            )
+        is Effect.ShowContactManagementAddConfirmDialog ->
+            effect.item.addPrompt.prompt.onSubmit?.let { message ->
+                showContactManagementAddConfirmDialog(message)
+            }
+        is Effect.ShowContactManagementRemoveDialog ->
+            showContactManagementRemoveDialog(effect.item, effect.channel, viewModel::handle)
+        is Effect.ShowChannelVerificationResentDialog ->
+            effect.item.registrationOptions.resendOptions.onSuccess?.let { message ->
+                showContactManagementResentDialog(message)
+            }
+        Effect.DismissContactManagementAddDialog ->
+            contactManagementDialogDismisses.emit(Unit)
+        is Effect.ShowContactManagementAddDialogError ->
+            contactManagementDialogErrors.send(effect.message)
     }
 }

@@ -18,17 +18,25 @@ import java.util.UUID
 import kotlin.random.Random
 import io.mockk.Ordering
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.coVerify
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -39,7 +47,8 @@ public class AutomationRemoteDataSubscriberTest {
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
     private val clock = TestClock().apply { currentTimeMillis = 1000 }
 
-    private val testDispatcher = UnconfinedTestDispatcher()
+    private val testDispatcher = StandardTestDispatcher()
+    private val unconfinedDispatcher = UnconfinedTestDispatcher()
 
     private var updatesFlow = MutableSharedFlow<InAppRemoteData>(extraBufferCapacity = Int.MAX_VALUE)
     private val remoteDataAccess: AutomationRemoteDataAccessInterface = mockk {
@@ -55,11 +64,21 @@ public class AutomationRemoteDataSubscriberTest {
         coEvery { this@mockk.setConstraints(any()) } returns Result.success(Unit)
     }
     private var subscriber: AutomationRemoteDataSubscriber = AutomationRemoteDataSubscriber(
-        dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.11", testDispatcher
+        dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.11", unconfinedDispatcher
     )
 
+    @Before
+    public fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    public fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
     @Test
-    public fun testSchedulingAutomations(): TestResult = runTest(testDispatcher) {
+    public fun testSchedulingAutomations(): TestResult = runTest {
         val appSchedules = makeSchedules(source = RemoteDataSource.APP)
         val contactSchedules = makeSchedules(source = RemoteDataSource.CONTACT)
 
@@ -86,21 +105,21 @@ public class AutomationRemoteDataSubscriberTest {
         updatesFlow.emit(data)
         advanceUntilIdle()
 
-        coVerify(ordering = Ordering.UNORDERED) {
+        coVerify {
             engine.upsertSchedules(appSchedules)
             engine.upsertSchedules(contactSchedules)
         }
     }
 
     @Test
-    public fun testEmptyPayloadStopsSchedules(): TestResult = runTest(testDispatcher) {
+    public fun testEmptyPayloadStopsSchedules(): TestResult = runTest {
         val appSchedules = makeSchedules(RemoteDataSource.APP)
         coEvery { engine.getSchedules() } returns appSchedules
 
         val emptyData = InAppRemoteData(emptyMap())
         val scheduleIDs = appSchedules.map { it.identifier }
 
-        coEvery { engine.stopSchedules(any()) } just runs
+        coJustRun { engine.stopSchedules(any()) }
 
         subscriber.subscribe()
         advanceUntilIdle()
@@ -112,7 +131,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testIgnoreSchedulesNoLongerScheduled(): TestResult = runTest(testDispatcher) {
+    public fun testIgnoreSchedulesNoLongerScheduled(): TestResult = runTest {
         coEvery { engine.upsertSchedules(any()) } just runs
 
         subscriber.subscribe()
@@ -165,11 +184,11 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testOlderSchedulesMinSDKVersion(): TestResult = runTest(testDispatcher) {
+    public fun testOlderSchedulesMinSDKVersion(): TestResult = runTest {
         coEvery { engine.upsertSchedules(any()) } just runs
 
         subscriber = AutomationRemoteDataSubscriber(
-            dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.0.0", testDispatcher
+            dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.0.0", unconfinedDispatcher
         )
         subscriber.subscribe()
         advanceUntilIdle()
@@ -198,7 +217,7 @@ public class AutomationRemoteDataSubscriberTest {
         subscriber.unsubscribe()
         advanceUntilIdle()
 
-        subscriber = AutomationRemoteDataSubscriber(dataStore, remoteDataAccess, engine, frequencyLimitManager, "2.0.0", testDispatcher)
+        subscriber = AutomationRemoteDataSubscriber(dataStore, remoteDataAccess, engine, frequencyLimitManager, "2.0.0", unconfinedDispatcher)
 
         val secondUpdateSchedules = firstUpdateSchedules + makeSchedules(
             source = RemoteDataSource.APP,
@@ -228,7 +247,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testSamePayloadSkipsAutomations(): TestResult = runTest(testDispatcher) {
+    public fun testSamePayloadSkipsAutomations(): TestResult = runTest {
         subscriber.subscribe()
         advanceUntilIdle()
 
@@ -262,7 +281,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testRemoteDataInfoChangeUpdatesSchedules(): TestResult = runTest(testDispatcher) {
+    public fun testRemoteDataInfoChangeUpdatesSchedules(): TestResult = runTest {
         subscriber.subscribe()
 
         val remoteDataInfo = RemoteDataInfo(
@@ -277,7 +296,7 @@ public class AutomationRemoteDataSubscriberTest {
         }
 
         var expectedSchedules = schedules
-        coEvery { engine.upsertSchedules(expectedSchedules) } just runs
+        coJustRun { engine.upsertSchedules(expectedSchedules) }
 
         val remoteData = InAppRemoteData(
             payload = mapOf(
@@ -293,6 +312,7 @@ public class AutomationRemoteDataSubscriberTest {
         advanceUntilIdle()
 
         coVerify { engine.upsertSchedules(expectedSchedules) }
+        advanceUntilIdle()
 
         coEvery { engine.getSchedules() } returns schedules
 
@@ -326,13 +346,13 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testPayloadDateChangeAutomations(): TestResult = runTest(testDispatcher) {
+    public fun testPayloadDateChangeAutomations(): TestResult = runTest {
         subscriber.subscribe()
 
         clock.currentTimeMillis = 1
         val schedules = makeSchedules(RemoteDataSource.APP, 4u)
 
-        coEvery { engine.upsertSchedules(schedules) } just runs
+        coJustRun { engine.upsertSchedules(schedules) }
 
         val remoteDataInfo = RemoteDataInfo(
             url = "https://some.other.url",
@@ -351,11 +371,11 @@ public class AutomationRemoteDataSubscriberTest {
                 )
             )
         )
+        advanceUntilIdle()
 
         coVerify { engine.upsertSchedules(schedules) }
 
         advanceUntilIdle()
-
 
         coEvery { engine.getSchedules() } returns schedules
 
@@ -378,7 +398,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testConstraints(): TestResult = runTest(testDispatcher) {
+    public fun testConstraints(): TestResult = runTest {
         val appConstraints = listOf(
             FrequencyConstraint("foo", 100, 10u),
             FrequencyConstraint("bar", 100, 10u)

@@ -1,14 +1,19 @@
 package com.urbanairship.preferencecenter.data
 
+import android.os.Parcelable
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonList
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.RawValue
 
 /**
  * Preference sections.
  */
-sealed class Section(private val type: String) {
+@Parcelize
+sealed class Section(private val type: String): Parcelable {
     abstract val id: String
     abstract val items: List<Item>
     abstract val display: CommonDisplay
@@ -21,16 +26,19 @@ sealed class Section(private val type: String) {
         }
 
     /** Returns `true` if this section contains channel subscription items. */
+    @IgnoredOnParcel
     internal val hasChannelSubscriptions: Boolean by lazy {
         items.any { it.hasChannelSubscriptions }
     }
 
     /** Returns `true` if this section contains contact subscription items. */
+    @IgnoredOnParcel
     internal val hasContactSubscriptions: Boolean by lazy {
         items.any { it.hasContactSubscriptions }
     }
 
     /** Returns `true` if this section contains contact management items. */
+    @IgnoredOnParcel
     internal val hasContactManagement: Boolean by lazy {
         items.any { it.hasContactManagement }
     }
@@ -40,9 +48,9 @@ sealed class Section(private val type: String) {
      */
     data class Common(
         override val id: String,
-        override val items: List<Item>,
+        override val items: @RawValue List<Item>,
         override val display: CommonDisplay,
-        override val conditions: Conditions
+        override val conditions: @RawValue Conditions
     ) : Section(TYPE_SECTION) {
         override fun toJson(): JsonMap = jsonMapBuilder().build()
     }
@@ -53,7 +61,7 @@ sealed class Section(private val type: String) {
     data class SectionBreak(
         override val id: String,
         override val display: CommonDisplay,
-        override val conditions: Conditions
+        override val conditions: @RawValue Conditions
     ) : Section(TYPE_SECTION_BREAK) {
         override val items: List<Item> = emptyList()
 
@@ -103,6 +111,7 @@ sealed class Section(private val type: String) {
 
     internal abstract fun toJson(): JsonMap
 
+    @Throws(JsonException::class)
     protected fun jsonMapBuilder() =
         JsonMap.newBuilder()
             .put(KEY_ID, id)

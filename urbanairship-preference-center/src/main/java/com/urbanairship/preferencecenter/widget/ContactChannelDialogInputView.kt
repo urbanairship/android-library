@@ -4,25 +4,27 @@ import android.content.Context
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
-import android.text.method.LinkMovementMethod
-import android.text.util.Linkify
 import android.util.AttributeSet
+import android.view.KeyEvent
+import android.view.inputmethod.EditorInfo
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.FrameLayout
 import android.widget.TextView
-import androidx.core.text.parseAsHtml
 import androidx.core.view.isVisible
+import com.urbanairship.UALog
 import com.urbanairship.preferencecenter.R
+import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.PromptDisplay
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.RegistrationOptions
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.SmsSenderInfo
 import com.urbanairship.preferencecenter.util.emojiFlag
 import com.urbanairship.preferencecenter.util.markdownToHtml
+import com.urbanairship.preferencecenter.util.setHtml
 import com.google.android.material.textfield.TextInputLayout
 
-class ContactChannelDialogInputView@JvmOverloads constructor(
+internal class ContactChannelDialogInputView@JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -47,9 +49,33 @@ class ContactChannelDialogInputView@JvmOverloads constructor(
                 onValidationChanged?.invoke(validator(s?.toString()))
             }
         })
+
+        textInputView.editText?.apply {
+            // Set the on-screen keyboard's action button to "Done"
+            imeOptions = EditorInfo.IME_ACTION_DONE
+
+            setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    onSubmit?.invoke()
+                    true
+                } else {
+                    false
+                }
+            }
+
+            setOnKeyListener { _, keyCode, event ->
+                if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) {
+                    onSubmit?.invoke()
+                    true
+                } else {
+                    false
+                }
+            }
+        }
     }
 
     var onValidationChanged: ((Boolean) -> Unit)? = null
+    var onSubmit: (() -> Unit)? = null
 
     private val adapter: ArrayAdapter<String> by lazy {
         ArrayAdapter(context, android.R.layout.simple_dropdown_item_1line)
@@ -68,7 +94,7 @@ class ContactChannelDialogInputView@JvmOverloads constructor(
                 val formatted = formatPhone(selectedSender?.dialingCode, input)
                 !input.isNullOrBlank() && phoneRegex.matches(formatted)
             }
-            null -> false
+            else -> false
         }
     }
 
@@ -78,7 +104,7 @@ class ContactChannelDialogInputView@JvmOverloads constructor(
         when (options) {
             is RegistrationOptions.Email -> {
                 setAddressLabel(options.addressLabel)
-                setAddressPlaceholder(options.placeholder)
+                options.placeholder?.let(::setAddressPlaceholder)
                 textInputView.editText?.inputType = InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
             }
             is RegistrationOptions.Sms -> {
@@ -89,7 +115,7 @@ class ContactChannelDialogInputView@JvmOverloads constructor(
             }
         }
 
-        display.footer?.let { setFooter(it) }
+        display.footer?.let(::setFooter)
     }
 
     sealed class DialogResult {
@@ -108,12 +134,15 @@ class ContactChannelDialogInputView@JvmOverloads constructor(
             is RegistrationOptions.Sms -> selectedSender?.senderId?.let { senderId ->
                 DialogResult.Sms(address = address, senderId = senderId)
             }
-            null -> null
+            else -> null
         }
     }
 
     fun setError(error: String?) {
         textInputView.error = error
+        textInputView.isErrorEnabled = error != null
+        textInputView.invalidate()
+        textInputView.requestLayout()
     }
 
     /** Returns a formatted phone number or email address. */
@@ -158,13 +187,12 @@ class ContactChannelDialogInputView@JvmOverloads constructor(
         countryPickerInputView.hint = text
     }
 
-    private fun setFooter(text: String) {
-        footerView.movementMethod = LinkMovementMethod.getInstance()
-
-        footerView.text = text.markdownToHtml().parseAsHtml()
-        // TODO: use the new TextClassifier API on 26+. need to add or find a compat helper...
-        footerView.autoLinkMask = Linkify.ALL
-
+    private fun setFooter(formattedText: Item.ContactManagement.FormattedText) {
+        if (formattedText.isMarkdown) {
+            footerView.setHtml(formattedText.text.markdownToHtml())
+        } else {
+            footerView.text = formattedText.text
+        }
         footerView.isVisible = true
     }
 

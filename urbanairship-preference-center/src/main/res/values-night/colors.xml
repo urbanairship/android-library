@@ -2,7 +2,7 @@
 <resources>
     <color name="ua_preference_center_background">#000000</color>
     <color name="ua_preference_center_surface">#121212</color>
-    <color name="ua_preference_center_accent">#004BFF</color>
+    <color name="ua_preference_center_accent">#1C5AFA</color>
     <color name="ua_preference_center_status_bar">#121212</color>
     <color name="ua_preference_center_ui_text_color">#FFFFFF</color>
     <color name="ua_preference_center_divider_color">#85FFFFFF</color>

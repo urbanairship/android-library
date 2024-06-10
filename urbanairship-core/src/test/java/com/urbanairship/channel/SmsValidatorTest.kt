@@ -28,13 +28,13 @@ import org.mockito.kotlin.whenever
 public class ValidatorTest {
     private val msisdn = "1234567890"
     private val sender = "TestSender"
-    private val payload = SmsValidationBody(sender, msisdn)
+    private val payload = AirshipSmsValidatorApiClient.requestPayload(msisdn, sender)
     private val config = TestAirshipRuntimeConfig()
     private val requestSession = TestRequestSession()
     private val testDispatcher = StandardTestDispatcher()
 
-    private val apiClient = SmsValidatorAPIClientImpl(config, requestSession.toSuspendingRequestSession())
-    private val smsValidator = SmsValidatorImpl(apiClient)
+    private val apiClient = AirshipSmsValidatorApiClient(config, requestSession.toSuspendingRequestSession())
+    private val smsValidator = AirshipSmsValidator(apiClient)
 
     @Before
     public fun setup() {
@@ -126,8 +126,8 @@ public class ValidatorTest {
 
     @Test
     public fun testListenerCalledWhenSet(): TestResult = runTest {
-        val listener = mock(SmsValidationListener::class.java)
-        smsValidator.listener = listener
+        val listener = mock(SmsValidationHandler::class.java)
+        smsValidator.handler = listener
 
         whenever(listener.validateSms(msisdn, sender)).thenReturn(true)
 

@@ -3,6 +3,7 @@
     <string name="inbox">Inbox</string>
     <string name="home">Home</string>
     <string name="settings">Settings</string>
+    <string name="preferences">Preferences</string>
     <string name="debug">Debug</string>
     <string name="message">Message</string>
 
@@ -27,6 +28,7 @@
     <string name="button_preferences">Preferences</string>
     <string name="toast_channel_clipboard">Channel copied to clipboard</string>
     <string name="current_tags">Current Tags</string>
+    <string name="tools">Tools</string>
 
     <!-- Message Center Indicator -->
     <string name="view">View</string>

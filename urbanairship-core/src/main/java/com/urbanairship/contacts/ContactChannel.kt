@@ -1,6 +1,5 @@
 /* Copyright Airship and Contributors */
 
-@file:Suppress("ConvertObjectToDataObject")
 package com.urbanairship.contacts
 
 import androidx.annotation.RestrictTo
@@ -34,6 +33,7 @@ public sealed class ContactChannel: JsonSerializable {
      */
     public abstract val isRegistered: Boolean
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         TYPE_KEY to this.channelType.name,
         INFO_KEY to when (this) {
@@ -105,7 +105,7 @@ public sealed class ContactChannel: JsonSerializable {
             get() {
                 return when (this.registrationInfo) {
                     is RegistrationInfo.Pending -> this.registrationInfo.address.maskPhoneNumber()
-                    is RegistrationInfo.Registered -> this.registrationInfo.maskedAddress
+                    is RegistrationInfo.Registered -> this.registrationInfo.maskedAddress.replaceAsterisks()
                 }
             }
 
@@ -127,9 +127,6 @@ public sealed class ContactChannel: JsonSerializable {
                     is RegistrationInfo.Registered -> this.registrationInfo.senderId
                 }
             }
-
-
-
 
         /**
          * Sms registration info.
@@ -221,6 +218,7 @@ public sealed class ContactChannel: JsonSerializable {
                 }
             }
 
+            @Throws(JsonException::class)
             override fun toJsonValue(): JsonValue = when (this) {
                 is Pending -> jsonMapOf(
                     TYPE_KEY to PENDING_TYPE,
@@ -280,6 +278,7 @@ public sealed class ContactChannel: JsonSerializable {
             other as Sms
 
             if (registrationInfo != other.registrationInfo) return false
+            if (channelType != other.channelType) return false
 
             return true
         }
@@ -306,7 +305,7 @@ public sealed class ContactChannel: JsonSerializable {
             get() {
                 return when (this.registrationInfo) {
                     is RegistrationInfo.Pending -> this.registrationInfo.address.maskEmail()
-                    is RegistrationInfo.Registered -> this.registrationInfo.maskedAddress
+                    is RegistrationInfo.Registered -> this.registrationInfo.maskedAddress.replaceAsterisks()
                 }
             }
 
@@ -325,6 +324,7 @@ public sealed class ContactChannel: JsonSerializable {
             other as Email
 
             if (registrationInfo != other.registrationInfo) return false
+            if (channelType != other.channelType) return false
 
             return true
         }
@@ -430,6 +430,7 @@ public sealed class ContactChannel: JsonSerializable {
                 )
             }
 
+            @Throws(JsonException::class)
             override fun toJsonValue(): JsonValue = when (this) {
                 is Pending -> jsonMapOf(
                     TYPE_KEY to PENDING_TYPE,
@@ -516,3 +517,5 @@ private fun String.maskPhoneNumber(): String {
         this
     }
 }
+
+private fun String.replaceAsterisks(): String = replace("*", "●")

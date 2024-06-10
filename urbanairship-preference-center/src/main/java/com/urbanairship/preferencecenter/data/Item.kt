@@ -5,12 +5,12 @@ import com.urbanairship.contacts.Scope
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
-import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
+import com.urbanairship.json.requireMap
 import com.urbanairship.json.toJsonList
 
 /**
@@ -134,6 +134,7 @@ sealed class Item(
     ) {
         override val display = CommonDisplay(iconDisplay.name, iconDisplay.description)
 
+        @Throws(JsonException::class)
         override fun toJson(): JsonMap =
             jsonMapBuilder()
                 .put(KEY_DISPLAY, iconDisplay.toJson())
@@ -231,7 +232,7 @@ sealed class Item(
 
         data class RemovePrompt(
             val prompt: RemoveChannelPrompt,
-            val button: LabeledButton
+            val button: IconButton
         ) {
             @Throws(JsonException::class)
             fun toJson() = jsonMapOf(
@@ -244,61 +245,101 @@ sealed class Item(
                 fun fromJson(json: JsonMap): RemovePrompt {
                     return RemovePrompt(
                         prompt = RemoveChannelPrompt.fromJson(json.requireField(KEY_VIEW)),
-                        button = LabeledButton.fromJson(json.requireField(KEY_BUTTON))
+                        button = IconButton.fromJson(json.requireField(KEY_BUTTON))
                     )
                 }
             }
         }
 
         data class AddChannelPrompt(
+            val type: String,
             val display: PromptDisplay,
-            val onSuccess: ActionableMessage?,
+            val submitButton: LabeledButton,
             val cancelButton: LabeledButton?,
-            val submitButton: LabeledButton?
+            val onSubmit: ActionableMessage?,
         ) {
             @Throws(JsonException::class)
             fun toJson() = jsonMapOf(
+                KEY_TYPE to type,
                 KEY_DISPLAY to display.toJson(),
-                KEY_ON_SUCCESS to onSuccess?.toJson(),
+                KEY_SUBMIT_BUTTON to submitButton.toJson(),
                 KEY_CANCEL_BUTTON to cancelButton?.toJson(),
-                KEY_SUBMIT_BUTTON to submitButton?.toJson()
+                KEY_ON_SUBMIT to onSubmit?.toJson(),
             )
 
             companion object {
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): AddChannelPrompt {
                     return AddChannelPrompt(
+                        type = json.requireField(KEY_TYPE),
                         display = PromptDisplay.fromJson(json.requireField(KEY_DISPLAY)),
-                        onSuccess = json.optionalMap(KEY_ON_SUCCESS)?.let { ActionableMessage.fromJson(it) },
+                        submitButton = json.requireMap(KEY_SUBMIT_BUTTON).let { LabeledButton.fromJson(it) },
                         cancelButton = json.optionalMap(KEY_CANCEL_BUTTON)?.let { LabeledButton.fromJson(it) },
-                        submitButton = json.optionalMap(KEY_SUBMIT_BUTTON)?.let { LabeledButton.fromJson(it) }
+                        onSubmit = json.optionalMap(KEY_ON_SUBMIT)?.let { ActionableMessage.fromJson(it) },
                     )
                 }
             }
         }
 
         data class RemoveChannelPrompt(
+            val type: String,
             val display: PromptDisplay,
-            val onSuccess: ActionableMessage?,
+            val submitButton: LabeledButton,
             val cancelButton: LabeledButton?,
-            val submitButton: LabeledButton?
+            val onSubmit: ActionableMessage?,
         ) {
             @Throws(JsonException::class)
             fun toJson() = jsonMapOf(
+                KEY_TYPE to type,
                 KEY_DISPLAY to display.toJson(),
-                KEY_ON_SUCCESS to onSuccess?.toJson(),
+                KEY_SUBMIT_BUTTON to submitButton.toJson(),
                 KEY_CANCEL_BUTTON to cancelButton?.toJson(),
-                KEY_SUBMIT_BUTTON to submitButton?.toJson()
+                KEY_ON_SUBMIT to onSubmit?.toJson(),
             )
 
             companion object {
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): RemoveChannelPrompt {
                     return RemoveChannelPrompt(
+                        type = json.requireField(KEY_TYPE),
                         display = PromptDisplay.fromJson(json.requireField(KEY_DISPLAY)),
-                        onSuccess = json.optionalMap(KEY_ON_SUCCESS)?.let { ActionableMessage.fromJson(it) },
+                        submitButton = json.requireMap(KEY_SUBMIT_BUTTON).let { LabeledButton.fromJson(it) },
                         cancelButton = json.optionalMap(KEY_CANCEL_BUTTON)?.let { LabeledButton.fromJson(it) },
-                        submitButton = json.optionalMap(KEY_SUBMIT_BUTTON)?.let { LabeledButton.fromJson(it) }
+                        onSubmit = json.optionalMap(KEY_ON_SUBMIT)?.let { ActionableMessage.fromJson(it) },
+                    )
+                }
+            }
+        }
+
+        data class FormattedText(
+            val text: String,
+            val type: FormatType
+        ) {
+            enum class FormatType(val value: String) {
+                PLAIN("string"),
+                MARKDOWN("markdown"),
+                UNKNOWN("unknown");
+
+                companion object {
+                    fun from(value: String): FormatType =
+                        entries.firstOrNull { it.value.equals(value, true) } ?: UNKNOWN
+                }
+            }
+
+            internal val isMarkdown = type == FormatType.MARKDOWN
+
+            @Throws(JsonException::class)
+            fun toJson() = jsonMapOf(
+                KEY_DESCRIPTION to text,
+                KEY_TYPE to type.value
+            )
+
+            companion object {
+                @Throws(JsonException::class)
+                fun fromJson(json: JsonMap): FormattedText {
+                    return FormattedText(
+                        text = json.requireField(KEY_DESCRIPTION),
+                        type = FormatType.from(json.requireField<String>(KEY_TYPE))
                     )
                 }
             }
@@ -306,27 +347,26 @@ sealed class Item(
 
         data class PromptDisplay(
             val title: String,
-            val body: String?,
-            val footer: String?,
+            val description: String?,
+            val footer: FormattedText?,
         ) {
             @Throws(JsonException::class)
             fun toJson() = jsonMapOf(
                 KEY_TITLE to title,
-                KEY_BODY to body,
-                KEY_FOOTER to footer
+                KEY_DESCRIPTION to description,
+                KEY_FOOTER to footer?.toJson()
             )
 
             companion object {
                 private const val KEY_TITLE = "title"
-                private const val KEY_BODY = "body"
                 private const val KEY_FOOTER = "footer"
 
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): PromptDisplay {
                     return PromptDisplay(
                         title = json.requireField(KEY_TITLE),
-                        body = json.optionalField(KEY_BODY),
-                        footer = json.optionalField(KEY_FOOTER),
+                        description = json.optionalField(KEY_DESCRIPTION),
+                        footer = json.optionalMap(KEY_FOOTER)?.let { FormattedText.fromJson(it) },
                     )
                 }
             }
@@ -334,7 +374,7 @@ sealed class Item(
 
         data class ActionableMessage(
             val title: String,
-            val description: String,
+            val description: String?,
             val button: LabeledButton,
             val contentDescription: String?
         ) {
@@ -351,8 +391,26 @@ sealed class Item(
                 fun fromJson(json: JsonMap): ActionableMessage {
                     return ActionableMessage(
                         title = json.requireField(KEY_NAME),
-                        description = json.requireField(KEY_DESCRIPTION),
+                        description = json.optionalField(KEY_DESCRIPTION),
                         button = LabeledButton.fromJson(json.requireField(KEY_BUTTON)),
+                        contentDescription = json.optionalField(KEY_CONTENT_DESCRIPTION)
+                    )
+                }
+            }
+        }
+
+        data class IconButton(
+            val contentDescription: String?
+        ) {
+            @Throws(JsonException::class)
+            fun toJson(): JsonMap = jsonMapOf(
+                KEY_CONTENT_DESCRIPTION to contentDescription
+            )
+
+            companion object {
+                @Throws(JsonException::class)
+                fun fromJson(json: JsonMap): IconButton {
+                    return IconButton(
                         contentDescription = json.optionalField(KEY_CONTENT_DESCRIPTION)
                     )
                 }
@@ -411,14 +469,14 @@ sealed class Item(
             val interval: Int,
             val message: String,
             val button: LabeledButton,
-            val onSuccess: ActionableMessage
+            val onSuccess: ActionableMessage?
         ) {
             @Throws(JsonException::class)
             fun toJson(): JsonMap = jsonMapOf(
                 KEY_INTERVAL to interval,
                 KEY_MESSAGE to message,
                 KEY_BUTTON to button.toJson(),
-                KEY_ON_SUCCESS to onSuccess.toJson()
+                KEY_ON_SUBMIT to onSuccess?.toJson()
             )
 
             companion object {
@@ -431,7 +489,7 @@ sealed class Item(
                         interval = json.requireField(KEY_INTERVAL),
                         message = json.requireField(KEY_MESSAGE),
                         button = LabeledButton.fromJson(json.requireField(KEY_BUTTON)),
-                        onSuccess = ActionableMessage.fromJson(json.requireField(KEY_ON_SUCCESS))
+                        onSuccess = json.optionalMap(KEY_ON_SUBMIT)?.let { ActionableMessage.fromJson(it) }
                     )
                 }
             }
@@ -441,7 +499,7 @@ sealed class Item(
             val type: String
         ) {
             abstract val resendOptions: ResendOptions
-            abstract val errorMessages: ErrorMessages?
+            abstract val errorMessages: ErrorMessages
 
             @Throws(JsonException::class)
             abstract fun toJson(): JsonMap
@@ -451,7 +509,7 @@ sealed class Item(
                 val countryLabel: String,
                 val phoneLabel: String,
                 override val resendOptions: ResendOptions,
-                override val errorMessages: ErrorMessages?,
+                override val errorMessages: ErrorMessages,
             ): RegistrationOptions("sms") {
 
                 @Throws(JsonException::class)
@@ -460,14 +518,13 @@ sealed class Item(
                     KEY_COUNTRY_LABEL to countryLabel,
                     KEY_PHONE_LABEL to phoneLabel,
                     KEY_RESEND to resendOptions.toJson(),
-                    KEY_ERROR_MESSAGES to errorMessages?.toJson()
+                    KEY_ERROR_MESSAGES to errorMessages.toJson()
                 )
 
                 companion object {
                     private const val KEY_SENDERS = "senders"
                     private const val KEY_COUNTRY_LABEL = "country_label"
                     private const val KEY_PHONE_LABEL = "msisdn_label"
-                    private const val KEY_RESEND = "resend"
 
                     @Throws(JsonException::class)
                     fun fromJson(json: JsonMap): Sms {
@@ -476,18 +533,19 @@ sealed class Item(
                             countryLabel = json.requireField(KEY_COUNTRY_LABEL),
                             phoneLabel = json.requireField(KEY_PHONE_LABEL),
                             resendOptions = ResendOptions.fromJson(json.requireField(KEY_RESEND)),
-                            errorMessages = json.optionalMap(KEY_ERROR_MESSAGES)?.let { ErrorMessages.fromJson(it) }
+                            errorMessages = json.requireMap(KEY_ERROR_MESSAGES).let { ErrorMessages.fromJson(it) }
                         )
                     }
                 }
             }
 
             data class Email(
-                val placeholder: String,
+                val placeholder: String?,
                 val addressLabel: String,
-                val properties: JsonValue?,
+                /** A key-value mapping of properties that will be passed to the double opt-in registration endpoint. */
+                val properties: JsonMap?,
                 override val resendOptions: ResendOptions,
-                override val errorMessages: ErrorMessages?,
+                override val errorMessages: ErrorMessages,
             ): RegistrationOptions("email") {
 
                 @Throws(JsonException::class)
@@ -495,7 +553,8 @@ sealed class Item(
                     KEY_PLACEHOLDER to placeholder,
                     KEY_ADDRESS_LABEL to addressLabel,
                     KEY_PROPERTIES to properties,
-                    KEY_RESEND to resendOptions.toJson()
+                    KEY_RESEND to resendOptions.toJson(),
+                    KEY_ERROR_MESSAGES to errorMessages.toJson()
                 )
 
                 companion object {
@@ -505,11 +564,11 @@ sealed class Item(
                     @Throws(JsonException::class)
                     fun fromJson(json: JsonMap): Email {
                         return Email(
-                            placeholder = json.requireField(KEY_PLACEHOLDER),
+                            placeholder = json.optionalField(KEY_PLACEHOLDER),
                             addressLabel = json.requireField(KEY_ADDRESS_LABEL),
                             properties = json.optionalField(KEY_PROPERTIES),
                             resendOptions = ResendOptions.fromJson(json.requireField(KEY_RESEND)),
-                            errorMessages = json.optionalMap(KEY_ERROR_MESSAGES)?.let { ErrorMessages.fromJson(it) }
+                            errorMessages = json.requireMap(KEY_ERROR_MESSAGES).let { ErrorMessages.fromJson(it) }
                         )
                     }
                 }
@@ -577,13 +636,13 @@ sealed class Item(
         private const val KEY_SCOPES = "scopes"
 
         private const val KEY_PLATFORM = "platform"
-        private const val KEY_EMPTY_LABEL = "empty_label"
+        private const val KEY_EMPTY_LABEL = "empty_message"
         private const val KEY_ADD = "add"
         private const val KEY_REMOVE = "remove"
         private const val KEY_REGISTRATION_OPTIONS = "registration_options"
 
         private const val KEY_VIEW = "view"
-        private const val KEY_ON_SUCCESS = "on_success"
+        private const val KEY_ON_SUBMIT = "on_submit"
         private const val KEY_CANCEL_BUTTON = "cancel_button"
         private const val KEY_SUBMIT_BUTTON = "submit_button"
 

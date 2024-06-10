@@ -1,18 +1,22 @@
 package com.urbanairship.preferencecenter.data
 
+import android.os.Parcelable
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
+import kotlin.jvm.Throws
+import kotlinx.parcelize.Parcelize
 
 /**
  * Common display attributes.
  */
+@Parcelize
 data class CommonDisplay(
     val name: String? = null,
     val description: String? = null
-) {
+): Parcelable {
     companion object {
         @JvmStatic val EMPTY = CommonDisplay(null, null)
 
@@ -25,6 +29,7 @@ data class CommonDisplay(
          * @hide
          * @throws JsonException
          */
+        @Throws(JsonException::class)
         internal fun parse(json: JsonMap): CommonDisplay =
             CommonDisplay(
                 name = json.optionalField(KEY_NAME),
@@ -37,6 +42,7 @@ data class CommonDisplay(
          * @hide
          * @throws JsonException
          */
+        @Throws(JsonException::class)
         internal fun parse(json: JsonValue?): CommonDisplay =
             json?.map?.let { parse(it) } ?: EMPTY
     }
@@ -44,6 +50,7 @@ data class CommonDisplay(
     internal fun isEmpty(): Boolean =
         name.isNullOrEmpty() && description.isNullOrEmpty()
 
+    @Throws(JsonException::class)
     internal fun toJson(): JsonMap = jsonMapOf(
         KEY_NAME to name,
         KEY_DESCRIPTION to description
@@ -53,11 +60,12 @@ data class CommonDisplay(
 /**
  * Icon display attributes.
  */
+@Parcelize
 data class IconDisplay(
     val icon: String? = null,
     val name: String? = null,
     val description: String? = null
-) {
+): Parcelable {
     companion object {
         private const val KEY_ICON = "icon"
         private const val KEY_NAME = "name"
@@ -69,6 +77,7 @@ data class IconDisplay(
          * @hide
          * @throws JsonException
          */
+        @Throws(JsonException::class)
         internal fun parse(json: JsonMap): IconDisplay =
             IconDisplay(
                 icon = json.optionalField(KEY_ICON),
@@ -77,6 +86,7 @@ data class IconDisplay(
             )
     }
 
+    @Throws(JsonException::class)
     internal fun toJson(): JsonMap = jsonMapOf(
         KEY_NAME to name,
         KEY_DESCRIPTION to description,

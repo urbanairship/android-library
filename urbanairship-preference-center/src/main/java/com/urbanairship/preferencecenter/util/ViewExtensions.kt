@@ -1,8 +1,10 @@
 package com.urbanairship.preferencecenter.util
 
+import android.text.method.LinkMovementMethod
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.text.parseAsHtml
 import com.urbanairship.UAirship
 import com.urbanairship.images.ImageRequestOptions
 
@@ -25,4 +27,12 @@ internal fun ImageView.loadImageOrHide(url: String?, options: ImageRequestOption
     } else {
         this.visibility = View.GONE
     }
+}
+
+internal fun TextView.setHtml(html: String, linkify: Boolean = true) {
+    if (linkify) {
+        movementMethod = LinkMovementMethod.getInstance()
+        linksClickable = true
+    }
+    text = html.parseAsHtml()
 }

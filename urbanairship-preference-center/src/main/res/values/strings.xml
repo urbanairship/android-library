@@ -24,4 +24,8 @@
 
     <!-- Contact channel management -->
     <string name="ua_preference_center_contact_management_pending">Pending verification</string>
+    <string name="ua_preference_center_contact_management_sms_description">Phone number</string>
+    <string name="ua_preference_center_contact_management_email_description">Email address</string>
+    <string name="ua_preference_center_contact_management_resend_description">Resend verification</string>
+    <string name="ua_preference_center_contact_management_redacted_description">redacted</string>
 </resources>

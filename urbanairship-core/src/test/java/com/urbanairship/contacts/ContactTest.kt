@@ -14,6 +14,7 @@ import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.ChannelRegistrationPayload
+import com.urbanairship.channel.SmsValidator
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.JsonValue
@@ -27,6 +28,7 @@ import io.mockk.runs
 import io.mockk.verify
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import io.mockk.coVerify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -40,6 +42,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -72,6 +75,8 @@ public class ContactTest {
         every { this@mockk.currentNamedUserIdUpdates } returns this@ContactTest.currentNamedUserIdUpdates
     }
 
+    private val mockSmsValidator = mockk<SmsValidator>(relaxed = true)
+
     private val testActivityMonitor = TestActivityMonitor()
     private val testClock = TestClock()
 
@@ -91,6 +96,7 @@ public class ContactTest {
             testClock,
             mockSubscriptionListApiClient,
             mockContactManager,
+            mockSmsValidator,
             mockChannelsContactProvider,
             testDispatcher
         )
@@ -988,5 +994,19 @@ public class ContactTest {
         )
         contact.disassociateChannel(channel)
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.DisassociateChannel(channel, true)) }
-        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }    }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
+    }
+
+    @Test
+    public fun testValidateSms(): TestResult = runTest {
+        coEvery { mockSmsValidator.validateSms(any(), any()) } returns true andThen false
+
+        val address = "some address"
+        val sender = "some sender"
+
+        assertTrue(contact.validateSms(address, sender))
+        assertFalse(contact.validateSms(address, sender))
+
+        coVerify(exactly = 2) { mockSmsValidator.validateSms(address, sender) }
+    }
 }

@@ -58,5 +58,18 @@
 
     </androidx.preference.PreferenceCategory>
 
+    <androidx.preference.PreferenceCategory
+        app:dependency="data_enabled"
+        app:iconSpaceReserved="false"
+        app:title="@string/tools">
+
+        <androidx.preference.Preference
+            app:key="debug"
+            app:iconSpaceReserved="false"
+            app:persistent="false"
+            app:title="@string/ua_debug_title" />
+
+    </androidx.preference.PreferenceCategory>
+
 
 </androidx.preference.PreferenceScreen>

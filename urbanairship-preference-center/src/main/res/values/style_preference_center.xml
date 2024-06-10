@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+
     <!-- Base style -->
     <style name="UrbanAirship.PreferenceCenter" parent="Theme.MaterialComponents.DayNight">
         <item name="colorPrimary">@color/ua_preference_center_background</item>
@@ -257,6 +258,8 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:orientation">horizontal</item>
         <item name="android:gravity">center_vertical|start</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:textAppearance">?textAppearanceListItemSecondary</item>
     </style>
 
     <!-- Preference Center sms/email opt-in item info (sms/email list) -->
@@ -278,7 +281,6 @@
     <style name="UrbanAirship.PreferenceCenter.Item.OptInInfo.EmptyText" parent="">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textAppearance">?textAppearanceListItemSecondary</item>
         <item name="android:textColor">?android:textColorSecondary</item>
         <item name="android:paddingEnd">4dp</item>
     </style>
@@ -289,6 +291,12 @@
         <item name="android:gravity">center_vertical|start</item>
     </style>
 
+    <!-- Preference Center sms/email opt-in item container around the icon, address, and pending/resend labels. -->
+    <style name="UrbanAirship.PreferenceCenter.Item.OptInInfo.ItemInfo" parent="">
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:background">?selectableItemBackground</item>
+    </style>
+
     <!-- Preference Center sms/email opt-in item info empty text -->
     <style name="UrbanAirship.PreferenceCenter.Item.OptInInfo.ListText" parent="">
         <item name="android:textAppearance">?textAppearanceListItemSecondary</item>
@@ -296,11 +304,23 @@
         <item name="android:paddingEnd">4dp</item>
     </style>
 
+    <!-- Preference Center sms/email opt-in item container for pending and resend labels -->
+    <style name="UrbanAirship.PreferenceCenter.Item.OptInInfo.ListItem.Status" parent="">
+        <item name="android:gravity">center_vertical|start</item>
+        <item name="android:animateLayoutChanges">true</item>
+    </style>
+
     <!-- Preference Center sms/email opt-in item info "Pending verification" label -->
     <style name="UrbanAirship.PreferenceCenter.Item.OptInInfo.ListItem.PendingLabel" parent="">
         <item name="android:textAppearance">?textAppearanceListItemSecondary</item>
         <item name="android:textColor">?android:textColorSecondary</item>
-        <item name="android:paddingEnd">4dp</item>
+    </style>
+
+    <!-- Preference Center sms/email opt-in item info "Resend" label -->
+    <style name="UrbanAirship.PreferenceCenter.Item.OptInInfo.ListItem.ResendLabel" parent="">
+        <item name="android:textAppearance">?textAppearanceListItemSecondary</item>
+        <item name="android:textColor">?colorControlActivated</item>
+        <item name="android:paddingStart">8dp</item>
     </style>
 
     <!-- Preference Center sms/email opt-in item info delete button -->
@@ -313,7 +333,7 @@
     </style>
 
     <!-- Preference Center sms/email opt-in item button -->
-    <style name="UrbanAirship.PreferenceCenter.Item.OptInButton" parent="@style/Widget.MaterialComponents.Button.OutlinedButton">
+    <style name="UrbanAirship.PreferenceCenter.Item.OptInButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="android:paddingStart">16dp</item>
         <item name="android:paddingEnd">16dp</item>
         <item name="android:textColor">?android:textColorPrimary</item>
@@ -325,11 +345,14 @@
 
     <!-- Preference Center sms/email opt-in add/remove dialog -->
     <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
-        <item name="alertDialogStyle">@style/MaterialAlertDialog.MaterialComponents</item>
+        <item name="alertDialogStyle">@style/UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialogStyle</item>
         <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialog.MaterialComponents.Title.Text</item>
         <item name="buttonBarPositiveButtonStyle">@style/UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog.PositiveButton</item>
         <item name="buttonBarNeutralButtonStyle">@style/UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog.NeutralButton</item>
         <item name="buttonBarNegativeButtonStyle">@style/UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog.NegativeButton</item>
+    </style>
+
+    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialogStyle" parent="MaterialAlertDialog.MaterialComponents">
     </style>
 
     <!-- Preference Center sms/email opt-in add/remove dialog positive button -->
@@ -344,7 +367,7 @@
 
     <!-- Preference Center sms/email opt-in add/remove dialog negative button -->
     <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog.NegativeButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/ua_preference_center_error</item>
+        <item name="android:textColor">@color/ua_preference_center_dialog_button_negative</item>
     </style>
 
     <!-- Preference Center sms/email opt-in add/remove dialog -->
@@ -354,13 +377,13 @@
         <item name="android:paddingEnd">16dp</item>
     </style>
 
-
     <!-- Preference Center sms/email opt-in prompt address text input -->
     <style name="UrbanAirship.PreferenceCenter.OptInDialog.TextInputLayout" parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
         <item name="boxStrokeColor">@color/ua_preference_center_dialog_input_outline</item>
         <item name="hintTextColor">?android:textColorSecondary</item>
-        <item name="shapeAppearance">@style/ShapeAppearance.Material3.Corner.Medium</item>
+        <item name="shapeAppearance">?shapeAppearanceMediumComponent</item>
         <item name="android:minHeight">?android:listPreferredItemHeight</item>
+        <item name="errorTextColor">@color/ua_preference_center_error</item>
         <item name="android:layout_marginBottom">8dp</item>
     </style>
 
@@ -368,7 +391,7 @@
     <style name="UrbanAirship.PreferenceCenter.OptInDialog.DropDownLayout" parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
         <item name="boxStrokeColor">@color/ua_preference_center_dialog_input_outline</item>
         <item name="hintTextColor">?android:textColorSecondary</item>
-        <item name="shapeAppearance">@style/ShapeAppearance.Material3.Corner.Medium</item>
+        <item name="shapeAppearance">?shapeAppearanceMediumComponent</item>
         <item name="android:minHeight">?android:listPreferredItemHeight</item>
         <item name="android:layout_marginBottom">8dp</item>
     </style>
@@ -377,6 +400,7 @@
     <style name="UrbanAirship.PreferenceCenter.OptInDialog.Footer" parent="">
         <item name="android:textAppearance">?textAppearanceBody2</item>
         <item name="android:textColor">?android:textColorSecondary</item>
+        <item name="android:textColorLink">@color/ua_preference_center_accent</item>
         <item name="android:layout_marginBottom">8dp</item>
         <item name="android:layout_marginTop">8dp</item>
     </style>

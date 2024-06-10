@@ -5,11 +5,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="viewModel"
             type="com.urbanairship.sample.home.HomeViewModel" />
-
     </data>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -26,133 +24,32 @@
                 android:id="@+id/channel_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
                 android:paddingBottom="8dp"
                 android:text="@string/channel_id"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
                 app:layout_constraintBottom_toTopOf="@+id/channelId"
-                app:layout_constraintStart_toStartOf="@+id/channelId" />
+                app:layout_constraintStart_toStartOf="parent" />
 
             <Button
                 android:id="@+id/channelId"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="51dp"
-                android:layout_marginStart="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="?listPreferredItemHeight"
                 android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
-                android:ellipsize="end"
-                android:gravity="center"
-                android:lines="1"
                 android:text="@{viewModel.channelId}"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Button"
                 android:textColor="?colorAccent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.495"
+                android:maxLines="1"
                 app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.302"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintVertical_bias="0.3"
                 tools:text="a61635e7-60c5-47e7-b9fb-870754e70a86" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/channelId">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Sports" />
-
-                    <Space
-                        android:layout_width="0dp"
-                        android:layout_height="32dp" />
-
-                    <Button
-                        android:id="@+id/lu_start"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Start" />
-
-                    <Space
-                        android:layout_width="0dp"
-                        android:layout_height="16dp" />
-
-                    <Button
-                        android:id="@+id/lu_update"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Update" />
-
-                    <Space
-                        android:layout_width="0dp"
-                        android:layout_height="16dp" />
-
-                    <Button
-                        android:id="@+id/lu_end"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="End" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal"
-
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Sports Async" />
-
-                    <Space
-                        android:layout_width="0dp"
-                        android:layout_height="32dp" />
-
-                    <Button
-                        android:id="@+id/lu_async_start"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Start" />
-
-                    <Space
-                        android:layout_width="0dp"
-                        android:layout_height="16dp" />
-
-                    <Button
-                        android:id="@+id/lu_async_update"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Update" />
-
-                    <Space
-                        android:layout_width="0dp"
-                        android:layout_height="16dp" />
-
-                    <Button
-                        android:id="@+id/lu_async_end"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="End" />
-                </LinearLayout>
-            </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

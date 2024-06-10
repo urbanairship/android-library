@@ -1,5 +1,7 @@
 package com.urbanairship.channel
 
+import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -8,35 +10,19 @@ import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestResult
 import com.urbanairship.http.SuspendingRequestSession
-import com.urbanairship.json.JsonSerializable
+import com.urbanairship.http.toSuspendingRequestSession
+import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import com.urbanairship.util.UAHttpStatusUtil
+import kotlin.jvm.Throws
 
 /**
- * Interface for objects that can validate SMS messages.
+ * Handler interface that can be used to override the default SMS validation behavior.
  */
-internal interface SmsValidator {
-    /**
-     * Listener that can be set to override the default SMS validation behavior.
-     */
-    var listener: SmsValidationListener?
-
-    /**
-     * Validates a given MSISDN and sender.
-     *
-     * @param msisdn The MSISDN to validate.
-     * @param sender The identifier given to the sender of the SMS message.
-     * @return `true` if the MSISDN and sender are valid, otherwise `false`.
-     */
-    suspend fun validateSms(msisdn: String, sender: String): Boolean
-}
-
-/**
- * Listener interface for validating SMS messages.
- */
-public interface SmsValidationListener {
+public interface SmsValidationHandler {
 
     /**
      * Validates a given MSISDN and sender.
@@ -49,47 +35,36 @@ public interface SmsValidationListener {
 }
 
 /**
- * Data class representing the body of an SMS validation request.
- *
- * @param sender The identifier of the sender.
- * @param msisdn The MSISDN to be validated.
+ * Interface for objects that can validate SMS messages.
+ * @hide
  */
-internal data class SmsValidationBody(
-    val sender: String,
-    val msisdn: String
-) : JsonSerializable {
-    companion object {
-        private const val REQUEST_MSISDN_KEY = "msisdn"
-        private const val REQUEST_SENDER_KEY = "sender"
-    }
-
-    override fun toJsonValue(): JsonValue {
-        return jsonMapOf(
-            REQUEST_SENDER_KEY to sender,
-            REQUEST_MSISDN_KEY to msisdn
-        ).toJsonValue()
-    }
-}
-
-/**
- * Interface for the SMS validation API client.
- */
-internal interface SmsValidatorAPIClient {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public interface SmsValidator {
     /**
-     * Validates a given MSISDN and sender using the API.
+     * Handler that can be set to override the default SMS validation behavior.
+     */
+    public var handler: SmsValidationHandler?
+
+    /**
+     * Validates a given MSISDN and sender.
      *
      * @param msisdn The MSISDN to validate.
      * @param sender The identifier given to the sender of the SMS message.
      * @return `true` if the MSISDN and sender are valid, otherwise `false`.
      */
-    suspend fun validateSms(msisdn: String, sender: String): Boolean
+    public suspend fun validateSms(msisdn: String, sender: String): Boolean
 }
 
 @OpenForTesting
-internal class SmsValidatorImpl(
-    private val apiClient: SmsValidatorAPIClient,
-    @Volatile override var listener: SmsValidationListener? = null
+internal class AirshipSmsValidator(
+    private val apiClient: AirshipSmsValidatorApiClient,
 ) : SmsValidator {
+
+    constructor(config: AirshipRuntimeConfig) : this(
+        AirshipSmsValidatorApiClient(config)
+    )
+
+    override var handler: SmsValidationHandler? = null
 
     private val resultsCache = mutableListOf<String>()
     private val resultsLookup = mutableMapOf<String, Boolean>()
@@ -114,7 +89,7 @@ internal class SmsValidatorImpl(
             return it
         }
 
-        listener?.let {
+        handler?.let {
             val isValid = it.validateSms(msisdn, sender)
             cacheResult(compoundKey, isValid)
             return isValid
@@ -126,29 +101,29 @@ internal class SmsValidatorImpl(
     }
 }
 
-internal class SmsValidatorAPIClientImpl(
-    private val runtimeConfig: AirshipRuntimeConfig,
-    private val session: SuspendingRequestSession
-) : SmsValidatorAPIClient {
+internal class AirshipSmsValidatorApiClient(
+    private val config: AirshipRuntimeConfig,
+    private val session: SuspendingRequestSession = config.requestSession.toSuspendingRequestSession()
+) {
 
-    private companion object {
-        private const val RESPONSE_OK_KEY = "ok"
-        private const val RESPONSE_VALID_KEY = "valid"
-        private const val VALIDATION_PATH = "api/channels/sms/validate"
+    suspend fun validateSms(msisdn: String, sender: String): Boolean {
+        val payload = try {
+            requestPayload(msisdn, sender)
+        } catch (e: JsonException) {
+            UALog.e(e) { "Failed to create SMS validation request!" }
+            return false
+        }
+
+        return performSmsValidation(payload).value ?: false
     }
 
-    override suspend fun validateSms(msisdn: String, sender: String): Boolean {
-        val responseBody = performSmsValidation(SmsValidationBody(sender, msisdn)).value
-        return responseBody ?: false
-    }
-
-    private suspend fun performSmsValidation(payload: JsonSerializable): RequestResult<Boolean> {
-        val url = runtimeConfig.deviceUrl.appendEncodedPath(VALIDATION_PATH).build()
+    private suspend fun performSmsValidation(payload: JsonMap): RequestResult<Boolean> {
+        val url = config.deviceUrl.appendEncodedPath(VALIDATION_PATH).build()
 
         val headers = mapOf(
             "Accept" to "application/vnd.urbanairship+json; version=3;",
             "Content-Type" to "application/json",
-            "X-UA-Appkey" to runtimeConfig.configOptions.appKey
+            "X-UA-Appkey" to config.configOptions.appKey
         )
 
         val request = Request(
@@ -162,19 +137,42 @@ internal class SmsValidatorAPIClientImpl(
         UALog.d { "Attempting SMS validation: $request" }
 
         val result = session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
-            return@execute if (UAHttpStatusUtil.inSuccessRange(status)) {
-                val json = JsonValue.parseString(responseBody).requireMap()
-                val isOk = json.requireField<Boolean>(RESPONSE_OK_KEY)
-                val valid = json.requireField<Boolean>(RESPONSE_VALID_KEY)
+            if (UAHttpStatusUtil.inSuccessRange(status)) {
+                try {
+                    val json = JsonValue.parseString(responseBody).requireMap()
 
-                valid && isOk
+                    val isOk: Boolean = json.requireField(RESPONSE_OK_KEY)
+                    val isValid: Boolean = json.requireField(RESPONSE_VALID_KEY)
+
+                    isOk && isValid
+                } catch (e: JsonException) {
+                    UALog.e(e) { "Failed to parse SMS validation response!" }
+                    null
+                }
             } else {
+                UALog.e { "Failed to validate SMS! (status: $status)" }
                 null
             }
-        }.also { result ->
-            UALog.d { "SMS Channel validation finished with result: $result" }
         }
 
+        UALog.d { "SMS Channel validation finished with result: $result" }
+
         return result
+    }
+
+    internal companion object {
+        private const val RESPONSE_OK_KEY = "ok"
+        private const val RESPONSE_VALID_KEY = "valid"
+        private const val VALIDATION_PATH = "api/channels/sms/validate"
+
+        private const val REQUEST_MSISDN_KEY = "msisdn"
+        private const val REQUEST_SENDER_KEY = "sender"
+
+        @VisibleForTesting
+        @Throws(JsonException::class)
+        fun requestPayload(msisdn: String, sender: String): JsonMap = jsonMapOf(
+            REQUEST_MSISDN_KEY to msisdn,
+            REQUEST_SENDER_KEY to sender,
+        )
     }
 }

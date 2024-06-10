@@ -12,13 +12,13 @@
         android:title="@string/inbox" />
 
     <item
+        android:id="@+id/pref_center"
+        android:icon="@drawable/ic_pref_center"
+        android:title="@string/preferences" />
+
+    <item
         android:id="@+id/settings"
         android:icon="@drawable/ic_settings"
         android:title="@string/settings" />
-
-    <item
-        android:id="@+id/ua_debug"
-        android:icon="@drawable/ic_debug"
-        android:title="@string/debug" />
 
 </menu>

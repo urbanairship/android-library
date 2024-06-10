@@ -1,5 +1,6 @@
 package com.urbanairship.preferencecenter.data
 
+import android.os.Parcelable
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -7,6 +8,7 @@ import com.urbanairship.json.requireField
 import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status
 import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status.OPT_IN
 import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status.OPT_OUT
+import kotlinx.parcelize.Parcelize
 
 typealias Conditions = List<Condition>
 
@@ -48,9 +50,10 @@ sealed class Condition(private val type: String) {
             .build()
     }
 
+    @Parcelize
     data class State(
         val isOptedIn: Boolean
-    )
+    ): Parcelable
 
     abstract fun evaluate(state: State): Boolean
 

@@ -47,7 +47,6 @@ private const val boldTag = """<b>$1</b>"""
 private const val italicTag = """<i>$1</i>"""
 private const val underlineTag = """<u>$1</u>"""
 
-// TODO: this is pretty basic, do we need to handle anything else?
 private fun basicMarkdownToHtml(markdown: String): String =
     markdown
         // Replace [link](url) with <a href="url">link</a>

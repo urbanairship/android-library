@@ -2,10 +2,12 @@ package com.urbanairship.preferencecenter
 
 import android.content.Context
 import android.net.Uri
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.preferencecenter.PreferenceCenter.Companion.KEY_PREFERENCE_FORMS
@@ -54,7 +56,7 @@ class PreferenceCenterTest {
         )
     }
 
-    private val context: Context = TestApplication.getApplication()
+    private val context: Context = ApplicationProvider.getApplicationContext()
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
     private val privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL)
 
@@ -88,9 +90,21 @@ class PreferenceCenterTest {
     }
 
     @Test
+    fun testGetConfigPendingResultWithSingleRemoteDataPayload(): TestResult = runTest {
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
+        assertEquals(PREFERENCE_FORM_1, prefCenter.getConfigPendingResult(ID_1).get())
+    }
+
+    @Test
     fun testGetJsonConfigWithSingleRemoteDataPayload(): TestResult = runTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
         assertEquals(PREFERENCE_FORM_1.toJson(), prefCenter.getJsonConfig(ID_1))
+    }
+
+    @Test
+    fun testGetJsonConfigPendingResultWithSingleRemoteDataPayload(): TestResult = runTest {
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
+        assertEquals(PREFERENCE_FORM_1.toJson(), prefCenter.getJsonConfigPendingResult(ID_1).get())
     }
 
     @Test
@@ -98,6 +112,13 @@ class PreferenceCenterTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(MULTI_FORM_PAYLOAD)
         assertEquals(PREFERENCE_FORM_1, prefCenter.getConfig(ID_1))
         assertEquals(PREFERENCE_FORM_2, prefCenter.getConfig(ID_2))
+    }
+
+    @Test
+    fun testGetConfigPendingResultWithMultipleRemoteDataPayloads(): TestResult = runTest {
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(MULTI_FORM_PAYLOAD)
+        assertEquals(PREFERENCE_FORM_1, prefCenter.getConfigPendingResult(ID_1).get())
+        assertEquals(PREFERENCE_FORM_2, prefCenter.getConfigPendingResult(ID_2).get())
     }
 
     @Test
