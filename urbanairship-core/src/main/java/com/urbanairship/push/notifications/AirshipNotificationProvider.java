@@ -29,6 +29,11 @@ public class AirshipNotificationProvider implements NotificationProvider {
      */
     public static final int TAG_NOTIFICATION_ID = 100;
 
+    /**
+     * Default Airship notification icon.
+     */
+    public static final String DEFAULT_AIRSHIP_NOTIFICATION_ICON = "ua_default_ic_notification";
+
     @StringRes
     private int titleId;
 
@@ -155,6 +160,9 @@ public class AirshipNotificationProvider implements NotificationProvider {
 
         if (this.smallIconId == 0) {
             smallIconId = context.getApplicationInfo().icon;
+            if (smallIconId == 0) {
+                smallIconId = context.getResources().getIdentifier(DEFAULT_AIRSHIP_NOTIFICATION_ICON, "drawable", context.getPackageName());
+            }
         }
 
         this.titleId = context.getApplicationInfo().labelRes;

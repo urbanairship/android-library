@@ -60,7 +60,7 @@ public class AirshipConfigOptionsTest extends BaseTestCase {
         assertTrue(production.channelCreationDelayEnabled);
         assertFalse(production.channelCaptureEnabled);
         assertEquals(Log.VERBOSE, production.logLevel);
-        assertEquals(R.drawable.ua_ic_urbanairship_notification, production.notificationIcon);
+        assertEquals(R.drawable.ua_default_ic_notification, production.notificationIcon);
         assertEquals(Color.parseColor("#ff0000"), production.notificationAccentColor);
         assertEquals("https://test.wallet.url.com/", production.walletUrl);
         assertEquals("test_channel", production.notificationChannel);
