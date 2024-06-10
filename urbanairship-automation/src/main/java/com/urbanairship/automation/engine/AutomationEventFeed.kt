@@ -6,7 +6,9 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.ApplicationMetrics
 import com.urbanairship.analytics.AirshipEventFeed
+import com.urbanairship.analytics.EventType
 import com.urbanairship.app.ActivityMonitor
+import com.urbanairship.automation.EventAutomationTriggerType
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -53,32 +55,29 @@ internal data class TriggerableState(
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public sealed class AutomationEvent {
-    internal data object Foreground : AutomationEvent()
-    internal data object Background : AutomationEvent()
-    internal data object AppInit : AutomationEvent()
-    internal data class CoreEvent(val airshipEvent: AirshipEventFeed.Event): AutomationEvent()
-    internal data class StateChanged(val state: TriggerableState) : AutomationEvent()
+internal sealed class AutomationEvent {
 
-    internal fun reportPayload(): JsonValue? {
-        return when(this) {
-            Foreground, Background, AppInit, is StateChanged -> null
-            is CoreEvent -> when (this.airshipEvent) {
-                is AirshipEventFeed.Event.CustomEvent -> this.airshipEvent.data.toJsonValue()
-                is AirshipEventFeed.Event.FeatureFlagInteracted -> this.airshipEvent.data.toJsonValue()
-                is AirshipEventFeed.Event.RegionExit -> this.airshipEvent.data.toJsonValue()
-                is AirshipEventFeed.Event.RegionEnter -> this.airshipEvent.data.toJsonValue()
-                is AirshipEventFeed.Event.ScreenTracked -> JsonValue.wrapOpt(this.airshipEvent.name)
-            }
-        }
-    }
+    internal data class Event(
+        val triggerType: EventAutomationTriggerType,
+        val data: JsonValue? = null,
+        val value: Double = 1.0
+    ) : AutomationEvent()
 
-    internal fun isStateEvent(): Boolean {
-        return when(this) {
+    internal data class StateChanged(
+        val state: TriggerableState
+    ) : AutomationEvent()
+
+    internal val isStateEvent: Boolean
+        get() = when(this) {
             is StateChanged -> true
             else -> false
         }
-    }
+
+    internal val eventData: JsonValue?
+        get() = when(this) {
+            is StateChanged -> null
+            is Event -> this.data
+        }
 }
 
 /** @hide */
@@ -108,7 +107,7 @@ public class AutomationEventFeed(
             if (!hasAttachedBefore) {
                 hasAttachedBefore = true
 
-                stream.emit(AutomationEvent.AppInit)
+                stream.emit(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
                 if (applicationMetrics.appVersionUpdated) {
                     appSessionState.update { it.copy(versionUpdated = applicationMetrics.currentAppVersion.toString()) }
@@ -116,24 +115,32 @@ public class AutomationEventFeed(
             }
 
             merge(
-                appSessionState.map { AutomationEvent.StateChanged(it) },
+                appSessionState.map { listOf(AutomationEvent.StateChanged(it)) },
 
                 activityMonitor.foregroundState.map {
-                    if (it) {
-                        AutomationEvent.Foreground
+                    val event = if (it) {
+                        AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND)
                     } else {
-                        AutomationEvent.Background
+                        AutomationEvent.Event(EventAutomationTriggerType.BACKGROUND)
                     }
+                    listOf(event)
                 },
 
-                eventFeed.events.map { AutomationEvent.CoreEvent(it) }
-            ).collect { event ->
-                stream.emit(event)
+                eventFeed.events.map {
+                    it.toAutomationEvents
+                }
+            ).collect { events ->
+                events?.forEach { event ->
+                    stream.emit(event)
 
-                when (event) {
-                    is AutomationEvent.Foreground -> appSessionState.update { it.copy(appSessionID = UUID.randomUUID().toString()) }
-                    is AutomationEvent.Background -> appSessionState.update { it.copy(appSessionID = null) }
-                    else -> {}
+                    if (event is AutomationEvent.Event) {
+                        when (event.triggerType) {
+                            EventAutomationTriggerType.FOREGROUND -> appSessionState.update { it.copy(appSessionID = UUID.randomUUID().toString()) }
+                            EventAutomationTriggerType.BACKGROUND -> appSessionState.update { it.copy(appSessionID = null) }
+                            else -> {}
+                        }
+                    }
+
                 }
             }
         }
@@ -143,3 +150,169 @@ public class AutomationEventFeed(
         subscription?.cancel()
     }
 }
+
+internal val AirshipEventFeed.Event.toAutomationEvents: List<AutomationEvent.Event>?
+    get() {
+        return when (this) {
+            is AirshipEventFeed.Event.Screen -> {
+                listOf(
+                    AutomationEvent.Event(
+                        triggerType = EventAutomationTriggerType.SCREEN,
+                        data = JsonValue.wrap(this.screen)
+                    )
+                )
+            }
+
+            is AirshipEventFeed.Event.Analytics -> {
+                when (this.eventType) {
+                   EventType.REGION_ENTER -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.REGION_ENTER,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.REGION_EXIT -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.REGION_EXIT,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.CUSTOM_EVENT -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                EventAutomationTriggerType.CUSTOM_EVENT_COUNT, data = this.data
+                            ), AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.CUSTOM_EVENT_VALUE,
+                                data = this.data,
+                                value = this.value ?: 1.0
+                            )
+                        )
+                    }
+
+                    EventType.FEATURE_FLAG_INTERACTION -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.FEATURE_FLAG_INTERACTION,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.IN_APP_DISPLAY -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.IN_APP_DISPLAY,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.IN_APP_RESOLUTION -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.IN_APP_RESOLUTION,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.IN_APP_BUTTON_TAP -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.IN_APP_BUTTON_TAP,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.IN_APP_PERMISSION_RESULT -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.IN_APP_PERMISSION_RESULT,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.IN_APP_FORM_DISPLAY -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.IN_APP_FORM_DISPLAY,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.IN_APP_FORM_RESULT -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.IN_APP_FORM_RESULT,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.IN_APP_GESTURE -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.IN_APP_GESTURE,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.IN_APP_PAGER_COMPLETED -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType =  EventAutomationTriggerType.IN_APP_PAGER_COMPLETED,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.IN_APP_PAGER_SUMMARY -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.IN_APP_PAGER_SUMMARY,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.IN_APP_PAGE_SWIPE -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.IN_APP_PAGE_SWIPE,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.IN_APP_PAGE_VIEW -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.IN_APP_PAGE_VIEW,
+                                data = this.data
+                            )
+                        )
+                    }
+
+                    EventType.IN_APP_PAGE_ACTION -> {
+                        listOf(
+                            AutomationEvent.Event(
+                                triggerType = EventAutomationTriggerType.IN_APP_PAGE_ACTION,
+                                data = this.data
+                            )
+                        )
+                    }
+                    else -> { null }
+                }
+            }
+        }
+    }

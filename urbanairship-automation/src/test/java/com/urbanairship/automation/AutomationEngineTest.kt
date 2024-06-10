@@ -162,7 +162,7 @@ public class AutomationEngineTest {
 
     @Test
     public fun testStartCollectsEventFeed(): TestResult = runTest {
-        val event = AutomationEvent.AppInit
+        val event = AutomationEvent.Event(EventAutomationTriggerType.APP_INIT)
         every { eventsFeed.feed }.answers{ flowOf(event) }
         coEvery { store.getSchedules() } answers { listOf(scheduleData) }
 

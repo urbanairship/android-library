@@ -3,7 +3,9 @@
 package com.urbanairship.iam.analytics
 
 import com.urbanairship.AirshipDispatchers
+import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.automation.engine.AutomationEventFeed
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.analytics.events.InAppDisplayEvent

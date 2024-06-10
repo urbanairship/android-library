@@ -3,8 +3,13 @@ package com.urbanairship.automation.engine
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.ApplicationMetrics
 import com.urbanairship.analytics.AirshipEventFeed
+import com.urbanairship.analytics.EventType
 import com.urbanairship.app.ActivityMonitor
+import com.urbanairship.automation.AutomationTrigger
+import com.urbanairship.automation.EventAutomationTriggerType
+import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import java.util.UUID
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
@@ -63,12 +68,12 @@ public class AutomationEventFeedTest {
         subject.feed.test {
             subject.attach()
 
-            assertEquals(AutomationEvent.AppInit, awaitItem())
+            assertEquals(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT), awaitItem())
 
             val expectedState = TriggerableState(versionUpdated = "123")
             assertEquals(AutomationEvent.StateChanged(expectedState), awaitItem())
 
-            assertEquals(AutomationEvent.Background, awaitItem())
+            assertEquals(AutomationEvent.Event(EventAutomationTriggerType.BACKGROUND), awaitItem())
         }
     }
 
@@ -77,9 +82,9 @@ public class AutomationEventFeedTest {
         foregroundState.value = true
         subject.attach()
         subject.feed.test {
-            assertEquals(AutomationEvent.AppInit, awaitItem())
+            assertEquals(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT), awaitItem())
             assertEquals(AutomationEvent.StateChanged(TriggerableState(versionUpdated = "123")), awaitItem())
-            assertEquals(AutomationEvent.Foreground, awaitItem())
+            assertEquals(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND), awaitItem())
         }
     }
 
@@ -98,12 +103,12 @@ public class AutomationEventFeedTest {
         subject.feed.test {
             val expectedState = TriggerableState(versionUpdated = "123")
             assertEquals(AutomationEvent.StateChanged(expectedState), awaitItem())
-            assertEquals(AutomationEvent.Background, awaitItem())
+            assertEquals(AutomationEvent.Event(EventAutomationTriggerType.BACKGROUND), awaitItem())
         }
     }
 
     @Test
-    public fun testSupportedEvents(): TestResult = runTest {
+    public fun testForegroundEvents(): TestResult = runTest {
         subject.attach()
 
         subject.feed.test {
@@ -112,33 +117,94 @@ public class AutomationEventFeedTest {
 
             // Foreground - foreground and app state
             foregroundState.value = true
-            assertEquals(AutomationEvent.Foreground, awaitItem())
+            assertEquals(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND), awaitItem())
             var stateEvent = awaitItem() as AutomationEvent.StateChanged
             assertNotNull(stateEvent.state.appSessionID)
 
             // Background - background and app state
             foregroundState.value = false
-            assertEquals(AutomationEvent.Background, awaitItem())
+            assertEquals(AutomationEvent.Event(EventAutomationTriggerType.BACKGROUND), awaitItem())
             stateEvent = awaitItem() as AutomationEvent.StateChanged
             assertNull(stateEvent.state.appSessionID)
+        }
+    }
 
-            // Core events
-            listOf(
-                AirshipEventFeed.Event.ScreenTracked("test-screen"),
-                AirshipEventFeed.Event.RegionEnter(jsonMapOf("region" to "enter")),
-                AirshipEventFeed.Event.RegionExit(jsonMapOf("region" to "exit")),
-                AirshipEventFeed.Event.CustomEvent(jsonMapOf("custom" to "event"), 100.0),
-                AirshipEventFeed.Event.FeatureFlagInteracted(jsonMapOf("ff" to "flag"))
-            ).forEach {
-                events.emit(it)
-                assertEquals(AutomationEvent.CoreEvent(it), awaitItem())
+    @Test
+    public fun testAnalyticFeedEvents(): TestResult = runTest {
+        subject.attach()
+
+        val eventMap = mapOf(
+            EventType.CUSTOM_EVENT to listOf(
+                EventAutomationTriggerType.CUSTOM_EVENT_COUNT,
+                EventAutomationTriggerType.CUSTOM_EVENT_VALUE
+            ),
+            EventType.REGION_EXIT to listOf(EventAutomationTriggerType.REGION_EXIT),
+            EventType.REGION_ENTER to listOf(EventAutomationTriggerType.REGION_ENTER),
+            EventType.FEATURE_FLAG_INTERACTION to listOf(EventAutomationTriggerType.FEATURE_FLAG_INTERACTION),
+            EventType.IN_APP_DISPLAY to listOf(EventAutomationTriggerType.IN_APP_DISPLAY),
+            EventType.IN_APP_RESOLUTION to listOf(EventAutomationTriggerType.IN_APP_RESOLUTION),
+            EventType.IN_APP_BUTTON_TAP to listOf(EventAutomationTriggerType.IN_APP_BUTTON_TAP),
+            EventType.IN_APP_PERMISSION_RESULT to listOf(EventAutomationTriggerType.IN_APP_PERMISSION_RESULT),
+            EventType.IN_APP_FORM_DISPLAY to listOf(EventAutomationTriggerType.IN_APP_FORM_DISPLAY),
+            EventType.IN_APP_FORM_RESULT to listOf(EventAutomationTriggerType.IN_APP_FORM_RESULT),
+            EventType.IN_APP_GESTURE to listOf(EventAutomationTriggerType.IN_APP_GESTURE),
+            EventType.IN_APP_PAGER_COMPLETED to listOf(EventAutomationTriggerType.IN_APP_PAGER_COMPLETED),
+            EventType.IN_APP_PAGER_SUMMARY to listOf(EventAutomationTriggerType.IN_APP_PAGER_SUMMARY),
+            EventType.IN_APP_PAGE_SWIPE to listOf(EventAutomationTriggerType.IN_APP_PAGE_SWIPE),
+            EventType.IN_APP_PAGE_VIEW to listOf(EventAutomationTriggerType.IN_APP_PAGE_VIEW),
+            EventType.IN_APP_PAGE_ACTION to listOf(EventAutomationTriggerType.IN_APP_PAGE_ACTION)
+        )
+
+        subject.feed.test {
+            /// First attach events
+            skipItems(3)
+
+            EventType.entries.forEach {
+                val data = JsonValue.wrap(UUID.randomUUID().toString())
+                events.emit(AirshipEventFeed.Event.Analytics(it, data))
+
+                eventMap[it]?.forEach { triggerType ->
+                    assertEquals(AutomationEvent.Event(triggerType, data, 1.0), awaitItem())
+                }
             }
+
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    public fun testScreenEvent(): TestResult = runTest {
+        subject.attach()
+
+        subject.feed.test {
+            /// First attach events
+            skipItems(3)
+
+            events.emit(AirshipEventFeed.Event.Screen("foo"))
+            assertEquals(AutomationEvent.Event(EventAutomationTriggerType.SCREEN, JsonValue.wrap("foo"), 1.0), awaitItem())
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    public fun testCustomEventValues(): TestResult = runTest {
+        subject.attach()
+
+        subject.feed.test {
+            /// First attach events
+            skipItems(3)
+
+            events.emit(AirshipEventFeed.Event.Analytics(EventType.CUSTOM_EVENT, JsonValue.NULL, 10.0))
+            assertEquals(AutomationEvent.Event(EventAutomationTriggerType.CUSTOM_EVENT_COUNT, JsonValue.NULL, 1.0), awaitItem())
+            assertEquals(AutomationEvent.Event(EventAutomationTriggerType.CUSTOM_EVENT_VALUE, JsonValue.NULL, 10.0), awaitItem())
+
+            ensureAllEventsConsumed()
         }
     }
 
     @Test
     public fun testNoEventsIfNotAttached(): TestResult = runTest {
-        events.emit(AirshipEventFeed.Event.ScreenTracked("test-screen"))
+        events.emit(AirshipEventFeed.Event.Screen("test-screen"))
         subject.feed.test {
             expectNoEvents()
         }
@@ -151,7 +217,7 @@ public class AutomationEventFeedTest {
             skipItems(3)
         }
         subject.detach()
-        events.emit(AirshipEventFeed.Event.ScreenTracked("test-screen"))
+        events.emit(AirshipEventFeed.Event.Screen("test-screen"))
         subject.feed.test {
             expectNoEvents()
         }

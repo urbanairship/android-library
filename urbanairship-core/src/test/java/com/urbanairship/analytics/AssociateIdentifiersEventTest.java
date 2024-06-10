@@ -20,7 +20,7 @@ public class AssociateIdentifiersEventTest extends BaseTestCase {
     @Test
     public void testEventType() {
         AssociateIdentifiersEvent event = new AssociateIdentifiersEvent(new AssociatedIdentifiers());
-        assertEquals(event.getType(), "associate_identifiers");
+        assertEquals(event.getType().getReportingName(), "associate_identifiers");
     }
 
     /**

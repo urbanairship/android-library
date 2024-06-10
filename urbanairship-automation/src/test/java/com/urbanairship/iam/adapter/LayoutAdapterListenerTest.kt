@@ -376,7 +376,7 @@ public class LayoutAdapterListenerTest {
 
         expected.forEachIndexed { index, event ->
             val recorded = recordedEvents[index]
-            assertEquals(event.first.name, recorded.first.name)
+            assertEquals(event.first.eventType, recorded.first.eventType)
             assertEquals(event.first.data?.toJsonValue(), recorded.first.data?.toJsonValue())
             assertEquals(event.second, recorded.second)
         }

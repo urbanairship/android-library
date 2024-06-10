@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.legacy
 
+import com.urbanairship.analytics.EventType
 import com.urbanairship.iam.analytics.InAppEventData
 import com.urbanairship.iam.analytics.InAppEventMessageId
 import com.urbanairship.iam.analytics.InAppEventRecorderInterface
@@ -40,7 +41,7 @@ private class LegacyResolutionEvent(
     reportData: JsonSerializable?
 ) : InAppEvent {
 
-    override val name: String = "in_app_resolution"
+    override val eventType: EventType = EventType.IN_APP_RESOLUTION
     override val data: JsonSerializable? = reportData
 
     internal companion object {

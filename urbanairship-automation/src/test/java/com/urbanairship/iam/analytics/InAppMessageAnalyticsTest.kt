@@ -2,6 +2,7 @@ package com.urbanairship.iam.analytics
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
+import com.urbanairship.analytics.EventType
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
@@ -136,7 +137,7 @@ public class InAppMessageAnalyticsTest {
 
         assertEquals(event?.context, expectedContext)
         assertEquals(event?.renderedLocale, jsonMapOf("US" to "en-US").toJsonValue())
-        assertEquals(event?.event?.name, "test_event")
+        assertEquals(event?.event?.eventType, EventType.IN_APP_DISPLAY)
     }
 
     @Test
@@ -391,6 +392,6 @@ public class InAppMessageAnalyticsTest {
 }
 
 private class TestInAppEvent(
-    override val name: String = "test_event",
+    override val eventType: EventType = EventType.IN_APP_DISPLAY,
     override val data: JsonSerializable? = null
 ) : InAppEvent

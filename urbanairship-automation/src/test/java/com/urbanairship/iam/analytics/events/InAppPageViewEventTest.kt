@@ -27,7 +27,7 @@ public class InAppPageViewEventTest {
             }
         """.trimIndent()
 
-        assertEquals("in_app_page_view", event.name)
+        assertEquals("in_app_page_view", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

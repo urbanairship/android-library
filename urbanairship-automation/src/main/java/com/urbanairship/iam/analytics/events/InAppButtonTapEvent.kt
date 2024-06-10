@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.analytics.events
 
+import com.urbanairship.analytics.EventType
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -13,7 +14,7 @@ internal class InAppButtonTapEvent(
 
     private var tapData = ButtonTapData(identifier, reportingMetadata)
 
-    override val name: String = NAME
+    override val eventType: EventType = EventType.IN_APP_BUTTON_TAP
     override val data: JsonSerializable = tapData
 
     companion object {

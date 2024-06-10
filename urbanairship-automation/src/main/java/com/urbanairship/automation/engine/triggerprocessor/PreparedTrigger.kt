@@ -60,11 +60,7 @@ internal class PreparedTrigger(
                 triggerData = currentData,
                 triggerResult =
                 if (match?.isTriggered == true) {
-                    if (event.reportPayload() != null) {
-                        generateTriggerResult(event.reportPayload()!!)
-                    } else {
-                        generateTriggerResult(JsonValue.NULL)
-                    }
+                    generateTriggerResult(event.eventData ?: JsonValue.NULL)
                 } else {
                     null
                 },

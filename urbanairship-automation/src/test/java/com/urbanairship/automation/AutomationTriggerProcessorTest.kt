@@ -111,7 +111,7 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
         processor.getTriggerResults().test {
             restoreSchedules()
 
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             assertEquals(
                 TriggerData(
@@ -123,7 +123,7 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
             processor.cancel(listOf("schedule-id"))
 
             assertNull(store.getTrigger("schedule-id", "default-trigger"))
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             expectNoEvents()
         }
@@ -147,7 +147,7 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
 
         processor.getTriggerResults().test {
             processor.restoreSchedules(listOf(schedule))
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             assertEquals(
                 TriggerData(
@@ -158,7 +158,7 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
 
             processor.cancel("test-group")
             assertNull(store.getTrigger("schedule-id", "trigger-id-2"))
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             expectNoEvents()
         }
@@ -177,7 +177,7 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
 
         processor.getTriggerResults().test {
             restoreSchedules(trigger)
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
             assertEquals(
                 TriggerData(
                     scheduleId = "schedule-id",
@@ -202,16 +202,16 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
 
         processor.getTriggerResults().test {
             restoreSchedules(trigger)
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             awaitItem()
 
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             awaitItem()
 
             processor.setPaused(true)
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             expectNoEvents()
         }

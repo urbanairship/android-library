@@ -149,7 +149,7 @@ public class InAppMessageDisplayListenerTests {
         assertEquals(recordedEvents.size, expected.size)
         expected.forEachIndexed { index, event ->
             val recorded = recordedEvents[index].first
-            assertEquals(event.name, recorded.name)
+            assertEquals(event.eventType, recorded.eventType)
             assertEquals(event.data?.toJsonValue(), recorded.data?.toJsonValue())
         }
     }

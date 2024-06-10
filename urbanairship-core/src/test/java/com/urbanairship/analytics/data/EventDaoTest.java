@@ -2,6 +2,7 @@ package com.urbanairship.analytics.data;
 
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.analytics.Event;
+import com.urbanairship.analytics.EventType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 
@@ -161,8 +162,8 @@ public class EventDaoTest extends BaseTestCase {
 
         @NonNull
         @Override
-        public String getType() {
-            return eventType;
+        public EventType getType() {
+            return EventType.APP_FOREGROUND;
         }
 
         @NonNull

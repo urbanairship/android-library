@@ -196,7 +196,6 @@ public class Modules {
             @NonNull Analytics analytics,
             @NonNull AirshipCache cache,
             @NonNull DeferredResolver resolver,
-            @NonNull AirshipEventFeed eventFeed,
             @NonNull PrivacyManager privacyManager
     ) {
         try {
@@ -205,7 +204,7 @@ public class Modules {
             if (moduleFactory != null) {
                 return moduleFactory.build(
                         context, dataStore, remoteData, analytics,
-                        cache, resolver, eventFeed, privacyManager
+                        cache, resolver, privacyManager
                 );
             }
         } catch (Exception e) {

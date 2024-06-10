@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.analytics.events
 
+import com.urbanairship.analytics.EventType
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -13,7 +14,7 @@ internal class InAppGestureEvent(
 
     private val reportingData = GestureData(identifier, metadata)
 
-    override val name: String = "in_app_gesture"
+    override val eventType: EventType = EventType.IN_APP_GESTURE
     override val data: JsonSerializable = reportingData
 
     private data class GestureData(

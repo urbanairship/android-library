@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation
 
+import com.urbanairship.UALog
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.automation.engine.AutomationEvent
 import com.urbanairship.automation.engine.TriggerableState
@@ -54,7 +55,43 @@ public enum class EventAutomationTriggerType(internal val value: String) : JsonS
     FEATURE_FLAG_INTERACTION("feature_flag_interaction"),
 
     /// Active session
-    ACTIVE_SESSION("active_session");
+    ACTIVE_SESSION("active_session"),
+
+    /// IAX display
+    IN_APP_DISPLAY("in_app_display"),
+
+    /// IAX resolution
+    IN_APP_RESOLUTION("in_app_resolution"),
+
+    /// IAX button tap
+    IN_APP_BUTTON_TAP("in_app_button_tap"),
+
+    /// IAX permission result
+    IN_APP_PERMISSION_RESULT("in_app_permission_result"),
+
+    /// IAX form display
+    IN_APP_FORM_DISPLAY("in_app_form_display"),
+
+    /// IAX form result
+    IN_APP_FORM_RESULT("in_app_form_result"),
+
+    /// IAX gesture
+    IN_APP_GESTURE("in_app_gesture"),
+
+    /// IAX pager completed
+    IN_APP_PAGER_COMPLETED("in_app_pager_completed"),
+
+    /// IAX pager summary
+    IN_APP_PAGER_SUMMARY("in_app_pager_summary"),
+
+    /// IAX page swipe
+    IN_APP_PAGE_SWIPE("in_app_page_swipe"),
+
+    /// IAX page view
+    IN_APP_PAGE_VIEW("in_app_page_view"),
+
+    /// IAX page action
+    IN_APP_PAGE_ACTION("in_app_page_action");
 
     internal companion object {
 
@@ -106,7 +143,7 @@ public sealed class AutomationTrigger(
     }
 
     /**
-     * Compount trigger
+     * Compound trigger
      */
     public class Compound(internal val trigger: CompoundAutomationTrigger) :
         AutomationTrigger(trigger.id, trigger.goal, trigger.type.value) {
@@ -119,7 +156,6 @@ public sealed class AutomationTrigger(
         data: TriggerData,
         resetOnTrigger: Boolean
     ): MatchResult? {
-
         val result = when(this) {
             is Compound -> trigger.matchEvent(event, data)
             is Event -> trigger.matchEvent(event, data)
@@ -258,103 +294,21 @@ public class EventAutomationTrigger internal constructor(
     }
 
     internal fun matchEvent(event: AutomationEvent, data: TriggerData): MatchResult? {
-        return when(event) {
-            is AutomationEvent.StateChanged -> stateTriggerMatch(event.state, data)
-
-            AutomationEvent.AppInit -> {
-                if (this.type != EventAutomationTriggerType.APP_INIT) {
+        UALog.e("matching $event")
+        return when (event) {
+            is AutomationEvent.StateChanged -> {
+                stateTriggerMatch(event.state, data)
+            }
+            is AutomationEvent.Event -> {
+                if (event.triggerType != this.type) {
                     return null
                 }
-                evaluateResults(data, 1.0)
-            }
 
-            AutomationEvent.Background -> {
-                if (this.type != EventAutomationTriggerType.BACKGROUND) {
+                if (!isPredicatedMatching(event.data ?: JsonValue.NULL)) {
                     return null
                 }
-                evaluateResults(data, 1.0)
+                evaluateResults(data, event.value)
             }
-
-            AutomationEvent.Foreground -> {
-                if (this.type != EventAutomationTriggerType.FOREGROUND) {
-                    return null
-                }
-                evaluateResults(data, 1.0)
-            }
-
-            is AutomationEvent.CoreEvent -> {
-                when (event.airshipEvent) {
-                    is AirshipEventFeed.Event.CustomEvent -> {
-                        customEvenTriggerMatch(
-                            event.airshipEvent.data.toJsonValue(),
-                            event.airshipEvent.value,
-                            data
-                        )
-                    }
-                    is AirshipEventFeed.Event.FeatureFlagInteracted -> {
-                        if (this.type != EventAutomationTriggerType.FEATURE_FLAG_INTERACTION) {
-                            return null
-                        }
-                        if (!isPredicatedMatching(event.airshipEvent.data)) {
-                            return null
-                        }
-
-                        evaluateResults(data, 1.0)
-                    }
-                    is AirshipEventFeed.Event.RegionEnter -> {
-                        if (this.type != EventAutomationTriggerType.REGION_ENTER) {
-                            return null
-                        }
-                        if (!isPredicatedMatching(event.airshipEvent.data)) {
-                            return null
-                        }
-
-                        evaluateResults(data, 1.0)
-                    }
-                    is AirshipEventFeed.Event.RegionExit -> {
-                        if (this.type != EventAutomationTriggerType.REGION_EXIT) {
-                            return null
-                        }
-                        if (!isPredicatedMatching(event.airshipEvent.data)) {
-                            return null
-                        }
-
-                        evaluateResults(data, 1.0)
-                    }
-                    is AirshipEventFeed.Event.ScreenTracked -> {
-                        if (this.type != EventAutomationTriggerType.SCREEN) {
-                            return null
-                        }
-                        if (!isPredicatedMatching(JsonValue.wrap(event.airshipEvent.name))) {
-                            return null
-                        }
-
-                        evaluateResults(data, 1.0)
-                    }
-                }
-            }
-        }
-    }
-
-    private fun customEvenTriggerMatch(eventData: JsonValue, value: Double?, data: TriggerData): MatchResult? {
-        return when(this.type) {
-            EventAutomationTriggerType.CUSTOM_EVENT_COUNT -> {
-                return if (isPredicatedMatching(eventData)) {
-                    evaluateResults(data, 1.0)
-                } else {
-                    null
-                }
-            }
-
-            EventAutomationTriggerType.CUSTOM_EVENT_VALUE -> {
-                return if (isPredicatedMatching(eventData)) {
-                    evaluateResults(data, value ?: 1.0)
-                } else {
-                    null
-                }
-            }
-
-            else -> null
         }
     }
 
@@ -448,7 +402,7 @@ public class CompoundAutomationTrigger internal constructor(
         //resend state event if children is triggered for chain triggers
         val state = data.lastTriggerableState
         if (this.type == CompoundAutomationTriggerType.CHAIN &&
-            state != null && !event.isStateEvent() &&
+            state != null && !event.isStateEvent &&
             triggeredChildren != triggeredChildrendCount(data)) {
 
             childResults = matchChildren(AutomationEvent.StateChanged(state), data)

@@ -12,8 +12,6 @@ import androidx.annotation.RestrictTo;
  */
 class InstallAttributionEvent extends Event {
 
-    private static final String TYPE = "install_attribution";
-
     private static final String PLAY_STORE_REFERRER = "google_play_referrer";
 
     private final String referrer;
@@ -29,8 +27,8 @@ class InstallAttributionEvent extends Event {
 
     @NonNull
     @Override
-    public String getType() {
-        return TYPE;
+    public EventType getType() {
+        return EventType.INSTALL_ATTRIBUTION;
     }
 
     /**

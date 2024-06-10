@@ -23,7 +23,7 @@ public class InAppButtonTapEventTest {
             }
         """.trimIndent()
 
-        assertEquals("in_app_button_tap", event.name)
+        assertEquals("in_app_button_tap", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

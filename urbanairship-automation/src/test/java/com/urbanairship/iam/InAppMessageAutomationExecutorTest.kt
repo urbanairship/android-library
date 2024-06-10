@@ -144,7 +144,7 @@ public class InAppMessageAutomationExecutorTest {
 
         every { analytics.recordEvent(any(), any()) } answers {
             val event: InAppEvent = firstArg()
-            assertEquals(InAppResolutionEvent.interrupted().name, event.name)
+            assertEquals(InAppResolutionEvent.interrupted().eventType, event.eventType)
         }
 
         coEvery { assetManager.clearCache(any()) } answers {
@@ -210,7 +210,7 @@ public class InAppMessageAutomationExecutorTest {
         coEvery { assetManager.clearCache(any()) } just runs
 
         every { analytics.recordEvent(any(), any()) } answers {
-            assertEquals(InAppResolutionEvent.control(experimentResult).name, firstArg<InAppEvent>().name)
+            assertEquals(InAppResolutionEvent.control(experimentResult).eventType, firstArg<InAppEvent>().eventType)
         }
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
@@ -270,7 +270,7 @@ public class InAppMessageAutomationExecutorTest {
 
         coEvery { analytics.recordEvent(any(), any()) } answers {
             val event: InAppEvent = firstArg()
-            assertEquals(event.name, InAppResolutionEvent.audienceExcluded().name)
+            assertEquals(event.eventType, InAppResolutionEvent.audienceExcluded().eventType)
         }
 
         val result = execute(preparedInfo.copy(additionalAudienceCheckResult = false))

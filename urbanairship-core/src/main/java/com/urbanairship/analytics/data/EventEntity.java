@@ -49,7 +49,7 @@ public class EventEntity {
         JsonValue json = JsonValue.parseString(payload);
 
         return new EventEntity(
-                event.getType(),
+                event.getType().getReportingName(),
                 event.getEventId(),
                 event.getTime(),
                 json,

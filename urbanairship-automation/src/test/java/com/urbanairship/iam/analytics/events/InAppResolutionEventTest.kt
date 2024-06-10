@@ -29,7 +29,7 @@ public class InAppResolutionEventTest {
             }
         """.trimIndent()
 
-        assertEquals("in_app_resolution", event.name)
+        assertEquals("in_app_resolution", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data?.toJsonValue())
     }
 
@@ -45,7 +45,7 @@ public class InAppResolutionEventTest {
             }
         """.trimIndent()
 
-        assertEquals("in_app_resolution", event.name)
+        assertEquals("in_app_resolution", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data?.toJsonValue())
     }
 
@@ -61,7 +61,7 @@ public class InAppResolutionEventTest {
             }
         """.trimIndent()
 
-        assertEquals("in_app_resolution", event.name)
+        assertEquals("in_app_resolution", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data?.toJsonValue())
     }
 
@@ -77,7 +77,7 @@ public class InAppResolutionEventTest {
             }
         """.trimIndent()
 
-        assertEquals("in_app_resolution", event.name)
+        assertEquals("in_app_resolution", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data?.toJsonValue())
     }
 
@@ -105,7 +105,7 @@ public class InAppResolutionEventTest {
             }
         """.trimIndent()
 
-        assertEquals("in_app_resolution", event.name)
+        assertEquals("in_app_resolution", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data?.toJsonValue())
     }
 
@@ -121,7 +121,7 @@ public class InAppResolutionEventTest {
          }
         """.trimIndent()
 
-        assertEquals("in_app_resolution", event.name)
+        assertEquals("in_app_resolution", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data?.toJsonValue())
     }
 }

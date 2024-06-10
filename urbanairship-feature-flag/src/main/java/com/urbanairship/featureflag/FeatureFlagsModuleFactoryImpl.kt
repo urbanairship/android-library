@@ -26,7 +26,6 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
         analytics: Analytics,
         cache: AirshipCache,
         resolver: DeferredResolver,
-        eventFeed: AirshipEventFeed,
         privacyManager: PrivacyManager
     ): Module {
         val manager = FeatureFlagManager(
@@ -35,7 +34,7 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
             audienceEvaluator = AudienceEvaluator(),
             remoteData = FeatureFlagRemoteDataAccess(remoteData),
             deferredResolver = FlagDeferredResolver(cache, resolver),
-            featureFlagAnalytics = FeatureFlagAnalytics(eventFeed, analytics),
+            featureFlagAnalytics = FeatureFlagAnalytics(analytics),
             privacyManager = privacyManager
         )
         return Module.singleComponent(manager, 0)

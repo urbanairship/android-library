@@ -5,7 +5,6 @@ import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 
 class FeatureFlagAnalytics(
-    private val eventFeed: AirshipEventFeed,
     private val analytics: Analytics,
 ) {
 
@@ -22,9 +21,7 @@ class FeatureFlagAnalytics(
 
         try {
             val event = FeatureFlagInteractionEvent(flag)
-            if (analytics.addEvent(event)) {
-                eventFeed.emit(AirshipEventFeed.Event.FeatureFlagInteracted(event.data))
-            }
+            analytics.addEvent(event)
         } catch (exception: Exception) {
             UALog.e(exception) { "Unable to track interaction: $flag" }
         }

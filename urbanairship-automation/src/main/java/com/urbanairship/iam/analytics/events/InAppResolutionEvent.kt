@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.analytics.events
 
+import com.urbanairship.analytics.EventType
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
@@ -13,7 +14,8 @@ internal class InAppResolutionEvent(
     reportData: JsonSerializable?
 ) : InAppEvent {
 
-    override val name: String = "in_app_resolution"
+
+    override val eventType: EventType = EventType.IN_APP_RESOLUTION
     override val data: JsonSerializable? = reportData
 
     companion object {

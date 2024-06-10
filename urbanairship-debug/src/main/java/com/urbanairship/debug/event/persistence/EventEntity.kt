@@ -30,6 +30,6 @@ data class EventEntity(
         session = event.sessionId,
         payload = event.body.toString(),
         time = event.timeMs,
-        type = event.type
+        type = event.type.reportingName
     )
 }

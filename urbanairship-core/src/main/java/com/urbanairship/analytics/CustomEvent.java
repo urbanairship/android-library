@@ -25,11 +25,6 @@ import androidx.annotation.Size;
 public class CustomEvent extends Event implements JsonSerializable {
 
     /**
-     * The event type.
-     */
-    static final String TYPE = "enhanced_custom_event";
-
-    /**
      * The interaction ID key.
      */
     @NonNull
@@ -230,8 +225,8 @@ public class CustomEvent extends Event implements JsonSerializable {
 
     @NonNull
     @Override
-    public final String getType() {
-        return TYPE;
+    public EventType getType() {
+        return EventType.CUSTOM_EVENT;
     }
 
     /**

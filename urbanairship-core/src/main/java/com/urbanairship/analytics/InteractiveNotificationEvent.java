@@ -29,8 +29,6 @@ public class InteractiveNotificationEvent extends Event {
 
     private static final String FOREGROUND_KEY = "foreground";
 
-    private static final String TYPE = "interactive_notification_action";
-
     private static final String USER_INPUT = "user_input";
 
     private final String sendId;
@@ -57,8 +55,8 @@ public class InteractiveNotificationEvent extends Event {
 
     @NonNull
     @Override
-    public final String getType() {
-        return TYPE;
+    public EventType getType() {
+        return EventType.INTERACTIVE_NOTIFICATION_ACTION;
     }
 
     /**

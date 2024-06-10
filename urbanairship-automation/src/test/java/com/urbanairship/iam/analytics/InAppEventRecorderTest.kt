@@ -3,6 +3,7 @@ package com.urbanairship.iam.analytics
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.Event
+import com.urbanairship.analytics.EventType
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.analytics.events.InAppEvent
 import com.urbanairship.json.JsonException
@@ -57,7 +58,7 @@ public class InAppEventRecorderTest {
 
         val recordedEvent = eventSlot.captured
 
-        assertEquals(defaultAppEvent.name, recordedEvent.type)
+        assertEquals(defaultAppEvent.eventType, recordedEvent.type)
 
         val json = """
             {
@@ -113,7 +114,7 @@ public class InAppEventRecorderTest {
 
         val recordedEvent = eventSlot.captured
 
-        assertEquals(defaultAppEvent.name, recordedEvent.type)
+        assertEquals(defaultAppEvent.eventType, recordedEvent.type)
 
         val json = """
             {
@@ -162,7 +163,7 @@ public class InAppEventRecorderTest {
     }
 
     private var defaultAppEvent = object : InAppEvent {
-        override val name: String = "some-name"
+        override val eventType: EventType = EventType.IN_APP_DISPLAY
         override val data: JsonSerializable = jsonMapOf(
             "field" to "something",
             "anotherField" to "something something"
@@ -170,7 +171,7 @@ public class InAppEventRecorderTest {
     }
 
     private var errorAppEvent = object : InAppEvent {
-        override val name: String = "some-name"
+        override val eventType: EventType = EventType.IN_APP_DISPLAY
         override val data: JsonSerializable
             get() { throw JsonException("test") }
     }

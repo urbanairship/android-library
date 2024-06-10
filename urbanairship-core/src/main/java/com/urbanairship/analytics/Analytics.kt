@@ -259,8 +259,9 @@ public class Analytics @VisibleForTesting public constructor(
     public fun recordCustomEvent(event: CustomEvent) {
         if (addEvent(event)) {
             eventFeed.emit(
-                AirshipEventFeed.Event.CustomEvent(
-                    event.toJsonValue().optMap(),
+                AirshipEventFeed.Event.Analytics(
+                    event.type,
+                    event.toJsonValue(),
                     event.eventValue?.toDouble()
                 )
             )
@@ -278,20 +279,12 @@ public class Analytics @VisibleForTesting public constructor(
                     _regions.update {
                         it.toMutableSet().apply { add(event.regionId) }.toSet()
                     }
-
-                    eventFeed.emit(
-                        AirshipEventFeed.Event.RegionEnter(event.eventData)
-                    )
                 }
 
                 RegionEvent.BOUNDARY_EVENT_EXIT -> {
                     _regions.update {
                         it.toMutableSet().apply { remove(event.regionId) }.toSet()
                     }
-
-                    eventFeed.emit(
-                        AirshipEventFeed.Event.RegionExit(event.eventData)
-                    )
                 }
             }
         }
@@ -310,6 +303,25 @@ public class Analytics @VisibleForTesting public constructor(
             UALog.d { "Disabled ignoring event: ${event.type}" }
             return false
         }
+
+        val feedEvent = when(event) {
+            is CustomEvent -> {
+                AirshipEventFeed.Event.Analytics(
+                    event.type,
+                    event.toJsonValue(),
+                    event.eventValue?.toDouble()
+                )
+            }
+            else -> {
+                AirshipEventFeed.Event.Analytics(
+                    event.type,
+                    event.eventData.toJsonValue()
+                )
+            }
+        }
+
+        eventFeed.emit(feedEvent)
+
         UALog.v { "Adding event: ${event.type}" }
         val sessionId = sessionId
         executor.execute { eventManager.addEvent(event, sessionId) }
@@ -476,7 +488,7 @@ public class Analytics @VisibleForTesting public constructor(
         _currentScreen.value = screen
         screenStartTime = clock.currentTimeMillis()
         if (screen != null) {
-            eventFeed.emit(AirshipEventFeed.Event.ScreenTracked(screen))
+            eventFeed.emit(AirshipEventFeed.Event.Screen(screen))
         }
     }
 

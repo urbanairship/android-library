@@ -20,7 +20,7 @@ class FeatureFlagAnalyticsTest {
 
     private val analytics: Analytics = mockk()
     private val feed: AirshipEventFeed = mockk(relaxed = true)
-    private val featureFlagAnalytics = FeatureFlagAnalytics(feed, analytics)
+    private val featureFlagAnalytics = FeatureFlagAnalytics(analytics)
 
     @Test
     fun testTrackInteraction(): TestResult = runTest {
@@ -34,10 +34,6 @@ class FeatureFlagAnalyticsTest {
                 // The event has a different time stamp so we are just comparing the data
                 assert(it.eventData == FeatureFlagInteractionEvent(flag).data)
             })
-
-            feed.emit(
-                AirshipEventFeed.Event.FeatureFlagInteracted(FeatureFlagInteractionEvent(flag).data)
-            )
         }
     }
 
@@ -54,7 +50,6 @@ class FeatureFlagAnalyticsTest {
                 assert(it.eventData == FeatureFlagInteractionEvent(flag).data)
             })
         }
-        verify(exactly = 0) { feed.emit(any()) }
     }
 
     @Test
@@ -64,7 +59,6 @@ class FeatureFlagAnalyticsTest {
 
         verify(exactly = 0) {
             analytics.addEvent(any())
-            feed.emit(any())
         }
     }
 
@@ -75,7 +69,6 @@ class FeatureFlagAnalyticsTest {
 
         verify(exactly = 0) {
             analytics.addEvent(any())
-            feed.emit(any())
         }
     }
 

@@ -90,11 +90,11 @@ public class PreparedTriggerTest: BaseTestCase() {
         instance.activate()
 
         assertEquals(0.0, instance.triggerData.count)
-        var result = instance.process(event = AutomationEvent.AppInit)
+        var result = instance.process(event = AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertEquals(1.0, result?.triggerData?.count)
         assertNull(result?.triggerResult)
 
-        result = instance.process(event = AutomationEvent.AppInit)
+        result = instance.process(event = AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertEquals(0.0, result?.triggerData?.count)
 
         val report = result?.triggerResult
@@ -110,7 +110,7 @@ public class PreparedTriggerTest: BaseTestCase() {
         clock.currentTimeMillis = 1
         val trigger = EventAutomationTrigger(type = EventAutomationTriggerType.APP_INIT, goal = 1.0)
         val instance = makeTrigger(trigger = AutomationTrigger.Event(trigger))
-        assertNull(instance.process(event = AutomationEvent.AppInit))
+        assertNull(instance.process(event = AutomationEvent.Event(EventAutomationTriggerType.APP_INIT)))
 
         instance.activate()
         instance.update(
@@ -119,7 +119,7 @@ public class PreparedTriggerTest: BaseTestCase() {
             endDate = null,
             priority = 0
         )
-        assertNull(instance.process(event = AutomationEvent.AppInit))
+        assertNull(instance.process(event = AutomationEvent.Event(EventAutomationTriggerType.APP_INIT)))
 
         instance.update(
             trigger = AutomationTrigger.Event(trigger),
@@ -127,7 +127,7 @@ public class PreparedTriggerTest: BaseTestCase() {
             endDate = null,
             priority = 0
         )
-        assertNotNull(instance.process(event = AutomationEvent.AppInit))
+        assertNotNull(instance.process(event = AutomationEvent.Event(EventAutomationTriggerType.APP_INIT)))
     }
 
     @Test
@@ -136,34 +136,22 @@ public class PreparedTriggerTest: BaseTestCase() {
         val instance = makeTrigger(trigger = AutomationTrigger.Event(trigger))
         instance.activate()
 
-        assertNull(instance.process(event = AutomationEvent.Foreground))
-        assertNotNull(instance.process(event = AutomationEvent.Background))
+        assertNull(instance.process(event = AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND)))
+        assertNotNull(instance.process(event = AutomationEvent.Event(EventAutomationTriggerType.BACKGROUND)))
     }
 
     @Test
     public fun testEventProcessingTypes(): TestResult = runTest {
-        assertEquals(1.0, check(EventAutomationTriggerType.FOREGROUND, AutomationEvent.Foreground)?.count)
-        assertEquals(1.0, check(EventAutomationTriggerType.BACKGROUND, AutomationEvent.Background)?.count)
-        assertEquals(1.0, check(EventAutomationTriggerType.APP_INIT, AutomationEvent.AppInit)?.count)
-        assertEquals(1.0, check(
-            EventAutomationTriggerType.SCREEN,
-            AutomationEvent.CoreEvent(AirshipEventFeed.Event.ScreenTracked("FOO")))?.count)
-        assertEquals(1.0, check(
-            EventAutomationTriggerType.REGION_ENTER,
-            AutomationEvent.CoreEvent(AirshipEventFeed.Event.RegionEnter(jsonMapOf())))?.count)
-        assertEquals(1.0, check(
-            EventAutomationTriggerType.REGION_EXIT,
-            AutomationEvent.CoreEvent(AirshipEventFeed.Event.RegionExit(jsonMapOf())))?.count)
-        assertEquals(1.0, check(
-            EventAutomationTriggerType.FEATURE_FLAG_INTERACTION,
-            AutomationEvent.CoreEvent(AirshipEventFeed.Event.FeatureFlagInteracted(jsonMapOf())))?.count)
-        assertEquals(2.0, check(
-            EventAutomationTriggerType.CUSTOM_EVENT_VALUE,
-            AutomationEvent.CoreEvent(AirshipEventFeed.Event.CustomEvent(jsonMapOf(), 2.0)))?.count)
-        assertEquals(1.0, check(
-            EventAutomationTriggerType.CUSTOM_EVENT_COUNT,
-            AutomationEvent.CoreEvent(AirshipEventFeed.Event.CustomEvent(jsonMapOf(), 2.0)))?.count)
+        EventAutomationTriggerType.entries.forEach {
+            val event = AutomationEvent.Event(it, JsonValue.NULL)
+            if (!event.isStateEvent) {
+                assertEquals(1.0, check(it, event)?.count)
+            }
+        }
+    }
 
+    @Test
+    public fun testEventStateProcessingTypes(): TestResult = runTest {
         assertNull(check(EventAutomationTriggerType.VERSION, AutomationEvent.StateChanged(state = TriggerableState())))
         assertEquals(1.0,
             check(
@@ -222,10 +210,10 @@ public class PreparedTriggerTest: BaseTestCase() {
         val instance = makeTrigger(trigger)
         instance.activate()
 
-        var state = instance.process(AutomationEvent.Background)
+        var state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.BACKGROUND))
         assertNull(state?.triggerData)
 
-        state = instance.process(AutomationEvent.Foreground)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
 
@@ -235,7 +223,7 @@ public class PreparedTriggerTest: BaseTestCase() {
         var appInit = state?.triggerData?.children?.get("init")
         assertEquals(0.0, appInit?.count)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNull(state?.triggerResult)
         assertEquals(1.0, state?.triggerData?.count)
 
@@ -244,10 +232,10 @@ public class PreparedTriggerTest: BaseTestCase() {
         appInit = state?.triggerData?.children?.get("init")
         assertEquals(0.0, appInit?.count)
 
-        state = instance.process(AutomationEvent.Foreground)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNull(state?.triggerResult)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNotNull(state?.triggerResult)
     }
 
@@ -290,10 +278,10 @@ public class PreparedTriggerTest: BaseTestCase() {
         val instance = makeTrigger(trigger)
         instance.activate()
 
-        var state = instance.process(AutomationEvent.Background)
+        var state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.BACKGROUND))
         assertNull(state?.triggerData)
 
-        state = instance.process(AutomationEvent.Foreground)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
 
@@ -303,7 +291,7 @@ public class PreparedTriggerTest: BaseTestCase() {
         var appInit = state?.triggerData?.children?.get("init")
         assertEquals(0.0, appInit?.count)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNull(state?.triggerResult)
         assertEquals(1.0, state?.triggerData?.count)
 
@@ -312,8 +300,8 @@ public class PreparedTriggerTest: BaseTestCase() {
         appInit = state?.triggerData?.children?.get("init")
         assertEquals(0.0, appInit?.count)
 
-        instance.process(AutomationEvent.Foreground)
-        state = instance.process(AutomationEvent.AppInit)
+        instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNotNull(state?.triggerResult)
     }
 
@@ -356,32 +344,32 @@ public class PreparedTriggerTest: BaseTestCase() {
         val instance = makeTrigger(trigger)
         instance.activate()
 
-        var state = instance.process(AutomationEvent.Foreground)
+        var state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
 
         assertChildDataCount(state?.triggerData, "foreground", 1.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertEquals(0.0, state?.triggerData?.count)
         assertNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 1.0)
         assertChildDataCount(state?.triggerData, "init", 1.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertEquals(1.0, state?.triggerData?.count)
         assertNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 0.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.Foreground)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertEquals(1.0, state?.triggerData?.count)
         assertNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 1.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.Foreground)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNotNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 0.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
@@ -426,38 +414,38 @@ public class PreparedTriggerTest: BaseTestCase() {
         val instance = makeTrigger(trigger)
         instance.activate()
 
-        var state = instance.process(AutomationEvent.Foreground)
+        var state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
 
         assertChildDataCount(state?.triggerData, "foreground", 1.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertEquals(0.0, state?.triggerData?.count)
         assertNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 1.0)
         assertChildDataCount(state?.triggerData, "init", 1.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertEquals(1.0, state?.triggerData?.count)
         assertNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 0.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertEquals(1.0, state?.triggerData?.count)
         assertNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 0.0)
         assertChildDataCount(state?.triggerData, "init", 1.0)
 
-        state = instance.process(AutomationEvent.Foreground)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertEquals(1.0, state?.triggerData?.count)
         assertNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 1.0)
         assertChildDataCount(state?.triggerData, "init", 1.0)
 
-        state = instance.process(AutomationEvent.Foreground)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNotNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 0.0)
         assertChildDataCount(state?.triggerData, "init", 1.0)
@@ -502,47 +490,47 @@ public class PreparedTriggerTest: BaseTestCase() {
         val instance = makeTrigger(trigger)
         instance.activate()
 
-        var state = instance.process(AutomationEvent.Foreground)
+        var state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
 
         assertChildDataCount(state?.triggerData, "foreground", 1.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNull(state?.triggerResult)
         assertNull(state?.triggerData)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNull(state?.triggerResult)
         assertNull(state?.triggerData?.count)
 
-        state = instance.process(AutomationEvent.Foreground)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
         assertChildDataCount(state?.triggerData, "foreground", 2.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
 
         assertChildDataCount(state?.triggerData, "foreground", 2.0)
         assertChildDataCount(state?.triggerData, "init", 1.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertEquals(1.0, state?.triggerData?.count)
         assertNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 2.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertEquals(1.0, state?.triggerData?.count)
         assertNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 2.0)
         assertChildDataCount(state?.triggerData, "init", 1.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNotNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
         assertChildDataCount(state?.triggerData, "foreground", 2.0)
@@ -584,7 +572,7 @@ public class PreparedTriggerTest: BaseTestCase() {
         var state = instance.process(AutomationEvent.StateChanged(TriggerableState("test")))
         assertNull(state?.triggerResult)
 
-        state = instance.process(AutomationEvent.CoreEvent(AirshipEventFeed.Event.CustomEvent(jsonMapOf(), 1.0)))
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.CUSTOM_EVENT_VALUE, JsonValue.NULL, 1.0))
         assertNotNull(state?.triggerResult)
     }
 
@@ -627,58 +615,58 @@ public class PreparedTriggerTest: BaseTestCase() {
         val instance = makeTrigger(trigger)
         instance.activate()
 
-        var state = instance.process(AutomationEvent.Foreground)
+        var state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
 
         assertChildDataCount(state?.triggerData, "foreground", 1.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNull(state?.triggerResult)
         assertNull(state?.triggerData)
 
-        state = instance.process(AutomationEvent.Foreground)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
         assertChildDataCount(state?.triggerData, "foreground", 2.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
         assertChildDataCount(state?.triggerData, "foreground", 2.0)
         assertChildDataCount(state?.triggerData, "init", 1.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertEquals(1.0, state?.triggerData?.count)
         assertNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 0.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNull(state?.triggerResult)
         assertNull(state?.triggerData)
 
-        state = instance.process(AutomationEvent.Foreground)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertEquals(1.0, state?.triggerData?.count)
         assertNull(state?.triggerResult)
         assertChildDataCount(state?.triggerData, "foreground", 1.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.Foreground)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNull(state?.triggerResult)
         assertEquals(1.0, state?.triggerData?.count)
         assertChildDataCount(state?.triggerData, "foreground", 2.0)
         assertChildDataCount(state?.triggerData, "init", 0.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNull(state?.triggerResult)
         assertEquals(1.0, state?.triggerData?.count)
         assertChildDataCount(state?.triggerData, "foreground", 2.0)
         assertChildDataCount(state?.triggerData, "init", 1.0)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNotNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
         assertChildDataCount(state?.triggerData, "foreground", 0.0)
@@ -774,19 +762,19 @@ public class PreparedTriggerTest: BaseTestCase() {
         val instance = makeTrigger(trigger)
         instance.activate()
 
-        var state = instance.process(AutomationEvent.Foreground)
+        var state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
 
-        state = instance.process(AutomationEvent.CoreEvent(AirshipEventFeed.Event.ScreenTracked("screen")))
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.SCREEN, JsonValue.wrap("screen")))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
 
-        state = instance.process(AutomationEvent.AppInit)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
         assertNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
 
-        state = instance.process(AutomationEvent.Background)
+        state = instance.process(AutomationEvent.Event(EventAutomationTriggerType.BACKGROUND))
         assertNotNull(state?.triggerResult)
         assertEquals(0.0, state?.triggerData?.count)
     }

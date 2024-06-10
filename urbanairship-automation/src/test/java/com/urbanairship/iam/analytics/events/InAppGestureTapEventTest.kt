@@ -22,7 +22,7 @@ public class InAppGestureTapEventTest {
             }
         """.trimIndent()
 
-        assertEquals("in_app_gesture", event.name)
+        assertEquals("in_app_gesture", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

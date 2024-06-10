@@ -31,7 +31,6 @@ public interface FeatureFlagsModuleFactory extends AirshipVersionInfo {
             @NonNull Analytics analytics,
             @NonNull AirshipCache cache,
             @NonNull DeferredResolver resolver,
-            @NonNull AirshipEventFeed eventFeed,
             @NonNull PrivacyManager privacyManager
     );
 }
