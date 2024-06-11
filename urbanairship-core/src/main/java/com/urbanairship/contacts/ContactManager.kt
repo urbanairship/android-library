@@ -102,9 +102,9 @@ internal class ContactManager(
             return lastContactIdentity?.isAnonymous == true && anonData?.isEmpty == false
         }
 
-    private var anonData: ContactData?
+    private var anonData: AnonContactData?
         get() = preferenceDataStore.optJsonValue(ANON_CONTACT_DATA_KEY)?.tryParse { json ->
-            ContactData(json)
+            AnonContactData.fromJson(json)
         }
         set(newValue) = preferenceDataStore.put(ANON_CONTACT_DATA_KEY, newValue)
 
@@ -416,6 +416,15 @@ internal class ContactManager(
                     )
                 }
 
+                is ContactOperation.AssociateChannel -> {
+                    contactChannels.add(
+                        ContactChannelMutation.AssociateAnon(
+                            channelId = operation.channelId,
+                            channelType = operation.channelType
+                        )
+                    )
+                }
+
                else -> continue
             }
         }
@@ -605,12 +614,6 @@ internal class ContactManager(
         )
 
         if (response.isSuccessful) {
-            audienceOverridesProvider.recordContactUpdate(
-                contactId,
-                operation.tags,
-                operation.attributes,
-                operation.subscriptions
-            )
             contactUpdated(contactId, operation)
         }
 
@@ -640,7 +643,12 @@ internal class ContactManager(
         )
 
         if (response.value != null && response.isSuccessful) {
-            contactUpdated(contactId, associatedChannel = response.value)
+            contactUpdated(
+                contactId = contactId,
+                channelUpdate = ContactChannelMutation.AssociateAnon(
+                    operation.channelId, operation.channelType
+                )
+            )
         }
 
         return response.isSuccessful || response.isClientError
@@ -657,19 +665,18 @@ internal class ContactManager(
         )
 
         if (response.value != null && response.isSuccessful) {
-            audienceOverridesProvider.recordContactUpdate(
+            contactUpdated(
                 contactId = contactId,
-                channel = ContactChannelMutation.Associate(
+                channelUpdate = ContactChannelMutation.Associate(
                     channel = ContactChannel.Sms(
                         ContactChannel.Sms.RegistrationInfo.Pending(
                             address = operation.msisdn,
                             operation.options
                         )
                     ),
-                    channelId = response.value.channelId
+                    channelId = response.value
                 )
             )
-            contactUpdated(contactId, associatedChannel = response.value)
         }
 
         return response.isSuccessful || response.isClientError
@@ -686,20 +693,18 @@ internal class ContactManager(
         )
 
         if (response.value != null && response.isSuccessful) {
-            audienceOverridesProvider.recordContactUpdate(
+            contactUpdated(
                 contactId = contactId,
-                channel = ContactChannelMutation.Associate(
+                channelUpdate = ContactChannelMutation.Associate(
                     channel = ContactChannel.Email(
                         ContactChannel.Email.RegistrationInfo.Pending(
                             address = operation.emailAddress,
                             operation.options
                         )
                     ),
-                    channelId = response.value.channelId
+                    channelId = response.value
                 )
             )
-
-            contactUpdated(contactId, associatedChannel = response.value)
         }
 
         return response.isSuccessful || response.isClientError
@@ -716,7 +721,13 @@ internal class ContactManager(
         )
 
         if (response.value != null && response.isSuccessful) {
-            contactUpdated(contactId, associatedChannel = response.value)
+            contactUpdated(
+                contactId = contactId,
+                channelUpdate = ContactChannelMutation.AssociateAnon(
+                    channelId = response.value,
+                    channelType = ChannelType.OPEN
+                )
+            )
         }
 
         return response.isSuccessful || response.isClientError
@@ -805,9 +816,12 @@ internal class ContactManager(
         }
 
         if (response.isSuccessful) {
-            audienceOverridesProvider.recordContactUpdate(
+            contactUpdated(
                 contactId = contactId,
-                channel = ContactChannelMutation.Disassociated(operation.channel)
+                channelUpdate = ContactChannelMutation.Disassociated(
+                    channel = operation.channel,
+                    channelId = response.value
+                )
             )
         }
 
@@ -846,7 +860,9 @@ internal class ContactManager(
                         tagGroups = anonData.tagGroups,
                         subscriptionLists = anonData.subscriptionLists,
                         attributes = anonData.attributes,
-                        associatedChannels = anonData.associatedChannels,
+                        associatedChannels = anonData.associatedChannels.map {
+                            ConflictEvent.ChannelInfo(it.channelId, it.channelType)
+                        },
                         conflictingNameUserId = namedUserId
                     )
                 )
@@ -875,16 +891,24 @@ internal class ContactManager(
     private fun contactUpdated(
         contactId: String,
         updateOperation: ContactOperation.Update? = null,
-        associatedChannel: AssociatedChannel? = null
+        channelUpdate: ContactChannelMutation? = null
     ) {
         if (contactId != this.lastContactIdentity?.contactId) {
             return
         }
 
+        audienceOverridesProvider.recordContactUpdate(
+            contactId,
+            updateOperation?.tags,
+            updateOperation?.attributes,
+            updateOperation?.subscriptions,
+            channelUpdate
+        )
+
         if (this.lastContactIdentity?.isAnonymous == true) {
             val attributes: MutableMap<String, JsonValue> = mutableMapOf()
             val tagGroups: MutableMap<String, MutableSet<String>> = mutableMapOf()
-            val channels: MutableList<AssociatedChannel> = mutableListOf()
+            val channels: MutableSet<AnonChannel> = mutableSetOf()
             val subscriptionLists: MutableMap<String, MutableSet<Scope>> = mutableMapOf()
             val anonData = this.anonData
             if (anonData != null) {
@@ -918,11 +942,23 @@ internal class ContactManager(
                 }
             }
 
-            if (associatedChannel != null) {
-                channels.add(associatedChannel)
+            when(channelUpdate) {
+                is ContactChannelMutation.AssociateAnon ->
+                    channels.add(AnonChannel(channelUpdate.channelId, channelUpdate.channelType))
+                is ContactChannelMutation.Associate -> {
+                    if (channelUpdate.channelId != null) {
+                        channels.add(AnonChannel(channelUpdate.channelId, channelUpdate.channel.channelType))
+                    }
+                }
+                is ContactChannelMutation.Disassociated -> {
+                    if (channelUpdate.channelId != null) {
+                        channels.remove(AnonChannel(channelUpdate.channelId, channelUpdate.channel.channelType))
+                    }
+                }
+                null -> {}
             }
 
-            this.anonData = ContactData(tagGroups, attributes, subscriptionLists, channels)
+            this.anonData = AnonContactData(tagGroups, attributes, subscriptionLists, channels.toList())
         }
     }
 

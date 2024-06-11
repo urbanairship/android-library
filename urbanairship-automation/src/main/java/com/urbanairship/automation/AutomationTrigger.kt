@@ -2,8 +2,6 @@
 
 package com.urbanairship.automation
 
-import com.urbanairship.UALog
-import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.automation.engine.AutomationEvent
 import com.urbanairship.automation.engine.TriggerableState
 import com.urbanairship.automation.engine.triggerprocessor.MatchResult
@@ -24,73 +22,120 @@ import java.util.UUID
  * Event automation trigger types.
  */
 public enum class EventAutomationTriggerType(internal val value: String) : JsonSerializable {
-    /// Foreground
+
+    /**
+     * Foreground
+     */
     FOREGROUND("foreground"),
 
-    /// Background
+    /**
+     * Background
+     */
     BACKGROUND("background"),
 
-    /// Screen view
+    /**
+     * Screen view
+     */
     SCREEN("screen"),
 
-    /// Version update
+    /**
+     * Version update
+     */
     VERSION("version"),
 
-    /// App init
+    /**
+     * App init
+     */
     APP_INIT("app_init"),
 
-    // Region enter
+    /**
+     * Region enter
+     */
     REGION_ENTER("region_enter"),
 
-    /// Region exit
+    /**
+     * Region exit
+     */
     REGION_EXIT("region_exit"),
 
-    /// Custom event count
+    /**
+     * Custom event count
+     */
     CUSTOM_EVENT_COUNT("custom_event_count"),
 
-    /// Custom event value
+    /**
+     * Custom event value
+     */
     CUSTOM_EVENT_VALUE("custom_event_value"),
 
-    /// Feature flag interaction
+    /**
+     * Feature flag interaction
+     */
     FEATURE_FLAG_INTERACTION("feature_flag_interaction"),
 
-    /// Active session
+    /**
+     * Active session
+     */
     ACTIVE_SESSION("active_session"),
 
-    /// IAX display
+    /**
+     * IAX display
+     */
     IN_APP_DISPLAY("in_app_display"),
 
-    /// IAX resolution
+    /**
+     * IAX resolution
+     */
     IN_APP_RESOLUTION("in_app_resolution"),
 
-    /// IAX button tap
+    /**
+     * IAX button tap
+     */
     IN_APP_BUTTON_TAP("in_app_button_tap"),
 
-    /// IAX permission result
+    /**
+     * IAX permission result
+     */
     IN_APP_PERMISSION_RESULT("in_app_permission_result"),
 
-    /// IAX form display
+    /**
+     * IAX form display
+     */
     IN_APP_FORM_DISPLAY("in_app_form_display"),
 
-    /// IAX form result
+    /**
+     * IAX form result
+     */
     IN_APP_FORM_RESULT("in_app_form_result"),
 
-    /// IAX gesture
+    /**
+     * IAX gesture
+     */
     IN_APP_GESTURE("in_app_gesture"),
 
-    /// IAX pager completed
+    /**
+     * IAX pager completed
+     */
     IN_APP_PAGER_COMPLETED("in_app_pager_completed"),
 
-    /// IAX pager summary
+    /**
+     * IAX pager summary
+     */
     IN_APP_PAGER_SUMMARY("in_app_pager_summary"),
 
-    /// IAX page swipe
+    /**
+     * IAX page swipe
+     */
     IN_APP_PAGE_SWIPE("in_app_page_swipe"),
 
-    /// IAX page view
+    /**
+     * IAX page view
+     */
     IN_APP_PAGE_VIEW("in_app_page_view"),
 
-    /// IAX page action
+    /**
+     * IAX page action
+     */
     IN_APP_PAGE_ACTION("in_app_page_action");
 
     internal companion object {
@@ -294,7 +339,6 @@ public class EventAutomationTrigger internal constructor(
     }
 
     internal fun matchEvent(event: AutomationEvent, data: TriggerData): MatchResult? {
-        UALog.e("matching $event")
         return when (event) {
             is AutomationEvent.StateChanged -> {
                 stateTriggerMatch(event.state, data)
@@ -394,8 +438,8 @@ public class CompoundAutomationTrigger internal constructor(
         ).toJsonValue()
     }
 
-    internal fun matchEvent(event: AutomationEvent, data: TriggerData): MatchResult? {
-        val triggeredChildren = triggeredChildrendCount(data)
+    internal fun matchEvent(event: AutomationEvent, data: TriggerData): MatchResult {
+        val triggeredChildren = triggeredChildrenCount(data)
 
         var childResults = matchChildren(event, data)
 
@@ -403,7 +447,7 @@ public class CompoundAutomationTrigger internal constructor(
         val state = data.lastTriggerableState
         if (this.type == CompoundAutomationTriggerType.CHAIN &&
             state != null && !event.isStateEvent &&
-            triggeredChildren != triggeredChildrendCount(data)) {
+            triggeredChildren != triggeredChildrenCount(data)) {
 
             childResults = matchChildren(AutomationEvent.StateChanged(state), data)
         } else if (event is AutomationEvent.StateChanged) {
@@ -470,7 +514,7 @@ public class CompoundAutomationTrigger internal constructor(
         }
     }
 
-    private fun triggeredChildrendCount(data: TriggerData): Int {
+    private fun triggeredChildrenCount(data: TriggerData): Int {
         return children.filter { child ->
             val state = data.children[child.trigger.id] ?: return@filter false
             return@filter child.trigger.isTriggered(state)

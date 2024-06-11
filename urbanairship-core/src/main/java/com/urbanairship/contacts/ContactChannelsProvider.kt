@@ -133,7 +133,17 @@ internal class ContactChannelsProvider(
                         if (address != null && channelId != null) {
                             addressToChannelIdMap[address] = channelId
                         }
-                    } else -> {}
+                    }
+                    is ContactChannelMutation.Disassociated -> {
+                        val address = it.channel.canonicalAddress
+                        val channelId = it.channelId
+                        if (address != null && channelId != null) {
+                            addressToChannelIdMap[address] = channelId
+                        }
+                    }
+                    is ContactChannelMutation.AssociateAnon -> {
+                        // No-op
+                    }
                 }
             }
         }
@@ -143,7 +153,7 @@ internal class ContactChannelsProvider(
             when (mutation) {
                 is ContactChannelMutation.Associate -> {
                     val found = mutable.firstOrNull {
-                        isMatch(it, mutation.channel, mutation.channelId)
+                        isMatch(it, mutation)
                     }
 
                     if (found == null) {
@@ -152,8 +162,11 @@ internal class ContactChannelsProvider(
                 }
                 is ContactChannelMutation.Disassociated -> {
                     mutable.removeAll {
-                        isMatch(it, mutation.channel)
+                        isMatch(it, mutation)
                     }
+                }
+                is ContactChannelMutation.AssociateAnon -> {
+                    // No-op
                 }
             }
         }
@@ -163,24 +176,22 @@ internal class ContactChannelsProvider(
 
     private fun isMatch(
         channel: ContactChannel,
-        otherChannel: ContactChannel,
-        otherChannelId: String? = null
+        mutation: ContactChannelMutation,
     ): Boolean {
         val canonicalAddress = channel.canonicalAddress
-        val resolvedChannelId = resolveChannelId(channel, canonicalAddress)
+        val resolvedChannelId = resolveChannelId(channel.channelId, canonicalAddress)
 
-        val otherCanonicalAddress = otherChannel.canonicalAddress
-        val otherResolvedChannelId = otherChannelId ?: resolveChannelId(otherChannel, otherCanonicalAddress)
+        val mutationCanonicalAddress = mutation.canonicalAddress
+        val mutationChannelId = resolveChannelId(mutation.channelId, mutationCanonicalAddress)
 
-        if (resolvedChannelId != null && resolvedChannelId == otherResolvedChannelId) {
+        if (resolvedChannelId != null && resolvedChannelId == mutationChannelId) {
             return true
         }
 
-        return canonicalAddress != null && canonicalAddress == otherCanonicalAddress
+        return canonicalAddress != null && canonicalAddress == mutationCanonicalAddress
     }
 
-    private fun resolveChannelId(contactChannel: ContactChannel, canonicalAddress: String?): String? {
-        val channelId =  contactChannel.channelId
+    private fun resolveChannelId(channelId: String?, canonicalAddress: String?): String? {
         if (channelId != null) { return channelId }
 
         if (canonicalAddress != null) {
@@ -194,11 +205,29 @@ internal class ContactChannelsProvider(
 
     companion object {
         private val maxCacheAge = 10.minutes
-        private val initialBackoff = 10.seconds
-        private val maxBackoff = 1.minutes
+        private val initialBackoff = 8.seconds
+        private val maxBackoff = 64.seconds
     }
 }
 
+
+private val ContactChannelMutation.canonicalAddress: String?
+    get() {
+        return when (this) {
+            is ContactChannelMutation.Disassociated -> channel.canonicalAddress
+            is ContactChannelMutation.Associate -> channel.canonicalAddress
+            is ContactChannelMutation.AssociateAnon -> null
+        }
+    }
+
+private val ContactChannelMutation.channelId: String?
+    get() {
+        return when (this) {
+            is ContactChannelMutation.Disassociated -> this.channelId ?: this.channel.channelId
+            is ContactChannelMutation.Associate -> this.channelId ?: this.channel.channelId
+            is ContactChannelMutation.AssociateAnon -> this.channelId
+        }
+    }
 
 private val ContactChannel.canonicalAddress: String?
     get() {

@@ -87,7 +87,7 @@ internal class ContactApiClient (
         emailAddress: String,
         options: EmailRegistrationOptions,
         locale: Locale
-    ): RequestResult<AssociatedChannel> {
+    ): RequestResult<String> {
         val url = runtimeConfig.deviceUrl.appendEncodedPath(EMAIL_PATH).build()
 
         val payload = jsonMapOf(
@@ -131,7 +131,7 @@ internal class ContactApiClient (
         msisdn: String,
         options: SmsRegistrationOptions,
         locale: Locale
-    ): RequestResult<AssociatedChannel> {
+    ): RequestResult<String> {
         val url = runtimeConfig.deviceUrl.appendEncodedPath(SMS_PATH).build()
 
         val payload = jsonMapOf(
@@ -151,7 +151,7 @@ internal class ContactApiClient (
         address: String,
         options: OpenChannelRegistrationOptions,
         locale: Locale
-    ): RequestResult<AssociatedChannel> {
+    ): RequestResult<String> {
         val url = runtimeConfig.deviceUrl.appendEncodedPath(OPEN_CHANNEL_PATH).build()
 
         val payload = jsonMapOf(
@@ -177,7 +177,7 @@ internal class ContactApiClient (
         contactId: String,
         channelId: String,
         channelType: ChannelType
-    ): RequestResult<AssociatedChannel> {
+    ): RequestResult<String> {
         val url = runtimeConfig.deviceUrl.appendEncodedPath(UPDATE_PATH + contactId).build()
 
         val payload = jsonMapOf(
@@ -205,7 +205,7 @@ internal class ContactApiClient (
 
         return session.execute(request) { status: Int, _: Map<String, String>, _: String? ->
             if (status == 200) {
-                AssociatedChannel(channelId, channelType)
+                channelId
             } else {
                 null
             }
@@ -255,7 +255,7 @@ internal class ContactApiClient (
         url: Uri?,
         payload: JsonSerializable,
         channelType: ChannelType
-    ): RequestResult<AssociatedChannel> {
+    ): RequestResult<String> {
         val headers = mapOf(
             "Accept" to "application/vnd.urbanairship+json; version=3;",
             "X-UA-Appkey" to runtimeConfig.configOptions.appKey,
@@ -370,7 +370,7 @@ internal class ContactApiClient (
         channelId: String,
         channelType: ChannelType,
         optOut: Boolean
-    ): RequestResult<Unit> {
+    ): RequestResult<String> {
         return performDisassociate(
             contactId,
             jsonMapOf(
@@ -385,7 +385,7 @@ internal class ContactApiClient (
         contactId: String,
         emailAddress: String,
         optOut: Boolean
-    ): RequestResult<Unit> {
+    ): RequestResult<String> {
         return performDisassociate(
             contactId, jsonMapOf(
                 EMAIL_ADDRESS_KEY to emailAddress,
@@ -400,7 +400,7 @@ internal class ContactApiClient (
         msisdn: String,
         senderId: String,
         optOut: Boolean
-    ): RequestResult<Unit> {
+    ): RequestResult<String> {
         return performDisassociate(
             contactId, jsonMapOf(
                 CHANNEL_TYPE_KEY to ChannelType.SMS,
@@ -414,7 +414,7 @@ internal class ContactApiClient (
     private suspend fun performDisassociate(
         contactId: String,
         payload: JsonSerializable,
-    ): RequestResult<Unit> {
+    ): RequestResult<String> {
         val url = runtimeConfig.deviceUrl.appendEncodedPath(DISASSOCIATE_PATH + contactId).build()
 
         val headers = mapOf(
@@ -432,7 +432,13 @@ internal class ContactApiClient (
 
         UALog.d { "Disassociating contact channel with payload $payload request: $request" }
 
-        return session.execute(request).also { result ->
+        return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
+            if (UAHttpStatusUtil.inSuccessRange(status)) {
+                JsonValue.parseString(responseBody).requireMap().requireField<String>(CHANNEL_ID_KEY)
+            } else {
+                null
+            }
+        }.also { result ->
             result.log { "Disassociating contact channel with payload $payload result: $result" }
         }
     }

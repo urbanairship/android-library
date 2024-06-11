@@ -241,7 +241,7 @@ public class ContactApiClientTest {
             client.registerOpen(fakeContactId, fakeEmail, options, Locale("en", "US"))
         assertEquals(200, result.status)
 
-        val expectedResultValue = AssociatedChannel("fake_channel_id", ChannelType.OPEN)
+        val expectedResultValue = "fake_channel_id"
         assertEquals(expectedResultValue, result.value)
         assertEquals(200, result.status)
 
@@ -317,7 +317,7 @@ public class ContactApiClientTest {
         val result = client.registerEmail(fakeContactId, fakeEmail, options, Locale("en", "US"))
         assertEquals(200, result.status)
 
-        val expectedResultValue = AssociatedChannel("fake_channel_id", ChannelType.EMAIL)
+        val expectedResultValue = "fake_channel_id"
         assertEquals(expectedResultValue, result.value)
         assertEquals(200, result.status)
 
@@ -386,7 +386,7 @@ public class ContactApiClientTest {
         val result = client.registerSms(fakeContactId, fakeMsisdn, options, Locale("en", "US"))
         assertEquals(200, result.status)
 
-        val expectedResultValue = AssociatedChannel("fake_channel_id", ChannelType.SMS)
+        val expectedResultValue = "fake_channel_id"
         assertEquals(expectedResultValue, result.value)
         assertEquals(200, result.status)
 
@@ -548,7 +548,7 @@ public class ContactApiClientTest {
 
         val result = client.associatedChannel(fakeContactId, fakeChannelId, ChannelType.OPEN)
 
-        val expectedResultValue = AssociatedChannel(fakeChannelId, ChannelType.OPEN)
+        val expectedResultValue = fakeChannelId
         assertEquals(expectedResultValue, result.value)
         assertEquals(200, result.status)
 
@@ -663,11 +663,17 @@ public class ContactApiClientTest {
 
     @Test
     public fun testDisassociateChannel(): TestResult = runTest {
-        requestSession.addResponse(200)
-
+        requestSession.addResponse(
+            200, """
+            {
+              "channel_id": "some_channel"
+            }
+            """
+        )
         val result = client.disassociateChannel(fakeContactId, fakeChannelId, ChannelType.OPEN, true)
 
         assertEquals(200, result.status)
+        assertEquals("some_channel", result.value)
 
         val expectedUpdateRequest = Request(
             url = Uri.parse("https://example.com/api/contacts/disassociate/$fakeContactId"),
@@ -692,11 +698,18 @@ public class ContactApiClientTest {
 
     @Test
     public fun testDisassociateEmailChannel(): TestResult = runTest {
-        requestSession.addResponse(200)
+        requestSession.addResponse(
+            200, """
+            {
+              "channel_id": "some_channel"
+            }
+            """
+        )
 
         val result = client.disassociateEmail(fakeContactId, "email@email.email", false)
 
         assertEquals(200, result.status)
+        assertEquals("some_channel", result.value)
 
         val expectedUpdateRequest = Request(
             url = Uri.parse("https://example.com/api/contacts/disassociate/$fakeContactId"),
@@ -721,11 +734,18 @@ public class ContactApiClientTest {
 
     @Test
     public fun testDisassociateSmsChannel(): TestResult = runTest {
-        requestSession.addResponse(200)
+        requestSession.addResponse(
+            200, """
+            {
+              "channel_id": "some_channel"
+            }
+            """
+        )
 
         val result = client.disassociateSms(fakeContactId, "msisdn-123", "sender-123", true)
 
         assertEquals(200, result.status)
+        assertEquals("some_channel", result.value)
 
         val expectedUpdateRequest = Request(
             url = Uri.parse("https://example.com/api/contacts/disassociate/$fakeContactId"),

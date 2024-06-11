@@ -627,7 +627,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = AssociatedChannel("some channel", ChannelType.EMAIL),
+            value = "some channel",
             body = null,
             headers = emptyMap()
         )
@@ -638,6 +638,21 @@ public class ContactManagerTest {
         coVerify {
             mockApiClient.registerEmail(
                 anonIdentityResult.contactId, address, options, Locale.ENGLISH
+            )
+        }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.Associate(
+                    channel = ContactChannel.Email(
+                        ContactChannel.Email.RegistrationInfo.Pending(
+                            address = address,
+                            options
+                        )
+                    ),
+                    channelId = "some channel"
+                )
             )
         }
     }
@@ -705,7 +720,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = AssociatedChannel("some channel", ChannelType.EMAIL),
+            value = "some channel",
             body = null,
             headers = emptyMap()
         )
@@ -716,6 +731,21 @@ public class ContactManagerTest {
         coVerify {
             mockApiClient.registerSms(
                 anonIdentityResult.contactId, address, options, Locale.ENGLISH
+            )
+        }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.Associate(
+                    channel = ContactChannel.Sms(
+                        ContactChannel.Sms.RegistrationInfo.Pending(
+                            address = address,
+                            options
+                        )
+                    ),
+                    channelId = "some channel"
+                )
             )
         }
     }
@@ -783,7 +813,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = AssociatedChannel("some channel", ChannelType.EMAIL),
+            value = "some channel",
             body = null,
             headers = emptyMap()
         )
@@ -794,6 +824,16 @@ public class ContactManagerTest {
         coVerify {
             mockApiClient.registerOpen(
                 anonIdentityResult.contactId, address, options, Locale.ENGLISH
+            )
+        }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.AssociateAnon(
+                    "some channel",
+                    ChannelType.OPEN
+                )
             )
         }
     }
@@ -815,7 +855,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 400,
-            value = AssociatedChannel("some channel", ChannelType.EMAIL),
+            value = "some channel",
             body = null,
             headers = emptyMap()
         )
@@ -841,7 +881,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 500,
-            value = AssociatedChannel("some channel", ChannelType.EMAIL),
+            value = "some channel",
             body = null,
             headers = emptyMap()
         )
@@ -867,7 +907,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = AssociatedChannel(address, type),
+            value = address,
             body = null,
             headers = emptyMap()
         )
@@ -985,6 +1025,13 @@ public class ContactManagerTest {
             )
         )
 
+        contactManager.addOperation(
+            ContactOperation.AssociateChannel(
+                channelId = "some email channel id",
+                channelType = ChannelType.EMAIL
+            )
+        )
+
         val expectedChannels = listOf(
             ContactChannelMutation.Associate(
                 ContactChannel.Email(
@@ -1009,6 +1056,10 @@ public class ContactManagerTest {
                         registrationOptions = SmsRegistrationOptions.options("some sender id")
                     )
                 )
+            ),
+            ContactChannelMutation.AssociateAnon(
+                channelId = "some email channel id",
+                channelType = ChannelType.EMAIL
             )
         )
 
@@ -1064,7 +1115,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = AssociatedChannel("some address", ChannelType.SMS),
+            value = "some address",
             body = null,
             headers = emptyMap()
         )
@@ -1104,7 +1155,7 @@ public class ContactManagerTest {
             subscriptionLists = mapOf(
                 "some list" to setOf(Scope.APP)
             ),
-            associatedChannels = listOf(AssociatedChannel("some address", ChannelType.SMS)),
+            associatedChannels = listOf(ConflictEvent.ChannelInfo("some address", ChannelType.SMS)),
             conflictingNameUserId = "some named user id"
         )
 
@@ -1127,7 +1178,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = Unit,
+            value = "contact channel id",
             body = null,
             headers = emptyMap()
         )
@@ -1153,6 +1204,21 @@ public class ContactManagerTest {
                 false
             )
         }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.Disassociated(
+                    ContactChannel.Email(
+                        ContactChannel.Email.RegistrationInfo.Registered(
+                            channelId = "some-channel",
+                            maskedAddress = "some-masked-email"
+                        )
+                    ),
+                    channelId = "contact channel id"
+                )
+            )
+        }
     }
 
     @Test
@@ -1169,7 +1235,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = Unit,
+            value = "contact channel id",
             body = null,
             headers = emptyMap()
         )
@@ -1179,7 +1245,7 @@ public class ContactManagerTest {
                 ContactChannel.Sms(
                     ContactChannel.Sms.RegistrationInfo.Registered(
                         channelId = "some-channel",
-                        maskedAddress = "some-masked-email",
+                        maskedAddress = "some-masked-sms",
                         isOptIn = true,
                         senderId = "some-sender"
                     )
@@ -1195,6 +1261,23 @@ public class ContactManagerTest {
                 "some-channel",
                 ChannelType.SMS,
                 true
+            )
+        }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.Disassociated(
+                    ContactChannel.Sms(
+                        ContactChannel.Sms.RegistrationInfo.Registered(
+                            channelId = "some-channel",
+                            maskedAddress = "some-masked-sms",
+                            isOptIn = true,
+                            senderId = "some-sender"
+                        )
+                    ),
+                    channelId = "contact channel id"
+                )
             )
         }
     }
@@ -1213,7 +1296,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = Unit,
+            value = "contact channel id",
             body = null,
             headers = emptyMap()
         )
@@ -1239,6 +1322,21 @@ public class ContactManagerTest {
                 false
             )
         }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.Disassociated(
+                    ContactChannel.Sms(
+                        ContactChannel.Sms.RegistrationInfo.Pending(
+                            address = "some-msisdn",
+                            registrationOptions = SmsRegistrationOptions.options("some-sender")
+                        )
+                    ),
+                    channelId = "contact channel id"
+                )
+            )
+        }
     }
 
     @Test
@@ -1255,7 +1353,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = Unit,
+            value = "contact channel id",
             body = null,
             headers = emptyMap()
         )
@@ -1280,6 +1378,21 @@ public class ContactManagerTest {
                 false
             )
         }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.Disassociated(
+                    ContactChannel.Email(
+                        ContactChannel.Email.RegistrationInfo.Pending(
+                            address = "email@email.email",
+                            registrationOptions = EmailRegistrationOptions.options(null, null, true)
+                        )
+                    ),
+                    channelId = "contact channel id"
+                )
+            )
+        }
     }
 
     @Test
@@ -1296,7 +1409,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 400,
-            value = Unit,
+            value = null,
             body = null,
             headers = emptyMap()
         )
@@ -1330,7 +1443,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 500,
-            value = Unit,
+            value = null,
             body = null,
             headers = emptyMap()
         )

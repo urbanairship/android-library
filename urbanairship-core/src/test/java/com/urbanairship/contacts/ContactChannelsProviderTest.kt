@@ -6,13 +6,11 @@ import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.http.RequestResult
 import com.urbanairship.util.TaskSleeper
 import java.util.UUID
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,7 +19,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -289,18 +286,18 @@ public class ContactChannelsProviderTest {
             contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDateMs = 0)
             assertTrue(this.awaitItem().isFailure)
 
-            clock.currentTimeMillis += 130.seconds.inWholeMilliseconds
-            advanceTimeBy(130.seconds)
+            clock.currentTimeMillis += 90.seconds.inWholeMilliseconds
+            advanceTimeBy(90.seconds)
             assertEquals(response + channelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
 
             ensureAllEventsConsumed()
         }
 
         coVerifyOrder {
-            taskSleeper.sleep(10.seconds)
-            taskSleeper.sleep(20.seconds)
-            taskSleeper.sleep(40.seconds)
-            taskSleeper.sleep(1.minutes)
+            taskSleeper.sleep(8.seconds)
+            taskSleeper.sleep(16.seconds)
+            taskSleeper.sleep(32.seconds)
+            taskSleeper.sleep(64.seconds)
             taskSleeper.sleep(10.minutes)
         }
     }
@@ -365,9 +362,10 @@ public class ContactChannelsProviderTest {
     }
 }
 
-private val ContactChannelMutation.channel : ContactChannel
+private val ContactChannelMutation.channel : ContactChannel?
     get() {
         return when(this) {
+            is ContactChannelMutation.AssociateAnon -> null
             is ContactChannelMutation.Associate -> this.channel
             is ContactChannelMutation.Disassociated -> this.channel
         }
