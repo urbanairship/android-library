@@ -32,9 +32,10 @@ public enum class ResolutionType(public val jsonValue: String) {
     DEFERRED("deferred"),
     STATIC("static");
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         public fun from(value: String): ResolutionType? {
-            return values().firstOrNull { it.jsonValue == value }
+            return entries.firstOrNull { it.jsonValue == value }
         }
     }
 }
@@ -49,6 +50,7 @@ public class ExperimentResult(
     public val allEvaluatedExperimentsMetadata: List<JsonMap>
 ) : JsonSerializable {
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val KEY_CHANNEL_ID = "channelId"
         private const val KEY_CONTACT_ID = "contactId"

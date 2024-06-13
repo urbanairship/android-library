@@ -17,6 +17,7 @@ public class TaskSleeper {
         }
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         public val default: TaskSleeper = TaskSleeper()
     }

@@ -34,6 +34,7 @@ public data class RemoteConfig @JvmOverloads constructor(
         IAA_CONFIG to iaaConfig
     ).toJsonValue()
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val AIRSHIP_CONFIG_KEY = "airship_config"
         private const val METERED_USAGE_CONFIG_KEY = "metered_usage"
@@ -97,6 +98,7 @@ public data class RemoteAirshipConfig @JvmOverloads constructor(
         meteredUsageUrl = jsonValue.optMap().optionalField(METERED_USAGE_URL_KEY)
     )
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val REMOTE_DATA_URL_KEY = "remote_data_url"
         private const val DEVICE_API_URL_KEY = "device_api_url"
@@ -120,6 +122,7 @@ public data class ContactConfig @JvmOverloads constructor(
         CHANNEL_REGISTRATION_MAX_RESOLVE_AGE_MS_KEY to channelRegistrationMaxResolveAgeMs
     ).toJsonValue()
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val FOREGROUND_INTERVAL_MS_KEY = "foreground_resolve_interval_ms"
         private const val CHANNEL_REGISTRATION_MAX_RESOLVE_AGE_MS_KEY = "max_cra_resolve_age_ms"
@@ -145,6 +148,7 @@ public data class MeteredUsageConfig internal constructor(
         INTERVAL_MS_KEY to intervalMs
     ).toJsonValue()
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val IS_ENABLED_KEY = "enabled"
         private const val INITIAL_DELAY_MS_KEY = "initial_delay_ms"

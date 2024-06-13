@@ -170,15 +170,15 @@ public sealed class CustomDisplayResolution {
     /**
      * Message tap
      */
-    public class MessageTap(): CustomDisplayResolution()
+    public data object MessageTap: CustomDisplayResolution()
 
     /**
      * User dismissed
      */
-    public class UserDismissed(): CustomDisplayResolution()
+    public data object UserDismissed: CustomDisplayResolution()
 
     /**
      * Timed out
      */
-    public class TimedOut(): CustomDisplayResolution()
+    public data object TimedOut: CustomDisplayResolution()
 }

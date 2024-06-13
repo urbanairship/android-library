@@ -36,6 +36,7 @@ public interface DeviceInfoProvider {
     public val installDateMilliseconds: Long
     public val locale: Locale
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         @JvmStatic
         public fun newProvider(contactId: String? = null): DeviceInfoProvider {

@@ -171,6 +171,7 @@ public class AirshipRuntimeConfig internal constructor (
         configObserver.updateRemoteConfig(config)
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private fun determineUrlFallback(configOptions: AirshipConfigOptions): Boolean {
             if ("huawei".equals(Build.MANUFACTURER, ignoreCase = true)) {

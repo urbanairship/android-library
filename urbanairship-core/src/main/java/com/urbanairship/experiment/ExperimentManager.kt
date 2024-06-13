@@ -32,6 +32,7 @@ public class ExperimentManager internal constructor(
 
     private val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         internal const val PAYLOAD_TYPE = "experiments"
     }
