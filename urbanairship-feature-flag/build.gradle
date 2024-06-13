@@ -40,6 +40,6 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
-        // TODO(SDK18): freeCompilerArgs = ["-Xexplicit-api=strict"]
+        freeCompilerArgs = ["-Xexplicit-api=strict"]
     }
 }

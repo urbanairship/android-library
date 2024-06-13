@@ -12,12 +12,11 @@ import kotlinx.parcelize.Parcelize
 /**
  * Common display attributes.
  */
-@Parcelize
-data class CommonDisplay(
+public data class CommonDisplay(
     val name: String? = null,
     val description: String? = null
-): Parcelable {
-    companion object {
+) {
+    internal companion object {
         @JvmStatic val EMPTY = CommonDisplay(null, null)
 
         private const val KEY_NAME = "name"
@@ -60,13 +59,12 @@ data class CommonDisplay(
 /**
  * Icon display attributes.
  */
-@Parcelize
-data class IconDisplay(
+public data class IconDisplay(
     val icon: String? = null,
     val name: String? = null,
     val description: String? = null
-): Parcelable {
-    companion object {
+) {
+    internal companion object {
         private const val KEY_ICON = "icon"
         private const val KEY_NAME = "name"
         private const val KEY_DESCRIPTION = "description"

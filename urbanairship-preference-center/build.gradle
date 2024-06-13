@@ -26,14 +26,13 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    namespace 'com.urbanairship.preferencecenter'
-}
 
-tasks.withType(KotlinCompile).configureEach {
-    it.kotlinOptions {
+    kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
-        freeCompilerArgs += [ "-opt-in=kotlin.RequiresOptIn" ]
+        freeCompilerArgs = ["-Xexplicit-api=strict"]
     }
+
+    namespace 'com.urbanairship.preferencecenter'
 }
 
 allOpen {

@@ -57,6 +57,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -70,8 +71,8 @@ import org.junit.runner.RunWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
-class PreferenceCenterViewModelTest {
-    companion object {
+public class PreferenceCenterViewModelTest {
+    public companion object {
         private const val PREF_CENTER_ID = "pref-center-id"
         private const val PREF_CENTER_TITLE = "Preference Center Title"
         private const val PREF_CENTER_SUBTITLE = "Preference Center Subtitle"
@@ -227,17 +228,17 @@ class PreferenceCenterViewModelTest {
     }
 
     @Before
-    fun setUp() {
+    public fun setUp() {
         Dispatchers.setMain(testDispatcher)
     }
 
     @After
-    fun tearDown() {
+    public fun tearDown() {
         Dispatchers.resetMain()
     }
 
     @Test
-    fun emitsInitialLoadingState() = runTest {
+    public fun emitsInitialLoadingState(): TestResult = runTest {
         viewModel(mockPreferenceCenter = null, mockChannel = null).run {
             states.test {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
@@ -247,7 +248,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun handlesRefreshActionWithMergeChannelData() = runTest {
+    public fun handlesRefreshActionWithMergeChannelData(): TestResult = runTest {
         val config = spyk(CHANNEL_SUBSCRIPTION_CONFIG)
         every { config.hasChannelSubscriptions } returns true
         every { config.hasContactSubscriptions } returns true
@@ -285,7 +286,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun handlesRefreshAction() = runTest {
+    public fun handlesRefreshAction(): TestResult = runTest {
         val config = spyk(CHANNEL_SUBSCRIPTION_CONFIG)
         every { config.hasChannelSubscriptions } returns true
         every { config.hasContactSubscriptions } returns true
@@ -310,7 +311,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun handleNamedUserIdChange() = runTest {
+    public fun handleNamedUserIdChange(): TestResult = runTest {
         val namedUserIdFlow = MutableStateFlow("")
         viewModel(namedUserIdFlow = namedUserIdFlow).run {
             states.test {
@@ -329,7 +330,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun handlesRefreshActionWithoutChannelSubscriptions() = runTest {
+    public fun handlesRefreshActionWithoutChannelSubscriptions(): TestResult = runTest {
         val config = spyk(CHANNEL_SUBSCRIPTION_CONFIG)
         every { config.hasChannelSubscriptions } returns false
         every { config.hasContactSubscriptions } returns true
@@ -354,7 +355,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun handlesRefreshActionWithoutContactSubscriptions() = runTest {
+    public fun handlesRefreshActionWithoutContactSubscriptions(): TestResult = runTest {
         val config = spyk(CHANNEL_SUBSCRIPTION_CONFIG)
         every { config.hasChannelSubscriptions } returns true
         every { config.hasContactSubscriptions } returns false
@@ -379,7 +380,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun handlesRefreshActionWithoutContactChannels() = runTest {
+    public fun handlesRefreshActionWithoutContactChannels(): TestResult = runTest {
         val config = spyk(CHANNEL_SUBSCRIPTION_CONFIG)
         every { config.hasChannelSubscriptions } returns true
         every { config.hasContactSubscriptions } returns true
@@ -408,7 +409,7 @@ class PreferenceCenterViewModelTest {
     //
 
     @Test
-    fun handlesChannelPreferenceItemChangedActionSubscribe() = runTest {
+    public fun handlesChannelPreferenceItemChangedActionSubscribe(): TestResult = runTest {
         val editor: SubscriptionListEditor = mockk {
             every { mutate(any(), any()) } returns this
             justRun { apply() }
@@ -447,7 +448,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun handlesChannelPreferenceItemChangedActionUnsubscribe() = runTest {
+    public fun handlesChannelPreferenceItemChangedActionUnsubscribe(): TestResult = runTest {
         val editor = mockk<SubscriptionListEditor> {
             every { mutate(any(), any()) } returns this
             justRun { apply() }
@@ -492,7 +493,7 @@ class PreferenceCenterViewModelTest {
     //
 
     @Test
-    fun handlesContactPreferenceItemChangedActionSubscribe() = runTest {
+    public fun handlesContactPreferenceItemChangedActionSubscribe(): TestResult = runTest {
         val editor = mockk<ScopedSubscriptionListEditor> {
             every { mutate(any(), any(), any()) } returns this
             justRun { apply() }
@@ -540,7 +541,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun handlesContactPreferenceItemChangedActionUnsubscribe() = runTest {
+    public fun handlesContactPreferenceItemChangedActionUnsubscribe(): TestResult = runTest {
         val editor = mockk<ScopedSubscriptionListEditor> {
             every { mutate(any(), any(), any()) } returns this
             justRun { apply() }
@@ -603,7 +604,7 @@ class PreferenceCenterViewModelTest {
     //
 
     @Test
-    fun handlesContactPreferenceGroupChangedActionSubscribe() = runTest {
+    public fun handlesContactPreferenceGroupChangedActionSubscribe(): TestResult = runTest {
         val editor = mockk<ScopedSubscriptionListEditor> {
             every { mutate(any(), any(), any()) } returns this
             justRun { apply() }
@@ -652,7 +653,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun handlesContactPreferenceGroupChangedActionUnsubscribe() = runTest {
+    public fun handlesContactPreferenceGroupChangedActionUnsubscribe(): TestResult = runTest {
         val editor = mockk<ScopedSubscriptionListEditor> {
             every { mutate(any(), any(), any()) } returns this
             justRun { apply() }
@@ -718,7 +719,7 @@ class PreferenceCenterViewModelTest {
     // Condition State Updates
     //
 
-    fun handlesConditionStateUpdate(): Unit = runTest {
+    public fun handlesConditionStateUpdate(): TestResult = runTest {
         val initialConditions = Condition.State(isOptedIn = false)
         val updatedConditions = Condition.State(isOptedIn = true)
 
@@ -772,7 +773,7 @@ class PreferenceCenterViewModelTest {
     //
 
     @Test
-    fun handlesButtonActions(): Unit = runTest {
+    public fun handlesButtonActions(): TestResult = runTest {
         val actions = mapOf(
             "deeplink" to JsonValue.wrap("foo"),
             "rate-app" to JsonValue.wrap("bar"),
@@ -795,7 +796,7 @@ class PreferenceCenterViewModelTest {
     //
 
     @Test
-    fun testFiltersEmptySection(): Unit = runTest {
+    public fun testFiltersEmptySection(): TestResult = runTest {
         val conf = ALERT_CONDITIONS_CONFIG
         val configItemCount = conf.sections.count() + conf.sections.sumOf { it.items.count() }
         // Sanity check that we have 2 sections with 1 alert item in first and 2 subscription
@@ -809,7 +810,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun testFiltersNotificationOptIn(): Unit = runTest {
+    public fun testFiltersNotificationOptIn(): TestResult = runTest {
         val conf = ALERT_CONDITIONS_CONFIG
         val configItemCount = conf.sections.count() + conf.sections.sumOf { it.items.count() }
         // Sanity check that we have 2 sections with 1 alert item in first and 2 subscription
@@ -827,7 +828,7 @@ class PreferenceCenterViewModelTest {
     //
 
     @Test
-    fun testAddContactChannel(): Unit = runTest {
+    public fun testAddContactChannel(): TestResult = runTest {
         val mockItem: Item.ContactManagement = mockk {}
         viewModel().run {
             states.test {
@@ -846,7 +847,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun testConfirmAddContactChannel(): Unit = runTest {
+    public fun testConfirmAddContactChannel(): TestResult = runTest {
         val mockItem: Item.ContactManagement = mockk {}
         val dialogResult: ContactChannelDialogInputView.DialogResult = mockk {}
 
@@ -867,7 +868,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun testRemoveContactChannel(): Unit = runTest {
+    public fun testRemoveContactChannel(): TestResult = runTest {
         val msisdn = "15038675309"
         val senderId = "123456"
 
@@ -897,7 +898,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun testRegisterUnregisterSmsChannel(): Unit = runTest {
+    public fun testRegisterUnregisterSmsChannel(): TestResult = runTest {
         val msisdn = "15038675309"
         val senderId = "123456"
         val registrationInfo = ContactChannel.Sms.RegistrationInfo.Pending(
@@ -939,7 +940,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun testRegisterUnregisterEmailChannel(): Unit = runTest {
+    public fun testRegisterUnregisterEmailChannel(): TestResult = runTest {
         val address = "someone@example.com"
         val optInProperties = jsonMapOf("foo" to "bar")
         val registrationInfo = ContactChannel.Email.RegistrationInfo.Pending(
@@ -988,7 +989,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun testValidateSmsChannelValid() = runTest {
+    public fun testValidateSmsChannelValid(): TestResult = runTest {
         val item: Item.ContactManagement = mockk {
             every { addPrompt } returns mockk(relaxed = true)
             every { registrationOptions } returns mockk {
@@ -1019,7 +1020,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun testValidateSmsChannelInvalid() = runTest {
+    public fun testValidateSmsChannelInvalid(): TestResult = runTest {
         val invalidMessage = "Invalid message"
         val item: Item.ContactManagement = mockk {
             every { addPrompt } returns mockk(relaxed = true)
@@ -1054,7 +1055,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun testResendChannelVerification() = runTest {
+    public fun testResendChannelVerification(): TestResult = runTest {
         val item: Item.ContactManagement = mockk {
             every { registrationOptions } returns mockk<RegistrationOptions.Email> {
                 every { properties } returns null
@@ -1086,7 +1087,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun testUpdateContactChannels() = runTest {
+    public fun testUpdateContactChannels(): TestResult = runTest {
         val config = spyk(CHANNEL_SUBSCRIPTION_CONFIG)
         every { config.hasChannelSubscriptions } returns true
         every { config.hasContactSubscriptions } returns true
@@ -1148,7 +1149,7 @@ class PreferenceCenterViewModelTest {
     }
 
     @Test
-    fun testUpdateContactChannelsState() = runTest {
+    public fun testUpdateContactChannelsState(): TestResult = runTest {
         val config = spyk(CHANNEL_SUBSCRIPTION_CONFIG)
         every { config.hasChannelSubscriptions } returns true
         every { config.hasContactSubscriptions } returns true

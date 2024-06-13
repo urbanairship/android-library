@@ -4,10 +4,10 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 
-data class Options(
+public data class Options(
     val mergeChannelDataToContact: Boolean
 ) {
-    companion object {
+    internal companion object {
         private const val KEY_MERGE_CHANNEL_DATA_TO_CONTACT = "merge_channel_data_to_contact"
 
         /**

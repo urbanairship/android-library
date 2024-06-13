@@ -10,10 +10,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class FeatureFlagInteractionEventTest {
+public class FeatureFlagInteractionEventTest {
 
     @Test
-    fun testEvent() {
+    public fun testEvent() {
         val flag = FeatureFlag.createFlag(
             name = "some-flag-name",
             isEligible = true,
@@ -42,7 +42,7 @@ class FeatureFlagInteractionEventTest {
     }
 
     @Test
-    fun testCreateFlag() {
+    public fun testCreateFlag() {
         val reportingInfo = FeatureFlag.ReportingInfo(
             reportingMetadata = jsonMapOf("reporting" to "is good"),
             channelId = "some channel",
@@ -64,7 +64,7 @@ class FeatureFlagInteractionEventTest {
     }
 
     @Test(expected = Exception::class)
-    fun testEventMissingReportingInfo() {
+    public fun testEventMissingReportingInfo() {
         val flag = FeatureFlag.createMissingFlag("some-flag")
         FeatureFlagInteractionEvent(flag)
     }

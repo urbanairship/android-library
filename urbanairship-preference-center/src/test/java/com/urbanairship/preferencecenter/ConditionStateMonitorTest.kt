@@ -25,7 +25,7 @@ import org.junit.runner.RunWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
-class ConditionStateMonitorTest {
+public class ConditionStateMonitorTest {
 
     private val stateFlow = MutableStateFlow(PushNotificationStatus(
         isUserNotificationsEnabled = true,
@@ -43,25 +43,25 @@ class ConditionStateMonitorTest {
     private lateinit var conditionStateMonitor: ConditionStateMonitor
 
     @Before
-    fun setUp() {
+    public fun setUp() {
         Dispatchers.setMain(testDispatcher)
         conditionStateMonitor = ConditionStateMonitor(mockPushManager)
     }
 
     @After
-    fun tearDown() {
+    public fun tearDown() {
         Dispatchers.resetMain()
     }
 
     @Test
-    fun testInitialState(): TestResult = runTest {
+    public fun testInitialState(): TestResult = runTest {
         conditionStateMonitor.states.test {
             assertThat(awaitItem()).isEqualTo(Condition.State(isOptedIn = true))
         }
     }
 
     @Test
-    fun testCurrentState(): TestResult = runTest {
+    public fun testCurrentState(): TestResult = runTest {
         every { mockPushManager.pushNotificationStatus } returnsMany listOf(
             PushNotificationStatus(
                 isUserNotificationsEnabled = true,
@@ -103,7 +103,7 @@ class ConditionStateMonitorTest {
     }
 
     @Test
-    fun testUpdates(): TestResult = runTest {
+    public fun testUpdates(): TestResult = runTest {
         conditionStateMonitor.states.test {
             assertThat(awaitItem()).isEqualTo(Condition.State(isOptedIn = true))
 

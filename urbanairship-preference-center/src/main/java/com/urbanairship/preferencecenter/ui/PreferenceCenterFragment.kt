@@ -41,18 +41,19 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @OpenForTesting
-class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center) {
-    companion object {
+public class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center) {
+    public companion object {
 
         /**
          * Required `String` argument specifying the ID of the Preference Center to be displayed.
          */
-        const val ARG_ID: String = "pref_center_id"
+        public const val ARG_ID: String = "pref_center_id"
 
         /**
          * Creates a new `PreferenceCenterFragment` instance, with [preferenceCenterId] passed as an argument.
          */
-        @JvmStatic fun create(preferenceCenterId: String): PreferenceCenterFragment =
+        @JvmStatic
+        public fun create(preferenceCenterId: String): PreferenceCenterFragment =
             PreferenceCenterFragment().apply {
                 arguments = Bundle().apply { putString(ARG_ID, preferenceCenterId) }
             }
@@ -61,7 +62,7 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     /**
      * Listener to override Preference Center display behavior.
      */
-    fun interface OnDisplayPreferenceCenterListener {
+    public fun interface OnDisplayPreferenceCenterListener {
 
         /**
          * Called when a Preference Center title and description will be displayed.
@@ -70,7 +71,7 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
          * @param description Description of the Preference Center.
          * @return `true` if the title and description were displayed, otherwise `false` to trigger the default display as an item at the top of the list.
          */
-        fun onDisplayPreferenceCenter(title: String?, description: String?): Boolean
+        public fun onDisplayPreferenceCenter(title: String?, description: String?): Boolean
     }
 
     private val preferenceCenterId: String by lazy {
@@ -185,14 +186,14 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     /**
      * Sets the [OnDisplayPreferenceCenterListener].
      */
-    fun setOnDisplayPreferenceCenterListener(listener: OnDisplayPreferenceCenterListener?) {
+    public fun setOnDisplayPreferenceCenterListener(listener: OnDisplayPreferenceCenterListener?) {
         onDisplayListener = listener
     }
 
     /**
      * Shows the title and description as an item at the top of the list.
      */
-    fun showHeaderItem(title: String?, description: String?) {
+    public fun showHeaderItem(title: String?, description: String?) {
         adapter.setHeaderItem(title, description)
     }
 

@@ -4,10 +4,12 @@ import com.urbanairship.UALog
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 
-class FeatureFlagAnalytics(
+/** Analytics helper that handles tracking of feature flag interactions. */
+internal class FeatureFlagAnalytics(
     private val analytics: Analytics,
 ) {
 
+    /** Tracks an interaction with the given feature [flag]. */
     fun trackInteraction(flag: FeatureFlag) {
         if (!flag.exists) {
             UALog.e { "Flag does not exist, unable to track interaction: $flag" }

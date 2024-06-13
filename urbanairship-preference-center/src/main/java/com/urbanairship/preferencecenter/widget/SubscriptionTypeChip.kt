@@ -13,7 +13,7 @@ import com.urbanairship.preferencecenter.R
  * Style is applied via `defStyleAttr` reference to:
  * `@style/UrbanAirship.PreferenceCenter.Item.ContactSubscriptionGroup.Chip`
  */
-class SubscriptionTypeChip(
+internal class SubscriptionTypeChip(
     context: Context,
     defStyleAttr: Int = R.attr.urbanAirshipPreferenceCenterSubscriptionTypeChipStyle
 ) : Chip(

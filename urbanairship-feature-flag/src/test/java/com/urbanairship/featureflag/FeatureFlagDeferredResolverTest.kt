@@ -42,7 +42,7 @@ import org.junit.runner.RunWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
-class FeatureFlagDeferredResolverTest {
+public class FeatureFlagDeferredResolverTest {
     private lateinit var cache: AirshipCache
     private val clock: Clock = mockk()
     private val coreResolver: DeferredResolver = mockk()
@@ -51,7 +51,7 @@ class FeatureFlagDeferredResolverTest {
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
-    fun setup() {
+    public fun setup() {
         cache = spyk(AirshipCache(
             context = ApplicationProvider.getApplicationContext(),
             runtimeConfig = mockk(),
@@ -68,12 +68,12 @@ class FeatureFlagDeferredResolverTest {
     }
 
     @After
-    fun tearDown() {
+    public fun tearDown() {
         Dispatchers.resetMain()
     }
 
     @Test
-    fun resolverReturnsValidCachedValue(): TestResult = runTest {
+    public fun resolverReturnsValidCachedValue(): TestResult = runTest {
         val expected = DeferredFlag.Found(
             DeferredFlagInfo(
                 isEligible = true,
@@ -95,7 +95,7 @@ class FeatureFlagDeferredResolverTest {
     }
 
     @Test
-    fun testSuccessPath(): TestResult = runTest {
+    public fun testSuccessPath(): TestResult = runTest {
         val expected = DeferredFlag.Found(
             DeferredFlagInfo(
                 isEligible = true,
@@ -135,7 +135,7 @@ class FeatureFlagDeferredResolverTest {
     }
 
     @Test
-    fun testCacheTtlIsCorrectlyParsed(): TestResult = runTest {
+    public fun testCacheTtlIsCorrectlyParsed(): TestResult = runTest {
         val request = makeDeferredRequest()
         val flagName = "flag-name"
         val info = makeFeatureFlagInfo(
@@ -177,7 +177,7 @@ class FeatureFlagDeferredResolverTest {
     }
 
     @Test
-    fun testNotFound(): TestResult = runTest {
+    public fun testNotFound(): TestResult = runTest {
         val request = makeDeferredRequest()
         val info = makeFeatureFlagInfo(
             "flag-name",
@@ -195,7 +195,7 @@ class FeatureFlagDeferredResolverTest {
     }
 
     @Test
-    fun testOutOfDateThrows(): TestResult = runTest {
+    public fun testOutOfDateThrows(): TestResult = runTest {
         val request = makeDeferredRequest()
         val info = makeFeatureFlagInfo(
             "flag-name",
@@ -212,7 +212,7 @@ class FeatureFlagDeferredResolverTest {
     }
 
     @Test
-    fun testRetryError(): TestResult = runTest {
+    public fun testRetryError(): TestResult = runTest {
         val expected = DeferredFlag.Found(
             DeferredFlagInfo(
                 isEligible = true,
@@ -261,17 +261,7 @@ class FeatureFlagDeferredResolverTest {
     }
 
     @Test
-    fun testRetryOnlyOnce(): TestResult = runTest {
-        val expected = DeferredFlag.Found(
-            DeferredFlagInfo(
-                isEligible = true,
-                variables = FeatureFlagVariables.Fixed(
-                    jsonMapOf("variable" to "value")
-                ),
-                reportingMetadata = jsonMapOf("reporting" to "context")
-            )
-        )
-
+    public fun testRetryOnlyOnce(): TestResult = runTest {
         val request = makeDeferredRequest()
         val info = makeFeatureFlagInfo(
             "flag-name",
@@ -283,7 +273,7 @@ class FeatureFlagDeferredResolverTest {
         coEvery { coreResolver.resolve(request, capture(callbackSlot)) } answers {
             if (counter < 2) {
                 counter += 1
-                DeferredResult.RetriableError<Any>(2L)
+                DeferredResult.RetriableError(2L)
             } else {
                 val deferred = callbackSlot.captured.invoke(jsonMapOf(
                     "is_eligible" to true,
@@ -306,7 +296,7 @@ class FeatureFlagDeferredResolverTest {
     }
 
     @Test
-    fun waitForResolving(): TestResult = runTest {
+    public fun waitForResolving(): TestResult = runTest {
         val expected = DeferredFlag.Found(
             DeferredFlagInfo(
                 isEligible = true,
@@ -340,8 +330,8 @@ class FeatureFlagDeferredResolverTest {
             subject.resolve(request, info)
         }
 
-        var valueFirst = withTimeoutOrNull(100, { first.await() })
-        var valueSecond = withTimeoutOrNull(100, { second.await() })
+        var valueFirst = withTimeoutOrNull(100) { first.await() }
+        var valueSecond = withTimeoutOrNull(100) { second.await() }
 
         assertNull(valueFirst)
         assertNull(valueSecond)
@@ -363,8 +353,8 @@ class FeatureFlagDeferredResolverTest {
 
         subject.resolve(request, info)
 
-        valueFirst = withTimeoutOrNull(100, { first.await() })
-        valueSecond = withTimeoutOrNull(100, { second.await() })
+        valueFirst = withTimeoutOrNull(100) { first.await() }
+        valueSecond = withTimeoutOrNull(100) { second.await() }
 
         assertEquals(expected, valueFirst?.getOrNull())
         assertEquals(expected, valueSecond?.getOrNull())
@@ -373,7 +363,7 @@ class FeatureFlagDeferredResolverTest {
     }
 
     @Test
-    fun reResolveOnFinished(): TestResult = runTest(UnconfinedTestDispatcher()) {
+    public fun reResolveOnFinished(): TestResult = runTest(UnconfinedTestDispatcher()) {
         val expected = DeferredFlag.Found(
             DeferredFlagInfo(
                 isEligible = true,
@@ -402,7 +392,7 @@ class FeatureFlagDeferredResolverTest {
 
         val first = async { subject.resolve(request, info) }
 
-        var valueFirst = withTimeoutOrNull(100, { first.await() })
+        var valueFirst = withTimeoutOrNull(100) { first.await() }
 
         assertNull(valueFirst)
 
@@ -423,7 +413,7 @@ class FeatureFlagDeferredResolverTest {
 
         subject.resolve(request, info)
 
-        valueFirst = withTimeoutOrNull(100, { first.await() })
+        valueFirst = withTimeoutOrNull(100) { first.await() }
 
         assertEquals(expected, valueFirst?.getOrNull())
         assertEquals(1, resolveCount)

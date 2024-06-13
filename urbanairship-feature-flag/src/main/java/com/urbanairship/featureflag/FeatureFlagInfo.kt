@@ -21,6 +21,7 @@ import java.text.ParseException
 internal sealed class FeatureFlagVariables: JsonSerializable {
     data class Fixed(val data: JsonMap?) : FeatureFlagVariables() {
 
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue {
             return jsonMapOf(
                 KEY_TYPE to VariableType.FIXED.jsonValue,
@@ -31,6 +32,7 @@ internal sealed class FeatureFlagVariables: JsonSerializable {
 
     data class Variant(val variantVariables: List<VariablesVariant>) : FeatureFlagVariables() {
 
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue {
             return jsonMapOf(
                 KEY_TYPE to VariableType.VARIANTS.jsonValue,
@@ -97,6 +99,7 @@ internal data class VariablesVariant(
         }
     }
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue {
         return jsonMapOf(
             KEY_ID to id,
@@ -247,7 +250,8 @@ internal data class EvaluationOptions(
         private const val KEY_STALE_DATA_FLAG = "disallow_stale_value"
         private const val KEY_TTL = "ttl"
 
-        fun fromJson(json: JsonMap): EvaluationOptions? {
+        @Throws(JsonException::class)
+        fun fromJson(json: JsonMap): EvaluationOptions {
             return EvaluationOptions(
                 disallowStaleValues = json.optionalField(KEY_STALE_DATA_FLAG),
                 ttl = json.optionalField(KEY_TTL)
@@ -255,6 +259,7 @@ internal data class EvaluationOptions(
         }
     }
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue {
         return jsonMapOf(
             KEY_STALE_DATA_FLAG to disallowStaleValues, KEY_TTL to ttl?.toLong()

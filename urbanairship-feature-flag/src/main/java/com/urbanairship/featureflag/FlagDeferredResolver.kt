@@ -3,6 +3,7 @@
 package com.urbanairship.featureflag
 
 import com.urbanairship.AirshipDispatchers
+import com.urbanairship.UALog
 import com.urbanairship.cache.AirshipCache
 import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.deferred.DeferredResolver
@@ -51,7 +52,13 @@ internal class FlagDeferredResolver(
     }
 
     private suspend fun resolve(request: DeferredRequest, flagInfo: FeatureFlagInfo, requestId: String): Result<DeferredFlag> {
-        val cached = cache.getCached(requestId, DeferredFlag::fromJson)
+        val cached = try {
+            cache.getCached(requestId, DeferredFlag::fromJson)
+        } catch (e: JsonException) {
+            UALog.w(e) { "Failed to parse cached deferred flag!" }
+            null
+        }
+
         if (cached != null) {
             return Result.success(cached)
         }
@@ -82,7 +89,14 @@ internal class FlagDeferredResolver(
             backOffIntervals.remove(requestId)
         }
 
-        when (val result = resolver.resolve(request, DeferredFlagInfo::fromJson)) {
+        val result = try {
+            resolver.resolve(request, DeferredFlagInfo::fromJson)
+        } catch (e: JsonException) {
+            UALog.w(e) { "Failed to parse resolved deferred flag info!" }
+            null
+        }
+
+        when (result) {
             is DeferredResult.Success<DeferredFlagInfo> -> {
                 return Result.success(DeferredFlag.Found(result.result))
             }
@@ -149,13 +163,14 @@ internal sealed class DeferredFlag: JsonSerializable {
 
     data class Found(val flagInfo: DeferredFlagInfo): DeferredFlag() {
 
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue {
             return jsonMapOf(KEY_TYPE to ResultType.FOUND.jsonValue, KEY_FLAG to flagInfo).toJsonValue()
         }
     }
 
     data object NotFound: DeferredFlag() {
-
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue {
             return jsonMapOf(KEY_TYPE to ResultType.NOT_FOUND.jsonValue).toJsonValue()
         }
@@ -183,6 +198,7 @@ internal data class DeferredFlagInfo(
         }
     }
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue {
         return jsonMapOf(
             KEY_IS_ELIGIBLE to isEligible,

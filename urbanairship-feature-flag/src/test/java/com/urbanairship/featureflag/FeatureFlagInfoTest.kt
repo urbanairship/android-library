@@ -11,10 +11,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class FeatureFlagInfoTest {
+public class FeatureFlagInfoTest {
 
     @Test
-    fun testFeatureFlagParsedFromJson() {
+    public fun testFeatureFlagParsedFromJson() {
         val json = generateFeatureFlagPayload()
         val featureFlags = json
             .require("feature_flags")

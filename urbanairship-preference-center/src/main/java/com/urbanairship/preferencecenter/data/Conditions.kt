@@ -10,7 +10,7 @@ import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status.OPT_I
 import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status.OPT_OUT
 import kotlinx.parcelize.Parcelize
 
-typealias Conditions = List<Condition>
+internal typealias Conditions = List<Condition>
 
 /**
  * Evaluates this list of conditions against the given [state].
@@ -19,28 +19,28 @@ typealias Conditions = List<Condition>
  * - Any condition evaluates to `true`.
  * - The conditions list is empty.
  */
-fun Conditions.evaluate(state: Condition.State): Boolean =
+internal fun Conditions.evaluate(state: Condition.State): Boolean =
     isEmpty() || any { it.evaluate(state) }
 
 /** Base condition, used to determine visibility of preference sections and items. */
-sealed class Condition(private val type: String) {
+public sealed class Condition(private val type: String) {
 
     /** Notification opt-in status condition. */
-    data class OptInStatus(
+    public data class OptInStatus(
         val status: Status
     ) : Condition(TYPE_NOTIFICATION_OPT_IN) {
 
-        enum class Status(val jsonValue: String) {
+        public enum class Status(public val jsonValue: String) {
             OPT_IN("opt_in"),
             OPT_OUT("opt_out");
 
-            companion object {
+            public companion object {
                 internal fun parse(json: String) =
                     valueOf(json.uppercase())
             }
         }
 
-        override fun evaluate(state: State) = when (status) {
+        public override fun evaluate(state: State): Boolean = when (status) {
             OPT_IN -> state.isOptedIn
             OPT_OUT -> !state.isOptedIn
         }
@@ -51,18 +51,18 @@ sealed class Condition(private val type: String) {
     }
 
     @Parcelize
-    data class State(
+    public data class State(
         val isOptedIn: Boolean
     ): Parcelable
 
-    abstract fun evaluate(state: State): Boolean
+    public abstract fun evaluate(state: State): Boolean
 
     internal abstract fun toJson(): JsonMap
 
     protected fun jsonMapBuilder(): JsonMap.Builder =
         JsonMap.newBuilder().put(KEY_TYPE, type)
 
-    companion object {
+    internal companion object {
         private const val TYPE_NOTIFICATION_OPT_IN = "notification_opt_in"
         private const val TYPE_SMS_OPT_IN = "sms_opt_in"
         private const val TYPE_EMAIL_OPT_IN = "email_opt_in"

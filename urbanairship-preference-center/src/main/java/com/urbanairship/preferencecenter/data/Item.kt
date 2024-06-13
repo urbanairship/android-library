@@ -16,20 +16,20 @@ import com.urbanairship.json.toJsonList
 /**
  * Preference items.
  */
-sealed class Item(
+public sealed class Item(
     private val type: String,
     internal val hasChannelSubscriptions: Boolean,
     internal val hasContactSubscriptions: Boolean,
     internal val hasContactManagement: Boolean
 ) {
-    abstract val id: String
-    abstract val display: CommonDisplay
-    abstract val conditions: Conditions
+    public abstract val id: String
+    public abstract val display: CommonDisplay
+    public abstract val conditions: Conditions
 
     /**
      * Channel subscription preference item.
      */
-    data class ChannelSubscription(
+    public data class ChannelSubscription(
         override val id: String,
         val subscriptionId: String,
         override val display: CommonDisplay,
@@ -49,7 +49,7 @@ sealed class Item(
     /**
      * Channel subscription preference item.
      */
-    data class ContactSubscription(
+    public data class ContactSubscription(
         override val id: String,
         val subscriptionId: String,
         val scopes: Set<Scope>,
@@ -71,7 +71,7 @@ sealed class Item(
     /**
      * Contact subscription group.
      */
-    data class ContactSubscriptionGroup(
+    public data class ContactSubscriptionGroup(
         override val id: String,
         val subscriptionId: String,
         val components: List<Component>,
@@ -90,19 +90,19 @@ sealed class Item(
                 .put(KEY_COMPONENTS, components.toJson())
                 .build()
 
-        data class Component(
+        public data class Component(
             val scopes: Set<Scope>,
             val display: CommonDisplay
         ) {
 
             @Throws(JsonException::class)
-            fun toJson(): JsonMap =
+            internal fun toJson(): JsonMap =
                 jsonMapOf(
                     KEY_SCOPES to JsonValue.wrap(scopes.map(Scope::toJsonValue)),
                     KEY_DISPLAY to display.toJson()
                 )
 
-            companion object {
+            internal companion object {
                 @Throws(JsonException::class)
                 internal fun parse(json: JsonMap): Component {
                     return Component(
@@ -121,7 +121,7 @@ sealed class Item(
     /**
      * Alert item with an icon, title, description, and optional button.
      */
-    data class Alert(
+    public data class Alert(
         override val id: String,
         val iconDisplay: IconDisplay,
         val button: Button?,
@@ -132,7 +132,7 @@ sealed class Item(
         hasContactSubscriptions = false,
         hasContactManagement = false,
     ) {
-        override val display = CommonDisplay(iconDisplay.name, iconDisplay.description)
+        override val display: CommonDisplay = CommonDisplay(iconDisplay.name, iconDisplay.description)
 
         @Throws(JsonException::class)
         override fun toJson(): JsonMap =
@@ -142,8 +142,7 @@ sealed class Item(
                 .build()
     }
 
-
-    data class ContactManagement(
+    public data class ContactManagement(
         override val id: String,
         val platform: Platform,
         override val display: CommonDisplay,
@@ -168,7 +167,7 @@ sealed class Item(
                 .put(KEY_REGISTRATION_OPTIONS, registrationOptions.toJson())
                 .build()
 
-        companion object {
+        internal companion object {
             @Throws(JsonException::class)
             fun fromJson(json: JsonMap): ContactManagement {
                 return ContactManagement(
@@ -184,13 +183,13 @@ sealed class Item(
             }
         }
 
-        enum class Platform(val jsonValue: String) {
+        public enum class Platform(public val jsonValue: String) {
             SMS("sms"),
             EMAIL("email");
 
-            fun toJson(): JsonValue = JsonValue.wrap(jsonValue)
+            public fun toJson(): JsonValue = JsonValue.wrap(jsonValue)
 
-            companion object {
+            internal companion object {
                 @Throws(JsonException::class)
                 fun fromJson(jsonValue: JsonValue): Platform {
                     val valueString = jsonValue.optString()
@@ -203,17 +202,17 @@ sealed class Item(
                 }
             }
 
-            fun toChannelType(): ChannelType = when (this) {
+            internal fun toChannelType(): ChannelType = when (this) {
                 SMS -> ChannelType.SMS
                 EMAIL -> ChannelType.EMAIL
             }
         }
 
-        data class AddPrompt(
+        public data class AddPrompt(
             val prompt: AddChannelPrompt,
             val button: LabeledButton
         ) {
-            companion object {
+            internal companion object {
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): AddPrompt {
                     return AddPrompt(
@@ -224,23 +223,23 @@ sealed class Item(
             }
 
             @Throws(JsonException::class)
-            fun toJson(): JsonMap = jsonMapOf(
+            public fun toJson(): JsonMap = jsonMapOf(
                 KEY_VIEW to prompt.toJson(),
                 KEY_BUTTON to button.toJson()
             )
         }
 
-        data class RemovePrompt(
+        public data class RemovePrompt(
             val prompt: RemoveChannelPrompt,
             val button: IconButton
         ) {
             @Throws(JsonException::class)
-            fun toJson() = jsonMapOf(
+            public fun toJson(): JsonMap = jsonMapOf(
                 KEY_VIEW to prompt.toJson(),
                 KEY_BUTTON to button.toJson()
             )
 
-            companion object {
+            internal companion object {
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): RemovePrompt {
                     return RemovePrompt(
@@ -251,7 +250,7 @@ sealed class Item(
             }
         }
 
-        data class AddChannelPrompt(
+        public data class AddChannelPrompt(
             val type: String,
             val display: PromptDisplay,
             val submitButton: LabeledButton,
@@ -259,7 +258,7 @@ sealed class Item(
             val onSubmit: ActionableMessage?,
         ) {
             @Throws(JsonException::class)
-            fun toJson() = jsonMapOf(
+            public fun toJson(): JsonMap = jsonMapOf(
                 KEY_TYPE to type,
                 KEY_DISPLAY to display.toJson(),
                 KEY_SUBMIT_BUTTON to submitButton.toJson(),
@@ -267,7 +266,7 @@ sealed class Item(
                 KEY_ON_SUBMIT to onSubmit?.toJson(),
             )
 
-            companion object {
+            internal companion object {
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): AddChannelPrompt {
                     return AddChannelPrompt(
@@ -281,7 +280,7 @@ sealed class Item(
             }
         }
 
-        data class RemoveChannelPrompt(
+        public data class RemoveChannelPrompt(
             val type: String,
             val display: PromptDisplay,
             val submitButton: LabeledButton,
@@ -289,7 +288,7 @@ sealed class Item(
             val onSubmit: ActionableMessage?,
         ) {
             @Throws(JsonException::class)
-            fun toJson() = jsonMapOf(
+            public fun toJson(): JsonMap = jsonMapOf(
                 KEY_TYPE to type,
                 KEY_DISPLAY to display.toJson(),
                 KEY_SUBMIT_BUTTON to submitButton.toJson(),
@@ -297,7 +296,7 @@ sealed class Item(
                 KEY_ON_SUBMIT to onSubmit?.toJson(),
             )
 
-            companion object {
+            internal companion object {
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): RemoveChannelPrompt {
                     return RemoveChannelPrompt(
@@ -311,30 +310,30 @@ sealed class Item(
             }
         }
 
-        data class FormattedText(
+        public data class FormattedText(
             val text: String,
             val type: FormatType
         ) {
-            enum class FormatType(val value: String) {
+            public enum class FormatType(public val value: String) {
                 PLAIN("string"),
                 MARKDOWN("markdown"),
                 UNKNOWN("unknown");
 
-                companion object {
+               internal companion object {
                     fun from(value: String): FormatType =
                         entries.firstOrNull { it.value.equals(value, true) } ?: UNKNOWN
-                }
+               }
             }
 
             internal val isMarkdown = type == FormatType.MARKDOWN
 
             @Throws(JsonException::class)
-            fun toJson() = jsonMapOf(
+            public fun toJson(): JsonMap = jsonMapOf(
                 KEY_DESCRIPTION to text,
                 KEY_TYPE to type.value
             )
 
-            companion object {
+            internal companion object {
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): FormattedText {
                     return FormattedText(
@@ -345,19 +344,19 @@ sealed class Item(
             }
         }
 
-        data class PromptDisplay(
+        public data class PromptDisplay(
             val title: String,
             val description: String?,
             val footer: FormattedText?,
         ) {
             @Throws(JsonException::class)
-            fun toJson() = jsonMapOf(
+            public fun toJson(): JsonMap = jsonMapOf(
                 KEY_TITLE to title,
                 KEY_DESCRIPTION to description,
                 KEY_FOOTER to footer?.toJson()
             )
 
-            companion object {
+            internal companion object {
                 private const val KEY_TITLE = "title"
                 private const val KEY_FOOTER = "footer"
 
@@ -372,21 +371,21 @@ sealed class Item(
             }
         }
 
-        data class ActionableMessage(
+        public data class ActionableMessage(
             val title: String,
             val description: String?,
             val button: LabeledButton,
             val contentDescription: String?
         ) {
             @Throws(JsonException::class)
-            fun toJson() = jsonMapOf(
+            public fun toJson(): JsonMap = jsonMapOf(
                 KEY_NAME to title,
                 KEY_DESCRIPTION to description,
                 KEY_BUTTON to button.toJson(),
                 KEY_CONTENT_DESCRIPTION to contentDescription
             )
 
-            companion object {
+            internal companion object {
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): ActionableMessage {
                     return ActionableMessage(
@@ -399,15 +398,15 @@ sealed class Item(
             }
         }
 
-        data class IconButton(
+        public data class IconButton(
             val contentDescription: String?
         ) {
             @Throws(JsonException::class)
-            fun toJson(): JsonMap = jsonMapOf(
+            public fun toJson(): JsonMap = jsonMapOf(
                 KEY_CONTENT_DESCRIPTION to contentDescription
             )
 
-            companion object {
+            internal companion object {
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): IconButton {
                     return IconButton(
@@ -417,17 +416,17 @@ sealed class Item(
             }
         }
 
-        data class LabeledButton(
+        public data class LabeledButton(
             val text: String,
             val contentDescription: String?
         ) {
             @Throws(JsonException::class)
-            fun toJson(): JsonMap = jsonMapOf(
+            public fun toJson(): JsonMap = jsonMapOf(
                 KEY_TEXT to text,
                 KEY_CONTENT_DESCRIPTION to contentDescription
             )
 
-            companion object {
+            internal companion object {
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): LabeledButton {
                     return LabeledButton(
@@ -438,19 +437,19 @@ sealed class Item(
             }
         }
 
-        data class ErrorMessages(
+        public data class ErrorMessages(
             /** Invalid SMS or email address. */
-            val invalidMessage: String,
+            public val invalidMessage: String,
             /** Fallback error. */
-            val defaultMessage: String
+            public val defaultMessage: String
         ) {
             @Throws(JsonException::class)
-            fun toJson(): JsonMap = jsonMapOf(
+            public fun toJson(): JsonMap = jsonMapOf(
                 KEY_INVALID to invalidMessage,
                 KEY_DEFAULT to defaultMessage
             )
 
-            companion object {
+            internal companion object {
                 private const val KEY_INVALID = "invalid"
                 private const val KEY_DEFAULT = "default"
 
@@ -464,7 +463,7 @@ sealed class Item(
             }
         }
 
-        data class ResendOptions(
+        public data class ResendOptions(
             /** Seconds to wait before refreshing channel opt-in state. */
             val interval: Int,
             val message: String,
@@ -472,14 +471,14 @@ sealed class Item(
             val onSuccess: ActionableMessage?
         ) {
             @Throws(JsonException::class)
-            fun toJson(): JsonMap = jsonMapOf(
+            public fun toJson(): JsonMap = jsonMapOf(
                 KEY_INTERVAL to interval,
                 KEY_MESSAGE to message,
                 KEY_BUTTON to button.toJson(),
                 KEY_ON_SUBMIT to onSuccess?.toJson()
             )
 
-            companion object {
+            internal companion object {
                 private const val KEY_INTERVAL = "interval"
                 private const val KEY_MESSAGE = "message"
 
@@ -495,16 +494,16 @@ sealed class Item(
             }
         }
 
-        sealed class RegistrationOptions(
-            val type: String
+        public sealed class RegistrationOptions(
+            public val type: String
         ) {
-            abstract val resendOptions: ResendOptions
-            abstract val errorMessages: ErrorMessages
+            public abstract val resendOptions: ResendOptions
+            public abstract val errorMessages: ErrorMessages
 
             @Throws(JsonException::class)
-            abstract fun toJson(): JsonMap
+            public abstract fun toJson(): JsonMap
 
-            data class Sms(
+            public data class Sms(
                 val senders: List<SmsSenderInfo>,
                 val countryLabel: String,
                 val phoneLabel: String,
@@ -513,7 +512,7 @@ sealed class Item(
             ): RegistrationOptions("sms") {
 
                 @Throws(JsonException::class)
-                override fun toJson() = jsonMapOf(
+                public override fun toJson(): JsonMap = jsonMapOf(
                     KEY_SENDERS to senders.map { it.toJson() },
                     KEY_COUNTRY_LABEL to countryLabel,
                     KEY_PHONE_LABEL to phoneLabel,
@@ -521,7 +520,7 @@ sealed class Item(
                     KEY_ERROR_MESSAGES to errorMessages.toJson()
                 )
 
-                companion object {
+                internal companion object {
                     private const val KEY_SENDERS = "senders"
                     private const val KEY_COUNTRY_LABEL = "country_label"
                     private const val KEY_PHONE_LABEL = "msisdn_label"
@@ -539,17 +538,17 @@ sealed class Item(
                 }
             }
 
-            data class Email(
-                val placeholder: String?,
-                val addressLabel: String,
+            public data class Email(
+                public val placeholder: String?,
+                public val addressLabel: String,
                 /** A key-value mapping of properties that will be passed to the double opt-in registration endpoint. */
-                val properties: JsonMap?,
-                override val resendOptions: ResendOptions,
-                override val errorMessages: ErrorMessages,
+                public val properties: JsonMap?,
+                public override val resendOptions: ResendOptions,
+                public override val errorMessages: ErrorMessages,
             ): RegistrationOptions("email") {
 
                 @Throws(JsonException::class)
-                override fun toJson() = jsonMapOf(
+                public override fun toJson(): JsonMap = jsonMapOf(
                     KEY_PLACEHOLDER to placeholder,
                     KEY_ADDRESS_LABEL to addressLabel,
                     KEY_PROPERTIES to properties,
@@ -557,7 +556,7 @@ sealed class Item(
                     KEY_ERROR_MESSAGES to errorMessages.toJson()
                 )
 
-                companion object {
+                internal companion object {
                     private const val KEY_ADDRESS_LABEL = "address_label"
                     private const val KEY_PROPERTIES = "properties"
 
@@ -574,7 +573,7 @@ sealed class Item(
                 }
             }
 
-            companion object {
+            internal companion object {
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): RegistrationOptions {
                     return when (val type = json.requireField<String>(KEY_TYPE)) {
@@ -586,21 +585,21 @@ sealed class Item(
             }
         }
 
-        data class SmsSenderInfo(
+        public data class SmsSenderInfo(
             val senderId: String,
             val placeholderText: String,
             val dialingCode: String,
             val displayName: String,
         ) {
             @Throws(JsonException::class)
-            fun toJson() = jsonMapOf(
+            public fun toJson(): JsonMap = jsonMapOf(
                 KEY_SENDER_ID to senderId,
                 KEY_PLACEHOLDER to placeholderText,
                 KEY_COUNTRY_CODE to dialingCode,
                 KEY_DISPLAY_NAME to displayName
             )
 
-            companion object {
+            internal companion object {
                 private const val KEY_SENDER_ID = "sender_id"
                 private const val KEY_COUNTRY_CODE = "country_code"
                 private const val KEY_DISPLAY_NAME = "display_name"
@@ -618,7 +617,7 @@ sealed class Item(
         }
     }
 
-    companion object {
+    internal companion object {
         private const val TYPE_CHANNEL_SUBSCRIPTION = "channel_subscription"
         private const val TYPE_CONTACT_SUBSCRIPTION = "contact_subscription"
         private const val TYPE_CONTACT_SUBSCRIPTION_GROUP = "contact_subscription_group"

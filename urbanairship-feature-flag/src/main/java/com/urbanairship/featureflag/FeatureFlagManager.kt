@@ -27,8 +27,7 @@ import kotlinx.coroutines.launch
  * Airship Feature Flags manager.
  */
 @OpenForTesting
-public class FeatureFlagManager
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal constructor(
+public class FeatureFlagManager internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     private val audienceEvaluator: AudienceEvaluator,
@@ -41,7 +40,7 @@ public class FeatureFlagManager
     private val privacyManager: PrivacyManager
 ) : AirshipComponent(context, dataStore) {
 
-    companion object {
+    public companion object {
 
         /**
          * Gets the shared `FeatureFlagManager` instance.
@@ -49,7 +48,7 @@ public class FeatureFlagManager
          * @return an instance of `FeatureFlagManager`.
          */
         @JvmStatic
-        fun shared(): FeatureFlagManager =
+        public fun shared(): FeatureFlagManager =
             UAirship.shared().requireComponent(FeatureFlagManager::class.java)
     }
 
@@ -72,7 +71,7 @@ public class FeatureFlagManager
      * @param name The flag name
      * @return an instance of `PendingResult<FeatureFlag>`.
      */
-    fun flagAsPendingResult(name: String): PendingResult<FeatureFlag> {
+    public fun flagAsPendingResult(name: String): PendingResult<FeatureFlag> {
         val result = PendingResult<FeatureFlag>()
         pendingResultScope.launch {
             result.result = flag(name).getOrNull()
@@ -86,7 +85,7 @@ public class FeatureFlagManager
      * @param name The flag name
      * @return an instance of `Result<FeatureFlag>`.
      */
-    suspend fun flag(name: String): Result<FeatureFlag> {
+    public suspend fun flag(name: String): Result<FeatureFlag> {
         return flag(name = name, allowRefresh = true)
     }
 
@@ -153,7 +152,7 @@ public class FeatureFlagManager
      * Tracks an interaction on a [FeatureFlag]. The [PrivacyManager.Feature.FEATURE_FLAGS]
      * must be enabled or this method will no-op.
      */
-    fun trackInteraction(flag: FeatureFlag) {
+    public fun trackInteraction(flag: FeatureFlag) {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS)) {
             UALog.w { "Feature flags are disabled, unable to track interaction" }
             return

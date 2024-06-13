@@ -12,16 +12,16 @@ import kotlinx.parcelize.Parceler
 /**
  * Preference Center Configuration.
  */
-data class PreferenceCenterConfig(
+public data class PreferenceCenterConfig(
     val id: String,
     val sections: List<Section>,
     val display: CommonDisplay,
     val options: Options? = null
 ) {
 
-    constructor(id: String, sections: List<Section>, display: CommonDisplay) : this(id, sections, display, null)
+    public constructor(id: String, sections: List<Section>, display: CommonDisplay) : this(id, sections, display, null)
 
-    companion object {
+    internal companion object {
         internal const val KEY_ID = "id"
         private const val KEY_DISPLAY = "display"
         private const val KEY_SECTIONS = "sections"

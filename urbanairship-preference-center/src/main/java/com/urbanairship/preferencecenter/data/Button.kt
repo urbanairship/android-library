@@ -14,12 +14,12 @@ import kotlinx.parcelize.Parcelize
  * Button attributes.
  */
 @Parcelize
-data class Button(
+public data class Button(
     val text: String,
     val contentDescription: String?,
     val actions: Map<String, JsonValue>
 ): Parcelable {
-    companion object {
+    internal companion object {
         private const val KEY_TEXT = "text"
         private const val KEY_CONTENT_DESCRIPTION = "content_description"
         private const val KEY_ACTIONS = "actions"

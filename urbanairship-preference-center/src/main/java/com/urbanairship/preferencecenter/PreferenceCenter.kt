@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 /**
  * Airship Preference Center.
  */
-class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal constructor(
+public class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,
@@ -33,14 +33,14 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
 
     private val pendingResultScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
 
-    companion object {
+    public companion object {
         /**
          * Gets the shared `PreferenceCenter` instance.
          *
          * @return an instance of `PreferenceCenter`.
          */
         @JvmStatic
-        fun shared(): PreferenceCenter =
+        public fun shared(): PreferenceCenter =
             UAirship.shared().requireComponent(PreferenceCenter::class.java)
 
         internal const val PAYLOAD_TYPE = "preference_forms"
@@ -51,7 +51,7 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
     /**
      * Listener to override Preference Center open behavior.
      */
-    fun interface OnOpenListener {
+    public fun interface OnOpenListener {
 
         /**
          * Called when Preference Center should be opened.
@@ -59,13 +59,13 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
          * @param preferenceCenterId ID of the Preference Center to be opened.
          * @return `true` if the preference center was shown, otherwise `false` to trigger the default behavior.
          */
-        fun onOpenPreferenceCenter(preferenceCenterId: String): Boolean
+        public fun onOpenPreferenceCenter(preferenceCenterId: String): Boolean
     }
 
     /**
      * Preference Center open listener.
      */
-    var openListener: OnOpenListener? = null
+    public var openListener: OnOpenListener? = null
 
     private val isFeatureEnabled: Boolean
         get() = privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
@@ -81,7 +81,7 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
      *
      * @param preferenceCenterId The ID of the Preference Center.
      */
-    fun open(preferenceCenterId: String) {
+    public fun open(preferenceCenterId: String) {
         if (!isFeatureEnabled) {
             UALog.w("Unable to open Preference Center! FEATURE_TAGS_AND_ATTRIBUTES not enabled.")
             return
@@ -103,7 +103,7 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
      * @param preferenceCenterId The ID of the Preference Center.
      * @return The requested [PreferenceCenterConfig].
      */
-    suspend fun getConfig(preferenceCenterId: String): PreferenceCenterConfig? {
+    public suspend fun getConfig(preferenceCenterId: String): PreferenceCenterConfig? {
         val config = getJsonConfig(preferenceCenterId) ?: return null
         return try {
             PreferenceCenterConfig.parse(config.optMap())
@@ -117,13 +117,10 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
      * Returns a [PendingResult] containing the configuration of the Preference Center form with the
      * given [preferenceCenterId].
      *
-     * @hide
-     *
      * @param preferenceCenterId The ID of the Preference Center.
      * @return The requested [PreferenceCenterConfig].
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    fun getConfigPendingResult(preferenceCenterId: String): PendingResult<PreferenceCenterConfig> {
+    public fun getConfigPendingResult(preferenceCenterId: String): PendingResult<PreferenceCenterConfig> {
         val pendingResult = PendingResult<PreferenceCenterConfig>()
         pendingResultScope.launch {
             pendingResult.result = getConfig(preferenceCenterId)
@@ -141,7 +138,7 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
      * @return The requested preference center config, or null if not found.
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    suspend fun getJsonConfig(preferenceCenterId: String): JsonValue? {
+    public suspend fun getJsonConfig(preferenceCenterId: String): JsonValue? {
         val payloads = remoteData.payloads(PAYLOAD_TYPE)
         for (payload in payloads) {
             val forms = payload.data.opt(KEY_PREFERENCE_FORMS).optList()
@@ -166,7 +163,7 @@ class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal cons
      * @return The requested [PreferenceCenterConfig].
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    fun getJsonConfigPendingResult(preferenceCenterId: String): PendingResult<JsonValue> {
+    public fun getJsonConfigPendingResult(preferenceCenterId: String): PendingResult<JsonValue> {
         val pendingResult = PendingResult<JsonValue>()
         pendingResultScope.launch {
             pendingResult.result = getJsonConfig(preferenceCenterId)

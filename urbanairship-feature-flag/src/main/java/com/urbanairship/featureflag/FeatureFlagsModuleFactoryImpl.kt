@@ -4,6 +4,7 @@ package com.urbanairship.featureflag
 
 import android.content.Context
 import androidx.annotation.Keep
+import androidx.annotation.RestrictTo
 import com.urbanairship.BuildConfig
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
@@ -16,8 +17,10 @@ import com.urbanairship.modules.Module
 import com.urbanairship.modules.featureflag.FeatureFlagsModuleFactory
 import com.urbanairship.remotedata.RemoteData
 
+/** @hide */
 @Keep
-class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
 
     override fun build(
         context: Context,

@@ -29,9 +29,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class PreferenceCenterTest {
+public class PreferenceCenterTest {
 
-    companion object {
+    public companion object {
         private val EMPTY_PAYLOADS = RemoteDataPayload.emptyPayload(PAYLOAD_TYPE)
 
         private const val ID_1 = "id-1"
@@ -69,7 +69,7 @@ class PreferenceCenterTest {
     )
 
     @Test
-    fun testOnOpenListener(): TestResult = runTest {
+    public fun testOnOpenListener(): TestResult = runTest {
         prefCenter.openListener = onOpenListener
         verify(exactly = 0) { onOpenListener.onOpenPreferenceCenter(any()) }
 
@@ -78,51 +78,51 @@ class PreferenceCenterTest {
     }
 
     @Test
-    fun testGetConfigWithEmptyRemoteDataPayload(): TestResult = runTest {
+    public fun testGetConfigWithEmptyRemoteDataPayload(): TestResult = runTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(EMPTY_PAYLOADS)
         assertEquals(null, prefCenter.getConfig(ID_1))
     }
 
     @Test
-    fun testGetConfigWithSingleRemoteDataPayload(): TestResult = runTest {
+    public fun testGetConfigWithSingleRemoteDataPayload(): TestResult = runTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
         assertEquals(PREFERENCE_FORM_1, prefCenter.getConfig(ID_1))
     }
 
     @Test
-    fun testGetConfigPendingResultWithSingleRemoteDataPayload(): TestResult = runTest {
+    public fun testGetConfigPendingResultWithSingleRemoteDataPayload(): TestResult = runTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
         assertEquals(PREFERENCE_FORM_1, prefCenter.getConfigPendingResult(ID_1).get())
     }
 
     @Test
-    fun testGetJsonConfigWithSingleRemoteDataPayload(): TestResult = runTest {
+    public fun testGetJsonConfigWithSingleRemoteDataPayload(): TestResult = runTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
         assertEquals(PREFERENCE_FORM_1.toJson(), prefCenter.getJsonConfig(ID_1))
     }
 
     @Test
-    fun testGetJsonConfigPendingResultWithSingleRemoteDataPayload(): TestResult = runTest {
+    public fun testGetJsonConfigPendingResultWithSingleRemoteDataPayload(): TestResult = runTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
         assertEquals(PREFERENCE_FORM_1.toJson(), prefCenter.getJsonConfigPendingResult(ID_1).get())
     }
 
     @Test
-    fun testGetConfigWithMultipleRemoteDataPayloads(): TestResult = runTest {
+    public fun testGetConfigWithMultipleRemoteDataPayloads(): TestResult = runTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(MULTI_FORM_PAYLOAD)
         assertEquals(PREFERENCE_FORM_1, prefCenter.getConfig(ID_1))
         assertEquals(PREFERENCE_FORM_2, prefCenter.getConfig(ID_2))
     }
 
     @Test
-    fun testGetConfigPendingResultWithMultipleRemoteDataPayloads(): TestResult = runTest {
+    public fun testGetConfigPendingResultWithMultipleRemoteDataPayloads(): TestResult = runTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(MULTI_FORM_PAYLOAD)
         assertEquals(PREFERENCE_FORM_1, prefCenter.getConfigPendingResult(ID_1).get())
         assertEquals(PREFERENCE_FORM_2, prefCenter.getConfigPendingResult(ID_2).get())
     }
 
     @Test
-    fun testDeepLink() {
+    public fun testDeepLink() {
         val deepLink = Uri.parse("uairship://preferences/some-preference")
         prefCenter.openListener = onOpenListener
 
@@ -131,7 +131,7 @@ class PreferenceCenterTest {
     }
 
     @Test
-    fun testDeepLinkTrailingSlash() {
+    public fun testDeepLinkTrailingSlash() {
         val deepLink = Uri.parse("uairship://preferences/some-preference/")
         prefCenter.openListener = onOpenListener
 
@@ -140,7 +140,7 @@ class PreferenceCenterTest {
     }
 
     @Test
-    fun testInvalidDeepLinks() {
+    public fun testInvalidDeepLinks() {
         prefCenter.openListener = onOpenListener
 
         val wrongHost = Uri.parse("uairship://what/some-preference/")

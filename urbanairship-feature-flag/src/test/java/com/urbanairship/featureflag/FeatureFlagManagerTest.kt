@@ -32,7 +32,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class FeatureFlagManagerTest {
+public class FeatureFlagManagerTest {
 
     private val context: Context = TestApplication.getApplication()
     private val featureFlagAnalytics: FeatureFlagAnalytics = mockk()
@@ -76,7 +76,7 @@ class FeatureFlagManagerTest {
     )
 
     @Test
-    fun testNoFlags(): TestResult = runTest {
+    public fun testNoFlags(): TestResult = runTest {
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(emptyList())
@@ -92,7 +92,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testFlagDisabledFeatureFlags(): TestResult = runTest {
+    public fun testFlagDisabledFeatureFlags(): TestResult = runTest {
         every { privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS) } returns false
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
@@ -114,7 +114,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaticNoVariables(): TestResult = runTest {
+    public fun testStaticNoVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -141,7 +141,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaticVariantVariables(): TestResult = runTest {
+    public fun testStaticVariantVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -192,7 +192,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaticVariantVariablesMissedLocalAudienceCheck(): TestResult = runTest {
+    public fun testStaticVariantVariablesMissedLocalAudienceCheck(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -244,7 +244,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaticFixedVariables(): TestResult = runTest {
+    public fun testStaticFixedVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -276,7 +276,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaticFixedVariablesMissedLocalAudienceCheck(): TestResult = runTest {
+    public fun testStaticFixedVariablesMissedLocalAudienceCheck(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -309,7 +309,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredNoVariables(): TestResult = runTest {
+    public fun testDeferredNoVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -346,7 +346,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredVariantVariables(): TestResult = runTest {
+    public fun testDeferredVariantVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -405,7 +405,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredFixedVariables(): TestResult = runTest {
+    public fun testDeferredFixedVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -445,7 +445,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredNotEligible(): TestResult = runTest {
+    public fun testDeferredNotEligible(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -485,7 +485,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredLocalAudienceCheckMiss(): TestResult = runTest {
+    public fun testDeferredLocalAudienceCheckMiss(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -514,7 +514,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredNoFlag(): TestResult = runTest {
+    public fun testDeferredNoFlag(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -541,7 +541,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredError(): TestResult = runTest {
+    public fun testDeferredError(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -566,7 +566,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testMultipleFlagsSameName(): TestResult = runTest {
+    public fun testMultipleFlagsSameName(): TestResult = runTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
@@ -614,7 +614,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testMultipleFlagsSameNameNoMatch(): TestResult = runTest {
+    public fun testMultipleFlagsSameNameNoMatch(): TestResult = runTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
@@ -662,7 +662,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testMultipleFlagsSameNameDeferred(): TestResult = runTest {
+    public fun testMultipleFlagsSameNameDeferred(): TestResult = runTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
@@ -733,7 +733,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaleNotDefined(): TestResult = runTest {
+    public fun testStaleNotDefined(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -764,7 +764,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaleNotAllowed(): TestResult = runTest {
+    public fun testStaleNotAllowed(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -795,7 +795,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaleNotAllowedSingleFlag(): TestResult = runTest {
+    public fun testStaleNotAllowedSingleFlag(): TestResult = runTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
@@ -848,7 +848,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testFlagOutOfDateRemoteDataFailedToRefresh(): TestResult = runTest {
+    public fun testFlagOutOfDateRemoteDataFailedToRefresh(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
@@ -870,7 +870,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testFlagOutOfDateRemoteDataSuccessRefresh(): TestResult = runTest {
+    public fun testFlagOutOfDateRemoteDataSuccessRefresh(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
@@ -893,7 +893,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testFlagOutOfDateRemoteDataSuccessRefreshToStale(): TestResult = runTest {
+    public fun testFlagOutOfDateRemoteDataSuccessRefreshToStale(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
@@ -915,7 +915,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaleDataNoFlag(): TestResult = runTest {
+    public fun testStaleDataNoFlag(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
@@ -937,7 +937,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testUpToDateNoFlag(): TestResult = runTest {
+    public fun testUpToDateNoFlag(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
         every { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
@@ -956,7 +956,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testTrackInteraction(): TestResult = runTest {
+    public fun testTrackInteraction(): TestResult = runTest {
         every { featureFlagAnalytics.trackInteraction(any()) } just runs
 
         val flag = FeatureFlag.createFlag("some name", false, generateReportingInfo())
@@ -966,7 +966,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testTrackInteractionDisabledFeatureFlags(): TestResult = runTest {
+    public fun testTrackInteractionDisabledFeatureFlags(): TestResult = runTest {
         every { privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS) } returns false
 
         val flag = FeatureFlag.createFlag("some name", false, generateReportingInfo())
