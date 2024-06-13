@@ -135,14 +135,14 @@ public class DeviceTagSelector
         return builder.build().toJsonValue()
     }
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (o == null || javaClass != o.javaClass) {
+        if (other == null || javaClass != other.javaClass) {
             return false
         }
-        val that: DeviceTagSelector = o as DeviceTagSelector
+        val that: DeviceTagSelector = other as DeviceTagSelector
         return ObjectsCompat.equals(type, that.type) && ObjectsCompat.equals(
             tag,
             that.tag

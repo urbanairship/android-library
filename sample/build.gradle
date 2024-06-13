@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
@@ -22,6 +23,11 @@ android {
     buildFeatures {
         dataBinding = true
         buildConfig = true
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     buildTypes {
@@ -47,6 +53,12 @@ android {
 }
 
 dependencies {
+    // Kotlin
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
+
+    // Jetpack
     implementation(libs.androidx.appcompat)
     implementation(libs.google.material)
     implementation(libs.androidx.preference)
@@ -57,6 +69,9 @@ dependencies {
     implementation(libs.androidx.navigation.ui)
     implementation(libs.playservices.instantapps)
     implementation(libs.playservices.location)
+
+    // Jetpack Glance
+    implementation(libs.glance.appwidget)
 
     // Airship ADM
     implementation project(':urbanairship-adm')

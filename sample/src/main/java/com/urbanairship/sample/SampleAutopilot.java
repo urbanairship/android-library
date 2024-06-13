@@ -12,6 +12,7 @@ import com.urbanairship.Autopilot;
 import com.urbanairship.UAirship;
 import com.urbanairship.liveupdate.LiveUpdateManager;
 import com.urbanairship.messagecenter.MessageCenter;
+import com.urbanairship.sample.glance.SampleAppWidgetLiveUpdate;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -55,6 +56,7 @@ public class SampleAutopilot extends Autopilot {
         // Register handlers for Live Updates.
         LiveUpdateManager.shared().register("sports", new SampleLiveUpdate());
         LiveUpdateManager.shared().register("sports-async", new SampleAsyncLiveUpdate());
+        LiveUpdateManager.shared().register("medals-widget", new SampleAppWidgetLiveUpdate());
 
         MessageCenter.shared().setOnShowMessageCenterListener(messageId -> {
             // Use an implicit navigation deep link for now as explicit deep links are broken
