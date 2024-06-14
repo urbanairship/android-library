@@ -2,6 +2,28 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.0.0, June 14, 2024
+Major SDK release with several breaking changes. 
+See the [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-17-18.md) for more info.
+
+### Changes
+- The Airship SDK now requires `compileSdk` version 34 (Android 14) or higher.
+- New Automation module
+  - Check schedule’s start date before executing, to better handle updates to the scheduled start date
+  - Improved image loading for In-App messages, Scenes, and Surveys
+  - Reset GIF animations on visibility change in Scenes and Surveys
+  - Pause Story progress while videos are loading
+  - Concurrent automation processing to reduce latency if more than one automation is triggered at the same time
+  - Embedded Scenes & Survey support
+  - New module `urbanairship-automation-compose` to support embedding a Scene & Survey in compose
+  - Added new compound triggers and IAX event triggers
+  - Ban lists support
+- Added new `PrivacyManager.Feature.FEATURE_FLAGS` to control access to feature flags
+- Added support for multiple deferred feature flag resolution
+- Added contact management support in preference centers
+- Migrated to non-transitive R classes
+- Removed `urbanairship-ads-identifier` and `urbanairship-preference` modules
+
 ## Version 17.8.1, May 13, 2024
 Patch release that improves first run display times for Scenes, Surveys, and In-App Automations.
 

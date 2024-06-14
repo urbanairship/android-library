@@ -32,7 +32,7 @@ internal fun PreferenceCenterFragment.showContactManagementAddDialog(
     val cancelButtonLabel = view.cancelButton?.text ?: context.getString(R.string.ua_cancel)
 
     val inputView = ContactChannelDialogInputView(context).apply {
-        setOptions(item.registrationOptions, view.display)
+        setPlatform(item.platform, view.display)
     }
 
     val dialog = MaterialAlertDialogBuilder(context)
@@ -52,7 +52,7 @@ internal fun PreferenceCenterFragment.showContactManagementAddDialog(
             // We shouldn't get null here, since the submit button is only enabled once
             // validation passes, but just in case...
             UALog.e { "Add contact channel dialog result was null!" }
-            inputView.setError(item.registrationOptions.errorMessages.defaultMessage)
+            inputView.setError(item.platform.errorMessages.defaultMessage)
         } else {
             // Map the dialog result to an action and pass it back to the Fragment to update
             // the ViewModel.

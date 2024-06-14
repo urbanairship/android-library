@@ -954,9 +954,11 @@ public class PreferenceCenterViewModelTest {
 
         val mockItem: Item.ContactManagement = mockk {
             every { addPrompt } returns mockk(relaxed = true)
-            every { registrationOptions } returns mockk<RegistrationOptions.Email> {
-                every { properties } returns optInProperties
-            }
+            every { platform } returns Item.ContactManagement.Platform.Email(
+                registrationOptions = mockk {
+                    every { properties } returns optInProperties
+                }
+            )
         }
 
         viewModel().run {
@@ -992,9 +994,11 @@ public class PreferenceCenterViewModelTest {
     public fun testValidateSmsChannelValid(): TestResult = runTest {
         val item: Item.ContactManagement = mockk {
             every { addPrompt } returns mockk(relaxed = true)
-            every { registrationOptions } returns mockk {
-                every { errorMessages } returns mockk(relaxed = true)
-            }
+            every { platform } returns Item.ContactManagement.Platform.Sms(
+                registrationOptions = mockk {
+                    every { errorMessages } returns mockk(relaxed = true)
+                }
+            )
         }
         val address = "15031112222"
         val senderId = "123456"
@@ -1024,12 +1028,13 @@ public class PreferenceCenterViewModelTest {
         val invalidMessage = "Invalid message"
         val item: Item.ContactManagement = mockk {
             every { addPrompt } returns mockk(relaxed = true)
-            every { registrationOptions } returns mockk {
-                every { errorMessages } returns Item.ContactManagement.ErrorMessages(
-                    invalidMessage = invalidMessage,
-                    defaultMessage = "Default message"
-                )
-            }
+            every { platform } returns Item.ContactManagement.Platform.Sms(
+                registrationOptions = mockk {
+                    every { errorMessages } returns Item.ContactManagement.ErrorMessages(
+                        invalidMessage = invalidMessage, defaultMessage = "Default message"
+                    )
+                }
+            )
         }
         val address = "15031112222"
         val senderId = "123456"
@@ -1057,12 +1062,14 @@ public class PreferenceCenterViewModelTest {
     @Test
     public fun testResendChannelVerification(): TestResult = runTest {
         val item: Item.ContactManagement = mockk {
-            every { registrationOptions } returns mockk<RegistrationOptions.Email> {
-                every { properties } returns null
-                every { resendOptions } returns mockk {
-                    every { interval } returns 3
+            every { platform } returns Item.ContactManagement.Platform.Email(
+                registrationOptions = mockk {
+                    every { properties } returns null
+                    every { resendOptions } returns mockk {
+                        every { interval } returns 3
+                    }
                 }
-            }
+            )
         }
         val contactChannel: ContactChannel = mockk { }
 

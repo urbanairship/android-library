@@ -81,16 +81,16 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
         ArrayAdapter(context, android.R.layout.simple_dropdown_item_1line)
     }
 
-    private var options: RegistrationOptions? = null
+    private var platform: Item.ContactManagement.Platform? = null
     private var selectedSender: SmsSenderInfo? = null
 
     private val validator: (input: String?) -> Boolean = { input ->
-        when (options) {
-            is RegistrationOptions.Email -> {
+        when (platform) {
+            is  Item.ContactManagement.Platform.Email -> {
                 val formatted = formatEmail(input)
                 !input.isNullOrBlank() && emailRegex.matches(formatted)
             }
-            is RegistrationOptions.Sms -> {
+            is Item.ContactManagement.Platform.Sms  -> {
                 val formatted = formatPhone(selectedSender?.dialingCode, input)
                 !input.isNullOrBlank() && phoneRegex.matches(formatted)
             }
@@ -98,19 +98,19 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
         }
     }
 
-    fun setOptions(options: RegistrationOptions, display: PromptDisplay) {
-        this.options = options
+    fun setPlatform(platform: Item.ContactManagement.Platform, display: PromptDisplay) {
+        this.platform = platform
 
-        when (options) {
-            is RegistrationOptions.Email -> {
-                setAddressLabel(options.addressLabel)
-                options.placeholder?.let(::setAddressPlaceholder)
+        when (platform) {
+            is Item.ContactManagement.Platform.Email -> {
+                setAddressLabel(platform.registrationOptions.addressLabel)
+                platform.registrationOptions.placeholder?.let(::setAddressPlaceholder)
                 textInputView.editText?.inputType = InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
             }
-            is RegistrationOptions.Sms -> {
-                setAddressLabel(options.phoneLabel)
-                setCountryPickerLabel(options.countryLabel)
-                setCountryCodes(options.senders)
+            is Item.ContactManagement.Platform.Sms -> {
+                setAddressLabel(platform.registrationOptions.phoneLabel)
+                setCountryPickerLabel(platform.registrationOptions.countryLabel)
+                setCountryCodes(platform.registrationOptions.senders)
                 textInputView.editText?.inputType = InputType.TYPE_CLASS_PHONE
             }
         }
@@ -129,9 +129,9 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
     fun getResult(): DialogResult? {
         val address = getFormattedAddress() ?: return null
 
-        return when (options) {
-            is RegistrationOptions.Email -> DialogResult.Email(address = address)
-            is RegistrationOptions.Sms -> selectedSender?.senderId?.let { senderId ->
+        return when (platform) {
+            is Item.ContactManagement.Platform.Email -> DialogResult.Email(address = address)
+            is Item.ContactManagement.Platform.Sms -> selectedSender?.senderId?.let { senderId ->
                 DialogResult.Sms(address = address, senderId = senderId)
             }
             else -> null
@@ -187,13 +187,8 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
         countryPickerInputView.hint = text
     }
 
-    private fun setFooter(formattedText: Item.ContactManagement.FormattedText) {
-        if (formattedText.isMarkdown) {
-            footerView.setHtml(formattedText.text.markdownToHtml())
-        } else {
-            footerView.text = formattedText.text
-        }
-        footerView.isVisible = true
+    private fun setFooter(formattedText: String) {
+        footerView.setHtml(formattedText.markdownToHtml())
     }
 
     private companion object {

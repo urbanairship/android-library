@@ -92,7 +92,7 @@ internal data class ContactManagementItem(
             descriptionView.setTextOrHide(item.display.description)
 
             val channels = contactChannelsProvider.get()
-                .filter { it.key.channelType == item.platform.toChannelType() }
+                .filter { it.key.channelType == item.platform.channelType }
 
             widget.removeAllViews()
             if (channels.isEmpty()) {
@@ -164,7 +164,7 @@ internal data class ContactManagementItem(
                         item.removePrompt.button.contentDescription?.let { contentDescription = it }
                     }
 
-                    val resendOptions = item.registrationOptions.resendOptions
+                    val resendOptions = item.platform.resendOptions
 
                     //  Set up pending view
                     pending.isVisible = if (state.showPendingButton) {
@@ -212,8 +212,8 @@ internal data class ContactManagementItem(
                 }
             }
 
-            val resendDescription = item.registrationOptions.resendOptions.button.contentDescription
-                ?: item.registrationOptions.resendOptions.button.text
+            val resendDescription = item.platform.resendOptions.button.contentDescription
+                ?: item.platform.resendOptions.button.text
 
             val clickAction = if (!isOptedIn) { resendDescription } else null
 
@@ -245,8 +245,8 @@ internal data class ContactManagementItem(
         }
 
         private fun platformDescription(platform: Platform): String = when (platform) {
-            Platform.EMAIL -> context.getString(R.string.ua_preference_center_contact_management_email_description)
-            Platform.SMS -> context.getString(R.string.ua_preference_center_contact_management_sms_description)
+            is Platform.Email -> context.getString(R.string.ua_preference_center_contact_management_email_description)
+            is Platform.Sms -> context.getString(R.string.ua_preference_center_contact_management_sms_description)
         }
 
         private fun addressDescription(maskedAddress: String) =
@@ -256,13 +256,11 @@ internal data class ContactManagementItem(
             )
 
         @DrawableRes
-        private fun itemIcon(item: Item.ContactManagement): Int {
-            return if (item.platform == Platform.EMAIL) {
-                R.drawable.ua_ic_preference_center_email
-            } else {
-                R.drawable.ua_ic_preference_center_phone
-            }
+        private fun itemIcon(item: Item.ContactManagement): Int = when (item.platform) {
+            is Platform.Email -> R.drawable.ua_ic_preference_center_email
+            is Platform.Sms -> R.drawable.ua_ic_preference_center_phone
         }
+
 
         private companion object {
             private val contentDescriptionRedactedPattern = """\*+""".toRegex()

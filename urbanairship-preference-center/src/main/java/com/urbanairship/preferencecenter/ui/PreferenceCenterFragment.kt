@@ -235,7 +235,7 @@ public class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference
         is Effect.ShowContactManagementRemoveDialog ->
             showContactManagementRemoveDialog(effect.item, effect.channel, viewModel::handle)
         is Effect.ShowChannelVerificationResentDialog ->
-            effect.item.registrationOptions.resendOptions.onSuccess?.let { message ->
+            effect.item.platform.resendOptions.onSuccess?.let { message ->
                 showContactManagementResentDialog(message)
             }
         Effect.DismissContactManagementAddDialog ->

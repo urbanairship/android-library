@@ -206,7 +206,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                         )
                     }
                 } else {
-                    val message = action.item.registrationOptions.errorMessages.invalidMessage
+                    val message = action.item.platform.errorMessages.invalidMessage
                     Effect.ShowContactManagementAddDialogError(message)
                 }
             )
@@ -225,14 +225,14 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 } ?: emptyFlow()
             }
             is Action.RegisterChannel.Email -> {
-                val options = action.item.registrationOptions as? RegistrationOptions.Email
+                val emailPlatform = action.item.platform as? Item.ContactManagement.Platform.Email
 
                 contact.registerEmail(
                     action.address,
                     EmailRegistrationOptions.options(
                         transactionalOptedIn = null,
                         doubleOptIn = true,
-                        properties = options?.properties
+                        properties = emailPlatform?.registrationOptions?.properties
                     )
                 )
 
@@ -251,7 +251,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                         ContactChannelState(showPendingButton = true, showResendButton = false)
                     ))
 
-                    val resendInterval = action.item.registrationOptions.resendOptions.interval.seconds
+                    val resendInterval = action.item.platform.resendOptions.interval.seconds
                     val resendDelay = resendInterval.coerceAtLeast(defaultResendLabelHideDelay)
                     delay(resendDelay)
 

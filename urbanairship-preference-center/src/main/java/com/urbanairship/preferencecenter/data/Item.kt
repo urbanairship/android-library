@@ -149,7 +149,6 @@ public sealed class Item(
         val addPrompt: AddPrompt,
         val removePrompt: RemovePrompt,
         val emptyLabel: String?,
-        val registrationOptions: RegistrationOptions,
         override val conditions: Conditions,
     ) : Item(
         type = TYPE_CONTACT_MANAGEMENT,
@@ -160,52 +159,67 @@ public sealed class Item(
         @Throws(JsonException::class)
         override fun toJson(): JsonMap =
             jsonMapBuilder()
-                .put(KEY_PLATFORM, platform.toJson())
+                .apply {
+                    when (platform) {
+                        is Platform.Sms -> {
+                            this.put(KEY_PLATFORM, PLATFORM_SMS)
+                                .put(KEY_REGISTRATION_OPTIONS, platform.registrationOptions.toJson())
+                        }
+                        is Platform.Email -> {
+                            this.put(KEY_PLATFORM, PLATFORM_EMAIL)
+                                .put(KEY_REGISTRATION_OPTIONS, platform.registrationOptions.toJson())
+                        }
+                    }
+                }
                 .put(KEY_ADD, addPrompt.toJson())
                 .put(KEY_REMOVE, removePrompt.toJson())
                 .put(KEY_EMPTY_LABEL, emptyLabel)
-                .put(KEY_REGISTRATION_OPTIONS, registrationOptions.toJson())
                 .build()
 
         internal companion object {
+
+            private const val PLATFORM_SMS = "sms"
+            private const val PLATFORM_EMAIL = "email"
+
             @Throws(JsonException::class)
             fun fromJson(json: JsonMap): ContactManagement {
                 return ContactManagement(
                     id = json.requireField(KEY_ID),
-                    platform = Platform.fromJson(json.requireField(KEY_PLATFORM)),
+                    platform = json.requireField<String>(KEY_PLATFORM).let {
+                        when(it) {
+                            PLATFORM_SMS -> Platform.Sms(RegistrationOptions.Sms.fromJson(json.requireField(KEY_REGISTRATION_OPTIONS)))
+                            PLATFORM_EMAIL -> Platform.Email(RegistrationOptions.Email.fromJson(json.requireField(KEY_REGISTRATION_OPTIONS)))
+                            else -> throw JsonException("Invalid registration type: $it")
+                        }
+                    },
                     display = CommonDisplay.parse(json.requireField<JsonMap>(KEY_DISPLAY)),
                     addPrompt = AddPrompt.fromJson(json.requireField(KEY_ADD)),
                     removePrompt = RemovePrompt.fromJson(json.requireField(KEY_REMOVE)),
                     emptyLabel = json.optionalField(KEY_EMPTY_LABEL),
-                    registrationOptions = RegistrationOptions.fromJson(json.requireField(KEY_REGISTRATION_OPTIONS)),
-                    conditions = Condition.parse(json.requireField<JsonValue>(KEY_CONDITIONS))
+                    conditions = Condition.parse(json.opt(KEY_CONDITIONS))
                 )
             }
         }
 
-        public enum class Platform(public val jsonValue: String) {
-            SMS("sms"),
-            EMAIL("email");
+        public sealed class Platform(public val channelType: ChannelType) {
+            public class Sms(public val registrationOptions: RegistrationOptions.Sms): Platform(ChannelType.SMS)
+            public class Email(public val registrationOptions: RegistrationOptions.Email): Platform(ChannelType.EMAIL)
 
-            public fun toJson(): JsonValue = JsonValue.wrap(jsonValue)
-
-            internal companion object {
-                @Throws(JsonException::class)
-                fun fromJson(jsonValue: JsonValue): Platform {
-                    val valueString = jsonValue.optString()
-                    for (platform in entries) {
-                        if (platform.jsonValue.equals(valueString, true)) {
-                            return platform
-                        }
+            internal val resendOptions: ResendOptions
+                get() {
+                    return when (this) {
+                        is Sms -> this.registrationOptions.resendOptions
+                        is Email -> this.registrationOptions.resendOptions
                     }
-                    throw JsonException("Invalid platform: $valueString")
                 }
-            }
 
-            internal fun toChannelType(): ChannelType = when (this) {
-                SMS -> ChannelType.SMS
-                EMAIL -> ChannelType.EMAIL
-            }
+            internal val errorMessages: ErrorMessages
+                get() {
+                    return when (this) {
+                        is Sms -> this.registrationOptions.errorMessages
+                        is Email -> this.registrationOptions.errorMessages
+                    }
+                }
         }
 
         public data class AddPrompt(
@@ -254,6 +268,7 @@ public sealed class Item(
             val type: String,
             val display: PromptDisplay,
             val submitButton: LabeledButton,
+            val closeButton: IconButton?,
             val cancelButton: LabeledButton?,
             val onSubmit: ActionableMessage?,
         ) {
@@ -263,6 +278,7 @@ public sealed class Item(
                 KEY_DISPLAY to display.toJson(),
                 KEY_SUBMIT_BUTTON to submitButton.toJson(),
                 KEY_CANCEL_BUTTON to cancelButton?.toJson(),
+                KEY_CLOSE_BUTTON to closeButton?.toJson(),
                 KEY_ON_SUBMIT to onSubmit?.toJson(),
             )
 
@@ -273,6 +289,7 @@ public sealed class Item(
                         type = json.requireField(KEY_TYPE),
                         display = PromptDisplay.fromJson(json.requireField(KEY_DISPLAY)),
                         submitButton = json.requireMap(KEY_SUBMIT_BUTTON).let { LabeledButton.fromJson(it) },
+                        closeButton = json.optionalMap(KEY_CLOSE_BUTTON)?.let { IconButton.fromJson(it) },
                         cancelButton = json.optionalMap(KEY_CANCEL_BUTTON)?.let { LabeledButton.fromJson(it) },
                         onSubmit = json.optionalMap(KEY_ON_SUBMIT)?.let { ActionableMessage.fromJson(it) },
                     )
@@ -284,6 +301,7 @@ public sealed class Item(
             val type: String,
             val display: PromptDisplay,
             val submitButton: LabeledButton,
+            val closeButton: IconButton?,
             val cancelButton: LabeledButton?,
             val onSubmit: ActionableMessage?,
         ) {
@@ -293,6 +311,7 @@ public sealed class Item(
                 KEY_DISPLAY to display.toJson(),
                 KEY_SUBMIT_BUTTON to submitButton.toJson(),
                 KEY_CANCEL_BUTTON to cancelButton?.toJson(),
+                KEY_CLOSE_BUTTON to closeButton?.toJson(),
                 KEY_ON_SUBMIT to onSubmit?.toJson(),
             )
 
@@ -303,42 +322,9 @@ public sealed class Item(
                         type = json.requireField(KEY_TYPE),
                         display = PromptDisplay.fromJson(json.requireField(KEY_DISPLAY)),
                         submitButton = json.requireMap(KEY_SUBMIT_BUTTON).let { LabeledButton.fromJson(it) },
+                        closeButton = json.optionalMap(KEY_CLOSE_BUTTON)?.let { IconButton.fromJson(it) },
                         cancelButton = json.optionalMap(KEY_CANCEL_BUTTON)?.let { LabeledButton.fromJson(it) },
                         onSubmit = json.optionalMap(KEY_ON_SUBMIT)?.let { ActionableMessage.fromJson(it) },
-                    )
-                }
-            }
-        }
-
-        public data class FormattedText(
-            val text: String,
-            val type: FormatType
-        ) {
-            public enum class FormatType(public val value: String) {
-                PLAIN("string"),
-                MARKDOWN("markdown"),
-                UNKNOWN("unknown");
-
-               internal companion object {
-                    fun from(value: String): FormatType =
-                        entries.firstOrNull { it.value.equals(value, true) } ?: UNKNOWN
-               }
-            }
-
-            internal val isMarkdown = type == FormatType.MARKDOWN
-
-            @Throws(JsonException::class)
-            public fun toJson(): JsonMap = jsonMapOf(
-                KEY_DESCRIPTION to text,
-                KEY_TYPE to type.value
-            )
-
-            internal companion object {
-                @Throws(JsonException::class)
-                fun fromJson(json: JsonMap): FormattedText {
-                    return FormattedText(
-                        text = json.requireField(KEY_DESCRIPTION),
-                        type = FormatType.from(json.requireField<String>(KEY_TYPE))
                     )
                 }
             }
@@ -347,13 +333,13 @@ public sealed class Item(
         public data class PromptDisplay(
             val title: String,
             val description: String?,
-            val footer: FormattedText?,
+            val footer: String?,
         ) {
             @Throws(JsonException::class)
             public fun toJson(): JsonMap = jsonMapOf(
                 KEY_TITLE to title,
                 KEY_DESCRIPTION to description,
-                KEY_FOOTER to footer?.toJson()
+                KEY_FOOTER to footer
             )
 
             internal companion object {
@@ -365,7 +351,7 @@ public sealed class Item(
                     return PromptDisplay(
                         title = json.requireField(KEY_TITLE),
                         description = json.optionalField(KEY_DESCRIPTION),
-                        footer = json.optionalMap(KEY_FOOTER)?.let { FormattedText.fromJson(it) },
+                        footer = json.optionalField(KEY_FOOTER),
                     )
                 }
             }
@@ -475,12 +461,13 @@ public sealed class Item(
                 KEY_INTERVAL to interval,
                 KEY_MESSAGE to message,
                 KEY_BUTTON to button.toJson(),
-                KEY_ON_SUBMIT to onSuccess?.toJson()
+                KEY_ON_SUCCESS to onSuccess?.toJson()
             )
 
             internal companion object {
                 private const val KEY_INTERVAL = "interval"
                 private const val KEY_MESSAGE = "message"
+                private const val KEY_ON_SUCCESS = "on_success"
 
                 @Throws(JsonException::class)
                 fun fromJson(json: JsonMap): ResendOptions {
@@ -488,7 +475,7 @@ public sealed class Item(
                         interval = json.requireField(KEY_INTERVAL),
                         message = json.requireField(KEY_MESSAGE),
                         button = LabeledButton.fromJson(json.requireField(KEY_BUTTON)),
-                        onSuccess = json.optionalMap(KEY_ON_SUBMIT)?.let { ActionableMessage.fromJson(it) }
+                        onSuccess = json.optionalMap(KEY_ON_SUCCESS)?.let { ActionableMessage.fromJson(it) }
                     )
                 }
             }
@@ -572,17 +559,6 @@ public sealed class Item(
                     }
                 }
             }
-
-            internal companion object {
-                @Throws(JsonException::class)
-                fun fromJson(json: JsonMap): RegistrationOptions {
-                    return when (val type = json.requireField<String>(KEY_TYPE)) {
-                        Platform.SMS.jsonValue -> Sms.fromJson(json)
-                        Platform.EMAIL.jsonValue -> Email.fromJson(json)
-                        else -> throw JsonException("Invalid registration type: $type")
-                    }
-                }
-            }
         }
 
         public data class SmsSenderInfo(
@@ -644,6 +620,7 @@ public sealed class Item(
         private const val KEY_ON_SUBMIT = "on_submit"
         private const val KEY_CANCEL_BUTTON = "cancel_button"
         private const val KEY_SUBMIT_BUTTON = "submit_button"
+        private const val KEY_CLOSE_BUTTON = "close_button"
 
         private const val KEY_NAME = "name"
         private const val KEY_DESCRIPTION = "description"
@@ -695,16 +672,7 @@ public sealed class Item(
                     button = Button.parse(json.optionalField(KEY_BUTTON)),
                     conditions = Condition.parse(json.get(KEY_CONDITIONS))
                 )
-                TYPE_CONTACT_MANAGEMENT -> ContactManagement(
-                    id = id,
-                    platform = ContactManagement.Platform.fromJson(json.requireField(KEY_PLATFORM)),
-                    display = CommonDisplay.parse(json.get(KEY_DISPLAY)),
-                    emptyLabel = json.optionalField(KEY_EMPTY_LABEL),
-                    conditions = Condition.parse(json.get(KEY_CONDITIONS)),
-                    addPrompt = ContactManagement.AddPrompt.fromJson(json.requireField(KEY_ADD)),
-                    removePrompt = ContactManagement.RemovePrompt.fromJson(json.requireField(KEY_REMOVE)),
-                    registrationOptions = ContactManagement.RegistrationOptions.fromJson(json.requireField(KEY_REGISTRATION_OPTIONS))
-                )
+                TYPE_CONTACT_MANAGEMENT -> ContactManagement.fromJson(json)
                 else -> throw JsonException("Unknown Preference Center Item type: '$type'")
             }
         }
