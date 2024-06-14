@@ -7,11 +7,15 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.urbanairship.debug.ServiceLocator
 import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.ui.appinfo.appInfoNav
 import com.urbanairship.debug.ui.automations.automationNav
 import com.urbanairship.debug.ui.deviceinfo.DeviceInfoScreen
 import com.urbanairship.debug.ui.deviceinfo.deviceInfoNav
+import com.urbanairship.debug.ui.events.EventScreen
+import com.urbanairship.debug.ui.events.EventViewModel
+import com.urbanairship.debug.ui.events.eventNav
 import com.urbanairship.debug.ui.preferencecenter.preferenceCenterNav
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,7 +42,7 @@ internal fun DebugNavHost(
         appInfoNav(navController = navController)
         preferenceCenterNav(navController = navController)
         automationNav(navController = navController)
-
+        eventNav(navController = navController)
 
         composable(route = TopLevelScreens.FeatureFlags.route) {
             // TODO

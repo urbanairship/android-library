@@ -7,12 +7,12 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UAirship
+import com.urbanairship.debug.ui.events.EventEntity
 import com.urbanairship.remotedata.RemoteData
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
@@ -37,5 +37,13 @@ internal class DebugManager(
 
     override fun onAirshipReady(airship: UAirship) {
         super.onAirshipReady(airship)
+
+        scope.launch {
+            airship.analytics.events.collect {
+                ServiceLocator.shared(context)
+                    .getEventDao()
+                    .insertEvent(EventEntity(it))
+            }
+        }
     }
 }
