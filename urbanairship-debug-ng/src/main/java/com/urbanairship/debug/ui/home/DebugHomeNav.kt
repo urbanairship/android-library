@@ -7,16 +7,14 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.urbanairship.debug.ServiceLocator
 import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.ui.appinfo.appInfoNav
 import com.urbanairship.debug.ui.automations.automationNav
 import com.urbanairship.debug.ui.deviceinfo.DeviceInfoScreen
 import com.urbanairship.debug.ui.deviceinfo.deviceInfoNav
-import com.urbanairship.debug.ui.events.EventScreen
-import com.urbanairship.debug.ui.events.EventViewModel
 import com.urbanairship.debug.ui.events.eventNav
 import com.urbanairship.debug.ui.preferencecenter.preferenceCenterNav
+import com.urbanairship.debug.ui.push.pushNav
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,16 +41,9 @@ internal fun DebugNavHost(
         preferenceCenterNav(navController = navController)
         automationNav(navController = navController)
         eventNav(navController = navController)
+        pushNav(navController = navController)
 
         composable(route = TopLevelScreens.FeatureFlags.route) {
-            // TODO
-            DeviceInfoScreen(
-                onNavigateUp = { navController.popBackStack() },
-                onNavigate = { route -> navController.navigate(route) }
-            )
-        }
-
-        composable(route = TopLevelScreens.Pushes.route) {
             // TODO
             DeviceInfoScreen(
                 onNavigateUp = { navController.popBackStack() },

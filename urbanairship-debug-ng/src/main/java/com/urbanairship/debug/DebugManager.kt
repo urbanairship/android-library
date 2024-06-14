@@ -8,6 +8,8 @@ import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UAirship
 import com.urbanairship.debug.ui.events.EventEntity
+import com.urbanairship.debug.ui.push.PushEntity
+import com.urbanairship.push.PushMessage
 import com.urbanairship.remotedata.RemoteData
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -39,6 +41,12 @@ internal class DebugManager(
         super.onAirshipReady(airship)
 
         scope.launch {
+            airship.pushManager.addPushListener { message: PushMessage, _: Boolean ->
+                ServiceLocator.shared(context)
+                    .getPushDao()
+                    .insertPush(PushEntity(message))
+            }
+
             airship.analytics.events.collect {
                 ServiceLocator.shared(context)
                     .getEventDao()
