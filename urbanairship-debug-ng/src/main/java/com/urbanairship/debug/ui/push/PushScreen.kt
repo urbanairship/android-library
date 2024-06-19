@@ -55,9 +55,9 @@ internal fun PushScreenContent(
                         onNavigate("${PushScreens.Details.route}/${item.id}")
                     },
                     headlineContent = {
-                        Text(text = item.id.toString(), fontWeight = FontWeight.Medium)
+                        Text(text = PushItem(item).alert?: "Push", fontWeight = FontWeight.Medium)
                     }, trailingContent = {
-                        Text(text = item.payload, fontWeight = FontWeight.Medium)
+                        Text(text = item.pushId, fontWeight = FontWeight.Medium)
                     }
                 )
             }
