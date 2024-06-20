@@ -27,15 +27,6 @@ public class VersionUtils {
     private static final String IVY_PATTERN_GREATER_THAN = "]%s,)";
     private static final String IVY_PATTERN_GREATER_THAN_OR_EQUAL_TO = "[%s,)";
 
-    /**
-     * Generates the version object.
-     *
-     * @return The version object.
-     */
-    @NonNull
-    public static JsonSerializable createVersionObject() {
-        return createVersionObject(UAirship.shared().getApplicationMetrics().getCurrentAppVersion());
-    }
 
     /**
      * Generates the version object.

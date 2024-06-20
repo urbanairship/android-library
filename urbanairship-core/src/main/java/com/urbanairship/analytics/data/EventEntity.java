@@ -1,5 +1,6 @@
 package com.urbanairship.analytics.data;
 
+import com.urbanairship.analytics.AirshipEventData;
 import com.urbanairship.analytics.Event;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
@@ -44,17 +45,16 @@ public class EventEntity {
         this.eventSize = eventSize;
     }
 
-    public static EventEntity create(@NonNull Event event, @NonNull String sessionId) throws JsonException {
-        String payload = event.createEventPayload(sessionId);
-        JsonValue json = JsonValue.parseString(payload);
+    public static EventEntity create(@NonNull AirshipEventData event) throws JsonException {
+        JsonValue payload = event.getFullEventPayload();
 
         return new EventEntity(
                 event.getType().getReportingName(),
-                event.getEventId(),
-                event.getTime(),
-                json,
-                sessionId,
-                payload.getBytes(StandardCharsets.UTF_8).length
+                event.getId(),
+                Event.millisecondsToSecondsString(event.getTimeMs()),
+                payload,
+                event.getSessionId(),
+                payload.toString().getBytes(StandardCharsets.UTF_8).length
         );
     }
 

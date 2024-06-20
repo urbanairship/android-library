@@ -31,7 +31,7 @@ import androidx.annotation.VisibleForTesting;
 public abstract class Event {
 
     private final String eventId; //a UUID string
-    private final String time; //seconds since the epoch
+    protected final long timeMilliseconds;
 
     //top level event fields
     static final String TYPE_KEY = "type";
@@ -75,11 +75,11 @@ public abstract class Event {
     /**
      * Constructor for Event.
      *
-     * @param timeMS The time of the event in milliseconds.
+     * @param timeMilliseconds The time of the event in milliseconds.
      */
-    public Event(long timeMS) {
-        eventId = UUID.randomUUID().toString();
-        time = millisecondsToSecondsString(timeMS);
+    public Event(long timeMilliseconds) {
+        this.eventId = UUID.randomUUID().toString();
+        this.timeMilliseconds = timeMilliseconds;
     }
 
     /**
@@ -106,33 +106,7 @@ public abstract class Event {
      */
     @NonNull
     public String getTime() {
-        return time;
-    }
-
-    /**
-     * Creates the full event payload.
-     *
-     * @return The event data as a String, or null if an error occurred.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @NonNull
-    public String createEventPayload(@NonNull String sessionId) {
-        JsonMap.Builder object = JsonMap.newBuilder();
-        JsonMap data = getEventData();
-
-        // Copy the event data and add the session id
-        data = JsonMap.newBuilder()
-                      .putAll(data)
-                      .put(SESSION_ID_KEY, sessionId)
-                      .build();
-
-        object.put(TYPE_KEY, getType().getReportingName())
-              .put(EVENT_ID_KEY, eventId)
-              .put(TIME_KEY, time)
-              .put(DATA_KEY, data);
-
-        return object.build().toString();
+        return millisecondsToSecondsString(timeMilliseconds);
     }
 
     /**
@@ -154,7 +128,26 @@ public abstract class Event {
     @NonNull
     @VisibleForTesting
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public abstract JsonMap getEventData();
+    @Deprecated
+    public JsonMap getEventData() {
+        return JsonMap.EMPTY_MAP;
+    }
+
+
+    /**
+     * Create the event data.
+     *
+     * @param conversionData The conversion data.
+     * @return The event data.
+     * @hide
+     */
+    @NonNull
+    @VisibleForTesting
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public JsonMap getEventData(@NonNull ConversionData conversionData) {
+        //noinspection deprecation
+        return getEventData();
+    }
 
     /**
      * Returns the connection type.

@@ -37,7 +37,7 @@ class InstallAttributionEvent extends Event {
     @NonNull
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public JsonMap getEventData() {
+    public JsonMap getEventData(@NonNull ConversionData conversionData) {
         return JsonMap.newBuilder()
                       .put(PLAY_STORE_REFERRER, referrer)
                       .build();

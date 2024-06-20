@@ -210,7 +210,6 @@ public class PushManager extends AirshipComponent {
 
     static final String SOUND_ENABLED_KEY = KEY_PREFIX + ".SOUND_ENABLED";
     static final String VIBRATE_ENABLED_KEY = KEY_PREFIX + ".VIBRATE_ENABLED";
-    static final String LAST_RECEIVED_METADATA = KEY_PREFIX + ".LAST_RECEIVED_METADATA";
 
     static final String QUIET_TIME_ENABLED = KEY_PREFIX + ".QUIET_TIME_ENABLED";
     static final String QUIET_TIME_INTERVAL = KEY_PREFIX + ".QUIET_TIME_INTERVAL";
@@ -812,7 +811,7 @@ public class PushManager extends AirshipComponent {
      */
     @Nullable
     public String getLastReceivedMetadata() {
-        return preferenceDataStore.getString(LAST_RECEIVED_METADATA, null);
+        return analytics.getLastReceivedMetadata();
     }
 
     /**
@@ -821,7 +820,7 @@ public class PushManager extends AirshipComponent {
      * @param sendMetadata The send metadata string.
      */
     void setLastReceivedMetadata(String sendMetadata) {
-        preferenceDataStore.put(LAST_RECEIVED_METADATA, sendMetadata);
+        analytics.setLastReceivedMetadata(sendMetadata);
     }
 
     /**

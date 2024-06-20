@@ -5,7 +5,9 @@ import android.database.sqlite.SQLiteException;
 
 import com.urbanairship.UALog;
 import com.urbanairship.PreferenceDataStore;
+import com.urbanairship.analytics.AirshipEventData;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.analytics.ConversionData;
 import com.urbanairship.analytics.Event;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
@@ -15,6 +17,7 @@ import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import java.util.ArrayList;
@@ -151,16 +154,15 @@ public class EventManager {
     /**
      * Adds an event.
      *
-     * @param event The event.
-     * @param sessionId The event's session ID.
+     * @param eventData The event data.
      */
     @WorkerThread
-    public void addEvent(@NonNull Event event, @NonNull String sessionId) {
+    public void addEvent(@NonNull AirshipEventData eventData, @Event.Priority int priority) {
         EventEntity entity;
         try {
-            entity = EventEntity.create(event, sessionId);
+            entity = EventEntity.create(eventData);
         } catch (JsonException e) {
-            UALog.e(e, "Analytics - Invalid event: %s", event);
+            UALog.e(e, "Analytics - Invalid event: %s", eventData);
             return;
         }
 
@@ -172,7 +174,7 @@ public class EventManager {
             eventDao.trimDatabase(maxSize);
         }
 
-        switch (event.getPriority()) {
+        switch (priority) {
             case Event.HIGH_PRIORITY:
                 scheduleEventUpload(HIGH_PRIORITY_BATCH_DELAY, TimeUnit.MILLISECONDS);
                 break;

@@ -1,6 +1,8 @@
 package com.urbanairship.analytics.data;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.analytics.AirshipEventData;
+import com.urbanairship.analytics.ConversionData;
 import com.urbanairship.analytics.Event;
 import com.urbanairship.analytics.EventType;
 import com.urbanairship.json.JsonException;
@@ -24,7 +26,13 @@ import static org.junit.Assert.assertTrue;
 
 public class EventDaoTest extends BaseTestCase {
     private static final String SESSION_ID = "session-id";
-    private static final Event EVENT = new TestEvent("event-id", "event-type");
+    private static final AirshipEventData EVENT = new AirshipEventData(
+            "event-id",
+            "session-id",
+            JsonMap.EMPTY_MAP.toJsonValue(),
+            EventType.APP_FOREGROUND,
+            System.currentTimeMillis()
+    );
 
     private static EventEntity ENTITY;
 
@@ -36,7 +44,7 @@ public class EventDaoTest extends BaseTestCase {
         db = AnalyticsDatabase.createInMemoryDatabase(ApplicationProvider.getApplicationContext());
         eventDao = db.getEventDao();
 
-        ENTITY = EventEntity.create(EVENT, SESSION_ID);
+        ENTITY = EventEntity.create(EVENT);
     }
 
     @After
@@ -60,11 +68,24 @@ public class EventDaoTest extends BaseTestCase {
 
     @Test
     public void testGetAndDeleteBatch() throws JsonException {
-        Event event1 = new TestEvent("event-1");
-        Event event2 = new TestEvent("event-2");
+        AirshipEventData event1 = new AirshipEventData(
+                "event-1",
+                "session-1",
+                JsonMap.EMPTY_MAP.toJsonValue(),
+                EventType.APP_FOREGROUND,
+                System.currentTimeMillis()
+        );
 
-        EventEntity entity1 = EventEntity.create(event1, "session-1");
-        EventEntity entity2 = EventEntity.create(event2, "session-2");
+        AirshipEventData event2 = new AirshipEventData(
+                "event-2",
+                "session-2",
+                JsonMap.EMPTY_MAP.toJsonValue(),
+                EventType.APP_FOREGROUND,
+                System.currentTimeMillis()
+        );
+
+        EventEntity entity1 = EventEntity.create(event1);
+        EventEntity entity2 = EventEntity.create(event2);
 
         eventDao.insert(entity1);
         eventDao.insert(entity2);
@@ -93,11 +114,24 @@ public class EventDaoTest extends BaseTestCase {
 
     @Test
     public void testTrim() throws JsonException {
-        Event event1 = new TestEvent("event-1");
-        Event event2 = new TestEvent("event-2");
+        AirshipEventData event1 = new AirshipEventData(
+                "event-1",
+                "session-1",
+                JsonMap.EMPTY_MAP.toJsonValue(),
+                EventType.APP_FOREGROUND,
+                System.currentTimeMillis()
+        );
 
-        EventEntity entity1 = EventEntity.create(event1, "session-1");
-        EventEntity entity2 = EventEntity.create(event2, "session-2");
+        AirshipEventData event2 = new AirshipEventData(
+                "event-2",
+                "session-2",
+                JsonMap.EMPTY_MAP.toJsonValue(),
+                EventType.APP_FOREGROUND,
+                System.currentTimeMillis()
+        );
+
+        EventEntity entity1 = EventEntity.create(event1);
+        EventEntity entity2 = EventEntity.create(event2);
 
         eventDao.insert(entity1);
         eventDao.insert(entity2);
@@ -127,13 +161,32 @@ public class EventDaoTest extends BaseTestCase {
 
     @Test
     public void testDeleteAll() throws JsonException {
-        Event event1 = new TestEvent("event-1");
-        Event event2 = new TestEvent("event-2");
-        Event event3 = new TestEvent("event-3");
+        AirshipEventData event1 = new AirshipEventData(
+                "event-1",
+                "session-1",
+                JsonMap.EMPTY_MAP.toJsonValue(),
+                EventType.APP_FOREGROUND,
+                System.currentTimeMillis()
+        );
 
-        EventEntity entity1 = EventEntity.create(event1, "session-1");
-        EventEntity entity2 = EventEntity.create(event2, "session-2");
-        EventEntity entity3 = EventEntity.create(event3, "session-3");
+        AirshipEventData event2 = new AirshipEventData(
+                "event-2",
+                "session-2",
+                JsonMap.EMPTY_MAP.toJsonValue(),
+                EventType.APP_FOREGROUND,
+                System.currentTimeMillis()
+        );
+        AirshipEventData event3 = new AirshipEventData(
+                "event-3",
+                "session-3",
+                JsonMap.EMPTY_MAP.toJsonValue(),
+                EventType.APP_FOREGROUND,
+                System.currentTimeMillis()
+        );
+
+        EventEntity entity1 = EventEntity.create(event1);
+        EventEntity entity2 = EventEntity.create(event2);
+        EventEntity entity3 = EventEntity.create(event3);
 
         eventDao.insert(entity1);
         eventDao.insert(entity2);
@@ -142,40 +195,5 @@ public class EventDaoTest extends BaseTestCase {
 
         eventDao.deleteAll();
         assertEquals(0, eventDao.count());
-    }
-
-    /**
-     * Testing class for testing events
-     */
-    private static class TestEvent extends Event {
-        String id;
-        String eventType;
-
-        public TestEvent(String id) {
-            this(id, "TEST EVENT");
-        }
-
-        public TestEvent(String id, String eventType) {
-            this.id = id;
-            this.eventType = eventType;
-        }
-
-        @NonNull
-        @Override
-        public EventType getType() {
-            return EventType.APP_FOREGROUND;
-        }
-
-        @NonNull
-        @Override
-        public String getEventId() {
-            return id != null ? id : super.getEventId();
-        }
-
-        @NonNull
-        @Override
-        public JsonMap getEventData() {
-            return new JsonMap(null);
-        }
     }
 }

@@ -32,13 +32,12 @@ class AppBackgroundEvent extends Event {
     @NonNull
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public final JsonMap getEventData() {
+    public JsonMap getEventData(@NonNull ConversionData conversionData) {
         return JsonMap.newBuilder()
                       .put(CONNECTION_TYPE_KEY, getConnectionType())
                       .put(CONNECTION_SUBTYPE_KEY, getConnectionSubType())
-                      .put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId())
-                      .put(METADATA_KEY, UAirship.shared().getAnalytics().getConversionMetadata())
+                      .put(PUSH_ID_KEY, conversionData.getConversionSendId())
+                      .put(METADATA_KEY, conversionData.getConversionMetadata())
                       .build();
     }
-
 }

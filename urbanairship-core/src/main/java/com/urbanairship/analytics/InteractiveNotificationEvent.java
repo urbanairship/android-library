@@ -65,7 +65,7 @@ public class InteractiveNotificationEvent extends Event {
     @NonNull
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public final JsonMap getEventData() {
+    public JsonMap getEventData(@NonNull ConversionData conversionData) {
         JsonMap.Builder builder = JsonMap.newBuilder()
                                          .put(SEND_ID_KEY, sendId)
                                          .put(BUTTON_GROUP_KEY, buttonGroupId)
