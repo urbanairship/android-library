@@ -3,6 +3,7 @@ package com.urbanairship.liveupdate
 import androidx.core.app.NotificationManagerCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.liveupdate.data.LiveUpdateDao
 import com.urbanairship.liveupdate.data.LiveUpdateDatabase
@@ -48,7 +49,7 @@ public class LiveUpdateStressTest {
     @OptIn(DelicateCoroutinesApi::class)
     private val registrarDispatcher = newFixedThreadPoolContext(16, "C/B")
 
-    private val processorDispatcher = AirshipDispatchers.newSingleThreadDispatcher()
+    private val processorDispatcher = AirshipDispatchers.newSerialDispatcher()
 
     private lateinit var database: LiveUpdateDatabase
     private lateinit var dao: LiveUpdateDao
@@ -105,7 +106,7 @@ public class LiveUpdateStressTest {
                 println("processing...")
             }
 
-            delay(1000)
+            delay(500)
         }
 
         awaitAll(job1, job2, job3)

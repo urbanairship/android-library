@@ -93,6 +93,10 @@ public class RemoteData @VisibleForTesting internal constructor(
         }
     }
 
+    internal fun getRefreshInterval(): Long {
+        return config.remoteConfig.remoteDataRefreshInterval ?: DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS
+    }
+
     @JvmOverloads
     internal constructor(
         context: Context,
@@ -130,7 +134,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     private val applicationListener: ApplicationListener = object : SimpleApplicationListener() {
         override fun onForeground(time: Long) {
             val now = clock.currentTimeMillis()
-            if (now >= lastForegroundDispatchTime + foregroundRefreshInterval) {
+            if (now >= lastForegroundDispatchTime + getRefreshInterval()) {
                 updateChangeToken()
                 dispatchRefreshJobAsync()
                 lastForegroundDispatchTime = now
@@ -154,11 +158,13 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     private var isAnyFeatureEnabled = AtomicBoolean(privacyManager.isAnyFeatureEnabled)
 
-    private val privacyListener = PrivacyManager.Listener {
-        val newValue = privacyManager.isAnyFeatureEnabled
+    private val privacyListener = object : PrivacyManager.Listener {
+        override fun onEnabledFeaturesChanged() {
+            val newValue = privacyManager.isAnyFeatureEnabled
 
-        if (!isAnyFeatureEnabled.getAndSet(newValue) && newValue) {
-            dispatchRefreshJobAsync()
+            if (!isAnyFeatureEnabled.getAndSet(newValue) && newValue) {
+                dispatchRefreshJobAsync()
+            }
         }
     }
 
@@ -215,15 +221,6 @@ public class RemoteData @VisibleForTesting internal constructor(
         }
         return JobResult.SUCCESS
     }
-
-    public var foregroundRefreshInterval: Long
-        get() = preferenceDataStore.getLong(
-            FOREGROUND_REFRESH_INTERVAL_KEY,
-            DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS
-        )
-        set(milliseconds) {
-            preferenceDataStore.put(FOREGROUND_REFRESH_INTERVAL_KEY, milliseconds)
-        }
 
     public val randomValue: Int
         get() {
@@ -381,7 +378,6 @@ public class RemoteData @VisibleForTesting internal constructor(
     public companion object {
 
         // Datastore keys
-        private const val FOREGROUND_REFRESH_INTERVAL_KEY = "com.urbanairship.remotedata.FOREGROUND_REFRESH_INTERVAL"
         private const val RANDOM_VALUE_KEY = "com.urbanairship.remotedata.RANDOM_VALUE"
         private const val CHANGE_TOKEN_KEY = "com.urbanairship.remotedata.CHANGE_TOKEN"
 

@@ -112,11 +112,6 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
-        if (!airship.getPushManager().isComponentEnabled()) {
-            UALog.d("PushManager component is disabled, ignoring message.");
-            return;
-        }
-
         if (!airship.getPushManager().isUniqueCanonicalId(message.getCanonicalPushId())) {
             UALog.d("Received a duplicate push with canonical ID: %s", message.getCanonicalPushId());
             return;

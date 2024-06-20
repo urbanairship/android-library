@@ -6,9 +6,11 @@ import android.content.Context
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
+import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteData
@@ -30,12 +32,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class FeatureFlagManagerTest {
+public class FeatureFlagManagerTest {
 
     private val context: Context = TestApplication.getApplication()
     private val featureFlagAnalytics: FeatureFlagAnalytics = mockk()
-
     private val deferredResolver: FlagDeferredResolver = mockk()
+    private val privacyManager: PrivacyManager = mockk {
+        every { this@mockk.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS) } returns true
+    }
 
     private var channelId = "test-channel"
     private var contactId = "contact-id"
@@ -43,7 +47,7 @@ class FeatureFlagManagerTest {
     private val infoProvider: DeviceInfoProvider = mockk {
         coEvery { this@mockk.getPermissionStatuses() } returns mapOf()
         coEvery { this@mockk.getChannelId() } answers { this@FeatureFlagManagerTest.channelId }
-        coEvery { this@mockk.getStableContactId() } answers { contactId }
+        coEvery { this@mockk.getStableContactInfo() } answers { StableContactInfo(contactId, null) }
         every { this@mockk.appVersionName } returns "1.0.0"
         every { this@mockk.installDateMilliseconds } returns 1
         every { this@mockk.locale } returns Locale.US
@@ -68,16 +72,11 @@ class FeatureFlagManagerTest {
         infoProviderFactory = { infoProvider },
         deferredResolver = deferredResolver,
         featureFlagAnalytics = featureFlagAnalytics,
+        privacyManager = privacyManager
     )
 
     @Test
-    fun testModuleIsWorking() {
-        featureFlags.init()
-        assert(featureFlags.isComponentEnabled)
-    }
-
-    @Test
-    fun testNoFlags(): TestResult = runTest {
+    public fun testNoFlags(): TestResult = runTest {
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(emptyList())
@@ -93,7 +92,29 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaticNoVariables(): TestResult = runTest {
+    public fun testFlagDisabledFeatureFlags(): TestResult = runTest {
+        every { privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS) } returns false
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.StaticPayload()
+        )
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val result = featureFlags.flag("test-ff")
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    public fun testStaticNoVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -120,7 +141,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaticVariantVariables(): TestResult = runTest {
+    public fun testStaticVariantVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -171,7 +192,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaticVariantVariablesMissedLocalAudienceCheck(): TestResult = runTest {
+    public fun testStaticVariantVariablesMissedLocalAudienceCheck(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -214,16 +235,16 @@ class FeatureFlagManagerTest {
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
             name = "test-ff",
-            variables = jsonMapOf("var" to 2),
+            variables = null,
             isEligible = false,
-            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "variable 2"))
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "flag"))
         )
 
         assertEquals(expected, flag)
     }
 
     @Test
-    fun testStaticFixedVariables(): TestResult = runTest {
+    public fun testStaticFixedVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -255,7 +276,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaticFixedVariablesMissedLocalAudienceCheck(): TestResult = runTest {
+    public fun testStaticFixedVariablesMissedLocalAudienceCheck(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -279,7 +300,7 @@ class FeatureFlagManagerTest {
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
             name = "test-ff",
-            variables = jsonMapOf("var" to 1),
+            variables = null,
             isEligible = false,
             reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "flag"))
         )
@@ -288,7 +309,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredNoVariables(): TestResult = runTest {
+    public fun testDeferredNoVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -325,7 +346,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredVariantVariables(): TestResult = runTest {
+    public fun testDeferredVariantVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -384,7 +405,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredFixedVariables(): TestResult = runTest {
+    public fun testDeferredFixedVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -424,7 +445,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredNotEligible(): TestResult = runTest {
+    public fun testDeferredNotEligible(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -455,7 +476,7 @@ class FeatureFlagManagerTest {
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
             name = "test-ff",
-            variables = jsonMapOf("var" to 1),
+            variables = null,
             isEligible = false,
             reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "deferred"))
         )
@@ -464,7 +485,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredLocalAudienceCheckMiss(): TestResult = runTest {
+    public fun testDeferredLocalAudienceCheckMiss(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -493,7 +514,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredNoFlag(): TestResult = runTest {
+    public fun testDeferredNoFlag(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -520,7 +541,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testDeferredError(): TestResult = runTest {
+    public fun testDeferredError(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -545,7 +566,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testMultipleFlagsSameName(): TestResult = runTest {
+    public fun testMultipleFlagsSameName(): TestResult = runTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
@@ -593,7 +614,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testMultipleFlagsSameNameNoMatch(): TestResult = runTest {
+    public fun testMultipleFlagsSameNameNoMatch(): TestResult = runTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
@@ -641,7 +662,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testMultipleFlagsSameNameDeferred(): TestResult = runTest {
+    public fun testMultipleFlagsSameNameDeferred(): TestResult = runTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
@@ -666,8 +687,7 @@ class FeatureFlagManagerTest {
                 lastUpdated = 0,
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag3"),
-                audience = audienceMissedSelector,
-                payload = FeatureFlagPayload.StaticPayload()
+                payload = FeatureFlagPayload.DeferredPayload(url = Uri.EMPTY)
             )
         )
 
@@ -683,6 +703,18 @@ class FeatureFlagManagerTest {
             )
         )
 
+        coEvery { deferredResolver.resolve(any(), flags[2]) } returns Result.success(
+            DeferredFlag.Found(
+                DeferredFlagInfo(
+                    isEligible = true,
+                    variables = FeatureFlagVariables.Fixed(
+                        jsonMapOf("var" to 2)
+                    ),
+                    reportingMetadata = jsonMapOf("reporting" to "deferred 2")
+                )
+            )
+        )
+
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(flags)
@@ -692,16 +724,16 @@ class FeatureFlagManagerTest {
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
             name = "test-ff",
-            variables = jsonMapOf("var" to 1),
-            isEligible = false,
-            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "deferred"))
+            variables = jsonMapOf("var" to 2),
+            isEligible = true,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "deferred 2"))
         )
 
         assertEquals(expected, flag)
     }
 
     @Test
-    fun testStaleNotDefined(): TestResult = runTest {
+    public fun testStaleNotDefined(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -732,7 +764,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaleNotAllowed(): TestResult = runTest {
+    public fun testStaleNotAllowed(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
             created = 0,
@@ -763,7 +795,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaleNotAllowedSingleFlag(): TestResult = runTest {
+    public fun testStaleNotAllowedSingleFlag(): TestResult = runTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
@@ -816,7 +848,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testFlagOutOfDateRemoteDataFailedToRefresh(): TestResult = runTest {
+    public fun testFlagOutOfDateRemoteDataFailedToRefresh(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
@@ -838,7 +870,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testFlagOutOfDateRemoteDataSuccessRefresh(): TestResult = runTest {
+    public fun testFlagOutOfDateRemoteDataSuccessRefresh(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
@@ -861,7 +893,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testFlagOutOfDateRemoteDataSuccessRefreshToStale(): TestResult = runTest {
+    public fun testFlagOutOfDateRemoteDataSuccessRefreshToStale(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
@@ -883,7 +915,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testStaleDataNoFlag(): TestResult = runTest {
+    public fun testStaleDataNoFlag(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
@@ -905,7 +937,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testUpToDateNoFlag(): TestResult = runTest {
+    public fun testUpToDateNoFlag(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
         every { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
@@ -924,7 +956,7 @@ class FeatureFlagManagerTest {
     }
 
     @Test
-    fun testTrackInteraction(): TestResult = runTest {
+    public fun testTrackInteraction(): TestResult = runTest {
         every { featureFlagAnalytics.trackInteraction(any()) } just runs
 
         val flag = FeatureFlag.createFlag("some name", false, generateReportingInfo())
@@ -933,12 +965,21 @@ class FeatureFlagManagerTest {
         verify(exactly = 1) { featureFlagAnalytics.trackInteraction(flag) }
     }
 
+    @Test
+    public fun testTrackInteractionDisabledFeatureFlags(): TestResult = runTest {
+        every { privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS) } returns false
+
+        val flag = FeatureFlag.createFlag("some name", false, generateReportingInfo())
+        featureFlags.trackInteraction(flag)
+
+        verify(exactly = 0) { featureFlagAnalytics.trackInteraction(flag) }
+    }
 
     private suspend fun generateReportingInfo(reportingMetadata: JsonMap? = null): FeatureFlag.ReportingInfo {
         return FeatureFlag.ReportingInfo(
             reportingMetadata = reportingMetadata
                 ?: jsonMapOf("flag_id" to "27f26d85-0550-4df5-85f0-7022fa7a5925"),
-            contactId = infoProvider.getStableContactId(),
+            contactId = infoProvider.getStableContactInfo().contactId,
             channelId = infoProvider.getChannelId()
         )
     }

@@ -19,12 +19,13 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.R
-import com.urbanairship.android.layout.ThomasListener
+import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment
 import com.urbanairship.android.layout.environment.ExternalReporter
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.Reporter
+import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent.DismissFromOutside
 import com.urbanairship.android.layout.info.LayoutInfo
@@ -65,9 +66,10 @@ internal class BannerLayout(
     private val webViewClientFactory: Factory<AirshipWebViewClient>? = args.webViewClientFactory
     private val imageCache: ImageCache? = args.imageCache
     private val payload: LayoutInfo = args.payload
-    private val externalListener: ThomasListener = args.listener
+    private val externalListener: ThomasListenerInterface = args.listener
     private val viewModelKey: String = args.hashCode().toString()
     private val reporter: Reporter = ExternalReporter(externalListener)
+    private val actionRunner: ThomasActionRunner = args.actionRunner
 
     private val activityPredicate = Predicate { activity: Activity ->
         try {
@@ -138,7 +140,7 @@ internal class BannerLayout(
         try {
             val modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
-                listener = externalListener,
+                actionRunner = actionRunner,
                 displayTimer = displayTimer
             )
             val model = viewModel.getOrCreateModel(

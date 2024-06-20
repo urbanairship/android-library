@@ -22,7 +22,7 @@ public class InAppPagerCompletedEventTest {
                "page_identifier":"page identifier"
             }
         """.trimIndent()
-        assertEquals("in_app_pager_completed", event.name)
+        assertEquals("in_app_pager_completed", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

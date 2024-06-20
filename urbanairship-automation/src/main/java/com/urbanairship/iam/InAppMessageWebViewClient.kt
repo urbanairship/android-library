@@ -3,7 +3,6 @@ package com.urbanairship.iam
 
 import android.webkit.WebView
 import androidx.annotation.CallSuper
-import androidx.annotation.VisibleForTesting
 import com.urbanairship.javascript.JavaScriptEnvironment
 import com.urbanairship.javascript.NativeBridge
 import com.urbanairship.json.JsonMap
@@ -20,8 +19,7 @@ internal open class InAppMessageWebViewClient: AirshipWebViewClient {
         this.messageExtras= messageExtras
     }
 
-    @VisibleForTesting
-    internal constructor(nativeBridge: NativeBridge, extras: JsonMap?) : super(nativeBridge) {
+    constructor(nativeBridge: NativeBridge, extras: JsonMap?) : super(nativeBridge) {
         messageExtras = extras
     }
 

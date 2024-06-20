@@ -36,7 +36,7 @@ public class AnalyticsEnablePreference extends UACheckBoxPreference {
     private final PrivacyManager.Listener privacyManagerListener = new PrivacyManager.Listener() {
         @Override
         public void onEnabledFeaturesChanged() {
-            setEnabled(UAirship.shared().getPrivacyManager().isEnabled(PrivacyManager.FEATURE_ANALYTICS));
+            setEnabled(UAirship.shared().getPrivacyManager().isEnabled(PrivacyManager.Feature.ANALYTICS));
         }
     };
 
@@ -54,15 +54,15 @@ public class AnalyticsEnablePreference extends UACheckBoxPreference {
 
     @Override
     protected boolean getInitialAirshipValue(@NonNull UAirship airship) {
-        return airship.getPrivacyManager().isEnabled(PrivacyManager.FEATURE_ANALYTICS);
+        return airship.getPrivacyManager().isEnabled(PrivacyManager.Feature.ANALYTICS);
     }
 
     @Override
     protected void onApplyAirshipPreference(@NonNull UAirship airship, boolean enabled) {
         if (enabled) {
-            airship.getPrivacyManager().enable(PrivacyManager.FEATURE_ANALYTICS);
+            airship.getPrivacyManager().enable(PrivacyManager.Feature.ANALYTICS);
         } else {
-            airship.getPrivacyManager().disable(PrivacyManager.FEATURE_ANALYTICS);
+            airship.getPrivacyManager().disable(PrivacyManager.Feature.ANALYTICS);
         }
     }
 

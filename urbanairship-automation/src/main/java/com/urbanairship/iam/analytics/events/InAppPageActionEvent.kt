@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.analytics.events
 
+import com.urbanairship.analytics.EventType
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -12,7 +13,8 @@ internal class InAppPageActionEvent(
 ) : InAppEvent {
     private val reportingData = PageActionData(identifier, metadata)
 
-    override val name: String = "in_app_page_action"
+    override val eventType: EventType = EventType.IN_APP_PAGE_ACTION
+
     override val data: JsonSerializable = reportingData
 
     private data class PageActionData(

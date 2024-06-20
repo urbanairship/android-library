@@ -12,7 +12,6 @@ import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.VisibilityInfo
-import com.urbanairship.android.layout.property.Actions
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
@@ -166,7 +165,7 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
         environment.reporter.report(event, state)
 
     protected fun runActions(
-        actions: Actions,
+        actions: Map<String, JsonValue>,
         state: LayoutData = layoutState.reportingContext()
     ) = environment.actionsRunner.run(actions, state)
 

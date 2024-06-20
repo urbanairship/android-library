@@ -8,10 +8,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class FeatureFlagTest {
+public class FeatureFlagTest {
 
     @Test
-    fun testCreateMissingFlag() {
+    public fun testCreateMissingFlag() {
         val flag = FeatureFlag.createMissingFlag("some-flag-name")
 
         assert(flag.name == "some-flag-name")
@@ -22,7 +22,7 @@ class FeatureFlagTest {
     }
 
     @Test
-    fun testCreateFlag() {
+    public fun testCreateFlag() {
         val reportingInfo = FeatureFlag.ReportingInfo(
             reportingMetadata = jsonMapOf("reporting" to "is good"),
             channelId = "some channel",
@@ -44,7 +44,7 @@ class FeatureFlagTest {
     }
 
     @Test
-    fun testJson() {
+    public fun testJson() {
         val flag = FeatureFlag.createFlag(
             name = "some-flag-name",
             isEligible = true,
@@ -73,7 +73,7 @@ class FeatureFlagTest {
     }
 
     @Test
-    fun testJsonDeprecatedConstructor() {
+    public fun testJsonDeprecatedConstructor() {
         val flag = FeatureFlag(isEligible = false, exists = false, variables = null)
         val expectedJson = jsonMapOf(
             "name" to "",
@@ -86,7 +86,7 @@ class FeatureFlagTest {
     }
 
     @Test
-    fun testJsonMissingFlag() {
+    public fun testJsonMissingFlag() {
         val flag = FeatureFlag.createMissingFlag("some-flag")
         val expectedJson = jsonMapOf(
             "name" to "some-flag",

@@ -241,7 +241,7 @@ public class ContactApiClientTest {
             client.registerOpen(fakeContactId, fakeEmail, options, Locale("en", "US"))
         assertEquals(200, result.status)
 
-        val expectedResultValue = AssociatedChannel("fake_channel_id", ChannelType.OPEN)
+        val expectedResultValue = "fake_channel_id"
         assertEquals(expectedResultValue, result.value)
         assertEquals(200, result.status)
 
@@ -317,7 +317,7 @@ public class ContactApiClientTest {
         val result = client.registerEmail(fakeContactId, fakeEmail, options, Locale("en", "US"))
         assertEquals(200, result.status)
 
-        val expectedResultValue = AssociatedChannel("fake_channel_id", ChannelType.EMAIL)
+        val expectedResultValue = "fake_channel_id"
         assertEquals(expectedResultValue, result.value)
         assertEquals(200, result.status)
 
@@ -386,7 +386,7 @@ public class ContactApiClientTest {
         val result = client.registerSms(fakeContactId, fakeMsisdn, options, Locale("en", "US"))
         assertEquals(200, result.status)
 
-        val expectedResultValue = AssociatedChannel("fake_channel_id", ChannelType.SMS)
+        val expectedResultValue = "fake_channel_id"
         assertEquals(expectedResultValue, result.value)
         assertEquals(200, result.status)
 
@@ -548,7 +548,7 @@ public class ContactApiClientTest {
 
         val result = client.associatedChannel(fakeContactId, fakeChannelId, ChannelType.OPEN)
 
-        val expectedResultValue = AssociatedChannel(fakeChannelId, ChannelType.OPEN)
+        val expectedResultValue = fakeChannelId
         assertEquals(expectedResultValue, result.value)
         assertEquals(200, result.status)
 
@@ -571,6 +571,199 @@ public class ContactApiClientTest {
             headers = mapOf(
                 "Accept" to "application/vnd.urbanairship+json; version=3;",
                 "X-UA-Appkey" to runtimeConfig.configOptions.appKey
+            )
+        )
+        assertEquals(expectedUpdateRequest, requestSession.requests[0])
+    }
+
+    @Test
+    public fun testResendChannelOptIn(): TestResult = runTest {
+        requestSession.addResponse(200)
+
+        val result = client.resendChannelOptIn(fakeChannelId, ChannelType.OPEN)
+
+        assertEquals(200, result.status)
+
+        val expectedUpdateRequest = Request(
+            url = Uri.parse("https://example.com/api/channels/resend"),
+            method = "POST",
+            body = RequestBody.Json(
+                """
+                      {
+                       "channel_type": "open",
+                       "channel_id": "$fakeChannelId"
+                    }
+                """
+            ),
+            auth = RequestAuth.GeneratedAppToken,
+            headers = mapOf(
+                "Accept" to "application/vnd.urbanairship+json; version=3;",
+                "Content-Type" to "application/json"
+            )
+        )
+        assertEquals(expectedUpdateRequest, requestSession.requests[0])
+    }
+
+    @Test
+    public fun testResendEmailOptIn(): TestResult = runTest {
+        requestSession.addResponse(200)
+
+        val result = client.resendEmailOptIn("email@email.email")
+
+        assertEquals(200, result.status)
+
+        val expectedUpdateRequest = Request(
+            url = Uri.parse("https://example.com/api/channels/resend"),
+            method = "POST",
+            body = RequestBody.Json(
+                """
+                      {
+                       "channel_type": "email",
+                       "email_address": "email@email.email"
+                    }
+                """
+            ),
+            auth = RequestAuth.GeneratedAppToken,
+            headers = mapOf(
+                "Accept" to "application/vnd.urbanairship+json; version=3;",
+                "Content-Type" to "application/json"
+            )
+        )
+        assertEquals(expectedUpdateRequest, requestSession.requests[0])
+    }
+
+    @Test
+    public fun testResendSmsOptIn(): TestResult = runTest {
+        requestSession.addResponse(200)
+
+        val result = client.resendSmsOptIn("msisdn-123", senderId = "sender-123")
+
+        assertEquals(200, result.status)
+
+        val expectedUpdateRequest = Request(
+            url = Uri.parse("https://example.com/api/channels/resend"),
+            method = "POST",
+            body = RequestBody.Json(
+                """
+                      {
+                       "channel_type": "sms",
+                       "msisdn": "msisdn-123",
+                       "sender": "sender-123"
+                    }
+                """
+            ),
+            auth = RequestAuth.GeneratedAppToken,
+            headers = mapOf(
+                "Accept" to "application/vnd.urbanairship+json; version=3;",
+                "Content-Type" to "application/json"
+            )
+        )
+        assertEquals(expectedUpdateRequest, requestSession.requests[0])
+    }
+
+    @Test
+    public fun testDisassociateChannel(): TestResult = runTest {
+        requestSession.addResponse(
+            200, """
+            {
+              "channel_id": "some_channel"
+            }
+            """
+        )
+        val result = client.disassociateChannel(fakeContactId, fakeChannelId, ChannelType.OPEN, true)
+
+        assertEquals(200, result.status)
+        assertEquals("some_channel", result.value)
+
+        val expectedUpdateRequest = Request(
+            url = Uri.parse("https://example.com/api/contacts/disassociate/$fakeContactId"),
+            method = "POST",
+            body = RequestBody.Json(
+                """
+                      {
+                       "channel_type": "open",
+                       "channel_id": "$fakeChannelId",
+                       "opt_out": true
+                    }
+                """
+            ),
+            auth = RequestAuth.ContactTokenAuth(fakeContactId),
+            headers = mapOf(
+                "Accept" to "application/vnd.urbanairship+json; version=3;",
+                "Content-Type" to "application/json"
+            )
+        )
+        assertEquals(expectedUpdateRequest, requestSession.requests[0])
+    }
+
+    @Test
+    public fun testDisassociateEmailChannel(): TestResult = runTest {
+        requestSession.addResponse(
+            200, """
+            {
+              "channel_id": "some_channel"
+            }
+            """
+        )
+
+        val result = client.disassociateEmail(fakeContactId, "email@email.email", false)
+
+        assertEquals(200, result.status)
+        assertEquals("some_channel", result.value)
+
+        val expectedUpdateRequest = Request(
+            url = Uri.parse("https://example.com/api/contacts/disassociate/$fakeContactId"),
+            method = "POST",
+            body = RequestBody.Json(
+                """
+                      {
+                       "channel_type": "email",
+                       "email_address": "email@email.email",
+                       "opt_out": false
+                    }
+                """
+            ),
+            auth = RequestAuth.ContactTokenAuth(fakeContactId),
+            headers = mapOf(
+                "Accept" to "application/vnd.urbanairship+json; version=3;",
+                "Content-Type" to "application/json"
+            )
+        )
+        assertEquals(expectedUpdateRequest, requestSession.requests[0])
+    }
+
+    @Test
+    public fun testDisassociateSmsChannel(): TestResult = runTest {
+        requestSession.addResponse(
+            200, """
+            {
+              "channel_id": "some_channel"
+            }
+            """
+        )
+
+        val result = client.disassociateSms(fakeContactId, "msisdn-123", "sender-123", true)
+
+        assertEquals(200, result.status)
+        assertEquals("some_channel", result.value)
+
+        val expectedUpdateRequest = Request(
+            url = Uri.parse("https://example.com/api/contacts/disassociate/$fakeContactId"),
+            method = "POST",
+            body = RequestBody.Json(
+                """
+                      {
+                       "channel_type": "sms",
+                       "msisdn": "msisdn-123",
+                       "sender": "sender-123",
+                       "opt_out": true
+                    }
+                """
+            ),
+            auth = RequestAuth.ContactTokenAuth(fakeContactId),
+            headers = mapOf(
+                "Accept" to "application/vnd.urbanairship+json; version=3;",
+                "Content-Type" to "application/json"
             )
         )
         assertEquals(expectedUpdateRequest, requestSession.requests[0])

@@ -10,13 +10,13 @@ import com.urbanairship.activity.ThemedActivity
 /**
  * `Activity` that displays a Preference Center via the hosted [PreferenceCenterFragment].
  */
-class PreferenceCenterActivity : ThemedActivity() {
+public class PreferenceCenterActivity : ThemedActivity() {
 
-    companion object {
+    public companion object {
         /**
          * Required `String` extra specifying the ID of the Preference Center to be displayed.
          */
-        const val EXTRA_ID = "com.urbanairship.preferencecenter.PREF_CENTER_ID"
+        public const val EXTRA_ID: String = "com.urbanairship.preferencecenter.PREF_CENTER_ID"
 
         private const val FRAGMENT_TAG = "PREF_CENTER_FRAGMENT"
     }

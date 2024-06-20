@@ -1,11 +1,6 @@
 package com.urbanairship.preferencecenter.ui
 
-import android.content.Context
-import android.content.res.Resources
-import android.graphics.Canvas
-import android.graphics.Rect
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
@@ -13,9 +8,8 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,30 +18,42 @@ import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ButtonClick
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ChannelSubscriptionChange
+import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactManagementAddClick
+import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactManagementRemoveClick
+import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactManagementResendClick
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactSubscriptionChange
 import com.urbanairship.preferencecenter.ui.PreferenceCenterAdapter.ItemEvent.ContactSubscriptionGroupChange
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Action
-import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.PreferenceCenterViewModelFactory
+import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Effect
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
+import com.urbanairship.preferencecenter.widget.SectionDividerDecoration
+import com.urbanairship.preferencecenter.widget.showContactManagementAddConfirmDialog
+import com.urbanairship.preferencecenter.widget.showContactManagementAddDialog
+import com.urbanairship.preferencecenter.widget.showContactManagementRemoveDialog
+import com.urbanairship.preferencecenter.widget.showContactManagementResentDialog
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @OpenForTesting
-class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center) {
-    companion object {
+public class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center) {
+    public companion object {
 
         /**
          * Required `String` argument specifying the ID of the Preference Center to be displayed.
          */
-        const val ARG_ID: String = "pref_center_id"
+        public const val ARG_ID: String = "pref_center_id"
 
         /**
          * Creates a new `PreferenceCenterFragment` instance, with [preferenceCenterId] passed as an argument.
          */
-        @JvmStatic fun create(preferenceCenterId: String): PreferenceCenterFragment =
+        @JvmStatic
+        public fun create(preferenceCenterId: String): PreferenceCenterFragment =
             PreferenceCenterFragment().apply {
                 arguments = Bundle().apply { putString(ARG_ID, preferenceCenterId) }
             }
@@ -56,7 +62,7 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     /**
      * Listener to override Preference Center display behavior.
      */
-    fun interface OnDisplayPreferenceCenterListener {
+    public fun interface OnDisplayPreferenceCenterListener {
 
         /**
          * Called when a Preference Center title and description will be displayed.
@@ -65,25 +71,18 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
          * @param description Description of the Preference Center.
          * @return `true` if the title and description were displayed, otherwise `false` to trigger the default display as an item at the top of the list.
          */
-        fun onDisplayPreferenceCenter(title: String?, description: String?): Boolean
-    }
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    @Suppress("ProtectedInFinal")
-    protected val viewModelFactory: ViewModelProvider.Factory by lazy {
-        PreferenceCenterViewModelFactory(preferenceCenterId)
+        public fun onDisplayPreferenceCenter(title: String?, description: String?): Boolean
     }
 
     private val preferenceCenterId: String by lazy {
         requireNotNull(arguments?.getString(ARG_ID)) { "Missing required argument: PreferenceCenterFragment.ARG_ID" }
     }
 
-    private val viewModel: PreferenceCenterViewModel by lazy {
-        ViewModelProvider(this, viewModelFactory)[PreferenceCenterViewModel::class.java]
+    private val viewModel: PreferenceCenterViewModel by activityViewModels {
+        PreferenceCenterViewModel.factory(preferenceCenterId)
     }
 
     @VisibleForTesting
-    @Suppress("ProtectedInFinal")
     protected val viewModelScopeProvider: () -> CoroutineScope = { viewModel.viewModelScope }
 
     private val adapter: PreferenceCenterAdapter by lazy {
@@ -93,6 +92,9 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     private lateinit var views: Views
 
     private var onDisplayListener: OnDisplayPreferenceCenterListener? = null
+
+    private val contactManagementDialogErrors = Channel<String>(Channel.UNLIMITED)
+    private val contactManagementDialogDismisses = MutableSharedFlow<Unit>()
 
     private data class Views(
         val view: View,
@@ -146,6 +148,10 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
             viewModel.states.collect(::render)
         }
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.effects.collect(::handle)
+        }
+
         adapter.itemEvents
             .map { event ->
                 when (event) {
@@ -157,6 +163,12 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
                         Action.ScopedPreferenceItemChanged(event.item, event.scopes, event.isChecked)
                     is ButtonClick ->
                         Action.ButtonActions(event.actions)
+                    is ContactManagementAddClick ->
+                        Action.RequestAddChannel(event.item)
+                    is ContactManagementRemoveClick ->
+                        Action.RequestRemoveChannel(event.item, event.channel)
+                    is ContactManagementResendClick ->
+                        Action.ResendChannelVerification(event.item, event.channel)
                 }
             }
             .onEach { action -> viewModel.handle(action) }
@@ -174,21 +186,20 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
     /**
      * Sets the [OnDisplayPreferenceCenterListener].
      */
-    fun setOnDisplayPreferenceCenterListener(listener: OnDisplayPreferenceCenterListener?) {
+    public fun setOnDisplayPreferenceCenterListener(listener: OnDisplayPreferenceCenterListener?) {
         onDisplayListener = listener
     }
 
     /**
      * Shows the title and description as an item at the top of the list.
      */
-    fun showHeaderItem(title: String?, description: String?) {
+    public fun showHeaderItem(title: String?, description: String?) {
         adapter.setHeaderItem(title, description)
     }
 
     private fun render(state: State): Unit = when (state) {
         is State.Loading -> {
             views.showLoading()
-            adapter.submit(emptyList(), emptySet(), emptyMap())
         }
         is State.Error -> views.showError()
         is State.Content -> {
@@ -197,84 +208,39 @@ class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference_center
                     showHeaderItem(state.title, state.subtitle)
                 }
             } ?: showHeaderItem(state.title, state.subtitle)
-            adapter.submit(state.listItems, state.channelSubscriptions, state.contactSubscriptions)
+
+            adapter.submit(
+                items = state.listItems,
+                channelSubscriptions = state.channelSubscriptions,
+                contactSubscriptions = state.contactSubscriptions,
+                contactChannels = state.contactChannelState
+            )
 
             views.showContent()
         }
     }
-}
 
-private class SectionDividerDecoration(
-    context: Context,
-    private val isAnimating: () -> Boolean
-) : RecyclerView.ItemDecoration() {
-    private val drawable = run {
-        val dividerAttr = TypedValue()
-        context.theme.resolveAttribute(androidx.appcompat.R.attr.dividerHorizontal, dividerAttr, true)
-        ContextCompat.getDrawable(context, dividerAttr.resourceId)
-            ?: throw Resources.NotFoundException("Failed to resolve attr 'dividerHorizontal' from theme!")
-    }
-
-    private val unlabeledSectionPadding = context.resources.getDimensionPixelSize(R.dimen.ua_preference_center_unlabeled_section_item_top_padding)
-
-    private val dividerHeight: Int = drawable.intrinsicHeight
-
-    override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
-        if (isAnimating()) return
-
-        if (shouldDrawDividerBelow(view, parent)) {
-            outRect.bottom = dividerHeight
-        } else if (isSectionWithoutLabeledBreak(view, parent)) {
-            outRect.top = unlabeledSectionPadding
-        }
-    }
-
-    override fun onDrawOver(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
-        if (isAnimating()) return
-
-        val width = parent.width
-        for (i in 0 until parent.childCount) {
-            val child = parent.getChildAt(i)
-            if (shouldDrawDividerBelow(child, parent)) {
-                val top = (child.y + child.height).toInt()
-                drawable.setBounds(0, top, width, top + dividerHeight)
-                drawable.draw(c)
+    private suspend fun handle(effect: Effect) = when (effect) {
+        is Effect.ShowContactManagementAddDialog ->
+            showContactManagementAddDialog(
+                item = effect.item,
+                onHandleAction = viewModel::handle,
+                errors = contactManagementDialogErrors.consumeAsFlow(),
+                dismisses = contactManagementDialogDismisses
+            )
+        is Effect.ShowContactManagementAddConfirmDialog ->
+            effect.item.addPrompt.prompt.onSubmit?.let { message ->
+                showContactManagementAddConfirmDialog(message)
             }
-        }
-    }
-
-    private fun shouldDrawDividerBelow(view: View, parent: RecyclerView): Boolean {
-        val holder = parent.getChildViewHolder(view)
-        val isNotSectionItem = holder !is PrefCenterItem.SectionItem.ViewHolder &&
-            holder !is PrefCenterItem.SectionBreakItem.ViewHolder
-
-        val index = parent.indexOfChild(view)
-        return if (index < parent.childCount - 1) {
-            val nextView = parent.getChildAt(index + 1)
-            val nextHolder = parent.getChildViewHolder(nextView)
-            val isNextSectionItem = nextHolder is PrefCenterItem.SectionItem.ViewHolder ||
-                nextHolder is PrefCenterItem.SectionBreakItem.ViewHolder
-            val isNextAlert = nextHolder is PrefCenterItem.AlertItem.ViewHolder
-
-            isNotSectionItem && isNextSectionItem || isNextAlert
-        } else {
-            false
-        }
-    }
-
-    private fun isSectionWithoutLabeledBreak(view: View, parent: RecyclerView): Boolean {
-        val holder = parent.getChildViewHolder(view)
-        val isSectionItem = holder is PrefCenterItem.SectionItem.ViewHolder
-
-        val index = parent.indexOfChild(view)
-        return if (index < parent.childCount && index > 0) {
-            val prevView = parent.getChildAt(index - 1)
-            val prevHolder = parent.getChildViewHolder(prevView)
-            val isPrevSectionBreak = prevHolder is PrefCenterItem.SectionBreakItem.ViewHolder
-
-            isSectionItem && !isPrevSectionBreak
-        } else {
-            false
-        }
+        is Effect.ShowContactManagementRemoveDialog ->
+            showContactManagementRemoveDialog(effect.item, effect.channel, viewModel::handle)
+        is Effect.ShowChannelVerificationResentDialog ->
+            effect.item.platform.resendOptions.onSuccess?.let { message ->
+                showContactManagementResentDialog(message)
+            }
+        Effect.DismissContactManagementAddDialog ->
+            contactManagementDialogDismisses.emit(Unit)
+        is Effect.ShowContactManagementAddDialogError ->
+            contactManagementDialogErrors.send(effect.message)
     }
 }

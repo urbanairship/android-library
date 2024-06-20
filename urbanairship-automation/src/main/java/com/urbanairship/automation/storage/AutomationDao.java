@@ -6,16 +6,13 @@ import java.util.Collection;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
-import androidx.room.RoomWarnings;
 import androidx.room.Transaction;
-import androidx.room.Update;
 
 /**
  * Automation data access object

@@ -33,7 +33,6 @@ import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -60,7 +59,7 @@ internal class ContactManager(
     private var lastIdentifyTimeMs: Long = 0
 
     private val _contactIdUpdates: MutableStateFlow<ContactIdUpdate?> = MutableStateFlow(null)
-    val contactIdUpdates: Flow<ContactIdUpdate?> = _contactIdUpdates.asStateFlow()
+    val contactIdUpdates: StateFlow<ContactIdUpdate?> = _contactIdUpdates.asStateFlow()
 
     private val _currentNamedUserIdUpdates: MutableStateFlow<String?> = MutableStateFlow(null)
     val currentNamedUserIdUpdates: StateFlow<String?> = _currentNamedUserIdUpdates.asStateFlow()
@@ -103,9 +102,9 @@ internal class ContactManager(
             return lastContactIdentity?.isAnonymous == true && anonData?.isEmpty == false
         }
 
-    private var anonData: ContactData?
+    private var anonData: AnonContactData?
         get() = preferenceDataStore.optJsonValue(ANON_CONTACT_DATA_KEY)?.tryParse { json ->
-            ContactData(json)
+            AnonContactData.fromJson(json)
         }
         set(newValue) = preferenceDataStore.put(ANON_CONTACT_DATA_KEY, newValue)
 
@@ -152,9 +151,10 @@ internal class ContactManager(
             } == null
 
             return ContactIdUpdate(
-                    contactId = lastIdentity.contactId,
-                    isStable = isStable,
-                    resolveDateMs = lastIdentity.resolveDateMs ?: 0
+                contactId = lastIdentity.contactId,
+                namedUserId = lastIdentity.namedUserId,
+                isStable = isStable,
+                resolveDateMs = lastIdentity.resolveDateMs ?: 0
             )
         }
 
@@ -351,36 +351,85 @@ internal class ContactManager(
         val tags: MutableList<TagGroupsMutation> = ArrayList()
         val attributes: MutableList<AttributeMutation> = ArrayList()
         val subscriptions: MutableList<ScopedSubscriptionListMutation> = ArrayList()
+        val contactChannels: MutableList<ContactChannelMutation> = ArrayList()
+
         var lastOperationNamedUser: String? = null
 
+
         for (operation in operations) {
-            // If we are at a reset, the contact ID will change so break
-            if (operation is ContactOperation.Reset) {
-                break
-            }
 
-            // If we have an identify:
-            // - not anonymous, break if the named user ID is not a match
-            // - is anonymous, break on the second named user mismatch since the first identify could
-            //   result in the same contact ID
-            if (operation is ContactOperation.Identify) {
-                if (!currentIdentity.isAnonymous && operation.identifier != currentIdentity.namedUserId) {
-                    break
-                }
-                if (lastOperationNamedUser != null && lastOperationNamedUser != operation.identifier) {
-                    break
-                }
-                lastOperationNamedUser = operation.identifier
-            }
+            when(operation) {
+                // If we are at a reset, the contact ID will change so break
+                is ContactOperation.Reset -> break
 
-            if (operation is ContactOperation.Update) {
-                operation.tags?.let { tags.addAll(it) }
-                operation.attributes?.let { attributes.addAll(it) }
-                operation.subscriptions?.let { subscriptions.addAll(it) }
+                // If we have an identify:
+                // - not anonymous, break if the named user ID is not a match
+                // - is anonymous, break on the second named user mismatch since the first identify could
+                //   result in the same contact ID
+                is ContactOperation.Identify -> {
+                    if (!currentIdentity.isAnonymous && operation.identifier != currentIdentity.namedUserId) {
+                        break
+                    }
+
+                    if (lastOperationNamedUser != null && lastOperationNamedUser != operation.identifier) {
+                        break
+                    }
+
+                    lastOperationNamedUser = operation.identifier
+                }
+
+                is ContactOperation.Update -> {
+                    operation.tags?.let { tags.addAll(it) }
+                    operation.attributes?.let { attributes.addAll(it) }
+                    operation.subscriptions?.let { subscriptions.addAll(it) }
+                }
+
+                is ContactOperation.RegisterSms -> {
+                    contactChannels.add(
+                        ContactChannelMutation.Associate(
+                            channel = ContactChannel.Sms(
+                                ContactChannel.Sms.RegistrationInfo.Pending(
+                                    address = operation.msisdn,
+                                    registrationOptions = operation.options
+                                )
+                            ),
+                        )
+                    )
+                }
+
+                is ContactOperation.RegisterEmail -> {
+                    contactChannels.add(
+                        ContactChannelMutation.Associate(
+                            channel = ContactChannel.Email(
+                                ContactChannel.Email.RegistrationInfo.Pending(
+                                    address = operation.emailAddress,
+                                    registrationOptions = operation.options
+                                )
+                            ),
+                        )
+                    )
+                }
+
+                is ContactOperation.DisassociateChannel -> {
+                    contactChannels.add(
+                        ContactChannelMutation.Disassociated(channel = operation.channel)
+                    )
+                }
+
+                is ContactOperation.AssociateChannel -> {
+                    contactChannels.add(
+                        ContactChannelMutation.AssociateAnon(
+                            channelId = operation.channelId,
+                            channelType = operation.channelType
+                        )
+                    )
+                }
+
+               else -> continue
             }
         }
 
-        return AudienceOverrides.Contact(tags, attributes, subscriptions)
+        return AudienceOverrides.Contact(tags, attributes, subscriptions, contactChannels)
     }
 
     private fun prepareNextOperationGroup(): OperationGroup? {
@@ -509,7 +558,9 @@ internal class ContactManager(
             is ContactOperation.RegisterEmail -> performRegisterEmail(operation)
             is ContactOperation.RegisterSms -> performRegisterSms(operation)
             is ContactOperation.RegisterOpen -> performRegisterOpen(operation)
-            is ContactOperation.OptinCheck -> performOptinCheck(channelId)
+            is ContactOperation.DisassociateChannel -> performDisassociateChannel(operation)
+            is ContactOperation.Resend -> performResend(operation)
+
         }
     }
 
@@ -563,12 +614,6 @@ internal class ContactManager(
         )
 
         if (response.isSuccessful) {
-            audienceOverridesProvider.recordContactUpdate(
-                contactId,
-                operation.tags,
-                operation.attributes,
-                operation.subscriptions
-            )
             contactUpdated(contactId, operation)
         }
 
@@ -598,7 +643,12 @@ internal class ContactManager(
         )
 
         if (response.value != null && response.isSuccessful) {
-            contactUpdated(contactId, associatedChannel = response.value)
+            contactUpdated(
+                contactId = contactId,
+                channelUpdate = ContactChannelMutation.AssociateAnon(
+                    operation.channelId, operation.channelType
+                )
+            )
         }
 
         return response.isSuccessful || response.isClientError
@@ -615,7 +665,18 @@ internal class ContactManager(
         )
 
         if (response.value != null && response.isSuccessful) {
-            contactUpdated(contactId, associatedChannel = response.value)
+            contactUpdated(
+                contactId = contactId,
+                channelUpdate = ContactChannelMutation.Associate(
+                    channel = ContactChannel.Sms(
+                        ContactChannel.Sms.RegistrationInfo.Pending(
+                            address = operation.msisdn,
+                            operation.options
+                        )
+                    ),
+                    channelId = response.value
+                )
+            )
         }
 
         return response.isSuccessful || response.isClientError
@@ -632,7 +693,18 @@ internal class ContactManager(
         )
 
         if (response.value != null && response.isSuccessful) {
-            contactUpdated(contactId, associatedChannel = response.value)
+            contactUpdated(
+                contactId = contactId,
+                channelUpdate = ContactChannelMutation.Associate(
+                    channel = ContactChannel.Email(
+                        ContactChannel.Email.RegistrationInfo.Pending(
+                            address = operation.emailAddress,
+                            operation.options
+                        )
+                    ),
+                    channelId = response.value
+                )
+            )
         }
 
         return response.isSuccessful || response.isClientError
@@ -649,16 +721,111 @@ internal class ContactManager(
         )
 
         if (response.value != null && response.isSuccessful) {
-            contactUpdated(contactId, associatedChannel = response.value)
+            contactUpdated(
+                contactId = contactId,
+                channelUpdate = ContactChannelMutation.AssociateAnon(
+                    channelId = response.value,
+                    channelType = ChannelType.OPEN
+                )
+            )
         }
 
         return response.isSuccessful || response.isClientError
     }
 
-    private suspend fun performOptinCheck(channelId: String): Boolean {
-        // TODO complete this method with correct requests
-        val response = contactApiClient.performOptinCheck(channelId)
-        return true
+    private suspend fun performResend(operation: ContactOperation.Resend): Boolean {
+        val response = when(operation.channel) {
+            is ContactChannel.Sms -> when (operation.channel.registrationInfo) {
+                is ContactChannel.Sms.RegistrationInfo.Registered -> {
+                    contactApiClient.resendChannelOptIn(
+                        channelId = operation.channel.registrationInfo.channelId,
+                        channelType = ChannelType.SMS
+                    )
+                }
+
+                is ContactChannel.Sms.RegistrationInfo.Pending -> {
+                    contactApiClient.resendSmsOptIn(
+                        msisdn = operation.channel.registrationInfo.address,
+                        senderId = operation.channel.registrationInfo.registrationOptions.senderId
+                    )
+                }
+            }
+
+            is ContactChannel.Email -> when (operation.channel.registrationInfo) {
+                is ContactChannel.Email.RegistrationInfo.Registered -> {
+                    contactApiClient.resendChannelOptIn(
+                        channelId = operation.channel.registrationInfo.channelId,
+                        channelType = ChannelType.EMAIL
+                    )
+                }
+
+                is ContactChannel.Email.RegistrationInfo.Pending -> {
+                    contactApiClient.resendEmailOptIn(
+                        emailAddress = operation.channel.registrationInfo.address,
+                    )
+                }
+            }
+        }
+
+        return response.isSuccessful || response.isClientError
+    }
+
+
+    private suspend fun performDisassociateChannel(operation: ContactOperation.DisassociateChannel): Boolean {
+        val contactId = this.lastContactId ?: return false
+
+        val response = when(operation.channel) {
+            is ContactChannel.Sms -> when (operation.channel.registrationInfo) {
+                is ContactChannel.Sms.RegistrationInfo.Registered -> {
+                    contactApiClient.disassociateChannel(
+                        contactId = contactId,
+                        channelId = operation.channel.registrationInfo.channelId,
+                        channelType = ChannelType.SMS,
+                        optOut = operation.optOut
+                    )
+                }
+
+                is ContactChannel.Sms.RegistrationInfo.Pending -> {
+                    contactApiClient.disassociateSms(
+                        contactId = contactId,
+                        msisdn = operation.channel.registrationInfo.address,
+                        senderId = operation.channel.registrationInfo.registrationOptions.senderId,
+                        optOut = operation.optOut
+                    )
+                }
+            }
+
+            is ContactChannel.Email -> when (operation.channel.registrationInfo) {
+                is ContactChannel.Email.RegistrationInfo.Registered -> {
+                    contactApiClient.disassociateChannel(
+                        contactId = contactId,
+                        channelId = operation.channel.registrationInfo.channelId,
+                        channelType = ChannelType.EMAIL,
+                        optOut = operation.optOut
+                    )
+                }
+
+                is ContactChannel.Email.RegistrationInfo.Pending -> {
+                    contactApiClient.disassociateEmail(
+                        contactId = contactId,
+                        emailAddress = operation.channel.registrationInfo.address,
+                        optOut = operation.optOut
+                    )
+                }
+            }
+        }
+
+        if (response.isSuccessful) {
+            contactUpdated(
+                contactId = contactId,
+                channelUpdate = ContactChannelMutation.Disassociated(
+                    channel = operation.channel,
+                    channelId = response.value
+                )
+            )
+        }
+
+        return response.isSuccessful || response.isClientError
     }
 
     private fun updateContactIdentity(
@@ -693,7 +860,9 @@ internal class ContactManager(
                         tagGroups = anonData.tagGroups,
                         subscriptionLists = anonData.subscriptionLists,
                         attributes = anonData.attributes,
-                        associatedChannels = anonData.associatedChannels,
+                        associatedChannels = anonData.associatedChannels.map {
+                            ConflictEvent.ChannelInfo(it.channelId, it.channelType)
+                        },
                         conflictingNameUserId = namedUserId
                     )
                 )
@@ -722,16 +891,24 @@ internal class ContactManager(
     private fun contactUpdated(
         contactId: String,
         updateOperation: ContactOperation.Update? = null,
-        associatedChannel: AssociatedChannel? = null,
+        channelUpdate: ContactChannelMutation? = null
     ) {
         if (contactId != this.lastContactIdentity?.contactId) {
             return
         }
 
+        audienceOverridesProvider.recordContactUpdate(
+            contactId,
+            updateOperation?.tags,
+            updateOperation?.attributes,
+            updateOperation?.subscriptions,
+            channelUpdate
+        )
+
         if (this.lastContactIdentity?.isAnonymous == true) {
             val attributes: MutableMap<String, JsonValue> = mutableMapOf()
             val tagGroups: MutableMap<String, MutableSet<String>> = mutableMapOf()
-            val channels: MutableList<AssociatedChannel> = mutableListOf()
+            val channels: MutableSet<AnonChannel> = mutableSetOf()
             val subscriptionLists: MutableMap<String, MutableSet<Scope>> = mutableMapOf()
             val anonData = this.anonData
             if (anonData != null) {
@@ -765,11 +942,23 @@ internal class ContactManager(
                 }
             }
 
-            if (associatedChannel != null) {
-                channels.add(associatedChannel)
+            when(channelUpdate) {
+                is ContactChannelMutation.AssociateAnon ->
+                    channels.add(AnonChannel(channelUpdate.channelId, channelUpdate.channelType))
+                is ContactChannelMutation.Associate -> {
+                    if (channelUpdate.channelId != null) {
+                        channels.add(AnonChannel(channelUpdate.channelId, channelUpdate.channel.channelType))
+                    }
+                }
+                is ContactChannelMutation.Disassociated -> {
+                    if (channelUpdate.channelId != null) {
+                        channels.remove(AnonChannel(channelUpdate.channelId, channelUpdate.channel.channelType))
+                    }
+                }
+                null -> {}
             }
 
-            this.anonData = ContactData(tagGroups, attributes, subscriptionLists, channels)
+            this.anonData = AnonContactData(tagGroups, attributes, subscriptionLists, channels.toList())
         }
     }
 

@@ -11,7 +11,7 @@ public class InAppDisplayEventTest {
     @Test
     public fun testEvent() {
         val event = InAppDisplayEvent()
-        assertEquals("in_app_display", event.name)
+        assertEquals("in_app_display", event.eventType.reportingName)
         assertNull(event.data)
     }
 }

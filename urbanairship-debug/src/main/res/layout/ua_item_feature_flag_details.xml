@@ -192,6 +192,30 @@
                     tools:text="Error" />
             </LinearLayout>
 
+            <!-- Variables -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="?android:listPreferredItemHeightSmall"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Variables"
+                    android:textAppearance="@style/AirshipDebug.ItemTitle" />
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:text='@{flag.variables.toString()}'
+                    android:textAppearance="@style/AirshipDebug.ItemSubTitle"
+                    tools:text="Error" />
+            </LinearLayout>
+
             <!-- Refresh button -->
             <Button
                 android:enabled="@{flag.exists, default=false}"

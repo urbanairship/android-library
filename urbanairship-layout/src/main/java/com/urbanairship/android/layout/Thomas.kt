@@ -9,11 +9,16 @@ import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.display.DisplayArgsLoader
 import com.urbanairship.android.layout.display.DisplayException
 import com.urbanairship.android.layout.display.DisplayRequest
+import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.ui.BannerLayout
 import com.urbanairship.android.layout.ui.ModalActivity
+import com.urbanairship.android.layout.util.Factory
+import com.urbanairship.android.layout.util.ImageCache
+import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.webkit.AirshipWebViewClient
 
 /**
  * Entry point and related helper methods for rendering layouts based on our internal DSL.
@@ -52,14 +57,20 @@ public object Thomas {
     public fun prepareDisplay(
         payload: LayoutInfo,
         extras: JsonMap,
+        activityMonitor: ActivityMonitor,
+        listener: ThomasListenerInterface,
+        actionRunner: ThomasActionRunner,
+        imageCache: ImageCache? = null,
+        webViewClientFactory: Factory<AirshipWebViewClient>? = null,
         embeddedViewManager: AirshipEmbeddedViewManager,
     ): DisplayRequest {
         if (!isValid(payload)) {
             throw DisplayException("Payload is not valid: " + payload.presentation)
         }
-        return when (payload.presentation) {
+
+        val callback = when (payload.presentation) {
             is ModalPresentation -> {
-                DisplayRequest(payload) { context: Context, args: DisplayArgs ->
+                { context: Context, args: DisplayArgs ->
                     val intent = Intent(context, ModalActivity::class.java)
                         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         .putExtra(
@@ -70,13 +81,13 @@ public object Thomas {
                 }
             }
             is BannerPresentation -> {
-                DisplayRequest(payload) { context: Context, args: DisplayArgs ->
+                { context: Context, args: DisplayArgs ->
                     val layoutBanner = BannerLayout(context, args)
                     layoutBanner.display()
                 }
             }
             is EmbeddedPresentation -> {
-                DisplayRequest(payload) { _: Context, args: DisplayArgs ->
+                { _: Context, args: DisplayArgs ->
                     embeddedViewManager.addPending(args, extras)
                 }
             }
@@ -84,5 +95,15 @@ public object Thomas {
                 throw DisplayException("Presentation not supported: " + payload.presentation)
             }
         }
+
+        return DisplayRequest(
+            payload = payload,
+            activityMonitor = activityMonitor,
+            listener = listener,
+            actionRunner = actionRunner,
+            imageCache = imageCache,
+            webViewClientFactory = webViewClientFactory,
+            onDisplay = callback
+        )
     }
 }

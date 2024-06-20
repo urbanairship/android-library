@@ -29,27 +29,20 @@ import kotlinx.coroutines.launch
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @OpenForTesting
-public class RemoteConfigManager @VisibleForTesting internal constructor(
+public class RemoteConfigManager @JvmOverloads constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     private val runtimeConfig: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val remoteData: RemoteData,
-    private val moduleAdapter: ModuleAdapter,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) : AirshipComponent(context, dataStore) {
 
-    public constructor(
-        context: Context,
-        dataStore: PreferenceDataStore,
-        runtimeConfig: AirshipRuntimeConfig,
-        privacyManager: PrivacyManager,
-        remoteData: RemoteData,
-    ) : this(context, dataStore, runtimeConfig, privacyManager, remoteData, ModuleAdapter())
-
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
-    private val privacyManagerListener = PrivacyManager.Listener { updateSubscription() }
+    private val privacyManagerListener = object : PrivacyManager.Listener {
+        override fun onEnabledFeaturesChanged() = updateSubscription()
+    }
 
     private var subscription: Job? = null
 
@@ -91,37 +84,8 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
      * @param config The remote data config.
      */
     private fun processConfig(config: JsonMap) {
-        val disableInfos: MutableList<DisableInfo> = ArrayList()
-        val moduleConfigs: MutableMap<String, JsonValue> = HashMap()
         val remoteConfig = RemoteConfig.fromJson(config)
-
-        for (key in config.keySet()) {
-            // Skip over fields that we've already parsed into the RemoteConfig object.
-            if (key in RemoteConfig.TOP_LEVEL_KEYS) {
-                continue
-            }
-
-            val value = config.opt(key)
-
-            // Handle disable info
-            if (DISABLE_INFO_KEY == key) {
-                for (disableInfoJson in value.optList()) {
-                    try {
-                        disableInfos.add(DisableInfo.fromJson(disableInfoJson))
-                    } catch (e: JsonException) {
-                        UALog.e(e, "Failed to parse remote config: %s", config)
-                    }
-                }
-                continue
-            }
-
-            // Store module configs
-            moduleConfigs[key] = value
-        }
-
         this.runtimeConfig.updateRemoteConfig(remoteConfig)
-
-        apply(DisableInfo.filter(disableInfos, UAirship.getVersion(), UAirship.getAppVersion()))
     }
 
     override fun tearDown() {
@@ -130,45 +94,10 @@ public class RemoteConfigManager @VisibleForTesting internal constructor(
         privacyManager.removeListener(privacyManagerListener)
     }
 
-    /**
-     * Disables and enables airship components.
-     *
-     * @param disableInfos The list of disable infos.
-     */
-    private fun apply(disableInfos: List<DisableInfo>) {
-        val disableModules: MutableSet<String> = HashSet()
-        val enabledModules: MutableSet<String> = HashSet(Modules.ALL_MODULES)
-        var remoteDataInterval = RemoteData.DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS
-
-        // Combine the disable modules and remote data interval
-        for (info in disableInfos) {
-            disableModules.addAll(info.disabledModules)
-            enabledModules.removeAll(info.disabledModules)
-            remoteDataInterval = remoteDataInterval.coerceAtLeast(info.remoteDataRefreshInterval)
-        }
-
-        // Disable
-        for (module in disableModules) {
-            moduleAdapter.setComponentEnabled(module, false)
-        }
-
-        // Enable
-        for (module in enabledModules) {
-            moduleAdapter.setComponentEnabled(module, true)
-        }
-
-        // Remote data refresh interval
-        remoteData.foregroundRefreshInterval = remoteDataInterval
-    }
-
     private companion object {
-
         // Remote config types
         private const val CONFIG_TYPE_COMMON = "app_config"
         private const val CONFIG_TYPE_ANDROID = "app_config:android"
         private const val CONFIG_TYPE_AMAZON = "app_config:amazon"
-
-        // Disable config key
-        private const val DISABLE_INFO_KEY = "disable_features"
     }
 }

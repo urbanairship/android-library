@@ -1,9 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id 'airship-module'
-    id 'kotlin-android'
-    id 'kotlin-allopen'
+    id("airship-module")
+    id("kotlin-android")
+    id("kotlin-allopen")
+    id("kotlin-parcelize")
 }
 
 description = "Airship Preference Center extension."
@@ -25,14 +26,13 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    namespace 'com.urbanairship.preferencecenter'
-}
 
-tasks.withType(KotlinCompile).configureEach {
-    it.kotlinOptions {
+    kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
-        freeCompilerArgs += [ "-opt-in=kotlin.RequiresOptIn" ]
+        freeCompilerArgs = ["-Xexplicit-api=strict"]
     }
+
+    namespace 'com.urbanairship.preferencecenter'
 }
 
 allOpen {
@@ -43,11 +43,12 @@ dependencies {
     api project(':urbanairship-core')
 
     // Kotlin
-    implementation(libs.kotlin.stdlib)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
 
     // AndroidX
     implementation(libs.androidx.core)
+    implementation(libs.androidx.fragment.fragmentktx)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.runtimektx)
     implementation(libs.androidx.lifecycle.viewmodelktx)
@@ -57,54 +58,14 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.google.material)
 
-    // Tests (Shared)
-
-    // debugImplementation is used here so that the empty Activity that FragmentScenario relies on
-    // is accessible by the target test process.
-    debugImplementation(libs.androidx.test.core)
-    debugImplementation(libs.androidx.fragment.testing)
-
     // Unit Tests
     testImplementation project(':urbanairship-test')
     testImplementation(libs.junit)
     testImplementation(libs.androidx.test.core)
-    testImplementation(libs.mockito.core)
-    testImplementation(libs.robolectric.core)
     testImplementation(libs.androidx.test.ext.junit)
-    testImplementation(libs.androidx.test.espresso.core)
-    androidTestImplementation(libs.androidx.test.espresso.contrib) {
-        // https://github.com/android/android-test/issues/861
-        exclude group: 'org.checkerframework', module: 'checker'
-    }
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.mockito.kotlin)
     testImplementation(libs.google.truth)
     testImplementation(libs.androidx.test.ext.truth)
     testImplementation(libs.turbine)
     testImplementation(libs.mockk)
-
-    // Instrumentation Tests
-    androidTestImplementation(libs.androidx.test.core)
-    androidTestImplementation(libs.androidx.test.runner)
-    androidTestImplementation(libs.androidx.test.rules)
-
-    androidTestImplementation(libs.kotlinx.coroutines.test)
-
-    androidTestImplementation(libs.androidx.test.espresso.core)
-    androidTestImplementation(libs.androidx.test.espresso.contrib) {
-        // https://github.com/android/android-test/issues/861
-        exclude group: 'org.checkerframework', module: 'checker'
-    }
-    androidTestImplementation(libs.androidx.test.espresso.intents)
-
-    androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(libs.google.truth)
-    androidTestImplementation(libs.androidx.test.ext.truth)
-
-    androidTestImplementation(libs.robolectric.annotations)
-
-    androidTestImplementation(libs.mockito.core)
-    androidTestImplementation(libs.mockito.android)
-    androidTestImplementation(libs.mockito.kotlin)
-
 }

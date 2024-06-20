@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestApplication
 import com.urbanairship.audience.DeviceInfoProvider
+import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.experiment.ExperimentManager.Companion.PAYLOAD_TYPE
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
@@ -48,7 +49,7 @@ public class ExperimentManagerTest {
 
     private val infoProvider: DeviceInfoProvider = mockk {
         coEvery { getChannelId() } answers { channelId }
-        coEvery { getStableContactId() } answers { contactId }
+        coEvery { getStableContactInfo() } answers { StableContactInfo(contactId, null) }
     }
 
     @Before
@@ -183,8 +184,7 @@ public class ExperimentManagerTest {
     @Test
     public fun testHoldoutGroupEvaluationRespectHashBuckets(): TestResult = runTest {
         channelId = "channel-id"
-        contactId = "some-contact-id"
-        val activeContactId = "active-contact-id"
+        contactId = "active-contact-id"
 
         val unmatchedJson = generateExperimentsPayload(
             id = "unmatched",
@@ -200,10 +200,10 @@ public class ExperimentManagerTest {
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
 
-        val result = subject.evaluateExperiments(messageInfo, infoProvider, activeContactId).getOrThrow()!!
+        val result = subject.evaluateExperiments(messageInfo, infoProvider).getOrThrow()!!
         assertTrue(result.isMatching)
         assertEquals("matched", result.matchedExperimentId)
-        assertEquals(activeContactId, result.contactId)
+        assertEquals(contactId, result.contactId)
         assert(result.allEvaluatedExperimentsMetadata
             .containsAll(listOf(
                 extractReportingMetadata(unmatchedJson),

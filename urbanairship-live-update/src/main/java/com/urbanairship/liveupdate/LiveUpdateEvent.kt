@@ -12,7 +12,7 @@ public enum class LiveUpdateEvent {
     internal companion object {
         @Throws(IllegalArgumentException::class)
         fun from(value: String): LiveUpdateEvent {
-            for (event in values()) {
+            for (event in entries) {
                 if (event.name.equals(value, ignoreCase = true)) {
                     return event
                 }

@@ -16,6 +16,7 @@ public data class RemoteDataPayload(
     val data: JsonMap,
     val remoteDataInfo: RemoteDataInfo? = null
 ) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         @JvmStatic
         public fun emptyPayload(type: String): RemoteDataPayload {

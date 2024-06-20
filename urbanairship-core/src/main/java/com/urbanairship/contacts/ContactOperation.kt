@@ -21,7 +21,6 @@ internal sealed class ContactOperation(
 
     object Resolve : ContactOperation(Type.RESOLVE, null)
     object Reset : ContactOperation(Type.RESET, null)
-    object OptinCheck : ContactOperation(Type.OPTIN_CHECK, null)
 
     data class Verify(
         val dateMs: Long,
@@ -44,6 +43,26 @@ internal sealed class ContactOperation(
 
         constructor(json: JsonValue) : this(
                 json.requireString()
+        )
+    }
+
+    data class DisassociateChannel(val channel: ContactChannel, val optOut: Boolean) :
+        ContactOperation(Type.DISASSOCIATE_CHANNEL, jsonMapOf(
+            CHANNEL_KEY to channel,
+            OPT_OUT_KEY to optOut
+        ).toJsonValue()){
+
+        constructor(json: JsonValue) : this(
+            ContactChannel.fromJson(json.requireMap().require(CHANNEL_KEY)),
+            json.requireMap().requireField(OPT_OUT_KEY)
+        )
+    }
+
+    data class Resend(val channel: ContactChannel) :
+        ContactOperation(Type.RESEND, JsonValue.wrapOpt(channel)) {
+
+        constructor(json: JsonValue) : this(
+            ContactChannel.fromJson(json)
         )
     }
 
@@ -135,7 +154,7 @@ internal sealed class ContactOperation(
 
     enum class Type {
         UPDATE, IDENTIFY, RESOLVE, RESET, REGISTER_EMAIL, REGISTER_SMS, REGISTER_OPEN_CHANNEL,
-        ASSOCIATE_CHANNEL, VERIFY, OPTIN_CHECK
+        ASSOCIATE_CHANNEL, VERIFY, RESEND, DISASSOCIATE_CHANNEL
     }
 
     internal companion object {
@@ -158,7 +177,8 @@ internal sealed class ContactOperation(
                 Type.REGISTER_OPEN_CHANNEL -> RegisterOpen(map.requireField(PAYLOAD_KEY))
                 Type.REGISTER_SMS -> RegisterSms(map.requireField(PAYLOAD_KEY))
                 Type.VERIFY -> Verify(map.requireField<JsonMap>(PAYLOAD_KEY))
-                Type.OPTIN_CHECK -> OptinCheck
+                Type.RESEND -> Resend(map.require(PAYLOAD_KEY))
+                Type.DISASSOCIATE_CHANNEL -> DisassociateChannel(map.require(PAYLOAD_KEY))
             }
         }
 
@@ -173,6 +193,8 @@ internal sealed class ContactOperation(
         private const val SUBSCRIPTION_LISTS_MUTATIONS_KEY = "SUBSCRIPTION_LISTS_MUTATIONS_KEY"
         private const val REQUIRED_KEY = "REQUIRED"
         private const val DATE_KEY = "DATE"
+        private const val OPT_OUT_KEY = "OPT_OUT"
+        private const val CHANNEL_KEY = "CHANNEL"
 
         const val TYPE_KEY = "TYPE_KEY"
         const val PAYLOAD_KEY = "PAYLOAD_KEY"

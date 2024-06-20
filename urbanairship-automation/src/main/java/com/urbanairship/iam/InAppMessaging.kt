@@ -3,9 +3,9 @@
 package com.urbanairship.iam
 
 import android.content.Context
-import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.adapter.CustomDisplayAdapter
 import com.urbanairship.iam.adapter.CustomDisplayAdapterType
+import com.urbanairship.iam.assets.AirshipCachedAssets
 
 /**
  * In-app messaging

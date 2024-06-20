@@ -13,25 +13,25 @@ import com.urbanairship.json.requireField
 /**
  * Airship Feature flag.
  */
-class FeatureFlag private constructor(
+public class FeatureFlag private constructor(
 
     /**
      * Flag name. Will be empty if the flag was created through the deprecated constructor.
      */
-    val name: String,
+    public val name: String,
 
     /**
      * Indicates whether the device is eligible or not for the flag.
      */
-    val isEligible: Boolean,
+    public val isEligible: Boolean,
 
     /**
      * Indicates whether the flag exists in the current flag listing or not
      */
-    val exists: Boolean,
+    public val exists: Boolean,
 
     /**
-     * Optional reportingInfo. Will be missing if the flag is created through the
+     * Optional reporting info. Will be `null` if the flag is created through the
      * deprecated constructor or if it does not exist.
      */
     internal val reportingInfo: ReportingInfo?,
@@ -39,15 +39,17 @@ class FeatureFlag private constructor(
     /**
      * Optional variables associated with the flag
      */
-    val variables: JsonMap?,
+    public val variables: JsonMap?,
 ) : JsonSerializable {
 
     /**
      * Public constructor.
+     *
      * @deprecated Applications should not create a flag directly, instead request a flag
-     * through `FeatureFlagManager`.
+     *      via [FeatureFlagManager.flag] or [FeatureFlagManager.flagAsPendingResult].
      */
-    @Deprecated("Flags should be accessed through `FeatureFlagManager`")
+    @Deprecated("Applications should not create a flag directly, instead request a flag " +
+            "via FeatureFlagManager.flag or FeatureFlagManager.flagAsPendingResult")
     public constructor(isEligible: Boolean, exists: Boolean, variables: JsonMap?) :
             this("", isEligible, exists, null, variables)
 
@@ -75,6 +77,7 @@ class FeatureFlag private constructor(
         return result
     }
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         KEY_NAME to name,
         KEY_EXISTS to exists,
@@ -160,6 +163,7 @@ class FeatureFlag private constructor(
             }
         }
 
+        @Throws(JsonException::class)
         override fun toJsonValue() = jsonMapOf(
             KEY_REPORTING_METADATA to reportingMetadata,
             KEY_CHANNEL_ID to channelId,

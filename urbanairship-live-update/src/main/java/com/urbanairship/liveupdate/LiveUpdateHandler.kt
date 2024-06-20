@@ -5,81 +5,31 @@ import android.content.Context
 import androidx.core.app.NotificationCompat
 import java.util.Objects
 
-/**
- * @hide
- */
-public sealed interface BaseLiveUpdateHandler
+/** Base interface for Live Update handlers. */
+public sealed interface LiveUpdateHandler
 
-/** Handlers for Live Update events. */
-@Deprecated(
-    message = "Deprecated in favor of Suspend and Callback versions of LiveUpdateHandlers"
-)
-public sealed interface LiveUpdateHandler<T> : BaseLiveUpdateHandler {
-    /**
-     * Called when a Live Update has been received.
-     *
-     * @return The [LiveUpdateResult].
-     */
-    public fun onUpdate(
-        /** Application `Context`. */
-        context: Context,
-        /** The Live Update [event][LiveUpdateEvent]. */
-        event: LiveUpdateEvent,
-        /** The Live Update data. */
-        update: LiveUpdate
-    ): LiveUpdateResult<T>
-}
+/** Handler for Live Update events that update a Notification. */
+public sealed interface NotificationLiveUpdateHandler : LiveUpdateHandler
 
-/**
- * Live Update handler that displays the latest content in a notification.
- *
- * @deprecated Replace with [SuspendLiveUpdateNotificationHandler] or [CallbackLiveUpdateNotificationHandler].
- */
-@Deprecated(
-    message = "Deprecated in favor of SuspendLiveUpdateNotificationHandler and CallbackLiveUpdateNotificationHandler"
-)
-public interface LiveUpdateNotificationHandler : LiveUpdateHandler<NotificationCompat.Builder> {
-    /**
-     * Called when a Live Update has been received.
-     *
-     * Implementations should return [LiveUpdateResult.ok] with a `NotificationCompat.Builder` to
-     * display the Live Update in a notification, or [LiveUpdateResult.cancel] to cancel the
-     * notification and end Live Updates.
-     *
-     * An `ok` result with a `null` value will be ignored and will neither update nor cancel the
-     * existing notification.
-     *
-     * @return The [LiveUpdateResult].
-     */
-    public override fun onUpdate(
-        /** Application `Context`. */
-        context: Context,
-        /** The Live Update [event][LiveUpdateEvent]. */
-        event: LiveUpdateEvent,
-        /** The Live Update data. */
-        update: LiveUpdate
-    ): LiveUpdateResult<NotificationCompat.Builder>
-}
-
-/** Async handlers for Live Update events. */
-public sealed interface AsyncLiveUpdateNotificationHandler : BaseLiveUpdateHandler
+/** Handler for Live Update events that allows for custom handling. */
+public sealed interface CustomLiveUpdateHandler : LiveUpdateHandler
 
 /**
  * Live Update handler that displays the latest content in a notification and uses a suspend
  * function to handle updates.
  */
-public abstract class SuspendLiveUpdateNotificationHandler : AsyncLiveUpdateNotificationHandler {
+public abstract class SuspendLiveUpdateNotificationHandler : NotificationLiveUpdateHandler {
     /**
      * Called when a Live Update has been received.
      *
+     * @param context Application `Context`.
+     * @param event The Live Update [event][LiveUpdateEvent].
+     * @param update The Live Update data.
      * @return The [LiveUpdateResult].
      */
     public abstract suspend fun onUpdate(
-        /** Application `Context`. */
         context: Context,
-        /** The Live Update [event][LiveUpdateEvent]. */
         event: LiveUpdateEvent,
-        /** The Live Update data. */
         update: LiveUpdate,
     ): LiveUpdateResult<NotificationCompat.Builder>
 
@@ -94,15 +44,19 @@ public abstract class SuspendLiveUpdateNotificationHandler : AsyncLiveUpdateNoti
  * Live Update handler that displays the latest content in a notification and uses a callback
  * to return update results.
  */
-public interface CallbackLiveUpdateNotificationHandler : AsyncLiveUpdateNotificationHandler {
+public interface CallbackLiveUpdateNotificationHandler : NotificationLiveUpdateHandler {
+    /**
+     * Called when a Live Update has been received.
+     *
+     * @param context Application `Context`.
+     * @param event The Live Update [event][LiveUpdateEvent].
+     * @param update The Live Update data.
+     * @param resultCallback The callback.
+     */
     public fun onUpdate(
-        /** Application `Context`. */
         context: Context,
-        /** The Live Update [event][LiveUpdateEvent]. */
         event: LiveUpdateEvent,
-        /** The Live Update data. */
         update: LiveUpdate,
-        /** The callback. */
         resultCallback: LiveUpdateResultCallback
     )
 
@@ -123,13 +77,16 @@ public interface CallbackLiveUpdateNotificationHandler : AsyncLiveUpdateNotifica
         public fun cancel()
     }
 
-    /** Result type for [LiveUpdateResultCallback]s. */
+    /**
+     * Result type for [LiveUpdateResultCallback]s.
+     *
+     * @property notificationTag The notification tag.
+     * @property notificationId The notification ID.
+     * @property notification The notification.
+     */
     public class NotificationResult(
-        /** The notification tag. */
         public val notificationTag: String,
-        /** The notification ID. */
         public val notificationId: Int,
-        /** The notification. */
         public val notification: Notification
     ) {
         override fun equals(other: Any?): Boolean {
@@ -151,12 +108,61 @@ public interface CallbackLiveUpdateNotificationHandler : AsyncLiveUpdateNotifica
     }
 }
 
-/** Live Update handler that allows for custom handling of Live Updates. */
-// TODO(async-live-updates): deprecate this and replace with callback and suspend versions
-@Deprecated(
-    message = "Deprecated in favor of TODO!"
-)
-public interface LiveUpdateCustomHandler : LiveUpdateHandler<Nothing>
+/**
+ * Live Update handler that allows for custom handling of Live Updates and uses a suspend
+ * function to handle updates.
+ */
+public interface SuspendLiveUpdateCustomHandler : CustomLiveUpdateHandler {
+
+    /**
+     * Called when a Live Update has been received.
+     *
+     * @param context Application `Context`.
+     * @param event The Live Update [event][LiveUpdateEvent].
+     * @param update The Live Update data.
+     * @return The [LiveUpdateResult].
+     */
+    public suspend fun onUpdate(
+        context: Context,
+        event: LiveUpdateEvent,
+        update: LiveUpdate,
+    ): LiveUpdateResult<Nothing>
+}
+
+/**
+ * Live Update handler that allows for custom handling of Live Updates and uses a callback
+ * to return update results.
+ */
+public interface CallbackLiveUpdateCustomHandler : CustomLiveUpdateHandler {
+
+    /**
+     * Called when a Live Update has been received.
+     *
+     * @param context Application `Context`.
+     * @param event The Live Update [event][LiveUpdateEvent].
+     * @param update The Live Update data.
+     * @param resultCallback The callback.
+     */
+    public fun onUpdate(
+        context: Context,
+        event: LiveUpdateEvent,
+        update: LiveUpdate,
+        resultCallback: LiveUpdateResultCallback
+    )
+
+    /** Live Update Result callbacks. */
+    public interface LiveUpdateResultCallback {
+        /**
+         * Indicates that the Live Update was handled successfully.
+         */
+        public fun ok()
+
+        /**
+         * Indicates that the Live Update should be cancelled and updates ended.
+         */
+        public fun cancel()
+    }
+}
 
 /** Result type for [LiveUpdateHandler]s. */
 public sealed class LiveUpdateResult<out T> {

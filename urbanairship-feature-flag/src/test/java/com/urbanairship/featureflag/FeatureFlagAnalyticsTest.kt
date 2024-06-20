@@ -16,14 +16,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class FeatureFlagAnalyticsTest {
+public class FeatureFlagAnalyticsTest {
 
     private val analytics: Analytics = mockk()
     private val feed: AirshipEventFeed = mockk(relaxed = true)
-    private val featureFlagAnalytics = FeatureFlagAnalytics(feed, analytics)
+    private val featureFlagAnalytics = FeatureFlagAnalytics(analytics)
 
     @Test
-    fun testTrackInteraction(): TestResult = runTest {
+    public fun testTrackInteraction(): TestResult = runTest {
         coEvery { analytics.addEvent(any()) } returns true
 
         val flag = FeatureFlag.createFlag("some-flag", true, generateReportingInfo())
@@ -34,15 +34,11 @@ class FeatureFlagAnalyticsTest {
                 // The event has a different time stamp so we are just comparing the data
                 assert(it.eventData == FeatureFlagInteractionEvent(flag).data)
             })
-
-            feed.emit(
-                AirshipEventFeed.Event.FeatureFlagInteracted(FeatureFlagInteractionEvent(flag).data)
-            )
         }
     }
 
     @Test
-    fun testTrackInteractionFailed(): TestResult = runTest {
+    public fun testTrackInteractionFailed(): TestResult = runTest {
         coEvery { analytics.addEvent(any()) } returns false
 
         val flag = FeatureFlag.createFlag("some-flag", true, generateReportingInfo())
@@ -54,28 +50,25 @@ class FeatureFlagAnalyticsTest {
                 assert(it.eventData == FeatureFlagInteractionEvent(flag).data)
             })
         }
-        verify(exactly = 0) { feed.emit(any()) }
     }
 
     @Test
-    fun testTrackInteractionFlagDoesNotExist(): TestResult = runTest {
+    public fun testTrackInteractionFlagDoesNotExist(): TestResult = runTest {
         val flag = FeatureFlag.createMissingFlag("some-flag")
         featureFlagAnalytics.trackInteraction(flag)
 
         verify(exactly = 0) {
             analytics.addEvent(any())
-            feed.emit(any())
         }
     }
 
     @Test
-    fun testTrackInteractionMissingReportingInfo(): TestResult = runTest {
+    public fun testTrackInteractionMissingReportingInfo(): TestResult = runTest {
         val flag = FeatureFlag(true, true,  null)
         featureFlagAnalytics.trackInteraction(flag)
 
         verify(exactly = 0) {
             analytics.addEvent(any())
-            feed.emit(any())
         }
     }
 

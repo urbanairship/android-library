@@ -4,8 +4,10 @@ package com.urbanairship.featureflag
 
 import android.content.Context
 import androidx.annotation.Keep
+import androidx.annotation.RestrictTo
 import com.urbanairship.BuildConfig
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.PrivacyManager
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.audience.DeviceInfoProvider
@@ -15,8 +17,10 @@ import com.urbanairship.modules.Module
 import com.urbanairship.modules.featureflag.FeatureFlagsModuleFactory
 import com.urbanairship.remotedata.RemoteData
 
+/** @hide */
 @Keep
-class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
 
     override fun build(
         context: Context,
@@ -25,7 +29,7 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
         analytics: Analytics,
         cache: AirshipCache,
         resolver: DeferredResolver,
-        eventFeed: AirshipEventFeed
+        privacyManager: PrivacyManager
     ): Module {
         val manager = FeatureFlagManager(
             context = context.applicationContext,
@@ -33,7 +37,8 @@ class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
             audienceEvaluator = AudienceEvaluator(),
             remoteData = FeatureFlagRemoteDataAccess(remoteData),
             deferredResolver = FlagDeferredResolver(cache, resolver),
-            featureFlagAnalytics = FeatureFlagAnalytics(eventFeed, analytics)
+            featureFlagAnalytics = FeatureFlagAnalytics(analytics),
+            privacyManager = privacyManager
         )
         return Module.singleComponent(manager, 0)
     }

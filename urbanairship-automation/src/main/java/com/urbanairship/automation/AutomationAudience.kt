@@ -3,10 +3,13 @@
 package com.urbanairship.automation
 
 import com.urbanairship.audience.AudienceSelector
+import com.urbanairship.automation.AutomationAudience.MissBehavior
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalField
 import java.util.Objects
 
 /**
@@ -76,4 +79,34 @@ public class AutomationAudience(
     override fun hashCode(): Int {
         return Objects.hash(audienceSelector, missBehavior)
     }
+}
+
+internal data class AdditionalAudienceCheckOverrides(
+    val bypass: Boolean?,
+    val context: JsonValue?,
+    val url: String?
+) : JsonSerializable {
+
+    companion object {
+        private const val BYPASS = "bypass"
+        private const val CONTEXT = "context"
+        private const val URL = "url"
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): AdditionalAudienceCheckOverrides {
+            val content = value.requireMap()
+
+            return AdditionalAudienceCheckOverrides(
+                bypass = content.optionalField(BYPASS),
+                context = content.get(CONTEXT),
+                url = content.optionalField(URL)
+            )
+        }
+    }
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        BYPASS to bypass,
+        CONTEXT to context,
+        URL to url
+    ).toJsonValue()
 }

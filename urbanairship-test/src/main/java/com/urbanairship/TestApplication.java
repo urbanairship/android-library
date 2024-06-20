@@ -49,7 +49,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         JobDispatcher dispatcher = new JobDispatcher(this, (context, jobInfo, delay) -> {});
         JobDispatcher.setInstance(dispatcher);
 
-        PrivacyManager privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL);
+        PrivacyManager privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL);
         Supplier<PushProviders> pushProviders =
                 () -> new TestPushProviders(testRuntimeConfig.getConfigOptions());
 

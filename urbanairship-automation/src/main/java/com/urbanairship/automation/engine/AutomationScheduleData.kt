@@ -3,8 +3,9 @@
 package com.urbanairship.automation.engine
 
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.deferred.DeferredTriggerContext
+import com.urbanairship.json.JsonValue
 import java.util.Objects
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import org.jetbrains.annotations.VisibleForTesting
 
@@ -14,7 +15,9 @@ internal class AutomationScheduleData(
     scheduleStateChangeDate: Long,
     executionCount: Int,
     triggerInfo: TriggeringInfo? = null,
-    preparedScheduleInfo: PreparedScheduleInfo? = null
+    preparedScheduleInfo: PreparedScheduleInfo? = null,
+    var associatedData: JsonValue? = null,
+    triggerSessionId: String
 ) {
     var schedule: AutomationSchedule = schedule
         private set
@@ -27,6 +30,9 @@ internal class AutomationScheduleData(
     var triggerInfo: TriggeringInfo? = triggerInfo
         private set
     var preparedScheduleInfo: PreparedScheduleInfo? = preparedScheduleInfo
+        private set
+
+    var triggerSessionId: String = triggerSessionId
         private set
 
     internal fun setSchedule(schedule: AutomationSchedule): AutomationScheduleData {
@@ -63,7 +69,7 @@ internal class AutomationScheduleData(
         return this
     }
 
-    internal fun triggered(context: DeferredTriggerContext?, date: Long): AutomationScheduleData {
+    internal fun triggered(triggerInfo: TriggeringInfo, date: Long): AutomationScheduleData {
         if (scheduleState != AutomationScheduleState.IDLE) { return  this }
 
         if (isOverLimit() || isExpired(date)) {
@@ -71,10 +77,8 @@ internal class AutomationScheduleData(
         }
 
         preparedScheduleInfo = null
-        triggerInfo = TriggeringInfo(
-            context = context,
-            date = date
-        )
+        this.triggerInfo = triggerInfo
+        triggerSessionId = UUID.randomUUID().toString()
 
         return setState(AutomationScheduleState.TRIGGERED, date)
     }
@@ -288,9 +292,7 @@ internal class AutomationScheduleData(
     }
 
     override fun toString(): String {
-        return "AutomationScheduleData(schedule=$schedule, scheduleState=$scheduleState, " +
-                "scheduleStateChangeDate=$scheduleStateChangeDate, executionCount=$executionCount, " +
-                "triggerInfo=$triggerInfo, preparedScheduleInfo=$preparedScheduleInfo)"
+        return "AutomationScheduleData(scheduleId=${schedule.identifier}, scheduleState=$scheduleState)"
     }
 
     override fun equals(other: Any?): Boolean {

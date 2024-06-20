@@ -2,7 +2,7 @@ package com.urbanairship.iam.coordinator
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
-import com.urbanairship.automation.utils.TaskSleeper
+import com.urbanairship.util.TaskSleeper
 import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.coVerify

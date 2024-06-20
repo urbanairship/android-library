@@ -321,7 +321,7 @@ public class PushManager extends AirshipComponent {
 
         permissionsManager.addAirshipEnabler(permission -> {
             if (permission == Permission.DISPLAY_NOTIFICATIONS) {
-                privacyManager.enable(PrivacyManager.FEATURE_PUSH);
+                privacyManager.enable(PrivacyManager.Feature.PUSH);
                 preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true);
                 airshipChannel.updateRegistration();
                 updateStatusObserver();
@@ -373,7 +373,7 @@ public class PushManager extends AirshipComponent {
     }
 
     private void checkPermission(@Nullable Runnable onCheckComplete) {
-        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH) || !isComponentEnabled()) {
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             return;
         }
 
@@ -402,8 +402,7 @@ public class PushManager extends AirshipComponent {
     }
 
     private boolean shouldRequestNotificationPermission() {
-        return privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)
-                && isComponentEnabled()
+        return privacyManager.isEnabled(PrivacyManager.Feature.PUSH)
                 && activityMonitor.isAppForegrounded()
                 && isAirshipReady
                 && getUserNotificationsEnabled()
@@ -412,7 +411,7 @@ public class PushManager extends AirshipComponent {
     }
 
     private void updateManagerEnablement() {
-        if (privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH) && isComponentEnabled()) {
+        if (privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             if (isPushManagerEnabled != null && isPushManagerEnabled) {
                 return;
             }
@@ -487,7 +486,7 @@ public class PushManager extends AirshipComponent {
         @NonNull
         @Override
         public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-            if (!isComponentEnabled() || !privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)) {
+            if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
                 return builder;
             }
 
@@ -509,27 +508,13 @@ public class PushManager extends AirshipComponent {
     };
 
     /**
-     * {@inheritDoc}
-     *
-     * @hide
-     */
-    @Override
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void onComponentEnableChange(boolean isEnabled) {
-        updateManagerEnablement();
-        if (isEnabled) {
-            checkPermission();
-        }
-    }
-
-    /**
      * @hide
      */
     @WorkerThread
     @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public JobResult onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
-        if (!privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)) {
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             return JobResult.SUCCESS;
         }
 
@@ -566,7 +551,7 @@ public class PushManager extends AirshipComponent {
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public boolean isPushEnabled() {
-        return privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH) && isComponentEnabled();
+        return privacyManager.isEnabled(PrivacyManager.Feature.PUSH);
     }
 
     /**
@@ -799,7 +784,7 @@ public class PushManager extends AirshipComponent {
      * @return <code>true</code> if push is available, <code>false</code> otherwise.
      */
     public boolean isPushAvailable() {
-        return privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH) && !UAStringUtil.isEmpty(getPushToken());
+        return privacyManager.isEnabled(PrivacyManager.Feature.PUSH) && !UAStringUtil.isEmpty(getPushToken());
     }
 
     /**
@@ -947,7 +932,7 @@ public class PushManager extends AirshipComponent {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
-        if (!isComponentEnabled() || !privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)) {
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             return;
         }
 
@@ -965,7 +950,7 @@ public class PushManager extends AirshipComponent {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     void onNotificationPosted(@NonNull PushMessage message, int notificationId, @Nullable String notificationTag) {
-        if (!isComponentEnabled() || !privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)) {
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             return;
         }
         NotificationListener listener = notificationListener;
@@ -1199,7 +1184,7 @@ public class PushManager extends AirshipComponent {
 
     @NonNull
     private Map<String, String> createAnalyticsHeaders() {
-        if (isComponentEnabled() && privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH)) {
+        if (privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             Map<String, String> headers = new HashMap<>();
             headers.put("X-UA-Channel-Opted-In", Boolean.toString(isOptIn()));
             headers.put("X-UA-Channel-Background-Enabled", Boolean.toString(isPushAvailable()));
@@ -1210,7 +1195,7 @@ public class PushManager extends AirshipComponent {
     }
 
     void onTokenChanged(@Nullable Class<? extends PushProvider> pushProviderClass, @Nullable String token) {
-        if (privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH) && pushProvider != null) {
+        if (privacyManager.isEnabled(PrivacyManager.Feature.PUSH) && pushProvider != null) {
             if (pushProviderClass != null && pushProvider.getClass().equals(pushProviderClass)) {
                 String oldToken = preferenceDataStore.getString(PUSH_TOKEN_KEY, null);
                 if (token != null && !UAStringUtil.equals(token, oldToken)) {
@@ -1230,7 +1215,7 @@ public class PushManager extends AirshipComponent {
         return new PushNotificationStatus(
                 getUserNotificationsEnabled(),
                 notificationManager.areNotificationsEnabled(),
-                privacyManager.isEnabled(PrivacyManager.FEATURE_PUSH),
+                privacyManager.isEnabled(PrivacyManager.Feature.PUSH),
                 !UAStringUtil.isEmpty(getPushToken())
         );
     }

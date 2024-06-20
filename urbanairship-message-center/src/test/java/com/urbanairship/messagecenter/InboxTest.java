@@ -81,7 +81,7 @@ public class InboxTest {
 
         Context context = ApplicationProvider.getApplicationContext();
         spyActivityMonitor = Mockito.spy(GlobalActivityMonitor.shared(context));
-        privacyManager = new PrivacyManager(PreferenceDataStore.inMemoryStore(context), PrivacyManager.FEATURE_ALL);
+        privacyManager = new PrivacyManager(PreferenceDataStore.inMemoryStore(context), PrivacyManager.Feature.ALL);
 
         Executor executor = new Executor() {
             @Override

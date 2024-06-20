@@ -12,6 +12,7 @@ import com.urbanairship.analytics.AirshipEventFeed;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
+import com.urbanairship.cache.AirshipCache;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.contacts.Contact;
@@ -46,10 +47,10 @@ public interface AutomationModuleFactory extends AirshipVersionInfo {
             @NonNull RemoteData remoteData,
             @NonNull ExperimentManager experimentManager,
             @NonNull AirshipMeteredUsage meteredUsage,
-            @NonNull Contact contact,
             @NonNull DeferredResolver deferredResolver,
             @NonNull AirshipEventFeed eventFeed,
-            @NonNull ApplicationMetrics metrics
-    );
+            @NonNull ApplicationMetrics metrics,
+            @NonNull AirshipCache cache
+            );
 
     }

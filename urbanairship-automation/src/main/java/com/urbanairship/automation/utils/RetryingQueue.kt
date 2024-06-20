@@ -3,6 +3,8 @@
 package com.urbanairship.automation.utils
 
 import com.urbanairship.UALog
+import com.urbanairship.remoteconfig.RetryingQueueConfig
+import com.urbanairship.util.TaskSleeper
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -15,10 +17,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 
 internal class RetryingQueue(
-    private val maxConcurrentOperations: Int = 3,
-    private val maxPendingResults: Int = 2,
-    private val initialBackOff: Duration = 15.seconds,
-    private val maxBackOff: Duration = 60.seconds,
+    private val maxConcurrentOperations: Int = DEFAULT_MAX_CONCURRENT_OPERATIONS,
+    private val maxPendingResults: Int = DEFAULT_PENDING_RESULTS,
+    private val initialBackOff: Duration = DEFAULT_INITIAL_BACK_OFF.seconds,
+    private val maxBackOff: Duration = DEFAULT_MAX_BACK_OFF.seconds,
     private val taskSleeper: TaskSleeper = TaskSleeper.default
 ) {
     init {
@@ -27,6 +29,17 @@ internal class RetryingQueue(
         require(initialBackOff.isPositive())
         require(maxBackOff.isPositive())
     }
+
+    constructor(
+        config: RetryingQueueConfig? = null,
+        sleeper: TaskSleeper = TaskSleeper.default
+    ) : this (
+        maxConcurrentOperations = config?.maxConcurrentOperations ?: DEFAULT_MAX_CONCURRENT_OPERATIONS,
+        maxPendingResults = config?.maxPendingResults ?: DEFAULT_PENDING_RESULTS,
+        initialBackOff = (config?.initialBackoff ?: DEFAULT_INITIAL_BACK_OFF).toInt().seconds,
+        maxBackOff = (config?.maxBackOff ?: DEFAULT_MAX_BACK_OFF).toInt().seconds,
+        taskSleeper = sleeper
+    )
 
     sealed class Result<T> {
         data class Success<T>(
@@ -168,5 +181,12 @@ internal class RetryingQueue(
                 }
             }
         }
+    }
+
+    private companion object {
+        private const val DEFAULT_MAX_CONCURRENT_OPERATIONS = 3
+        private const val DEFAULT_PENDING_RESULTS = 2
+        private const val DEFAULT_INITIAL_BACK_OFF = 15
+        private const val DEFAULT_MAX_BACK_OFF = 60
     }
 }

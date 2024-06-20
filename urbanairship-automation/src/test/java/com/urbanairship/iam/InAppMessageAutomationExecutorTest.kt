@@ -3,12 +3,18 @@ package com.urbanairship.iam
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionRunRequest
-import com.urbanairship.actions.ActionRunRequestFactory
+import com.urbanairship.actions.run
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
 import com.urbanairship.automation.engine.PreparedScheduleInfo
+import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
+import com.urbanairship.experiment.ExperimentResult
+import com.urbanairship.iam.actions.InAppActionRunner
+import com.urbanairship.iam.adapter.DisplayAdapter
+import com.urbanairship.iam.adapter.DisplayResult
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.analytics.events.InAppEvent
@@ -16,11 +22,7 @@ import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.assets.AssetCacheManager
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
-import com.urbanairship.iam.adapter.DisplayAdapter
-import com.urbanairship.iam.adapter.DisplayResult
 import com.urbanairship.iam.coordinator.DisplayCoordinator
-import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
-import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.util.UUID
@@ -46,6 +48,7 @@ public class InAppMessageAutomationExecutorTest {
     private val analytics: InAppMessageAnalyticsInterface = mockk()
     private val analyticsFactory: InAppMessageAnalyticsFactory = mockk()
     private val conditionsChangedNotifier = ScheduleConditionsChangedNotifier()
+    private val actionRunner: InAppActionRunner = mockk()
 
     private val displayAdapterReady = MutableStateFlow(true)
     private val displayAdapter: DisplayAdapter = mockk {
@@ -56,9 +59,8 @@ public class InAppMessageAutomationExecutorTest {
     private val displayCoordinator: DisplayCoordinator = mockk() {
         every { isReady } returns displayCoordinatorReady
     }
-    private val actionRunFactory: ActionRunRequestFactory = mockk()
     private val executor = InAppMessageAutomationExecutor(
-        context, assetManager, analyticsFactory, conditionsChangedNotifier, actionRunFactory
+        context, assetManager, analyticsFactory, conditionsChangedNotifier
     )
 
     private val preparedInfo = PreparedScheduleInfo(
@@ -66,7 +68,8 @@ public class InAppMessageAutomationExecutorTest {
         productId = UUID.randomUUID().toString(),
         campaigns = JsonValue.wrap(UUID.randomUUID().toString()),
         contactId = UUID.randomUUID().toString(),
-        reportingContext = JsonValue.wrap(UUID.randomUUID().toString())
+        reportingContext = JsonValue.wrap(UUID.randomUUID().toString()),
+        triggerSessionId = UUID.randomUUID().toString()
     )
 
     private val preparedData = PreparedInAppMessageData(
@@ -76,22 +79,14 @@ public class InAppMessageAutomationExecutorTest {
             actions = jsonMapOf("action" to "payload")
         ),
         displayAdapter = displayAdapter,
-        displayCoordinator = displayCoordinator
+        displayCoordinator = displayCoordinator,
+        analytics = analytics,
+        actionRunner = actionRunner,
     )
 
     @Before
     public fun setup() {
-        every { analyticsFactory.makeAnalytics(any(), any()) } returns analytics
-
-        every { analyticsFactory.makeAnalytics(any(), any(), any(), any(), any(), any(), any()) } answers {
-            assertEquals(preparedInfo.scheduleId, args[0])
-            assertEquals(preparedInfo.productId, args[1])
-            assertEquals(preparedInfo.contactId, args[2])
-            assertEquals(preparedData.message, args[3])
-            assertEquals(preparedInfo.campaigns, args[4])
-            assertEquals(preparedInfo.reportingContext, args[5])
-            analytics
-        }
+        coEvery { analyticsFactory.makeAnalytics(any(), any()) } returns analytics
     }
 
     @Test
@@ -144,12 +139,12 @@ public class InAppMessageAutomationExecutorTest {
             identifier = preparedInfo.scheduleId,
             triggers = listOf(),
             data = AutomationSchedule.ScheduleData.InAppMessageData(preparedData.message),
-            created = 0u
+            created = 0u,
         )
 
         every { analytics.recordEvent(any(), any()) } answers {
             val event: InAppEvent = firstArg()
-            assertEquals(InAppResolutionEvent.interrupted().name, event.name)
+            assertEquals(InAppResolutionEvent.interrupted().eventType, event.eventType)
         }
 
         coEvery { assetManager.clearCache(any()) } answers {
@@ -165,7 +160,6 @@ public class InAppMessageAutomationExecutorTest {
     @Test
     public fun testExecute(): TestResult = runTest {
 
-        coEvery { analytics.recordImpression() } just runs
         every { displayCoordinator.messageWillDisplay(any()) } answers {
             assertEquals(preparedData.message, firstArg())
         }
@@ -177,17 +171,15 @@ public class InAppMessageAutomationExecutorTest {
         coEvery { displayAdapter.display(any(), any()) } coAnswers {
             assertEquals(context, firstArg())
             assertEquals(analytics, secondArg())
-            analytics.recordImpression()
             DisplayResult.FINISHED
         }
 
         coEvery { assetManager.clearCache(any()) } just runs
 
-        mockActionRunner()
+        coEvery { actionRunner.run(any(), any(), eq(Action.SITUATION_AUTOMATION)) } just runs
 
         val result = execute()
 
-        coVerify(exactly = 1) { analytics.recordImpression() }
         coVerify { displayAdapter.display(any(), any()) }
         verify { displayCoordinator.messageWillDisplay(any()) }
         verify { displayCoordinator.messageFinishedDisplaying(any()) }
@@ -209,7 +201,8 @@ public class InAppMessageAutomationExecutorTest {
             campaigns = preparedInfo.campaigns,
             contactId = preparedInfo.contactId,
             reportingContext = preparedInfo.reportingContext,
-            experimentResult = experimentResult
+            experimentResult = experimentResult,
+            triggerSessionId = UUID.randomUUID().toString()
         )
 
         every { displayCoordinator.messageWillDisplay(any()) } just runs
@@ -217,7 +210,7 @@ public class InAppMessageAutomationExecutorTest {
         coEvery { assetManager.clearCache(any()) } just runs
 
         every { analytics.recordEvent(any(), any()) } answers {
-            assertEquals(InAppResolutionEvent.control(experimentResult).name, firstArg<InAppEvent>().name)
+            assertEquals(InAppResolutionEvent.control(experimentResult).eventType, firstArg<InAppEvent>().eventType)
         }
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
@@ -239,7 +232,7 @@ public class InAppMessageAutomationExecutorTest {
         every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
         every { analytics.recordEvent(any(), any()) } just runs
 
-        mockActionRunner()
+        coEvery { actionRunner.run(any(), any(), eq(Action.SITUATION_AUTOMATION)) } just runs
 
         coEvery { assetManager.clearCache(any()) } just runs
 
@@ -250,6 +243,7 @@ public class InAppMessageAutomationExecutorTest {
 
         verify { delegate.messageWillDisplay(any(), any()) }
         verify { delegate.messageFinishedDisplaying(any(), any()) }
+        verify { actionRunner.run(any(), any(), eq(Action.SITUATION_AUTOMATION)) }
     }
 
     @Test
@@ -268,35 +262,42 @@ public class InAppMessageAutomationExecutorTest {
     }
 
     @Test
+    public fun testAdditionalAudienceCheckMiss(): TestResult = runTest {
+
+        coEvery { displayAdapter.display(any(), any()) } coAnswers {
+            throw IllegalArgumentException()
+        }
+
+        coEvery { analytics.recordEvent(any(), any()) } answers {
+            val event: InAppEvent = firstArg()
+            assertEquals(event.eventType, InAppResolutionEvent.audienceExcluded().eventType)
+        }
+
+        val result = execute(preparedInfo.copy(additionalAudienceCheckResult = false))
+        assertEquals(ScheduleExecuteResult.FINISHED, result)
+
+        coVerify { analytics.recordEvent(any(), any()) }
+    }
+
+    @Test
     public fun testExecuteCancel(): TestResult = runTest {
         every { displayCoordinator.messageWillDisplay(any()) } just runs
         every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
 
-        coEvery { analytics.recordImpression() } just runs
-
         coEvery { displayAdapter.display(any(), any()) } coAnswers {
             assertEquals(context, firstArg())
             assertEquals(analytics, secondArg())
-            analytics.recordImpression()
             DisplayResult.CANCEL
         }
 
-        val request = mockActionRunner()
+        coEvery { actionRunner.run(any(), any(), Action.SITUATION_AUTOMATION) } just runs
 
         coEvery { assetManager.clearCache(any()) } just runs
 
         val result = execute()
 
         assertEquals(result, ScheduleExecuteResult.CANCEL)
-        verify { request.setValue(eq(JsonValue.wrap("payload"))) }
-    }
-
-    private fun mockActionRunner(): ActionRunRequest {
-        val request: ActionRunRequest = mockk()
-        every { actionRunFactory.createActionRequest(any()) } returns request
-        every { request.setValue(any<Any>()) } returns request
-        every { request.run() } just runs
-        return request
+        verify { actionRunner.run(any(), any(), eq(Action.SITUATION_AUTOMATION)) }
     }
 
     private fun checkReady(): ScheduleReadyResult = executor.isReady(preparedData, preparedInfo)

@@ -1,6 +1,7 @@
 package com.urbanairship.automation.utils
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.util.TaskSleeper
 import kotlin.time.Duration.Companion.INFINITE
 import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.seconds

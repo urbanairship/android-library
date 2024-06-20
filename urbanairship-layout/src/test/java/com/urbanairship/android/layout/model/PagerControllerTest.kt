@@ -3,12 +3,12 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import app.cash.turbine.test
-import com.urbanairship.android.layout.environment.ActionsRunner
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.reporting.DisplayTimer
@@ -40,7 +40,7 @@ public class PagerControllerTest {
     private val testScope = TestScope(testDispatcher)
 
     private val mockReporter: Reporter = mockk(relaxUnitFun = true)
-    private val mockActionsRunner: ActionsRunner = mockk()
+    private val mockActionsRunner: ThomasActionRunner = mockk()
     private val mockDisplayTimer: DisplayTimer = mockk() {
         every { time } returns System.currentTimeMillis()
     }

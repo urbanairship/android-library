@@ -2,8 +2,8 @@
 
 package com.urbanairship.automation.engine.triggerprocessor
 
-import com.urbanairship.automation.engine.AutomationEvent
 import com.urbanairship.automation.AutomationTrigger
+import com.urbanairship.automation.engine.AutomationEvent
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.json.JsonValue
@@ -60,11 +60,7 @@ internal class PreparedTrigger(
                 triggerData = currentData,
                 triggerResult =
                 if (match?.isTriggered == true) {
-                    if (event.reportPayload() != null) {
-                        generateTriggerResult(event.reportPayload()!!)
-                    } else {
-                        generateTriggerResult(JsonValue.NULL)
-                    }
+                    generateTriggerResult(event.eventData ?: JsonValue.NULL)
                 } else {
                     null
                 },

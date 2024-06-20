@@ -42,6 +42,18 @@ public data class MeteredUsageEventEntity(
         )
     }
 
+    internal fun copyWithContactId(contactId: String): MeteredUsageEventEntity {
+        return MeteredUsageEventEntity(
+            eventId = this.eventId,
+            entityId = this.entityId,
+            type = this.type,
+            product = this.product,
+            reportingContext = this.reportingContext,
+            timestamp = this.timestamp,
+            contactId = contactId
+        )
+    }
+
     internal fun toJson(): JsonValue {
         return jsonMapOf(
             "event_id" to eventId,

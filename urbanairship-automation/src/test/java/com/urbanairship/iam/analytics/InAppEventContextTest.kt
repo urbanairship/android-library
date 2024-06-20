@@ -86,11 +86,17 @@ public class InAppEventContextTest {
             PagerData("pager-id", 1, "page-id", 2, false),
             "button-identifier"
         )
+        val displayContext = InAppEventContext.Display(
+            triggerSessionId = UUID.randomUUID().toString(),
+            isFirstDisplay = true,
+            isFirstDisplayTriggerSessionId = false
+        )
 
         val context = InAppEventContext.makeContext(
             reportingContext = reportingMetadata,
             experimentResult = experimentResult,
-            layoutContext = layoutData
+            layoutContext = layoutData,
+            displayContext = displayContext
         )
 
         val expected = InAppEventContext(
@@ -109,7 +115,8 @@ public class InAppEventContextTest {
             ),
             button = InAppEventContext.Button("button-identifier"),
             reportingContext = reportingMetadata,
-            experimentReportingData = experimentResult.allEvaluatedExperimentsMetadata
+            experimentReportingData = experimentResult.allEvaluatedExperimentsMetadata,
+            display = displayContext
         )
 
         assertEquals(expected, context)
@@ -117,7 +124,7 @@ public class InAppEventContextTest {
 
     @Test
     public fun testMakeEmpty() {
-        val context = InAppEventContext.makeContext(null, null, null)
+        val context = InAppEventContext.makeContext(null, null, null, null)
         assertNull(context)
     }
 }

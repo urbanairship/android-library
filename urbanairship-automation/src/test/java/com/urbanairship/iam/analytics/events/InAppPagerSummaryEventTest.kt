@@ -44,7 +44,7 @@ public class InAppPagerSummaryEventTest {
             }
         """.trimIndent()
 
-        assertEquals("in_app_pager_summary", event.name)
+        assertEquals("in_app_pager_summary", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

@@ -174,10 +174,10 @@ internal open class BannerView(
         // Button Layout
         val buttonLayout = view.findViewById<InAppButtonLayout>(R.id.buttons)
         if (displayContent.buttons?.isNotEmpty() == true) {
-            buttonLayout.visibility = GONE
-        } else {
             buttonLayout.setButtons(displayContent.buttonLayoutType, displayContent.buttons ?: emptyList())
             buttonLayout.setButtonClickListener(this)
+        } else {
+            buttonLayout.visibility = GONE
         }
 
         // Banner dismiss pull

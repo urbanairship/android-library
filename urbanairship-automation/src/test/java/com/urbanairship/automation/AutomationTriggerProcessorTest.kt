@@ -16,6 +16,7 @@ import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.json.JsonValue
+import java.util.UUID
 import app.cash.turbine.test
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
@@ -110,7 +111,7 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
         processor.getTriggerResults().test {
             restoreSchedules()
 
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             assertEquals(
                 TriggerData(
@@ -122,7 +123,7 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
             processor.cancel(listOf("schedule-id"))
 
             assertNull(store.getTrigger("schedule-id", "default-trigger"))
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             expectNoEvents()
         }
@@ -146,7 +147,7 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
 
         processor.getTriggerResults().test {
             processor.restoreSchedules(listOf(schedule))
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             assertEquals(
                 TriggerData(
@@ -157,7 +158,7 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
 
             processor.cancel("test-group")
             assertNull(store.getTrigger("schedule-id", "trigger-id-2"))
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             expectNoEvents()
         }
@@ -176,7 +177,7 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
 
         processor.getTriggerResults().test {
             restoreSchedules(trigger)
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
             assertEquals(
                 TriggerData(
                     scheduleId = "schedule-id",
@@ -201,16 +202,16 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
 
         processor.getTriggerResults().test {
             restoreSchedules(trigger)
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             awaitItem()
 
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             awaitItem()
 
             processor.setPaused(true)
-            processor.processEvent(AutomationEvent.AppInit)
+            processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
             expectNoEvents()
         }
@@ -246,7 +247,8 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
             ),
             scheduleState = AutomationScheduleState.IDLE,
             scheduleStateChangeDate = clock.currentTimeMillis(),
-            executionCount = 0
+            executionCount = 0,
+            triggerSessionId = UUID.randomUUID().toString()
         )
     }
 }

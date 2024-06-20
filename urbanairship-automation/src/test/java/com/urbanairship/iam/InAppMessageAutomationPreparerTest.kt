@@ -2,12 +2,13 @@ package com.urbanairship.iam
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.automation.engine.PreparedScheduleInfo
+import com.urbanairship.iam.adapter.DisplayAdapter
+import com.urbanairship.iam.adapter.DisplayAdapterFactory
+import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.assets.AssetCacheManager
 import com.urbanairship.iam.content.Banner
 import com.urbanairship.iam.content.InAppMessageDisplayContent
-import com.urbanairship.iam.adapter.DisplayAdapter
-import com.urbanairship.iam.adapter.DisplayAdapterFactory
 import com.urbanairship.iam.coordinator.DisplayCoordinator
 import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
 import com.urbanairship.iam.info.InAppMessageMediaInfo
@@ -30,6 +31,7 @@ public class InAppMessageAutomationPreparerTest {
     private val assetsManager: AssetCacheManager = mockk()
     private val adapterFactory: DisplayAdapterFactory = mockk()
     private val coordinatorManager: DisplayCoordinatorManager = mockk()
+    private val analyticsFactory: InAppMessageAnalyticsFactory = mockk(relaxed = true)
 
     private val message = InAppMessage(
         name = "test",
@@ -44,10 +46,12 @@ public class InAppMessageAutomationPreparerTest {
     private val preparedScheduleInfo = PreparedScheduleInfo(
         scheduleId = UUID.randomUUID().toString(),
         campaigns = JsonValue.wrap("campaigns"),
-        contactId = UUID.randomUUID().toString()
+        contactId = UUID.randomUUID().toString(),
+        triggerSessionId = UUID.randomUUID().toString(),
+        additionalAudienceCheckResult = true
     )
 
-    private val preparer = InAppMessageAutomationPreparer(assetsManager, coordinatorManager, adapterFactory)
+    private val preparer = InAppMessageAutomationPreparer(assetsManager, coordinatorManager, adapterFactory, analyticsFactory)
 
 
     @Test
@@ -66,7 +70,7 @@ public class InAppMessageAutomationPreparerTest {
         }
 
         val adapter: DisplayAdapter = mockk()
-        every { adapterFactory.makeAdapter(any(), any()) } answers {
+        every { adapterFactory.makeAdapter(any(), any(), any()) } answers {
             assertEquals(message, firstArg())
             assertEquals(cachedAsset, secondArg())
             Result.success(adapter)
@@ -84,7 +88,7 @@ public class InAppMessageAutomationPreparerTest {
         every { coordinatorManager.displayCoordinator(any()) } returns coordinator
 
         val adapter: DisplayAdapter = mockk()
-        every { adapterFactory.makeAdapter(any(), any()) } returns Result.success(adapter)
+        every { adapterFactory.makeAdapter(any(), any(), any()) } returns Result.success(adapter)
 
         coEvery { assetsManager.cacheAsset(any(), any()) } answers  {
             throw IllegalArgumentException()
@@ -104,7 +108,7 @@ public class InAppMessageAutomationPreparerTest {
         val coordinator: DisplayCoordinator = mockk()
         every { coordinatorManager.displayCoordinator(any()) } returns coordinator
 
-        every { adapterFactory.makeAdapter(any(), any()) } returns Result.failure(IllegalArgumentException("failed"))
+        every { adapterFactory.makeAdapter(any(), any(), any()) } returns Result.failure(IllegalArgumentException("failed"))
 
         assertTrue(preparer.prepare(message, preparedScheduleInfo).isFailure)
     }

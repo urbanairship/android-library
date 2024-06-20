@@ -27,7 +27,11 @@ public class AutomationScheduleDataTest {
         date = clock.currentTimeMillis
     )
 
-    private val preparedScheduleInfo = PreparedScheduleInfo(scheduleId = UUID.randomUUID().toString())
+    private val preparedScheduleInfo = PreparedScheduleInfo(
+        scheduleId = UUID.randomUUID().toString(),
+        triggerSessionId = UUID.randomUUID().toString(),
+        additionalAudienceCheckResult = true
+    )
 
     @Test
     public fun testIsInState() {
@@ -605,12 +609,15 @@ public class AutomationScheduleDataTest {
             goal = 10.0,
             event = JsonValue.wrap("event"))
         val data = makeData()
-        data.triggered(context, clock.currentTimeMillis + 100)
+        val previousTriggerSessionId = data.triggerSessionId
+        val date = clock.currentTimeMillis
+        data.triggered(TriggeringInfo(context, date), date + 100)
 
         assertEquals(data.triggerInfo?.context, context)
-        assertEquals(data.triggerInfo?.date, clock.currentTimeMillis + 100)
+        assertEquals(data.triggerInfo?.date, clock.currentTimeMillis)
         assertEquals(data.scheduleState, AutomationScheduleState.TRIGGERED)
         assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertFalse(data.triggerSessionId == previousTriggerSessionId)
     }
 
     @Test
@@ -622,7 +629,8 @@ public class AutomationScheduleDataTest {
             type = "some-type",
             goal = 10.0,
             event = JsonValue.wrap("event"))
-        data.triggered(context, clock.currentTimeMillis + 100)
+        val date = clock.currentTimeMillis
+        data.triggered(TriggeringInfo(context, date), date + 100)
 
         assertNull(data.triggerInfo)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
@@ -637,7 +645,8 @@ public class AutomationScheduleDataTest {
             type = "some-type",
             goal = 10.0,
             event = JsonValue.wrap("event"))
-        data.triggered(context, clock.currentTimeMillis + 100)
+        val date = clock.currentTimeMillis
+        data.triggered(TriggeringInfo(context, date), date + 100)
 
         assertNull(data.triggerInfo)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
@@ -680,7 +689,8 @@ public class AutomationScheduleDataTest {
             scheduleStateChangeDate = clock.currentTimeMillis(),
             executionCount = 0,
             triggerInfo = triggeringInfo,
-            preparedScheduleInfo = preparedScheduleInfo
+            preparedScheduleInfo = preparedScheduleInfo,
+            triggerSessionId = UUID.randomUUID().toString()
         )
     }
 

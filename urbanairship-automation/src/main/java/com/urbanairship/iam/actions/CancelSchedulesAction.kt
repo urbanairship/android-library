@@ -8,8 +8,6 @@ import com.urbanairship.actions.ActionResult
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.jsonMapOf
-import kotlin.jvm.Throws
 import kotlinx.coroutines.runBlocking
 
 /**

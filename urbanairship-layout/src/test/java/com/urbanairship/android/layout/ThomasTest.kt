@@ -1,10 +1,10 @@
 package com.urbanairship.android.layout
 
-import com.urbanairship.android.layout.environment.ActionsRunner
 import com.urbanairship.android.layout.environment.AttributeHandler
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
+import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.model.ContainerLayoutModel
 import com.urbanairship.android.layout.property.HorizontalPosition
@@ -44,7 +44,7 @@ public class ThomasTest {
     private val testScope = TestScope(testDispatcher)
 
     private val mockReporter: Reporter = mockk(relaxUnitFun = true)
-    private val mockActionsRunner: ActionsRunner = mockk()
+    private val mockActionsRunner: ThomasActionRunner = mockk()
     private val mockAttributeHandler: AttributeHandler = mockk()
     private val mockDisplayTimer: DisplayTimer = mockk {
         every { time } returns System.currentTimeMillis()

@@ -3,7 +3,6 @@
 package com.urbanairship.automation.storage;
 
 import com.urbanairship.UALog;
-import com.urbanairship.audience.AudienceSelector;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 

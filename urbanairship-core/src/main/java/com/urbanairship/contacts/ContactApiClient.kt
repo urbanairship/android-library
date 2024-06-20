@@ -19,7 +19,6 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
@@ -33,7 +32,7 @@ import java.util.TimeZone
  * @hide
  */
 @OpenForTesting
-internal class ContactApiClient constructor(
+internal class ContactApiClient (
     private val runtimeConfig: AirshipRuntimeConfig,
     private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession(),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
@@ -88,7 +87,7 @@ internal class ContactApiClient constructor(
         emailAddress: String,
         options: EmailRegistrationOptions,
         locale: Locale
-    ): RequestResult<AssociatedChannel> {
+    ): RequestResult<String> {
         val url = runtimeConfig.deviceUrl.appendEncodedPath(EMAIL_PATH).build()
 
         val payload = jsonMapOf(
@@ -132,7 +131,7 @@ internal class ContactApiClient constructor(
         msisdn: String,
         options: SmsRegistrationOptions,
         locale: Locale
-    ): RequestResult<AssociatedChannel> {
+    ): RequestResult<String> {
         val url = runtimeConfig.deviceUrl.appendEncodedPath(SMS_PATH).build()
 
         val payload = jsonMapOf(
@@ -152,7 +151,7 @@ internal class ContactApiClient constructor(
         address: String,
         options: OpenChannelRegistrationOptions,
         locale: Locale
-    ): RequestResult<AssociatedChannel> {
+    ): RequestResult<String> {
         val url = runtimeConfig.deviceUrl.appendEncodedPath(OPEN_CHANNEL_PATH).build()
 
         val payload = jsonMapOf(
@@ -178,13 +177,13 @@ internal class ContactApiClient constructor(
         contactId: String,
         channelId: String,
         channelType: ChannelType
-    ): RequestResult<AssociatedChannel> {
+    ): RequestResult<String> {
         val url = runtimeConfig.deviceUrl.appendEncodedPath(UPDATE_PATH + contactId).build()
 
         val payload = jsonMapOf(
             ASSOCIATE_KEY to listOf(
                 jsonMapOf(
-                    DEVICE_TYPE to channelType.toString().lowercase(), CHANNEL_ID to channelId
+                    DEVICE_TYPE to channelType.toString().lowercase(), CHANNEL_ID_KEY to channelId
                 )
             )
         )
@@ -206,7 +205,7 @@ internal class ContactApiClient constructor(
 
         return session.execute(request) { status: Int, _: Map<String, String>, _: String? ->
             if (status == 200) {
-                AssociatedChannel(channelId, channelType)
+                channelId
             } else {
                 null
             }
@@ -256,7 +255,7 @@ internal class ContactApiClient constructor(
         url: Uri?,
         payload: JsonSerializable,
         channelType: ChannelType
-    ): RequestResult<AssociatedChannel> {
+    ): RequestResult<String> {
         val headers = mapOf(
             "Accept" to "application/vnd.urbanairship+json; version=3;",
             "X-UA-Appkey" to runtimeConfig.configOptions.appKey,
@@ -275,7 +274,7 @@ internal class ContactApiClient constructor(
         val result =
             session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
                 if (UAHttpStatusUtil.inSuccessRange(status)) {
-                    JsonValue.parseString(responseBody).optMap().opt(CHANNEL_ID).requireString()
+                    JsonValue.parseString(responseBody).optMap().opt(CHANNEL_ID_KEY).requireString()
                 } else {
                     null
                 }
@@ -326,43 +325,165 @@ internal class ContactApiClient constructor(
         }
     }
 
-    @Throws(RequestException::class)
-    suspend fun performOptinCheck(channelId: String): List<OptinCheckResult> {
-        // TODO : Execute request and get Optin status for Emails and SMS
-        // STUB value
-        val jsonResult = "{ type: email, id: j****@gmail.com, commercial: out, transactional: in, channelId: abcd-efgh }lId: a123-efgh }"
-        return listOf(OptinCheckResult(JsonValue.wrap(jsonResult).map!!))
-    }
-
-    internal data class OptinCheckResult(
-        val type: String,
-        val id: String,
-        val sender: String?,
-        val commercial: Boolean,
-        val transactional: Boolean,
-        val channelId: String
-    ) {
-
-        constructor(jsonMap: JsonMap) : this(
-            type = jsonMap.requireField("type"),
-            sender = jsonMap.optionalField("sender"),
-            id = jsonMap.requireField("id"),
-            commercial = jsonMap.requireField("commercial"),
-            transactional = jsonMap.requireField("transactional"),
-            channelId = jsonMap.requireField("channelId")
+    internal suspend fun resendChannelOptIn(
+        channelId: String,
+        channelType: ChannelType
+    ): RequestResult<Unit> {
+        return performResend(
+            jsonMapOf(
+                CHANNEL_ID_KEY to channelId,
+                CHANNEL_TYPE_KEY to when(channelType) {
+                    ChannelType.EMAIL -> "email"
+                    ChannelType.SMS -> "sms"
+                    ChannelType.OPEN -> "open"
+                }
+            )
         )
     }
 
-    private companion object {
+    internal suspend fun resendEmailOptIn(
+        emailAddress: String
+    ): RequestResult<Unit> {
+        return performResend(
+            jsonMapOf(
+                EMAIL_ADDRESS_KEY to emailAddress,
+                CHANNEL_TYPE_KEY to ChannelType.EMAIL
+            )
+        )
+    }
 
+    internal suspend fun resendSmsOptIn(
+        msisdn: String,
+        senderId: String
+    ): RequestResult<Unit> {
+        return performResend(
+            jsonMapOf(
+                MSISDN_KEY to msisdn,
+                SENDER_KEY to senderId,
+                CHANNEL_TYPE_KEY to ChannelType.SMS
+            )
+        )
+    }
+
+    internal suspend fun disassociateChannel(
+        contactId: String,
+        channelId: String,
+        channelType: ChannelType,
+        optOut: Boolean
+    ): RequestResult<String> {
+        return performDisassociate(
+            contactId,
+            jsonMapOf(
+                CHANNEL_ID_KEY to channelId,
+                CHANNEL_TYPE_KEY to channelType,
+                OPT_OUT_KEY to optOut
+            )
+        )
+    }
+
+    internal suspend fun disassociateEmail(
+        contactId: String,
+        emailAddress: String,
+        optOut: Boolean
+    ): RequestResult<String> {
+        return performDisassociate(
+            contactId, jsonMapOf(
+                EMAIL_ADDRESS_KEY to emailAddress,
+                CHANNEL_TYPE_KEY to ChannelType.EMAIL,
+                OPT_OUT_KEY to optOut
+            )
+        )
+    }
+
+    internal suspend fun disassociateSms(
+        contactId: String,
+        msisdn: String,
+        senderId: String,
+        optOut: Boolean
+    ): RequestResult<String> {
+        return performDisassociate(
+            contactId, jsonMapOf(
+                CHANNEL_TYPE_KEY to ChannelType.SMS,
+                MSISDN_KEY to msisdn,
+                SENDER_KEY to senderId,
+                OPT_OUT_KEY to optOut
+            )
+        )
+    }
+
+    private suspend fun performDisassociate(
+        contactId: String,
+        payload: JsonSerializable,
+    ): RequestResult<String> {
+        val url = runtimeConfig.deviceUrl.appendEncodedPath(DISASSOCIATE_PATH + contactId).build()
+
+        val headers = mapOf(
+            "Accept" to "application/vnd.urbanairship+json; version=3;",
+            "Content-Type" to "application/json"
+        )
+
+        val request = Request(
+            url = url,
+            method = "POST",
+            auth = RequestAuth.ContactTokenAuth(contactId),
+            body = RequestBody.Json(payload),
+            headers = headers
+        )
+
+        UALog.d { "Disassociating contact channel with payload $payload request: $request" }
+
+        return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
+            if (UAHttpStatusUtil.inSuccessRange(status)) {
+                JsonValue.parseString(responseBody).requireMap().requireField<String>(CHANNEL_ID_KEY)
+            } else {
+                null
+            }
+        }.also { result ->
+            result.log { "Disassociating contact channel with payload $payload result: $result" }
+        }
+    }
+
+    private suspend fun performResend(
+        payload: JsonSerializable,
+    ): RequestResult<Unit> {
+        val url = runtimeConfig.deviceUrl.appendEncodedPath(RESEND_PATH).build()
+
+        val headers = mapOf(
+            "Accept" to "application/vnd.urbanairship+json; version=3;",
+            "Content-Type" to "application/json"
+        )
+
+        val request = Request(
+            url = url,
+            method = "POST",
+            auth = RequestAuth.GeneratedAppToken,
+            body = RequestBody.Json(payload),
+            headers = headers
+        )
+
+        UALog.d { "Resending opt-in for contact channel with payload $payload request: $request" }
+
+        return session.execute(request).also { result ->
+            result.log { "Resending opt-in for contact channel with payload $payload result: $result" }
+        }
+    }
+
+
+    private companion object {
+        private const val RESEND_PATH = "api/channels/resend"
         private const val IDENTIFY_PATH = "api/contacts/identify/v2"
         private const val UPDATE_PATH = "api/contacts/"
         private const val EMAIL_PATH = "api/channels/restricted/email/"
         private const val SMS_PATH = "api/channels/restricted/sms/"
         private const val OPEN_CHANNEL_PATH = "api/channels/restricted/open/"
+        private const val DISASSOCIATE_PATH = "api/contacts/disassociate/"
+
+        private const val OPT_OUT_KEY = "opt_out"
+        private const val EMAIL_ADDRESS_KEY = "email_address"
         private const val NAMED_USER_ID = "named_user_id"
-        private const val CHANNEL_ID = "channel_id"
+        private const val CHANNEL_ID_KEY = "channel_id"
         private const val CHANNEL_KEY = "channel"
+        private const val CHANNEL_TYPE_KEY = "channel_type"
         private const val DEVICE_TYPE = "device_type"
         private const val DEVICE_INFO = "device_info"
         private const val ACTION_KEY = "action"

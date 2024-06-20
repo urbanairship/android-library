@@ -20,8 +20,11 @@ import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.channel.AirshipSmsValidator
 import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.channel.AttributeMutation
+import com.urbanairship.channel.SmsValidationHandler
+import com.urbanairship.channel.SmsValidator
 import com.urbanairship.channel.TagGroupsEditor
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -62,21 +65,22 @@ public class Contact internal constructor(
     private val clock: Clock,
     private val subscriptionListApiClient: SubscriptionListApiClient,
     private val contactManager: ContactManager,
-    subscriptionListDispatcher: CoroutineDispatcher
+    private val smsValidator: SmsValidator,
+    contactChannelsProvider: ContactChannelsProvider = ContactChannelsProvider(
+        config,
+        audienceOverridesProvider,
+        contactManager.contactIdUpdates
+    ),
+    subscriptionListDispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) : AirshipComponent(context, preferenceDataStore) {
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public constructor(
+    internal constructor(
         context: Context,
         preferenceDataStore: PreferenceDataStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,
         localeManager: LocaleManager,
-        audienceOverridesProvider: AudienceOverridesProvider
+        audienceOverridesProvider: AudienceOverridesProvider,
     ) : this(
         context,
         preferenceDataStore,
@@ -95,8 +99,9 @@ public class Contact internal constructor(
             localeManager,
             audienceOverridesProvider
         ),
-        AirshipDispatchers.newSerialDispatcher(),
+        AirshipSmsValidator(config)
     )
+
     /**
      * @hide
      */
@@ -104,7 +109,7 @@ public class Contact internal constructor(
     public val authTokenProvider: AuthTokenProvider = this.contactManager
 
     private val subscriptionListCache: CachedValue<Subscriptions> = CachedValue(clock)
-    private val scope = CoroutineScope(subscriptionListDispatcher + SupervisorJob())
+    private val subscriptionsScope = CoroutineScope(subscriptionListDispatcher + SupervisorJob())
     private val subscriptionFetchQueue = SerialQueue()
 
     /**
@@ -150,8 +155,8 @@ public class Contact internal constructor(
     public val lastContactId: String?
         get() = contactManager.lastContactId
 
-    internal suspend fun stableContactId(): String {
-        return contactManager.stableContactIdUpdate().contactId
+    internal suspend fun stableContactInfo(): StableContactInfo {
+        return contactManager.stableContactIdUpdate().toContactInfo()
     }
 
     private suspend fun stableVerifiedContactId(): String {
@@ -168,7 +173,7 @@ public class Contact internal constructor(
     }
 
     private val channelExtender = AirshipChannel.Extender.Suspending { builder ->
-        if (privacyManager.isEnabled(PrivacyManager.FEATURE_CONTACTS)) {
+        if (privacyManager.isEnabled(PrivacyManager.Feature.CONTACTS)) {
             if (airshipChannel.id != null) {
                 builder.setContactId(stableVerifiedContactId())
             } else {
@@ -191,7 +196,7 @@ public class Contact internal constructor(
             }
         })
 
-        scope.launch {
+        subscriptionsScope.launch {
             for (conflict in contactManager.conflictEvents) {
                 contactConflictListener?.onConflict(conflict)
             }
@@ -203,7 +208,7 @@ public class Contact internal constructor(
             }
         }
 
-        scope.launch {
+        subscriptionsScope.launch {
             contactManager.contactIdUpdates
                 .drop(1)
                 .mapNotNull { it?.contactId }
@@ -215,7 +220,10 @@ public class Contact internal constructor(
 
         airshipChannel.addChannelRegistrationPayloadExtender(channelExtender)
 
-        privacyManager.addListener { checkPrivacyManager() }
+        privacyManager.addListener(object : PrivacyManager.Listener {
+            override fun onEnabledFeaturesChanged() = checkPrivacyManager()
+        })
+
         checkPrivacyManager()
         contactManager.isEnabled = true
     }
@@ -267,17 +275,6 @@ public class Contact internal constructor(
     @AirshipComponentGroups.Group
     override fun getComponentGroup(): Int {
         return AirshipComponentGroups.CONTACT
-    }
-
-    /**
-     * @param isEnabled `true` if the component is enabled, otherwise `false`.
-     * @hide
-     */
-    override fun onComponentEnableChange(isEnabled: Boolean) {
-        super.onComponentEnableChange(isEnabled)
-        if (contactManager.isEnabled != isEnabled) {
-            contactManager.isEnabled = isEnabled
-        }
     }
 
     /**
@@ -338,6 +335,7 @@ public class Contact internal constructor(
                 }
 
                 contactManager.addOperation(ContactOperation.Update(tags = collapsedMutations))
+                audienceOverridesProvider.notifyPendingChanged()
             }
         }
     }
@@ -354,6 +352,7 @@ public class Contact internal constructor(
             return
         }
         contactManager.addOperation(ContactOperation.RegisterEmail(address, options))
+        audienceOverridesProvider.notifyPendingChanged()
     }
 
     /**
@@ -368,6 +367,7 @@ public class Contact internal constructor(
             return
         }
         contactManager.addOperation(ContactOperation.RegisterSms(msisdn, options))
+        audienceOverridesProvider.notifyPendingChanged()
     }
 
     /**
@@ -382,6 +382,7 @@ public class Contact internal constructor(
             return
         }
         contactManager.addOperation(ContactOperation.RegisterOpen(address, options))
+        audienceOverridesProvider.notifyPendingChanged()
     }
 
     /**
@@ -396,6 +397,53 @@ public class Contact internal constructor(
             return
         }
         contactManager.addOperation(ContactOperation.AssociateChannel(channelId, channelType))
+        audienceOverridesProvider.notifyPendingChanged()
+    }
+
+    /**
+     * Disassociates the contact channel.
+     * @param contactChannel The channel.
+     * @param optOut If the channel should also be opted out.
+     */
+    public fun disassociateChannel(contactChannel: ContactChannel, optOut: Boolean = true) {
+        if (!privacyManager.isContactsEnabled) {
+            UALog.w { "Ignoring disassociate channel request while contacts are disabled." }
+            return
+        }
+        contactManager.addOperation(ContactOperation.DisassociateChannel(contactChannel, optOut))
+        audienceOverridesProvider.notifyPendingChanged()
+    }
+
+    /**
+     * Resends double-opt in for the given contact channel.
+     * @param contactChannel The channel.
+     */
+    public fun resendDoubleOptIn(contactChannel: ContactChannel) {
+        if (!privacyManager.isContactsEnabled) {
+            UALog.w { "Ignoring resend double opt-in request while contacts are disabled." }
+            return
+        }
+        contactManager.addOperation(ContactOperation.Resend(contactChannel))
+    }
+
+    /**
+     * Validates an SMS number.
+     *
+     * @param msisdn The MSISDN (phone number) to validate.
+     * @param sender The identifier given to the sender of the SMS message.
+     * @return `true` if the MSISDN and sender combination are valid, otherwise `false`.
+     */
+    public suspend fun validateSms(msisdn: String, sender: String): Boolean {
+        return smsValidator.validateSms(msisdn, sender)
+    }
+
+    /**
+     * Sets the SMS validation handler, to allow overriding of the default Airship validation.
+     *
+     * @param handler An implementation of [SmsValidationHandler], or `null` to remove the existing handler.
+     */
+    public fun setSmsValidationHandler(handler: SmsValidationHandler?) {
+        smsValidator.handler = handler
     }
 
     /**
@@ -416,6 +464,7 @@ public class Contact internal constructor(
                 }
 
                 contactManager.addOperation(ContactOperation.Update(attributes = collapsedMutations))
+                audienceOverridesProvider.notifyPendingChanged()
             }
         }
     }
@@ -438,6 +487,7 @@ public class Contact internal constructor(
                 }
 
                 contactManager.addOperation(ContactOperation.Update(subscriptions = mutations))
+                audienceOverridesProvider.notifyPendingChanged()
             }
         }
     }
@@ -464,7 +514,7 @@ public class Contact internal constructor(
             )
         }
 
-        val contactId = stableContactId()
+        val contactId = stableContactInfo().contactId
 
         // Get the subscription lists from the in-memory cache, if available.
         val result = fetchContactSubscriptionList(contactId)
@@ -485,6 +535,8 @@ public class Contact internal constructor(
         return Result.success(subscriptions)
     }
 
+    public val channelContacts: Flow<Result<List<ContactChannel>>> = contactChannelsProvider.contactChannels
+
     /**
      * Returns the current set of subscription lists for the current contact.
      *
@@ -495,7 +547,7 @@ public class Contact internal constructor(
      */
     public fun fetchSubscriptionListsPendingResult(): PendingResult<Map<String, Set<Scope>>?> {
         val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
-        scope.launch {
+        subscriptionsScope.launch {
             pendingResult.result = fetchSubscriptionLists().getOrNull()
         }
         return pendingResult
@@ -512,17 +564,11 @@ public class Contact internal constructor(
     @Deprecated("Use fetchSubscriptionListsPendingResult() instead")
     public fun getSubscriptionLists(): PendingResult<Map<String, Set<Scope>>?> {
         val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
-        scope.launch {
+        subscriptionsScope.launch {
             pendingResult.result = fetchSubscriptionLists().getOrNull()
         }
         return pendingResult
     }
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public suspend fun getStableContactId(): String = stableContactId()
 
     private suspend fun fetchContactSubscriptionList(contactId: String): Result<Map<String, Set<Scope>>> {
         return subscriptionFetchQueue.run {
@@ -576,5 +622,5 @@ public class Contact internal constructor(
     )
 }
 
-private val PrivacyManager.isContactsEnabled get() = this.isEnabled(PrivacyManager.FEATURE_CONTACTS)
-private val PrivacyManager.isContactsAudienceEnabled get() = this.isEnabled(PrivacyManager.FEATURE_CONTACTS, PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+private val PrivacyManager.isContactsEnabled get() = this.isEnabled(PrivacyManager.Feature.CONTACTS)
+private val PrivacyManager.isContactsAudienceEnabled get() = this.isEnabled(PrivacyManager.Feature.CONTACTS, PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)

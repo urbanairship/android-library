@@ -1,6 +1,6 @@
 package com.urbanairship.android.layout.environment
 
-import com.urbanairship.android.layout.ThomasListener
+import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.reporting.LayoutData
 
@@ -8,7 +8,7 @@ internal interface Reporter {
     fun report(event: ReportingEvent, state: LayoutData)
 }
 
-internal class ExternalReporter(val listener: ThomasListener) : Reporter {
+internal class ExternalReporter(val listener: ThomasListenerInterface) : Reporter {
 
     override fun report(event: ReportingEvent, state: LayoutData) {
         when (event) {
@@ -39,6 +39,12 @@ internal class ExternalReporter(val listener: ThomasListener) : Reporter {
             }
             is ReportingEvent.FormDisplay -> with(event) {
                 listener.onFormDisplay(formInfo, state)
+            }
+            is ReportingEvent.TimedOut -> with(event) {
+                listener.onTimedOut(layoutData)
+            }
+            is ReportingEvent.VisibilityChanged -> with(event) {
+                listener.onVisibilityChanged(isVisible, isForegrounded)
             }
         }
     }

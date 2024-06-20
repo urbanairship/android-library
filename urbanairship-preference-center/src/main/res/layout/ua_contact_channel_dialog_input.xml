@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/UrbanAirship.PreferenceCenter.OptInDialog.InputView"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/country_picker_input"
+        style="@style/UrbanAirship.PreferenceCenter.OptInDialog.DropDownLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <AutoCompleteTextView
+            android:id="@+id/country_picker_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:inputType="none" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/text_input"
+        style="@style/UrbanAirship.PreferenceCenter.OptInDialog.TextInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:id="@+id/footer"
+        style="@style/UrbanAirship.PreferenceCenter.OptInDialog.Footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="Footer lorem ipsum dolor sit amet, consectetur adipiscing elit" />
+</LinearLayout>

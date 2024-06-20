@@ -4,6 +4,7 @@ package com.urbanairship.analytics.location;
 
 import com.urbanairship.UALog;
 import com.urbanairship.analytics.Event;
+import com.urbanairship.analytics.EventType;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
@@ -25,12 +26,6 @@ import androidx.annotation.Size;
  * proximityRegion and/or circularRegion.
  */
 public class RegionEvent extends Event implements JsonSerializable {
-
-    /**
-     * The event type.
-     */
-    @NonNull
-    public static final String TYPE = "region_event";
 
     /**
      * The region ID key.
@@ -178,8 +173,12 @@ public class RegionEvent extends Event implements JsonSerializable {
 
     @NonNull
     @Override
-    public final String getType() {
-        return TYPE;
+    public final EventType getType() {
+        if (boundaryEvent == BOUNDARY_EVENT_ENTER) {
+            return EventType.REGION_ENTER;
+        } else {
+            return EventType.REGION_EXIT;
+        }
     }
 
     /**

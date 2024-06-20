@@ -285,7 +285,7 @@ public class AudienceSelectorTest {
         assertFalse(checkAudience(audience))
     }
 
-    private suspend fun checkAudience(audience: AudienceSelector, timestamp: Long = 0, contactId: String? = null): Boolean {
-        return audience.evaluate(timestamp, infoProvider, contactId)
+    private suspend fun checkAudience(audience: AudienceSelector, timestamp: Long = 0): Boolean {
+        return audience.evaluate(timestamp, infoProvider)
     }
 }

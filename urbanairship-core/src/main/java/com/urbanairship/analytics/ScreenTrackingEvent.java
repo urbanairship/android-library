@@ -15,11 +15,6 @@ import androidx.annotation.RestrictTo;
  */
 class ScreenTrackingEvent extends Event {
 
-    /**
-     * The screen tracking type key.
-     */
-    @NonNull
-    static final String TYPE = "screen_tracking";
 
     /**
      * The maximum screen tracking event identifier length.
@@ -94,8 +89,8 @@ class ScreenTrackingEvent extends Event {
 
     @NonNull
     @Override
-    public String getType() {
-        return TYPE;
+    public EventType getType() {
+        return EventType.SCREEN_TRACKING;
     }
 
     /**

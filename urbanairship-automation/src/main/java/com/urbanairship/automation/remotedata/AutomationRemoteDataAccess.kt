@@ -5,8 +5,8 @@ package com.urbanairship.automation.remotedata
 import android.content.Context
 import com.urbanairship.UALog
 import com.urbanairship.automation.AutomationSchedule
-import com.urbanairship.iam.InAppMessage
 import com.urbanairship.automation.limits.FrequencyConstraint
+import com.urbanairship.iam.InAppMessage
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue

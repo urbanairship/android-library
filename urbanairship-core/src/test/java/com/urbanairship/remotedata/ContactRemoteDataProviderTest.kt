@@ -9,6 +9,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.contacts.Contact
 import com.urbanairship.contacts.ContactIdUpdate
+import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestResult
 import io.mockk.coEvery
@@ -56,7 +57,7 @@ public class ContactRemoteDataProviderTest {
         every {
             mockUrlFactory.createContactUrl("some contact id", Locale.CANADA_FRENCH, 100)
         } returns Uri.parse("some url")
-        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some contact id", true, 0)
+        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some contact id", null,true, 0)
         assertTrue(provider.isRemoteDataInfoUpToDate(remoteDataInfo, Locale.CANADA_FRENCH, 100))
     }
 
@@ -72,7 +73,7 @@ public class ContactRemoteDataProviderTest {
         every {
             mockUrlFactory.createContactUrl("some contact id", Locale.CANADA_FRENCH, 100)
         } returns Uri.parse("some url")
-        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some contact id", false, 0)
+        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some contact id", null, false, 0)
         assertFalse(provider.isRemoteDataInfoUpToDate(remoteDataInfo, Locale.CANADA_FRENCH, 100))
     }
 
@@ -88,7 +89,7 @@ public class ContactRemoteDataProviderTest {
         every {
             mockUrlFactory.createContactUrl("some contact id", Locale.CANADA_FRENCH, 100)
         } returns Uri.parse("some url")
-        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some other contact id", true, 0)
+        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some other contact id", null, true, 0)
         assertFalse(provider.isRemoteDataInfoUpToDate(remoteDataInfo, Locale.CANADA_FRENCH, 100))
     }
 
@@ -104,7 +105,7 @@ public class ContactRemoteDataProviderTest {
         every {
             mockUrlFactory.createContactUrl("some contact id", Locale.CANADA_FRENCH, 100)
         } returns Uri.parse("some other url")
-        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some contact id", true, 0)
+        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some contact id", null, true, 0)
         assertFalse(provider.isRemoteDataInfoUpToDate(remoteDataInfo, Locale.CANADA_FRENCH, 100))
     }
 
@@ -115,7 +116,7 @@ public class ContactRemoteDataProviderTest {
         )
 
         val uri = Uri.parse("some uri")
-        coEvery { mockContact.stableContactId() } returns "stable"
+        coEvery { mockContact.stableContactInfo() } returns StableContactInfo("stable", null)
 
         coEvery {
             mockApiClient.fetch(uri, RequestAuth.ContactTokenAuth("stable"), null, any())
@@ -150,7 +151,7 @@ public class ContactRemoteDataProviderTest {
             mockUrlFactory.createContactUrl("stable", Locale.CANADA_FRENCH, 100)
         } returns uri
 
-        coEvery { mockContact.stableContactId() } returns "stable"
+        coEvery { mockContact.stableContactInfo() } returns StableContactInfo("stable", null)
 
         coEvery {
             mockApiClient.fetch(uri, RequestAuth.ContactTokenAuth("stable"), "some last modified", any())
@@ -181,7 +182,7 @@ public class ContactRemoteDataProviderTest {
             mockUrlFactory.createContactUrl("stable", Locale.CANADA_FRENCH, 100)
         } returns uri
 
-        coEvery { mockContact.stableContactId() } returns "stable"
+        coEvery { mockContact.stableContactInfo() } returns StableContactInfo("stable", null)
 
         coEvery {
             mockApiClient.fetch(uri, RequestAuth.ContactTokenAuth("stable"), null, any())

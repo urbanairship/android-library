@@ -22,7 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class FeatureFlagRemoteDataAccessTest {
+public class FeatureFlagRemoteDataAccessTest {
     private val remoteData: RemoteData = mockk()
     private val clock = TestClock().apply { currentTimeMillis = currentTimeMillis() }
     private val remoteDataAccess = FeatureFlagRemoteDataAccess(remoteData, clock)
@@ -30,7 +30,7 @@ class FeatureFlagRemoteDataAccessTest {
     private val payloadType = "feature_flags"
 
     @Test
-    fun testFeatureFlag(): TestResult = runTest {
+    public fun testFeatureFlag(): TestResult = runTest {
         val json = """
        {
            "feature_flags":[
@@ -85,7 +85,7 @@ class FeatureFlagRemoteDataAccessTest {
     }
 
     @Test
-    fun testIgnoreInvalidFlags(): TestResult = runTest {
+    public fun testIgnoreInvalidFlags(): TestResult = runTest {
         val json = """
         {
            "feature_flags":[
@@ -140,7 +140,7 @@ class FeatureFlagRemoteDataAccessTest {
     }
 
     @Test
-    fun testIgnoreContact(): TestResult = runTest {
+    public fun testIgnoreContact(): TestResult = runTest {
         val json = """
         {
            "feature_flags":[
@@ -186,7 +186,7 @@ class FeatureFlagRemoteDataAccessTest {
     }
 
     @Test
-    fun testIgnoreInactive(): TestResult = runTest {
+    public fun testIgnoreInactive(): TestResult = runTest {
 
         val json = """
         {

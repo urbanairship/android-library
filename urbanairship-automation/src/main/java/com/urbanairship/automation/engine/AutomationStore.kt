@@ -19,6 +19,8 @@ import androidx.room.Transaction
 import androidx.room.TypeConverters
 import androidx.room.Update
 import androidx.room.Upsert
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.urbanairship.UALog
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.triggerprocessor.TriggerData
@@ -29,6 +31,7 @@ import com.urbanairship.json.JsonTypeConverters
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.SerialQueue
 import java.io.File
+import java.util.UUID
 import org.jetbrains.annotations.VisibleForTesting
 
 internal interface AutomationStoreInterface: ScheduleStoreInterface, TriggerStoreInterface {}
@@ -98,19 +101,26 @@ internal class SerialAccessAutomationStore(private val store: AutomationStoreInt
 }
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities = [ScheduleEntity::class, TriggerEntity::class], version = 1)
+@Database(entities = [ScheduleEntity::class, TriggerEntity::class], version = 2)
 internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterface {
     internal abstract val dao: AutomationDao
 
     internal companion object {
+
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE schedules ADD COLUMN triggerSessionId TEXT")
+                db.execSQL("ALTER TABLE schedules ADD COLUMN associatedData TEXT")
+            }
+        }
+
         fun createDatabase(context: Context, config: AirshipRuntimeConfig): AutomationStore {
             val name = config.configOptions.appKey + "_automation_store"
             val path = File(ContextCompat.getNoBackupFilesDir(context), name).absolutePath
-            return databaseBuilder(
-                context,
-                AutomationStore::class.java,
-                path
-            ).fallbackToDestructiveMigrationOnDowngrade().build()
+            return databaseBuilder(context, AutomationStore::class.java, path)
+                .addMigrations(MIGRATION_1_2)
+                .fallbackToDestructiveMigrationOnDowngrade()
+                .build()
         }
 
         @VisibleForTesting
@@ -307,7 +317,9 @@ internal class ScheduleEntity(
     var schedule: JsonValue,
     var scheduleState: String,
     var scheduleStateChangeDate: Long,
-    var triggerInfo: JsonValue?
+    var triggerInfo: JsonValue?,
+    var triggerSessionId: String?,
+    var associatedData: JsonValue?
 ) {
 
     companion object {
@@ -320,7 +332,9 @@ internal class ScheduleEntity(
                 schedule = data.schedule.toJsonValue(),
                 scheduleState = data.scheduleState.toString(),
                 scheduleStateChangeDate = data.scheduleStateChangeDate,
-                triggerInfo = data.triggerInfo?.toJsonValue()
+                triggerInfo = data.triggerInfo?.toJsonValue(),
+                triggerSessionId = data.triggerSessionId,
+                associatedData = data.associatedData
             )
         }
     }
@@ -333,7 +347,9 @@ internal class ScheduleEntity(
                 scheduleStateChangeDate = scheduleStateChangeDate,
                 executionCount = executionCount,
                 triggerInfo = triggerInfo?.let(TriggeringInfo::fromJson),
-                preparedScheduleInfo = preparedScheduleInfo?.let(PreparedScheduleInfo::fromJson)
+                preparedScheduleInfo = preparedScheduleInfo?.let(PreparedScheduleInfo::fromJson),
+                triggerSessionId = this.triggerSessionId ?: UUID.randomUUID().toString(),
+                associatedData = associatedData
             )
         } catch (ex: Exception) {
             UALog.e(ex) { "Failed to convert schedule entity to schedule data $this" }

@@ -3,6 +3,7 @@ package com.urbanairship.http
 import android.util.Base64
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipConfigOptions
+import com.urbanairship.Provider
 import com.urbanairship.UAirship
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
@@ -22,36 +23,38 @@ public class DefaultRequestSession : RequestSession {
 
     private val configOptions: AirshipConfigOptions
     private val httpClient: HttpClient
-    private val platform: Int
+    private val platformProvider: Provider<Int>
     private val clock: Clock
     private val nonceTokenFactory: () -> String
 
-    public constructor(configOptions: AirshipConfigOptions, platform: Int) : this(
-        configOptions, platform, DefaultHttpClient()
+    public constructor(configOptions: AirshipConfigOptions, platformProvider: Provider<Int>) : this(
+        configOptions, platformProvider, DefaultHttpClient()
     )
 
     internal constructor(
         configOptions: AirshipConfigOptions,
-        platform: Int,
+        platformProvider:  Provider<Int>,
         httpClient: HttpClient,
         clock: Clock = Clock.DEFAULT_CLOCK,
         nonceTokenFactory: () -> String = { UUID.randomUUID().toString() }
     ) {
         this.configOptions = configOptions
-        this.platform = platform
+        this.platformProvider = platformProvider
         this.httpClient = httpClient
         this.nonceTokenFactory = nonceTokenFactory
         this.clock = clock
-        this.defaultHeaders = mapOf(
-            "X-UA-App-Key" to configOptions.appKey,
-            "User-Agent" to "(UrbanAirshipLib-${PlatformUtils.asString(platform)}/${UAirship.getVersion()}; ${configOptions.appKey})"
-        )
     }
 
     public override var channelAuthTokenProvider: AuthTokenProvider? = null
     public override var contactAuthTokenProvider: AuthTokenProvider? = null
 
     private val defaultHeaders: Map<String, String>
+        get() {
+            return mapOf(
+                "X-UA-App-Key" to configOptions.appKey,
+                "User-Agent" to "(UrbanAirshipLib-${PlatformUtils.asString(platformProvider.get())}/${UAirship.getVersion()}; ${configOptions.appKey})"
+            )
+        }
 
     @Throws(RequestException::class)
     public override fun execute(request: Request): Response<Unit> {

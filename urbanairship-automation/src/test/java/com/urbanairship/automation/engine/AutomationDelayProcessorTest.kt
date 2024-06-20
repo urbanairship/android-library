@@ -6,7 +6,7 @@ import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.AutomationAppState
 import com.urbanairship.automation.AutomationDelay
-import com.urbanairship.automation.utils.TaskSleeper
+import com.urbanairship.util.TaskSleeper
 import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.coVerify

@@ -25,7 +25,7 @@ public class LegacyAnalyticsTest {
                 )
 
                 it.event.data == expectedData &&
-                        it.event.name == "in_app_resolution" &&
+                        it.event.eventType.reportingName == "in_app_resolution" &&
                         it.messageId == InAppEventMessageId.Legacy("some-schedule-id")
             })
         }
@@ -42,7 +42,7 @@ public class LegacyAnalyticsTest {
                     "replacement_id" to "some-other-schedule-id"
                 )
 
-                it.event.data == expectedData && it.event.name == "in_app_resolution" && it.messageId == InAppEventMessageId.Legacy(
+                it.event.data == expectedData && it.event.eventType.reportingName == "in_app_resolution" && it.messageId == InAppEventMessageId.Legacy(
                     "some-schedule-id"
                 )
             })

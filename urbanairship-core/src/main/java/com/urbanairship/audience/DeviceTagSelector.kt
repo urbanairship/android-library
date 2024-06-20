@@ -31,6 +31,7 @@ public class DeviceTagSelector
         internal val selectors: List<DeviceTagSelector> = emptyList()
     ) : JsonSerializable {
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         public fun and(@Size(min = 1) selectors: List<DeviceTagSelector>): DeviceTagSelector {
             return DeviceTagSelector(Type.AND, selectors = selectors)
@@ -135,14 +136,14 @@ public class DeviceTagSelector
         return builder.build().toJsonValue()
     }
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (o == null || javaClass != o.javaClass) {
+        if (other == null || javaClass != other.javaClass) {
             return false
         }
-        val that: DeviceTagSelector = o as DeviceTagSelector
+        val that: DeviceTagSelector = other as DeviceTagSelector
         return ObjectsCompat.equals(type, that.type) && ObjectsCompat.equals(
             tag,
             that.tag

@@ -4,15 +4,16 @@ package com.urbanairship.featureflag
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.analytics.Event
+import com.urbanairship.analytics.EventType
 import com.urbanairship.json.jsonMapOf
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class FeatureFlagInteractionEventTest {
+public class FeatureFlagInteractionEventTest {
 
     @Test
-    fun testEvent() {
+    public fun testEvent() {
         val flag = FeatureFlag.createFlag(
             name = "some-flag-name",
             isEligible = true,
@@ -34,13 +35,14 @@ class FeatureFlagInteractionEventTest {
         )
 
         val event = FeatureFlagInteractionEvent(flag)
-        assert(event.type == "feature_flag_interaction")
+        assert(event.type.reportingName == "feature_flag_interaction")
+        assert(event.type == EventType.FEATURE_FLAG_INTERACTION)
         assert(event.priority == Event.NORMAL_PRIORITY)
         assert(event.data == expectedData)
     }
 
     @Test
-    fun testCreateFlag() {
+    public fun testCreateFlag() {
         val reportingInfo = FeatureFlag.ReportingInfo(
             reportingMetadata = jsonMapOf("reporting" to "is good"),
             channelId = "some channel",
@@ -62,7 +64,7 @@ class FeatureFlagInteractionEventTest {
     }
 
     @Test(expected = Exception::class)
-    fun testEventMissingReportingInfo() {
+    public fun testEventMissingReportingInfo() {
         val flag = FeatureFlag.createMissingFlag("some-flag")
         FeatureFlagInteractionEvent(flag)
     }

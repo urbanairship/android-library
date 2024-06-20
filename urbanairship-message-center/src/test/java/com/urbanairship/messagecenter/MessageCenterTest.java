@@ -2,7 +2,6 @@
 
 package com.urbanairship.messagecenter;
 
-import static com.urbanairship.PrivacyManager.FEATURE_MESSAGE_CENTER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -79,7 +78,7 @@ public class MessageCenterTest {
         this.messageCenter = new MessageCenter(context, dataStore, config, privacyManager, inbox, pushManager);
         shadowApplication = shadowOf((Application) context);
 
-        when(privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)).thenReturn(true);
+        when(privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)).thenReturn(true);
 
         ArgumentCaptor<PushListener> pushListenerArgumentCaptor = ArgumentCaptor.forClass(PushListener.class);
         messageCenter.init();
@@ -219,7 +218,7 @@ public class MessageCenterTest {
         Mockito.clearInvocations(pushManager);
         Mockito.clearInvocations(inbox);
 
-        when(privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)).thenReturn(false);
+        when(privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)).thenReturn(false);
         privacyManagerListener.onEnabledFeaturesChanged();
 
         verify(inbox, timeout(100).times(1)).setEnabled(eq(false));
@@ -232,7 +231,7 @@ public class MessageCenterTest {
         Mockito.clearInvocations(pushManager);
         Mockito.clearInvocations(inbox);
 
-        when(privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)).thenReturn(true);
+        when(privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)).thenReturn(true);
 
         messageCenter.updateInboxEnabledState();
 
@@ -249,7 +248,7 @@ public class MessageCenterTest {
         Mockito.clearInvocations(pushManager);
         Mockito.clearInvocations(inbox);
 
-        when(privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)).thenReturn(false);
+        when(privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)).thenReturn(false);
 
         messageCenter.updateInboxEnabledState();
 
@@ -263,7 +262,7 @@ public class MessageCenterTest {
 
     @Test
     public void testShowMessageCenterWhenDisabled() {
-        when(privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)).thenReturn(false);
+        when(privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)).thenReturn(false);
 
         messageCenter.showMessageCenter();
         Intent intent = shadowApplication.getNextStartedActivity();
@@ -273,7 +272,7 @@ public class MessageCenterTest {
 
     @Test
     public void testPerformJobWhenEnabled() {
-        when(privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)).thenReturn(true);
+        when(privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)).thenReturn(true);
 
         UAirship airship = mock(UAirship.class);
         JobInfo jobInfo = mock(JobInfo.class);
@@ -288,7 +287,7 @@ public class MessageCenterTest {
 
     @Test
     public void testPerformJobWhenDisabled() {
-        when(privacyManager.isEnabled(FEATURE_MESSAGE_CENTER)).thenReturn(false);
+        when(privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)).thenReturn(false);
 
         JobResult result = messageCenter.onPerformJob(mock(UAirship.class), mock(JobInfo.class));
         assertEquals(JobResult.SUCCESS, result);

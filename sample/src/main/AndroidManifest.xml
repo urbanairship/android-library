@@ -5,8 +5,9 @@
     <dist:module dist:instant="true" />
 
     <!-- Optional: Needed if using location in Airship. -->
-    <!-- Use "android.permission.ACCESS_COARSE_LOCATION" instead if GPS access is not necessary -->
+    <!-- Use only "android.permission.ACCESS_COARSE_LOCATION" if GPS access is not necessary -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:name="com.urbanairship.sample.SampleApplication"
@@ -43,6 +44,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver android:name=".glance.SampleAppWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/sample_widget_info" />
+        </receiver>
 
     </application>
 

@@ -16,7 +16,6 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.core.view.doOnPreDraw
-import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.iam.info.InAppMessageMediaInfo
 import com.urbanairship.images.ImageRequestOptions

@@ -21,7 +21,7 @@ public class InAppPageActionEventTest {
                "action_identifier":"action id"
             }
         """.trimIndent()
-        assertEquals("in_app_page_action", event.name)
+        assertEquals("in_app_page_action", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

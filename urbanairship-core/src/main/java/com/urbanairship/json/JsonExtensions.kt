@@ -1,6 +1,8 @@
 package com.urbanairship.json
 
 import com.urbanairship.UALog
+import com.urbanairship.util.DateUtils
+import java.text.ParseException
 
 @Throws(JsonException::class)
 public fun jsonMapOf(vararg fields: Pair<String, *>): JsonMap =
@@ -75,6 +77,64 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
         JsonValue::class -> field.toJsonValue() as T
         else -> throw JsonException("Invalid type '${T::class.java.simpleName}' for field '$key'")
     }
+}
+
+
+/**
+ * Gets the field with the given [key] and parses it as a ISO date string.
+ *
+ * @throws JsonException if the value is not a valid date string.
+ */
+@Throws(JsonException::class)
+public fun JsonMap.isoDateAsMilliseconds(key: String): Long? {
+    return try {
+        optionalField<String>(key)?.let {
+            DateUtils.parseIso8601(it)
+        }
+    } catch (e: Exception) {
+        throw JsonException("Unable to parse value as date: ${get(key)}", e)
+    }
+}
+
+/**
+ * Gets a map with the given [key] from the [JsonMap].
+ *
+ * @throws JsonException if the field is undefined or is not a valid [JsonMap].
+ */
+@Throws(JsonException::class)
+public fun JsonMap.requireMap(key: String): JsonMap {
+    return requireField(key)
+}
+
+/**
+ * Gets a list with the given [key] from the [JsonMap].
+ *
+ * @throws JsonException if the field is undefined or is not a valid [JsonList].
+ */
+@Throws(JsonException::class)
+public fun JsonMap.requireList(key: String): JsonList {
+    return requireField(key)
+}
+
+
+/**
+ * Gets a map with the given [key] from the [JsonMap], or an `null` if not defined.
+ *
+ * @throws JsonException if the field is undefined or is not a valid [JsonMap].
+ */
+@Throws(JsonException::class)
+public fun JsonMap.optionalMap(key: String): JsonMap? {
+    return optionalField<JsonMap>(key)
+}
+
+/**
+ * Gets a list with the given [key] from the [JsonMap], or an `null` if not defined.
+ *
+ * @throws JsonException if the field is undefined or is not a valid [JsonList].
+ */
+@Throws(JsonException::class)
+public fun JsonMap.optionalList(key: String): JsonList? {
+    return optionalField<JsonList>(key)
 }
 
 /**

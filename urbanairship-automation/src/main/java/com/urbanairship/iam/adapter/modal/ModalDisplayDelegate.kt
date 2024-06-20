@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import com.urbanairship.Predicate
+import com.urbanairship.actions.ActionRunner
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.utils.ActiveTimer
 import com.urbanairship.iam.InAppMessageActivity
@@ -16,7 +17,6 @@ import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.InAppMessageDisplayContent
-import java.util.UUID
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -29,6 +29,7 @@ internal class ModalDisplayDelegate(
     private val displayContent: InAppMessageDisplayContent.ModalContent,
     private val assets: AirshipCachedAssets?,
     private val activityMonitor: ActivityMonitor,
+    private val actionRunner: ActionRunner
 ) : DelegatingDisplayAdapter.Delegate {
 
     override val activityPredicate: Predicate<Activity>? = null
@@ -49,7 +50,8 @@ internal class ModalDisplayDelegate(
         val displayArgs = InAppDisplayArgs(
             displayContent = displayContent,
             assets = assets,
-            displayListener = displayListener
+            displayListener = displayListener,
+            actionRunner = actionRunner
         )
 
         val loader = InAppDisplayArgsLoader.newLoader(displayArgs)

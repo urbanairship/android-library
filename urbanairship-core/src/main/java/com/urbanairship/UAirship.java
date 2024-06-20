@@ -26,6 +26,7 @@ import com.urbanairship.base.Supplier;
 import com.urbanairship.cache.AirshipCache;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.config.RemoteConfigObserver;
 import com.urbanairship.contacts.Contact;
 import com.urbanairship.deferred.DeferredResolver;
 import com.urbanairship.experiment.ExperimentManager;
@@ -695,9 +696,14 @@ public class UAirship {
         // Create and init the preference data store first
         this.preferenceDataStore = PreferenceDataStore.loadDataStore(getApplicationContext(), airshipConfigOptions);
 
-        this.privacyManager = new PrivacyManager(preferenceDataStore, airshipConfigOptions.enabledFeatures);
-        this.privacyManager.migrateData();
+        RemoteConfigObserver remoteConfigObserver = new RemoteConfigObserver(this.preferenceDataStore);
 
+        this.privacyManager = new PrivacyManager(
+                preferenceDataStore,
+                airshipConfigOptions.enabledFeatures,
+                remoteConfigObserver,
+                airshipConfigOptions.resetEnabledFeatures
+        );
 
         this.permissionsManager = PermissionsManager.newPermissionsManager(application);
 
@@ -706,10 +712,11 @@ public class UAirship {
         Supplier<PushProviders> pushProviders = PushProviders.lazyLoader(application, airshipConfigOptions);
 
         AudienceOverridesProvider audienceOverridesProvider = new AudienceOverridesProvider();
-        DeferredPlatformProvider platformProvider = new DeferredPlatformProvider(getApplicationContext(), preferenceDataStore, privacyManager, pushProviders);
-        DefaultRequestSession requestSession = new DefaultRequestSession(airshipConfigOptions, platformProvider.get());
+        DeferredPlatformProvider platformProvider = new DeferredPlatformProvider(application, preferenceDataStore, privacyManager, pushProviders);
+        DefaultRequestSession requestSession = new DefaultRequestSession(airshipConfigOptions, platformProvider);
 
-        this.runtimeConfig = new AirshipRuntimeConfig(() -> airshipConfigOptions, requestSession, preferenceDataStore, platformProvider);
+        this.runtimeConfig = new AirshipRuntimeConfig(() -> airshipConfigOptions, requestSession, remoteConfigObserver, platformProvider);
+
         this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, localeManager, audienceOverridesProvider);
         requestSession.setChannelAuthTokenProvider(this.channel.getAuthTokenProvider());
 
@@ -744,12 +751,13 @@ public class UAirship {
         this.remoteData = new RemoteData(application, runtimeConfig, preferenceDataStore, privacyManager, localeManager,  pushManager, pushProviders, contact);
         components.add(this.remoteData);
 
-        this.meteredUsageManager = new AirshipMeteredUsage(application, preferenceDataStore, runtimeConfig, privacyManager);
+        this.meteredUsageManager = new AirshipMeteredUsage(application, preferenceDataStore, runtimeConfig, privacyManager, contact);
         components.add(this.meteredUsageManager);
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, runtimeConfig, privacyManager, remoteData);
         components.add(this.remoteConfigManager);
 
+        AirshipCache cache = new AirshipCache(application, runtimeConfig);
 
         // Experiments
         this.experimentManager = new ExperimentManager(application, preferenceDataStore,
@@ -772,7 +780,7 @@ public class UAirship {
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
                 privacyManager, channel, pushManager, analytics, remoteData, this.experimentManager,
-                meteredUsageManager, contact, deferredResolver, eventFeed, applicationMetrics);
+                meteredUsageManager, deferredResolver, eventFeed, applicationMetrics, cache);
         processModule(automationModule);
 
         // Ad Id
@@ -789,7 +797,7 @@ public class UAirship {
 
         // Feature flags
         Module featureFlags = Modules.featureFlags(application, preferenceDataStore, remoteData, analytics,
-                new AirshipCache(application, runtimeConfig), deferredResolver, eventFeed);
+                cache, deferredResolver, privacyManager);
         processModule(featureFlags);
 
         for (AirshipComponent component : components) {

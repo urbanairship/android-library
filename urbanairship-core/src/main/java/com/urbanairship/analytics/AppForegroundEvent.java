@@ -13,8 +13,6 @@ import androidx.annotation.RestrictTo;
 
 class AppForegroundEvent extends Event {
 
-    static final String TYPE = "app_foreground";
-    static final String NOTIFICATION_TYPES_KEY = "notification_types";
 
     /**
      * Default constructor for AppForegroundEvent.
@@ -27,8 +25,8 @@ class AppForegroundEvent extends Event {
 
     @NonNull
     @Override
-    public final String getType() {
-        return TYPE;
+    public final EventType getType() {
+        return EventType.APP_FOREGROUND;
     }
 
     /**

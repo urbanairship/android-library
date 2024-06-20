@@ -2,20 +2,19 @@
 
 package com.urbanairship.iam.adapter.layout
 
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.actions.ActionRunRequest
-import com.urbanairship.actions.ActionRunRequestFactory
-import com.urbanairship.actions.PermissionResultReceiver
-import com.urbanairship.actions.PromptPermissionAction
-import com.urbanairship.android.layout.ThomasListener
+import com.urbanairship.UALog
+import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
+import com.urbanairship.automation.utils.ActiveTimerInterface
+import com.urbanairship.automation.utils.ManualActiveTimer
+import com.urbanairship.iam.adapter.DisplayResult
+import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.analytics.events.InAppButtonTapEvent
+import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppFormDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppFormResultEvent
 import com.urbanairship.iam.analytics.events.InAppGestureEvent
@@ -24,20 +23,16 @@ import com.urbanairship.iam.analytics.events.InAppPageSwipeEvent
 import com.urbanairship.iam.analytics.events.InAppPageViewEvent
 import com.urbanairship.iam.analytics.events.InAppPagerCompletedEvent
 import com.urbanairship.iam.analytics.events.InAppPagerSummaryEvent
-import com.urbanairship.iam.analytics.events.InAppPermissionResultEvent
+import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.analytics.events.PageViewSummary
-import com.urbanairship.iam.adapter.InAppMessageDisplayListener
-import com.urbanairship.iam.info.InAppMessageButtonInfo
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
-import com.urbanairship.permission.Permission
-import com.urbanairship.permission.PermissionStatus
 
 @VisibleForTesting
 internal class LayoutListener (
-    val displayListener: InAppMessageDisplayListener
-) : ThomasListener {
-
+    val analytics: InAppMessageAnalyticsInterface,
+    private val timer: ActiveTimerInterface = ManualActiveTimer(),
+    private var onDismiss: ((DisplayResult) -> Unit)?
+) : ThomasListenerInterface {
     private val completedPagers: MutableSet<String> = HashSet()
     private val pagerSummaryMap: MutableMap<String, PagerSummary> = HashMap()
     private val pagerViewCounts: MutableMap<String, MutableMap<Int, Int>> = HashMap()
@@ -45,7 +40,7 @@ internal class LayoutListener (
     override fun onPageView(pagerData: PagerData, state: LayoutData, displayedAt: Long) {
         // View
         val viewCount = updatePageViewCount(pagerData)
-        displayListener.analytics.recordEvent(
+        analytics.recordEvent(
             event = InAppPageViewEvent(pagerData, viewCount),
             layoutContext = state
         )
@@ -53,7 +48,7 @@ internal class LayoutListener (
         // Completed
         if (pagerData.isCompleted && !completedPagers.contains(pagerData.identifier)) {
             completedPagers.add(pagerData.identifier)
-            displayListener.analytics.recordEvent(
+            analytics.recordEvent(
                 event = InAppPagerCompletedEvent(pagerData),
                 layoutContext = state
             )
@@ -73,7 +68,7 @@ internal class LayoutListener (
         fromPageId: String,
         state: LayoutData
     ) {
-        displayListener.analytics.recordEvent(
+        analytics.recordEvent(
             InAppPageSwipeEvent(
                 from = PagerData(
                     pagerData.identifier,
@@ -97,7 +92,7 @@ internal class LayoutListener (
         reportingMetadata: JsonValue?,
         state: LayoutData
     ) {
-        displayListener.analytics.recordEvent(
+        analytics.recordEvent(
             event = InAppButtonTapEvent(buttonId, reportingMetadata),
             layoutContext = state
         )
@@ -111,50 +106,46 @@ internal class LayoutListener (
         state: LayoutData
     ) {
         sendPageSummaryEvents(layoutData = state, displayTime)
-        val behavior = if (cancel) InAppMessageButtonInfo.Behavior.CANCEL
-        else InAppMessageButtonInfo.Behavior.DISMISS
-        displayListener.onButtonDismissed(buttonId, buttonDescription ?: "", behavior, state)
+        tryDismiss { time ->
+            analytics.recordEvent(
+                InAppResolutionEvent.buttonTap(
+                    identifier = buttonId,
+                    description = buttonDescription ?: "",
+                    displayTime = time),
+                layoutContext = state
+            )
+
+            if (cancel) {
+                DisplayResult.CANCEL
+            } else {
+                DisplayResult.FINISHED
+            }
+        }
     }
 
     override fun onDismiss(displayTime: Long) {
         sendPageSummaryEvents(null, displayTime)
-        displayListener.onUserDismissed()
+        tryDismiss { time ->
+            analytics.recordEvent(
+                InAppResolutionEvent.userDismissed(time),
+                layoutContext = null
+            )
+            DisplayResult.FINISHED
+        }
     }
 
     override fun onFormResult(formData: FormData.BaseForm, state: LayoutData) {
-        displayListener.analytics.recordEvent(
+        analytics.recordEvent(
             event = InAppFormResultEvent(formData.toJsonValue()),
             layoutContext = state
         )
     }
 
     override fun onFormDisplay(formInfo: FormInfo, state: LayoutData) {
-        displayListener.analytics.recordEvent(
+        analytics.recordEvent(
             event = InAppFormDisplayEvent(formInfo),
             layoutContext = state
         )
-    }
-
-    override fun onRunActions(actions: Map<String, JsonValue>, state: LayoutData) {
-
-        val permissionResultReceiver = object : PermissionResultReceiver(Handler(Looper.getMainLooper())) {
-            override fun onResult(
-                permission: Permission,
-                before: PermissionStatus,
-                after: PermissionStatus
-            ) {
-                onPromptPermissionResult(permission, before, after, state)
-            }
-        }
-
-        com.urbanairship.iam.InAppActionUtils.runActions(JsonMap(actions), ActionRunRequestFactory { actionName: String ->
-            val bundle = Bundle()
-            bundle.putParcelable(
-                PromptPermissionAction.RECEIVER_METADATA,
-                permissionResultReceiver
-            )
-            ActionRunRequest.createRequest(actionName).setMetadata(bundle)
-        })
     }
 
     override fun onPagerGesture(
@@ -162,7 +153,7 @@ internal class LayoutListener (
         reportingMetadata: JsonValue?,
         state: LayoutData
     ) {
-        displayListener.analytics.recordEvent(
+        analytics.recordEvent(
             event = InAppGestureEvent(gestureId, reportingMetadata),
             layoutContext = state
         )
@@ -173,23 +164,31 @@ internal class LayoutListener (
         reportingMetadata: JsonValue?,
         state: LayoutData
     ) {
-        displayListener.analytics.recordEvent(
+        analytics.recordEvent(
             event = InAppPageActionEvent(actionId, reportingMetadata),
             layoutContext = state
         )
     }
 
-    internal fun onPromptPermissionResult(
-        permission: Permission,
-        before: PermissionStatus,
-        after: PermissionStatus,
-        layoutContext: LayoutData
-    ) {
-        displayListener.analytics.recordEvent(
-            event = InAppPermissionResultEvent(permission, before, after),
-            layoutContext = layoutContext
-        )
+    override fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean) {
+        if (isVisible && isForegrounded) {
+            analytics.recordEvent(InAppDisplayEvent(), null)
+            timer.start()
+        } else {
+            timer.stop()
+        }
     }
+
+    override fun onTimedOut(state: LayoutData?) {
+        tryDismiss { time ->
+            analytics.recordEvent(
+                InAppResolutionEvent.timedOut(time),
+                state
+            )
+            DisplayResult.FINISHED
+        }
+    }
+
 
     /**
      * Updates the pager page view count map.
@@ -217,14 +216,26 @@ internal class LayoutListener (
                 it.pageFinished(displayTime)
                 val data = it.pagerData ?: return@forEach
 
-                displayListener.analytics.recordEvent(
+                analytics.recordEvent(
                     event = InAppPagerSummaryEvent(data, it.pageViewSummaries),
                     layoutContext = layoutData
                 )
             }
     }
-}
 
+    private fun tryDismiss(block: (Long) -> DisplayResult) {
+        val dismiss = this.onDismiss
+        if (dismiss == null) {
+            UALog.e { "Dismissed already called!" }
+            return
+        }
+
+        timer.stop()
+        val result = block.invoke(timer.time)
+        dismiss(result)
+        onDismiss = null
+    }
+}
 
 private class PagerSummary {
 

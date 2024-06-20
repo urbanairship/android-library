@@ -26,7 +26,7 @@ public class InAppPageSwipeEventAction {
             }
         """.trimIndent()
 
-        assertEquals("in_app_page_swipe", event.name)
+        assertEquals("in_app_page_swipe", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

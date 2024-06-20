@@ -161,7 +161,7 @@ public class Inbox {
             @NonNull
             @Override
             public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                if (privacyManager.isEnabled(PrivacyManager.FEATURE_MESSAGE_CENTER)) {
+                if (privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
                     return builder.setUserId(getUser().getId());
                 } else {
                     return builder;

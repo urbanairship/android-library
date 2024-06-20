@@ -26,7 +26,7 @@ public class InAppPermissionResultEventTest {
             }
         """.trimIndent()
 
-        assertEquals("in_app_permission_result", event.name)
+        assertEquals("in_app_permission_result", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

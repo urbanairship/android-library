@@ -3,39 +3,24 @@ package com.urbanairship.liveupdate
 import com.urbanairship.json.JsonMap
 import com.urbanairship.liveupdate.data.LiveUpdateContent
 import com.urbanairship.liveupdate.data.LiveUpdateState
+import java.util.Objects
 
 /**
  * Information about a Live Update.
+ *
+ * @property name The Live Update name.
+ * @property type The Live Update type.
+ * @property content The Live Update content.
+ * @property lastContentUpdateTime The timestamp of the last UPDATE event for this Live Update.
+ * @property lastStateChangeTime The timestamp of the last START or END event for this Live Update.
+ * @property dismissalTime The optional dismissal timestamp for this Live Update.
  */
-public data class LiveUpdate(
-    /**
-     * The Live Update name.
-     */
+public class LiveUpdate(
     public val name: String,
-
-    /**
-     * The Live Update type.
-     */
     public val type: String,
-
-    /**
-     * The Live Update content.
-     */
     public val content: JsonMap,
-
-    /**
-     * The timestamp of the last UPDATE event for this Live Update.
-     */
     public val lastContentUpdateTime: Long,
-
-    /**
-     * The timestamp of the last START or END event for this Live Update.
-     */
     public val lastStateChangeTime: Long,
-
-    /**
-     * The optional dismissal timestamp for this Live Update.
-     */
     public val dismissalTime: Long? = null,
 ) {
     internal companion object {
@@ -48,4 +33,24 @@ public data class LiveUpdate(
             dismissalTime = state.dismissalDate
         )
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as LiveUpdate
+
+        if (name != other.name) return false
+        if (type != other.type) return false
+        if (content != other.content) return false
+        if (lastContentUpdateTime != other.lastContentUpdateTime) return false
+        if (lastStateChangeTime != other.lastStateChangeTime) return false
+        if (dismissalTime != other.dismissalTime) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int = Objects.hash(
+        name, type, content, lastContentUpdateTime, lastStateChangeTime, dismissalTime
+    )
 }

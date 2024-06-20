@@ -43,7 +43,7 @@ public class LiveUpdateManagerTest {
     @Before
     public fun setUp() {
         dataStore = PreferenceDataStore.inMemoryStore(TestApplication.getApplication())
-        privacyManager = PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL)
+        privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL)
 
         liveUpdateManager = LiveUpdateManager(
             context = TestApplication.getApplication(),
@@ -60,7 +60,6 @@ public class LiveUpdateManagerTest {
     @Test
     public fun testInit() {
         liveUpdateManager.init()
-        assertTrue(liveUpdateManager.isComponentEnabled)
 
         verify { pushManager.addPushListener(any()) }
         verify { channel.addChannelListener(any()) }

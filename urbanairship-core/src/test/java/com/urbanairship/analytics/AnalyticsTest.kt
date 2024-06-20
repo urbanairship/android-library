@@ -59,7 +59,7 @@ public class AnalyticsTest() {
     private val executor = Executor { obj: Runnable -> obj.run() }
     private val runtimeConfig = TestAirshipRuntimeConfig()
     private val activityMonitor = TestActivityMonitor()
-    private val privacyManager = PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL)
+    private val privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL)
 
 
     private val testDispatcher = StandardTestDispatcher()
@@ -188,7 +188,7 @@ public class AnalyticsTest() {
      */
     @Test
     public fun testAddEventDisabledAnalytics() {
-        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS)
+        privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         analytics.addEvent(AppForegroundEvent(100))
         verify(exactly = 0) { mockEventManager.addEvent(any(), any())  }
     }
@@ -200,7 +200,7 @@ public class AnalyticsTest() {
     public fun testAddInvalidEvent() {
         val event: Event = mockk() {
             every { eventId } returns "event-id"
-            every { type } returns "event-type"
+            every { type } returns EventType.APP_BACKGROUND
             every { createEventPayload(any()) } returns "event-data"
             every { time } returns "1000"
             every { priority } returns Event.HIGH_PRIORITY
@@ -216,7 +216,7 @@ public class AnalyticsTest() {
      */
     @Test
     public fun testDisableAnalytics() {
-        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS)
+        privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         verify { mockEventManager.deleteEvents() }
     }
 
@@ -324,7 +324,7 @@ public class AnalyticsTest() {
         // Verify identifiers are stored
         assertThat(analytics.associatedIdentifiers.ids).isEqualTo(mapOf("customKey" to "customValue"))
 
-        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS)
+        privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         assertThat(analytics.associatedIdentifiers.ids).isEmpty()
 
         analytics.editAssociatedIdentifiers().addIdentifier("customKey", "customValue").apply()
@@ -365,7 +365,7 @@ public class AnalyticsTest() {
      */
     @Test
     public fun testSendingWithAnalyticsDisabled() {
-        privacyManager.disable(PrivacyManager.FEATURE_ANALYTICS)
+        privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         every { mockChannel.id } returns "channel"
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
@@ -651,7 +651,7 @@ public class AnalyticsTest() {
     public fun testEventFeed(): TestResult = runTest {
         analytics.trackScreen("foo")
         verify {
-            mockEventFeed.emit(AirshipEventFeed.Event.ScreenTracked("foo"))
+            mockEventFeed.emit(AirshipEventFeed.Event.Screen("foo"))
         }
 
         val regionEnter = RegionEvent.newBuilder()
@@ -662,7 +662,13 @@ public class AnalyticsTest() {
 
         analytics.recordRegionEvent(regionEnter)
         verify {
-            mockEventFeed.emit(AirshipEventFeed.Event.RegionEnter(regionEnter.eventData))
+            mockEventFeed.emit(
+                AirshipEventFeed.Event.Analytics(
+                    EventType.REGION_ENTER,
+                    regionEnter.eventData.toJsonValue(),
+                    null
+                )
+            )
         }
 
         val regionExit = RegionEvent.newBuilder()
@@ -673,7 +679,13 @@ public class AnalyticsTest() {
 
         analytics.recordRegionEvent(regionExit)
         verify {
-            mockEventFeed.emit(AirshipEventFeed.Event.RegionExit(regionExit.eventData))
+            mockEventFeed.emit(
+                AirshipEventFeed.Event.Analytics(
+                    EventType.REGION_EXIT,
+                    regionExit.eventData.toJsonValue(),
+                    null
+                )
+            )
         }
 
         val customEvent = CustomEvent.newBuilder("foo")
@@ -682,7 +694,13 @@ public class AnalyticsTest() {
 
         analytics.recordCustomEvent(customEvent)
         verify {
-            mockEventFeed.emit(AirshipEventFeed.Event.CustomEvent(customEvent.toJsonValue().requireMap(), 100.0))
+            mockEventFeed.emit(
+                AirshipEventFeed.Event.Analytics(
+                    EventType.CUSTOM_EVENT,
+                    customEvent.toJsonValue(),
+                    100.0
+                )
+            )
         }
     }
 }

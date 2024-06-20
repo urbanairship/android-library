@@ -627,7 +627,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = AssociatedChannel("some channel", ChannelType.EMAIL),
+            value = "some channel",
             body = null,
             headers = emptyMap()
         )
@@ -638,6 +638,21 @@ public class ContactManagerTest {
         coVerify {
             mockApiClient.registerEmail(
                 anonIdentityResult.contactId, address, options, Locale.ENGLISH
+            )
+        }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.Associate(
+                    channel = ContactChannel.Email(
+                        ContactChannel.Email.RegistrationInfo.Pending(
+                            address = address,
+                            options
+                        )
+                    ),
+                    channelId = "some channel"
+                )
             )
         }
     }
@@ -705,7 +720,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = AssociatedChannel("some channel", ChannelType.EMAIL),
+            value = "some channel",
             body = null,
             headers = emptyMap()
         )
@@ -716,6 +731,21 @@ public class ContactManagerTest {
         coVerify {
             mockApiClient.registerSms(
                 anonIdentityResult.contactId, address, options, Locale.ENGLISH
+            )
+        }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.Associate(
+                    channel = ContactChannel.Sms(
+                        ContactChannel.Sms.RegistrationInfo.Pending(
+                            address = address,
+                            options
+                        )
+                    ),
+                    channelId = "some channel"
+                )
             )
         }
     }
@@ -783,7 +813,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = AssociatedChannel("some channel", ChannelType.EMAIL),
+            value = "some channel",
             body = null,
             headers = emptyMap()
         )
@@ -794,6 +824,16 @@ public class ContactManagerTest {
         coVerify {
             mockApiClient.registerOpen(
                 anonIdentityResult.contactId, address, options, Locale.ENGLISH
+            )
+        }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.AssociateAnon(
+                    "some channel",
+                    ChannelType.OPEN
+                )
             )
         }
     }
@@ -815,7 +855,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 400,
-            value = AssociatedChannel("some channel", ChannelType.EMAIL),
+            value = "some channel",
             body = null,
             headers = emptyMap()
         )
@@ -841,7 +881,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 500,
-            value = AssociatedChannel("some channel", ChannelType.EMAIL),
+            value = "some channel",
             body = null,
             headers = emptyMap()
         )
@@ -867,7 +907,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = AssociatedChannel(address, type),
+            value = address,
             body = null,
             headers = emptyMap()
         )
@@ -961,10 +1001,74 @@ public class ContactManagerTest {
         contactManager.addOperation(ContactOperation.Update(tags = tags))
         contactManager.addOperation(ContactOperation.Update(attributes = attributes))
         contactManager.addOperation(ContactOperation.Update(subscriptions = subscriptions))
+        contactManager.addOperation(
+           ContactOperation.RegisterEmail(
+               emailAddress = "otheremail@email.email",
+               options = EmailRegistrationOptions.options(null, null, true)
+           )
+        )
+        contactManager.addOperation(
+            ContactOperation.DisassociateChannel(
+                channel = ContactChannel.Email(
+                    ContactChannel.Email.RegistrationInfo.Registered(
+                        channelId = "some-channel",
+                        maskedAddress = "some-masked-email",
+                    )
+                ),
+                optOut = false
+            )
+        )
+        contactManager.addOperation(
+            ContactOperation.RegisterSms(
+                msisdn = "some sms",
+                options = SmsRegistrationOptions.options("some sender id")
+            )
+        )
+
+        contactManager.addOperation(
+            ContactOperation.AssociateChannel(
+                channelId = "some email channel id",
+                channelType = ChannelType.EMAIL
+            )
+        )
+
+        val expectedChannels = listOf(
+            ContactChannelMutation.Associate(
+                ContactChannel.Email(
+                    ContactChannel.Email.RegistrationInfo.Pending(
+                        address = "otheremail@email.email",
+                        registrationOptions = EmailRegistrationOptions.options(null, null, true)
+                    )
+                )
+            ),
+            ContactChannelMutation.Disassociated(
+                ContactChannel.Email(
+                    ContactChannel.Email.RegistrationInfo.Registered(
+                        channelId = "some-channel",
+                        maskedAddress = "some-masked-email"
+                    )
+                )
+            ),
+            ContactChannelMutation.Associate(
+                ContactChannel.Sms(
+                    ContactChannel.Sms.RegistrationInfo.Pending(
+                        address = "some sms",
+                        registrationOptions = SmsRegistrationOptions.options("some sender id")
+                    )
+                )
+            ),
+            ContactChannelMutation.AssociateAnon(
+                channelId = "some email channel id",
+                channelType = ChannelType.EMAIL
+            )
+        )
 
         assertEquals(
             AudienceOverrides.Contact(
-                tags = tags, attributes = attributes, subscriptions = subscriptions
+                tags = tags,
+                attributes = attributes,
+                subscriptions = subscriptions,
+                channels = expectedChannels
             ), audienceOverrideSlot.captured(anonIdentityResult.contactId)
         )
     }
@@ -1011,7 +1115,7 @@ public class ContactManagerTest {
             )
         } returns RequestResult(
             status = 200,
-            value = AssociatedChannel("some address", ChannelType.SMS),
+            value = "some address",
             body = null,
             headers = emptyMap()
         )
@@ -1051,7 +1155,7 @@ public class ContactManagerTest {
             subscriptionLists = mapOf(
                 "some list" to setOf(Scope.APP)
             ),
-            associatedChannels = listOf(AssociatedChannel("some address", ChannelType.SMS)),
+            associatedChannels = listOf(ConflictEvent.ChannelInfo("some address", ChannelType.SMS)),
             conflictingNameUserId = "some named user id"
         )
 
@@ -1059,4 +1163,527 @@ public class ContactManagerTest {
            assertEquals(expectedConflictEvent, this.awaitItem())
         }
     }
+
+    @Test
+    public fun testDisassociateRegisteredEmailChannel(): TestResult = runTest {
+        // Resolve
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        // Disassociate
+        coEvery {
+            mockApiClient.disassociateChannel(
+                anonIdentityResult.contactId, "some-channel", ChannelType.EMAIL, false
+            )
+        } returns RequestResult(
+            status = 200,
+            value = "contact channel id",
+            body = null,
+            headers = emptyMap()
+        )
+
+        contactManager.addOperation(
+            ContactOperation.DisassociateChannel(
+                ContactChannel.Email(
+                    ContactChannel.Email.RegistrationInfo.Registered(
+                        channelId = "some-channel",
+                        maskedAddress = "some-masked-email"
+                    )
+                ),
+                false
+            )
+        )
+
+        assertEquals(true, contactManager.performNextOperation())
+        coVerify {
+            mockApiClient.disassociateChannel(
+                anonIdentityResult.contactId,
+                "some-channel",
+                ChannelType.EMAIL,
+                false
+            )
+        }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.Disassociated(
+                    ContactChannel.Email(
+                        ContactChannel.Email.RegistrationInfo.Registered(
+                            channelId = "some-channel",
+                            maskedAddress = "some-masked-email"
+                        )
+                    ),
+                    channelId = "contact channel id"
+                )
+            )
+        }
+    }
+
+    @Test
+    public fun testDisassociateRegisteredSmsChannel(): TestResult = runTest {
+        // Resolve
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        // Disassociate
+        coEvery {
+            mockApiClient.disassociateChannel(
+                anonIdentityResult.contactId, "some-channel", ChannelType.SMS, true
+            )
+        } returns RequestResult(
+            status = 200,
+            value = "contact channel id",
+            body = null,
+            headers = emptyMap()
+        )
+
+        contactManager.addOperation(
+            ContactOperation.DisassociateChannel(
+                ContactChannel.Sms(
+                    ContactChannel.Sms.RegistrationInfo.Registered(
+                        channelId = "some-channel",
+                        maskedAddress = "some-masked-sms",
+                        isOptIn = true,
+                        senderId = "some-sender"
+                    )
+                ),
+                true
+            )
+        )
+
+        assertEquals(true, contactManager.performNextOperation())
+        coVerify {
+            mockApiClient.disassociateChannel(
+                anonIdentityResult.contactId,
+                "some-channel",
+                ChannelType.SMS,
+                true
+            )
+        }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.Disassociated(
+                    ContactChannel.Sms(
+                        ContactChannel.Sms.RegistrationInfo.Registered(
+                            channelId = "some-channel",
+                            maskedAddress = "some-masked-sms",
+                            isOptIn = true,
+                            senderId = "some-sender"
+                        )
+                    ),
+                    channelId = "contact channel id"
+                )
+            )
+        }
+    }
+
+    @Test
+    public fun testDisassociatePendingSmsChannel(): TestResult = runTest {
+        // Resolve
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        // Disassociate
+        coEvery {
+            mockApiClient.disassociateSms(
+                anonIdentityResult.contactId, "some-msisdn", "some-sender", false
+            )
+        } returns RequestResult(
+            status = 200,
+            value = "contact channel id",
+            body = null,
+            headers = emptyMap()
+        )
+
+        contactManager.addOperation(
+            ContactOperation.DisassociateChannel(
+                ContactChannel.Sms(
+                    ContactChannel.Sms.RegistrationInfo.Pending(
+                        address = "some-msisdn",
+                        registrationOptions = SmsRegistrationOptions.options("some-sender")
+                    )
+                ),
+                false
+            )
+        )
+
+        assertEquals(true, contactManager.performNextOperation())
+        coVerify {
+            mockApiClient.disassociateSms(
+                anonIdentityResult.contactId,
+                "some-msisdn",
+                "some-sender",
+                false
+            )
+        }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.Disassociated(
+                    ContactChannel.Sms(
+                        ContactChannel.Sms.RegistrationInfo.Pending(
+                            address = "some-msisdn",
+                            registrationOptions = SmsRegistrationOptions.options("some-sender")
+                        )
+                    ),
+                    channelId = "contact channel id"
+                )
+            )
+        }
+    }
+
+    @Test
+    public fun testDisassociatePendingEmailChannel(): TestResult = runTest {
+        // Resolve
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        // Disassociate
+        coEvery {
+            mockApiClient.disassociateEmail(
+                anonIdentityResult.contactId, "email@email.email", false
+            )
+        } returns RequestResult(
+            status = 200,
+            value = "contact channel id",
+            body = null,
+            headers = emptyMap()
+        )
+
+        contactManager.addOperation(
+            ContactOperation.DisassociateChannel(
+                ContactChannel.Email(
+                    ContactChannel.Email.RegistrationInfo.Pending(
+                        address = "email@email.email",
+                        registrationOptions = EmailRegistrationOptions.options(null, null, true)
+                    )
+                ),
+                false
+            )
+        )
+
+        assertEquals(true, contactManager.performNextOperation())
+        coVerify {
+            mockApiClient.disassociateEmail(
+                anonIdentityResult.contactId,
+                "email@email.email",
+                false
+            )
+        }
+
+        verify {
+            mockAudienceOverridesProvider.recordContactUpdate(
+                anonIdentityResult.contactId,
+                channel = ContactChannelMutation.Disassociated(
+                    ContactChannel.Email(
+                        ContactChannel.Email.RegistrationInfo.Pending(
+                            address = "email@email.email",
+                            registrationOptions = EmailRegistrationOptions.options(null, null, true)
+                        )
+                    ),
+                    channelId = "contact channel id"
+                )
+            )
+        }
+    }
+
+    @Test
+    public fun testDisassociateClientError(): TestResult = runTest {
+        // Resolve
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        // Disassociate
+        coEvery {
+            mockApiClient.disassociateEmail(
+                anonIdentityResult.contactId, "email@email.email", true
+            )
+        } returns RequestResult(
+            status = 400,
+            value = null,
+            body = null,
+            headers = emptyMap()
+        )
+
+        contactManager.addOperation(
+            ContactOperation.DisassociateChannel(
+                ContactChannel.Email(
+                    ContactChannel.Email.RegistrationInfo.Pending(
+                        address = "email@email.email",
+                        registrationOptions = EmailRegistrationOptions.options(null, null, true)
+                    )
+                ),
+                true
+            )
+        )
+
+        assertEquals(true, contactManager.performNextOperation())
+    }
+
+    @Test
+    public fun testDisassociateServerError(): TestResult = runTest {
+        // Resolve
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        // Disassociate
+        coEvery {
+            mockApiClient.disassociateEmail(
+                anonIdentityResult.contactId, "email@email.email", false
+            )
+        } returns RequestResult(
+            status = 500,
+            value = null,
+            body = null,
+            headers = emptyMap()
+        )
+
+        contactManager.addOperation(
+            ContactOperation.DisassociateChannel(
+                ContactChannel.Email(
+                    ContactChannel.Email.RegistrationInfo.Pending(
+                        address = "email@email.email",
+                        registrationOptions = EmailRegistrationOptions.options(null, null, true)
+                    )
+                ),
+                false
+            )
+        )
+
+        assertEquals(false, contactManager.performNextOperation())
+    }
+
+    @Test
+    public fun testResendOptInRegisteredEmailChannel(): TestResult = runTest {
+        // Resolve
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        // Disassociate
+        coEvery {
+            mockApiClient.resendChannelOptIn(
+                "some-channel", ChannelType.EMAIL
+            )
+        } returns RequestResult(
+            status = 200,
+            value = Unit,
+            body = null,
+            headers = emptyMap()
+        )
+
+        contactManager.addOperation(
+            ContactOperation.Resend(
+                ContactChannel.Email(
+                    ContactChannel.Email.RegistrationInfo.Registered(
+                        channelId = "some-channel",
+                        maskedAddress = "some-masked-email"
+                    )
+                )
+            )
+        )
+
+        assertEquals(true, contactManager.performNextOperation())
+        coVerify {
+            mockApiClient.resendChannelOptIn(
+                "some-channel",
+                ChannelType.EMAIL
+            )
+        }
+    }
+
+    @Test
+    public fun testResendOptInRegisteredSmsChannel(): TestResult = runTest {
+        // Resolve
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        // Disassociate
+        coEvery {
+            mockApiClient.resendChannelOptIn(
+                "some-channel", ChannelType.SMS
+            )
+        } returns RequestResult(
+            status = 200,
+            value = Unit,
+            body = null,
+            headers = emptyMap()
+        )
+
+        contactManager.addOperation(
+            ContactOperation.Resend(
+                ContactChannel.Sms(
+                    ContactChannel.Sms.RegistrationInfo.Registered(
+                        channelId = "some-channel",
+                        maskedAddress = "some-masked-email",
+                        senderId = "some-sender",
+                        isOptIn = true
+                    )
+                )
+            )
+        )
+
+        assertEquals(true, contactManager.performNextOperation())
+        coVerify {
+            mockApiClient.resendChannelOptIn(
+                "some-channel",
+                ChannelType.SMS
+            )
+        }
+    }
+
+    @Test
+    public fun testResendOptInPendingSmsChannel(): TestResult = runTest {
+        // Resolve
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        // Disassociate
+        coEvery {
+            mockApiClient.resendSmsOptIn(
+                "some-msisdn", "some-sender"
+            )
+        } returns RequestResult(
+            status = 200,
+            value = Unit,
+            body = null,
+            headers = emptyMap()
+        )
+
+        contactManager.addOperation(
+            ContactOperation.Resend(
+                ContactChannel.Sms(
+                    ContactChannel.Sms.RegistrationInfo.Pending(
+                        address = "some-msisdn",
+                        registrationOptions = SmsRegistrationOptions.options("some-sender")
+                    )
+                )
+            )
+        )
+
+        assertEquals(true, contactManager.performNextOperation())
+        coVerify {
+            mockApiClient.resendSmsOptIn(
+                "some-msisdn",
+                "some-sender"
+            )
+        }
+    }
+
+    @Test
+    public fun testResendOptInPendingEmailChannel(): TestResult = runTest {
+        // Resolve
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        // Disassociate
+        coEvery {
+            mockApiClient.resendEmailOptIn(
+                "email@email.email"
+            )
+        } returns RequestResult(
+            status = 200,
+            value = Unit,
+            body = null,
+            headers = emptyMap()
+        )
+
+        contactManager.addOperation(
+            ContactOperation.Resend(
+                ContactChannel.Email(
+                    ContactChannel.Email.RegistrationInfo.Pending(
+                        address = "email@email.email",
+                        registrationOptions = EmailRegistrationOptions.options(null, null, true)
+                    )
+                )
+            )
+        )
+
+        assertEquals(true, contactManager.performNextOperation())
+        coVerify {
+            mockApiClient.resendEmailOptIn(
+                "email@email.email"
+            )
+        }
+    }
+
+    @Test
+    public fun testResendOptInClientError(): TestResult = runTest {
+        // Resolve
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        // Disassociate
+        coEvery {
+            mockApiClient.resendEmailOptIn(
+                "email@email.email"
+            )
+        } returns RequestResult(
+            status = 400,
+            value = Unit,
+            body = null,
+            headers = emptyMap()
+        )
+
+        contactManager.addOperation(
+            ContactOperation.Resend(
+                ContactChannel.Email(
+                    ContactChannel.Email.RegistrationInfo.Pending(
+                        address = "email@email.email",
+                        registrationOptions = EmailRegistrationOptions.options(null, null, true)
+                    )
+                )
+            )
+        )
+
+        assertEquals(true, contactManager.performNextOperation())
+    }
+
+    @Test
+    public fun testResendOptInServerError(): TestResult = runTest {
+        // Resolve
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        // Disassociate
+        coEvery {
+            mockApiClient.resendEmailOptIn(
+                "email@email.email"
+            )
+        } returns RequestResult(
+            status = 500,
+            value = Unit,
+            body = null,
+            headers = emptyMap()
+        )
+
+        contactManager.addOperation(
+            ContactOperation.Resend(
+                ContactChannel.Email(
+                    ContactChannel.Email.RegistrationInfo.Pending(
+                        address = "email@email.email",
+                        registrationOptions = EmailRegistrationOptions.options(null, null, true)
+                    )
+                )
+            )
+        )
+
+        assertEquals(false, contactManager.performNextOperation())
+    }
+
 }

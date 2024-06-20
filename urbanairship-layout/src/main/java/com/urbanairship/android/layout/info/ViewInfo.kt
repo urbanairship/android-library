@@ -67,6 +67,7 @@ import com.urbanairship.json.requireField
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public sealed class ViewInfo : View {
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         @JvmStatic
         @Throws(JsonException::class)

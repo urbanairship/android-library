@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.analytics.events
 
+import com.urbanairship.analytics.EventType
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -21,7 +22,8 @@ internal class InAppPageViewEvent(
         pageIndex = pagerData.index
     )
 
-    override val name: String = "in_app_page_view"
+    override val eventType: EventType = EventType.IN_APP_PAGE_VIEW
+
     override val data: JsonSerializable = reportData
 
     private data class PageViewData(

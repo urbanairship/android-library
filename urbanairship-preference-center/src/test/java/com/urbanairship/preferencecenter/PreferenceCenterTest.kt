@@ -2,10 +2,12 @@ package com.urbanairship.preferencecenter
 
 import android.content.Context
 import android.net.Uri
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.preferencecenter.PreferenceCenter.Companion.KEY_PREFERENCE_FORMS
@@ -27,9 +29,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class PreferenceCenterTest {
+public class PreferenceCenterTest {
 
-    companion object {
+    public companion object {
         private val EMPTY_PAYLOADS = RemoteDataPayload.emptyPayload(PAYLOAD_TYPE)
 
         private const val ID_1 = "id-1"
@@ -54,9 +56,9 @@ class PreferenceCenterTest {
         )
     }
 
-    private val context: Context = TestApplication.getApplication()
+    private val context: Context = ApplicationProvider.getApplicationContext()
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
-    private val privacyManager = PrivacyManager(dataStore, PrivacyManager.FEATURE_ALL)
+    private val privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL)
 
     private val remoteData: RemoteData = mockk()
 
@@ -67,7 +69,7 @@ class PreferenceCenterTest {
     )
 
     @Test
-    fun testOnOpenListener(): TestResult = runTest {
+    public fun testOnOpenListener(): TestResult = runTest {
         prefCenter.openListener = onOpenListener
         verify(exactly = 0) { onOpenListener.onOpenPreferenceCenter(any()) }
 
@@ -76,32 +78,51 @@ class PreferenceCenterTest {
     }
 
     @Test
-    fun testGetConfigWithEmptyRemoteDataPayload(): TestResult = runTest {
+    public fun testGetConfigWithEmptyRemoteDataPayload(): TestResult = runTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(EMPTY_PAYLOADS)
         assertEquals(null, prefCenter.getConfig(ID_1))
     }
 
     @Test
-    fun testGetConfigWithSingleRemoteDataPayload(): TestResult = runTest {
+    public fun testGetConfigWithSingleRemoteDataPayload(): TestResult = runTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
         assertEquals(PREFERENCE_FORM_1, prefCenter.getConfig(ID_1))
     }
 
     @Test
-    fun testGetJsonConfigWithSingleRemoteDataPayload(): TestResult = runTest {
+    public fun testGetConfigPendingResultWithSingleRemoteDataPayload(): TestResult = runTest {
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
+        assertEquals(PREFERENCE_FORM_1, prefCenter.getConfigPendingResult(ID_1).get())
+    }
+
+    @Test
+    public fun testGetJsonConfigWithSingleRemoteDataPayload(): TestResult = runTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
         assertEquals(PREFERENCE_FORM_1.toJson(), prefCenter.getJsonConfig(ID_1))
     }
 
     @Test
-    fun testGetConfigWithMultipleRemoteDataPayloads(): TestResult = runTest {
+    public fun testGetJsonConfigPendingResultWithSingleRemoteDataPayload(): TestResult = runTest {
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(SINGLE_FORM_PAYLOAD)
+        assertEquals(PREFERENCE_FORM_1.toJson(), prefCenter.getJsonConfigPendingResult(ID_1).get())
+    }
+
+    @Test
+    public fun testGetConfigWithMultipleRemoteDataPayloads(): TestResult = runTest {
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(MULTI_FORM_PAYLOAD)
         assertEquals(PREFERENCE_FORM_1, prefCenter.getConfig(ID_1))
         assertEquals(PREFERENCE_FORM_2, prefCenter.getConfig(ID_2))
     }
 
     @Test
-    fun testDeepLink() {
+    public fun testGetConfigPendingResultWithMultipleRemoteDataPayloads(): TestResult = runTest {
+        coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(MULTI_FORM_PAYLOAD)
+        assertEquals(PREFERENCE_FORM_1, prefCenter.getConfigPendingResult(ID_1).get())
+        assertEquals(PREFERENCE_FORM_2, prefCenter.getConfigPendingResult(ID_2).get())
+    }
+
+    @Test
+    public fun testDeepLink() {
         val deepLink = Uri.parse("uairship://preferences/some-preference")
         prefCenter.openListener = onOpenListener
 
@@ -110,7 +131,7 @@ class PreferenceCenterTest {
     }
 
     @Test
-    fun testDeepLinkTrailingSlash() {
+    public fun testDeepLinkTrailingSlash() {
         val deepLink = Uri.parse("uairship://preferences/some-preference/")
         prefCenter.openListener = onOpenListener
 
@@ -119,7 +140,7 @@ class PreferenceCenterTest {
     }
 
     @Test
-    fun testInvalidDeepLinks() {
+    public fun testInvalidDeepLinks() {
         prefCenter.openListener = onOpenListener
 
         val wrongHost = Uri.parse("uairship://what/some-preference/")

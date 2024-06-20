@@ -9,7 +9,6 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import java.util.Objects
-import kotlin.jvm.Throws
 
 internal class TriggerData(
     internal val scheduleId: String,

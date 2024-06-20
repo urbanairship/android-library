@@ -2,21 +2,29 @@
 
 package com.urbanairship.sample.preference;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.urbanairship.debug.DebugActivity;
 import com.urbanairship.sample.R;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+
+import static com.urbanairship.debug.R.*;
 
 /**
  * Settings fragment.
@@ -50,6 +58,7 @@ public class SettingsFragment extends Fragment {
     public static class PreferenceFragment extends PreferenceFragmentCompat {
 
         private static final String TAGS_KEY = "tags";
+        private static final String DEBUG_KEY = "debug";
 
         @Override
         public void onCreatePreferences(Bundle bundle, String s) {
@@ -57,10 +66,17 @@ public class SettingsFragment extends Fragment {
         }
 
         @Override
-        public boolean onPreferenceTreeClick(Preference preference) {
-            View view = getView();
-            if (view != null && TAGS_KEY.equals(preference.getKey())) {
-                Navigation.findNavController(view).navigate(R.id.tagsFragment);
+        public boolean onPreferenceTreeClick(@NonNull Preference preference) {
+            View view = requireView();
+
+            switch (preference.getKey()) {
+                case TAGS_KEY:
+                    Navigation.findNavController(view).navigate(R.id.tagsFragment);
+                    return true;
+                case DEBUG_KEY:
+                    requireActivity().startActivity(new Intent(requireContext(), DebugActivity.class)
+                            .putExtra("includeBackButton", true));
+                    return true;
             }
 
             return super.onPreferenceTreeClick(preference);

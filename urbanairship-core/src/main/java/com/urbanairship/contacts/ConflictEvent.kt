@@ -25,10 +25,11 @@ public class ConflictEvent(
      * Contact subscription lists.
      */
     public val subscriptionLists: Map<String, Set<Scope>> = emptyMap(),
+
     /**
      * A list of associated contacts.
      */
-    public val associatedChannels: List<AssociatedChannel> = emptyList(),
+    public val associatedChannels: List<ChannelInfo> = emptyList(),
 
     /**
      * The named user ID if the conflict was caused by an identify operation
@@ -56,5 +57,39 @@ public class ConflictEvent(
 
     override fun toString(): String {
         return "ConflictEvent(tagGroups=$tagGroups, attributes=$attributes, subscriptionLists=$subscriptionLists, associatedChannels=$associatedChannels, conflictingNameUserId=$conflictingNameUserId)"
+    }
+
+    /**
+     * Channel Info.
+     */
+    public class ChannelInfo(
+        /**
+         * The channel ID.
+         *
+         * @return The channel ID.
+         */
+        public val channelId: String,
+
+        /**
+         * The channel type.
+         *
+         * @return The channel type.
+         */
+        public val channelType: ChannelType
+    ) {
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as ChannelInfo
+
+            if (channelId != other.channelId) return false
+            if (channelType != other.channelType) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int = ObjectsCompat.hash(channelId, channelType)
     }
 }

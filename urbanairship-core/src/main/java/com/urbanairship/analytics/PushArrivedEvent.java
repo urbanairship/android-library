@@ -24,8 +24,6 @@ import androidx.core.app.NotificationManagerCompat;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PushArrivedEvent extends Event {
 
-    @NonNull
-    static final String TYPE = "push_arrived";
 
     /**
      * Default send ID assigned when absent from the push payload.
@@ -127,8 +125,8 @@ public class PushArrivedEvent extends Event {
 
     @NonNull
     @Override
-    public final String getType() {
-        return TYPE;
+    public EventType getType() {
+        return EventType.PUSH_ARRIVED;
     }
 
     /**

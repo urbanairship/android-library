@@ -24,7 +24,7 @@ public class InAppFormDisplayEventTest {
             }
         """.trimIndent()
 
-        assertEquals("in_app_form_display", event.name)
+        assertEquals("in_app_form_display", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

@@ -1,7 +1,5 @@
 package com.urbanairship.automation
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.automation.engine.AutomationDelayProcessor
@@ -18,12 +16,13 @@ import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProc
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.storage.AutomationStoreMigrator
+import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
+import com.urbanairship.util.TaskSleeper
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
-import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
-import com.urbanairship.automation.utils.TaskSleeper
 import com.urbanairship.json.JsonValue
+import java.util.UUID
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
@@ -51,7 +50,6 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class AutomationEngineTest {
-    private val context: Context = ApplicationProvider.getApplicationContext()
     private val clock = TestClock()
 
     private val testDispatcher = StandardTestDispatcher()
@@ -72,10 +70,11 @@ public class AutomationEngineTest {
 
     private val scheduleData: AutomationScheduleData
         get() = AutomationScheduleData(
-        schedule = schedule,
-        scheduleState = AutomationScheduleState.IDLE,
-        scheduleStateChangeDate = clock.currentTimeMillis,
-        executionCount = 0
+            schedule = schedule,
+            scheduleState = AutomationScheduleState.IDLE,
+            scheduleStateChangeDate = clock.currentTimeMillis,
+            executionCount = 0,
+            triggerSessionId = UUID.randomUUID().toString()
     )
 
     private val triggerProcessor: AutomationTriggerProcessor = mockk(relaxed = true)
@@ -96,7 +95,6 @@ public class AutomationEngineTest {
     private val delayProcessor: AutomationDelayProcessor = mockk(relaxed = true)
 
     private val engine: AutomationEngine = AutomationEngine(
-        context = context,
         store = store,
         executor = executor,
         preparer = preparer,
@@ -164,7 +162,7 @@ public class AutomationEngineTest {
 
     @Test
     public fun testStartCollectsEventFeed(): TestResult = runTest {
-        val event = AutomationEvent.AppInit
+        val event = AutomationEvent.Event(EventAutomationTriggerType.APP_INIT)
         every { eventsFeed.feed }.answers{ flowOf(event) }
         coEvery { store.getSchedules() } answers { listOf(scheduleData) }
 

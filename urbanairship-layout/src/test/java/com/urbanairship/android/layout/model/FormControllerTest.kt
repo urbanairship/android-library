@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.model
 
 import app.cash.turbine.test
 import app.cash.turbine.testIn
-import com.urbanairship.android.layout.environment.ActionsRunner
 import com.urbanairship.android.layout.environment.AttributeHandler
 import com.urbanairship.android.layout.environment.FormType
 import com.urbanairship.android.layout.environment.LayoutEvent
@@ -13,6 +12,7 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.inputData
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.property.FormBehaviorType
@@ -51,7 +51,7 @@ public class FormControllerTest {
     private val testScope = TestScope(testDispatcher)
 
     private val mockReporter: Reporter = mockk(relaxUnitFun = true)
-    private val mockActionsRunner: ActionsRunner = mockk()
+    private val mockActionsRunner: ThomasActionRunner = mockk()
     private val mockAttributeHandler: AttributeHandler = mockk {
         every { update(any()) } returns Unit
     }

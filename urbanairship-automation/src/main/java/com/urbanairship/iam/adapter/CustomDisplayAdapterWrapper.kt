@@ -4,11 +4,11 @@ package com.urbanairship.iam.adapter
 
 import android.content.Context
 import com.urbanairship.app.GlobalActivityMonitor
+import com.urbanairship.automation.utils.ActiveTimer
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.info.InAppMessageButtonInfo
-import com.urbanairship.automation.utils.ActiveTimer
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +32,6 @@ internal class CustomDisplayAdapterWrapper (
 
     override suspend fun display(context: Context, analytics: InAppMessageAnalyticsInterface): DisplayResult {
         analytics.recordEvent(InAppDisplayEvent(), layoutContext = null)
-        analytics.recordImpression()
 
         val timer = ActiveTimer(GlobalActivityMonitor.shared(context))
         timer.start()

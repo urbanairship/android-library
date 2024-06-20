@@ -27,7 +27,7 @@ public class EventTest extends BaseTestCase {
     public void testCreateEventPayload() throws JsonException {
         JsonMap body = JsonValue.parseString(event.createEventPayload("session id")).optMap();
 
-        assertEquals(body.get(Event.TYPE_KEY).getString(), event.getType());
+        assertEquals(body.get(Event.TYPE_KEY).getString(), event.getType().getReportingName());
         assertEquals(body.get(Event.EVENT_ID_KEY).getString(), event.getEventId());
         assertEquals(body.get(Event.TIME_KEY).getString(), event.getTime());
         assertEquals(body.get(Event.DATA_KEY).optMap().get(Event.SESSION_ID_KEY).getString(), "session id");
@@ -41,8 +41,8 @@ public class EventTest extends BaseTestCase {
 
         @NonNull
         @Override
-        public String getType() {
-            return "basic";
+        public EventType getType() {
+            return EventType.APP_FOREGROUND;
         }
 
         @NonNull

@@ -3,15 +3,16 @@
 package com.urbanairship.automation.engine
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.experiment.ExperimentResult
+import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
+import java.util.UUID
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -36,8 +37,11 @@ public data class PreparedScheduleInfo(
     internal val campaigns: JsonValue? = null,
     internal val contactId: String? = null,
     internal val experimentResult: ExperimentResult? = null,
-    internal val reportingContext: JsonValue? = null
+    internal val reportingContext: JsonValue? = null,
+    internal val triggerSessionId: String,
+    internal val additionalAudienceCheckResult: Boolean = true
 ) : JsonSerializable {
+
     internal companion object {
         private const val SCHEDULE_ID = "schedule_id"
         private const val PRODUCT_ID = "product_id"
@@ -45,6 +49,8 @@ public data class PreparedScheduleInfo(
         private const val CONTACT_ID = "contact_id"
         private const val EXPERIMENT_RESULT = "experiment_result"
         private const val REPORTING_CONTEXT = "reporting_context"
+        private const val TRIGGER_SESSION_ID = "trigger_session_id"
+        private const val ADDITIONAL_AUDIENCE_CHECK_RESULT = "additional_audience_check_result"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): PreparedScheduleInfo {
@@ -55,7 +61,10 @@ public data class PreparedScheduleInfo(
                 campaigns = content.get(CAMPAIGNS),
                 contactId = content.optionalField(CONTACT_ID),
                 experimentResult = content.get(EXPERIMENT_RESULT)?.let { ExperimentResult.fromJson(it.requireMap()) },
-                reportingContext = content.get(REPORTING_CONTEXT)
+                reportingContext = content.get(REPORTING_CONTEXT),
+                // Default to a UUID for backwards compatibility
+                triggerSessionId = content.optionalField(TRIGGER_SESSION_ID) ?: UUID.randomUUID().toString(),
+                additionalAudienceCheckResult = content.requireField(ADDITIONAL_AUDIENCE_CHECK_RESULT)
             )
         }
     }
@@ -66,6 +75,8 @@ public data class PreparedScheduleInfo(
         CAMPAIGNS to campaigns,
         CONTACT_ID to contactId,
         EXPERIMENT_RESULT to experimentResult,
-        REPORTING_CONTEXT to reportingContext
+        REPORTING_CONTEXT to reportingContext,
+        TRIGGER_SESSION_ID to triggerSessionId,
+        ADDITIONAL_AUDIENCE_CHECK_RESULT to additionalAudienceCheckResult
     ).toJsonValue()
 }

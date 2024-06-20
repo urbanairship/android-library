@@ -2,7 +2,6 @@
 
 package com.urbanairship.automation.engine
 
-import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
@@ -13,7 +12,7 @@ import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.updateOrCreate
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
-import com.urbanairship.automation.utils.TaskSleeper
+import com.urbanairship.util.TaskSleeper
 import com.urbanairship.util.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
@@ -48,7 +47,6 @@ internal interface AutomationEngineInterface {
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class AutomationEngine(
-    private val context: Context,
     private val store: ScheduleStoreInterface,
     private val executor: AutomationExecutorInterface,
     private val preparer: AutomationPreparer,
@@ -266,7 +264,7 @@ internal class AutomationEngine(
                     data?.let { preparer.cancelled(it.schedule) }
                 }
                 TriggerExecutionType.EXECUTION -> {
-                    updateState(result.scheduleId) { it.triggered(result.triggerInfo.context, date)}
+                    updateState(result.scheduleId) { it.triggered(result.triggerInfo, date)}
                     startTaskToProcessTriggeredSchedule(result.scheduleId)
                 }
             }
@@ -328,19 +326,19 @@ internal class AutomationEngine(
         }
     }
 
-    private suspend fun startTaskToProcessTriggeredSchedule(scheduleID: String) {
+    private suspend fun startTaskToProcessTriggeredSchedule(scheduleId: String) {
         scope.launch {
-            UALog.v { "Processing triggered schedule $scheduleID" }
-            processTriggeredSchedule(scheduleID)
+            UALog.v { "Processing triggered schedule $scheduleId" }
+            processTriggeredSchedule(scheduleId)
         }
         // Give the task above a chance to run
         yield()
     }
 
-    private suspend fun processTriggeredSchedule(scheduleID: String) {
-        val data = store.getSchedule(scheduleID)
+    private suspend fun processTriggeredSchedule(scheduleId: String) {
+        val data = store.getSchedule(scheduleId)
         if (data == null) {
-            UALog.v { "Aborting processing schedule $scheduleID, no longer in database." }
+            UALog.v { "Aborting processing schedule $scheduleId, no longer in database." }
             return
         }
 
@@ -362,7 +360,7 @@ internal class AutomationEngine(
     private suspend fun prepareSchedule(data: AutomationScheduleData): Pair<AutomationScheduleData, PreparedSchedule>? {
         UALog.v { "Preparing schedule $data" }
 
-        val result = preparer.prepare(context, data.schedule, data.triggerInfo?.context)
+        val result = preparer.prepare(data.schedule, data.triggerInfo?.context, data.triggerSessionId)
         UALog.v { "Preparing schedule $data result: $result" }
 
         val updated = updateState(data.schedule.identifier) {

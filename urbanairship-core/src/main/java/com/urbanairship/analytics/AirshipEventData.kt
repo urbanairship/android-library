@@ -1,3 +1,5 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.analytics
 
 import com.urbanairship.json.JsonValue
@@ -24,7 +26,7 @@ public class AirshipEventData(
     /**
      * Event type
      */
-    public val type: String,
+    public val type: EventType,
 
     /**
      * Time in milliseconds.

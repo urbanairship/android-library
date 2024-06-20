@@ -57,7 +57,7 @@ public class RemoteDataRefreshManagerTest {
 
     @Test
     public fun testRefresh(): TestResult = runTest {
-        every { mockPrivacyManager.isAnyFeatureEnabled } returns true
+        every { mockPrivacyManager.isAnyFeatureEnabled(any()) } returns true
         coEvery { mockAppRemoteDataProvider.refresh(any(), any(), any()) } returns RemoteDataProvider.RefreshResult.NEW_DATA
         coEvery { mockContactRemoteDataProvider.refresh(any(), any(), any()) } returns RemoteDataProvider.RefreshResult.SKIPPED
 
@@ -85,7 +85,7 @@ public class RemoteDataRefreshManagerTest {
 
     @Test
     public fun testRefreshFailed(): TestResult = runTest {
-        every { mockPrivacyManager.isAnyFeatureEnabled } returns true
+        every { mockPrivacyManager.isAnyFeatureEnabled(any()) } returns true
         coEvery { mockAppRemoteDataProvider.refresh(any(), any(), any()) } returns RemoteDataProvider.RefreshResult.FAILED
         coEvery { mockContactRemoteDataProvider.refresh(any(), any(), any()) } returns RemoteDataProvider.RefreshResult.SKIPPED
 
@@ -113,7 +113,7 @@ public class RemoteDataRefreshManagerTest {
 
     @Test
     public fun testRefreshPrivacyManagerNotEnabled(): TestResult = runTest {
-        every { mockPrivacyManager.isAnyFeatureEnabled } returns false
+        every { mockPrivacyManager.isAnyFeatureEnabled(any()) } returns false
 
         remoteDataRefreshManager.refreshFlow.test {
             val jobResult = remoteDataRefreshManager.performRefresh(

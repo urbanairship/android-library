@@ -6,8 +6,8 @@ import androidx.annotation.MainThread
 import com.urbanairship.UALog
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.isInAppMessageType
-import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
+import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.json.JsonValue
 
 internal enum class ScheduleReadyResult {

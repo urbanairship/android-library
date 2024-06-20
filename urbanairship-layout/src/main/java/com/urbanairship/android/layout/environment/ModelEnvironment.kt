@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 internal class ModelEnvironment(
     val layoutState: LayoutState,
     val reporter: Reporter,
-    val actionsRunner: ActionsRunner,
+    val actionsRunner: ThomasActionRunner,
     val displayTimer: DisplayTimer,
     val modelScope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob()),
     val attributeHandler: AttributeHandler = AttributeHandler(),

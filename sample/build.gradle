@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
@@ -22,6 +23,11 @@ android {
     buildFeatures {
         dataBinding = true
         buildConfig = true
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     buildTypes {
@@ -48,6 +54,12 @@ android {
 }
 
 dependencies {
+    // Kotlin
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
+
+    // Jetpack
     implementation(libs.androidx.appcompat)
     implementation(libs.google.material)
     implementation(libs.androidx.preference)
@@ -58,6 +70,9 @@ dependencies {
     implementation(libs.androidx.navigation.ui)
     implementation(libs.playservices.instantapps)
     implementation(libs.playservices.location)
+
+    // Jetpack Glance
+    implementation(libs.glance.appwidget)
 
     // Airship ADM
     implementation project(':urbanairship-adm')
@@ -74,6 +89,9 @@ dependencies {
     // Airship Message Center
     implementation project(':urbanairship-message-center')
 
+    // Airship Preference Center
+    implementation project(':urbanairship-preference-center')
+
     // Airship Automation (In-App)
     implementation project(':urbanairship-automation')
 
@@ -86,7 +104,7 @@ dependencies {
     // Airship Debug: Normally this is a debug only dependency but we embed the view in sample app
     implementation project(':urbanairship-debug-ng')
 
-    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    implementation libs.glide
 
     // Testing-only dependencies
 

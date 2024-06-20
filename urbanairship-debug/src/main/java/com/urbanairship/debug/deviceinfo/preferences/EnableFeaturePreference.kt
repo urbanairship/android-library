@@ -20,13 +20,14 @@ class EnableFeaturePreference : SwitchPreference {
 
     val feature by lazy {
         when (key) {
-            AirshipConfigOptions.FEATURE_ALL -> PrivacyManager.FEATURE_ALL
-            AirshipConfigOptions.FEATURE_ANALYTICS -> PrivacyManager.FEATURE_ANALYTICS
-            AirshipConfigOptions.FEATURE_CONTACTS -> PrivacyManager.FEATURE_CONTACTS
-            AirshipConfigOptions.FEATURE_IN_APP_AUTOMATION -> PrivacyManager.FEATURE_IN_APP_AUTOMATION
-            AirshipConfigOptions.FEATURE_MESSAGE_CENTER -> PrivacyManager.FEATURE_MESSAGE_CENTER
-            AirshipConfigOptions.FEATURE_PUSH -> PrivacyManager.FEATURE_PUSH
-            AirshipConfigOptions.FEATURE_TAGS_AND_ATTRIBUTES -> PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES
+            AirshipConfigOptions.FEATURE_ALL -> PrivacyManager.Feature.ALL
+            AirshipConfigOptions.FEATURE_ANALYTICS -> PrivacyManager.Feature.ANALYTICS
+            AirshipConfigOptions.FEATURE_CONTACTS -> PrivacyManager.Feature.CONTACTS
+            AirshipConfigOptions.FEATURE_IN_APP_AUTOMATION -> PrivacyManager.Feature.IN_APP_AUTOMATION
+            AirshipConfigOptions.FEATURE_MESSAGE_CENTER -> PrivacyManager.Feature.MESSAGE_CENTER
+            AirshipConfigOptions.FEATURE_PUSH -> PrivacyManager.Feature.PUSH
+            AirshipConfigOptions.FEATURE_TAGS_AND_ATTRIBUTES -> PrivacyManager.Feature.TAGS_AND_ATTRIBUTES
+            AirshipConfigOptions.FEATURE_FEATURE_FLAGS -> PrivacyManager.Feature.FEATURE_FLAGS
             else -> throw IllegalArgumentException("Invalid tag: $key")
         }
     }

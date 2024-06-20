@@ -16,7 +16,6 @@ import androidx.annotation.RestrictTo;
  */
 class AssociateIdentifiersEvent extends Event {
 
-    private static final String TYPE = "associate_identifiers";
 
     @NonNull
     private final Map<String, String> ids;
@@ -27,8 +26,8 @@ class AssociateIdentifiersEvent extends Event {
 
     @NonNull
     @Override
-    public String getType() {
-        return TYPE;
+    public EventType getType() {
+        return EventType.ASSOCIATE_IDENTIFIERS;
     }
 
     @Override

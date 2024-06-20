@@ -142,7 +142,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testDisplayNotification() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -172,7 +171,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void test() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -197,7 +195,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testInvalidPushProvider() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -219,7 +216,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testUserNotificationsDisabled() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(false);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -234,7 +230,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testNotForegroundDisplayable() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -266,7 +261,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testForegroundDisplayable() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -295,7 +289,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
     @Test
     public void testForegroundDisplayPredicate() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -332,7 +325,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testBackgroundPush() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -347,7 +339,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testNotificationProviderException() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -371,7 +362,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     public void testNotificationProviderSuccess() {
         notificationProvider.notification = createNotification();
 
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -387,7 +377,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testNotificationProviderResultCancel() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -411,7 +400,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testNotificationFactoryResultRetry() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -435,7 +423,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testNotificationFactoryResultOK() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -453,7 +440,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testNotificationContentIntent() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -483,7 +469,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testNotificationDeleteIntent() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -511,7 +496,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
     @Test
     @Config(sdk = 25)
     public void testDeliverPushPreOreo() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -541,7 +525,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
      */
     @Test
     public void testRemoteDataMessage() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
@@ -573,7 +556,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
     @Test
     public void testNullNotificationChannel() {
-        when(pushManager.isComponentEnabled()).thenReturn(true);
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);

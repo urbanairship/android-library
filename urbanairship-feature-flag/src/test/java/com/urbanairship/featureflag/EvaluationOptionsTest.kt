@@ -6,17 +6,17 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class EvaluationOptionsTest {
+public class EvaluationOptionsTest {
 
     @Test
-    fun testParse() {
+    public fun testParse() {
         val json = jsonMapOf(
             "disallow_stale_value" to true,
             "ttl" to 1800000
         )
 
         val fromJson = EvaluationOptions.fromJson(json)
-        assert(fromJson?.disallowStaleValues == true)
-        assert(fromJson?.ttl == 1800000.toULong())
+        assert(fromJson.disallowStaleValues == true)
+        assert(fromJson.ttl == 1800000.toULong())
     }
 }

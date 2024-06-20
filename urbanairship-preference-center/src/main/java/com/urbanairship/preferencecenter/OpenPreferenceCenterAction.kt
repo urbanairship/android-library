@@ -9,7 +9,7 @@ import java.util.concurrent.Callable
 /**
  * Opens a Preference Center.
  */
-class OpenPreferenceCenterAction(
+public class OpenPreferenceCenterAction(
     private val preferenceCenterCallable: Callable<PreferenceCenter> = AirshipComponentUtils.callableForComponent(PreferenceCenter::class.java)
 ) : Action() {
 

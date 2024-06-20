@@ -1,15 +1,17 @@
 package com.urbanairship.iam.adapter
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestClock
 import com.urbanairship.android.layout.event.ReportingEvent.FormResult
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
+import com.urbanairship.automation.utils.ManualActiveTimer
+import com.urbanairship.iam.adapter.layout.LayoutListener
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.analytics.events.InAppButtonTapEvent
+import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppEvent
 import com.urbanairship.iam.analytics.events.InAppFormDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppFormResultEvent
@@ -21,17 +23,12 @@ import com.urbanairship.iam.analytics.events.InAppPagerSummaryEvent
 import com.urbanairship.iam.analytics.events.InAppPermissionResultEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.analytics.events.PageViewSummary
-import com.urbanairship.iam.adapter.layout.LayoutListener
-import com.urbanairship.automation.utils.ActiveTimer
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
-import io.mockk.coEvery
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
@@ -44,12 +41,10 @@ import org.junit.runner.RunWith
 public class LayoutAdapterListenerTest {
     private val analytics: InAppMessageAnalyticsInterface = mockk()
     private var recordedEvents = mutableListOf<Pair<InAppEvent, LayoutData?>>()
-    private val activityMonitor = TestActivityMonitor()
     private val clock = TestClock()
-    private val timer = ActiveTimer(activityMonitor, clock)
+    private val timer = ManualActiveTimer(clock)
     private var displayResult: DisplayResult? = null
-    private val displayListener = InAppMessageDisplayListener(analytics, timer, { displayResult = it })
-    private val listener = LayoutListener(displayListener)
+    private val listener = LayoutListener(analytics, timer) { displayResult = it }
     private val defaultLayoutData = LayoutData(null, null, "button")
 
     @Before
@@ -57,8 +52,6 @@ public class LayoutAdapterListenerTest {
         every { analytics.recordEvent(any(), any()) } answers {
             recordedEvents.add(Pair(firstArg(), secondArg()))
         }
-
-        coEvery { analytics.recordImpression() } just runs
     }
 
     @Test
@@ -279,30 +272,6 @@ public class LayoutAdapterListenerTest {
         assertNull(displayResult)
     }
 
-    @Test
-    public fun testPromptPermissionResult() {
-        timer.start()
-
-        listener.onPromptPermissionResult(
-            permission = Permission.DISPLAY_NOTIFICATIONS,
-            before = PermissionStatus.DENIED,
-            after = PermissionStatus.GRANTED,
-            layoutContext = defaultLayoutData)
-
-        verifyEvents(listOf(
-            Pair(
-                InAppPermissionResultEvent(
-                    permission = Permission.DISPLAY_NOTIFICATIONS,
-                    startingStatus = PermissionStatus.DENIED,
-                    endingStatus = PermissionStatus.GRANTED
-                ),
-                defaultLayoutData
-            )
-        ))
-
-        assertTrue(timer.isStarted)
-        assertNull(displayResult)
-    }
 
     @Test
     public fun testDismissPagerSummary() {
@@ -339,6 +308,65 @@ public class LayoutAdapterListenerTest {
         assertEquals(displayResult, DisplayResult.FINISHED)
     }
 
+    @Test
+    public fun testVisibilityChanged() {
+        timer.start()
+
+        listener.onVisibilityChanged(isVisible = true, isForegrounded = true)
+        verifyEvents(listOf(
+            Pair(InAppDisplayEvent(), null)
+        ))
+        assertTrue(timer.isStarted)
+
+        listener.onVisibilityChanged(isVisible = false, isForegrounded = true)
+        verifyEvents(listOf(
+            Pair(InAppDisplayEvent(), null)
+        ))
+        assertFalse(timer.isStarted)
+
+        listener.onVisibilityChanged(isVisible = false, isForegrounded = false)
+        verifyEvents(listOf(
+            Pair(InAppDisplayEvent(), null)
+        ))
+        assertFalse(timer.isStarted)
+
+        listener.onVisibilityChanged(isVisible = true, isForegrounded = false)
+        verifyEvents(listOf(
+            Pair(InAppDisplayEvent(), null)
+        ))
+        assertFalse(timer.isStarted)
+
+        listener.onVisibilityChanged(isVisible = true, isForegrounded = true)
+        verifyEvents(listOf(
+            Pair(InAppDisplayEvent(), null),
+            Pair(InAppDisplayEvent(), null)
+        ))
+        assertTrue(timer.isStarted)
+
+        assertNull(displayResult)
+    }
+
+    @Test
+    public fun testTimedOut() {
+        clock.currentTimeMillis = 0
+        timer.start()
+        clock.currentTimeMillis = 10
+
+        listener.onTimedOut(
+            state = defaultLayoutData
+        )
+
+        verifyEvents(listOf(
+            Pair(
+                InAppResolutionEvent.timedOut(10),
+                defaultLayoutData
+            )
+        ))
+
+        assertFalse(timer.isStarted)
+        assertEquals(displayResult, DisplayResult.FINISHED)
+    }
+
     private fun makePagerInfo(identifier: String, page: Int): PagerData {
         return PagerData(identifier, page, "page-$page", 100, false)
     }
@@ -348,7 +376,7 @@ public class LayoutAdapterListenerTest {
 
         expected.forEachIndexed { index, event ->
             val recorded = recordedEvents[index]
-            assertEquals(event.first.name, recorded.first.name)
+            assertEquals(event.first.eventType, recorded.first.eventType)
             assertEquals(event.first.data?.toJsonValue(), recorded.first.data?.toJsonValue())
             assertEquals(event.second, recorded.second)
         }

@@ -11,15 +11,11 @@ import android.widget.RemoteViews;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.NotificationTarget;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.liveupdate.CallbackLiveUpdateNotificationHandler;
 import com.urbanairship.liveupdate.LiveUpdate;
 import com.urbanairship.liveupdate.LiveUpdateEvent;
-import com.urbanairship.liveupdate.LiveUpdateNotificationHandler;
-import com.urbanairship.liveupdate.LiveUpdateResult;
 import com.urbanairship.util.PendingIntentCompat;
 
-import org.jetbrains.annotations.NotNull;
-
-import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 
@@ -27,19 +23,19 @@ import androidx.core.app.NotificationCompat;
  * Sample sports live update handler, with support for loading team images via Glide, in the
  * optional onNotificationPosted callback.
  */
-public class SampleLiveUpdate implements LiveUpdateNotificationHandler {
+public class SampleLiveUpdate implements CallbackLiveUpdateNotificationHandler {
 
     @SuppressLint("MissingPermission")
     @Override
-    @NotNull
-    public LiveUpdateResult<NotificationCompat.Builder> onUpdate(@NonNull Context context, @NonNull LiveUpdateEvent event, @NonNull LiveUpdate update) {
+    public void onUpdate(@NonNull Context context, @NonNull LiveUpdateEvent event, @NonNull LiveUpdate update, @NonNull LiveUpdateResultCallback resultCallback) {
 
         Log.d("SampleLiveUpdate", "onUpdate: action=" + event + ", update=" + update);
 
         if (event == LiveUpdateEvent.END) {
             // Dismiss the live update on END. The default behavior will leave the Live Update
             // in the notification tray until the dismissal time is reached or the user dismisses it.
-            return LiveUpdateResult.cancel();
+            resultCallback.cancel();
+            return;
         }
 
         JsonMap content = update.getContent();
@@ -85,23 +81,29 @@ public class SampleLiveUpdate implements LiveUpdateNotificationHandler {
                         .setCustomBigContentView(bigLayout)
                         .setContentIntent(contentIntent);
 
-        return LiveUpdateResult.ok(builder)
-                               .extend((notification, notificationId, tag) -> {
-            // Load the team icons
-            loadTeamIcon(context, teamOneImageUrl, R.id.teamOneImage, notification, notificationId, tag);
-            loadTeamIcon(context, teamTwoImageUrl, R.id.teamTwoImage, notification, notificationId, tag);
-        });
-    }
-
-    @SuppressLint("MissingPermission")
-    private void loadTeamIcon(Context context, String iconUrl, @IdRes int viewId, Notification notification, int id, String tag) {
-        if (iconUrl.isEmpty()) {
+        NotificationResult result = resultCallback.ok(builder);
+        if (result == null) {
             return;
         }
 
-        Glide.with(context).asBitmap()
-             .load(iconUrl)
-             .into(new NotificationTarget(
-                     context, viewId, notification.contentView, notification, id, tag));
+        Notification notification = result.getNotification();
+        int id = result.getNotificationId();
+        String tag = result.getNotificationTag();
+
+        if (!teamOneImageUrl.isEmpty()) {
+            Glide.with(context)
+                 .asBitmap()
+                 .load(teamOneImageUrl)
+                 .into(new NotificationTarget(context,
+                         R.id.teamOneImage, notification.contentView, notification, id, tag));
+        }
+
+        if (!teamTwoImageUrl.isEmpty()) {
+            Glide.with(context)
+                 .asBitmap()
+                 .load(teamTwoImageUrl)
+                 .into(new NotificationTarget(context,
+                         R.id.teamTwoImage, notification.contentView, notification, id, tag));
+        }
     }
 }

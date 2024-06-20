@@ -27,18 +27,24 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.lifecycleScope
 import com.urbanairship.UALog
+import com.urbanairship.actions.Action
+import com.urbanairship.actions.DefaultActionRunner
+import com.urbanairship.actions.run
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.Thomas
+import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.ConstrainedSize
 import com.urbanairship.android.layout.property.EmbeddedPlacement
+import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.automation.compose.AirshipEmbeddedView
 import com.urbanairship.embedded.AirshipEmbeddedObserver
 import com.urbanairship.embedded.EmbeddedViewManager
+import com.urbanairship.json.JsonValue
 import com.urbanairship.json.emptyJsonMap
 import kotlinx.coroutines.launch
 
@@ -178,12 +184,22 @@ private fun displayLayout(context: Context, fileName: String, embeddedId: String
 
         manager.dismissAll(embeddedId)
 
-        Thomas.prepareDisplay(payload, emptyJsonMap(), manager)
-            .setInAppActivityMonitor(GlobalActivityMonitor.shared(context.applicationContext))
-            .setListener(listener)
-            .display(context)
+        Thomas.prepareDisplay(
+            payload = payload,
+            extras = emptyJsonMap(),
+            activityMonitor = GlobalActivityMonitor.shared(context.applicationContext),
+            listener = listener,
+            actionRunner = object: ThomasActionRunner {
+                override fun run(actions: Map<String, JsonValue>, state: LayoutData) {
+                    DefaultActionRunner.run(actions, Action.SITUATION_AUTOMATION)
+                }
+            },
+            embeddedViewManager = EmbeddedViewManager
+        ).display(context)
+
     } catch (e: Exception) {
         UALog.e(e)
         Toast.makeText(context, "Error trying to display layout", Toast.LENGTH_LONG).show()
     }
+
 }

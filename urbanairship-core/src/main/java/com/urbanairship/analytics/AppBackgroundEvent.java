@@ -10,7 +10,6 @@ import androidx.annotation.RestrictTo;
 
 class AppBackgroundEvent extends Event {
 
-    static final String TYPE = "app_background";
 
     /**
      * Default constructor for AppBackgroundEvent.
@@ -23,8 +22,8 @@ class AppBackgroundEvent extends Event {
 
     @Override
     @NonNull
-    public final String getType() {
-        return TYPE;
+    public final EventType getType() {
+        return EventType.APP_BACKGROUND;
     }
 
     /**

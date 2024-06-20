@@ -127,7 +127,7 @@ public abstract class Event {
                       .put(SESSION_ID_KEY, sessionId)
                       .build();
 
-        object.put(TYPE_KEY, getType())
+        object.put(TYPE_KEY, getType().getReportingName())
               .put(EVENT_ID_KEY, eventId)
               .put(TIME_KEY, time)
               .put(DATA_KEY, data);
@@ -137,11 +137,13 @@ public abstract class Event {
 
     /**
      * The event type.
+     * @hide
      *
      * @return The event type.
      */
     @NonNull
-    public abstract String getType();
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public abstract EventType getType();
 
     /**
      * Create the event data.

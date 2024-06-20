@@ -14,4 +14,5 @@
     <color name="ua_preference_center_subscription_type_chip_stroke">@color/ua_preference_center_divider_color</color>
     <color name="ua_preference_center_subscription_type_chip_check_mark">#FFFFFF</color>
     <color name="ua_preference_center_alert_button_text">#FFFFFF</color>
+    <color name="ua_preference_center_error">#E6193B</color>
 </resources>

@@ -104,6 +104,11 @@ public class RetailEventTemplate {
      */
     private static final String WISHLIST_ID = "wishlist_id";
 
+    /**
+     * The currency property.
+     */
+    private static final String CURRENCY = "currency";
+
     @NonNull
     private final String eventName;
 
@@ -136,6 +141,9 @@ public class RetailEventTemplate {
 
     @Nullable
     private String wishlistId;
+
+    @Nullable
+    private String currency;
 
     private boolean newItem;
     private boolean newItemSet;
@@ -352,6 +360,18 @@ public class RetailEventTemplate {
     }
 
     /**
+     * Set the currency.
+     *
+     * @param currency The currency name.
+     * @return A RetailEventTemplate.
+     */
+    @NonNull
+    public RetailEventTemplate setCurrency(@Nullable String currency) {
+        this.currency = currency;
+        return this;
+    }
+
+    /**
      * Set the brand.
      *
      * @param brand The brand as a string.
@@ -433,6 +453,10 @@ public class RetailEventTemplate {
 
         if (this.wishlistId != null) {
             builder.addProperty(WISHLIST_ID, this.wishlistId);
+        }
+
+        if (this.currency != null) {
+            builder.addProperty(CURRENCY, this.currency);
         }
 
         builder.setTemplateType(RETAIL_EVENT_TEMPLATE);

@@ -1,7 +1,7 @@
 package com.urbanairship.android.layout.playground.embedded
 
 import com.urbanairship.UALog
-import com.urbanairship.android.layout.ThomasListener
+import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
@@ -10,7 +10,7 @@ import com.urbanairship.json.JsonValue
 
 internal class EmbeddedLayoutListener(
     private val layoutName: String
-) : ThomasListener {
+) : ThomasListenerInterface {
 
     override fun onPageView(pagerData: PagerData, state: LayoutData, displayedAt: Long) {
         UALog.d {
@@ -65,10 +65,6 @@ internal class EmbeddedLayoutListener(
         UALog.d { "$layoutName - onFormDisplay(formInfo: $formInfo, state: $state)" }
     }
 
-    override fun onRunActions(actions: Map<String, JsonValue>, state: LayoutData) {
-        UALog.d { "$layoutName - onRunActions(actions: $actions, state: $state)" }
-    }
-
     override fun onPagerGesture(
         gestureId: String,
         reportingMetadata: JsonValue?,
@@ -84,4 +80,13 @@ internal class EmbeddedLayoutListener(
     ) {
         UALog.d { "$layoutName - onPagerAutomatedAction(actionId: $actionId, state: $state)" }
     }
+
+    override fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean) {
+        UALog.d { "$layoutName - onVisibilityChanged(isVisible: $isVisible, isForegrounded: $isForegrounded)" }
+    }
+
+    override fun onTimedOut(state: LayoutData?) {
+        UALog.d { "$layoutName - onTimedOut(layoutContext: $state)" }
+    }
+
 }

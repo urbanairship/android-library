@@ -7,12 +7,12 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.ApplicationMetrics
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
-import com.urbanairship.actions.ActionRunRequestFactory
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.automation.action.ActionAutomationExecutor
 import com.urbanairship.automation.action.ActionAutomationPreparer
+import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolver
 import com.urbanairship.automation.engine.AutomationDelayProcessor
 import com.urbanairship.automation.engine.AutomationEngine
 import com.urbanairship.automation.engine.AutomationEventFeed
@@ -21,15 +21,6 @@ import com.urbanairship.automation.engine.AutomationPreparer
 import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.SerialAccessAutomationStore
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
-import com.urbanairship.iam.InAppMessageAutomationExecutor
-import com.urbanairship.iam.InAppMessageAutomationPreparer
-import com.urbanairship.iam.InAppMessaging
-import com.urbanairship.iam.analytics.InAppEventRecorder
-import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
-import com.urbanairship.iam.assets.AssetCacheManager
-import com.urbanairship.iam.adapter.DisplayAdapterFactory
-import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
-import com.urbanairship.iam.legacy.LegacyInAppMessaging
 import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
@@ -37,12 +28,23 @@ import com.urbanairship.automation.storage.AutomationDatabase
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.utils.NetworkMonitor
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
+import com.urbanairship.cache.AirshipCache
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
-import com.urbanairship.contacts.Contact
 import com.urbanairship.deferred.DeferredResolver
 import com.urbanairship.experiment.ExperimentManager
+import com.urbanairship.iam.InAppMessageAutomationExecutor
+import com.urbanairship.iam.InAppMessageAutomationPreparer
+import com.urbanairship.iam.InAppMessaging
+import com.urbanairship.iam.adapter.DisplayAdapterFactory
+import com.urbanairship.iam.analytics.DefaultInAppDisplayImpressionRuleProvider
+import com.urbanairship.iam.analytics.InAppEventRecorder
+import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
+import com.urbanairship.iam.analytics.MessageDisplayHistoryStore
+import com.urbanairship.iam.assets.AssetCacheManager
+import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
 import com.urbanairship.iam.legacy.LegacyAnalytics
+import com.urbanairship.iam.legacy.LegacyInAppMessaging
 import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.automation.AutomationModuleFactory
@@ -68,13 +70,13 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         remoteData: RemoteData,
         experimentManager: ExperimentManager,
         meteredUsage: AirshipMeteredUsage,
-        contact: Contact,
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
-        metrics: ApplicationMetrics
+        metrics: ApplicationMetrics,
+        cache: AirshipCache
     ): Module {
         val assetManager = AssetCacheManager(context)
-        val eventRecorder = InAppEventRecorder(analytics)
+        val eventRecorder = InAppEventRecorder(analytics, meteredUsage)
         val scheduleConditionNotifier = ScheduleConditionsChangedNotifier()
         val remoteDataAccess = AutomationRemoteDataAccess(context, remoteData)
         val activityMonitor = GlobalActivityMonitor.shared(context)
@@ -82,6 +84,11 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         val frequencyLimits = FrequencyLimitManager(context, runtimeConfig)
         val automationStore = SerialAccessAutomationStore(
             AutomationStore.createDatabase(context, runtimeConfig)
+        )
+        val analyticsFactory = InAppMessageAnalyticsFactory(
+            eventRecorder = eventRecorder,
+            displayHistoryStore = MessageDisplayHistoryStore(automationStore),
+            displayImpressionRuleProvider = DefaultInAppDisplayImpressionRuleProvider()
         )
 
         // Preparation
@@ -93,7 +100,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 context,
                 NetworkMonitor.shared(context),
                 activityMonitor
-            )
+            ),
+            analyticsFactory = analyticsFactory
         )
 
         // Execution
@@ -101,13 +109,11 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         val messageExecutor = InAppMessageAutomationExecutor(
             context = context,
             assetManager = assetManager,
-            analyticsFactory = InAppMessageAnalyticsFactory(eventRecorder, meteredUsage),
-            scheduleConditionsChangedNotifier = scheduleConditionNotifier,
-            actionRunnerFactory = ActionRunRequestFactory()
+            analyticsFactory = analyticsFactory,
+            scheduleConditionsChangedNotifier = scheduleConditionNotifier
         )
 
         val engine = AutomationEngine(
-            context = context,
             store = automationStore,
             executor = AutomationExecutor(
                 actionExecutor = actionExecutor,
@@ -120,7 +126,12 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 deferredResolver = deferredResolver,
                 frequencyLimitManager = frequencyLimits,
                 experiments = experimentManager,
-                remoteDataAccess = remoteDataAccess
+                remoteDataAccess = remoteDataAccess,
+                additionalAudienceResolver = AdditionalAudienceCheckerResolver(
+                    config = runtimeConfig,
+                    cache = cache
+                ),
+                queueConfigSupplier = { runtimeConfig.remoteConfig.iaaConfig?.retryingQueue },
             ),
             scheduleConditionsChangedNotifier = scheduleConditionNotifier,
             eventsFeed = AutomationEventFeed(

@@ -8,13 +8,14 @@ import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.TriggeringInfo
+import com.urbanairship.deferred.DeferredTriggerContext
+import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
-import com.urbanairship.deferred.DeferredTriggerContext
-import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import java.util.UUID
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.fail
@@ -90,7 +91,9 @@ public class AutomationStoreTest {
                 contactId = "some contact",
                 isMatching = true,
                 allEvaluatedExperimentsMetadata = listOf(jsonMapOf("full" to "reporting"))
-            )
+            ),
+            triggerSessionId = "some trigger session id",
+            additionalAudienceCheckResult = true
         )
 
         val date = 1L
@@ -138,7 +141,9 @@ public class AutomationStoreTest {
                     contactId = "some contact",
                     isMatching = true,
                     allEvaluatedExperimentsMetadata = listOf(jsonMapOf("full" to "reporting"))
-                )
+                ),
+                triggerSessionId = "some trigger session id",
+                additionalAudienceCheckResult = true
             )
         )
 
@@ -213,6 +218,30 @@ public class AutomationStoreTest {
         assertEquals(listOf(original["bar"]), store.getSchedules())
     }
 
+    @Test
+    public fun testAssociatedData(): TestResult = runTest {
+        val associatedData = JsonValue.wrap("some data")
+        val schedule = makeSchedule("bar")
+        schedule.associatedData = associatedData
+
+        store.upsertSchedules(listOf("bar")) { _, _ ->
+            schedule
+        }
+
+        assertEquals(associatedData, store.getSchedule("bar")?.associatedData)
+    }
+
+    @Test
+    public fun testAssociatedDataNull(): TestResult = runTest {
+        val schedule = makeSchedule("bar")
+
+        store.upsertSchedules(listOf("bar")) { _, _ ->
+            schedule
+        }
+
+        assertNull(store.getSchedule("bar")?.associatedData)
+    }
+
     private fun makeSchedule(identifier: String, group: String? = null): AutomationScheduleData {
         val schedule = AutomationSchedule(
             identifier = identifier,
@@ -231,7 +260,8 @@ public class AutomationStoreTest {
             schedule = schedule,
             scheduleState = AutomationScheduleState.IDLE,
             scheduleStateChangeDate = 0L,
-            executionCount = 0
+            executionCount = 0,
+            triggerSessionId = UUID.randomUUID().toString()
         )
     }
 }

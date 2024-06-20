@@ -14,7 +14,6 @@ import android.view.ViewTreeObserver
 import android.webkit.WebView
 import android.widget.ImageButton
 import android.widget.ProgressBar
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
@@ -25,6 +24,7 @@ import com.urbanairship.iam.content.HTML
 import com.urbanairship.iam.content.InAppMessageDisplayContent.HTMLContent
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.iam.view.BoundedFrameLayout
+import com.urbanairship.javascript.NativeBridge
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.emptyJsonMap
@@ -78,7 +78,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
 
         val extras = args.extras ?: emptyJsonMap()
 
-        wv.setWebViewClient(object : HtmlWebViewClient(extras) {
+        wv.setWebViewClient(object : HtmlWebViewClient(NativeBridge(args.actionRunner), extras) {
             override fun onMessageDismissed(argument: JsonValue) {
                 reportButtonTap(argument)
                 finish()

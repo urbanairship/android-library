@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.analytics.events
 
+import com.urbanairship.analytics.EventType
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -16,7 +17,7 @@ internal class InAppFormDisplayEvent(
     constructor(info: FormInfo) : this(info.identifier, info.formType, info.formResponseType)
     private val formData = FormDisplayData(identifier, formType, responseType)
 
-    override val name: String = "in_app_form_display"
+    override val eventType: EventType = EventType.IN_APP_FORM_DISPLAY
     override val data: JsonSerializable = formData
 
     private data class FormDisplayData(

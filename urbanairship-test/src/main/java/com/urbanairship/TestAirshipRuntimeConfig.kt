@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.config.RemoteConfigObserver
 import com.urbanairship.http.RequestSession
 import com.urbanairship.http.SuspendingRequestSession
 import com.urbanairship.remoteconfig.RemoteConfig

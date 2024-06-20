@@ -2,14 +2,25 @@
 
 package com.urbanairship.iam.analytics
 
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
+import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.Event
+import com.urbanairship.analytics.EventType
+import com.urbanairship.automation.engine.AutomationEventFeed
+import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppEvent
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.meteredusage.AirshipMeteredUsage
+import com.urbanairship.meteredusage.MeteredUsageEventEntity
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 internal data class InAppEventData(
     val event: InAppEvent,
@@ -21,11 +32,15 @@ internal data class InAppEventData(
 
 internal interface InAppEventRecorderInterface {
     fun recordEvent(event: InAppEventData)
+    fun recordImpressionEvent(event: MeteredUsageEventEntity)
 }
 
 internal class InAppEventRecorder(
-    private val analytics: Analytics
+    private val analytics: Analytics,
+    private val meteredUsage: AirshipMeteredUsage,
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ): InAppEventRecorderInterface {
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     override fun recordEvent(event: InAppEventData) {
         try {
@@ -35,10 +50,15 @@ internal class InAppEventRecorder(
             UALog.e(ex) { "Failed to record event $event" }
         }
     }
+
+    override fun recordImpressionEvent(event: MeteredUsageEventEntity) {
+        scope.launch { meteredUsage.addEvent(event) }
+    }
+
 }
 
 private data class AnalyticsEvent(
-    val name: String,
+    val eventType: EventType,
     val identifier: InAppEventMessageId,
     val source: InAppEventSource,
     val context: InAppEventContext?,
@@ -49,7 +69,7 @@ private data class AnalyticsEvent(
 ) : Event() {
     constructor(eventData: InAppEventData, analytics: Analytics) :
             this(
-                name = eventData.event.name,
+                eventType = eventData.event.eventType,
                 identifier = eventData.messageId,
                 source = eventData.source,
                 context = eventData.context,
@@ -67,7 +87,7 @@ private data class AnalyticsEvent(
         private const val RENDERED_LOCALE = "rendered_locale"
     }
 
-    override fun getType(): String = name
+    override fun getType(): EventType = eventType
 
     override fun getEventData(): JsonMap {
         return JsonMap.newBuilder()

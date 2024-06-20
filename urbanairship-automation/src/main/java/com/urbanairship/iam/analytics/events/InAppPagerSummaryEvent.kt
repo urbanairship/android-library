@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.analytics.events
 
+import com.urbanairship.analytics.EventType
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -19,7 +20,7 @@ internal class InAppPagerSummaryEvent(
         completed = pagerData.isCompleted
     )
 
-    override val name: String = "in_app_pager_summary"
+    override val eventType: EventType = EventType.IN_APP_PAGER_SUMMARY
     override val data: JsonSerializable = reportData
 
     private data class PagerSummaryData(

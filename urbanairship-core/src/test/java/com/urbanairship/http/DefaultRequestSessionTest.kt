@@ -51,10 +51,8 @@ public class DefaultRequestSessionTest {
     private var nonce = "noncesense"
 
     private val requestSession = DefaultRequestSession(
-        appConfig, platform, mockClient, testClock
-    ) {
-        nonce
-    }
+        appConfig, { platform }, mockClient, testClock, { nonce }
+    )
 
     @Test
     public fun testRequest() {

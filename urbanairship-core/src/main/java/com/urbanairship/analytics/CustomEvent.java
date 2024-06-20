@@ -25,11 +25,6 @@ import androidx.annotation.Size;
 public class CustomEvent extends Event implements JsonSerializable {
 
     /**
-     * The event type.
-     */
-    static final String TYPE = "enhanced_custom_event";
-
-    /**
      * The interaction ID key.
      */
     @NonNull
@@ -89,6 +84,9 @@ public class CustomEvent extends Event implements JsonSerializable {
     @NonNull
     public static final String TEMPLATE_TYPE = "template_type";
 
+    @NonNull
+    private static final String IN_APP_KEY = "in_app";
+
     /**
      * The custom properties key.
      */
@@ -139,6 +137,9 @@ public class CustomEvent extends Event implements JsonSerializable {
     @NonNull
     private final JsonMap properties;
 
+    @Nullable
+    private final JsonValue inAppContext;
+
     private CustomEvent(@NonNull Builder builder) {
         this.eventName = builder.eventName;
         this.eventValue = builder.value;
@@ -148,6 +149,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         this.sendId = builder.pushSendId;
         this.templateType = builder.templateType;
         this.properties = new JsonMap(builder.properties);
+        this.inAppContext = builder.inAppContext;
     }
 
     /**
@@ -223,8 +225,8 @@ public class CustomEvent extends Event implements JsonSerializable {
 
     @NonNull
     @Override
-    public final String getType() {
-        return TYPE;
+    public EventType getType() {
+        return EventType.CUSTOM_EVENT;
     }
 
     /**
@@ -244,6 +246,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         data.put(INTERACTION_TYPE, interactionType);
         data.put(TRANSACTION_ID, transactionId);
         data.put(TEMPLATE_TYPE, templateType);
+        data.put(IN_APP_KEY, inAppContext);
 
         if (eventValue != null) {
             data.put(EVENT_VALUE, eventValue.movePointRight(6).longValue());
@@ -261,7 +264,7 @@ public class CustomEvent extends Event implements JsonSerializable {
             data.put(LAST_RECEIVED_METADATA, UAirship.shared().getPushManager().getLastReceivedMetadata());
         }
 
-        if (properties.getMap().size() > 0) {
+        if (!properties.getMap().isEmpty()) {
             data.put(PROPERTIES, properties);
         }
 
@@ -276,6 +279,7 @@ public class CustomEvent extends Event implements JsonSerializable {
                                       .put(INTERACTION_ID, interactionId)
                                       .put(INTERACTION_TYPE, interactionType)
                                       .put(TRANSACTION_ID, transactionId)
+                                      .put(IN_APP_KEY, inAppContext)
                                       .put(PROPERTIES, JsonValue.wrapOpt(properties));
 
         if (eventValue != null) {
@@ -372,6 +376,9 @@ public class CustomEvent extends Event implements JsonSerializable {
 
         @NonNull
         private Map<String, JsonValue> properties = new HashMap<>();
+
+        @Nullable
+        private JsonValue inAppContext;
 
         /**
          * Creates a new custom event builder
@@ -647,6 +654,16 @@ public class CustomEvent extends Event implements JsonSerializable {
         @NonNull
         public Builder addProperty(@NonNull @Size(min = 1) String name, boolean value) {
             properties.put(name, JsonValue.wrap(value));
+            return this;
+        }
+
+        /**
+         * @hide
+         */
+        @NonNull
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public Builder setInAppContext(@Nullable JsonValue value) {
+            inAppContext = value;
             return this;
         }
 

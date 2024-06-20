@@ -4,7 +4,9 @@ package com.urbanairship.actions;
 
 import com.urbanairship.UALog;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.util.Checks;
 
@@ -41,6 +43,10 @@ public class AddCustomEventAction extends Action {
     @NonNull
     public static final String DEFAULT_REGISTRY_NAME = "add_custom_event_action";
 
+
+    public static final String IN_APP_CONTEXT_METADATA_KEY = "in_app_metadata";
+
+
     @NonNull
     @Override
     public ActionResult perform(@NonNull ActionArguments arguments) {
@@ -67,6 +73,15 @@ public class AddCustomEventAction extends Action {
             eventBuilder.setEventValue(eventStringValue);
         } else {
             eventBuilder.setEventValue(eventDoubleValue);
+        }
+
+        String inApp = arguments.getMetadata().getString(IN_APP_CONTEXT_METADATA_KEY);
+        if (inApp != null) {
+            try {
+                eventBuilder.setInAppContext(JsonValue.parseString(inApp));
+            } catch (Exception e) {
+                UALog.w("Failed to parse in-app context for custom event", e);
+            }
         }
 
         // Try to fill in the interaction if its not set

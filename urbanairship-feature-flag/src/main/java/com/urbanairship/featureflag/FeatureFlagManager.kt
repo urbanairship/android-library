@@ -9,6 +9,8 @@ import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.PrivacyManager
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.audience.AudienceSelector
@@ -16,6 +18,7 @@ import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.json.JsonMap
 import com.urbanairship.remotedata.RemoteData
+import java.lang.IllegalStateException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
@@ -24,8 +27,7 @@ import kotlinx.coroutines.launch
  * Airship Feature Flags manager.
  */
 @OpenForTesting
-public class FeatureFlagManager
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal constructor(
+public class FeatureFlagManager internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     private val audienceEvaluator: AudienceEvaluator,
@@ -34,10 +36,11 @@ public class FeatureFlagManager
         DeviceInfoProvider.newCachingProvider()
     },
     private val deferredResolver: FlagDeferredResolver,
-    private val featureFlagAnalytics: FeatureFlagAnalytics
+    private val featureFlagAnalytics: FeatureFlagAnalytics,
+    private val privacyManager: PrivacyManager
 ) : AirshipComponent(context, dataStore) {
 
-    companion object {
+    public companion object {
 
         /**
          * Gets the shared `FeatureFlagManager` instance.
@@ -45,7 +48,7 @@ public class FeatureFlagManager
          * @return an instance of `FeatureFlagManager`.
          */
         @JvmStatic
-        fun shared(): FeatureFlagManager =
+        public fun shared(): FeatureFlagManager =
             UAirship.shared().requireComponent(FeatureFlagManager::class.java)
     }
 
@@ -62,11 +65,13 @@ public class FeatureFlagManager
     }
 
     /**
-     * Gets and evaluates a feature flag and returns it as a PendingResult.
+     * Gets and evaluates a feature flag and returns it as a PendingResult. The [PrivacyManager.Feature.FEATURE_FLAGS]
+     * must be enabled or this method will return null.
+     *
      * @param name The flag name
      * @return an instance of `PendingResult<FeatureFlag>`.
      */
-    fun flagAsPendingResult(name: String): PendingResult<FeatureFlag> {
+    public fun flagAsPendingResult(name: String): PendingResult<FeatureFlag> {
         val result = PendingResult<FeatureFlag>()
         pendingResultScope.launch {
             result.result = flag(name).getOrNull()
@@ -75,17 +80,18 @@ public class FeatureFlagManager
     }
 
     /**
-     * Gets and evaluates  a feature flag
+     * Gets and evaluates a feature flag. The [PrivacyManager.Feature.FEATURE_FLAGS]
+     * must be enabled or this method will return an error.
      * @param name The flag name
      * @return an instance of `Result<FeatureFlag>`.
      */
-    suspend fun flag(name: String): Result<FeatureFlag> {
+    public suspend fun flag(name: String): Result<FeatureFlag> {
         return flag(name = name, allowRefresh = true)
     }
 
     private suspend fun flag(name: String, allowRefresh: Boolean): Result<FeatureFlag> {
-        if (!isComponentEnabled) {
-            return Result.failure(FeatureFlagException.FailedToFetch())
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS)) {
+            return Result.failure(IllegalStateException("Feature flags are disabled"))
         }
 
         val remoteDataInfo = remoteData.fetchFlagRemoteInfo(name)
@@ -142,7 +148,15 @@ public class FeatureFlagManager
         }
     }
 
-    fun trackInteraction(flag: FeatureFlag) {
+    /**
+     * Tracks an interaction on a [FeatureFlag]. The [PrivacyManager.Feature.FEATURE_FLAGS]
+     * must be enabled or this method will no-op.
+     */
+    public fun trackInteraction(flag: FeatureFlag) {
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS)) {
+            UALog.w { "Feature flags are disabled, unable to track interaction" }
+            return
+        }
         featureFlagAnalytics.trackInteraction(flag)
     }
 
@@ -156,68 +170,65 @@ public class FeatureFlagManager
 
         val flags = remoteDataInfo.flagInfoList
 
-        if (flags.isEmpty()) {
-            return Result.success(
-                FeatureFlag.createMissingFlag(name)
-            )
-        }
+        val deviceInfoProvider = infoProviderFactory()
 
-        val deviceInfo = infoProviderFactory()
+        for ((index, info) in flags.withIndex()) {
+            val isLocallyEligible = audienceEvaluator.evaluateOptional(info.audience, info.created, deviceInfoProvider)
+            val isLast = index == flags.lastIndex
 
-        for (info in flags) {
-            if (!audienceEvaluator.evaluateOptional(info.audience, info.created, deviceInfo)) {
+            if (!isLocallyEligible && !isLast) {
                 continue
             }
 
-            return when (val payload = info.payload) {
+            val result = when (val payload = info.payload) {
                 is FeatureFlagPayload.StaticPayload -> {
-                    resolveStatic(info, true, payload, deviceInfo)
+                    resolveStatic(
+                        flagInfo = info,
+                        isLocallyEligible = isLocallyEligible,
+                        staticPayload = payload,
+                        deviceInfoProvider = deviceInfoProvider
+                    )
                 }
                 is FeatureFlagPayload.DeferredPayload -> {
-                    resolveDeferred(info, payload, deviceInfo)
+                    resolveDeferred(
+                        flagInfo = info,
+                        isLocallyEligible = isLocallyEligible,
+                        deferredPayload = payload,
+                        deviceInfoProvider = deviceInfoProvider
+                    )
                 }
+            }
+
+            /// If we have an error, flag is eligible, or the last flag return
+            if (result.isFailure || result.getOrNull()?.isEligible == true || isLast) {
+                return result
             }
         }
 
-        val last = flags.last()
-        return if (last.payload is FeatureFlagPayload.StaticPayload) {
-            resolveStatic(last, false, last.payload, deviceInfo)
-        } else {
-            Result.success(
-                FeatureFlag.createFlag(
-                    name = last.name,
-                    isEligible = false,
-                    variables = null,
-                    reportingInfo = FeatureFlag.ReportingInfo(
-                        reportingMetadata = last.reportingContext,
-                        channelId = deviceInfo.getChannelId(),
-                        contactId = deviceInfo.getStableContactId(),
-                    )
-                )
-            )
-        }
+        return Result.success(FeatureFlag.createMissingFlag(name))
     }
 
     private suspend fun resolveStatic(
         flagInfo: FeatureFlagInfo,
-        isEligible: Boolean,
+        isLocallyEligible: Boolean,
         staticPayload: FeatureFlagPayload.StaticPayload,
         deviceInfoProvider: DeviceInfoProvider
     ): Result<FeatureFlag> {
         val variables = staticPayload.variables?.evaluate(
-            audienceEvaluator,
-            flagInfo.created,
-            deviceInfoProvider
+            isEligible = isLocallyEligible,
+            audienceEvaluator = audienceEvaluator,
+            newEvaluationDate = flagInfo.created,
+            deviceInfoProvider = deviceInfoProvider
         )
 
         val flag = FeatureFlag.createFlag(
             name = flagInfo.name,
-            isEligible = isEligible,
+            isEligible = isLocallyEligible,
             variables = variables?.data,
             reportingInfo = FeatureFlag.ReportingInfo(
                 reportingMetadata = variables?.reportingMetadata ?: flagInfo.reportingContext,
                 channelId = deviceInfoProvider.getChannelId(),
-                contactId = deviceInfoProvider.getStableContactId()
+                contactId = deviceInfoProvider.getStableContactInfo().contactId,
             )
         )
 
@@ -226,10 +237,27 @@ public class FeatureFlagManager
 
     private suspend fun resolveDeferred(
         flagInfo: FeatureFlagInfo,
+        isLocallyEligible: Boolean,
         deferredPayload: FeatureFlagPayload.DeferredPayload,
         deviceInfoProvider: DeviceInfoProvider
     ): Result<FeatureFlag> {
-        val contactId = deviceInfoProvider.getStableContactId()
+
+        if (!isLocallyEligible) {
+            return Result.success(
+                FeatureFlag.createFlag(
+                    name = flagInfo.name,
+                    isEligible = false,
+                    variables = null,
+                    reportingInfo = FeatureFlag.ReportingInfo(
+                        reportingMetadata = flagInfo.reportingContext,
+                        channelId = deviceInfoProvider.getChannelId(),
+                        contactId = deviceInfoProvider.getStableContactInfo().contactId
+                    )
+                )
+            )
+        }
+
+        val contactId = deviceInfoProvider.getStableContactInfo().contactId
         val chanelId = deviceInfoProvider.getChannelId()
         val request = DeferredRequest(
             uri = deferredPayload.url,
@@ -245,9 +273,10 @@ public class FeatureFlagManager
                 val flag = when(deferredFlag) {
                     is DeferredFlag.Found -> {
                         val variables = deferredFlag.flagInfo.variables?.evaluate(
-                            audienceEvaluator,
-                            flagInfo.created,
-                            deviceInfoProvider
+                            isEligible = deferredFlag.flagInfo.isEligible,
+                            audienceEvaluator = audienceEvaluator,
+                            newEvaluationDate = flagInfo.created,
+                            deviceInfoProvider = deviceInfoProvider
                         )
 
                         FeatureFlag.createFlag(
@@ -257,7 +286,7 @@ public class FeatureFlagManager
                             reportingInfo = FeatureFlag.ReportingInfo(
                                 reportingMetadata = variables?.reportingMetadata ?: deferredFlag.flagInfo.reportingMetadata,
                                 channelId = deviceInfoProvider.getChannelId(),
-                                contactId = deviceInfoProvider.getStableContactId()
+                                contactId = deviceInfoProvider.getStableContactInfo().contactId
                             )
                         )
                     }
@@ -275,8 +304,15 @@ public class FeatureFlagManager
 }
 
 private suspend fun FeatureFlagVariables.evaluate(
-    audienceEvaluator: AudienceEvaluator, newEvaluationDate: Long, infoProvider: DeviceInfoProvider
-): VariableResult {
+    isEligible: Boolean,
+    audienceEvaluator: AudienceEvaluator,
+    newEvaluationDate: Long,
+    deviceInfoProvider: DeviceInfoProvider
+): VariableResult? {
+    if (!isEligible) {
+        return null
+    }
+
     return when (this) {
         is FeatureFlagVariables.Fixed -> {
             VariableResult(this.data, null)
@@ -285,7 +321,7 @@ private suspend fun FeatureFlagVariables.evaluate(
         is FeatureFlagVariables.Variant -> {
             val match = this.variantVariables.firstOrNull {
                 audienceEvaluator.evaluateOptional(
-                    it.selector, newEvaluationDate, infoProvider
+                    it.selector, newEvaluationDate, deviceInfoProvider
                 )
             }
 

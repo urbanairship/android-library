@@ -14,6 +14,7 @@ import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.ChannelRegistrationPayload
+import com.urbanairship.channel.SmsValidator
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.JsonValue
@@ -27,10 +28,13 @@ import io.mockk.runs
 import io.mockk.verify
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import io.mockk.coVerify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.resetMain
@@ -38,6 +42,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -55,6 +60,11 @@ public class ContactTest {
     private val mockSubscriptionListApiClient = mockk<SubscriptionListApiClient>()
     private val mockAudienceOverridesProvider = mockk<AudienceOverridesProvider>(relaxed = true)
 
+    private val contactChannelFlow = MutableSharedFlow<Result<List<ContactChannel>>>()
+    private val mockChannelsContactProvider = mockk<ContactChannelsProvider>(relaxed = true) {
+        every { contactChannels } returns contactChannelFlow.asSharedFlow()
+    }
+
     private val conflictEvents = Channel<ConflictEvent>(Channel.UNLIMITED)
     private val currentNamedUserIdUpdates = MutableStateFlow<String?>(null)
     private val contactIdUpdates = MutableStateFlow<ContactIdUpdate?>(null)
@@ -65,12 +75,14 @@ public class ContactTest {
         every { this@mockk.currentNamedUserIdUpdates } returns this@ContactTest.currentNamedUserIdUpdates
     }
 
+    private val mockSmsValidator = mockk<SmsValidator>(relaxed = true)
+
     private val testActivityMonitor = TestActivityMonitor()
     private val testClock = TestClock()
 
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
-    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.FEATURE_ALL)
+    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL)
 
     private val contact: Contact by lazy {
         Contact(
@@ -84,6 +96,8 @@ public class ContactTest {
             testClock,
             mockSubscriptionListApiClient,
             mockContactManager,
+            mockSmsValidator,
+            mockChannelsContactProvider,
             testDispatcher
         )
     }
@@ -128,11 +142,19 @@ public class ContactTest {
 
         coEvery {
             mockContactManager.stableContactIdUpdate()
-        } returns ContactIdUpdate("some stable not verified id", true, testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) - 1)
+        } returns ContactIdUpdate(
+            contactId = "some stable not verified id",
+            namedUserId = null,
+            isStable = true,
+            resolveDateMs = testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) - 1)
 
         coEvery {
             mockContactManager.stableContactIdUpdate(testClock.currentTimeMillis())
-        } returns ContactIdUpdate("some contact id", true, testClock.currentTimeMillis)
+        } returns ContactIdUpdate(
+            contactId = "some contact id",
+            namedUserId = null,
+            isStable = true,
+            resolveDateMs = testClock.currentTimeMillis)
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
@@ -158,7 +180,7 @@ public class ContactTest {
 
         coEvery {
             mockContactManager.stableContactIdUpdate()
-        } returns ContactIdUpdate("some stable verified id", true, testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) + 1)
+        } returns ContactIdUpdate("some stable verified id", null, true, testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) + 1)
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
@@ -190,11 +212,11 @@ public class ContactTest {
 
         coEvery {
             mockContactManager.stableContactIdUpdate()
-        } returns ContactIdUpdate("some stable not verified id", true, testClock.currentTimeMillis() - 100)
+        } returns ContactIdUpdate("some stable not verified id", null, true, testClock.currentTimeMillis() - 100)
 
         coEvery {
             mockContactManager.stableContactIdUpdate(testClock.currentTimeMillis())
-        } returns ContactIdUpdate("some stable verified id", true, testClock.currentTimeMillis)
+        } returns ContactIdUpdate("some stable verified id", null, true, testClock.currentTimeMillis)
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
@@ -315,16 +337,16 @@ public class ContactTest {
         assertEquals(0, count)
         testDispatcher.scheduler.advanceUntilIdle()
 
-        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", true, 0))
+        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", null, true, 0))
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(1, count)
 
         // Different update, same contact id
-        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", true, 0))
+        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", null, true, 0))
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(1, count)
 
-        contactIdUpdates.tryEmit(ContactIdUpdate("some  other contact id", false, 0))
+        contactIdUpdates.tryEmit(ContactIdUpdate("some  other contact id", null, false, 0))
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(2, count)
     }
@@ -341,7 +363,7 @@ public class ContactTest {
         contact
 
         // Privacy manager change will trigger a reset
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Reset) }
 
         contact.reset()
@@ -356,14 +378,14 @@ public class ContactTest {
 
     @Test
     public fun testIdentifyContactsDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         contact.identify("some named user id")
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Identify("some named user id")) }
     }
 
     @Test
     public fun testNotifyRemoteLogin(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.CONTACTS)
         contact.notifyRemoteLogin()
         verify(exactly = 1) {
             mockContactManager.addOperation(match<ContactOperation.Verify> {
@@ -381,28 +403,31 @@ public class ContactTest {
         )
 
         verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(tags = expectedMutations)) }
+        verify { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
     public fun testEditTagsContactDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         contact.editTagGroups().setTag("some group", "some tag").apply()
 
         val expectedMutations = listOf(
             TagGroupsMutation.newSetTagsMutation("some group", setOf("some tag"))
         )
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Update(tags = expectedMutations)) }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
     public fun testEditTagsTagsAndAttributesDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.CONTACTS)
         contact.editTagGroups().setTag("some group", "some tag").apply()
 
         val expectedMutations = listOf(
             TagGroupsMutation.newSetTagsMutation("some group", setOf("some tag"))
         )
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Update(tags = expectedMutations)) }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
@@ -416,11 +441,12 @@ public class ContactTest {
         )
 
         verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(attributes = expectedMutations)) }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
     public fun testEditAttributesContactDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         contact.editAttributes().setAttribute("some attribute", "some value").apply()
 
         val expectedMutations = listOf(
@@ -434,7 +460,7 @@ public class ContactTest {
 
     @Test
     public fun testEditAttributesTagsAndAttributesDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.CONTACTS)
         contact.editAttributes().setAttribute("some attribute", "some value").apply()
 
         val expectedMutations = listOf(
@@ -444,6 +470,8 @@ public class ContactTest {
         )
 
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Update(attributes = expectedMutations)) }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
@@ -457,11 +485,13 @@ public class ContactTest {
         )
 
         verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(subscriptions = expectedMutations)) }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
     public fun testEditSubscriptionsContactDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply()
 
         val expectedMutations = listOf(
@@ -471,11 +501,13 @@ public class ContactTest {
         )
 
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Update(subscriptions = expectedMutations)) }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
     public fun testEditSubscriptionsTagsAndAttributesDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.CONTACTS)
         contact.editSubscriptionLists().subscribe("some list", Scope.APP).apply()
 
         val expectedMutations = listOf(
@@ -485,6 +517,8 @@ public class ContactTest {
         )
 
         verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Update(subscriptions = expectedMutations)) }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
@@ -501,11 +535,13 @@ public class ContactTest {
                 )
             )
         }
+
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
     public fun testRegisterEmailContactsDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
         val address = "some address"
         val options = EmailRegistrationOptions.options(null, null, true)
@@ -519,6 +555,8 @@ public class ContactTest {
                 )
             )
         }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
@@ -535,11 +573,13 @@ public class ContactTest {
                 )
             )
         }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
     public fun testRegisterSmsContactsDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
         val address = "some address"
         val options = SmsRegistrationOptions.options("some sender id")
@@ -553,6 +593,7 @@ public class ContactTest {
                 )
             )
         }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
@@ -569,11 +610,13 @@ public class ContactTest {
                 )
             )
         }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
     public fun testRegisterOpenContactsDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
         val address = "some address"
         val options = OpenChannelRegistrationOptions.options("some platform")
@@ -587,6 +630,8 @@ public class ContactTest {
                 )
             )
         }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
+
     }
 
     @Test
@@ -604,7 +649,7 @@ public class ContactTest {
 
     @Test
     public fun testAssociateChannelContactsDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
         contact.associateChannel("channel id", ChannelType.OPEN)
 
@@ -669,7 +714,7 @@ public class ContactTest {
 
     @Test
     public fun testMigrateTagsAndAttributesDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_CONTACTS)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.CONTACTS)
 
         val namedUserId = UUID.randomUUID().toString()
         val tags = listOf(
@@ -705,7 +750,7 @@ public class ContactTest {
 
     @Test
     public fun testMigrateContactsDisabled(): TestResult = runTest {
-        privacyManager.setEnabledFeatures(PrivacyManager.FEATURE_TAGS_AND_ATTRIBUTES)
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
         val namedUserId = UUID.randomUUID().toString()
         val tags = listOf(
@@ -741,7 +786,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptions(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", true, 0)
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", null, true, 0)
         val networkResult = RequestResult(
             status = 200, value = mapOf(
                 "foo" to setOf(Scope.APP, Scope.SMS), "bar" to setOf(Scope.EMAIL)
@@ -756,7 +801,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionsCache(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", true, 0)
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", null, true, 0)
 
         val networkResult = RequestResult(
             status = 200, value = mapOf(
@@ -773,7 +818,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionsError(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", true, 0)
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", null, true, 0)
 
         val networkResult = RequestResult<Map<String, Set<Scope>>>(
             status = 404, value = null, body = null, headers = emptyMap()
@@ -786,8 +831,8 @@ public class ContactTest {
     @Test
     public fun testFetchSubscriptionsIgnoresCacheContactIdChanges(): TestResult = runTest {
         coEvery { mockContactManager.stableContactIdUpdate() } returnsMany listOf(
-            ContactIdUpdate("first", true, 0),
-            ContactIdUpdate("second", true, 1)
+            ContactIdUpdate("first", null, true, 0),
+            ContactIdUpdate("second", null, true, 1)
         )
 
         val firstResult = RequestResult(
@@ -810,7 +855,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionListCacheTime(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", true, 0)
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", null, true, 0)
 
         val firstResult = RequestResult(
             status = 200, value = mapOf(
@@ -867,7 +912,7 @@ public class ContactTest {
             )
         )
 
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", true, 0)
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", null, true, 0)
         coEvery { mockAudienceOverridesProvider.contactOverrides("some id") } returns overrides
 
         val networkResult = RequestResult(
@@ -885,5 +930,83 @@ public class ContactTest {
         )
 
         assertEquals(expected, contact.fetchSubscriptionLists().getOrThrow())
+    }
+
+    @Test
+    public fun testResendOptIn(): TestResult = runTest {
+        val channel = ContactChannel.Email(
+            ContactChannel.Email.RegistrationInfo.Pending(
+                address = "email@email.email",
+                registrationOptions = EmailRegistrationOptions.options(null, null, true)
+            )
+        )
+        contact.resendDoubleOptIn(channel)
+        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Resend(channel)) }
+    }
+
+    @Test
+    public fun testResendOptInContactsDisabled(): TestResult = runTest {
+        privacyManager.disable(PrivacyManager.Feature.CONTACTS)
+        val channel = ContactChannel.Email(
+            ContactChannel.Email.RegistrationInfo.Pending(
+                address = "email@email.email",
+                registrationOptions = EmailRegistrationOptions.options(null, null, true)
+            )
+        )
+        contact.resendDoubleOptIn(channel)
+        verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.Resend(channel)) }
+    }
+
+    @Test
+    public fun testDisassociate(): TestResult = runTest {
+        val channel = ContactChannel.Email(
+            ContactChannel.Email.RegistrationInfo.Pending(
+                address = "email@email.email",
+                registrationOptions = EmailRegistrationOptions.options(null, null, true)
+            )
+        )
+        contact.disassociateChannel(channel)
+        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.DisassociateChannel(channel, true)) }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
+    }
+
+    @Test
+    public fun testDisassociateOptOutFalse(): TestResult = runTest {
+        val channel = ContactChannel.Email(
+            ContactChannel.Email.RegistrationInfo.Pending(
+                address = "email@email.email",
+                registrationOptions = EmailRegistrationOptions.options(null, null, true)
+            )
+        )
+        contact.disassociateChannel(channel, false)
+        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.DisassociateChannel(channel, false)) }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
+    }
+
+    @Test
+    public fun testDisassociateContactsDisabled(): TestResult = runTest {
+        privacyManager.disable(PrivacyManager.Feature.CONTACTS)
+        val channel = ContactChannel.Email(
+            ContactChannel.Email.RegistrationInfo.Pending(
+                address = "email@email.email",
+                registrationOptions = EmailRegistrationOptions.options(null, null, true)
+            )
+        )
+        contact.disassociateChannel(channel)
+        verify(exactly = 0) { mockContactManager.addOperation(ContactOperation.DisassociateChannel(channel, true)) }
+        verify(exactly = 0) { mockAudienceOverridesProvider.notifyPendingChanged() }
+    }
+
+    @Test
+    public fun testValidateSms(): TestResult = runTest {
+        coEvery { mockSmsValidator.validateSms(any(), any()) } returns true andThen false
+
+        val address = "some address"
+        val sender = "some sender"
+
+        assertTrue(contact.validateSms(address, sender))
+        assertFalse(contact.validateSms(address, sender))
+
+        coVerify(exactly = 2) { mockSmsValidator.validateSms(address, sender) }
     }
 }

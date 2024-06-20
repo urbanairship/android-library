@@ -15,7 +15,7 @@ import com.urbanairship.remotedata.RemoteData
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class PreferenceCenterModuleFactoryImpl : PreferenceCenterModuleFactory {
+public class PreferenceCenterModuleFactoryImpl : PreferenceCenterModuleFactory {
 
     override fun build(
         context: Context,

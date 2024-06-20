@@ -10,6 +10,7 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.analytics.EventTestUtils;
 import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 
 import org.json.JSONException;
@@ -123,6 +124,37 @@ public class AddCustomEventActionTest extends BaseTestCase {
         EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type");
         EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id");
         EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name");
+    }
+
+    @Test
+    public void testPerformInAppContext() {
+        Map map = new HashMap();
+        map.put(CustomEvent.TRANSACTION_ID, "transaction id");
+        map.put(CustomEvent.EVENT_VALUE, "123.45");
+        map.put(CustomEvent.INTERACTION_TYPE, "interaction type");
+        map.put(CustomEvent.INTERACTION_ID, "interaction id");
+        map.put(CustomEvent.EVENT_NAME, "event name");
+
+        Bundle metadata = new Bundle();
+        metadata.putString(AddCustomEventAction.IN_APP_CONTEXT_METADATA_KEY, JsonValue.wrap("some-context").toString());
+
+        ActionArguments args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, map, metadata);
+
+        ActionResult result = action.perform(args);
+        assertEquals("Action should've completed", ActionResult.STATUS_COMPLETED, result.getStatus());
+
+        // Verify the event was added
+        ArgumentCaptor<CustomEvent> argumentCaptor = ArgumentCaptor.forClass(CustomEvent.class);
+        verify(analytics).recordCustomEvent(argumentCaptor.capture());
+
+        // Validate the resulting event
+        CustomEvent event = argumentCaptor.getValue();
+        EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id");
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 123450000L);
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type");
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id");
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name");
+        EventTestUtils.validateEventValue(event, "in_app", "some-context");
     }
 
     /**

@@ -10,21 +10,23 @@ import androidx.annotation.MainThread
 import androidx.core.view.ViewCompat
 import com.urbanairship.Predicate
 import com.urbanairship.UALog.e
+import com.urbanairship.actions.ActionRunner
+import com.urbanairship.actions.run
 import com.urbanairship.app.ActivityListener
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.automation.R
+import com.urbanairship.automation.utils.ActiveTimer
+import com.urbanairship.iam.adapter.DelegatingDisplayAdapter
+import com.urbanairship.iam.adapter.DisplayResult
+import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.Banner
 import com.urbanairship.iam.content.InAppMessageDisplayContent
-import com.urbanairship.iam.adapter.DelegatingDisplayAdapter
-import com.urbanairship.iam.adapter.DisplayResult
-import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.iam.view.BannerView
 import com.urbanairship.iam.view.InAppViewUtils
-import com.urbanairship.automation.utils.ActiveTimer
 import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CancellableContinuation
@@ -38,7 +40,8 @@ import kotlinx.coroutines.withContext
 internal class BannerDisplayDelegate(
     private val displayContent: InAppMessageDisplayContent.BannerContent,
     private val assets: AirshipCachedAssets?,
-    private val activityMonitor: ActivityMonitor
+    private val activityMonitor: ActivityMonitor,
+    private val actionRunner: ActionRunner
 ) : DelegatingDisplayAdapter.Delegate {
 
     override val activityPredicate: Predicate<Activity> = object : Predicate<Activity> {
@@ -104,9 +107,8 @@ internal class BannerDisplayDelegate(
 
     /**
      * Called when the banner is finished displaying.
-     * @param context The context.
      */
-    private fun onDisplayFinished(context: Context) {
+    private fun onDisplayFinished() {
         activityMonitor.removeActivityListener(listener)
     }
 
@@ -139,29 +141,31 @@ internal class BannerDisplayDelegate(
 
         view.setListener(object : BannerView.Listener {
             override fun onButtonClicked(view: BannerView, buttonInfo: InAppMessageButtonInfo) {
-                com.urbanairship.iam.InAppActionUtils.runActions(buttonInfo)
+                buttonInfo.actions?.let {
+                    actionRunner.run(it.map)
+                }
                 analyticsListener?.onButtonDismissed(buttonInfo)
 
-                onDisplayFinished(view.context)
+                onDisplayFinished()
             }
 
             override fun onBannerClicked(view: BannerView) {
                 if (displayContent.banner.actions?.isNotEmpty == true) {
-                    com.urbanairship.iam.InAppActionUtils.runActions(displayContent.banner.actions)
+                    actionRunner.run(displayContent.banner.actions.map)
                     analyticsListener?.onMessageTapDismissed()
                 }
 
-                onDisplayFinished(view.context)
+                onDisplayFinished()
             }
 
             override fun onTimedOut(view: BannerView) {
                 analyticsListener?.onTimedOut()
-                onDisplayFinished(view.context)
+                onDisplayFinished()
             }
 
             override fun onUserDismissed(view: BannerView) {
                 analyticsListener?.onUserDismissed()
-                onDisplayFinished(view.context)
+                onDisplayFinished()
             }
         })
 
