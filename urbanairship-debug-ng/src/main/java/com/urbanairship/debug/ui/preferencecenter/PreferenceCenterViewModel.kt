@@ -74,6 +74,3 @@ internal class DefaultPreferenceCenterViewModel(
 }
 
 internal data class PrefCenter(val id: String, val title: String)
-
-
-

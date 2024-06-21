@@ -66,6 +66,3 @@ internal data class Automation(
     val name: String,
     val body: JsonSerializable
 )
-
-
-

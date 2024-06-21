@@ -63,4 +63,3 @@ Gradients from airship.com
 --wp--preset--gradient--blueish-purple: linear-gradient(273.31deg, #4F16FF 0.53%, #6725FA 23.08%, #8236F5 48.56%, #3244F7 81.51%, #44FFE9 102.43%);
 --wp--preset--gradient--purpleish-pink: linear-gradient(272.09deg, #793ED4 0.61%, #CC8095 33.81%, #FB828A 59.42%, #FF5B97 99.27%);
  */
-

@@ -44,5 +44,3 @@ internal val AirshipTypography: Typography = with(Typography()) {
         labelSmall = labelSmall.copy(fontFamily = Lato),
     )
 }
-
-

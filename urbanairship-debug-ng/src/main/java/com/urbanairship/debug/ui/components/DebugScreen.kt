@@ -55,4 +55,3 @@ internal sealed class TopBarNavigation {
     data class Back(val onBack: () -> Unit): TopBarNavigation()
     data object None: TopBarNavigation()
 }
-
