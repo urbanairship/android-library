@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.1.0, June 20, 2024
+Minor SDK release that fixes a potential crash related to analytics during app init and adds public
+builders for modifying `InAppMessage` and `AutomationSchedule` objects via extenders set on`LegacyInAppMessaging`.
+
+### Changes
+- Fixed a potential crash related to analytics during app init
+- Added builders for modifying `InAppMessage` and `AutomationSchedule` objects via extenders set on `LegacyInAppMessaging`
+
 ## Version 18.0.0, June 14, 2024
 Major SDK release with several breaking changes. 
 See the [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-17-18.md) for more info.
