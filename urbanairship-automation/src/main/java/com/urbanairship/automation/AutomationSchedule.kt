@@ -92,15 +92,205 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     internal val additionalAudienceCheckOverrides: AdditionalAudienceCheckOverrides? = null
 ) : JsonSerializable {
 
+    /**
+     * Schedule builder.
+     */
+    public class Builder internal constructor(
+        schedule: AutomationSchedule
+    ) {
+        // Public
+        private var triggers: List<AutomationTrigger> = schedule.triggers
+        private var group: String? = schedule.group
+        private var priority: Int? = schedule.priority
+        private var limit: UInt? = schedule.limit
+        private var startDate: ULong? = schedule.startDate
+        private var endDate: ULong? = schedule.endDate
+        private var audience: AutomationAudience? = schedule.audience
+        private var delay: AutomationDelay? = schedule.delay
+        private var interval: ULong? = schedule.interval
+        private var data: ScheduleData = schedule.data
+        private var editGracePeriodDays: ULong? = schedule.editGracePeriodDays
+
+        // Internal
+        private val identifier: String = schedule.identifier
+        private val metadata: JsonValue? = schedule.metadata
+        private val frequencyConstraintIds: List<String>? = schedule.frequencyConstraintIds
+        private val messageType: String? = schedule.messageType
+        private val campaigns: JsonValue? = schedule.campaigns
+        private val reportingContext: JsonValue? = schedule.reportingContext
+        private val productId: String? = schedule.productId
+        private val minSDKVersion: String? = schedule.minSDKVersion
+        private val created: ULong = schedule.created
+        private val queue: String? = schedule.queue
+        private val additionalAudienceCheckOverrides: AdditionalAudienceCheckOverrides? = schedule.additionalAudienceCheckOverrides
+        private val bypassHoldoutGroups: Boolean? = schedule.bypassHoldoutGroups
+
+        /**
+         * Set the triggers.
+         * @param triggers The triggers.
+         * @return The builder object.
+         */
+        public fun setTriggers(triggers: List<AutomationTrigger>): Builder = apply {
+            this.triggers = triggers
+        }
+
+        /**
+         * Set the group.
+         * @param group The group.
+         * @return The builder object.
+         */
+        public fun setGroup(group: String?): Builder = apply {
+            this.group = group
+        }
+
+        /**
+         * Set the priority.
+         * @param priority The priority.
+         * @return The builder object.
+         */
+        public fun setPriority(priority: Int?): Builder = apply {
+            this.priority = priority
+        }
+
+        /**
+         * Set the limit.
+         * @param limit The limit.
+         * @return The builder object.
+         */
+        public fun setLimit(limit: Int?): Builder = apply {
+            this.limit = limit?.toUInt()
+        }
+
+        /**
+         * Set the start date.
+         * @param startDate The start date.
+         * @return The builder object.
+         */
+        public fun setStartDate(startDate: Long?): Builder = apply {
+            this.startDate = startDate?.toULong()
+        }
+
+        /**
+         * Set the end date.
+         * @param endDate The end date.
+         * @return The builder object.
+         */
+        public fun setEndDate(endDate: Long?): Builder = apply {
+            this.endDate = endDate?.toULong()
+        }
+
+        /**
+         * Set the audience.
+         * @param audience The audience.
+         * @return The builder object.
+         */
+        public fun setAudience(audience: AutomationAudience?): Builder = apply {
+            this.audience = audience
+        }
+
+        /**
+         * Set the delay.
+         * @param delay The delay.
+         * @return The builder object.
+         */
+        public fun setDelay(delay: AutomationDelay?): Builder = apply {
+            this.delay = delay
+        }
+
+        /**
+         * Set the interval.
+         * @param interval The interval.
+         * @return The builder object.
+         */
+        public fun setInterval(interval: Long?): Builder = apply {
+            this.interval = interval?.toULong()
+        }
+
+        /**
+         * Set the data.
+         * @param data The data.
+         * @return The builder object.
+         */
+        public fun setData(data: ScheduleData): Builder = apply {
+            this.data = data
+        }
+
+        /**
+         * Set the edit grace period days.
+         * @param editGracePeriodDays The edit grace period days.
+         * @return The builder object.
+         */
+        public fun setEditGracePeriodDays(editGracePeriodDays: Long?): Builder = apply {
+            this.editGracePeriodDays = editGracePeriodDays?.toULong()
+        }
+
+        /**
+         * Build the AutomationSchedule.
+         * @return The AutomationSchedule.
+         */
+        public fun build(): AutomationSchedule {
+            return AutomationSchedule(
+                identifier = identifier,
+                triggers = triggers,
+                group = group,
+                priority = priority,
+                limit = limit,
+                startDate = startDate,
+                endDate = endDate,
+                audience = audience,
+                delay = delay,
+                interval = interval,
+                data = data,
+                bypassHoldoutGroups = bypassHoldoutGroups,
+                editGracePeriodDays = editGracePeriodDays,
+                metadata = metadata,
+                frequencyConstraintIds = frequencyConstraintIds,
+                messageType = messageType,
+                campaigns = campaigns,
+                reportingContext = reportingContext,
+                productId = productId,
+                minSDKVersion = minSDKVersion,
+                created = created,
+                queue = queue,
+                additionalAudienceCheckOverrides = additionalAudienceCheckOverrides
+            )
+        }
+    }
+
+    /**
+     * Creates a new `AutomationSchedule.Builder` with the values from this schedule.
+     */
+    public fun newBuilder(): Builder = Builder(this)
+
     internal fun copyWith(
         group: String? = null,
         endDate: ULong? = null,
         metadata: JsonValue? = null): AutomationSchedule {
-        return AutomationSchedule(identifier, triggers, group ?: this.group, priority, limit,
-            startDate, endDate ?: this.endDate, audience, delay, interval, data,
-            bypassHoldoutGroups, editGracePeriodDays, metadata ?: this.metadata,
-            frequencyConstraintIds, messageType, campaigns, reportingContext, productId,
-            minSDKVersion, created, queue, additionalAudienceCheckOverrides)
+        return AutomationSchedule(
+            identifier = identifier,
+            triggers = triggers,
+            group = group ?: this.group,
+            priority = priority,
+            limit = limit,
+            startDate = startDate,
+            endDate = endDate ?: this.endDate,
+            audience = audience,
+            delay = delay,
+            interval = interval,
+            data = data,
+            bypassHoldoutGroups = bypassHoldoutGroups,
+            editGracePeriodDays = editGracePeriodDays,
+            metadata = metadata ?: this.metadata,
+            frequencyConstraintIds = frequencyConstraintIds,
+            messageType = messageType,
+            campaigns = campaigns,
+            reportingContext = reportingContext,
+            productId = productId,
+            minSDKVersion = minSDKVersion,
+            created = created,
+            queue = queue,
+            additionalAudienceCheckOverrides = additionalAudienceCheckOverrides
+        )
     }
 
     /**
