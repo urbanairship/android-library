@@ -59,7 +59,7 @@ internal fun EventScreenContent(
                     headlineContent = {
                         Text(text = item.eventId, fontWeight = FontWeight.Medium)
                     }, trailingContent = {
-                        Text(text = item.type, fontWeight = FontWeight.Medium)
+                        Text(text = item.type.toString(), fontWeight = FontWeight.Medium)
                     }
                 )
             }

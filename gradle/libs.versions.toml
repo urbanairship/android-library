@@ -144,6 +144,7 @@ androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-corektx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-customview = { module = "androidx.customview:customview", version.ref = "androidx-customview" }
 androidx-fragment-fragment = { module = "androidx.fragment:fragment", version.ref = "androidx-fragment" }
+androidx-fragment-fragmentktx = { module = "androidx.fragment:fragment-ktx", version.ref = "androidx-fragment" }
 androidx-fragment-testing = { module = "androidx.fragment:fragment-testing", version.ref = "androidx-fragment" }
 androidx-lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8", version.ref="androidx-lifecycle" }
 androidx-lifecycle-livedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref="androidx-lifecycle" }

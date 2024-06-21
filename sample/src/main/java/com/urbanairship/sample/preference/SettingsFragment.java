@@ -24,7 +24,6 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
-import static com.urbanairship.debug.R.*;
 
 /**
  * Settings fragment.

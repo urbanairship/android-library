@@ -29,6 +29,7 @@
     <string name="toast_channel_clipboard">Channel copied to clipboard</string>
     <string name="current_tags">Current Tags</string>
     <string name="tools">Tools</string>
+    <string name="ua_debug_title">Debug Tools</string>
 
     <!-- Message Center Indicator -->
     <string name="view">View</string>
