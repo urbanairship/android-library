@@ -19,6 +19,7 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.meteredusage.MeteredUsageEventEntity
 import com.urbanairship.meteredusage.MeteredUsageType
 import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
 import io.mockk.coEvery
 import io.mockk.confirmVerified
 import io.mockk.mockk
@@ -170,7 +171,7 @@ public class InAppMessageAnalyticsTest {
 
         val analytics = makeAnalytics(
             source = InAppMessage.Source.LEGACY_PUSH,
-            displayImpressionRule = InAppDisplayImpressionRule.Interval(10)
+            displayImpressionRule = InAppDisplayImpressionRule.Interval(10.seconds)
         )
 
         analytics.recordEvent(InAppDisplayEvent(), null)
@@ -191,7 +192,7 @@ public class InAppMessageAnalyticsTest {
         assertEquals(0L, displayHistory.lastImpression?.date)
         assertEquals(preparedInfo.triggerSessionId, displayHistory.lastImpression?.triggerSessionId)
 
-        clock.currentTimeMillis += 9L
+        clock.currentTimeMillis += 9999L // 9.999 seconds
         // This third run should still not trigger a recordImpressionEvent
         analytics.recordEvent(InAppDisplayEvent(), null)
 
@@ -203,7 +204,7 @@ public class InAppMessageAnalyticsTest {
             assertEquals(MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION, it.type)
             assertEquals(preparedInfo.productId, it.product)
             assertEquals(preparedInfo.reportingContext, it.reportingContext)
-            assertEquals(10L, it.timestamp)
+            assertEquals(10000L, it.timestamp)
             assertEquals(preparedInfo.contactId, it.contactId)
         }) }
 

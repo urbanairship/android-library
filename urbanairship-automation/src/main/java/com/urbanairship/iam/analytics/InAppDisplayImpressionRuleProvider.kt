@@ -3,10 +3,12 @@
 package com.urbanairship.iam.analytics
 
 import com.urbanairship.iam.InAppMessage
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 internal sealed class InAppDisplayImpressionRule {
     internal data object Once : InAppDisplayImpressionRule()
-    internal data class Interval(val value: Int) : InAppDisplayImpressionRule()
+    internal data class Interval(val value: Duration) : InAppDisplayImpressionRule()
 }
 
 internal interface InAppDisplayImpressionRuleInterface {
@@ -24,6 +26,6 @@ internal class DefaultInAppDisplayImpressionRuleProvider : InAppDisplayImpressio
     }
 
     companion object {
-        private const val DEFAULT_EMBEDDED_IMPRESSION_INTERVAL = 30
+        private val DEFAULT_EMBEDDED_IMPRESSION_INTERVAL: Duration = 30.minutes
     }
 }
