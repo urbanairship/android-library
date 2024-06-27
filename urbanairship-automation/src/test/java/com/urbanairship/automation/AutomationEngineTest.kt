@@ -2,6 +2,7 @@ package com.urbanairship.automation
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
+import com.urbanairship.TestTaskSleeper
 import com.urbanairship.automation.engine.AutomationDelayProcessor
 import com.urbanairship.automation.engine.AutomationEngine
 import com.urbanairship.automation.engine.AutomationEvent
@@ -94,6 +95,10 @@ public class AutomationEngineTest {
 
     private val delayProcessor: AutomationDelayProcessor = mockk(relaxed = true)
 
+    private val sleeper = TestTaskSleeper(clock) { sleep ->
+        clock.currentTimeMillis += sleep.inWholeMilliseconds
+    }
+
     private val engine: AutomationEngine = AutomationEngine(
         store = store,
         executor = executor,
@@ -103,7 +108,7 @@ public class AutomationEngineTest {
         triggerProcessor = triggerProcessor,
         delayProcessor = delayProcessor,
         clock = clock,
-        sleeper = TaskSleeper.default,
+        sleeper = sleeper,
         dispatcher = testDispatcher,
         automationStoreMigrator = automationStoreMigrator
     )
