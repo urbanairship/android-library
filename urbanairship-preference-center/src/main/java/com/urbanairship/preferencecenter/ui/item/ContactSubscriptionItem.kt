@@ -75,17 +75,7 @@ internal data class ContactSubscriptionItem(val item: Item.ContactSubscription) 
             titleView.setTextOrHide(item.title)
             descriptionView.setTextOrHide(item.subtitle)
 
-            with(switch) {
-                // Unset and re-set listener so that we can set up the switch without notifying listeners.
-                setOnCheckedChangeListener(null)
-                isChecked = isChecked(item.subscriptionId, item.scopes)
-                setOnCheckedChangeListener { _, isChecked ->
-                    if (adapterPosition != RecyclerView.NO_POSITION) {
-                        onCheckedChange(adapterPosition, item.scopes, isChecked)
-                        updateAccessibilityDescription(itemView.context, item, isChecked)
-                    }
-                }
-            }
+            bindSwitch(item)
 
             // Add a click listener on the whole item to provide a better experience for toggling subscriptions
             // when using screen readers.
@@ -98,6 +88,20 @@ internal data class ContactSubscriptionItem(val item: Item.ContactSubscription) 
             updateAccessibilityDescription(
                 itemView.context, item, isChecked(item.subscriptionId, item.scopes)
             )
+        }
+
+        internal fun bindSwitch(item: ContactSubscriptionItem) {
+            with(switch) {
+                // Unset and re-set listener so that we can set up the switch without notifying listeners.
+                setOnCheckedChangeListener(null)
+                isChecked = isChecked(item.subscriptionId, item.scopes)
+                setOnCheckedChangeListener { _, isChecked ->
+                    if (adapterPosition != RecyclerView.NO_POSITION) {
+                        onCheckedChange(adapterPosition, item.scopes, isChecked)
+                        updateAccessibilityDescription(itemView.context, item, isChecked)
+                    }
+                }
+            }
         }
 
         private fun updateAccessibilityDescription(

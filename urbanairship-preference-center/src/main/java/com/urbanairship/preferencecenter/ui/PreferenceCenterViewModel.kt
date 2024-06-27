@@ -60,6 +60,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
@@ -492,6 +493,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                     )
                 }
             }
+            .distinctUntilChanged()
 
     private fun getConfig(preferenceCenterId: String): Flow<PreferenceCenterConfig> = flow {
         emit(preferenceCenter.getConfig(preferenceCenterId) ?: throw IllegalStateException("Null preference center for id: $preferenceCenterId"))
