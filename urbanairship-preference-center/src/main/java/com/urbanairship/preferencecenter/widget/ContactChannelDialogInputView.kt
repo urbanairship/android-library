@@ -34,46 +34,6 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
     private val countryPickerInputView: TextInputLayout
     private val countryPickerTextView: AutoCompleteTextView
 
-    init {
-        inflate(context, R.layout.ua_contact_channel_dialog_input, this)
-        textInputView = findViewById(R.id.text_input)
-        footerView = findViewById(R.id.footer)
-        countryPickerInputView = findViewById(R.id.country_picker_input)
-        countryPickerTextView = findViewById(R.id.country_picker_text)
-
-        textInputView.editText?.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-
-            override fun afterTextChanged(s: Editable?) {
-                onValidationChanged?.invoke(validator(s?.toString()))
-            }
-        })
-
-        textInputView.editText?.apply {
-            // Set the on-screen keyboard's action button to "Done"
-            imeOptions = EditorInfo.IME_ACTION_DONE
-
-            setOnEditorActionListener { _, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    onSubmit?.invoke()
-                    true
-                } else {
-                    false
-                }
-            }
-
-            setOnKeyListener { _, keyCode, event ->
-                if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) {
-                    onSubmit?.invoke()
-                    true
-                } else {
-                    false
-                }
-            }
-        }
-    }
-
     var onValidationChanged: ((Boolean) -> Unit)? = null
     var onSubmit: (() -> Unit)? = null
 
@@ -83,6 +43,8 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
 
     private var platform: Item.ContactManagement.Platform? = null
     private var selectedSender: SmsSenderInfo? = null
+
+    private var isValid = false
 
     private val validator: (input: String?) -> Boolean = { input ->
         when (platform) {
@@ -95,6 +57,51 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
                 !input.isNullOrBlank() && phoneRegex.matches(formatted)
             }
             else -> false
+        }
+    }
+
+    init {
+        inflate(context, R.layout.ua_contact_channel_dialog_input, this)
+        textInputView = findViewById(R.id.text_input)
+        footerView = findViewById(R.id.footer)
+        countryPickerInputView = findViewById(R.id.country_picker_input)
+        countryPickerTextView = findViewById(R.id.country_picker_text)
+
+        textInputView.editText?.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+
+            override fun afterTextChanged(s: Editable?) {
+                isValid = validator(s?.toString())
+                onValidationChanged?.invoke(isValid)
+            }
+        })
+
+        textInputView.editText?.apply {
+            // Set the on-screen keyboard's action button to "Done"
+            imeOptions = EditorInfo.IME_ACTION_DONE
+
+            setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    if (isValid) {
+                        onSubmit?.invoke()
+                    }
+                    true
+                } else {
+                    false
+                }
+            }
+
+            setOnKeyListener { _, keyCode, event ->
+                if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) {
+                    if (isValid) {
+                        onSubmit?.invoke()
+                    }
+                    true
+                } else {
+                    false
+                }
+            }
         }
     }
 
