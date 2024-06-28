@@ -2,6 +2,16 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.1.1, June 28, 2024
+Patch release that includes fixes for Preference Center, Privacy Manager, and Embedded Content.
+
+### Changes
+- Fixed a Preference Center issue that caused contact subscription toggles to show the incorrect state after being toggled
+- Fixed test dependency being included in the automation module
+- Fixed Embedded Content impression event interval
+- Fixed privacy manager crash when enabling, disabling, or setting an empty set of features
+- Contact channel listing is now refreshed on foreground and from a background push
+
 ## Version 18.1.0, June 20, 2024
 Minor SDK release that fixes a potential crash related to analytics during app init and adds public
 builders for modifying `InAppMessage` and `AutomationSchedule` objects via extenders set on`LegacyInAppMessaging`.
