@@ -183,6 +183,45 @@ public class ContactChannelsProviderTest {
         }
     }
 
+    @Test
+    public fun testManualRefresh(): TestResult = runTest(testDispatcher) {
+        val firstResponse = listOf(
+            makeRegisteredSmsChannel(),
+        )
+
+        val secondResponse = listOf(
+            makeRegisteredSmsChannel(),
+            makeRegisteredEmailChannel()
+        )
+
+        coEvery { apiClient.fetch("some-contact-id") } returnsMany listOf(
+            makeRequestResult(firstResponse),
+            makeRequestResult(secondResponse)
+        )
+
+        val channelOverrides = listOf(
+            ContactChannelMutation.Associate(makePendingSmsChannel()),
+            ContactChannelMutation.Associate(makePendingEmailChannel())
+        )
+
+        coEvery { audienceOverridesProvider.contactOverrides("some-contact-id") } returns AudienceOverrides.Contact(
+            channels = channelOverrides
+        )
+
+        provider.contactChannels.test {
+            ensureAllEventsConsumed()
+
+            contactUpdates.value = ContactIdUpdate("some-contact-id", namedUserId = null, isStable = true, resolveDateMs = 0)
+
+            assertEquals(firstResponse + channelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
+            ensureAllEventsConsumed()
+
+            provider.refresh()
+            assertEquals(secondResponse + channelOverrides.map { it.channel }, this.awaitItem().getOrThrow())
+            ensureAllEventsConsumed()
+        }
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     public fun testRefreshFailsIgnored(): TestResult = runTest(testDispatcher) {
