@@ -96,6 +96,12 @@ internal class PreferenceCenterAdapter(
         ) : ItemEvent()
     }
 
+    /** RecyclerView payloads, used to update items without a full rebind. */
+    sealed class ItemPayload {
+        data object SubscriptionChange : ItemPayload()
+        data object ContactManagementChange : ItemPayload()
+    }
+
     private val itemEventsFlow: MutableSharedFlow<ItemEvent> = MutableSharedFlow()
 
     val itemEvents: SharedFlow<ItemEvent> = itemEventsFlow.asSharedFlow()
@@ -142,9 +148,34 @@ internal class PreferenceCenterAdapter(
         else -> throw IllegalArgumentException("Unsupported view type: $viewType")
     }
 
-    override fun onBindViewHolder(holder: PrefCenterViewHolder<*>, position: Int) {
-        holder.bindItem(getItem(position))
+    override fun onBindViewHolder(
+        holder: PrefCenterViewHolder<*>,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+        when (payloads.lastOrNull()) {
+            is ItemPayload.SubscriptionChange -> when (holder) {
+                is ChannelSubscriptionItem.ViewHolder ->
+                    holder.bindSwitch(getItem(position) as ChannelSubscriptionItem)
+
+                is ContactSubscriptionItem.ViewHolder ->
+                    holder.bindSwitch(getItem(position) as ContactSubscriptionItem)
+
+                is ContactSubscriptionGroupItem.ViewHolder ->
+                    holder.bindChips(getItem(position) as ContactSubscriptionGroupItem)
+            }
+
+            is ItemPayload.ContactManagementChange -> when (holder) {
+                is ContactManagementItem.ViewHolder ->
+                    holder.bindContactChannels(getItem(position) as ContactManagementItem)
+            }
+
+            else -> onBindViewHolder(holder, position)
+        }
     }
+
+    override fun onBindViewHolder(holder: PrefCenterViewHolder<*>, position: Int) =
+        holder.bindItem(getItem(position))
 
     override fun getItemId(position: Int): Long = UUID.fromString(getItem(position).id).leastSignificantBits
 
@@ -159,8 +190,7 @@ internal class PreferenceCenterAdapter(
         setSubscriptions(
             channelSubscriptions = channelSubscriptions,
             contactSubscriptions = contactSubscriptions,
-            contactChannels = contactChannels,
-            notify = true
+            contactChannels = contactChannels
         )
         val list = descriptionItem?.let { listOf(it) + items } ?: items
         submitList(list)
@@ -170,8 +200,7 @@ internal class PreferenceCenterAdapter(
     private fun setSubscriptions(
         channelSubscriptions: Set<String>,
         contactSubscriptions: Map<String, Set<Scope>>,
-        contactChannels: Map<ContactChannel, ContactChannelState>,
-        notify: Boolean = true
+        contactChannels: Map<ContactChannel, ContactChannelState>
     ) {
         if (this.channelSubscriptions != channelSubscriptions) {
             with(this.channelSubscriptions) {
@@ -179,11 +208,9 @@ internal class PreferenceCenterAdapter(
                 addAll(channelSubscriptions)
             }
 
-            if (notify) {
-                currentList.forEachIndexed { index, item ->
-                    if (item is ChannelSubscriptionItem) {
-                        notifyItemChanged(index)
-                    }
+            currentList.forEachIndexed { index, item ->
+                if (item is ChannelSubscriptionItem) {
+                    notifyItemChanged(index, ItemPayload.SubscriptionChange)
                 }
             }
         }
@@ -193,11 +220,9 @@ internal class PreferenceCenterAdapter(
                 putAll(contactSubscriptions)
             }
 
-            if (notify) {
-                currentList.forEachIndexed { index, item ->
-                    if (item is ContactSubscriptionItem || item is ContactSubscriptionGroupItem) {
-                        notifyItemChanged(index)
-                    }
+            currentList.forEachIndexed { index, item ->
+                if (item is ContactSubscriptionItem || item is ContactSubscriptionGroupItem) {
+                    notifyItemChanged(index, ItemPayload.SubscriptionChange)
                 }
             }
         }
@@ -207,11 +232,9 @@ internal class PreferenceCenterAdapter(
                 putAll(contactChannels)
             }
 
-            if (notify) {
-                currentList.forEachIndexed { index, item ->
-                    if (item is ContactManagementItem) {
-                        notifyItemChanged(index)
-                    }
+            currentList.forEachIndexed { index, item ->
+                if (item is ContactManagementItem) {
+                    notifyItemChanged(index, ItemPayload.ContactManagementChange)
                 }
             }
         }

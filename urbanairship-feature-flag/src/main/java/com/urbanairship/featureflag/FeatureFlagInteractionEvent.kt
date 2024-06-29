@@ -2,6 +2,7 @@
 
 package com.urbanairship.featureflag
 
+import com.urbanairship.analytics.ConversionData
 import com.urbanairship.analytics.Event
 import com.urbanairship.analytics.EventType
 import com.urbanairship.json.JsonException
@@ -28,5 +29,5 @@ internal class FeatureFlagInteractionEvent private constructor(
     )
 
     override fun getType(): EventType = EventType.FEATURE_FLAG_INTERACTION
-    override fun getEventData(): JsonMap = data
+    override fun getEventData(conversionData: ConversionData): JsonMap = data
 }

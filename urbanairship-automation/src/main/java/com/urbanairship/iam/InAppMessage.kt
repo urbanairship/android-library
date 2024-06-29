@@ -81,10 +81,14 @@ public class InAppMessage internal constructor(
         override fun toJsonValue(): JsonValue = JsonValue.wrap(json)
     }
 
-    public constructor(name: String, displayContent: InAppMessageDisplayContent,
-                       extras: JsonMap? = null, actions: JsonMap? = null,
-                       isReportingEnabled: Boolean? = null, displayBehavior: DisplayBehavior? = null)
-            : this(
+    public constructor(
+        name: String,
+        displayContent: InAppMessageDisplayContent,
+        extras: JsonMap? = null,
+        actions: JsonMap? = null,
+        isReportingEnabled: Boolean? = null,
+        displayBehavior: DisplayBehavior? = null
+    ) : this(
         name = name,
         displayContent = displayContent,
         source = Source.APP_DEFINED,
@@ -92,7 +96,105 @@ public class InAppMessage internal constructor(
         actions = actions,
         isReportingEnabled = isReportingEnabled,
         displayBehavior = displayBehavior,
-        renderedLocale = null)
+        renderedLocale = null
+    )
+
+    /**
+     * Creates a new `InAppMessage.Builder` with the values from this message.
+     */
+    public fun newBuilder(): Builder = Builder(this)
+
+    /**
+     * InAppMessage builder.
+     */
+    public class Builder internal constructor(
+        message: InAppMessage
+    ) {
+        private var name: String = message.name
+        private var displayContent: InAppMessageDisplayContent = message.displayContent
+        private var source: Source? = message.source
+        private var extras: JsonMap? = message.extras
+        private var actions: JsonMap? = message.actions
+        private var isReportingEnabled: Boolean? = message.isReportingEnabled
+        private var displayBehavior: DisplayBehavior? = message.displayBehavior
+        private var renderedLocale: JsonValue? = message.renderedLocale
+
+        /**
+         * Sets the in-app message name.
+         *
+         * @param name The in-app message name.
+         * @return The builder.
+         */
+        public fun setName(name: String): Builder = apply {
+            this.name = name
+        }
+
+        /**
+         * Sets the in-app message display content.
+         *
+         * @param displayContent The in-app message display content.
+         * @return The builder.
+         */
+        public fun setDisplayContent(displayContent: InAppMessageDisplayContent): Builder = apply {
+            this.displayContent = displayContent
+        }
+
+        /**
+         * Sets the in-app message extras.
+         *
+         * @param extras The in-app message extras.
+         * @return The builder.
+         */
+        public fun setExtras(extras: JsonMap?): Builder = apply {
+            this.extras = extras
+        }
+
+        /**
+         * Sets the in-app message actions.
+         *
+         * @param actions The in-app message actions.
+         * @return The builder.
+         */
+        public fun setActions(actions: JsonMap?): Builder = apply {
+            this.actions = actions
+        }
+
+        /**
+         * Sets if the in-app message reporting is enabled.
+         *
+         * @param isReportingEnabled `true` to enable reporting, `false` to disable reporting.
+         * @return The builder.
+         */
+        public fun setReportingEnabled(isReportingEnabled: Boolean): Builder = apply {
+            this.isReportingEnabled = isReportingEnabled
+        }
+
+        /**
+         * Sets the display behavior.
+         *
+         * @param displayBehavior The display behavior.
+         * @return The builder.
+         */
+        public fun setDisplayBehavior(displayBehavior: DisplayBehavior?): Builder = apply {
+            this.displayBehavior = displayBehavior
+        }
+
+        /**
+         * Builds the in-app message.
+         *
+         * @return The in-app message.
+         */
+        public fun build(): InAppMessage = InAppMessage(
+            name = name,
+            displayContent = displayContent,
+            source = source,
+            extras = extras,
+            actions = actions,
+            isReportingEnabled = isReportingEnabled,
+            displayBehavior = displayBehavior,
+            renderedLocale = renderedLocale
+        )
+    }
 
     internal companion object {
         /**

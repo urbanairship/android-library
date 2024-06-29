@@ -18,6 +18,9 @@ import com.urbanairship.channel.SmsValidator
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.JsonValue
+import com.urbanairship.push.PushListener
+import com.urbanairship.push.PushManager
+import com.urbanairship.push.PushMessage
 import com.urbanairship.remoteconfig.ContactConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import io.mockk.coEvery
@@ -83,6 +86,10 @@ public class ContactTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
     private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL)
+    private val pushListeners = mutableListOf<PushListener>()
+    private val mockPushManager: PushManager = mockk {
+        every { this@mockk.addInternalPushListener(capture(pushListeners)) } just runs
+    }
 
     private val contact: Contact by lazy {
         Contact(
@@ -97,6 +104,7 @@ public class ContactTest {
             mockSubscriptionListApiClient,
             mockContactManager,
             mockSmsValidator,
+            mockPushManager,
             mockChannelsContactProvider,
             testDispatcher
         )
@@ -286,6 +294,27 @@ public class ContactTest {
         testActivityMonitor.foreground()
 
         assertEquals(2, count)
+    }
+
+    @Test
+    public fun testForegroundRefreshesContactChannels(): TestResult = runTest {
+        // init
+        contact
+        verify(exactly = 0) { mockChannelsContactProvider.refresh() }
+
+        testActivityMonitor.foreground()
+        verify { mockChannelsContactProvider.refresh() }
+    }
+
+    @Test
+    public fun testPushRefreshesContact(): TestResult = runTest {
+        // init
+        contact
+        val mockPush = mockk<PushMessage> {
+            every { this@mockk.containsKey("com.urbanairship.contact.update") } returns true
+        }
+        pushListeners.forEach { it.onPushReceived(mockPush, false) }
+        verify { mockChannelsContactProvider.refresh() }
     }
 
     @Test

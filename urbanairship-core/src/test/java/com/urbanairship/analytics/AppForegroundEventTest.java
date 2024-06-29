@@ -7,6 +7,7 @@ import android.os.Build;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
+import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.push.PushManager;
 
@@ -15,27 +16,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class AppForegroundEventTest extends BaseTestCase {
 
     private AppForegroundEvent event;
-    private JsonMap data;
-
-    private PushManager mockPush;
-    private Analytics analytics;
 
     @Before
     public void setUp() {
         event = new AppForegroundEvent(1000);
-        data = event.getEventData();
-
-        mockPush = Mockito.mock(PushManager.class);
-        TestApplication.getApplication().setPushManager(mockPush);
-
-        analytics = mock(Analytics.class);
-        TestApplication.getApplication().setAnalytics(analytics);
     }
 
     @Test
@@ -79,15 +70,15 @@ public class AppForegroundEventTest extends BaseTestCase {
     }
 
     @Test
-    public void testPushId() throws JSONException {
-        when(analytics.getConversionSendId()).thenReturn("send id");
-        EventTestUtils.validateEventValue(event, Event.PUSH_ID_KEY, "send id");
+    public void testPushId() throws JsonException {
+        ConversionData conversionData = new ConversionData("send id", null, null);
+        assertEquals(event.getEventData(conversionData).require(Event.PUSH_ID_KEY).requireString(), "send id");
     }
 
     @Test
-    public void testPushMetadata() throws JSONException {
-        when(analytics.getConversionMetadata()).thenReturn("metadata");
-        EventTestUtils.validateEventValue(event, Event.METADATA_KEY, "metadata");
+    public void testPushMetadata() throws JsonException {
+        ConversionData conversionData = new ConversionData(null, "metadata", null);
+        assertEquals(event.getEventData(conversionData).require(Event.METADATA_KEY).requireString(), "metadata");
     }
 
     /**
@@ -95,9 +86,9 @@ public class AppForegroundEventTest extends BaseTestCase {
      * data
      */
     @Test
-    public void testLastSendMetadata() throws JSONException {
-        when(mockPush.getLastReceivedMetadata()).thenReturn("last metadata");
-        EventTestUtils.validateEventValue(event, Event.LAST_METADATA_KEY, "last metadata");
+    public void testLastSendMetadata() throws JsonException {
+        ConversionData conversionData = new ConversionData(null, "metadata", "last metadata");
+        assertEquals(event.getEventData(conversionData).require(Event.LAST_METADATA_KEY).requireString(), "last metadata");
     }
 
 }

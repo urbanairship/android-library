@@ -187,7 +187,7 @@ internal class InAppMessageAnalytics private constructor(
 
         return when (displayImpressionRule) {
             is InAppDisplayImpressionRule.Interval -> {
-                (clock.currentTimeMillis() - lastImpression.date) >= displayImpressionRule.value
+                (clock.currentTimeMillis() - lastImpression.date) >= displayImpressionRule.value.inWholeMilliseconds
             }
             is InAppDisplayImpressionRule.Once -> false
         }

@@ -60,6 +60,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
@@ -280,6 +281,8 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                         val isPending = !channel.isOptedIn
                         if (isPending) {
                             schedulePendingResendVisibilityChanges(channel)
+                        } else {
+                            cancelPendingResendVisibilityChanges(channel)
                         }
                         ContactChannelState(
                             showResendButton = false, showPendingButton = isPending
@@ -289,6 +292,8 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                         val isPending = !channel.isOptedIn
                         if (isPending) {
                             schedulePendingResendVisibilityChanges(channel, onlyHide = true)
+                        } else {
+                            cancelPendingResendVisibilityChanges(channel)
                         }
                         channelState
                     }
@@ -430,33 +435,40 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         }
     }
 
-    private var showResendButtonJob: Job? = null
-    private var hidePendingLabelJob: Job? = null
+    private var showResendButtonJobs: MutableMap<ContactChannel, Job> = mutableMapOf()
+    private var hidePendingLabelJobs: MutableMap<ContactChannel, Job> = mutableMapOf()
+
+    fun cancelPendingResendVisibilityChanges(channel: ContactChannel) {
+        cancelPendingVisibilityChanges(channel)
+        cancelResendVisibilityChanges(channel)
+    }
+
+    fun cancelPendingVisibilityChanges(channel: ContactChannel) {
+        hidePendingLabelJobs[channel]?.cancel()
+        hidePendingLabelJobs.remove(channel)
+    }
+
+    fun cancelResendVisibilityChanges(channel: ContactChannel) {
+        showResendButtonJobs[channel]?.cancel()
+        showResendButtonJobs.remove(channel)
+    }
 
     fun schedulePendingResendVisibilityChanges(channel: ContactChannel, onlyHide: Boolean = false) {
         if (!onlyHide) {
-            showResendButtonJob?.cancel()
-            showResendButtonJob = viewModelScope.launch(dispatcher) {
+            cancelResendVisibilityChanges(channel)
+            showResendButtonJobs[channel] = viewModelScope.launch(dispatcher) {
                 delay(defaultResendLabelHideDelay)
-                handle(
-                    Action.UpdateContactChannel(
-                        channel, ContactChannelState(
-                            showResendButton = true, showPendingButton = true
-                        )
-                    )
-                )
+                handle(Action.UpdateContactChannel(
+                    channel, ContactChannelState(showResendButton = true, showPendingButton = true)
+                ))
             }
         }
 
-        hidePendingLabelJob?.cancel()
-        hidePendingLabelJob = viewModelScope.launch(dispatcher) {
+        cancelPendingVisibilityChanges(channel)
+        hidePendingLabelJobs[channel] = viewModelScope.launch(dispatcher) {
             delay(defaultPendingLabelHideDelay)
             handle(Action.UpdateContactChannel(
-                channel,
-                ContactChannelState(
-                    showPendingButton = false,
-                    showResendButton = false
-                )
+                channel, ContactChannelState(showPendingButton = false, showResendButton = false)
             ))
         }
     }
@@ -492,6 +504,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                     )
                 }
             }
+            .distinctUntilChanged()
 
     private fun getConfig(preferenceCenterId: String): Flow<PreferenceCenterConfig> = flow {
         emit(preferenceCenter.getConfig(preferenceCenterId) ?: throw IllegalStateException("Null preference center for id: $preferenceCenterId"))

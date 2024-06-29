@@ -286,8 +286,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
     ) : JsonSerializable {
 
         internal fun subtracting(features: List<Feature>): Feature {
-            val combined = features.reduce { result, value -> result or value }
-            return this and combined.inv()
+            return this and reduce(features).inv()
         }
 
         internal fun subtracting(feature: Feature?): Feature {
@@ -296,8 +295,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
         }
 
         internal fun combining(features: List<Feature>): Feature {
-            val combined = features.reduce { result, value -> result or value }
-            return this or combined
+            return this or reduce(features)
         }
 
         internal fun contains(features: List<Feature>): Boolean {
@@ -312,6 +310,10 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
 
         internal fun contains(feature: Feature): Boolean {
             return this and feature == feature
+        }
+
+        private fun reduce(features: List<Feature>): Feature {
+            return features.reduceOrNull { result, value -> result or value } ?: NONE
         }
 
         override fun toString(): String {

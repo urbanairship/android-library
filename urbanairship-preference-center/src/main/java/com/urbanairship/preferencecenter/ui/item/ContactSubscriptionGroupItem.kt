@@ -66,7 +66,9 @@ internal data class ContactSubscriptionGroupItem(val item: Item.ContactSubscript
         override fun bind(item: ContactSubscriptionGroupItem) {
             titleView.setTextOrHide(item.title)
             descriptionView.setTextOrHide(item.subtitle)
+        }
 
+        internal fun bindChips(item: ContactSubscriptionGroupItem) {
             // Remove all chips and re-add them.
             chipGroup.removeAllViews()
             for (component in item.components) {

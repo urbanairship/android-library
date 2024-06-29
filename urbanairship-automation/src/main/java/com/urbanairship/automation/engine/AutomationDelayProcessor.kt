@@ -3,6 +3,7 @@
 package com.urbanairship.automation.engine
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.UALog
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.AutomationAppState
@@ -33,7 +34,10 @@ internal class AutomationDelayProcessor(
     private val sleeper: TaskSleeper = TaskSleeper.default
 ) : AutomationDelayProcessorInterface {
 
-    override suspend fun process(delay: AutomationDelay?, triggerDate: Long) = withContext(Dispatchers.Main.immediate) {
+    override suspend fun process(
+        delay: AutomationDelay?,
+        triggerDate: Long
+    ) = withContext(Dispatchers.Main.immediate) {
         if (delay == null) {
             return@withContext
         }

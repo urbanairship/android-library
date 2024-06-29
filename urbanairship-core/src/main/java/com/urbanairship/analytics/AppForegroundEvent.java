@@ -35,7 +35,7 @@ class AppForegroundEvent extends Event {
     @NonNull
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public final JsonMap getEventData() {
+    public final JsonMap getEventData(@NonNull ConversionData conversionData) {
         PackageInfo packageInfo = UAirship.getPackageInfo();
         return JsonMap.newBuilder()
                       .put(CONNECTION_TYPE_KEY, getConnectionType())
@@ -46,9 +46,9 @@ class AppForegroundEvent extends Event {
                       .put(OS_VERSION_KEY, Build.VERSION.RELEASE)
                       .put(LIB_VERSION_KEY, UAirship.getVersion())
                       .putOpt(PACKAGE_VERSION_KEY, packageInfo != null ? packageInfo.versionName : null)
-                      .put(PUSH_ID_KEY, UAirship.shared().getAnalytics().getConversionSendId())
-                      .put(METADATA_KEY, UAirship.shared().getAnalytics().getConversionMetadata())
-                      .put(LAST_METADATA_KEY, UAirship.shared().getPushManager().getLastReceivedMetadata())
+                      .put(PUSH_ID_KEY, conversionData.getConversionSendId())
+                      .put(METADATA_KEY, conversionData.getConversionMetadata())
+                      .put(LAST_METADATA_KEY, conversionData.getLastReceivedMetadata())
                       .build();
     }
 

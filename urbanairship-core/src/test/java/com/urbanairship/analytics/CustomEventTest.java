@@ -8,6 +8,7 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.TestApplication;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonList;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.push.PushMessage;
@@ -24,6 +25,7 @@ import java.util.Arrays;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -159,46 +161,49 @@ public class CustomEventTest extends BaseTestCase {
      * Test creating a custom event includes the hard conversion send id if set.
      */
     @Test
-    public void testHardConversionId() throws JSONException {
+    public void testHardConversionId() throws JsonException {
         CustomEvent event = CustomEvent.newBuilder("event name").build();
-        when(analytics.getConversionSendId()).thenReturn("send id");
-        EventTestUtils.validateEventValue(event, "conversion_send_id", "send id");
+        ConversionData conversionData = new ConversionData("send id", "send metadata", "last metadata");
+
+        JsonMap eventData = event.getEventData(conversionData);
+        assertEquals(eventData.require("conversion_send_id").requireString(), "send id");
     }
 
     /**
      * Test creating a custom event includes the hard conversion metadata if set.
      */
     @Test
-    public void testHardConversionMetadata() throws JSONException {
+    public void testHardConversionMetadata() throws JsonException {
         CustomEvent event = CustomEvent.newBuilder("event name").build();
-        when(analytics.getConversionMetadata()).thenReturn("metadata");
-        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
+        ConversionData conversionData = new ConversionData("send id", "send metadata", "last metadata");
+
+        JsonMap eventData = event.getEventData(conversionData);
+        assertEquals(eventData.require("conversion_metadata").requireString(), "send metadata");
     }
 
     /**
      * Test creating a custom event includes the last received metadata.
      */
     @Test
-    public void testLastMetadata() throws JSONException {
-        when(pushManager.getLastReceivedMetadata()).thenReturn("last metadata");
-
+    public void testLastMetadata() throws JsonException {
         CustomEvent event = CustomEvent.newBuilder("event name").build();
+        ConversionData conversionData = new ConversionData("send id", null, "last metadata");
 
-        EventTestUtils.validateEventValue(event, "last_received_metadata", "last metadata");
+        JsonMap eventData = event.getEventData(conversionData);
+        assertEquals(eventData.require("last_received_metadata").requireString(), "last metadata");
     }
 
     /**
      * Test creating a custom event includes only the hard metadata if set and not the last send.
      */
     @Test
-    public void testHardConversionMetadataAndLastMetadata() throws JSONException {
-        when(analytics.getConversionMetadata()).thenReturn("metadata");
-        when(pushManager.getLastReceivedMetadata()).thenReturn("last metadata");
-
+    public void testHardConversionMetadataAndLastMetadata() throws JsonException {
         CustomEvent event = CustomEvent.newBuilder("event name").build();
+        ConversionData conversionData = new ConversionData("send id", "send metadata", "last metadata");
 
-        EventTestUtils.validateEventValue(event, "last_received_metadata", null);
-        EventTestUtils.validateEventValue(event, "conversion_metadata", "metadata");
+        JsonMap eventData = event.getEventData(conversionData);
+        assertNull(eventData.get("last_received_metadata"));
+        assertEquals(eventData.require("conversion_metadata").requireString(), "send metadata");
     }
 
     /**
@@ -486,7 +491,7 @@ public class CustomEventTest extends BaseTestCase {
         EventTestUtils.validateNestedEventValue(event, "properties", "long", "9223372036854775807");
 
         // Validate the custom String[] property
-        JsonList array = event.getEventData().get("properties").getMap().get("array").getList();
+        JsonList array = event.getEventData(new ConversionData(null, null, null)).get("properties").getMap().get("array").getList();
         assertEquals(2, array.size());
         assertEquals("value", array.get(0).getString());
         assertEquals("another value", array.get(1).getString());

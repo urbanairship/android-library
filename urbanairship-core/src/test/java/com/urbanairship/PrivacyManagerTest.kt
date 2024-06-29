@@ -282,6 +282,37 @@ public class PrivacyManagerTest {
     }
 
     @Test
+    public fun testSetEmptyFeatures() {
+        privacyManager.enabledFeatures = PrivacyManager.Feature.ALL
+        privacyManager.enable()
+        assertEquals(privacyManager.enabledFeatures, PrivacyManager.Feature.ALL)
+
+        privacyManager.disable()
+        assertEquals(privacyManager.enabledFeatures, PrivacyManager.Feature.ALL)
+
+        assertFalse(privacyManager.isEnabled())
+
+        privacyManager.setEnabledFeatures()
+        assertEquals(privacyManager.enabledFeatures, PrivacyManager.Feature.NONE)
+    }
+
+    @Test
+    public fun testSingleFeature() {
+        privacyManager.enabledFeatures = PrivacyManager.Feature.NONE
+
+        privacyManager.enable(PrivacyManager.Feature.PUSH)
+        assertEquals(privacyManager.enabledFeatures, PrivacyManager.Feature.PUSH)
+        assertTrue(privacyManager.isEnabled(PrivacyManager.Feature.PUSH))
+
+        privacyManager.disable(PrivacyManager.Feature.PUSH)
+        assertEquals(privacyManager.enabledFeatures, PrivacyManager.Feature.NONE)
+
+        privacyManager.setEnabledFeatures(PrivacyManager.Feature.PUSH)
+        assertEquals(privacyManager.enabledFeatures, PrivacyManager.Feature.PUSH)
+        assertTrue(privacyManager.isEnabled(PrivacyManager.Feature.PUSH))
+    }
+
+    @Test
     public fun testListener() {
         val listener: PrivacyManager.Listener = mockk(relaxed = true)
 

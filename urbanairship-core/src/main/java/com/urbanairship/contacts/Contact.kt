@@ -34,6 +34,9 @@ import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.locale.LocaleManager
+import com.urbanairship.push.PushListener
+import com.urbanairship.push.PushManager
+import com.urbanairship.push.PushMessage
 import com.urbanairship.util.CachedValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.SerialQueue
@@ -66,6 +69,7 @@ public class Contact internal constructor(
     private val subscriptionListApiClient: SubscriptionListApiClient,
     private val contactManager: ContactManager,
     private val smsValidator: SmsValidator,
+    pushManager: PushManager,
     contactChannelsProvider: ContactChannelsProvider = ContactChannelsProvider(
         config,
         audienceOverridesProvider,
@@ -81,6 +85,7 @@ public class Contact internal constructor(
         airshipChannel: AirshipChannel,
         localeManager: LocaleManager,
         audienceOverridesProvider: AudienceOverridesProvider,
+        pushManager: PushManager
     ) : this(
         context,
         preferenceDataStore,
@@ -99,7 +104,8 @@ public class Contact internal constructor(
             localeManager,
             audienceOverridesProvider
         ),
-        AirshipSmsValidator(config)
+        AirshipSmsValidator(config),
+        pushManager
     )
 
     /**
@@ -193,8 +199,16 @@ public class Contact internal constructor(
                     }
                     lastResolvedDate = clock.currentTimeMillis()
                 }
+
+                contactChannelsProvider.refresh()
             }
         })
+
+        pushManager.addInternalPushListener { message, _ ->
+            if (message.containsKey(CONTACT_UPDATE_PUSH_KEY)) {
+                contactChannelsProvider.refresh()
+            }
+        }
 
         subscriptionsScope.launch {
             for (conflict in contactManager.conflictEvents) {
@@ -590,6 +604,8 @@ public class Contact internal constructor(
         }
     }
 
+
+
     internal companion object {
 
         @VisibleForTesting
@@ -614,6 +630,9 @@ public class Contact internal constructor(
 
         /** Default CRA max age. */
         private val CRA_MAX_AGE = TimeUnit.MINUTES.toMillis(10)
+
+        private val CONTACT_UPDATE_PUSH_KEY = "com.urbanairship.contact.update"
+
     }
 
     private data class Subscriptions(

@@ -2,25 +2,33 @@ package com.urbanairship.automation.engine
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
+import com.urbanairship.TestTaskSleeper
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.AutomationAppState
 import com.urbanairship.automation.AutomationDelay
+import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -29,6 +37,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class AutomationDelayProcessorTest {
     private val foregroundState = MutableStateFlow(false)
@@ -45,12 +54,16 @@ public class AutomationDelayProcessorTest {
         every { this@mockk.regionState } returns this@AutomationDelayProcessorTest.regionState
     }
 
-    private val sleeper: TaskSleeper = mockk(relaxed = true)
-
     private val testDispatcher = StandardTestDispatcher()
     private val clock = TestClock().apply {
         currentTimeMillis = 0
     }
+
+    private val sleeper: TaskSleeper = spyk(
+        TestTaskSleeper(clock) { sleep ->
+            clock.currentTimeMillis += sleep.inWholeMilliseconds
+        }
+    )
 
     private val processor =  AutomationDelayProcessor(
         analytics = analytics,
@@ -88,7 +101,9 @@ public class AutomationDelayProcessorTest {
             assertTrue(awaitItem())
         }
 
-        coVerify { sleeper.sleep(100.seconds) }
+        coVerify {
+            sleeper.sleep(100.seconds)
+        }
     }
 
     @Test
@@ -100,7 +115,9 @@ public class AutomationDelayProcessorTest {
             assertTrue(awaitItem())
         }
 
-        coVerify { sleeper.sleep(100.seconds) }
+        coVerify {
+            sleeper.sleep(100.seconds)
+        }
     }
 
     @Test
@@ -108,18 +125,23 @@ public class AutomationDelayProcessorTest {
         val delay = AutomationDelay(seconds = 100L)
 
         clock.currentTimeMillis = 100 * 1000
+
         startProcessing(delay, this, triggerTime = 50 * 1000).test {
             assertFalse(awaitItem())
             assertTrue(awaitItem())
         }
 
-        coVerify { sleeper.sleep(50.seconds) }
+        coVerify {
+            sleeper.sleep(50.seconds)
+        }
     }
 
     @Test
     public fun testSkipSleep(): TestResult = runTest {
         val delay = AutomationDelay(seconds = 100L)
+
         clock.currentTimeMillis = 100 * 1000
+
         startProcessing(delay, this, triggerTime = 0).test {
             assertFalse(awaitItem())
             assertTrue(awaitItem())
@@ -201,15 +223,13 @@ public class AutomationDelayProcessorTest {
     private fun startProcessing(
         delay: AutomationDelay?,
         scope: TestScope,
-        triggerTime: Long = clock.currentTimeMillis()
+        triggerTime: Long = 0
     ): StateFlow<Boolean> {
-
         val flow = MutableStateFlow(false)
-        scope.async(Dispatchers.IO) {
+        scope.launch(Dispatchers.IO) {
             processor.process(delay, triggerDate = triggerTime)
             flow.value = true
         }
         return flow
     }
-
 }

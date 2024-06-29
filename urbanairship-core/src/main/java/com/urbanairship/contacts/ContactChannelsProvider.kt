@@ -8,6 +8,7 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.util.CachedValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
+import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.time.Duration
@@ -18,7 +19,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -38,13 +39,11 @@ internal class ContactChannelsProvider(
     dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) {
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
-    private val cachedResponse  = CachedValue<Pair<String, List<ContactChannel>>>(clock)
-
     /// Map to cache address to channels to make matching easier
     private val addressToChannelIdMap = mutableMapOf<String, String>()
     private val lock = ReentrantLock()
-
-
+    private val changeTokenFlow = MutableStateFlow(UUID.randomUUID())
+    private val fetchCache = FetchCache(clock, maxCacheAge)
     internal constructor(
         config: AirshipRuntimeConfig,
         audienceOverridesProvider: AudienceOverridesProvider,
@@ -55,61 +54,69 @@ internal class ContactChannelsProvider(
         contactUpdates = contactUpdates
     )
 
+    fun refresh() {
+        changeTokenFlow.value = UUID.randomUUID()
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    val contactChannels: SharedFlow<Result<List<ContactChannel>>> = contactUpdates.mapNotNull {
-        if (it?.isStable == true) { it.contactId } else { null }
-    }.flatMapLatest { contactId ->
-        val fetchUpdates = flow {
+    val contactChannels: SharedFlow<Result<List<ContactChannel>>> by lazy {
+        var lastContactId: String? = null
 
-            var backoff: Duration = initialBackoff
-            var isFirstFetch = true
+        val stableContactIdUpdates = contactUpdates.mapNotNull {
+            if (it?.isStable == true) { it.contactId } else { null }
+        }
 
-            while (true) {
-                val fetched = fetch(contactId)
-                backoff = if (fetched.isSuccess) {
-                    emit(fetched)
-                    taskSleeper.sleep(cachedResponse.remainingCacheTimeMillis().milliseconds)
-                    initialBackoff
-                } else {
-                    if (isFirstFetch) {
+        combine(stableContactIdUpdates, changeTokenFlow) { contactId, changeToken ->
+            Pair(contactId, changeToken)
+        }.flatMapLatest { (contactId, changeToken) ->
+            val fetchUpdates = flow {
+
+                var backoff: Duration = initialBackoff
+
+                while (true) {
+                    val fetched = fetch(contactId, changeToken)
+                    backoff = if (fetched.isSuccess) {
                         emit(fetched)
+                        taskSleeper.sleep(fetchCache.remainingCacheTimeMillis)
+                        initialBackoff
+                    } else {
+                        if (lastContactId != contactId) {
+                            emit(fetched)
+                        }
+                        taskSleeper.sleep(backoff)
+                        backoff.times(2).coerceAtMost(maxBackoff)
                     }
-                    taskSleeper.sleep(backoff)
-                    backoff.times(2).coerceAtMost(maxBackoff)
+                    lastContactId = contactId
                 }
-                isFirstFetch = false
             }
-        }
 
-        val overridesUpdates = audienceOverridesProvider.updates.map { _ ->
-            audienceOverridesProvider.contactOverrides(contactId)
-        }
+            val overridesUpdates = audienceOverridesProvider.updates.map { _ ->
+                audienceOverridesProvider.contactOverrides(contactId)
+            }
 
-        combine(fetchUpdates, overridesUpdates) { fetchUpdate, overrides ->
-            fetchUpdate.fold(onSuccess = {
-                Result.success(applyOverrides(it, overrides.channels))
-            }, onFailure = {
-                Result.failure(it)
-            })
-        }
-    }.shareIn(
-        scope  = scope,
-        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 100),
-        replay =  1
-    )
+            combine(fetchUpdates, overridesUpdates) { fetchUpdate, overrides ->
+                fetchUpdate.fold(onSuccess = {
+                    Result.success(applyOverrides(it, overrides.channels))
+                }, onFailure = {
+                    Result.failure(it)
+                })
+            }
+        }.shareIn(
+            scope  = scope,
+            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 100),
+            replay =  1
+        )
+    }
 
-    private suspend fun fetch(contactId: String): Result<List<ContactChannel>> {
-        val cached = cachedResponse.get()
-        if (cached != null && cached.first == contactId) {
-            return Result.success(cached.second)
+    private suspend fun fetch(contactId: String, changeToken: UUID): Result<List<ContactChannel>> {
+        val cached = fetchCache.getCache(contactId, changeToken)
+        if (cached != null) {
+            return Result.success(cached)
         }
 
         val result = apiClient.fetch(contactId)
         if (result.isSuccessful && result.value != null) {
-            cachedResponse.set(
-                Pair(contactId, result.value),
-                clock.currentTimeMillis() + maxCacheAge.inWholeMilliseconds
-            )
+            fetchCache.setCache(contactId, changeToken, result.value)
             return Result.success(result.value)
         }
 
@@ -272,3 +279,28 @@ private val ContactChannel.channelId: String?
             }
         }
     }
+
+
+private class FetchCache(private val clock: Clock, private val maxCacheAge: Duration) {
+    private val cachedResponse  = CachedValue<Triple<String, UUID, List<ContactChannel>>>(clock)
+
+    fun getCache(contactId: String, changeToken: UUID): List<ContactChannel>? {
+        val cached = cachedResponse.get()
+        if (cached != null && cached.first == contactId && cached.second == changeToken) {
+            return cached.third
+        }
+
+        return null
+    }
+
+    fun setCache(contactId: String, changeToken: UUID, value: List<ContactChannel>) {
+        cachedResponse.set(
+            Triple(contactId, changeToken, value),
+            clock.currentTimeMillis() + maxCacheAge.inWholeMilliseconds
+        )
+    }
+
+    val remainingCacheTimeMillis: Duration
+        get() = cachedResponse.remainingCacheTimeMillis().milliseconds
+
+}

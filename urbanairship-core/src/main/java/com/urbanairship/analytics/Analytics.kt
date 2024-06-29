@@ -29,6 +29,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionsManager
+import com.urbanairship.push.PushManager
 import com.urbanairship.util.Clock
 import com.urbanairship.util.UAStringUtil
 import java.util.TimeZone
@@ -145,6 +146,22 @@ public class Analytics @VisibleForTesting public constructor(
             field = metadata
         }
 
+    /**
+     * Returns the send metadata of the last received push.
+     *
+     * @return The send metadata from the last received push, or null if not found.
+     * @hide
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @set:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public var lastReceivedMetadata: String?
+        get() {
+            return dataStore.getString(LAST_RECEIVED_METADATA, null)
+        }
+        set(value) {
+            dataStore.put(LAST_RECEIVED_METADATA, value)
+        }
+
     // Screen state
     private var _currentScreen: MutableStateFlow<String?> = MutableStateFlow(null)
     private var previousScreen: String? = null
@@ -202,6 +219,7 @@ public class Analytics @VisibleForTesting public constructor(
         if (activityMonitor.isAppForegrounded) {
             onForeground(clock.currentTimeMillis())
         }
+
         airshipChannel.addChannelListener { uploadEvents() }
 
         privacyManager.addListener(object : PrivacyManager.Listener {
@@ -304,6 +322,20 @@ public class Analytics @VisibleForTesting public constructor(
             return false
         }
 
+        val conversionData = ConversionData(
+            conversionSendId = conversionSendId,
+            conversionMetadata = conversionMetadata,
+            lastReceivedMetadata = lastReceivedMetadata
+        )
+
+        val eventData = AirshipEventData(
+            id = event.eventId,
+            sessionId = sessionId,
+            body = event.getEventData(conversionData).toJsonValue(),
+            type = event.type,
+            timeMs = event.timeMilliseconds
+        )
+
         val feedEvent = when(event) {
             is CustomEvent -> {
                 AirshipEventFeed.Event.Analytics(
@@ -315,24 +347,19 @@ public class Analytics @VisibleForTesting public constructor(
             else -> {
                 AirshipEventFeed.Event.Analytics(
                     event.type,
-                    event.eventData.toJsonValue()
+                    eventData.body
                 )
             }
         }
 
         eventFeed.emit(feedEvent)
 
+
+
         UALog.v { "Adding event: ${event.type}" }
-        val sessionId = sessionId
-        executor.execute { eventManager.addEvent(event, sessionId) }
+        executor.execute { eventManager.addEvent(eventData, event.priority) }
         _events.tryEmit(
-            AirshipEventData(
-                id = event.eventId,
-                sessionId = sessionId,
-                body = event.eventData.toJsonValue(),
-                type = event.type,
-                timeMs = (event.time.toDouble() * 1000).toLong()
-            )
+            eventData
         )
         return true
     }
@@ -591,5 +618,6 @@ public class Analytics @VisibleForTesting public constructor(
          */
         private const val SCHEDULE_SEND_DELAY_SECONDS: Long = 10
         private const val ASSOCIATED_IDENTIFIERS_KEY = "com.urbanairship.analytics.ASSOCIATED_IDENTIFIERS"
+        private const val LAST_RECEIVED_METADATA = "com.urbanairship.push.LAST_RECEIVED_METADATA"
     }
 }
