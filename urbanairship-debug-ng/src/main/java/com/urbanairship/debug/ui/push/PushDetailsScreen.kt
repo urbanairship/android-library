@@ -22,6 +22,7 @@ import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.JsonItem
 import com.urbanairship.debug.ui.components.TopBarNavigation
 import com.urbanairship.json.JsonValue
+import com.urbanairship.push.PushMessage
 import kotlinx.coroutines.flow.map
 
 @Composable
@@ -59,7 +60,7 @@ internal fun PushDetailsScreenContent(
         Column(
             modifier = modifier.verticalScroll(rememberScrollState())
         ) {
-            JsonItem(JsonValue.wrap(it.payload))
+            JsonItem(PushMessage.fromJsonValue(JsonValue.parseString(it.payload)))
         }
     } ?: Box(contentAlignment = Alignment.Center) {
         CircularProgressIndicator(

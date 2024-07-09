@@ -22,6 +22,6 @@ internal data class PushEntity(
     constructor(pushMessage: PushMessage) : this(
         0,
         pushMessage.canonicalPushId ?: "MISSING",
-        pushMessage.toJsonValue().toString(),
+        pushMessage.toJsonValue().optMap().toString(true),
         System.currentTimeMillis())
 }
