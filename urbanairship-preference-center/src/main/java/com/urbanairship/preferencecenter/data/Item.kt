@@ -577,7 +577,7 @@ public sealed class Item(
 
             internal companion object {
                 private const val KEY_SENDER_ID = "sender_id"
-                private const val KEY_COUNTRY_CODE = "country_code"
+                private const val KEY_COUNTRY_CODE = "country_calling_code"
                 private const val KEY_DISPLAY_NAME = "display_name"
 
                 @Throws(JsonException::class)
