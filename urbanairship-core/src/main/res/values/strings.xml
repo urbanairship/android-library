@@ -69,6 +69,12 @@
     <string name="ua_rate_app_action_default_body">Tap <xliff:g id="ok_button_title" example="Rate">%1$2s</xliff:g> to rate it on the app store.</string>
     <string name="ua_rate_app_action_generic_display_name">This App</string>
 
+    <!-- Accessibility buttons -->
+    <string name="ua_icon_button_close">Close button</string>
+    <string name="ua_icon_button_checkmark">Validate button</string>
+    <string name="ua_icon_button_forward_arrow">Next button</string>
+    <string name="ua_icon_button_backward_arrow">Previous button</string>
+
     <!-- Channels -->
     <string name="ua_default_channel_name">Notifications</string>
     <string name="ua_default_channel_description">General app updates</string>
