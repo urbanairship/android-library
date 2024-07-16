@@ -3,6 +3,13 @@
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
 ## Version 18.1.1, June 28, 2024
+Patch release that includes fixes for Preference Center.
+
+### Changes
+- Fixed warning message on preference center email entry field.
+- Fixed country code listing.
+
+## Version 18.1.1, June 28, 2024
 Patch release that includes fixes for Preference Center, Privacy Manager, and Embedded Content.
 
 ### Changes
