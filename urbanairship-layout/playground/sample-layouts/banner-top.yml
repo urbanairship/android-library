@@ -37,7 +37,7 @@ view:
             weight: 1
             view:
               type: label
-              text: Something was successful!
+              text: 'Awoooh Markdown in *italic*, **bold** and even __underline__ !'
               text_appearance:
                 font_size: 14
                 color:
