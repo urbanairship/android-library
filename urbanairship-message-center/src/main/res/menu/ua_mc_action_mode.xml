@@ -12,7 +12,7 @@
     <item
         android:id="@+id/delete"
         android:title="@string/ua_delete"
-        android:showAsAction="ifRoom"
+        android:showAsAction="never"
         tools:ignore="AppCompatResource" />
 
 
