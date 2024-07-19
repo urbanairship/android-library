@@ -19,7 +19,7 @@
     <item
         android:id="@+id/select_all"
         android:title="@string/ua_select_all"
-        android:showAsAction="ifRoom"
+        android:showAsAction="never"
         tools:ignore="AppCompatResource" />
 
 
