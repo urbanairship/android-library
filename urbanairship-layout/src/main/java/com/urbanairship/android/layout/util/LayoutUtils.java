@@ -9,6 +9,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.text.Html;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -31,6 +32,7 @@ import com.urbanairship.android.layout.property.FormInputType;
 import com.urbanairship.android.layout.property.SwitchStyle;
 import com.urbanairship.android.layout.property.TextAppearance;
 import com.urbanairship.android.layout.property.TextStyle;
+import com.urbanairship.android.layout.util.StringExtensionsKt;
 import com.urbanairship.android.layout.widget.Clippable;
 import com.urbanairship.util.UAStringUtil;
 
@@ -195,7 +197,7 @@ public final class LayoutUtils {
             text += NARROW_NBSP;
         }
 
-        textView.setText(text);
+        textView.setText(Html.fromHtml(StringExtensionsKt.markdownToHtml(text)));
     }
 
     public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
