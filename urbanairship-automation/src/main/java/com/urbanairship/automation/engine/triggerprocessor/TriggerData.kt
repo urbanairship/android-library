@@ -75,6 +75,8 @@ internal class TriggerData(
         }
     }
 
+
+
     override fun toJsonValue(): JsonValue = jsonMapOf(
         SCHEDULE_ID to scheduleId,
         TRIGGER_ID to triggerId,
@@ -99,5 +101,9 @@ internal class TriggerData(
 
     override fun hashCode(): Int {
         return Objects.hash(scheduleId, triggerId, lastTriggerableState, count, children)
+    }
+
+    override fun toString(): String {
+        return "TriggerData(scheduleId='$scheduleId', triggerId='$triggerId', triggerCount=$triggerCount, lastTriggerableState=$lastTriggerableState, mutableChildren=$mutableChildren)"
     }
 }

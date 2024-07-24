@@ -230,7 +230,7 @@ public class AirshipEmbeddedView private constructor(
 
     private fun onUpdate(request: EmbeddedDisplayRequest?) {
         val displayArgs = request?.displayArgsProvider?.invoke()
-        val layout = displayArgs?.let { args -> EmbeddedLayout(context, id, args, manager) }
+        val layout = displayArgs?.let { args -> EmbeddedLayout(context, id, request.viewInstanceId, args, manager) }
 
         UALog.v {
             val action = if (layout != null) "available" else "empty"

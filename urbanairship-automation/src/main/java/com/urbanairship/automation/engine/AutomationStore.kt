@@ -101,7 +101,7 @@ internal class SerialAccessAutomationStore(private val store: AutomationStoreInt
 }
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities = [ScheduleEntity::class, TriggerEntity::class], version = 2)
+@Database(entities = [ScheduleEntity::class, TriggerEntity::class], version = 3)
 internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterface {
     internal abstract val dao: AutomationDao
 
@@ -114,11 +114,19 @@ internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterfa
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE automation_trigger_data")
+                db.execSQL("CREATE TABLE IF NOT EXISTS automation_trigger_data (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `triggerId` TEXT NOT NULL, `scheduleId` TEXT NOT NULL, `state` TEXT NOT NULL)")
+            }
+        }
+
         fun createDatabase(context: Context, config: AirshipRuntimeConfig): AutomationStore {
             val name = config.configOptions.appKey + "_automation_store"
             val path = File(ContextCompat.getNoBackupFilesDir(context), name).absolutePath
             return databaseBuilder(context, AutomationStore::class.java, path)
                 .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_2_3)
                 .fallbackToDestructiveMigrationOnDowngrade()
                 .build()
         }
@@ -362,7 +370,8 @@ internal class ScheduleEntity(
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @TypeConverters(JsonTypeConverters::class)
 internal data class TriggerEntity(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    var id: Int = 0,
     val triggerId: String,
     val scheduleId: String,
     val state: JsonValue

@@ -120,7 +120,7 @@ internal fun rememberAirshipEmbeddedViewState(
                         // Inflate the embedded layout.
                         UALog.v { "Display request available for id: \"$embeddedId\"" }
                         val displayArgs = request.displayArgsProvider.invoke()
-                        EmbeddedLayout(context, embeddedId, displayArgs, embeddedViewManager)
+                        EmbeddedLayout(context, embeddedId, request.viewInstanceId, displayArgs, embeddedViewManager)
                     }
                 }
                 .collect { state.currentLayout = it }
