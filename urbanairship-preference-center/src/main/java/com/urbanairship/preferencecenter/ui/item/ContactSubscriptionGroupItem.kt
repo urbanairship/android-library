@@ -66,6 +66,8 @@ internal data class ContactSubscriptionGroupItem(val item: Item.ContactSubscript
         override fun bind(item: ContactSubscriptionGroupItem) {
             titleView.setTextOrHide(item.title)
             descriptionView.setTextOrHide(item.subtitle)
+
+            bindChips(item)
         }
 
         internal fun bindChips(item: ContactSubscriptionGroupItem) {
