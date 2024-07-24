@@ -340,8 +340,6 @@ public class WeightlessLinearLayout extends ViewGroup {
             });
 
             int maxPercentCount = childrenWithMaxPercent.size();
-            // We only want to distribute the available content height, not the total height with margins.
-            int availableContentHeight = height - maxPercentChildrenTotalMargins;
 
             int lastChildIndex = maxPercentCount - 1;
             for (int i = 0; i < maxPercentCount; i++) {
@@ -351,13 +349,13 @@ public class WeightlessLinearLayout extends ViewGroup {
                 if (heightMode != MeasureSpec.UNSPECIFIED) {
                     float actualPercent;
 
-                    if (delta >= (availableContentHeight * lp.maxHeightPercent) * (maxPercentCount - i)) {
+                    if (delta >= (height * lp.maxHeightPercent) * (maxPercentCount - i)) {
                         actualPercent = lp.maxHeightPercent;
                     } else {
-                        actualPercent = ((float) delta) / ((float)(childrenWithMaxPercent.size() - i)) / ((float) availableContentHeight);
+                        actualPercent = ((float) delta) / ((float)(childrenWithMaxPercent.size() - i)) / ((float) height);
                     }
 
-                    int childHeight = (int) (actualPercent * availableContentHeight);
+                    int childHeight = (int) (actualPercent * height);
                     if (i == lastChildIndex) {
                         childHeight = Math.min(childHeight, delta);
                     }
@@ -573,8 +571,6 @@ public class WeightlessLinearLayout extends ViewGroup {
             });
 
             int maxPercentCount = childrenWithMaxPercent.size();
-            // We only want to distribute the available content width, not the total width with margins.
-            int availableContentWidth = width - maxPercentChildrenTotalMargins;
 
             int lastChildIndex = maxPercentCount - 1;
             for (int i = 0; i < maxPercentCount; i++) {
@@ -584,13 +580,13 @@ public class WeightlessLinearLayout extends ViewGroup {
                 if (widthMode != MeasureSpec.UNSPECIFIED) {
                     float actualPercent;
 
-                    if (delta >= (availableContentWidth * lp.maxWidthPercent) * (maxPercentCount - i)) {
+                    if (delta >= (width * lp.maxWidthPercent) * (maxPercentCount - i)) {
                         actualPercent = lp.maxWidthPercent;
                     } else {
-                        actualPercent = ((float) delta) / ((float)(childrenWithMaxPercent.size() - i)) / ((float) availableContentWidth);
+                        actualPercent = ((float) delta) / ((float)(childrenWithMaxPercent.size() - i)) / ((float) width);
                     }
 
-                    int childWidth = (int) (actualPercent * availableContentWidth);
+                    int childWidth = (int) (actualPercent * width);
                     if (i == lastChildIndex) {
                         childWidth = Math.min(childWidth, delta);
                     }
