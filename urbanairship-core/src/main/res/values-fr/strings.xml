@@ -63,11 +63,6 @@
     <string name="ua_rate_app_action_default_title">Vous aimez <xliff:g example="cette app" id="app_name">%1$2s</xliff:g>?</string>
     <string name="ua_rate_app_action_default_body">Appuyez sur <xliff:g example="Evaluer" id="ok_button_title">%1$2s</xliff:g> pour l\'évaluer sur le Play Store.</string>
     <string name="ua_rate_app_action_generic_display_name">Cette application</string>
-    <!-- Accessibility buttons -->
-    <string name="ua_icon_button_close">Fermer</string>
-    <string name="ua_icon_button_checkmark">Valider</string>
-    <string name="ua_icon_button_forward_arrow">Suivant</string>
-    <string name="ua_icon_button_backward_arrow">Précédent</string>
     <!-- Channels -->
     <string name="ua_default_channel_name">Notifications</string>
     <string name="ua_default_channel_description">Notifications générales de l\'application</string>
