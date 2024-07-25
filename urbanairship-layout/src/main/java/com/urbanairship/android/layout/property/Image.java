@@ -4,15 +4,13 @@ package com.urbanairship.android.layout.property;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-
+import com.urbanairship.UALog;
 import com.urbanairship.android.layout.R;
 import com.urbanairship.android.layout.util.LayoutUtils;
 import com.urbanairship.android.layout.widget.ShapeDrawableWrapper;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
-
 import java.util.Locale;
-
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -118,6 +116,23 @@ public abstract class Image {
             return drawable.resId;
         }
 
+        @NonNull
+        public String getContentDescription(Context context, Icon icon) {
+            switch (icon.drawable.value) {
+                case "close":
+                    return context.getString(com.urbanairship.R.string.ua_icon_button_close);
+                case "checkmark":
+                    return context.getString(com.urbanairship.R.string.ua_icon_button_checkmark);
+                case "forward_arrow":
+                    return context.getString(com.urbanairship.R.string.ua_icon_button_forward_arrow);
+                case "backward_arrow":
+                    return context.getString(com.urbanairship.R.string.ua_icon_button_backward_arrow);
+                default:
+                    UALog.w("Unknown Icon drawable");
+                    return "";
+            }
+        }
+
         public Drawable getDrawable(@NonNull Context context) {
             return getDrawable(context, true);
         }
@@ -156,6 +171,11 @@ public abstract class Image {
             DrawableResource(@NonNull String value, int resId) {
                 this.value = value;
                 this.resId = resId;
+            }
+
+            @NonNull
+            public String getValue() {
+                return value;
             }
 
             @NonNull
