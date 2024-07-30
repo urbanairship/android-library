@@ -64,7 +64,7 @@ public data class PreparedScheduleInfo(
                 reportingContext = content.get(REPORTING_CONTEXT),
                 // Default to a UUID for backwards compatibility
                 triggerSessionId = content.optionalField(TRIGGER_SESSION_ID) ?: UUID.randomUUID().toString(),
-                additionalAudienceCheckResult = content.requireField(ADDITIONAL_AUDIENCE_CHECK_RESULT)
+                additionalAudienceCheckResult = content.optionalField(ADDITIONAL_AUDIENCE_CHECK_RESULT) ?: true
             )
         }
     }

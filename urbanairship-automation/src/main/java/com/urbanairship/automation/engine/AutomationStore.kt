@@ -125,8 +125,7 @@ internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterfa
             val name = config.configOptions.appKey + "_automation_store"
             val path = File(ContextCompat.getNoBackupFilesDir(context), name).absolutePath
             return databaseBuilder(context, AutomationStore::class.java, path)
-                .addMigrations(MIGRATION_1_2)
-                .addMigrations(MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .fallbackToDestructiveMigrationOnDowngrade()
                 .build()
         }

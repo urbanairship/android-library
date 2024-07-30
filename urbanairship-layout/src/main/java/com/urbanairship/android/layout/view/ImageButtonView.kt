@@ -15,6 +15,7 @@ import com.urbanairship.android.layout.model.ImageButtonModel
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.util.ColorStateListBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.widget.TappableView
@@ -50,11 +51,16 @@ internal class ImageButtonView(
 
                 var isLoaded = false
 
+                // Falling back to the screen dimensions keeps the image as large as possible,
+                // while still allowing for sampling to occur.
+                val fallbackWidth = ResourceUtils.getDisplayWidthPixels(context)
+                val fallbackHeight = ResourceUtils.getDisplayHeightPixels(context)
                 fun loadImage(url: String) = UAirship.shared().imageLoader
                     .load(context, this, ImageRequestOptions.newBuilder(url)
                         .setImageLoadedCallback { success ->
                             if (success) { isLoaded = true }
                         }
+                        .setFallbackDimensions(fallbackWidth, fallbackHeight)
                         .build())
 
                 loadImage(url)

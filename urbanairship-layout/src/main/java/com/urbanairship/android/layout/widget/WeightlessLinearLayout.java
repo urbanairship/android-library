@@ -232,7 +232,6 @@ public class WeightlessLinearLayout extends ViewGroup {
 
         int count = getChildCount();
         List<View> childrenWithMaxPercent = new ArrayList<>();
-        int maxPercentChildrenTotalMargins = 0;
 
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         int widthSize = MeasureSpec.getSize(widthMeasureSpec);
@@ -254,7 +253,6 @@ public class WeightlessLinearLayout extends ViewGroup {
 
             if (lp.maxHeightPercent > 0) {
                 childrenWithMaxPercent.add(child);
-                maxPercentChildrenTotalMargins += lp.getMarginStart() + lp.getMarginEnd();
             }
 
             if (heightMode == MeasureSpec.EXACTLY && lp.height == 0 && lp.maxHeightPercent > 0) {
@@ -463,7 +461,6 @@ public class WeightlessLinearLayout extends ViewGroup {
 
         int count = getChildCount();
         List<View> childrenWithMaxPercent = new ArrayList<>();
-        int maxPercentChildrenTotalMargins = 0;
 
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
 
@@ -485,7 +482,6 @@ public class WeightlessLinearLayout extends ViewGroup {
 
             if (lp.maxWidthPercent > 0) {
                 childrenWithMaxPercent.add(child);
-                maxPercentChildrenTotalMargins += lp.getMarginStart() + lp.getMarginEnd();
             }
 
             if (widthMode == MeasureSpec.EXACTLY && lp.width == 0 && lp.maxWidthPercent > 0) {
@@ -604,7 +600,7 @@ public class WeightlessLinearLayout extends ViewGroup {
                             heightSpec = MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.EXACTLY);
                         }
                     } else {
-                        heightSpec = getChildMeasureSpec(widthMeasureSpec, getPaddingTop() + getPaddingBottom() + lp.topMargin + lp.bottomMargin, lp.height);
+                        heightSpec = getChildMeasureSpec(heightMeasureSpec, getPaddingTop() + getPaddingBottom() + lp.topMargin + lp.bottomMargin, lp.height);
                     }
 
                     int widthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY);
@@ -792,6 +788,7 @@ public class WeightlessLinearLayout extends ViewGroup {
                 break;
 
             case Gravity.CENTER_HORIZONTAL:
+
                 // mTotalLength contains the padding already
                 childLeft = getPaddingLeft() + (right - left - totalLength) / 2;
                 break;
@@ -918,7 +915,7 @@ public class WeightlessLinearLayout extends ViewGroup {
         @NonNull
         @Override
         public String toString() {
-            return String.format("LayoutParams{ width = %d, height = %d, maxWidth = %.2f, maxHeight = %.2f",
+            return String.format("LayoutParams{ width = %d, height = %d, maxWidth = %.2f, maxHeight = %.2f }",
                 width, height, maxWidthPercent, maxHeightPercent);
         }
     }

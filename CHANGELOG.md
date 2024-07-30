@@ -2,7 +2,18 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
-## Version 18.1.1, June 28, 2024
+## Version 18.1.3, July 30, 2024
+Patch release that includes bug fixes for Embedded Content and Preference Center, and accessibility improvements for Message Center. 
+
+### Changes
+- Fixed an issue with container child item measurement in Scenes, when margins were set on the container items.
+- Fixed a Preference Center bug that could lead to subscription channel chips not being visible when initially displaying a Preference Center.
+- Fixed dismissing multiple embedded views in the same session.
+- Fixed an issue with automation trigger state not correctly persisting across sessions.
+- Message Center accessibility improvements.
+- Updated the default style for the pull to dismiss view in In-App Message Banners to better match iOS.
+
+## Version 18.1.2, July 15, 2024
 Patch release that includes fixes for Preference Center.
 
 ### Changes
