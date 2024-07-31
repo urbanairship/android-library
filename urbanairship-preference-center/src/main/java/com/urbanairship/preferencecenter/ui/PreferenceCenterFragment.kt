@@ -10,6 +10,8 @@ import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -78,8 +80,14 @@ public class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference
         requireNotNull(arguments?.getString(ARG_ID)) { "Missing required argument: PreferenceCenterFragment.ARG_ID" }
     }
 
-    private val viewModel: PreferenceCenterViewModel by activityViewModels {
-        PreferenceCenterViewModel.factory(preferenceCenterId)
+    private val viewModel by lazy {
+        ViewModelProvider(
+            owner = this, // Scope the ViewModel to the Fragment's lifecycle.
+            factory = PreferenceCenterViewModel.factory(preferenceCenterId)
+        ).get(
+            key = preferenceCenterId, // Ensure we create a unique VM per pref center ID.
+            modelClass = PreferenceCenterViewModel::class.java
+        )
     }
 
     @VisibleForTesting
