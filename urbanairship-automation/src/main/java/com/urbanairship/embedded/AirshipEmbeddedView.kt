@@ -218,7 +218,7 @@ public class AirshipEmbeddedView private constructor(
     private fun collectDisplayRequests() {
         displayRequestsJob = viewScope.launch {
             try {
-                manager.displayRequests(embeddedViewId = id, comparator = comparator)
+                manager.displayRequests(embeddedViewId = id, comparator = comparator, scope = viewScope)
                     .collect(::onUpdate)
             } catch (e: CancellationException) {
                 UALog.v { "Stopped collecting display requests for $logTag" }

@@ -3,7 +3,6 @@
 package com.urbanairship.android.layout
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.AirshipScopes
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
@@ -70,6 +69,6 @@ public interface AirshipEmbeddedViewManager {
     public fun displayRequests(
         embeddedViewId: String,
         comparator: Comparator<AirshipEmbeddedInfo>? = null,
-        scope: CoroutineScope = AirshipScopes.AppForegroundScope,
+        scope: CoroutineScope
     ): Flow<EmbeddedDisplayRequest?>
 }
