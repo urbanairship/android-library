@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.1.4, July 31, 2024
+Patch release that includes bug fixes for Embedded Content.
+
+### Changes
+- Fixed an issue with dismissing Embedded Content after pausing and resuming the app.
+- Updated the default `PreferenceCenterFragment` to scope the `PreferenceCenterViewModel` to the fragment's view lifecycle.
+
 ## Version 18.1.3, July 30, 2024
 Patch release that includes bug fixes for Embedded Content and Preference Center, and accessibility improvements for Message Center. 
 
