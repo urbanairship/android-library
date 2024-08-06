@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.1.5, August 06, 2024
+Patch release that fixes test devices audience check and holdout group experiments displays.
+
+### Changes
+- Fixed test devices audience check.
+- Fixed holdout group experiment displays.
+
 ## Version 18.1.4, July 31, 2024
 Patch release that includes bug fixes for Embedded Content.
 
