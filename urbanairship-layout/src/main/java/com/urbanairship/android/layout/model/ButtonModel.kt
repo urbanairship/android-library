@@ -3,6 +3,8 @@ package com.urbanairship.android.layout.model
 
 import android.view.View
 import androidx.annotation.CallSuper
+import com.urbanairship.Provider
+import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
@@ -44,7 +46,8 @@ internal abstract class ButtonModel<T>(
     private val formState: SharedState<State.Form>?,
     private val pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
-    properties: ModelProperties
+    properties: ModelProperties,
+    platformProvider: Provider<Int> = Provider { UAirship.shared().platformType }
 ) : BaseModel<T, ButtonModel.Listener>(
     viewType = viewType,
     backgroundColor = backgroundColor,
@@ -53,7 +56,8 @@ internal abstract class ButtonModel<T>(
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
     environment = environment,
-    properties = properties
+    properties = properties,
+    platformProvider = platformProvider
 ) where T : View, T : TappableView {
     abstract val reportingDescription: String
 
