@@ -10,6 +10,7 @@ import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.channel.AirshipChannel.Extender.Blocking
 import com.urbanairship.channel.AirshipChannel.Extender.Suspending
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.http.RequestResult
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -17,15 +18,49 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import com.urbanairship.json.tryParse
 import com.urbanairship.util.Clock
+import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/**
+ * Interface for providing channel creation method. Default method is [ChannelGenerationMethod.Automatic]
+ */
+public interface AirshipChannelCreateOption {
+    public fun get(): ChannelGenerationMethod
+}
+
+/**
+ * Defines methods of channel id generation. [Automatic] means to use a regular channel creation logic
+ * [Restore] will try to restore the provided channel id if it's valid. If the provided channel id is invalid
+ * [Automatic] method will be used
+ */
+public sealed class ChannelGenerationMethod {
+    public data object Automatic: ChannelGenerationMethod()
+    public class Restore(internal val channelID: String): ChannelGenerationMethod()
+
+    internal val isValid: Boolean
+        get() {
+            return when(this) {
+                Automatic -> true
+                is Restore -> {
+                    try {
+                        UUID.fromString(channelID)
+                        true
+                    } catch (ex: Exception) {
+                        false
+                    }
+                }
+            }
+        }
+}
+
 internal class ChannelRegistrar(
     private val dataStore: PreferenceDataStore,
     private val channelApiClient: ChannelApiClient,
     private val activityMonitor: ActivityMonitor,
+    private val channelCreateOption: AirshipChannelCreateOption? = null,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
 ) {
     constructor(
@@ -35,7 +70,8 @@ internal class ChannelRegistrar(
     ) : this(
         dataStore = dataStore,
         channelApiClient = ChannelApiClient(runtimeConfig),
-        activityMonitor = GlobalActivityMonitor.shared(context)
+        activityMonitor = GlobalActivityMonitor.shared(context),
+        channelCreateOption = runtimeConfig.configOptions.channelCreateOption
     )
 
     private val _channelIdFlow: MutableStateFlow<String?> = MutableStateFlow(this.channelId)
@@ -130,26 +166,79 @@ internal class ChannelRegistrar(
 
     private suspend fun createChannel(): RegistrationResult {
         val payload = buildCraPayload()
+
+        val method = channelCreateOption?.get() ?: ChannelGenerationMethod.Automatic
+
+        val result = when (method) {
+            ChannelGenerationMethod.Automatic -> regularCreateChannel(payload)
+            is ChannelGenerationMethod.Restore -> {
+                var restoreResult: RegistrationResult? = null
+                if (method.isValid) {
+                    restoreResult = tryRestoreChannel(method.channelID, payload)
+                }
+
+                if (restoreResult == null) {
+                    restoreResult = regularCreateChannel(payload)
+                }
+
+                restoreResult
+            }
+        }
+
+        return result
+    }
+
+    private suspend fun tryRestoreChannel(
+        channelId: String,
+        payload: ChannelRegistrationPayload
+    ): RegistrationResult? {
+
+        val location = channelApiClient.createLocation(channelId) ?: return null
+
+        val response = RequestResult(
+            status = 200,
+            value = Channel(
+                identifier = channelId,
+                location = location.toString()),
+            body = null,
+            headers = null
+        )
+
+        onNewChannelIdCreated(response, payload, rememberPayload = false)
+        return updateChannel(channelId)
+    }
+
+    private suspend fun regularCreateChannel(payload: ChannelRegistrationPayload): RegistrationResult {
         val result = channelApiClient.createChannel(payload)
 
         UALog.i { "Channel registration finished with result: $result" }
 
-        return if (result.isSuccessful && result.value != null) {
-            UALog.i { "Airship channel created: ${result.value.identifier}" }
-            this.channelId = result.value.identifier
-            this.lastChannelRegistrationInfo = RegistrationInfo(
-                dateMillis = clock.currentTimeMillis(),
-                payload = payload,
-                location = result.value.location
-            )
+        return onNewChannelIdCreated(result, payload)
+    }
 
-            _channelIdFlow.tryEmit(result.value.identifier)
+    private suspend fun onNewChannelIdCreated(
+        response: RequestResult<Channel>,
+        payload: ChannelRegistrationPayload,
+        rememberPayload: Boolean = true
+    ): RegistrationResult {
+        return if (response.isSuccessful && response.value != null) {
+            UALog.i { "Airship channel created: ${response.value.identifier}" }
+            this.channelId = response.value.identifier
+            if (rememberPayload) {
+                this.lastChannelRegistrationInfo = RegistrationInfo(
+                    dateMillis = clock.currentTimeMillis(),
+                    payload = payload,
+                    location = response.value.location
+                )
+            }
+
+            _channelIdFlow.tryEmit(response.value.identifier)
             if (isUpToDate()) {
                 RegistrationResult.SUCCESS
             } else {
                 RegistrationResult.NEEDS_UPDATE
             }
-        } else if (result.isServerError || result.isTooManyRequestsError || result.exception != null) {
+        } else if (response.isServerError || response.isTooManyRequestsError || response.exception != null) {
             return RegistrationResult.FAILED
         } else {
             return RegistrationResult.SUCCESS
