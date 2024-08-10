@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+
+## Version 18.1.6 August 9, 2024
+Patch release that fixes in-app experience displays when resuming from a paused state. Apps that use in-app experiences are encouraged to update.
+
+### Changes
+- Fixed Automation Engine updates when pause state changes.
+
 ## Version 18.1.5, August 06, 2024
 Patch release that fixes test devices audience check and holdout group experiments displays.
 
