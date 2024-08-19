@@ -261,7 +261,7 @@ internal class PreferenceCenterAdapter(
 
         val list = currentList.toMutableList()
         if (list.firstOrNull() is DescriptionItem) {
-            list.removeFirst()
+            list.removeAt(0)
         }
 
         if (item != null) {

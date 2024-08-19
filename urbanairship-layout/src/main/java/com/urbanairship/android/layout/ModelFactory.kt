@@ -124,7 +124,7 @@ internal class ThomasModelFactory : ModelFactory {
 
         // Process layout
         while (stack.isNotEmpty()) {
-            val (tag, parentTag, info, controllers, pagerPageId) = stack.removeFirst()
+            val (tag, parentTag, info, controllers, pagerPageId) = stack.removeAt(0)
             // Create node builder and add it to the processed nodes map
             val node = LayoutNode.Builder(
                 tag = tag,
