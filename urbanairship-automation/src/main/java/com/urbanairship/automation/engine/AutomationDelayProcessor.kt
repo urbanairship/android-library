@@ -8,8 +8,10 @@ import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.AutomationAppState
 import com.urbanairship.automation.AutomationDelay
+import com.urbanairship.automation.DisplayWindowResult
 import com.urbanairship.util.TaskSleeper
 import com.urbanairship.util.Clock
+import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
@@ -71,12 +73,20 @@ internal class AutomationDelayProcessor(
                     it.contains(delay.regionId)
                 }.first()
             }
+
+            delay.displayWindow?.nextAvailability(Date(clock.currentTimeMillis()))?.let {
+                when (it) {
+                    is DisplayWindowResult.Retry -> sleeper.sleep(it.delay)
+                    else -> {}
+                }
+            }
         }
     }
 
     override fun areConditionsMet(delay: AutomationDelay?): Boolean {
         if (delay == null) {  return true  }
-        return isAppStateMatch(delay) && isScreenMatch(delay) && isRegionMatch(delay)
+        return isAppStateMatch(delay) && isScreenMatch(delay)
+                && isRegionMatch(delay) && isDisplayWindowMatch(delay)
     }
 
     private fun isAppStateMatch(delay: AutomationDelay): Boolean {
@@ -92,6 +102,11 @@ internal class AutomationDelayProcessor(
     private fun isRegionMatch(delay: AutomationDelay): Boolean {
         if (delay.regionId.isNullOrEmpty()) { return true }
         return analytics.regionState.value.contains(delay.regionId)
+    }
+
+    private fun isDisplayWindowMatch(delay: AutomationDelay): Boolean {
+        val window = delay.displayWindow ?: return true
+        return window.nextAvailability(Date(clock.currentTimeMillis())) == DisplayWindowResult.Now
     }
 
     private fun remainingSeconds(delay: AutomationDelay, triggerDate: Long): Long {

@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
+import java.util.Objects
 
 /**
  * Represents the app foreground/background state.
@@ -47,6 +48,11 @@ public class AutomationDelay(
      * The execution screens.
      */
     internal val screens: List<String>? = null,
+
+    /**
+     * Display window for automation
+     */
+    internal val displayWindow: DisplayWindow? = null,
     /**
      * The execution region ID.
      */
@@ -67,6 +73,7 @@ public class AutomationDelay(
         private const val SCREEN_KEY = "screen"
         private const val REGION_ID_KEY = "region_id"
         private const val CANCELLATION_TRIGGERS_KEY = "cancellation_triggers"
+        private const val DISPLAY_WINDOW_KEY = "display_window"
 
         /**
          * Parses a AutomationDelay from JSON.
@@ -100,12 +107,13 @@ public class AutomationDelay(
 
             return AutomationDelay(
                 seconds = content.optionalField(SECONDS_KEY),
-                appState = content.get(APP_STATE_KEY)?.let(AutomationAppState.Companion::fromJson),
+                appState = content.get(APP_STATE_KEY)?.let(AutomationAppState::fromJson),
                 screens = screens,
                 regionId = content.optionalField(REGION_ID_KEY),
                 cancellationTriggers = content.get(CANCELLATION_TRIGGERS_KEY)?.requireList()?.map {
                     AutomationTrigger.fromJson(it, TriggerExecutionType.DELAY_CANCELLATION)
-                }
+                },
+                displayWindow = content.get(DISPLAY_WINDOW_KEY)?.let(DisplayWindow::fromJson)
             )
         }
     }
@@ -115,7 +123,8 @@ public class AutomationDelay(
         APP_STATE_KEY to appState,
         SCREEN_KEY to screens,
         REGION_ID_KEY to regionId,
-        CANCELLATION_TRIGGERS_KEY to cancellationTriggers
+        CANCELLATION_TRIGGERS_KEY to cancellationTriggers,
+        DISPLAY_WINDOW_KEY to displayWindow
     ).toJsonValue()
 
     override fun toString(): String = toJsonValue().toString()
@@ -130,15 +139,11 @@ public class AutomationDelay(
         if (screens != other.screens) return false
         if (regionId != other.regionId) return false
         if (appState != other.appState) return false
+        if (displayWindow != other.displayWindow) return false
         return cancellationTriggers == other.cancellationTriggers
     }
 
     override fun hashCode(): Int {
-        var result = seconds?.hashCode() ?: 0
-        result = 31 * result + (screens?.hashCode() ?: 0)
-        result = 31 * result + (regionId?.hashCode() ?: 0)
-        result = 31 * result + (appState?.hashCode() ?: 0)
-        result = 31 * result + (cancellationTriggers?.hashCode() ?: 0)
-        return result
+        return Objects.hash(seconds, screens, regionId, appState, cancellationTriggers, displayWindow)
     }
 }
