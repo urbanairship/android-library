@@ -9,7 +9,10 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -57,6 +60,41 @@ public class MessageCenterFragment extends Fragment {
             updateCurrentMessage();
         }
     };
+
+    /**
+     * {@link ActionMode} listener.
+     */
+    public interface OnActionModeListener {
+        /**
+         * Called when the {@link ActionMode} is created. Use it to hide the app toolbar.
+         * @param mode the ActionMode.
+         * @param menu the ActionMode Menu.
+         */
+        void onActionModeCreated(@NonNull ActionMode mode, @NonNull Menu menu);
+
+        /**
+         * Called when the {@link ActionMode} is destroyed. Use it to show the app toolbar.
+         * @param mode the ActionMode.
+         */
+        void onActionModeDestroyed(@NonNull ActionMode mode);
+    }
+
+    /**
+     * {@link ActionMode} listener.
+     */
+    @Nullable
+    protected OnActionModeListener actionModeListener = null;
+
+    /**
+     * Sets the {@link ActionMode} listener.
+     * @param actionModeListener The ActionMode listener.
+     */
+    public void setActionModeListener(@Nullable OnActionModeListener actionModeListener) {
+        this.actionModeListener = actionModeListener;
+        if (isViewConfigured) {
+            configureMessageListFragment(messageListFragment);
+        }
+    }
 
     /**
      * Creates a new {@link MessageCenterFragment}
@@ -216,7 +254,7 @@ public class MessageCenterFragment extends Fragment {
                     }
                 });
 
-                absListView.setMultiChoiceModeListener(new DefaultMultiChoiceModeListener(messageListFragment));
+                absListView.setMultiChoiceModeListener(new DefaultMultiChoiceModeListener(messageListFragment, actionModeListener));
                 absListView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
 
                 // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
