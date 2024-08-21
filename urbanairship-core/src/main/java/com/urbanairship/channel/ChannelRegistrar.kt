@@ -14,6 +14,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.json.tryParse
 import com.urbanairship.util.Clock
@@ -102,6 +103,11 @@ internal class ChannelRegistrar(
             return payload
         }
 
+        val lastFullUpload = lastRegistrationInfo.lastFullUploadMillis
+        if (lastFullUpload == null || (clock.currentTimeMillis() - lastFullUpload) > CHANNEL_REREGISTRATION_INTERVAL_MS) {
+            return payload
+        }
+
         return if (shouldUpdate(payload, lastRegistrationInfo, location)) {
             payload.minimizedPayload(lastRegistrationInfo.payload)
         } else {
@@ -139,6 +145,7 @@ internal class ChannelRegistrar(
             this.channelId = result.value.identifier
             this.lastChannelRegistrationInfo = RegistrationInfo(
                 dateMillis = clock.currentTimeMillis(),
+                lastFullUploadMillis = clock.currentTimeMillis(),
                 payload = payload,
                 location = result.value.location
             )
@@ -167,12 +174,18 @@ internal class ChannelRegistrar(
         val result = channelApiClient.updateChannel(channelId, updatePayload)
 
         UALog.i { "Channel registration finished with result $result" }
+        val fullUploadMillis = if (payload == updatePayload) {
+            clock.currentTimeMillis()
+        } else {
+            lastChannelRegistrationInfo?.lastFullUploadMillis
+        }
 
         return if (result.isSuccessful && result.value != null) {
             UALog.i { "Airship channel updated" }
             // Set non-minimized payload as the last sent version, for future comparison
             this.lastChannelRegistrationInfo = RegistrationInfo(
                 dateMillis = clock.currentTimeMillis(),
+                lastFullUploadMillis = fullUploadMillis,
                 payload = payload,
                 location = result.value.location
             )
@@ -207,6 +220,7 @@ internal enum class RegistrationResult {
 
 private data class RegistrationInfo(
     val dateMillis: Long,
+    val lastFullUploadMillis: Long?,
     val payload: ChannelRegistrationPayload,
     /**
      * The location of the channel. We track this so we can detect URL changes if the site is
@@ -217,12 +231,14 @@ private data class RegistrationInfo(
 
     constructor(json: JsonMap) : this(
         dateMillis = json.requireField<Long>(DATE),
+        lastFullUploadMillis = json.optionalField<Long>(LAST_FULL_UPLOAD_DATE),
         payload = ChannelRegistrationPayload.fromJson(json.require(PAYLOAD)),
         location = json.requireField<String>(LOCATION),
     )
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
         DATE to dateMillis,
+        LAST_FULL_UPLOAD_DATE to lastFullUploadMillis,
         PAYLOAD to payload,
         LOCATION to location,
     ).toJsonValue()
@@ -230,6 +246,7 @@ private data class RegistrationInfo(
     private companion object {
 
         private const val DATE = "date"
+        private const val LAST_FULL_UPLOAD_DATE = "last_full_upload_date"
         private const val PAYLOAD = "payload"
         private const val LOCATION = "location"
     }
