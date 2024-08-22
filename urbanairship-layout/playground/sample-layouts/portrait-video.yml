@@ -34,7 +34,38 @@ view:
           width: 100%
         view:
           type: container
+          background_color:
+            default:
+              type: hex
+              hex: "#FFFFFF"
+              alpha: 1
           items:
+            - position:
+                horizontal: center
+                vertical: center
+              size:
+                width: 100%
+                height: 100%
+              view:
+                media_fit: fit_crop
+                position:
+                  horizontal: center
+                  vertical: center
+                border:
+                  stroke_color:
+                    default:
+                      hex: "#ff0000"
+                      alpha: 1
+                  stroke_width: 2
+                media_type: video
+                type: media
+                url: https://storage.googleapis.com/airship-media-url/ProductTeam/Maxime/PaddleInMP4.mp4
+                video:
+                  aspect_ratio: 0.5625
+                  show_controls: false
+                  autoplay: true
+                  muted: true
+                  loop: true
             - position:
                 horizontal: center
                 vertical: center
@@ -76,22 +107,7 @@ view:
                                     type: linear_layout
                                     direction: vertical
                                     items:
-                                      - size:
-                                          height: auto
-                                          width: 100%
-                                        view:
-                                          type: media
-                                          video:
-                                            aspect_ratio: 0.77
-                                            show_controls: true
-                                            autoplay: true
-                                            muted: true
-                                            loop: true
-                                          media_fit: center_inside
-                                          url: https://hangar-dl.urbanairship.com/binary/public/Hx7SIqHqQDmFj6aruaAFcQ/611c0ad9-73b6-4a66-8010-8d1ea1be961a
-                                          #url: https://dsqqu7oxq6o1v.cloudfront.net/preview-992269-Avy3e9Poxf-high.mp4
-                                          #url: https:\/\/hangar-dl.urbanairship.com\/binary\/public\/ISex_TTJRuarzs9-o_Gkhg\/1dc4d48b-63ba-4dd4-8cdc-8ba63613780f
-                                          media_type: video
+
                                       - size:
                                           width: 100%
                                           height: auto
@@ -136,16 +152,6 @@ view:
                                             styles: [ ]
                                             font_families:
                                               - sans-serif
-                            background_color:
-                              default:
-                                type: hex
-                                hex: "#FFFFFF"
-                                alpha: 1
-                      background_color:
-                        default:
-                          type: hex
-                          hex: "#FFFFFF"
-                          alpha: 1
                   - identifier: 1cd9d07b-32ce-40bb-9526-412cce473b38
                     type: pager_item
                     view:

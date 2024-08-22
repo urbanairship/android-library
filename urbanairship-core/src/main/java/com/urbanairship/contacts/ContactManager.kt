@@ -31,14 +31,18 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OpenForTesting
@@ -52,6 +56,8 @@ internal class ContactManager(
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) : AuthTokenProvider {
+
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     private val identifyOperationQueue = SerialQueue()
     private val operationLock: ReentrantLock = ReentrantLock()
@@ -204,6 +210,13 @@ internal class ContactManager(
         jobDispatcher.setRateLimit(UPDATE_RATE_LIMIT, 1, 500, TimeUnit.MILLISECONDS)
 
         yieldContactUpdates()
+
+        scope.launch {
+            val startingChannelId = channel.id
+            channel.channelIdFlow.filter { it != startingChannelId }.collect {
+                dispatchContactUpdateJob()
+            }
+        }
     }
 
     internal suspend fun stableContactIdUpdate(minResolveDate: Long = 0): ContactIdUpdate {

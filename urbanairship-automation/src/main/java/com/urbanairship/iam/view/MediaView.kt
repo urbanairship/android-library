@@ -17,6 +17,7 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.core.view.doOnPreDraw
 import com.urbanairship.UAirship
+import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.iam.info.InAppMessageMediaInfo
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
@@ -87,11 +88,16 @@ internal class MediaView @JvmOverloads constructor(
                 imageView.contentDescription = mediaInfo.description
                 val url = cachedMediaUrl ?: mediaInfo.url
 
+                val fallbackWidth = ResourceUtils.getDisplayWidthPixels(context)
+                val fallbackHeight = ResourceUtils.getDisplayHeightPixels(context)
+
                 imageView.doOnPreDraw {
                     UAirship.shared().imageLoader.load(
                         context,
                         imageView,
-                        ImageRequestOptions.newBuilder(url).build()
+                        ImageRequestOptions.newBuilder(url)
+                            .setFallbackDimensions(fallbackWidth, fallbackHeight)
+                            .build()
                     )
                 }
 

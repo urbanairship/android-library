@@ -184,7 +184,7 @@ public final class ConstraintSetBuilder {
 
     @NonNull
     public ConstraintSetBuilder width(@Nullable Size size, boolean ignoreSafeArea, @IdRes int viewId) {
-        return size(size, ignoreSafeArea, viewId, ConstraintSet.WRAP_CONTENT);
+        return width(size, ignoreSafeArea, viewId, ConstraintSet.WRAP_CONTENT);
     }
 
     @NonNull

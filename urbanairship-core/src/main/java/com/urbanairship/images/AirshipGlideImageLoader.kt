@@ -3,7 +3,9 @@ package com.urbanairship.images
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.Size
+import android.view.View
 import android.view.ViewGroup
+import android.view.ViewParent
 import android.view.ViewTreeObserver
 import android.view.ViewTreeObserver.OnPreDrawListener
 import android.widget.ImageView
@@ -80,62 +82,69 @@ internal object AirshipGlideImageLoader : ImageLoader {
         private val zeroWidthFallback: Int?,
         private val zeroHeightFallback: Int?,
         private val subtractPadding: Boolean = true,
-        ) : DrawableImageViewTarget(view) {
+    ) : DrawableImageViewTarget(view) {
 
         override fun getSize(cb: SizeReadyCallback) {
             // Fast path: the view is already measured or has fallback width/height
             val size = getSize()
-            if (size != null) {
+            if (size.width > 0 && size.height > 0) {
                 cb.onSizeReady(size.width, size.height)
-                return@getSize
-            }
+            } else {
+                // Slow path: wait for the view to be measured...
+                val viewTreeObserver = view.viewTreeObserver
+                val preDrawListener = object : OnPreDrawListener {
+                    private var isResumed = false
 
-            // Slow path: wait for the view to be measured...
-            val viewTreeObserver = view.viewTreeObserver
-            val preDrawListener = object : OnPreDrawListener {
-                private var isResumed = false
+                    override fun onPreDraw(): Boolean {
+                        getSize().let { size ->
+                            viewTreeObserver.removePreDrawListenerSafe(this)
 
-                override fun onPreDraw(): Boolean {
-                    getSize()?.let { size ->
-                        viewTreeObserver.removePreDrawListenerSafe(this)
-
-                        if (!isResumed) {
-                            isResumed = true
-                            cb.onSizeReady(size.width, size.height)
+                            if (!isResumed) {
+                                isResumed = true
+                                cb.onSizeReady(size.width, size.height)
+                            }
                         }
+                        return true
                     }
-                    return true
                 }
+
+                viewTreeObserver.addOnPreDrawListener(preDrawListener)
             }
-
-            viewTreeObserver.addOnPreDrawListener(preDrawListener)
         }
 
-        fun getSize(): Size? {
-            val width = getWidth() ?: return null
-            val height = getHeight() ?: return null
-            return Size(width, height)
-        }
+        fun getSize(): Size = Size(getWidth(), getHeight())
 
         fun getWidth() = getDimension(
-            paramSize = view.layoutParams?.width ?: -1,
+            paramSize = view.layoutParams?.width ?: ViewGroup.LayoutParams.MATCH_PARENT,
             viewSize = view.width,
             paddingSize = if (subtractPadding) view.paddingLeft + view.paddingRight else 0
-        ) ?: zeroWidthFallback
+        ) ?: zeroWidthFallback.let {
+            if (it == null || it < 0) {
+                Target.SIZE_ORIGINAL
+            } else {
+                it
+            }
+        }
 
         fun getHeight() = getDimension(
-            paramSize = view.layoutParams?.height ?: -1,
+            paramSize = view.layoutParams?.height ?: ViewGroup.LayoutParams.MATCH_PARENT,
             viewSize = view.height,
             paddingSize = if (subtractPadding) view.paddingTop + view.paddingBottom else 0
-        ) ?: zeroHeightFallback
+        ) ?: zeroHeightFallback.let {
+            if (it == null || it < 0) {
+                Target.SIZE_ORIGINAL
+            } else {
+                it
+            }
+        }
 
         fun getDimension(
             paramSize: Int,
             viewSize: Int,
             paddingSize: Int
         ): Int? {
-            // If the dimension is set to WRAP_CONTENT, then the dimension is undefined.
-            if (paramSize == ViewGroup.LayoutParams.WRAP_CONTENT) {
+            // If the dimension is set to WRAP_CONTENT or MATCH_PARENT, then the dimension is undefined.
+            if (paramSize <= 0) {
                 return null
             }
 

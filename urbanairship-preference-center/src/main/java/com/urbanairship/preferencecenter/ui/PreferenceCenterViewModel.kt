@@ -185,6 +185,15 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         }
 
     /**
+     * Helper to do basic formatting and validation of email address.
+     */
+    private fun formatAndValidateEmail(email: String?): Boolean {
+        val formattedEmail = (email ?: "").trim().lowercase()
+        val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
+        return emailRegex.matches(formattedEmail)
+    }
+
+    /**
      * Flow that maps an [Action] to one or more side [Effect]s that do not impact viewmodel state.
      */
     private suspend fun effects(action: Action): Flow<Effect> =
@@ -195,9 +204,20 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             }
 
             // Contact Management
-
             is Action.RequestAddChannel -> flowOf(
                 Effect.ShowContactManagementAddDialog(action.item)
+            )
+            is Action.ValidateEmailChannel -> flowOf(
+                if (formatAndValidateEmail(action.address)) {
+                    Effect.DismissContactManagementAddDialog.also {
+                        handle(
+                            Action.RegisterChannel.Email(action.item, action.address)
+                        )
+                    }
+                } else {
+                    val message = action.item.platform.errorMessages.invalidMessage
+                    Effect.ShowContactManagementAddDialogError(message)
+                }
             )
             is Action.ValidateSmsChannel -> flowOf(
                 if (contact.validateSms(action.address, action.senderId)) {
@@ -626,6 +646,11 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             val item: Item.ContactManagement,
             val address: String,
             val senderId: String
+        ) : Action()
+
+        data class ValidateEmailChannel(
+            val item: Item.ContactManagement,
+            val address: String,
         ) : Action()
 
         data class UpdateContactChannel(

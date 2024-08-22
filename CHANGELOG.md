@@ -2,6 +2,45 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+
+## Version 18.1.6 August 9, 2024
+Patch release that fixes in-app experience displays when resuming from a paused state. Apps that use in-app experiences are encouraged to update.
+
+### Changes
+- Fixed Automation Engine updates when pause state changes.
+
+## Version 18.1.5, August 06, 2024
+Patch release that fixes test devices audience check and holdout group experiments displays.
+
+### Changes
+- Fixed test devices audience check.
+- Fixed holdout group experiment displays.
+
+## Version 18.1.4, July 31, 2024
+Patch release that includes bug fixes for Embedded Content.
+
+### Changes
+- Fixed an issue with dismissing Embedded Content after pausing and resuming the app.
+- Updated the default `PreferenceCenterFragment` to scope the `PreferenceCenterViewModel` to the fragment's view lifecycle.
+
+## Version 18.1.3, July 30, 2024
+Patch release that includes bug fixes for Embedded Content and Preference Center, and accessibility improvements for Message Center. 
+
+### Changes
+- Fixed an issue with container child item measurement in Scenes, when margins were set on the container items.
+- Fixed a Preference Center bug that could lead to subscription channel chips not being visible when initially displaying a Preference Center.
+- Fixed dismissing multiple embedded views in the same session.
+- Fixed an issue with automation trigger state not correctly persisting across sessions.
+- Message Center accessibility improvements.
+- Updated the default style for the pull to dismiss view in In-App Message Banners to better match iOS.
+
+## Version 18.1.2, July 15, 2024
+Patch release that includes fixes for Preference Center.
+
+### Changes
+- Fixed warning message on preference center email entry field.
+- Fixed country code listing.
+
 ## Version 18.1.1, June 28, 2024
 Patch release that includes fixes for Preference Center, Privacy Manager, and Embedded Content.
 

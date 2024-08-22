@@ -49,12 +49,10 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
     private val validator: (input: String?) -> Boolean = { input ->
         when (platform) {
             is  Item.ContactManagement.Platform.Email -> {
-                val formatted = formatEmail(input)
-                !input.isNullOrBlank() && emailRegex.matches(formatted)
+                !input.isNullOrBlank()
             }
             is Item.ContactManagement.Platform.Sms  -> {
-                val formatted = formatPhone(selectedSender?.dialingCode, input)
-                !input.isNullOrBlank() && phoneRegex.matches(formatted)
+                !input.isNullOrBlank()
             }
             else -> false
         }
@@ -169,7 +167,7 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
         senders.first().apply {
             selectedSender = this
             // Set the default value with no filter, because we want to show all options in the dropdown.
-            countryPickerTextView.setText(formatCountryPickerItem(displayName, dialingCode), false)
+            countryPickerTextView.setText(displayName, false)
             setAddressPlaceholder(placeholderText)
         }
 
@@ -199,9 +197,6 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
     }
 
     private companion object {
-        private val emailRegex = """[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,64}""".toRegex()
-        private val phoneRegex = """^[1-9]\d{1,14}$""".toRegex()
-
         private fun formatEmail(email: String?): String {
             return (email ?: "").trim()
         }

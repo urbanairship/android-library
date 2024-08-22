@@ -179,12 +179,10 @@ public class Contact internal constructor(
     }
 
     private val channelExtender = AirshipChannel.Extender.Suspending { builder ->
-        if (privacyManager.isEnabled(PrivacyManager.Feature.CONTACTS)) {
-            if (airshipChannel.id != null) {
-                builder.setContactId(stableVerifiedContactId())
-            } else {
-                builder.setContactId(contactManager.lastContactId)
-            }
+        if (airshipChannel.id != null) {
+            builder.setContactId(stableVerifiedContactId())
+        } else {
+            builder.setContactId(contactManager.lastContactId)
         }
         builder
     }

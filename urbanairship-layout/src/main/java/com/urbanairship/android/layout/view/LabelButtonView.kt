@@ -4,8 +4,6 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import android.text.TextUtils
 import androidx.core.view.isGone
-import com.google.android.material.button.MaterialButton
-import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.LabelButtonModel
 import com.urbanairship.android.layout.util.LayoutUtils
@@ -13,6 +11,7 @@ import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.widget.TappableView
+import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.flow.Flow
 
 internal class LabelButtonView(
@@ -48,15 +47,17 @@ internal class LabelButtonView(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val strokeWidthPixels = strokeWidth
+
         val autoHeight = MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY
         val autoWidth = MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.EXACTLY
         if (autoHeight || autoWidth) {
             val twelveDp = ResourceUtils.dpToPx(context, 12).toInt()
             val horizontal = if (autoWidth) twelveDp else 0
             val vertical = if (autoHeight) twelveDp else 0
-            setPadding(horizontal, vertical, horizontal, vertical)
+            setPadding(horizontal + strokeWidthPixels, vertical + strokeWidthPixels, horizontal + strokeWidthPixels, vertical + strokeWidthPixels)
         } else {
-            setPadding(0, 0, 0, 0)
+            setPadding(strokeWidthPixels, strokeWidthPixels, strokeWidthPixels, strokeWidthPixels)
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }

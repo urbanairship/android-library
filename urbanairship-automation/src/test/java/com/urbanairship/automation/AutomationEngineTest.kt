@@ -30,6 +30,7 @@ import io.mockk.coVerifyOrder
 import io.mockk.coVerifySequence
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
@@ -95,6 +96,8 @@ public class AutomationEngineTest {
 
     private val delayProcessor: AutomationDelayProcessor = mockk(relaxed = true)
 
+    private val scheduleConditionsChangedNotifier: ScheduleConditionsChangedNotifier = mockk(relaxed = true)
+
     private val sleeper = TestTaskSleeper(clock) { sleep ->
         clock.currentTimeMillis += sleep.inWholeMilliseconds
     }
@@ -103,7 +106,7 @@ public class AutomationEngineTest {
         store = store,
         executor = executor,
         preparer = preparer,
-        scheduleConditionsChangedNotifier = ScheduleConditionsChangedNotifier(),
+        scheduleConditionsChangedNotifier = scheduleConditionsChangedNotifier,
         eventsFeed = eventsFeed,
         triggerProcessor = triggerProcessor,
         delayProcessor = delayProcessor,
@@ -194,6 +197,32 @@ public class AutomationEngineTest {
 
         engine.setEnginePaused(false)
         assertFalse(engine.isPaused())
+    }
+
+    @Test
+    public fun testResumeNotifiesScheduleConditionsChanged(): TestResult = runTest {
+        engine.setExecutionPaused(true)
+        engine.setEnginePaused(true)
+        engine.start()
+        advanceUntilIdle()
+
+        verify(exactly = 0) {
+            scheduleConditionsChangedNotifier.notifyChanged()
+        }
+
+        engine.setExecutionPaused(false)
+        advanceUntilIdle()
+
+        verify(exactly = 0) {
+            scheduleConditionsChangedNotifier.notifyChanged()
+        }
+
+        engine.setEnginePaused(false)
+        advanceUntilIdle()
+
+        verify(exactly = 1) {
+            scheduleConditionsChangedNotifier.notifyChanged()
+        }
     }
 
     @Test

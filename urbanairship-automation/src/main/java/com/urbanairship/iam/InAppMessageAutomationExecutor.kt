@@ -118,12 +118,12 @@ internal class InAppMessageAutomationExecutor(
             } catch (ex: Exception) {
                 UALog.e(ex) { "Failed to display message" }
                 result = ScheduleExecuteResult.RETRY
-            } finally {
-                // Finished
-                data.displayCoordinator.messageFinishedDisplaying(data.message)
-                displayDelegate?.messageFinishedDisplaying(data.message, preparedScheduleInfo.scheduleId)
             }
         }
+
+        // Finished
+        data.displayCoordinator.messageFinishedDisplaying(data.message)
+        displayDelegate?.messageFinishedDisplaying(data.message, preparedScheduleInfo.scheduleId)
 
         // Clean up assets
         if (result != ScheduleExecuteResult.RETRY) {

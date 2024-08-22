@@ -28,6 +28,7 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -50,8 +51,10 @@ public class ContactManagerTest {
 
     private val testDispatcher = StandardTestDispatcher()
 
+    private val channelIdFlow = MutableStateFlow<String?>(null)
     private val mockChannel = mockk<AirshipChannel>(relaxed = true) {
-        every { id } returns "some channel id"
+        every { this@mockk.id } returns "some channel id"
+        every { this@mockk.channelIdFlow } returns this@ContactManagerTest.channelIdFlow
     }
 
     private val mockApiClient = mockk<ContactApiClient>()
@@ -116,6 +119,17 @@ public class ContactManagerTest {
 
         contactManager.isEnabled = true
         verify(exactly = 1) { mockJobDispatcher.dispatch(any()) }
+    }
+
+    @Test
+    public fun testChannelIdUpdateEnqueuesJob(): TestResult = runTest {
+        contactManager.addOperation(ContactOperation.Resolve)
+        verify(exactly = 1) { mockJobDispatcher.dispatch(any()) }
+
+        testDispatcher.scheduler.advanceUntilIdle()
+        channelIdFlow.emit("some channel")
+        testDispatcher.scheduler.advanceUntilIdle()
+        verify(exactly = 2){ mockJobDispatcher.dispatch(any()) }
     }
 
     @Test

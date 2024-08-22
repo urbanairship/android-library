@@ -25,6 +25,7 @@
     <style name="AppTheme.MessageCenter" parent="MessageCenter">
         <item name="messageCenterItemTitleTextAppearance">@style/AppTheme.MessageCenter.TitleTextAppearance</item>
         <item name="messageCenterItemDateTextAppearance">@style/AppTheme.MessageCenter.DateTextAppearance</item>
+        <item name="messageCenterItemIconEnabled">true</item>
     </style>
 
     <!-- Custom message title text style -->
