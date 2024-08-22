@@ -69,7 +69,7 @@ internal class DeviceInfoProviderImpl(private val contactId: String? = null) : D
         get() = PlatformUtils.asString(UAirship.shared().platformType)
 
     override val channelCreated: Boolean
-        get() = UAirship.shared().channel.id == null
+        get() = UAirship.shared().channel.id != null
     override val analyticsEnabled: Boolean
         get() = UAirship.shared().analytics.isEnabled
 

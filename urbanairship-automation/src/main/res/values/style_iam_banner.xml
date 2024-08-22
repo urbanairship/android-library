@@ -25,8 +25,8 @@
 
     <!-- Dismiss pull view -->
     <style name="UrbanAirship.InAppBanner.Pull">
-        <item name="android:layout_width">40dp</item>
-        <item name="android:layout_height">8dp</item>
+        <item name="android:layout_width">36dp</item>
+        <item name="android:layout_height">4dp</item>
         <item name="android:layout_gravity">center</item>
         <item name="android:background">@drawable/ua_iam_banner_pull_background</item>
     </style>
@@ -34,11 +34,13 @@
     <!-- Dismiss pull overrides for top banner placement -->
     <style name="UrbanAirship.InAppBanner.Pull.Top">
         <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:layout_marginTop">16dp</item>
     </style>
 
     <!-- Dismiss pull overrides for bottom banner placement -->
     <style name="UrbanAirship.InAppBanner.Pull.Bottom">
         <item name="android:layout_marginTop">8dp</item>
+        <item name="android:layout_marginBottom">16dp</item>
     </style>
 
     <!-- Media -->

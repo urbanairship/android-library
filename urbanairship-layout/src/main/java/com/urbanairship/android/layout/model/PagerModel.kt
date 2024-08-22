@@ -407,7 +407,10 @@ internal class PagerModel(
     }
 
     private fun resumeStory() {
-        UALog.v { "resume story" }
+        if (automatedActionsTimers.isNotEmpty()) {
+            UALog.v { "resume story" }
+        }
+
         navigationActionTimer?.start()
         for (timer in automatedActionsTimers) {
             timer.start()

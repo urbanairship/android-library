@@ -3,12 +3,12 @@
 package com.urbanairship.android.layout
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.AirshipScopes
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.embedded.AirshipEmbeddedInfo
 import com.urbanairship.json.JsonMap
+import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 
@@ -49,7 +49,7 @@ public interface AirshipEmbeddedViewManager {
             UALog.e { "Failed to add pending embedded view. Required embedded view ID is null!" }
             return@addPending
         }
-        val viewInstanceId = payload.hash.toString()
+        val viewInstanceId = UUID.randomUUID().toString()
 
         addPending(
             embeddedViewId = embeddedViewId,
@@ -69,6 +69,6 @@ public interface AirshipEmbeddedViewManager {
     public fun displayRequests(
         embeddedViewId: String,
         comparator: Comparator<AirshipEmbeddedInfo>? = null,
-        scope: CoroutineScope = AirshipScopes.AppForegroundScope,
+        scope: CoroutineScope
     ): Flow<EmbeddedDisplayRequest?>
 }

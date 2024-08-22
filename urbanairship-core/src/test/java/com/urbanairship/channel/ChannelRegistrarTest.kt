@@ -14,6 +14,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -23,6 +24,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -260,6 +262,44 @@ public class ChannelRegistrarTest {
 
         coVerify(exactly = 1) { mockClient.updateChannel(any(), any()) }
         coVerify(exactly = 1) { mockClient.createChannel(any()) }
+    }
+
+    @Test
+    public fun testFullPayloadUploadAfter24Hours(): TestResult = runTest {
+        // Create channel first
+        val payload = ChannelRegistrationPayload.Builder()
+            .setContactId(UUID.randomUUID().toString())
+            .setAppVersion("test")
+            .build()
+
+        registrar.addChannelRegistrationPayloadExtender(
+            AirshipChannel.Extender.Suspending {
+                it.setContactId(payload.contactId)
+                it.setAppVersion(payload.appVersion)
+            }
+        )
+
+        testClock.currentTimeMillis = 1
+
+        coEvery {
+            mockClient.createChannel(any())
+        } returns RequestResult(200, Channel("some id", "some://location"), null, null)
+        assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
+
+        val capturedPayload = slot<ChannelRegistrationPayload>()
+        // Update
+        coEvery {
+            mockClient.updateChannel("some id", capture(capturedPayload))
+        } returns RequestResult(200, Channel("some id", "some://location"), null, null)
+        assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
+
+        assertFalse(capturedPayload.isCaptured)
+
+        testActivityMonitor.foreground()
+        testClock.currentTimeMillis += 24 * 60 * 60 * 1000 + 1
+
+        assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
+        assertEquals(payload, capturedPayload.captured)
     }
 
     public fun testUpdateMinimizedPayload(): TestResult = runTest {

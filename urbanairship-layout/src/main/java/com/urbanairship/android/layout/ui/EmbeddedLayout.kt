@@ -61,6 +61,7 @@ private object EmbeddedViewModelStoreOwner : ViewModelStoreOwner {
 public class EmbeddedLayout(
     private val context: Context,
     public val embeddedViewId: String,
+    public val viewInstanceId: String,
     args: DisplayArgs,
     private val embeddedViewManager: AirshipEmbeddedViewManager
 ) {
@@ -75,7 +76,6 @@ public class EmbeddedLayout(
     private val imageCache: ImageCache? = args.imageCache
     private val actionRunner: ThomasActionRunner = args.actionRunner
 
-    public val viewInstanceId: String =  payload.hash.toString()
 
     private val reporter: Reporter = ExternalReporter(externalListener)
 

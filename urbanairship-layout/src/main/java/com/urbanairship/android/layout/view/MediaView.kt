@@ -22,8 +22,11 @@ import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.MediaModel
+import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
+import com.urbanairship.android.layout.property.Position
+import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -238,7 +241,29 @@ internal class MediaView(
 
         val frameLayout = when (model.mediaType) {
             // Adjust the aspect ratio of the WebView if the media is video or youtube.
-            MediaType.VIDEO,
+            MediaType.VIDEO -> FixedAspectRatioFrameLayout(context).apply {
+                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
+                    gravity = Gravity.CENTER
+                }
+
+                doOnAttach {
+                    val params = this@MediaView.layoutParams
+                    val isWrapWidth = params.width == WRAP_CONTENT
+                    val isWrapHeight = params.height == WRAP_CONTENT
+
+                    if (isWrapWidth || isWrapHeight) {
+                        // If either dimension is wrap_content, the aspect ratio will be adjusted
+                        // based on the video's aspect ratio.
+                        model.video?.aspectRatio?.let {
+                            aspectRatio = it.toFloat()
+                        }
+                    } else {
+                        // If the width and height are known, we don't need to fix to the aspect
+                        // ratio of the video.
+                        aspectRatio = null
+                    }
+                }
+            }
             MediaType.YOUTUBE -> FixedAspectRatioFrameLayout(context).apply {
                 layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
                     gravity = Gravity.CENTER
@@ -297,6 +322,7 @@ internal class MediaView(
                                 if (video.muted) "muted" else "",
                                 if (video.loop) "loop" else "",
                                 model.url,
+                                model.videoStyle,
                                 if (video.autoplay) VIDEO_AUTO_PLAYING_JS_CODE else ""
                             ),
                             "text/html",
@@ -353,6 +379,27 @@ internal class MediaView(
         load.run()
     }
 
+    private val MediaModel.videoStyle: String
+        get() = when (mediaFit) {
+            MediaFit.CENTER -> "object-fit: none;"
+            MediaFit.CENTER_INSIDE -> "object-fit: contain;"
+            MediaFit.CENTER_CROP -> "object-fit: cover;"
+            MediaFit.FIT_CROP -> {
+                val isRtl = View.LAYOUT_DIRECTION_RTL == layoutDirection
+                val horizontal = when (position.horizontal) {
+                    HorizontalPosition.START -> if (isRtl) "right" else "left"
+                    HorizontalPosition.END -> if (isRtl) "left" else "right"
+                    HorizontalPosition.CENTER -> "center"
+                }
+                val vertical = when (position.vertical) {
+                    VerticalPosition.TOP -> "top"
+                    VerticalPosition.BOTTOM -> "bottom"
+                    VerticalPosition.CENTER -> "center"
+                }
+                "object-fit: cover; object-position: $horizontal $vertical;"
+            }
+        }
+
     private abstract class MediaWebViewClient(private val onRetry: Runnable) : WebViewClient() {
 
         var error = false
@@ -388,7 +435,7 @@ internal class MediaView(
     class FixedAspectRatioFrameLayout(context: Context) : FrameLayout(context) {
 
         // Default to a 16:9 aspect ratio
-        var aspectRatio = 1.77f
+        var aspectRatio: Float? = 1.77f
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
             val widthMode = MeasureSpec.getMode(widthMeasureSpec)
@@ -410,19 +457,21 @@ internal class MediaView(
                 return
             }
 
-            if (widthDynamic) {
-                // Width is dynamic.
-                val w = (receivedHeight * aspectRatio).toInt()
-                measuredWidth = MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY)
-                measuredHeight = heightMeasureSpec
-            } else {
-                // Height is dynamic.
-                measuredWidth = widthMeasureSpec
-                val h = (receivedWidth / aspectRatio).toInt()
-                measuredHeight = MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY)
-            }
+            aspectRatio?.let {
+                if (widthDynamic) {
+                    // Width is dynamic.
+                    val w = (receivedHeight * it).toInt()
+                    measuredWidth = MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY)
+                    measuredHeight = heightMeasureSpec
+                } else {
+                    // Height is dynamic.
+                    measuredWidth = widthMeasureSpec
+                    val h = (receivedWidth / it).toInt()
+                    measuredHeight = MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY)
+                }
 
-            super.onMeasure(measuredWidth, measuredHeight)
+                super.onMeasure(measuredWidth, measuredHeight)
+            } ?: super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         }
     }
 
@@ -430,7 +479,7 @@ internal class MediaView(
         @Language("HTML")
         private val VIDEO_HTML_FORMAT = """
             <body style="margin:0">
-                <video id="video" playsinline %s %s %s %s height="100%%" width="100%%" src="%s"></video>
+                <video id="video" playsinline %s %s %s %s height="100%%" width="100%%" src="%s" style="%s"></video>
                 <script>
                     let videoElement = document.getElementById("video");
 

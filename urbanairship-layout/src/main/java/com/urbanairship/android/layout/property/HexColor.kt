@@ -6,6 +6,7 @@ package com.urbanairship.android.layout.property
 import android.graphics.Color
 import androidx.annotation.ColorInt
 import androidx.core.graphics.ColorUtils
+import com.urbanairship.UALog
 import com.urbanairship.UALog.w
 import com.urbanairship.json.JsonMap
 
@@ -25,10 +26,15 @@ public object HexColor {
             return null
         }
 
-        var color = Color.parseColor(hex)
-        if (alpha != 1f) {
-            color = ColorUtils.setAlphaComponent(color, (alpha * 255).toInt())
+        return try {
+            var color = Color.parseColor(hex)
+            if (alpha != 1f) {
+                color = ColorUtils.setAlphaComponent(color, (alpha * 255).toInt())
+            }
+            color
+        } catch (e: Exception) {
+            UALog.e(e) { "Invalid color $hex " }
+            null
         }
-        return color
     }
 }

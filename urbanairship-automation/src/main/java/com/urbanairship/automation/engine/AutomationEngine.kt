@@ -22,7 +22,11 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.skip
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -119,6 +123,16 @@ internal class AutomationEngine(
                 eventsFeed.feed.collect {
                     if (isActive) {
                         triggerProcessor.processEvent(it)
+                    }
+                }
+            }
+
+            launch {
+                combine(isPaused, isExecutionPaused) { enginePaused, executionPaused ->
+                    enginePaused || executionPaused
+                }.distinctUntilChanged().collect { paused ->
+                    if (isActive && !paused) {
+                        scheduleConditionsChangedNotifier.notifyChanged()
                     }
                 }
             }

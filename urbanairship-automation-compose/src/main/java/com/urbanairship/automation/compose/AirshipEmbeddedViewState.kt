@@ -10,6 +10,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.platform.LocalContext
@@ -106,11 +107,12 @@ internal fun rememberAirshipEmbeddedViewState(
 ): AirshipEmbeddedViewState {
     val context = LocalContext.current
     val state = remember { AirshipEmbeddedViewState(embeddedId) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(key1 = embeddedId) {
         // Collect display requests and update the current layout state.
         withContext(Dispatchers.Default) {
-            embeddedViewManager.displayRequests(embeddedId, comparator)
+            embeddedViewManager.displayRequests(embeddedId, comparator, scope)
                 .map { request ->
                     if (request == null) {
                         // Nothing to display.
@@ -120,7 +122,7 @@ internal fun rememberAirshipEmbeddedViewState(
                         // Inflate the embedded layout.
                         UALog.v { "Display request available for id: \"$embeddedId\"" }
                         val displayArgs = request.displayArgsProvider.invoke()
-                        EmbeddedLayout(context, embeddedId, displayArgs, embeddedViewManager)
+                        EmbeddedLayout(context, embeddedId, request.viewInstanceId, displayArgs, embeddedViewManager)
                     }
                 }
                 .collect { state.currentLayout = it }

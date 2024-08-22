@@ -58,13 +58,11 @@ internal fun PreferenceCenterFragment.showContactManagementAddDialog(
             // the ViewModel.
             val action = when (result) {
                 is DialogResult.Email -> {
-                    dialog.dismiss()
-                    // Email is assumed to be valid after passing our local regex check
-                    Action.RegisterChannel.Email(item, result.address)
+                    Action.ValidateEmailChannel(item, result.address)
                 }
 
                 is DialogResult.Sms ->
-                    // SMS passed local validation, but needs to be validated by backend or
+                    // SMS needs to be validated by backend or
                     // a custom validation handler. The model will handle making the request
                     // and will either register the channel or show an error message via the
                     // errors flow (which is why we don't want to dismiss the dialog here).
