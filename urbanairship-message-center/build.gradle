@@ -1,6 +1,7 @@
 plugins {
     id("airship-module")
     id("kotlin-android")
+    alias(libs.plugins.binary.compatibility.validator)
 }
 
 description = "Airship Android SDK Message Center module"
@@ -22,6 +23,7 @@ dependencies {
     api project(':urbanairship-core')
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.annotation)
     annotationProcessor(libs.androidx.room.compiler)
 
     // Tests
@@ -41,6 +43,9 @@ dependencies {
     androidTestImplementation(libs.androidx.room.testing)
 }
 
-android {
-    namespace 'com.urbanairship.messagecenter'
+apiValidation {
+    nonPublicMarkers.add("androidx.annotation.RestrictTo")
+
+    // Exclude the apiCheck task from check / build
+    validationDisabled = false
 }
