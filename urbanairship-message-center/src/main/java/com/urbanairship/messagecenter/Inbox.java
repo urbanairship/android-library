@@ -76,18 +76,30 @@ public class Inbox {
     private final Map<String, Message> readMessages = new HashMap<>();
     private final Map<String, Message> messageUrlMap = new HashMap<>();
 
+    @NonNull
     private final MessageDao messageDao;
+    @NonNull
     private final User user;
+    @NonNull
     private final Executor executor;
     private final Context context;
+    @NonNull
     private final Handler handler = new Handler(Looper.getMainLooper());
+    @NonNull
     private final PreferenceDataStore dataStore;
+    @NonNull
     private final JobDispatcher jobDispatcher;
+    @NonNull
     private final ApplicationListener applicationListener;
+    @NonNull
     private final AirshipChannelListener channelListener;
+    @NonNull
     private final AirshipChannel.Extender channelRegistrationPayloadExtender;
+    @NonNull
     private final User.Listener userListener;
+    @NonNull
     private final ActivityMonitor activityMonitor;
+    @NonNull
     private final AirshipChannel airshipChannel;
 
     private boolean isFetchingMessages = false;

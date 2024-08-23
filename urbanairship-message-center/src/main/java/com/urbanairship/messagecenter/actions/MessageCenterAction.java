@@ -51,6 +51,7 @@ public class MessageCenterAction extends Action {
     @NonNull
     public static final String MESSAGE_ID_PLACEHOLDER = "auto";
 
+    @NonNull
     private final Callable<MessageCenter> messageCenterCallable;
 
     @Override

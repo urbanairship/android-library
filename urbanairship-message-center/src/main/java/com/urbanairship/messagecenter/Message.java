@@ -44,6 +44,7 @@ public class Message implements Comparable<Message> {
     private String messageUrl;
     private String messageBodyUrl;
     private String messageReadUrl;
+    @Nullable
     private JsonValue messageReporting;
     private String title;
     private JsonValue rawJson;

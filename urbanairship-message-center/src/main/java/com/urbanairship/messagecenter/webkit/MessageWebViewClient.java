@@ -29,6 +29,7 @@ import androidx.annotation.RestrictTo;
  */
 public class MessageWebViewClient extends AirshipWebViewClient {
 
+    @NonNull
     private static SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ", Locale.US);
 
     static {

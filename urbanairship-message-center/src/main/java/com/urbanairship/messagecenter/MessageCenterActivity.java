@@ -19,6 +19,7 @@ import androidx.annotation.Nullable;
  */
 public class MessageCenterActivity extends ThemedActivity {
 
+    @Nullable
     private MessageCenterFragment messageCenterFragment;
 
     @Override

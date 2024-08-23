@@ -57,12 +57,18 @@ class InboxJobHandler {
     private static final String LAST_UPDATE_TIME = "com.urbanairship.user.LAST_UPDATE_TIME";
     private static final long USER_UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000; //24H
 
+    @NonNull
     private final MessageDao messageDao;
+    @NonNull
     private final User user;
+    @NonNull
     private final Inbox inbox;
+    @NonNull
     private final PreferenceDataStore dataStore;
+    @NonNull
     private final AirshipChannel channel;
 
+    @NonNull
     private final InboxApiClient inboxApiClient;
 
     InboxJobHandler(@NonNull Context context,
@@ -226,7 +232,7 @@ class InboxJobHandler {
      *
      * @param serverMessages The messages from the server.
      */
-    private void updateInbox(JsonList serverMessages) {
+    private void updateInbox(@NonNull JsonList serverMessages) {
         List<JsonValue> messagesToInsert = new ArrayList<>();
         HashSet<String> serverMessageIds = new HashSet<>();
 

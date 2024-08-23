@@ -129,7 +129,8 @@ public class MessageEntity {
         return this.deleted;
     }
 
-    protected Message createMessageFromEntity(MessageEntity entity) {
+    @Nullable
+    protected Message createMessageFromEntity(@NonNull MessageEntity entity) {
         try {
             return Message.create(JsonValue.parseString(entity.rawMessageObject), entity.unread, entity.deleted);
         } catch (JsonException e) {

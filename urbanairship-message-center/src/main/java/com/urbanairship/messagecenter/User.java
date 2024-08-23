@@ -40,7 +40,9 @@ public class User {
     private static final String USER_REGISTERED_CHANNEL_ID_KEY = KEY_PREFIX + ".REGISTERED_CHANNEL_ID";
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
+    @NonNull
     private final PreferenceDataStore preferences;
+    @NonNull
     private final AirshipChannel channel;
 
     User(@NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipChannel channel) {

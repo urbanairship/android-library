@@ -45,7 +45,9 @@ public class InboxApiClient {
     private static final String PAYLOAD_ANDROID_CHANNELS_KEY = "android_channels";
     private static final String PAYLOAD_ADD_KEY = "add";
 
+    @NonNull
     private final AirshipRuntimeConfig runtimeConfig;
+    @NonNull
     private final RequestSession session;
 
     InboxApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
@@ -85,6 +87,7 @@ public class InboxApiClient {
         });
     }
 
+    @NonNull
     Response<Void> syncDeletedMessageState(@NonNull User user, @NonNull String channelId, @NonNull List<JsonValue> reportingsToDelete) throws RequestException {
         Uri url = getUserApiUrl(user.getId(), DELETE_MESSAGES_PATH);
 
@@ -109,6 +112,7 @@ public class InboxApiClient {
         return session.execute(request, (status, responseHeaders, responseBody) -> null);
     }
 
+    @NonNull
     Response<Void> syncReadMessageState(@NonNull User user, @NonNull String channelId, @NonNull List<JsonValue> reportingsToUpdate) throws RequestException {
         Uri url = getUserApiUrl(user.getId(), MARK_READ_MESSAGES_PATH);
 
@@ -133,6 +137,7 @@ public class InboxApiClient {
         return session.execute(request, (status, responseHeaders, responseBody) -> null);
     }
 
+    @NonNull
     Response<UserCredentials> createUser(@NonNull String channelId) throws RequestException {
         Uri url = getUserApiUrl();
 
@@ -165,6 +170,7 @@ public class InboxApiClient {
         });
     }
 
+    @NonNull
     Response<Void> updateUser(@NonNull User user, @NonNull String channelId) throws RequestException {
         Uri url = getUserApiUrl(user.getId());
 
@@ -201,7 +207,7 @@ public class InboxApiClient {
      * @return The URL or null if an error occurred.
      */
     @Nullable
-    private Uri getUserApiUrl(String... paths) {
+    private Uri getUserApiUrl(@NonNull String... paths) {
         UrlBuilder builder = runtimeConfig.getDeviceUrl().appendEncodedPath(USER_API_PATH);
 
         for (String path : paths) {
@@ -232,6 +238,7 @@ public class InboxApiClient {
         }
     }
 
+    @NonNull
     private RequestAuth getUserAuth(@NonNull User user) throws RequestException {
         String userId = user.getId();
         String userPassword = user.getPassword();

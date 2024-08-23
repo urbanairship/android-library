@@ -23,6 +23,7 @@ public class MessageActivity extends ThemedActivity {
 
     private static final String FRAGMENT_TAG = "MessageFragment";
 
+    @Nullable
     private String messageId;
 
     private final InboxListener updateMessageListener = new InboxListener() {
@@ -131,7 +132,7 @@ public class MessageActivity extends ThemedActivity {
 
     @Override
     @SuppressLint("UnknownNullness")
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
                 this.finish();

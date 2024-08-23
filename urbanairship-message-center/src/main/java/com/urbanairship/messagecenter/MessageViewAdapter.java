@@ -20,7 +20,9 @@ import androidx.annotation.Nullable;
  */
 public abstract class MessageViewAdapter extends BaseAdapter {
 
+    @NonNull
     private final List<Message> items;
+    @NonNull
     private final Context context;
     private final int layout;
 
