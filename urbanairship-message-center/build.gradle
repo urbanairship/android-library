@@ -1,8 +1,22 @@
 plugins {
-    id 'airship-module'
+    id("airship-module")
+    id("kotlin-android")
 }
 
 description = "Airship Android SDK Message Center module"
+
+airshipModule {
+    published = true
+}
+
+android {
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+        freeCompilerArgs = ["-Xexplicit-api=strict"]
+    }
+
+    namespace 'com.urbanairship.messagecenter'
+}
 
 dependencies {
     api project(':urbanairship-core')
