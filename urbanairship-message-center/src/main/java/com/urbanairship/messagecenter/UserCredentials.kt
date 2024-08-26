@@ -1,30 +1,29 @@
 /* Copyright Airship and Contributors */
-
-package com.urbanairship.messagecenter;
-
-import androidx.annotation.RestrictTo;
+package com.urbanairship.messagecenter
 
 /**
  * Model object for User credentials.
  *
  * @hide
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class UserCredentials {
+internal class UserCredentials(
+    val username: String,
+    val password: String
+) {
 
-    private final String username;
-    private final String password;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
 
-    public UserCredentials(String username, String password) {
-        this.username = username;
-        this.password = password;
+        other as UserCredentials
+
+        if (username != other.username) return false
+        return password == other.password
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
+    override fun hashCode(): Int {
+        var result = username.hashCode()
+        result = 31 * result + password.hashCode()
+        return result
     }
 }
