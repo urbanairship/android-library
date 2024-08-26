@@ -1,85 +1,63 @@
 /* Copyright Airship and Contributors */
+package com.urbanairship.messagecenter
 
-package com.urbanairship.messagecenter;
+import androidx.annotation.VisibleForTesting
+import com.urbanairship.PreferenceDataStore
+import com.urbanairship.UALog
+import com.urbanairship.channel.AirshipChannel
+import java.io.UnsupportedEncodingException
+import java.util.concurrent.CopyOnWriteArrayList
 
-import com.urbanairship.UALog;
-import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.util.UAStringUtil;
+/** The Airship rich push user. */
+public class User internal constructor(
+    private val preferences: PreferenceDataStore,
+    private val channel: AirshipChannel
+) {
 
-import java.io.UnsupportedEncodingException;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+    init {
+        val password = preferences.getString(USER_PASSWORD_KEY, null)
+        if (!password.isNullOrEmpty()) {
+            val userToken = encode(password, preferences.getString(USER_ID_KEY, null))
+            if (preferences.putSync(USER_TOKEN_KEY, userToken)) {
+                preferences.remove(USER_PASSWORD_KEY)
+            }
+        }
+    }
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-/**
- * The Airship rich push user.
- */
-public class User {
-
-    /**
-     * A listener interface for receiving events for user updates.
-     */
+    /** A listener interface for receiving events for user updates. */
     public interface Listener {
 
         /**
          * Called when the user is updated.
          *
-         * @param success {@code} if the request was successful, otherwise {@code false}.
+         * @param success `true` if the request was successful, otherwise `false`.
          */
-        void onUserUpdated(boolean success);
-
+        public fun onUserUpdated(success: Boolean)
     }
 
-    private static final String KEY_PREFIX = "com.urbanairship.user";
-    private static final String USER_ID_KEY = KEY_PREFIX + ".ID";
-    private static final String USER_PASSWORD_KEY = KEY_PREFIX + ".PASSWORD";
-    private static final String USER_TOKEN_KEY = KEY_PREFIX + ".USER_TOKEN";
-    private static final String USER_REGISTERED_CHANNEL_ID_KEY = KEY_PREFIX + ".REGISTERED_CHANNEL_ID";
-    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
-
-    @NonNull
-    private final PreferenceDataStore preferences;
-    @NonNull
-    private final AirshipChannel channel;
-
-    User(@NonNull PreferenceDataStore preferenceDataStore, @NonNull AirshipChannel channel) {
-        this.preferences = preferenceDataStore;
-        this.channel = channel;
-        String password = preferences.getString(USER_PASSWORD_KEY, null);
-
-        if (!UAStringUtil.isEmpty(password)) {
-            String userToken = encode(password, preferences.getString(USER_ID_KEY, null));
-
-            if (preferences.putSync(USER_TOKEN_KEY, userToken)) {
-                preferences.remove(USER_PASSWORD_KEY);
-            }
-        }
-    }
+    private val listeners: MutableList<Listener> = CopyOnWriteArrayList()
 
     /**
      * Subscribe a listener for user update events.
      *
-     * @param listener An object implementing the {@link Listener} interface.
+     * @param listener An object implementing the [Listener] interface.
      */
-    public void addListener(@NonNull Listener listener) {
-        listeners.add(listener);
+    public fun addListener(listener: Listener) {
+        listeners.add(listener)
     }
 
     /**
      * Unsubscribe a listener for inbox and user update events.
      *
-     * @param listener An object implementing the {@link Listener} interface.
+     * @param listener An object implementing the [Listener] interface.
      */
-    public void removeListener(@NonNull Listener listener) {
-        listeners.remove(listener);
+    public fun removeListener(listener: Listener) {
+        listeners.remove(listener)
     }
 
-    void onUserUpdated(boolean success) {
-        for (Listener listener : listeners) {
-            listener.onUserUpdated(success);
+    public fun onUserUpdated(success: Boolean) {
+        for (listener in listeners) {
+            listener.onUserUpdated(success)
         }
     }
 
@@ -88,9 +66,9 @@ public class User {
      *
      * @param channelId The channelId
      */
-    void onUpdated(@NonNull String channelId) {
-        if (!channelId.equals(this.getRegisteredChannelId())) {
-            preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId);
+    public fun onUpdated(channelId: String) {
+        if (channelId != registeredChannelId) {
+            preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId)
         }
     }
 
@@ -101,168 +79,144 @@ public class User {
      * @param userToken The user's token
      * @param channelId The channel Id that will be registered
      */
-    void onCreated(@NonNull String userId, @NonNull String userToken, @NonNull String channelId) {
-        this.setRegisteredChannelId(channelId);
-        this.setUser(userId, userToken);
+    public fun onCreated(userId: String, userToken: String, channelId: String) {
+        registeredChannelId = channelId
+        setUser(userId, userToken)
     }
 
-    /**
-     * Returns whether the user has been created.
-     *
-     * @return <code>true</code> if the user has an id, <code>false</code> otherwise.
-     */
-    public static boolean isCreated() {
-        return MessageCenter.shared().getUser().isUserCreated();
-    }
-
-    /**
-     * Checks if the user credentials are available.
-     *
-     * @return {@code true} if the credentials are available, otherwise {@code false}.
-     */
-    public boolean isUserCreated() {
-        return (!UAStringUtil.isEmpty(getId()) && !UAStringUtil.isEmpty(getPassword()));
-    }
+    public val isUserCreated: Boolean
+        /**
+         * Checks if the user credentials are available.
+         *
+         * @return `true` if the credentials are available, otherwise `false`.
+         */
+        get() = !id.isNullOrEmpty() && !password.isNullOrEmpty()
 
     /**
      * Updates the user
      *
      * @param userId The user ID from the response
      * @param userToken The user token from the response
+     *
+     * @hide
      */
-    void setUser(@NonNull String userId, @NonNull String userToken) {
-        UALog.d("Setting Rich Push user: %s", userId);
-        preferences.put(USER_ID_KEY, userId);
-        preferences.put(USER_TOKEN_KEY, encode(userToken, userId));
+    @VisibleForTesting
+    public fun setUser(userId: String, userToken: String) {
+        UALog.d("Setting Rich Push user: %s", userId)
+        preferences.put(USER_ID_KEY, userId)
+        preferences.put(USER_TOKEN_KEY, encode(userToken, userId))
     }
 
-    /**
-     * Get the user's ID.
-     *
-     * @return A user ID String or null if it doesn't exist.
-     */
-    @Nullable
-    public String getId() {
-        if (preferences.getString(USER_TOKEN_KEY, null) != null) {
-            return preferences.getString(USER_ID_KEY, null);
+    /** The user's ID. */
+    public val id: String?
+        get() = if (preferences.getString(USER_TOKEN_KEY, null) != null) {
+            preferences.getString(USER_ID_KEY, null)
+        } else {
+            null
         }
-        return null;
+
+    /** The user's token used for basic auth. */
+    public val password: String?
+        get() = if (preferences.getString(USER_ID_KEY, null) != null) {
+            decode(preferences.getString(USER_TOKEN_KEY, null), id)
+        } else {
+            null
+        }
+
+    /** The registered Channel ID stored in the DataStore, or `null` if no Channel ID is stored. */
+    private var registeredChannelId: String
+        get() = preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "")
+        set(channelId) = preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId)
+
+    /** Returns `true` if the user should be updated. */
+    public fun shouldUpdate(): Boolean {
+        return channel.id != null && registeredChannelId != channel.id
     }
 
-    /**
-     * Get the user's token used for basic auth.
-     *
-     * @return A user token String.
-     */
-    @Nullable
-    public String getPassword() {
-        if (preferences.getString(USER_ID_KEY, null) != null) {
-            return decode(preferences.getString(USER_TOKEN_KEY, null), getId());
-        }
-        return null;
-    }
+    public companion object {
 
-    /**
-     * Encode the string with the key.
-     *
-     * @param input The string to encode.
-     * @param key The key used to encode the string.
-     * @return The encoded string.
-     */
-    @Nullable
-    private static String encode(@Nullable String input, @Nullable String key) {
-        if (UAStringUtil.isEmpty(input) || UAStringUtil.isEmpty(key)) {
-            return null;
-        }
+        private const val KEY_PREFIX = "com.urbanairship.user"
+        private const val USER_ID_KEY = "${KEY_PREFIX}.ID"
+        private const val USER_PASSWORD_KEY = "${KEY_PREFIX}.PASSWORD"
+        private const val USER_TOKEN_KEY = "${KEY_PREFIX}.USER_TOKEN"
+        private const val USER_REGISTERED_CHANNEL_ID_KEY = "${KEY_PREFIX}.REGISTERED_CHANNEL_ID"
 
-        // xor the two strings together
-        byte[] bytes = xor(input.getBytes(), key.getBytes());
+        /** A flag indicating whether the user has been created. */
+        public val isCreated: Boolean
+            get() = MessageCenter.shared().user.isUserCreated
 
-        // Format the raw byte array as a hex string
-        StringBuilder hexHash = new StringBuilder();
-        for (byte b : bytes) {
-            hexHash.append(String.format("%02x", b));
-        }
-        return hexHash.toString();
-    }
-
-    /**
-     * Decode the string with the key.
-     *
-     * @param encodedString The string to decode.
-     * @param key The key used to decode the string.
-     * @return The decoded string.
-     */
-    @Nullable
-    private static String decode(@Nullable String encodedString, @Nullable String key) {
-        if (UAStringUtil.isEmpty(encodedString) || UAStringUtil.isEmpty(key)) {
-            return null;
-        }
-
-        int length = encodedString.length();
-
-        // Make sure we have an even number of chars
-        if (length % 2 != 0) {
-            return null;
-        }
-
-        try {
-            // Decode the encodedString to a byte array
-            byte[] decodedBytes = new byte[length / 2];
-            for (int i = 0; i < length; i += 2) {
-                decodedBytes[i / 2] = Byte.parseByte(encodedString.substring(i, i + 2), 16);
+        /**
+         * Encode the string with the key.
+         *
+         * @param input The string to encode.
+         * @param key The key used to encode the string.
+         * @return The encoded string.
+         */
+        private fun encode(input: String?, key: String?): String? {
+            if (input.isNullOrEmpty() || key.isNullOrEmpty()) {
+                return null
             }
-            decodedBytes = xor(decodedBytes, key.getBytes());
 
-            return new String(decodedBytes, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            UALog.e(e, "RichPushUser - Unable to decode string.");
-        } catch (NumberFormatException e) {
-            UALog.e(e, "RichPushUser - String contains invalid hex numbers.");
+            // xor the two strings together
+            val bytes = xor(input.toByteArray(), key.toByteArray())
+
+            // Format the raw byte array as a hex string
+            val hexHash = StringBuilder()
+            for (b in bytes) {
+                hexHash.append(String.format("%02x", b))
+            }
+            return hexHash.toString()
         }
 
-        return null;
-    }
+        /**
+         * Decode the string with the key.
+         *
+         * @param encodedString The string to decode.
+         * @param key The key used to decode the string.
+         * @return The decoded string.
+         */
+        private fun decode(encodedString: String?, key: String?): String? {
+            if (encodedString.isNullOrEmpty() || key.isNullOrEmpty()) {
+                return null
+            }
 
-    /**
-     * Compare and return the xor value.
-     *
-     * @param a The byte value.
-     * @param b The byte value.
-     * @return The byte result value.
-     */
-    private static byte[] xor(@NonNull byte[] a, @NonNull byte[] b) {
-        byte[] out = new byte[a.length];
+            val length = encodedString.length
+            // Make sure we have an even number of chars
+            if (length % 2 != 0) {
+                return null
+            }
 
-        for (int i = 0; i < a.length; i++) {
-            out[i] = (byte) (a[i] ^ b[i % b.length]);
+            try {
+                // Decode the encodedString to a byte array
+                var decodedBytes = ByteArray(length / 2)
+                var i = 0
+                while (i < length) {
+                    decodedBytes[i / 2] = encodedString.substring(i, i + 2).toByte(16)
+                    i += 2
+                }
+                decodedBytes = xor(decodedBytes, key.toByteArray())
+                return String(decodedBytes, charset("UTF-8"))
+            } catch (e: UnsupportedEncodingException) {
+                UALog.e(e, "RichPushUser - Unable to decode string.")
+            } catch (e: NumberFormatException) {
+                UALog.e(e, "RichPushUser - String contains invalid hex numbers.")
+            }
+            return null
         }
 
-        return out;
+        /**
+         * Compare and return the xor value.
+         *
+         * @param a The byte value.
+         * @param b The byte value.
+         * @return The byte result value.
+         */
+        private fun xor(a: ByteArray, b: ByteArray): ByteArray {
+            val out = ByteArray(a.size)
+            for (i in a.indices) {
+                out[i] = (a[i].toInt() xor b[i % b.size].toInt()).toByte()
+            }
+            return out
+        }
     }
-
-    /**
-     * Retrieve and return the registered Channel ID stored in the DataStore.
-     * If none is stored, return an empty string.
-     *
-     * @return The registered Channel ID String
-     */
-    @NonNull
-    private String getRegisteredChannelId() {
-        return preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "");
-    }
-
-    /**
-     * Save in the DataStore the Channel ID used for registration.
-     *
-     * @param channelId The ChannelId String
-     */
-    private void setRegisteredChannelId(@NonNull String channelId) {
-        preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId);
-    }
-
-    boolean shouldUpdate() {
-        return channel.getId() != null && (!this.getRegisteredChannelId().equals(channel.getId()));
-    }
-
 }
