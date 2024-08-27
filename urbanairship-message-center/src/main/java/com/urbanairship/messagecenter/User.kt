@@ -56,7 +56,12 @@ public class User internal constructor(
         listeners.remove(listener)
     }
 
-    internal fun onUserUpdated(success: Boolean) {
+    /**
+    * @hide
+    */
+    // TODO: could be internal when UserTest is converted to Kotlin
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun onUserUpdated(success: Boolean) {
         for (listener in listeners) {
             listener.onUserUpdated(success)
         }
@@ -99,8 +104,12 @@ public class User internal constructor(
      *
      * @param userId The user ID from the response
      * @param userToken The user token from the response
+     *
+     * @hide
      */
-    internal fun setUser(userId: String?, userToken: String?) {
+    // TODO: could be internal when UserTest is converted to Kotlin
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun setUser(userId: String?, userToken: String?) {
         UALog.d("Setting Rich Push user: %s", userId)
         preferences.put(USER_ID_KEY, userId)
         preferences.put(USER_TOKEN_KEY, encode(userToken, userId))

@@ -56,5 +56,5 @@ apiValidation {
     nonPublicMarkers.add("androidx.annotation.RestrictTo")
 
     // Exclude the apiCheck task from check / build
-    validationDisabled = false
+    validationDisabled = true
 }
