@@ -14,7 +14,6 @@ import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
-import com.urbanairship.messagecenter.InboxApiClient
 import com.urbanairship.messagecenter.InboxJobHandler.Companion.ACTION_RICH_PUSH_MESSAGES_UPDATE
 import com.urbanairship.messagecenter.InboxJobHandler.Companion.ACTION_RICH_PUSH_USER_UPDATE
 import com.urbanairship.messagecenter.InboxJobHandler.Companion.LAST_MESSAGE_REFRESH_TIME
@@ -22,26 +21,18 @@ import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import java.net.HttpURLConnection
 import io.mockk.Called
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.isMockKMock
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import junit.framework.Assert
-import junit.framework.TestCase
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
-import org.mockito.Mockito
 
 @RunWith(AndroidJUnit4::class)
 public class InboxJobHandlerTest {
