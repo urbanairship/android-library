@@ -1,71 +1,67 @@
 /* Copyright Airship and Contributors */
+package com.urbanairship.messagecenter
 
-package com.urbanairship.messagecenter;
+import android.content.Context
+import android.view.View
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.messagecenter.MessageCenterTestUtils.createMessage
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNull
+import org.junit.Test
+import org.junit.runner.RunWith
 
-import android.view.View;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import java.util.Arrays;
-
-import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNull;
-
-@RunWith(AndroidJUnit4.class)
+@RunWith(AndroidJUnit4::class)
 public class MessageViewAdapterTest {
-
-    private MessageViewAdapter messageViewAdapter;
-
-    @Before
-    public void setup() {
-        messageViewAdapter = new MessageViewAdapter(ApplicationProvider.getApplicationContext(), 0) {
-            @Override
-            protected void bindView(@NonNull View view, @NonNull Message message, int position) {
-
-            }
-        };
+    
+    private val context = ApplicationProvider.getApplicationContext<Context>()
+    private val messageViewAdapter = object : MessageViewAdapter(context, 0) {
+        override fun bindView(view: View, message: Message, position: Int) {}
     }
 
     @Test
-    public void testGetItem() {
+    public fun testGetItem() {
         // Test empty message view adapter
-        assertNull(messageViewAdapter.getItem(0));
-        assertNull(messageViewAdapter.getItem(-1));
+        assertNull(messageViewAdapter.getItem(0))
+        assertNull(messageViewAdapter.getItem(-1))
 
         // Set
-        messageViewAdapter.set(Arrays.asList(MessageCenterTestUtils.createMessage("id-0", null, false), MessageCenterTestUtils.createMessage("id-1", null, false)));
+        messageViewAdapter.set(messages)
 
         // Verify messages are available
-        assertEquals("id-0", ((Message) messageViewAdapter.getItem(0)).getMessageId());
-        assertEquals("id-1", ((Message) messageViewAdapter.getItem(1)).getMessageId());
+        assertEquals(messageId1, (messageViewAdapter.getItem(0) as Message?)?.messageId)
+        assertEquals(messageId2, (messageViewAdapter.getItem(1) as Message?)?.messageId)
 
         // Test non-empty message view adapter
-        assertNull(messageViewAdapter.getItem(2));
-        assertNull(messageViewAdapter.getItem(-1));
+        assertNull(messageViewAdapter.getItem(2))
+        assertNull(messageViewAdapter.getItem(-1))
     }
 
     @Test
-    public void testGetItemId() {
+    public fun testGetItemId() {
         // Test empty message view adapter
-        assertEquals(-1, messageViewAdapter.getItemId(0));
-        assertEquals(-1, messageViewAdapter.getItemId(-1));
+        assertEquals(-1, messageViewAdapter.getItemId(0))
+        assertEquals(-1, messageViewAdapter.getItemId(-1))
 
         // Set
-        messageViewAdapter.set(Arrays.asList(MessageCenterTestUtils.createMessage("id-0", null, false), MessageCenterTestUtils.createMessage("id-1", null, false)));
+        messageViewAdapter.set(messages)
 
         // Verify messages are available
-        assertEquals("id-0".hashCode(), messageViewAdapter.getItemId(0));
-        assertEquals("id-1".hashCode(), messageViewAdapter.getItemId(1));
+        assertEquals(messageId1.hashCode().toLong(), messageViewAdapter.getItemId(0))
+        assertEquals(messageId2.hashCode().toLong(), messageViewAdapter.getItemId(1))
 
         // Test non-empty message view adapter
-        assertEquals(-1, messageViewAdapter.getItemId(2));
-        assertEquals(-1, messageViewAdapter.getItemId(-1));
+        assertEquals(-1, messageViewAdapter.getItemId(2))
+        assertEquals(-1, messageViewAdapter.getItemId(-1))
     }
 
+    private companion object {
+        const val messageId1 = "id-0"
+        const val messageId2 = "id-1"
+
+        val messages = listOf(
+            createMessage(messageId1, null, false),
+            createMessage(messageId2, null, false)
+        )
+    }
 }
