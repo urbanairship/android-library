@@ -57,11 +57,11 @@ public class MessageCenterTest {
     @Before
     public fun setup() {
         messageCenter.init()
-        
+
         val pushListenerSlot = slot<PushListener>()
         verify { pushManager.addInternalPushListener(capture(pushListenerSlot)) }
         pushListener = pushListenerSlot.captured
-        
+
         val privacyListenerSlot = slot<PrivacyManager.Listener>()
         verify { privacyManager.addListener(capture(privacyListenerSlot)) }
         privacyManagerListener = privacyListenerSlot.captured

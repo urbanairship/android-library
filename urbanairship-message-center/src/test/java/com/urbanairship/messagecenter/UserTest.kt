@@ -22,10 +22,10 @@ public class UserTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
     private val mockChannel = mockk<AirshipChannel>()
-    
+
     private val user = User(dataStore, mockChannel)
     private val listener = TestUserListener()
-    
+
     @Before
     public fun setUp() {
         user.addListener(listener)
@@ -138,7 +138,7 @@ public class UserTest {
     /** Listener that captures the last update user result */
     private class TestUserListener : User.Listener {
         var lastUpdateUserResult: Boolean? = null
-        
+
         override fun onUserUpdated(success: Boolean) {
             lastUpdateUserResult = success
         }

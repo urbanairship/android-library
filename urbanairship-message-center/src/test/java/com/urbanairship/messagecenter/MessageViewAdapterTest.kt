@@ -13,7 +13,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 public class MessageViewAdapterTest {
-    
+
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val messageViewAdapter = object : MessageViewAdapter(context, 0) {
         override fun bindView(view: View, message: Message, position: Int) {}
