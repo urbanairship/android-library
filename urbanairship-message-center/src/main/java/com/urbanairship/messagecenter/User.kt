@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.messagecenter
 
+import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
@@ -55,7 +56,7 @@ public class User internal constructor(
         listeners.remove(listener)
     }
 
-    public fun onUserUpdated(success: Boolean) {
+    internal fun onUserUpdated(success: Boolean) {
         for (listener in listeners) {
             listener.onUserUpdated(success)
         }
@@ -66,7 +67,7 @@ public class User internal constructor(
      *
      * @param channelId The channelId
      */
-    public fun onUpdated(channelId: String) {
+    internal fun onUpdated(channelId: String) {
         if (channelId != registeredChannelId) {
             preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId)
         }
@@ -79,11 +80,12 @@ public class User internal constructor(
      * @param userToken The user's token
      * @param channelId The channel Id that will be registered
      */
-    public fun onCreated(userId: String, userToken: String, channelId: String) {
+    internal fun onCreated(userId: String, userToken: String, channelId: String) {
         registeredChannelId = channelId
         setUser(userId, userToken)
     }
 
+    // TODO: could be internal when Inbox is converted to Kotlin?
     public val isUserCreated: Boolean
         /**
          * Checks if the user credentials are available.
@@ -97,11 +99,8 @@ public class User internal constructor(
      *
      * @param userId The user ID from the response
      * @param userToken The user token from the response
-     *
-     * @hide
      */
-    @VisibleForTesting
-    public fun setUser(userId: String, userToken: String) {
+    internal fun setUser(userId: String?, userToken: String?) {
         UALog.d("Setting Rich Push user: %s", userId)
         preferences.put(USER_ID_KEY, userId)
         preferences.put(USER_TOKEN_KEY, encode(userToken, userId))
@@ -128,11 +127,18 @@ public class User internal constructor(
         get() = preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "")
         set(channelId) = preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId)
 
-    /** Returns `true` if the user should be updated. */
+    /**
+     * Returns `true` if the user should be updated.
+     *
+     * @hide
+     */
+    // TODO: can be internal when Inbox is converted to Kotlin
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun shouldUpdate(): Boolean {
         return channel.id != null && registeredChannelId != channel.id
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         private const val KEY_PREFIX = "com.urbanairship.user"
@@ -142,6 +148,7 @@ public class User internal constructor(
         private const val USER_REGISTERED_CHANNEL_ID_KEY = "${KEY_PREFIX}.REGISTERED_CHANNEL_ID"
 
         /** A flag indicating whether the user has been created. */
+        @JvmStatic
         public val isCreated: Boolean
             get() = MessageCenter.shared().user.isUserCreated
 
