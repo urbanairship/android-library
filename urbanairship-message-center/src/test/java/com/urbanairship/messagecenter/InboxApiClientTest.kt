@@ -1,244 +1,247 @@
 /* Copyright Airship and Contributors */
+package com.urbanairship.messagecenter
 
-package com.urbanairship.messagecenter;
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.PreferenceDataStore
+import com.urbanairship.TestAirshipRuntimeConfig
+import com.urbanairship.TestRequestSession
+import com.urbanairship.UAirship
+import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.http.RequestAuth.ChannelTokenAuth
+import com.urbanairship.http.RequestBody
+import com.urbanairship.http.RequestException
+import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.remoteconfig.RemoteAirshipConfig
+import com.urbanairship.remoteconfig.RemoteConfig
+import io.mockk.mockk
+import junit.framework.TestCase
+import junit.framework.TestCase.assertEquals
+import org.intellij.lang.annotations.Language
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mockito
 
-import android.content.Context;
-
-import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.TestAirshipRuntimeConfig;
-import com.urbanairship.TestRequestSession;
-import com.urbanairship.UAirship;
-import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.http.RequestAuth;
-import com.urbanairship.http.RequestBody;
-import com.urbanairship.http.RequestException;
-import com.urbanairship.http.Response;
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonList;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
-import com.urbanairship.remoteconfig.RemoteAirshipConfig;
-import com.urbanairship.remoteconfig.RemoteConfig;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
-import static junit.framework.TestCase.assertEquals;
-
-@RunWith(AndroidJUnit4.class)
+@RunWith(AndroidJUnit4::class)
 public class InboxApiClientTest {
 
-    private AirshipChannel mockChannel;
+    private val context = ApplicationProvider.getApplicationContext<Context>()
 
-    private User user;
-    private PreferenceDataStore dataStore;
+    private val mockChannel = mockk<AirshipChannel> {}
+    private val dataStore = PreferenceDataStore.inMemoryStore(context)
+    private val user = User(dataStore, mockChannel)
 
-    private TestRequestSession requestSession = new TestRequestSession();
-    private TestAirshipRuntimeConfig runtimeConfig;
-
-    private InboxApiClient inboxApiClient;
+    private val requestSession = TestRequestSession()
+    private val runtimeConfig = TestAirshipRuntimeConfig(
+        RemoteConfig(
+            RemoteAirshipConfig(
+                "https://remote-data",
+                "https://example.com",
+                "https://wallet",
+                "https://analytics",
+                "https://metered-usage"
+            )
+        )
+    )
+    private val inboxApiClient = InboxApiClient(runtimeConfig, requestSession)
 
     @Before
-    public void setup() {
-        mockChannel = Mockito.mock(AirshipChannel.class);
-
-        Context context = ApplicationProvider.getApplicationContext();
-        dataStore = PreferenceDataStore.inMemoryStore(context);
-
-        user = new User(dataStore, mockChannel);
+    public fun setup() {
         // Set a valid user
-        user.setUser("fakeUserId", "password");
-
-        runtimeConfig = new TestAirshipRuntimeConfig(
-                new RemoteConfig(
-                        new RemoteAirshipConfig(
-                                "https://remote-data",
-                                "https://example.com",
-                                "https://wallet",
-                                "https://analytics",
-                                "https://metered-usage"
-                        )
-                )
-        );
-
-        inboxApiClient = new InboxApiClient(runtimeConfig, requestSession);
+        user.setUser("fakeUserId", "password")
     }
 
     @Test
-    public void testUpdateMessagesSucceeds() throws RequestException, JsonException {
-        String responseBody = "{ \"messages\": [ {\"message_id\": \"some_mesg_id\"," +
-                "\"message_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/\"," +
-                "\"message_body_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/body/\"," +
-                "\"message_read_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/read/\"," +
-                "\"unread\": true, \"message_sent\": \"2010-09-05 12:13 -0000\"," +
-                "\"title\": \"Message title\", \"extra\": { \"some_key\": \"some_value\"}," +
-                "\"content_type\": \"text/html\", \"content_size\": \"128\"}]}";
+    @Throws(RequestException::class, JsonException::class)
+    public fun testUpdateMessagesSucceeds() {
+        @Language("JSON")
+        val responseBody = """
+            {
+              "messages": [
+                {
+                  "message_id": "some_mesg_id",
+                  "message_url": "https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/",
+                  "message_body_url": "https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/body/",
+                  "message_read_url": "https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/read/",
+                  "unread": true,
+                  "message_sent": "2010-09-05 12:13 -0000",
+                  "title": "Message title",
+                  "extra": {
+                    "some_key": "some_value"
+                  },
+                  "content_type": "text/html",
+                  "content_size": "128"
+                }
+              ]
+            }
+            """.trimIndent()
 
-        requestSession.addResponse(200, responseBody);
+        requestSession.addResponse(200, responseBody)
 
-        Response<JsonList> response = inboxApiClient.fetchMessages(user, "channelId",  "some last modified");
+        val (status, result) = inboxApiClient.fetchMessages(user, "channelId", "some last modified")
 
-        assertEquals(200, response.getStatus());
-        assertEquals("GET", requestSession.getLastRequest().getMethod());
-        assertEquals("https://example.com/api/user/fakeUserId/messages/", requestSession.getLastRequest().getUrl().toString());
-        assertEquals("channelId", requestSession.getLastRequest().getHeaders().get("X-UA-Channel-ID"));
-        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
-        assertEquals("some last modified", requestSession.getLastRequest().getHeaders().get("If-Modified-Since"));
-
-        assertEquals(JsonValue.parseString(responseBody).optMap().opt("messages").getList(), response.getResult());
+        assertEquals(200, status)
+        assertEquals("GET", requestSession.lastRequest.method)
+        assertEquals("https://example.com/api/user/fakeUserId/messages/", requestSession.lastRequest.url.toString())
+        assertEquals("channelId", requestSession.lastRequest.headers["X-UA-Channel-ID"])
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.lastRequest.headers["Accept"])
+        assertEquals("some last modified", requestSession.lastRequest.headers["If-Modified-Since"])
+        assertEquals(JsonValue.parseString(responseBody).optMap().opt("messages").list, result)
     }
 
     /**
      * Test update messages with null URL.
      */
-    @Test(expected = RequestException.class)
-    public void testNullUrlUpdateMessages() throws RequestException {
-        runtimeConfig.updateRemoteConfig(new RemoteConfig());
-        inboxApiClient.fetchMessages(user, "channelId", null);
+    @Test(expected = RequestException::class)
+    @Throws(RequestException::class)
+    public fun testNullUrlUpdateMessages() {
+        runtimeConfig.updateRemoteConfig(RemoteConfig())
+        inboxApiClient.fetchMessages(user, "channelId", null)
     }
 
     @Test
-    public void testSyncDeletedMessageStateSucceeds() throws JsonException, RequestException {
-        requestSession.addResponse(200);
+    @Throws(JsonException::class, RequestException::class)
+    public fun testSyncDeletedMessageStateSucceeds() {
+        requestSession.addResponse(200)
+        val reportings = listOf(
+            JsonValue.parseString("""{"message_id":"testId1"}"""),
+            JsonValue.parseString("""{"message_id":"testId2"}""")
+        )
+        val expectedJsonMap = jsonMapOf("messages" to JsonValue.wrapOpt(reportings))
 
-        List<JsonValue> reportings = new ArrayList<>();
-        reportings.add(JsonValue.parseString("{\"message_id\":\"testId1\"}"));
-        reportings.add(JsonValue.parseString("{\"message_id\":\"testId2\"}"));
+        val (status) = inboxApiClient.syncDeletedMessageState(user, "channelId", reportings)
 
-        JsonMap expectedJsonMap = JsonMap.newBuilder()
-                .put("messages", JsonValue.wrapOpt(reportings))
-                .build();
-
-        Response<Void> response = inboxApiClient.syncDeletedMessageState(user, "channelId", reportings);
-
-        assertEquals(200, response.getStatus());
-        assertEquals("POST", requestSession.getLastRequest().getMethod());
-        assertEquals("https://example.com/api/user/fakeUserId/messages/delete/", requestSession.getLastRequest().getUrl().toString());
-        assertEquals("channelId", requestSession.getLastRequest().getHeaders().get("X-UA-Channel-ID"));
-        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
-        assertEquals(new RequestBody.Json(expectedJsonMap), requestSession.getLastRequest().getBody());
+        assertEquals(200, status)
+        assertEquals("POST", requestSession.lastRequest.method)
+        assertEquals("https://example.com/api/user/fakeUserId/messages/delete/", requestSession.lastRequest.url.toString())
+        assertEquals("channelId", requestSession.lastRequest.headers["X-UA-Channel-ID"])
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.lastRequest.headers["Accept"])
+        assertEquals(RequestBody.Json(expectedJsonMap), requestSession.lastRequest.body)
     }
 
-    @Test(expected = RequestException.class)
-    public void testNullUrlSyncDeletedMessageState() throws RequestException {
-        runtimeConfig.updateRemoteConfig(new RemoteConfig());
-        inboxApiClient.syncDeletedMessageState(user, "channelId", Collections.emptyList());
-    }
-
-    @Test
-    public void testSyncReadMessageStateSucceeds() throws JsonException, RequestException {
-        requestSession.addResponse(200);
-
-        List<JsonValue> reportings = new ArrayList<>();
-        reportings.add(JsonValue.parseString("{\"message_id\":\"testId1\"}"));
-        reportings.add(JsonValue.parseString("{\"message_id\":\"testId2\"}"));
-
-        JsonMap expectedJsonMap = JsonMap.newBuilder()
-                                         .put("messages", JsonValue.wrapOpt(reportings))
-                                         .build();
-
-        Response<Void> response = inboxApiClient.syncReadMessageState(user, "channelId", reportings);
-
-        assertEquals(200, response.getStatus());
-        assertEquals("POST", requestSession.getLastRequest().getMethod());
-        assertEquals("https://example.com/api/user/fakeUserId/messages/unread/", requestSession.getLastRequest().getUrl().toString());
-        assertEquals("channelId", requestSession.getLastRequest().getHeaders().get("X-UA-Channel-ID"));
-        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
-        assertEquals(new RequestBody.Json(expectedJsonMap), requestSession.getLastRequest().getBody());
-    }
-
-    @Test(expected = RequestException.class)
-    public void testNullUrlSyncReadMessageState() throws RequestException {
-        runtimeConfig.updateRemoteConfig(new RemoteConfig());
-        inboxApiClient.syncReadMessageState(user, "channelId", Collections.emptyList());
+    @Test(expected = RequestException::class)
+    @Throws(RequestException::class)
+    public fun testNullUrlSyncDeletedMessageState() {
+        runtimeConfig.updateRemoteConfig(RemoteConfig())
+        inboxApiClient.syncDeletedMessageState(user, "channelId", emptyList())
     }
 
     @Test
-    public void testCreateUserAndroidChannelsSucceeds() throws RequestException {
+    @Throws(JsonException::class, RequestException::class)
+    public fun testSyncReadMessageStateSucceeds() {
+        requestSession.addResponse(200)
+        val reportings = listOf(
+            JsonValue.parseString("""{"message_id":"testId1"}"""),
+            JsonValue.parseString("""{"message_id":"testId2"}""")
+        )
+        val expectedJsonMap = jsonMapOf("messages" to JsonValue.wrapOpt(reportings))
 
-        requestSession.addResponse(200, "{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }");
-        runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM);
+        val (status) = inboxApiClient.syncReadMessageState(user, "channelId", reportings)
 
-        Response<UserCredentials> response = inboxApiClient.createUser("channelId");
+        assertEquals(200, status)
+        assertEquals("POST", requestSession.lastRequest.method)
+        assertEquals("https://example.com/api/user/fakeUserId/messages/unread/", requestSession.lastRequest.url.toString())
+        assertEquals("channelId", requestSession.lastRequest.headers["X-UA-Channel-ID"])
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.lastRequest.headers["Accept"])
+        assertEquals(RequestBody.Json(expectedJsonMap), requestSession.lastRequest.body)
+    }
 
-        assertEquals(200, response.getStatus());
-        assertEquals("POST", requestSession.getLastRequest().getMethod());
-        assertEquals("https://example.com/api/user/", requestSession.getLastRequest().getUrl().toString());
-        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
-        assertEquals("{\"android_channels\":[\"channelId\"]}", requestSession.getLastRequest().getBody().getContent());
-        assertEquals(new RequestAuth.ChannelTokenAuth("channelId"), requestSession.getLastRequest().getAuth());
-
-        UserCredentials userCredentials = response.getResult();
-        assertEquals("someUserId", userCredentials.getUsername());
-        assertEquals("someUserToken", userCredentials.getPassword());
+    @Test(expected = RequestException::class)
+    @Throws(RequestException::class)
+    public fun testNullUrlSyncReadMessageState() {
+        runtimeConfig.updateRemoteConfig(RemoteConfig())
+        inboxApiClient.syncReadMessageState(user, "channelId", emptyList())
     }
 
     @Test
-    public void testCreateUserAmazonChannelsSucceeds() throws RequestException {
-        requestSession.addResponse(200, "{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }");
-        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
+    @Throws(RequestException::class)
+    public fun testCreateUserAndroidChannelsSucceeds() {
+        requestSession.addResponse(
+            200,
+            """{ "user_id": "someUserId", "password": "someUserToken" }"""
+        )
+        runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM)
 
-        Response<UserCredentials> response = inboxApiClient.createUser("channelId");
+        val (status, userCredentials) = inboxApiClient.createUser("channelId")
 
-        assertEquals(200, response.getStatus());
-        assertEquals("POST", requestSession.getLastRequest().getMethod());
-        assertEquals("https://example.com/api/user/", requestSession.getLastRequest().getUrl().toString());
-        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
-        assertEquals("{\"amazon_channels\":[\"channelId\"]}", requestSession.getLastRequest().getBody().getContent());
-
-        UserCredentials userCredentials = response.getResult();
-        assertEquals("someUserId", userCredentials.getUsername());
-        assertEquals("someUserToken", userCredentials.getPassword());
-    }
-
-    @Test(expected = RequestException.class)
-    public void testNullUrlCreateUser() throws RequestException {
-        runtimeConfig.updateRemoteConfig(new RemoteConfig());
-        runtimeConfig.setPlatform(0);
-        inboxApiClient.createUser("channelId");
+        assertEquals(200, status)
+        assertEquals("POST", requestSession.lastRequest.method)
+        assertEquals("https://example.com/api/user/", requestSession.lastRequest.url.toString())
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.lastRequest.headers["Accept"])
+        assertEquals("{\"android_channels\":[\"channelId\"]}", requestSession.lastRequest.body!!.content)
+        assertEquals(ChannelTokenAuth("channelId"), requestSession.lastRequest.auth)
+        assertEquals("someUserId", userCredentials.username)
+        assertEquals("someUserToken", userCredentials.password)
     }
 
     @Test
-    public void testUpdateUserAndroidChannelsSucceeds() throws RequestException {
-        requestSession.addResponse(200);
-        runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM);
+    @Throws(RequestException::class)
+    public fun testCreateUserAmazonChannelsSucceeds() {
+        requestSession.addResponse(
+            200,
+            """{ "user_id": "someUserId", "password": "someUserToken" }"""
+        )
+        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM)
 
-        Response<Void> response = inboxApiClient.updateUser(user,"channelId");
+        val (status, userCredentials) = inboxApiClient.createUser("channelId")
 
-        assertEquals(200, response.getStatus());
-        assertEquals("POST", requestSession.getLastRequest().getMethod());
-        assertEquals("https://example.com/api/user/fakeUserId/", requestSession.getLastRequest().getUrl().toString());
-        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
-        assertEquals("{\"android_channels\":{\"add\":[\"channelId\"]}}", requestSession.getLastRequest().getBody().getContent());
+        assertEquals(200, status)
+        assertEquals("POST", requestSession.lastRequest.method)
+        assertEquals("https://example.com/api/user/", requestSession.lastRequest.url.toString())
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.lastRequest.headers["Accept"])
+        assertEquals("{\"amazon_channels\":[\"channelId\"]}", requestSession.lastRequest.body!!.content)
+        assertEquals("someUserId", userCredentials.username)
+        assertEquals("someUserToken", userCredentials.password)
+    }
+
+    @Test(expected = RequestException::class)
+    @Throws(RequestException::class)
+    public fun testNullUrlCreateUser() {
+        runtimeConfig.updateRemoteConfig(RemoteConfig())
+        runtimeConfig.setPlatform(0)
+        inboxApiClient.createUser("channelId")
     }
 
     @Test
-    public void testUpdateUserAmazonChannelsSucceeds() throws RequestException {
-        requestSession.addResponse(200);
-        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM);
+    @Throws(RequestException::class)
+    public fun testUpdateUserAndroidChannelsSucceeds() {
+        requestSession.addResponse(200)
+        runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM)
 
-        Response<Void> response = inboxApiClient.updateUser(user,"channelId");
+        val (status) = inboxApiClient.updateUser(user, "channelId")
 
-        assertEquals(200, response.getStatus());
-        assertEquals("POST", requestSession.getLastRequest().getMethod());
-        assertEquals("https://example.com/api/user/fakeUserId/", requestSession.getLastRequest().getUrl().toString());
-        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.getLastRequest().getHeaders().get("Accept"));
-        assertEquals("{\"amazon_channels\":{\"add\":[\"channelId\"]}}", requestSession.getLastRequest().getBody().getContent());
+        assertEquals(200, status)
+        assertEquals("POST", requestSession.lastRequest.method)
+        assertEquals("https://example.com/api/user/fakeUserId/", requestSession.lastRequest.url.toString())
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.lastRequest.headers["Accept"])
+        assertEquals("{\"android_channels\":{\"add\":[\"channelId\"]}}", requestSession.lastRequest.body!!.content)
     }
 
-    @Test(expected = RequestException.class)
-    public void testNullUrlUpdateUser() throws RequestException {
-        runtimeConfig.updateRemoteConfig(new RemoteConfig());
-        runtimeConfig.setPlatform(0);
-        inboxApiClient.updateUser(user,"channelId");
+    @Test
+    @Throws(RequestException::class)
+    public fun testUpdateUserAmazonChannelsSucceeds() {
+        requestSession.addResponse(200)
+        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM)
+
+        val (status) = inboxApiClient.updateUser(user, "channelId")
+
+        assertEquals(200, status)
+        assertEquals("POST", requestSession.lastRequest.method)
+        assertEquals("https://example.com/api/user/fakeUserId/", requestSession.lastRequest.url.toString())
+        assertEquals("application/vnd.urbanairship+json; version=3;", requestSession.lastRequest.headers["Accept"])
+        assertEquals("{\"amazon_channels\":{\"add\":[\"channelId\"]}}", requestSession.lastRequest.body!!.content)
+    }
+
+    @Test(expected = RequestException::class)
+    @Throws(RequestException::class)
+    public fun testNullUrlUpdateUser() {
+        runtimeConfig.updateRemoteConfig(RemoteConfig())
+        runtimeConfig.setPlatform(0)
+        inboxApiClient.updateUser(user, "channelId")
     }
 }
