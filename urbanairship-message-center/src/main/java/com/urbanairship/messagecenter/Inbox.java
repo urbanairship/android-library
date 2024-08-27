@@ -210,7 +210,7 @@ public class Inbox {
         }
 
         if (inboxJobHandler == null) {
-            inboxJobHandler = new InboxJobHandler(context, this, getUser(), airshipChannel,
+            inboxJobHandler = new InboxJobHandler(this, getUser(), airshipChannel,
                     airship.getRuntimeConfig(), dataStore, messageDao);
         }
 
