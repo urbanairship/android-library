@@ -58,6 +58,7 @@ public class MessageCenter extends AirshipComponent {
     @NonNull
     private static final String DEEP_LINK_HOST = "message_center";
 
+    @Nullable
     private Predicate<Message> predicate;
 
 
@@ -78,13 +79,20 @@ public class MessageCenter extends AirshipComponent {
 
     }
 
+    @NonNull
     private final PrivacyManager privacyManager;
+    @NonNull
     private final PushManager pushManager;
+    @NonNull
     private final Inbox inbox;
+    @Nullable
     private OnShowMessageCenterListener onShowMessageCenterListener;
+    @NonNull
     private final PushListener pushListener;
+    @NonNull
     private final AirshipRuntimeConfig config;
 
+    @NonNull
     private AtomicBoolean isStarted = new AtomicBoolean(false);
 
     /**

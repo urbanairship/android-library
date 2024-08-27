@@ -44,6 +44,7 @@ public class MessageItemView extends FrameLayout {
     private final List<Integer> accessibilityActionIds = new ArrayList<>();
 
     private boolean isHighlighted;
+    @Nullable
     private OnClickListener selectionListener;
 
     public MessageItemView(@NonNull Context context) {

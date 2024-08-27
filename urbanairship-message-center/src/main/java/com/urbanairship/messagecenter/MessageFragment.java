@@ -54,14 +54,19 @@ public class MessageFragment extends Fragment {
      */
     protected static final int ERROR_MESSAGE_UNAVAILABLE = 3;
 
+    @Nullable
     private MessageWebView webView;
+    @Nullable
     private View progressBar;
+    @Nullable
     private Message message;
     private View errorPage;
     private Button retryButton;
     private TextView errorMessage;
 
+    @Nullable
     private Integer error = null;
+    @Nullable
     private Cancelable fetchMessageRequest;
 
     /**

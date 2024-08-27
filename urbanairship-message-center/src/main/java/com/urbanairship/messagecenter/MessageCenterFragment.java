@@ -44,14 +44,17 @@ public class MessageCenterFragment extends Fragment {
     private static final String STATE_ABS_LIST_VIEW = "listView";
     private static final String STATE_PENDING_MESSAGE_ID = "pendingMessageId";
 
+    @Nullable
     private Predicate<Message> predicate;
 
     private MessageListFragment messageListFragment;
     private boolean isTwoPane;
     private boolean isViewConfigured;
 
+    @Nullable
     private String currentMessageId;
     private int currentMessagePosition = -1;
+    @Nullable
     private String pendingMessageId;
 
     private final InboxListener inboxListener = new InboxListener() {

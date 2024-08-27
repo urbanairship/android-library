@@ -50,11 +50,15 @@ public class MessageListFragment extends Fragment {
 
     }
 
+    @Nullable
     private SwipeRefreshLayout refreshLayout;
+    @Nullable
     private AbsListView absListView;
     private Inbox inbox;
     private MessageViewAdapter adapter;
+    @Nullable
     private Cancelable fetchMessagesOperation;
+    @Nullable
     private String currentMessageId;
     private Predicate<Message> predicate;
     private final List<OnListViewReadyCallback> pendingCallbacks = new ArrayList<>();
@@ -69,6 +73,7 @@ public class MessageListFragment extends Fragment {
      *
      * @return The filtered list of messages.
      */
+    @NonNull
     private List<Message> getMessages() {
         return inbox.getMessages(predicate);
     }

@@ -6,6 +6,7 @@ import com.urbanairship.analytics.data.BatchedQueryHelper;
 import java.util.Collections;
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.core.util.Consumer;
 import androidx.room.Dao;
@@ -108,7 +109,7 @@ public abstract class MessageDao {
         }
     }
 
-    public void deleteMessages(List<String> messageIds) {
+    public void deleteMessages(@NonNull List<String> messageIds) {
         try {
             deleteMessagesInternal(messageIds);
         } catch (Exception e) {
@@ -173,7 +174,7 @@ public abstract class MessageDao {
     protected abstract void markMessagesReadOriginInternal(List<String> messageIds);
 
     @Transaction
-    protected void deleteMessagesInternal(List<String> messageIds) {
+    protected void deleteMessagesInternal(@NonNull List<String> messageIds) {
         //noinspection Convert2MethodRef
         Consumer<List<String>> consumer = ids -> deleteMessagesBatchInternal(ids);
         BatchedQueryHelper.runBatched(messageIds, consumer);

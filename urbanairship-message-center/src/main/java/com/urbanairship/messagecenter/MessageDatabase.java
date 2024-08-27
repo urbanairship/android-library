@@ -54,6 +54,7 @@ public abstract class MessageDatabase extends RoomDatabase {
     static final Migration MIGRATION_3_5 = new MessageDatabaseMultiMigration(3, 5);
     static final Migration MIGRATION_4_5 = new MessageDatabaseMultiMigration(4, 5);
 
+    @NonNull
     public static MessageDatabase createDatabase(@NonNull Context context, @NonNull AirshipConfigOptions config) {
         String name = config.appKey + "_" + DB_NAME;
         File urbanAirshipNoBackupDirectory = new File(ContextCompat.getNoBackupFilesDir(context), DB_DIR);
@@ -68,6 +69,7 @@ public abstract class MessageDatabase extends RoomDatabase {
             .build();
     }
 
+    @NonNull
     @VisibleForTesting
     public static MessageDatabase createInMemoryDatabase(@NonNull Context context) {
         return Room.inMemoryDatabaseBuilder(context, MessageDatabase.class)

@@ -26,6 +26,7 @@ import androidx.fragment.app.FragmentActivity;
  */
 public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceModeListener {
 
+    @NonNull
     private final MessageListFragment messageListFragment;
 
     @Nullable
