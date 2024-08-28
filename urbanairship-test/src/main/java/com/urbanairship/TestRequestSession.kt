@@ -50,7 +50,7 @@ public class TestRequestSession : RequestSession {
 
         return try {
             Checks.checkNotNull(request.url, "missing url")
-            val response = responses.removeFirst()
+            val response = responses.removeAt(0)
 
             Response(
                 response.statusCode,

@@ -452,7 +452,7 @@ internal class ContactManager(
             return null
         }
 
-        val next = operations.removeFirst()
+        val next = operations.removeAt(0)
         when (next.operation) {
             is ContactOperation.Update -> {
                 val group = mutableListOf(next)
