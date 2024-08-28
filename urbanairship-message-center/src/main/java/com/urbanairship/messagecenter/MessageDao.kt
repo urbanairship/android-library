@@ -1,196 +1,180 @@
-package com.urbanairship.messagecenter;
+package com.urbanairship.messagecenter
 
-import com.urbanairship.UALog;
-import com.urbanairship.analytics.data.BatchedQueryHelper;
-
-import java.util.Collections;
-import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.core.util.Consumer;
-import androidx.room.Dao;
-import androidx.room.Insert;
-import androidx.room.OnConflictStrategy;
-import androidx.room.Query;
-import androidx.room.Transaction;
+import androidx.annotation.RestrictTo
+import androidx.core.util.Consumer
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Transaction
+import com.urbanairship.UALog.e
+import com.urbanairship.analytics.data.BatchedQueryHelper
 
 /**
  * Message Data Access Object.
  *
  * Note: In order to avoid potential crashes in customer apps, all generated DAO methods
- * should be {@code protected} and exposed via a separate {@code public} method that wraps
+ * should be `protected` and exposed via a separate `public` method that wraps
  * the internal DAO call with a try/catch.
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Dao
-public abstract class MessageDao {
-    public void insert(MessageEntity message) {
+internal abstract class MessageDao {
+
+    fun insert(message: MessageEntity) = try {
+        insertInternal(message)
+    } catch (e: Exception) {
+        e(e, "Failed to insert message!")
+    }
+
+    fun insertMessages(messages: List<MessageEntity>) = try {
+        insertMessagesInternal(messages)
+    } catch (e: Exception) {
+        e(e, "Failed to insert messages!")
+    }
+
+    val messages: List<MessageEntity>
+        get() = try {
+            getMessagesInternal()
+        } catch (e: Exception) {
+            e(e, "Failed to get messages!")
+            emptyList()
+        }
+
+    val messageIds: List<String>
+        get() = try {
+            getMessageIdsInternal()
+        } catch (e: Exception) {
+            e(e, "Failed to get message IDs!")
+            emptyList()
+        }
+
+    val locallyReadMessages: List<MessageEntity>
+        get() = try {
+            getLocallyReadMessagesInternal()
+        } catch (e: Exception) {
+            e(e, "Failed to get locally read messages!")
+            emptyList()
+        }
+
+    val locallyDeletedMessages: List<MessageEntity>
+        get() = try {
+            getLocallyDeletedMessagesInternal()
+        } catch (e: Exception) {
+            e(e, "Failed to get locally deleted messages!")
+            emptyList()
+        }
+
+    fun markMessagesRead(messageIds: List<String>) {
         try {
-            insertInternal(message);
-        } catch (Exception e) {
-            UALog.e(e, "Failed to insert message!");
+            markMessagesReadInternal(messageIds)
+        } catch (e: Exception) {
+            e(e, "Failed to mark messages as read!")
         }
     }
 
-    public void insertMessages(List<MessageEntity> messages) {
+    fun markMessagesUnread(messageIds: List<String>) {
         try {
-            insertMessagesInternal(messages);
-        } catch (Exception e) {
-            UALog.e(e, "Failed to insert messages!");
+            markMessagesUnreadInternal(messageIds)
+        } catch (e: Exception) {
+            e(e, "Failed to mark messages as unread!")
         }
     }
 
-    public List<MessageEntity> getMessages() {
+    fun markMessagesDeleted(messageIds: List<String>) {
         try {
-            return getMessagesInternal();
-        } catch (Exception e) {
-            UALog.e(e, "Failed to get messages!");
-            return Collections.emptyList();
+            markMessagesDeletedInternal(messageIds)
+        } catch (e: Exception) {
+            e(e, "Failed to mark messages as deleted!")
         }
     }
 
-    public List<String> getMessageIds() {
+    fun markMessagesReadOrigin(messageIds: List<String>) {
         try {
-            return getMessageIdsInternal();
-        } catch (Exception e) {
-            UALog.e(e, "Failed to get message IDs!");
-            return Collections.emptyList();
+            markMessagesReadOriginInternal(messageIds)
+        } catch (e: Exception) {
+            e(e, "Failed to mark messages as read (origin)!")
         }
     }
 
-    public List<MessageEntity> getLocallyReadMessages() {
+    fun deleteMessages(messageIds: List<String>) {
         try {
-            return getLocallyReadMessagesInternal();
-        } catch (Exception e) {
-            UALog.e(e, "Failed to get locally read messages!");
-            return Collections.emptyList();
+            deleteMessagesInternal(messageIds)
+        } catch (e: Exception) {
+            e(e, "Failed to delete messages!")
         }
     }
 
-    public List<MessageEntity> getLocallyDeletedMessages() {
+    fun deleteAllMessages() {
         try {
-            return getLocallyDeletedMessagesInternal();
-        } catch (Exception e) {
-            UALog.e(e, "Failed to get locally deleted messages!");
-            return Collections.emptyList();
+            deleteAllMessagesInternal()
+        } catch (e: Exception) {
+            e(e, "Failed to delete all messages!")
         }
     }
 
-    public void markMessagesRead(List<String> messageIds) {
-        try {
-            markMessagesReadInternal(messageIds);
-        } catch (Exception e) {
-            UALog.e(e, "Failed to mark messages as read!");
-        }
-    }
-
-    public void markMessagesUnread(List<String> messageIds) {
-        try {
-            markMessagesUnreadInternal(messageIds);
-        } catch (Exception e) {
-            UALog.e(e, "Failed to mark messages as unread!");
-        }
-    }
-
-    public void markMessagesDeleted(List<String> messageIds) {
-        try {
-            markMessagesDeletedInternal(messageIds);
-        } catch (Exception e) {
-            UALog.e(e, "Failed to mark messages as deleted!");
-        }
-    }
-
-    public void markMessagesReadOrigin(List<String> messageIds) {
-        try {
-            markMessagesReadOriginInternal(messageIds);
-        } catch (Exception e) {
-            UALog.e(e, "Failed to mark messages as read (origin)!");
-        }
-    }
-
-    public void deleteMessages(@NonNull List<String> messageIds) {
-        try {
-            deleteMessagesInternal(messageIds);
-        } catch (Exception e) {
-            UALog.e(e, "Failed to delete messages!");
-        }
-    }
-
-    public void deleteAllMessages() {
-        try {
-            deleteAllMessagesInternal();
-        } catch (Exception e) {
-            UALog.e(e, "Failed to delete all messages!");
-        }
-    }
-
-
-    public boolean messageExists(String messageId) {
-        try {
-            return messageExistsInternal(messageId);
-        } catch (Exception e) {
-            UALog.e(e, "Failed to check if message exists!");
-            return false;
+    fun messageExists(messageId: String): Boolean {
+        return try {
+            messageExistsInternal(messageId)
+        } catch (e: Exception) {
+            e(e, "Failed to check if message exists!")
+            false
         }
     }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    protected abstract void insertInternal(MessageEntity message);
-
+    protected abstract fun insertInternal(message: MessageEntity)
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    protected abstract void insertMessagesInternal(List<MessageEntity> messages);
+    protected abstract fun insertMessagesInternal(messages: List<MessageEntity>)
 
     @Transaction
     @Query("SELECT * FROM richpush")
-    protected abstract List<MessageEntity> getMessagesInternal();
+    protected abstract fun getMessagesInternal(): List<MessageEntity>
 
     @Transaction
     @Query("SELECT message_id FROM richpush")
-    protected abstract List<String> getMessageIdsInternal();
+    protected abstract fun getMessageIdsInternal(): List<String>
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE unread = 0 AND unread <> unread_orig")
-    protected abstract List<MessageEntity> getLocallyReadMessagesInternal();
+    protected abstract fun getLocallyReadMessagesInternal(): List<MessageEntity>
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE deleted = 1")
-    protected abstract List<MessageEntity> getLocallyDeletedMessagesInternal();
+    protected abstract fun getLocallyDeletedMessagesInternal(): List<MessageEntity>
 
     @Transaction
     @Query("UPDATE richpush SET unread = 0 WHERE message_id IN (:messageIds)")
-    protected abstract void markMessagesReadInternal(List<String> messageIds);
+    protected abstract fun markMessagesReadInternal(messageIds: List<String>)
 
     @Transaction
     @Query("UPDATE richpush SET unread = 1 WHERE message_id IN (:messageIds)")
-    protected abstract void markMessagesUnreadInternal(List<String> messageIds);
+    protected abstract fun markMessagesUnreadInternal(messageIds: List<String>)
 
     @Transaction
     @Query("UPDATE richpush SET deleted = 1 WHERE message_id IN (:messageIds)")
-    protected abstract void markMessagesDeletedInternal(List<String> messageIds);
+    protected abstract fun markMessagesDeletedInternal(messageIds: List<String>)
 
     @Transaction
     @Query("UPDATE richpush SET unread_orig = 0 WHERE message_id IN (:messageIds)")
-    protected abstract void markMessagesReadOriginInternal(List<String> messageIds);
+    protected abstract fun markMessagesReadOriginInternal(messageIds: List<String>)
 
     @Transaction
-    protected void deleteMessagesInternal(@NonNull List<String> messageIds) {
-        //noinspection Convert2MethodRef
-        Consumer<List<String>> consumer = ids -> deleteMessagesBatchInternal(ids);
-        BatchedQueryHelper.runBatched(messageIds, consumer);
+    protected open fun deleteMessagesInternal(messageIds: List<String>) {
+        val consumer = Consumer { ids: List<String> -> deleteMessagesBatchInternal(ids) }
+        BatchedQueryHelper.runBatched(messageIds, consumer)
     }
 
     /**
-     * This query is only for internal use, with a {@code BatchedQueryHelper},
+     * This query is only for internal use, with a `BatchedQueryHelper`,
      * which stops us from bumping into the max query params limit of 999.
      */
     @Query("DELETE FROM richpush WHERE message_id IN (:messageIds)")
-    protected abstract void deleteMessagesBatchInternal(List<String> messageIds);
+    protected abstract fun deleteMessagesBatchInternal(messageIds: List<String>)
 
     @Transaction
     @Query("DELETE FROM richpush")
-    protected abstract void deleteAllMessagesInternal();
+    protected abstract fun deleteAllMessagesInternal()
 
     @Query("SELECT EXISTS (SELECT 1 FROM richpush WHERE message_id = :id)")
-    protected abstract boolean messageExistsInternal(String id);
+    protected abstract fun messageExistsInternal(id: String): Boolean
 }

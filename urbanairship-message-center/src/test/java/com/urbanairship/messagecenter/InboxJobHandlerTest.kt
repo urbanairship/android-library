@@ -281,25 +281,29 @@ public class InboxJobHandlerTest {
         val idsToDelete = ArrayList<String>()
         val messageToDelete = createFakeMessage("id1", false, true)
         val messageToDelete2 = createFakeMessage("id2", false, true)
-        val messageCollection = ArrayList<MessageEntity?>()
+        val messageCollection = mutableListOf<MessageEntity>()
         val reportingsToDelete: MutableList<JsonValue?> = ArrayList()
 
         messageCollection.add(
-            MessageEntity.createMessageFromPayload(
-                messageToDelete!!.messageId,
-                messageToDelete.rawMessageJson
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToDelete!!.messageId,
+                    messageToDelete.rawMessageJson
+                )
             )
         )
 
         messageCollection.add(
-            MessageEntity.createMessageFromPayload(
-                messageToDelete2!!.messageId,
-                messageToDelete2.rawMessageJson
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToDelete2!!.messageId,
+                    messageToDelete2.rawMessageJson
+                )
             )
         )
 
         for (message in messageCollection) {
-            reportingsToDelete.add(message!!.messageReporting)
+            reportingsToDelete.add(message.messageReporting)
             idsToDelete.add(message.getMessageId())
         }
 
@@ -344,20 +348,29 @@ public class InboxJobHandlerTest {
 
         val idsToDelete = ArrayList<String>()
         val reportingsToDelete: MutableList<JsonValue?> = ArrayList()
-        val messageToDelete = createFakeMessage("id1", false, true)
-        val messageToDelete2 = createFakeMessage("id2", false, true)
-        val messagesToDelete = ArrayList<MessageEntity?>()
-
-        messagesToDelete.add(
-            MessageEntity.createMessageFromPayload(messageToDelete!!.messageId, messageToDelete.rawMessageJson)
+        val messageToDelete = requireNotNull(
+            createFakeMessage(messageId = "id1", unread = false, deleted = true)
         )
-
-        messagesToDelete.add(
-            MessageEntity.createMessageFromPayload(messageToDelete2!!.messageId, messageToDelete2.rawMessageJson)
+        val messageToDelete2 = requireNotNull(
+            createFakeMessage(messageId = "id2", unread = false, deleted = true)
+        )
+        val messagesToDelete = listOf(
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToDelete.messageId,
+                    messageToDelete.rawMessageJson
+                )
+            ),
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToDelete2.messageId,
+                    messageToDelete2.rawMessageJson
+                )
+            )
         )
 
         for (message in messagesToDelete) {
-            reportingsToDelete.add(message!!.messageReporting)
+            reportingsToDelete.add(message.messageReporting)
             idsToDelete.add(message.getMessageId())
         }
 
@@ -402,20 +415,29 @@ public class InboxJobHandlerTest {
 
         val idsToUpdate = ArrayList<String>()
         val reportingsToUpdate: MutableList<JsonValue?> = ArrayList()
-        val messageToUpdate = createFakeMessage("id1", false, false)
-        val messageToUpdate2 = createFakeMessage("id2", false, false)
-        val messagesToUpdate = ArrayList<MessageEntity?>()
-
-        messagesToUpdate.add(
-            MessageEntity.createMessageFromPayload(messageToUpdate!!.messageId, messageToUpdate.rawMessageJson)
+        val messageToUpdate = requireNotNull(
+            createFakeMessage(messageId = "id1", unread = false, deleted = false)
         )
-
-        messagesToUpdate.add(
-            MessageEntity.createMessageFromPayload(messageToUpdate2!!.messageId, messageToUpdate2.rawMessageJson)
+        val messageToUpdate2 = requireNotNull(
+            createFakeMessage(messageId = "id2", unread = false, deleted = false)
+        )
+        val messagesToUpdate = listOf(
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToUpdate.messageId,
+                    messageToUpdate.rawMessageJson
+                )
+            ),
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToUpdate2.messageId,
+                    messageToUpdate2.rawMessageJson
+                )
+            )
         )
 
         for (message in messagesToUpdate) {
-            reportingsToUpdate.add(message!!.messageReporting)
+            reportingsToUpdate.add(message.messageReporting)
             idsToUpdate.add(message.getMessageId())
         }
 
@@ -461,17 +483,17 @@ public class InboxJobHandlerTest {
         val idsToUpdate = ArrayList<String>()
         val reportingsToUpdate: MutableList<JsonValue?> = ArrayList()
         val messageToUpdate = createFakeMessage("id1", false, false)
-        val messagesToUpdate = ArrayList<MessageEntity?>()
-
-        messagesToUpdate.add(
-            MessageEntity.createMessageFromPayload(
-                messageToUpdate!!.messageId,
-                messageToUpdate.rawMessageJson
+        val messagesToUpdate = listOf(
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToUpdate!!.messageId,
+                    messageToUpdate.rawMessageJson
+                )
             )
         )
 
         for (message in messagesToUpdate) {
-            reportingsToUpdate.add(message!!.messageReporting)
+            reportingsToUpdate.add(message.messageReporting)
             idsToUpdate.add(message.getMessageId())
         }
 

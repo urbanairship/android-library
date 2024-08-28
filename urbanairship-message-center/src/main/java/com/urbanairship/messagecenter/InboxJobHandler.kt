@@ -142,8 +142,8 @@ internal class InboxJobHandler @VisibleForTesting constructor(
             // 200-299
             if (response.isSuccessful) {
                 val result = response.result
-                UALog.i("InboxJobHandler - Received %s inbox messages.", response.result.size())
-                updateInbox(response.result)
+                UALog.i("InboxJobHandler - Received %s inbox messages.", result.size())
+                updateInbox(result)
                 dataStore.put(LAST_MESSAGE_REFRESH_TIME, response.headers["Last-Modified"])
                 return true
             }
@@ -194,7 +194,7 @@ internal class InboxJobHandler @VisibleForTesting constructor(
         if (messagesToInsert.size > 0) {
             messageDao.insertMessages(MessageEntity.createMessagesFromPayload(messagesToInsert))
         }
-        val deletedMessageIds = messageDao.messageIds
+        val deletedMessageIds = messageDao.messageIds.toMutableList()
         deletedMessageIds.removeAll(serverMessageIds)
         messageDao.deleteMessages(deletedMessageIds)
     }
