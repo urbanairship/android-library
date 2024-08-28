@@ -55,6 +55,31 @@ public class Fullscreen @VisibleForTesting internal constructor(
      */
     public val dismissButtonColor: InAppMessageColor = InAppMessageColor(Color.BLACK),
 ) : JsonSerializable {
+
+    /** Returns a copy of the Fullscreen display content with the provided changes. */
+    @JvmOverloads
+    public fun copy(
+        heading: InAppMessageTextInfo? = this.heading,
+        body: InAppMessageTextInfo? = this.body,
+        media: InAppMessageMediaInfo? = this.media,
+        footer: InAppMessageButtonInfo? = this.footer,
+        buttons: List<InAppMessageButtonInfo> = this.buttons,
+        buttonLayoutType: InAppMessageButtonLayoutType = this.buttonLayoutType,
+        template: Template = this.template,
+        backgroundColor: InAppMessageColor = this.backgroundColor,
+        dismissButtonColor: InAppMessageColor = this.dismissButtonColor
+    ): Fullscreen = Fullscreen(
+        heading = heading,
+        body = body,
+        media = media,
+        footer = footer,
+        buttons = buttons,
+        buttonLayoutType = buttonLayoutType,
+        template = template,
+        backgroundColor = backgroundColor,
+        dismissButtonColor = dismissButtonColor
+    )
+
     public enum class Template(internal val json: String) : JsonSerializable {
         /**
          * Template with display order of header, media, body, buttons, footer.

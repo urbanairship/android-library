@@ -13,6 +13,11 @@ import com.urbanairship.json.JsonValue
 public class Custom @VisibleForTesting internal constructor(
     public val value: JsonValue
 ) : JsonSerializable {
+
+    public fun copy(value: JsonValue = this.value): Custom {
+        return Custom(value)
+    }
+
     public companion object {
         private const val CUSTOM_KEY = "custom"
 
@@ -44,5 +49,4 @@ public class Custom @VisibleForTesting internal constructor(
     override fun hashCode(): Int {
         return value.hashCode()
     }
-
 }

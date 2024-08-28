@@ -24,6 +24,10 @@ internal class InAppMessageAutomationPreparer(
     private val actionRunnerFactory: InAppActionRunnerFactory = InAppActionRunnerFactory()
 ) : AutomationPreparerDelegate<InAppMessage, PreparedInAppMessageData> {
 
+    var messageContentExtender: InAppMessageContentExtender?
+        get() { synchronized(displayAdapterFactory) { return displayAdapterFactory.messageContentExtender } }
+        set(value) { synchronized(displayAdapterFactory) { displayAdapterFactory.messageContentExtender = value } }
+
     var displayInterval: Long
         get() { synchronized(displayCoordinatorManager) { return displayCoordinatorManager.displayInterval } }
         set(value) { synchronized(displayCoordinatorManager) { displayCoordinatorManager.displayInterval = value} }

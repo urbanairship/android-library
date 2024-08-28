@@ -6,6 +6,7 @@ import android.content.Context
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.utils.NetworkMonitor
 import com.urbanairship.iam.InAppMessage
+import com.urbanairship.iam.InAppMessageContentExtender
 import com.urbanairship.iam.actions.InAppActionRunner
 import com.urbanairship.iam.adapter.banner.BannerDisplayDelegate
 import com.urbanairship.iam.adapter.fullscreen.FullscreenDisplayDelegate
@@ -14,6 +15,10 @@ import com.urbanairship.iam.adapter.layout.AirshipLayoutDisplayDelegate
 import com.urbanairship.iam.adapter.modal.ModalDisplayDelegate
 import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.InAppMessageDisplayContent
+import com.urbanairship.iam.content.InAppMessageDisplayContent.BannerContent
+import com.urbanairship.iam.content.InAppMessageDisplayContent.FullscreenContent
+import com.urbanairship.iam.content.InAppMessageDisplayContent.HTMLContent
+import com.urbanairship.iam.content.InAppMessageDisplayContent.ModalContent
 
 private typealias AdapterBuilder = (Context, InAppMessage, AirshipCachedAssets) -> CustomDisplayAdapter?
 
@@ -23,13 +28,14 @@ internal class DisplayAdapterFactory(
     private val activityMonitor: ActivityMonitor
 ) {
     private val customAdapters = mutableMapOf<CustomDisplayAdapterType, AdapterBuilder>()
+    var messageContentExtender: InAppMessageContentExtender? = null
 
     private fun makeCustomAdapter(context: Context, message: InAppMessage, assets: AirshipCachedAssets): DisplayAdapter? {
         val type = when(message.displayContent) {
-            is InAppMessageDisplayContent.BannerContent -> CustomDisplayAdapterType.BANNER
-            is InAppMessageDisplayContent.FullscreenContent -> CustomDisplayAdapterType.FULLSCREEN
-            is InAppMessageDisplayContent.HTMLContent -> CustomDisplayAdapterType.HTML
-            is InAppMessageDisplayContent.ModalContent -> CustomDisplayAdapterType.MODAL
+            is BannerContent -> CustomDisplayAdapterType.BANNER
+            is FullscreenContent -> CustomDisplayAdapterType.FULLSCREEN
+            is HTMLContent -> CustomDisplayAdapterType.HTML
+            is ModalContent -> CustomDisplayAdapterType.MODAL
             is InAppMessageDisplayContent.CustomContent -> CustomDisplayAdapterType.CUSTOM
             is InAppMessageDisplayContent.AirshipLayoutContent ->  null
         } ?: return null
@@ -43,16 +49,44 @@ internal class DisplayAdapterFactory(
     }
 
     private fun makeDefaultAdapter(message: InAppMessage, assets: AirshipCachedAssets, actionRunner: InAppActionRunner): DisplayAdapter? {
-        val delegate = when(message.displayContent) {
-            is InAppMessageDisplayContent.BannerContent -> BannerDisplayDelegate(message.displayContent, assets, activityMonitor, actionRunner)
-            is InAppMessageDisplayContent.FullscreenContent -> FullscreenDisplayDelegate(message.displayContent, assets, activityMonitor, actionRunner)
-            is InAppMessageDisplayContent.HTMLContent -> HtmlDisplayDelegate(message.displayContent, assets, message.extras, activityMonitor, actionRunner)
-            is InAppMessageDisplayContent.ModalContent -> ModalDisplayDelegate(message.displayContent, assets, activityMonitor, actionRunner)
-            is InAppMessageDisplayContent.AirshipLayoutContent -> AirshipLayoutDisplayDelegate(message.displayContent, assets, message.extras, activityMonitor, actionRunner)
+        val extendedMessage = extendMessage(message)
+        val delegate = when(val extendedContent = extendedMessage.displayContent) {
+            is BannerContent -> BannerDisplayDelegate(
+                displayContent = extendedContent,
+                assets = assets,
+                activityMonitor = activityMonitor,
+                actionRunner = actionRunner
+            )
+            is FullscreenContent -> FullscreenDisplayDelegate(
+                displayContent = extendedContent,
+                assets = assets,
+                activityMonitor = activityMonitor,
+                actionRunner = actionRunner
+            )
+            is HTMLContent -> HtmlDisplayDelegate(
+                displayContent = extendedContent,
+                assets = assets,
+                messageExtras = extendedMessage.extras,
+                activityMonitor = activityMonitor,
+                actionRunner = actionRunner
+            )
+            is ModalContent -> ModalDisplayDelegate(
+                displayContent = extendedContent,
+                assets = assets,
+                activityMonitor = activityMonitor,
+                actionRunner = actionRunner
+            )
+            is InAppMessageDisplayContent.AirshipLayoutContent -> AirshipLayoutDisplayDelegate(
+                displayContent = extendedContent,
+                assets = assets,
+                messageExtras = extendedMessage.extras,
+                activityMonitor = activityMonitor,
+                actionRunner = actionRunner
+            )
             else -> null
         } ?: return null
 
-        return DelegatingDisplayAdapter(message, assets, delegate, networkMonitor, activityMonitor)
+        return DelegatingDisplayAdapter(extendedMessage, assets, delegate, networkMonitor, activityMonitor)
     }
 
     fun setAdapterFactoryBlock(type: CustomDisplayAdapterType, factoryBlock: AdapterBuilder) {
@@ -72,5 +106,12 @@ internal class DisplayAdapterFactory(
         } else {
             Result.failure(IllegalArgumentException("No display adapter for message $message"))
         }
+    }
+
+    private fun extendMessage(message: InAppMessage): InAppMessage {
+        val extendedContent = messageContentExtender?.extend(message) ?: message.displayContent
+        return message.newBuilder()
+            .setDisplayContent(extendedContent)
+            .build()
     }
 }
