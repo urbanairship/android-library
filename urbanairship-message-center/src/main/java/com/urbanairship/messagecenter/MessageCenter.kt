@@ -1,169 +1,121 @@
 /* Copyright Airship and Contributors */
+package com.urbanairship.messagecenter
 
-package com.urbanairship.messagecenter;
-
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-
-import com.urbanairship.AirshipComponent;
-import com.urbanairship.AirshipComponentGroups;
-import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Predicate;
-import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.PrivacyManager;
-import com.urbanairship.UALog;
-import com.urbanairship.UAirship;
-import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.config.AirshipRuntimeConfig;
-import com.urbanairship.job.JobInfo;
-import com.urbanairship.job.JobResult;
-import com.urbanairship.push.PushListener;
-import com.urbanairship.push.PushManager;
-import com.urbanairship.util.UAStringUtil;
-
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
+import com.urbanairship.AirshipComponent
+import com.urbanairship.AirshipComponentGroups
+import com.urbanairship.AirshipExecutors
+import com.urbanairship.Predicate
+import com.urbanairship.PreferenceDataStore
+import com.urbanairship.PrivacyManager
+import com.urbanairship.UALog
+import com.urbanairship.UAirship
+import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.job.JobInfo
+import com.urbanairship.job.JobResult
+import com.urbanairship.push.PushListener
+import com.urbanairship.push.PushManager
+import com.urbanairship.push.PushMessage
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Airship Message Center.
+ *
+ * @property inbox The inbox.
  */
-public class MessageCenter extends AirshipComponent {
+public class MessageCenter
+@VisibleForTesting
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal constructor(
+    context: Context,
+    dataStore: PreferenceDataStore,
+    private val config: AirshipRuntimeConfig,
+    private val privacyManager: PrivacyManager,
+    public val inbox: Inbox,
+    private val pushManager: PushManager
+) : AirshipComponent(context, dataStore) {
 
-    /**
-     * Intent action to view the message center.
-     */
-    @NonNull
-    public static final String VIEW_MESSAGE_CENTER_INTENT_ACTION = "com.urbanairship.VIEW_RICH_PUSH_INBOX";
-
-    /**
-     * Intent action to view a message.
-     */
-    @NonNull
-    public static final String VIEW_MESSAGE_INTENT_ACTION = "com.urbanairship.VIEW_RICH_PUSH_MESSAGE";
-
-    /**
-     * Scheme used for @{code message:<MESSAGE_ID>} when requesting to view a message with
-     * {@code com.urbanairship.VIEW_RICH_PUSH_MESSAGE}.
-     */
-    @NonNull
-    public static final String MESSAGE_DATA_SCHEME = "message";
-
-    @NonNull
-    private static final String DEEP_LINK_HOST = "message_center";
-
-    @Nullable
-    private Predicate<Message> predicate;
-
+    /** The default inbox predicate. */
+    public var predicate: Predicate<Message>? = null
 
     /**
      * Listener for showing the message center. If set, the listener
-     * will be called to show the message center instead of the default behavior. For more
-     * info see {@link #showMessageCenter()}.
+     * will be called to show the message center instead of the default behavior.
+     *
+     * For more info see: [showMessageCenter].
      */
-    public interface OnShowMessageCenterListener {
+    public fun interface OnShowMessageCenterListener {
 
         /**
          * Called when the message center needs to be displayed.
          *
          * @param messageId The optional message Id.
-         * @return {@code true} if the inbox was shown, otherwise {@code false} to trigger the default behavior.
+         * @return `true` if the inbox was shown, otherwise `false` to trigger the default behavior.
          */
-        boolean onShowMessageCenter(@Nullable String messageId);
-
+        public fun onShowMessageCenter(messageId: String?): Boolean
     }
 
-    @NonNull
-    private final PrivacyManager privacyManager;
-    @NonNull
-    private final PushManager pushManager;
-    @NonNull
-    private final Inbox inbox;
-    @Nullable
-    private OnShowMessageCenterListener onShowMessageCenterListener;
-    @NonNull
-    private final PushListener pushListener;
-    @NonNull
-    private final AirshipRuntimeConfig config;
+    private var onShowMessageCenterListener: OnShowMessageCenterListener? = null
 
-    @NonNull
-    private AtomicBoolean isStarted = new AtomicBoolean(false);
-
-    /**
-     * Gets the shared Message Center instance.
-     *
-     * @return The shared Message Center instance.
-     */
-    @NonNull
-    public static MessageCenter shared() {
-        return UAirship.shared().requireComponent(MessageCenter.class);
+    private val pushListener: PushListener = PushListener { message: PushMessage, _: Boolean ->
+        val hasMessageId = !message.richPushMessageId.isNullOrEmpty()
+        val isMessageMissing = inbox.getMessage(message.richPushMessageId) == null
+        // If we have a message ID, but the message is not in the inbox, fetch messages.
+        if (hasMessageId && isMessageMissing) {
+            UALog.d("Received a Rich Push.")
+            inbox.fetchMessages()
+        }
     }
 
+    private val isStarted = AtomicBoolean(false)
+
     /**
-     * Default constructor.
-     *
-     * @param context The application context.
-     * @param dataStore The preference data store.
-     * @param pushManager The push manager.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public MessageCenter(@NonNull Context context,
-                         @NonNull PreferenceDataStore dataStore,
-                         @NonNull AirshipRuntimeConfig config,
-                         @NonNull PrivacyManager privacyManager,
-                         @NonNull AirshipChannel channel,
-                         @NonNull PushManager pushManager) {
-        this(context, dataStore, config, privacyManager, new Inbox(context, dataStore, channel, config.getConfigOptions(), privacyManager), pushManager);
+    internal constructor(
+        context: Context,
+        dataStore: PreferenceDataStore,
+        config: AirshipRuntimeConfig,
+        privacyManager: PrivacyManager,
+        channel: AirshipChannel,
+        pushManager: PushManager
+    ) : this(
+        context,
+        dataStore,
+        config,
+        privacyManager,
+        Inbox(context, dataStore, channel, config.configOptions, privacyManager),
+        pushManager
+    )
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    override fun init() {
+        super.init()
+        initialize()
     }
 
     /**
-     * Constructor for testing.
+     * Internal version of [init], which is protected in the abstract [AirshipComponent].
      *
-     * @param context The application context.
-     * @param dataStore The preference data store.
-     * @param inbox The inbox.
-     * @param pushManager The push manager.
      * @hide
      */
     @VisibleForTesting
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    MessageCenter(@NonNull Context context,
-                  @NonNull PreferenceDataStore dataStore,
-                  @NonNull AirshipRuntimeConfig config,
-                  @NonNull PrivacyManager privacyManager,
-                  @NonNull Inbox inbox,
-                  @NonNull PushManager pushManager) {
-        super(context, dataStore);
-        this.privacyManager = privacyManager;
-        this.pushManager = pushManager;
-        this.inbox = inbox;
-        this.config = config;
-        this.pushListener = (message, notificationPosted) -> {
-            if (!UAStringUtil.isEmpty(message.getRichPushMessageId()) && getInbox().getMessage(message.getRichPushMessageId()) == null) {
-                UALog.d("Received a Rich Push.");
-                getInbox().fetchMessages();
-            }
-        };
-    }
-
-    /**
-     * @hide
-     */
-    @Override
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected void init() {
-        super.init();
-
-        privacyManager.addListener(() -> AirshipExecutors.newSerialExecutor().execute(this::updateInboxEnabledState));
-        config.addConfigListener(() -> getInbox().dispatchUpdateUserJob(true));
-        updateInboxEnabledState();
+    internal fun initialize() {
+        privacyManager.addListener {
+            AirshipExecutors.newSerialExecutor().execute { updateInboxEnabledState() }
+        }
+        config.addConfigListener { inbox.dispatchUpdateUserJob(true) }
+        updateInboxEnabledState()
     }
 
     /**
@@ -172,45 +124,39 @@ public class MessageCenter extends AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    void updateInboxEnabledState() {
-        boolean isEnabled = privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER);
-
-        inbox.setEnabled(isEnabled);
-        inbox.updateEnabledState();
-
+    internal fun updateInboxEnabledState() {
+        val isEnabled = privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)
+        inbox.setEnabled(isEnabled)
+        inbox.updateEnabledState()
         if (isEnabled) {
             if (!isStarted.getAndSet(true)) {
-                UALog.v("Initializing Inbox...");
-
-                pushManager.addInternalPushListener(pushListener);
+                UALog.v("Initializing Inbox...")
+                pushManager.addInternalPushListener(pushListener)
             }
         } else {
-            tearDown();
+            tearDown()
         }
     }
 
     /**
      * @hide
      */
-    @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @AirshipComponentGroups.Group
-    public int getComponentGroup() {
-        return AirshipComponentGroups.MESSAGE_CENTER;
+    override fun getComponentGroup(): Int {
+        return AirshipComponentGroups.MESSAGE_CENTER
     }
-
 
     /**
      * @hide
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @NonNull
-    public JobResult onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
-        if (privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
-            return inbox.onPerformJob(airship, jobInfo);
+    override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
+        return if (privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
+            inbox.onPerformJob(airship, jobInfo)
         } else {
-            return JobResult.SUCCESS;
+            JobResult.SUCCESS
         }
     }
 
@@ -218,162 +164,138 @@ public class MessageCenter extends AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void tearDown() {
-        inbox.tearDown();
-        pushManager.removePushListener(pushListener);
-        isStarted.set(false);
+    public override fun tearDown() {
+        inbox.tearDown()
+        pushManager.removePushListener(pushListener)
+        isStarted.set(false)
     }
 
-    /**
-     * Returns the inbox.
-     *
-     * @return The inbox.
-     */
-    @NonNull
-    public Inbox getInbox() {
-        return inbox;
-    }
-
-    /**
-     * Returns the inbox user.
-     *
-     * @return The inbox user.
-     */
-    @NonNull
-    public User getUser() {
-        return inbox.getUser();
-    }
-
-    /**
-     * Returns the default inbox predicate.
-     *
-     * @return The default inbox predicate.
-     */
-    @Nullable
-    public Predicate<Message> getPredicate() {
-        return predicate;
-    }
-
-    /**
-     * Sets the default inbox predicate.
-     *
-     * @param predicate The default inbox predicate.
-     */
-    public void setPredicate(@Nullable Predicate<Message> predicate) {
-        this.predicate = predicate;
-    }
+    /** The inbox user. */
+    public val user: User
+        get() = inbox.user
 
     /**
      * Sets the show message center listener.
      *
      * @param listener The listener.
      */
-    public void setOnShowMessageCenterListener(@Nullable OnShowMessageCenterListener listener) {
-        this.onShowMessageCenterListener = listener;
-    }
-
-    /**
-     * Called to show the message center. See {@link #showMessageCenter(String)} for more details.
-     */
-    public void showMessageCenter() {
-        showMessageCenter(null);
+    public fun setOnShowMessageCenterListener(listener: OnShowMessageCenterListener?) {
+        onShowMessageCenterListener = listener
     }
 
     /**
      * Called to show the message center for a specific message.
      *
      * To show the message center, the SDK will try the following:
-     * <pre>
-     * - The optional {@link OnShowMessageCenterListener}.
-     * - An implicit intent with {@code com.urbanairship.VIEW_RICH_PUSH_INBOX}.
-     * - If the message ID is provided, an implicit intent with {@code com.urbanairship.VIEW_MESSAGE_INTENT_ACTION}.
-     * - Finally it will fallback to the provided {@link MessageCenterActivity}.
-     * </pre>
+     * - The optional [OnShowMessageCenterListener].
+     * - An implicit intent with `com.urbanairship.VIEW_RICH_PUSH_INBOX`.
+     * - If the message ID is provided, an implicit intent with `com.urbanairship.VIEW_MESSAGE_INTENT_ACTION`.
+     * - Finally it will fallback to the provided [MessageCenterActivity].
      *
-     * Implicit intents will have the message ID encoded as the intent's data with the format @{code message:<MESSAGE_ID>}.
+     * Implicit intents will have the message ID encoded as the intent's data with the format `message:<MESSAGE_ID>`.
      *
-     * @param messageId The message ID.
+     * @param messageId An optional message ID to display. If `null`, the inbox will be displayed.
      */
-    public void showMessageCenter(@Nullable String messageId) {
+    @JvmOverloads
+    public fun showMessageCenter(messageId: String? = null) {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
-            UALog.w("Unable to show Message Center. FEATURE_MESSAGE_CENTER is not enabled in PrivacyManager.");
-            return;
+            UALog.w { "Unable to show Message Center. FEATURE_MESSAGE_CENTER is not enabled in PrivacyManager." }
+            return
         }
 
         // Try the listener
-        OnShowMessageCenterListener listener = this.onShowMessageCenterListener;
+        val listener = onShowMessageCenterListener
         if (listener != null && listener.onShowMessageCenter(messageId)) {
-            return;
+            return
         }
 
         // Try the VIEW_MESSAGE_CENTER_INTENT_ACTION intent
-        Intent intent = new Intent(VIEW_MESSAGE_CENTER_INTENT_ACTION)
-                .setPackage(getContext().getPackageName())
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        val intent = Intent(VIEW_MESSAGE_CENTER_INTENT_ACTION)
+            .setPackage(context.packageName)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
 
-        if (messageId != null) {
-            intent.setData(Uri.fromParts(MESSAGE_DATA_SCHEME, messageId, null));
-        }
+        messageId?.let { intent.setData(Uri.fromParts(MESSAGE_DATA_SCHEME, it, null)) }
 
-        if (intent.resolveActivity(getContext().getPackageManager()) != null) {
-            getContext().startActivity(intent);
-            return;
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+            return
         }
 
         // Try the VIEW_MESSAGE_INTENT_ACTION if the message ID is available
         if (messageId != null) {
-            intent.setAction(VIEW_MESSAGE_INTENT_ACTION);
-            if (intent.resolveActivity(getContext().getPackageManager()) != null) {
-                getContext().startActivity(intent);
-                return;
+            intent.setAction(VIEW_MESSAGE_INTENT_ACTION)
+            if (intent.resolveActivity(context.packageManager) != null) {
+                context.startActivity(intent)
+                return
             }
         }
 
         // Fallback to the message center activity
-        intent.setClass(getContext(), MessageCenterActivity.class);
-        getContext().startActivity(intent);
+        intent.setClass(context, MessageCenterActivity::class.java)
+        context.startActivity(intent)
     }
 
-    /**
-     * Parses the message Id from a message center intent.
-     *
-     * @param intent The intent.
-     * @return The message Id if it's available on the intent, otherwise {@code null}.
-     */
-    @Nullable
-    public static String parseMessageId(@Nullable Intent intent) {
-        if (intent == null || intent.getData() == null || intent.getAction() == null) {
-            return null;
-        }
-
-        if (!MESSAGE_DATA_SCHEME.equalsIgnoreCase(intent.getData().getScheme())) {
-            return null;
-        }
-
-        switch (intent.getAction()) {
-            case VIEW_MESSAGE_CENTER_INTENT_ACTION:
-            case VIEW_MESSAGE_INTENT_ACTION:
-                return intent.getData().getSchemeSpecificPart();
-
-            default:
-                return null;
-        }
-    }
-
-    @Override
-    public boolean onAirshipDeepLink(@NonNull Uri uri) {
-        if (DEEP_LINK_HOST.equals(uri.getEncodedAuthority())) {
-            List<String> paths = uri.getPathSegments();
-            if (paths.size() == 0) {
-                showMessageCenter();
-                return true;
-            } else if (paths.size() == 1) {
-                showMessageCenter(paths.get(0));
-                return true;
+    override fun onAirshipDeepLink(uri: Uri): Boolean {
+        if (DEEP_LINK_HOST == uri.encodedAuthority) {
+            val paths = uri.pathSegments
+            if (paths.size == 0) {
+                showMessageCenter()
+                return true
+            } else if (paths.size == 1) {
+                showMessageCenter(paths[0])
+                return true
             }
         }
-
-        return false;
+        return false
     }
 
+    public companion object {
+
+        /**
+         * Intent action to view the message center.
+         */
+        public const val VIEW_MESSAGE_CENTER_INTENT_ACTION: String = "com.urbanairship.VIEW_RICH_PUSH_INBOX"
+
+        /**
+         * Intent action to view a message.
+         */
+        public const val VIEW_MESSAGE_INTENT_ACTION: String = "com.urbanairship.VIEW_RICH_PUSH_MESSAGE"
+
+        /**
+         * Scheme used for `message:<MESSAGE_ID>` when requesting to view a message with
+         * `com.urbanairship.VIEW_RICH_PUSH_MESSAGE`.
+         */
+        public const val MESSAGE_DATA_SCHEME: String = "message"
+
+        private const val DEEP_LINK_HOST = "message_center"
+
+        /**
+         * Gets the shared Message Center instance.
+         *
+         * @return The shared Message Center instance.
+         */
+        @JvmStatic
+        public fun shared(): MessageCenter =
+            UAirship.shared().requireComponent(MessageCenter::class.java)
+
+        /**
+         * Parses the message Id from a message center intent.
+         *
+         * @param intent The intent.
+         * @return The message Id if it's available on the intent, otherwise `null`.
+         */
+        @JvmStatic
+        public fun parseMessageId(intent: Intent?): String? {
+            if (intent == null || intent.data == null || intent.action == null) {
+                return null
+            }
+            return if (!MESSAGE_DATA_SCHEME.equals(intent.data?.scheme, ignoreCase = true)) {
+                null
+            } else when (intent.action) {
+                VIEW_MESSAGE_CENTER_INTENT_ACTION,
+                VIEW_MESSAGE_INTENT_ACTION -> intent.data?.schemeSpecificPart
+                else -> null
+            }
+        }
+    }
 }

@@ -56,7 +56,7 @@ public class MessageCenterTest {
 
     @Before
     public fun setup() {
-        messageCenter.init()
+        messageCenter.initialize()
 
         val pushListenerSlot = slot<PushListener>()
         verify { pushManager.addInternalPushListener(capture(pushListenerSlot)) }
