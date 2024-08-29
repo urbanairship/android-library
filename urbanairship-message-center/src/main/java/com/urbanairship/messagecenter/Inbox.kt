@@ -1,201 +1,143 @@
 /* Copyright Airship and Contributors */
+package com.urbanairship.messagecenter
 
-package com.urbanairship.messagecenter;
-
-import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
-import androidx.annotation.WorkerThread;
-
-import com.urbanairship.AirshipConfigOptions;
-import com.urbanairship.AirshipExecutors;
-import com.urbanairship.Cancelable;
-import com.urbanairship.CancelableOperation;
-import com.urbanairship.UALog;
-import com.urbanairship.Predicate;
-import com.urbanairship.PreferenceDataStore;
-import com.urbanairship.PrivacyManager;
-import com.urbanairship.UAirship;
-import com.urbanairship.app.ActivityMonitor;
-import com.urbanairship.app.ApplicationListener;
-import com.urbanairship.app.GlobalActivityMonitor;
-import com.urbanairship.channel.AirshipChannel;
-import com.urbanairship.channel.AirshipChannelListener;
-import com.urbanairship.channel.ChannelRegistrationPayload;
-import com.urbanairship.job.JobDispatcher;
-import com.urbanairship.job.JobInfo;
-import com.urbanairship.job.JobResult;
-import com.urbanairship.json.JsonMap;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import androidx.annotation.RestrictTo
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
+import com.urbanairship.AirshipConfigOptions
+import com.urbanairship.AirshipExecutors
+import com.urbanairship.Cancelable
+import com.urbanairship.CancelableOperation
+import com.urbanairship.Predicate
+import com.urbanairship.PreferenceDataStore
+import com.urbanairship.PrivacyManager
+import com.urbanairship.UALog
+import com.urbanairship.UAirship
+import com.urbanairship.app.ActivityMonitor
+import com.urbanairship.app.ApplicationListener
+import com.urbanairship.app.GlobalActivityMonitor.Companion.shared
+import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.channel.AirshipChannelListener
+import com.urbanairship.job.JobDispatcher
+import com.urbanairship.job.JobInfo
+import com.urbanairship.job.JobResult
+import com.urbanairship.json.jsonMapOf
+import java.util.Collections
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executor
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The inbox provides access to the device's local inbox data.
- * Modifications (e.g., deletions or mark read) will be sent to the Airship
- * server the next time the inbox is synchronized.
+ * The inbox provides access to the device's local inbox data. Modifications (e.g., deletions or
+ * mark read) will be sent to the Airship server the next time the inbox is synchronized.
+ *
+ * @property user The [User].
  */
-public class Inbox {
+public class Inbox @VisibleForTesting internal constructor(
+    context: Context,
+    private val dataStore: PreferenceDataStore,
+    private val jobDispatcher: JobDispatcher,
+    public val user: User,
+    private val messageDao: MessageDao,
+    private val executor: Executor,
+    private val activityMonitor: ActivityMonitor,
+    private val airshipChannel: AirshipChannel,
+    private val privacyManager: PrivacyManager
+) {
 
-    /**
-     * A callback used to be notified when refreshing messages.
-     */
-    public interface FetchMessagesCallback {
+    /** A callback used to be notified when refreshing messages. */
+    public fun interface FetchMessagesCallback {
 
         /**
          * Called when a request to refresh messages is finished.
          *
          * @param success If the request was successful or not.
          */
-        void onFinished(boolean success);
-
+        public fun onFinished(success: Boolean)
     }
-
-    private static final SentAtRichPushMessageComparator MESSAGE_COMPARATOR = new SentAtRichPushMessageComparator();
-
-    private final static Object inboxLock = new Object();
-    private final List<InboxListener> listeners = new CopyOnWriteArrayList<>();
-
-    private final Set<String> deletedMessageIds = new HashSet<>();
-    private final Map<String, Message> unreadMessages = new HashMap<>();
-    private final Map<String, Message> readMessages = new HashMap<>();
-    private final Map<String, Message> messageUrlMap = new HashMap<>();
-
-    @NonNull
-    private final MessageDao messageDao;
-    @NonNull
-    private final User user;
-    @NonNull
-    private final Executor executor;
-    private final Context context;
-    @NonNull
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    @NonNull
-    private final PreferenceDataStore dataStore;
-    @NonNull
-    private final JobDispatcher jobDispatcher;
-    @NonNull
-    private final ApplicationListener applicationListener;
-    @NonNull
-    private final AirshipChannelListener channelListener;
-    @NonNull
-    private final AirshipChannel.Extender channelRegistrationPayloadExtender;
-    @NonNull
-    private final User.Listener userListener;
-    @NonNull
-    private final ActivityMonitor activityMonitor;
-    @NonNull
-    private final AirshipChannel airshipChannel;
-
-    private boolean isFetchingMessages = false;
-    @Nullable
-    @VisibleForTesting
-    InboxJobHandler inboxJobHandler;
-
-    private final AtomicBoolean isEnabled = new AtomicBoolean(false);
-    private final AtomicBoolean isStarted = new AtomicBoolean(false);
-
-    private final List<PendingFetchMessagesCallback> pendingFetchCallbacks = new ArrayList<>();
 
     /**
      * Default constructor.
      *
-     * @param context The application context.
-     * @param dataStore The preference data store.
      * @hide
      */
-    public Inbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore,
-                 @NonNull AirshipChannel airshipChannel, @NonNull AirshipConfigOptions configOptions,
-                 @NonNull PrivacyManager privacyManager) {
-        this(context, dataStore, JobDispatcher.shared(context), new User(dataStore, airshipChannel),
-                MessageDatabase.createDatabase(context, configOptions).getDao(),
-                AirshipExecutors.newSerialExecutor(),
-                GlobalActivityMonitor.shared(context), airshipChannel, privacyManager);
+    internal constructor(
+        context: Context,
+        dataStore: PreferenceDataStore,
+        airshipChannel: AirshipChannel,
+        configOptions: AirshipConfigOptions,
+        privacyManager: PrivacyManager
+    ) : this(
+        context = context,
+        dataStore = dataStore,
+        jobDispatcher = JobDispatcher.shared(context),
+        user = User(dataStore, airshipChannel),
+        messageDao = MessageDatabase.createDatabase(context, configOptions).dao,
+        executor = AirshipExecutors.newSerialExecutor(),
+        activityMonitor = shared(context),
+        airshipChannel = airshipChannel,
+        privacyManager = privacyManager
+    )
+
+    private val listeners: MutableList<InboxListener> = CopyOnWriteArrayList()
+    private val deletedMessageIds: MutableSet<String> = HashSet()
+    private val unreadMessages: MutableMap<String, Message> = HashMap()
+    private val readMessages: MutableMap<String, Message> = HashMap()
+    private val messageUrlMap: MutableMap<String, Message> = HashMap()
+    private val context: Context = context.applicationContext
+    private val handler = Handler(Looper.getMainLooper())
+
+    private var isFetchingMessages = false
+
+    @VisibleForTesting
+    internal var inboxJobHandler: InboxJobHandler? = null
+    private val isEnabled = AtomicBoolean(false)
+    private val isStarted = AtomicBoolean(false)
+    private val pendingFetchCallbacks: MutableList<PendingFetchMessagesCallback> = ArrayList()
+
+    private val applicationListener: ApplicationListener = object : ApplicationListener {
+        override fun onForeground(time: Long) = jobDispatcher.dispatch(
+            JobInfo.newBuilder()
+                .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                .setAirshipComponent(MessageCenter::class.java)
+                .setConflictStrategy(JobInfo.KEEP)
+                .build()
+        )
+        override fun onBackground(time: Long) = jobDispatcher.dispatch(
+            JobInfo.newBuilder()
+                .setAction(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
+                .setAirshipComponent(MessageCenter::class.java)
+                .setConflictStrategy(JobInfo.KEEP)
+                .build()
+        )
     }
 
-    /**
-     * @hide
-     */
-    @VisibleForTesting
-    Inbox(@NonNull Context context, @NonNull PreferenceDataStore dataStore, @NonNull final JobDispatcher jobDispatcher,
-          @NonNull User user, @NonNull MessageDao messageDao, @NonNull Executor executor,
-          @NonNull ActivityMonitor activityMonitor, @NonNull AirshipChannel airshipChannel,
-          @NonNull PrivacyManager privacyManager) {
-        this.context = context.getApplicationContext();
-        this.dataStore = dataStore;
-        this.user = user;
-        this.messageDao = messageDao;
-        this.executor = executor;
-        this.jobDispatcher = jobDispatcher;
-        this.airshipChannel = airshipChannel;
-        this.applicationListener = new ApplicationListener() {
-            @Override
-            public void onForeground(long time) {
-                JobInfo jobInfo = JobInfo.newBuilder()
-                                         .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                                         .setAirshipComponent(MessageCenter.class)
-                                         .setConflictStrategy(JobInfo.KEEP)
-                                         .build();
+    private val channelListener: AirshipChannelListener =
+        AirshipChannelListener { dispatchUpdateUserJob(true) }
 
-                jobDispatcher.dispatch(jobInfo);
-            }
+    private val channelRegistrationPayloadExtender = AirshipChannel.Extender.Blocking { builder ->
+        if (privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
+            builder.setUserId(user.id)
+        } else {
+            builder
+        }
+    }
 
-            @Override
-            public void onBackground(long time) {
-                JobInfo jobInfo = JobInfo.newBuilder()
-                                         .setAction(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
-                                         .setAirshipComponent(MessageCenter.class)
-                                         .setConflictStrategy(JobInfo.KEEP)
-                                         .build();
-
-                jobDispatcher.dispatch(jobInfo);
-            }
-        };
-
-        this.channelListener = channelId -> dispatchUpdateUserJob(true);
-
-        this.channelRegistrationPayloadExtender = new AirshipChannel.Extender.Blocking() {
-            @NonNull
-            @Override
-            public ChannelRegistrationPayload.Builder extend(@NonNull ChannelRegistrationPayload.Builder builder) {
-                if (privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
-                    return builder.setUserId(getUser().getId());
-                } else {
-                    return builder;
-                }
-            }
-        };
-
-        this.userListener = success -> {
-            if (success) {
-                fetchMessages();
-            }
-        };
-
-        this.activityMonitor = activityMonitor;
+    private val userListener = User.Listener { success: Boolean ->
+        if (success) {
+            fetchMessages()
+        }
     }
 
     /**
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    void init() {
-        updateEnabledState();
+    public fun init() {
+        updateEnabledState()
     }
 
     /**
@@ -203,18 +145,16 @@ public class Inbox {
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @NonNull
-    JobResult onPerformJob(@NonNull UAirship airship, @NonNull JobInfo jobInfo) {
+    internal fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
         if (!isEnabled.get()) {
-            return JobResult.SUCCESS;
+            return JobResult.SUCCESS
         }
-
         if (inboxJobHandler == null) {
-            inboxJobHandler = new InboxJobHandler(this, getUser(), airshipChannel,
-                    airship.getRuntimeConfig(), dataStore, messageDao);
+            inboxJobHandler = InboxJobHandler(
+                this, user, airshipChannel, airship.runtimeConfig, dataStore, messageDao
+            )
         }
-
-        return inboxJobHandler.performJob(jobInfo);
+        return inboxJobHandler!!.performJob(jobInfo)
     }
 
     /**
@@ -223,32 +163,27 @@ public class Inbox {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    void updateEnabledState() {
+    internal fun updateEnabledState() {
         if (isEnabled.get()) {
             if (!isStarted.getAndSet(true)) {
                 // Refresh the inbox whenever the user is updated.
-                user.addListener(userListener);
-
-                refresh(false);
-
-                activityMonitor.addApplicationListener(applicationListener);
-                airshipChannel.addChannelListener(channelListener);
-
+                user.addListener(userListener)
+                refresh(false)
+                activityMonitor.addApplicationListener(applicationListener)
+                airshipChannel.addChannelListener(channelListener)
                 if (user.shouldUpdate()) {
-                    dispatchUpdateUserJob(true);
+                    dispatchUpdateUserJob(true)
                 }
-
-                airshipChannel.addChannelRegistrationPayloadExtender(channelRegistrationPayloadExtender);
+                airshipChannel.addChannelRegistrationPayloadExtender(
+                    channelRegistrationPayloadExtender
+                )
             }
         } else {
             // Clean up any Message Center data stored on the device.
-            deleteAllMessages();
-            InboxJobHandler jobHandler = inboxJobHandler;
-            if (jobHandler != null) {
-                jobHandler.removeStoredData();
-            }
-
-            tearDown();
+            deleteAllMessages()
+            val jobHandler = inboxJobHandler
+            jobHandler?.removeStoredData()
+            tearDown()
         }
     }
 
@@ -256,12 +191,12 @@ public class Inbox {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    void tearDown() {
-        activityMonitor.removeApplicationListener(applicationListener);
-        airshipChannel.removeChannelListener(channelListener);
-        airshipChannel.removeChannelRegistrationPayloadExtender(channelRegistrationPayloadExtender);
-        user.removeListener(userListener);
-        isStarted.set(false);
+    internal fun tearDown() {
+        activityMonitor.removeApplicationListener(applicationListener)
+        airshipChannel.removeChannelListener(channelListener)
+        airshipChannel.removeChannelRegistrationPayloadExtender(channelRegistrationPayloadExtender)
+        user.removeListener(userListener)
+        isStarted.set(false)
     }
 
     /**
@@ -270,163 +205,121 @@ public class Inbox {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public void setEnabled(boolean isEnabled) {
-        this.isEnabled.set(isEnabled);
-    }
-
-    /**
-     * Returns the {@link User}.
-     *
-     * @return The {@link User}.
-     */
-    @NonNull
-    public User getUser() {
-        return user;
+    internal fun setEnabled(isEnabled: Boolean) {
+        this.isEnabled.set(isEnabled)
     }
 
     /**
      * Subscribe a listener for inbox update event callbacks.
      *
-     * @param listener An object implementing the {@link InboxListener} interface.
+     * @param listener An object implementing the [InboxListener] interface.
      */
-    public void addListener(@NonNull InboxListener listener) {
-        listeners.add(listener);
+    public fun addListener(listener: InboxListener) {
+        listeners.add(listener)
     }
 
     /**
      * Unsubscribe a listener for inbox update event callbacks.
      *
-     * @param listener An object implementing the {@link InboxListener} interface.
+     * @param listener An object implementing the [InboxListener] interface.
      */
-    public void removeListener(@NonNull InboxListener listener) {
-        listeners.remove(listener);
+    public fun removeListener(listener: InboxListener) {
+        listeners.remove(listener)
     }
 
     /**
      * Fetches the latest inbox changes from Airship.
-     * <p>
+     *
+     *
      * Normally this method is not called directly as the message list is automatically fetched when
      * the application foregrounds or when a notification with an associated message is received.
-     * <p>
+     *
+     *
      * If the fetch request completes and results in a change to the messages,
-     * {@link InboxListener#onInboxUpdated()} will be called.
+     * [InboxListener.onInboxUpdated] will be called.
      */
-    public void fetchMessages() {
-        fetchMessages(null, null);
-    }
+    public fun fetchMessages(): Cancelable = fetchMessages(null, null)
 
     /**
      * Fetches the latest inbox changes from Airship.
-     * <p>
+     *
+     *
      * Normally this method is not called directly as the message list is automatically fetched when
      * the application foregrounds or when a notification with an associated message is received.
-     * <p>
+     *
+     *
      * If the fetch request completes and results in a change to the messages,
-     * {@link InboxListener#onInboxUpdated()} will be called.
+     * [InboxListener.onInboxUpdated] will be called.
      *
      * @param callback Callback to be notified when the request finishes fetching the messages.
      * @return A cancelable object that can be used to cancel the callback.
      */
-    @Nullable
-    public Cancelable fetchMessages(@Nullable FetchMessagesCallback callback) {
-        return fetchMessages(null, callback);
-    }
+    public fun fetchMessages(callback: FetchMessagesCallback): Cancelable =
+        fetchMessages(null, callback)
 
     /**
      * Fetches the latest inbox changes from Airship.
-     * <p>
+     *
+     *
      * Normally this method is not called directly as the message list is automatically fetched when
      * the application foregrounds or when a notification with an associated message is received.
-     * <p>
+     *
+     *
      * If the fetch request completes and results in a change to the messages,
-     * {@link InboxListener#onInboxUpdated()} will be called.
+     * [InboxListener.onInboxUpdated] will be called.
      *
      * @param callback Callback to be notified when the request finishes fetching the messages.
      * @param looper The looper to post the callback on.
      * @return A cancelable object that can be used to cancel the callback.
      */
-    @Nullable
-    public Cancelable fetchMessages(@Nullable Looper looper, @Nullable FetchMessagesCallback callback) {
-        PendingFetchMessagesCallback cancelableOperation = new PendingFetchMessagesCallback(callback, looper);
-
-        synchronized (pendingFetchCallbacks) {
-            pendingFetchCallbacks.add(cancelableOperation);
-
+    public fun fetchMessages(looper: Looper?, callback: FetchMessagesCallback?): Cancelable {
+        val cancelableOperation = PendingFetchMessagesCallback(callback, looper)
+        synchronized(pendingFetchCallbacks) {
+            pendingFetchCallbacks.add(cancelableOperation)
             if (!isFetchingMessages) {
-                JobInfo jobInfo = JobInfo.newBuilder()
-                                         .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                                         .setAirshipComponent(MessageCenter.class)
-                                         .setConflictStrategy(JobInfo.REPLACE)
-                                         .build();
-
-                jobDispatcher.dispatch(jobInfo);
+                val jobInfo: JobInfo =
+                    JobInfo.newBuilder().setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
+                        .setAirshipComponent(MessageCenter::class.java)
+                        .setConflictStrategy(JobInfo.REPLACE).build()
+                jobDispatcher.dispatch(jobInfo)
             }
-
-            isFetchingMessages = true;
+            isFetchingMessages = true
         }
-
-        return cancelableOperation;
+        return cancelableOperation
     }
 
-    void onUpdateMessagesFinished(boolean result) {
-        synchronized (pendingFetchCallbacks) {
-            for (PendingFetchMessagesCallback callback : pendingFetchCallbacks) {
-                callback.result = result;
-                callback.run();
+    internal fun onUpdateMessagesFinished(result: Boolean) =
+        synchronized(pendingFetchCallbacks) {
+            for (callback: PendingFetchMessagesCallback in pendingFetchCallbacks) {
+                callback.result = result
+                callback.run()
             }
-
-            isFetchingMessages = false;
-            pendingFetchCallbacks.clear();
+            isFetchingMessages = false
+            pendingFetchCallbacks.clear()
         }
-    }
 
-    /**
-     * Gets the total message count.
-     *
-     * @return The number of RichPushMessages currently in the inbox.
-     */
-    public int getCount() {
-        synchronized (inboxLock) {
-            return unreadMessages.size() + readMessages.size();
-        }
-    }
+    /** The total message count. */
+    public val count: Int
+        get() = synchronized(inboxLock) { return unreadMessages.size + readMessages.size }
 
-    /**
-     * Gets all the message ids in the inbox.
-     *
-     * @return A set of message ids.
-     */
-    @NonNull
-    public Set<String> getMessageIds() {
-        synchronized (inboxLock) {
-            Set<String> messageIds = new HashSet<>(getCount());
-            messageIds.addAll(readMessages.keySet());
-            messageIds.addAll(unreadMessages.keySet());
-            return messageIds;
+    /** All the message IDs in the [Inbox]. */
+    public val messageIds: Set<String>
+        get() = synchronized(inboxLock) {
+            val messageIds: MutableSet<String> = HashSet(count)
+            messageIds.addAll(readMessages.keys)
+            messageIds.addAll(unreadMessages.keys)
+            return messageIds
         }
-    }
 
-    /**
-     * Gets the total read message count.
-     *
-     * @return The number of read RichPushMessages currently in the inbox.
-     */
-    public int getReadCount() {
-        synchronized (inboxLock) {
-            return readMessages.size();
-        }
-    }
 
-    /**
-     * Gets the total unread message count.
-     *
-     * @return The number of unread RichPushMessages currently in the inbox.
-     */
-    public int getUnreadCount() {
-        synchronized (inboxLock) {
-            return unreadMessages.size();
-        }
-    }
+    /** The number of read messages currently in the [Inbox]. */
+    public val readCount: Int
+        get() = synchronized(inboxLock) { return readMessages.size }
+
+
+    /** The number of unread messages currently in the [Inbox]. */
+    public val unreadCount: Int
+        get() = synchronized(inboxLock) { return unreadMessages.size }
 
     /**
      * Filters a collection of messages according to the supplied predicate
@@ -435,21 +328,20 @@ public class Inbox {
      * @param predicate The predicate. If null, the collection will be returned as-is.
      * @return A filtered collection of messages
      */
-    @NonNull
-    private Collection<Message> filterMessages(@NonNull Collection<Message> messages, @Nullable Predicate<Message> predicate) {
-        List<Message> filteredMessages = new ArrayList<>();
-
+    private fun filterMessages(
+        messages: Collection<Message>,
+        predicate: Predicate<Message>?
+    ): Collection<Message> {
+        val filteredMessages = mutableListOf<Message>()
         if (predicate == null) {
-            return messages;
+            return messages
         }
-
-        for (Message message : messages) {
+        for (message: Message in messages) {
             if (predicate.apply(message)) {
-                filteredMessages.add(message);
+                filteredMessages.add(message)
             }
         }
-
-        return filteredMessages;
+        return filteredMessages
     }
 
     /**
@@ -457,211 +349,168 @@ public class Inbox {
      * Sorted by descending sent-at date.
      *
      * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
-     * @return List of filtered and sorted {@link Message}s.
+     * @return List of filtered and sorted [Message]s.
      */
-    @NonNull
-    public List<Message> getMessages(@Nullable Predicate<Message> predicate) {
-        synchronized (inboxLock) {
-            List<Message> messages = new ArrayList<>();
-            messages.addAll(filterMessages(unreadMessages.values(), predicate));
-            messages.addAll(filterMessages(readMessages.values(), predicate));
-            Collections.sort(messages, MESSAGE_COMPARATOR);
-            return messages;
+    public fun getMessages(predicate: Predicate<Message>?): List<Message> =
+        synchronized(inboxLock) {
+            val messages: MutableList<Message> = ArrayList()
+            messages.addAll(filterMessages(unreadMessages.values, predicate))
+            messages.addAll(filterMessages(readMessages.values, predicate))
+            Collections.sort(messages, MESSAGE_COMPARATOR)
+            return messages
         }
-    }
 
-    /**
-     * Gets a list of RichPushMessages. Sorted by descending sent-at date.
-     *
-     * @return List of sorted {@link Message}s.
-     */
-    @NonNull
-    public List<Message> getMessages() {
-        return getMessages(null);
-    }
+    /** The list of messages in the [Inbox]. Sorted by descending sent-at date. */
+    public val messages: List<Message>
+        get() = getMessages(null)
 
     /**
      * Gets a list of unread RichPushMessages, filtered by the provided predicate.
      * Sorted by descending sent-at date.
      *
      * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
-     * @return List of sorted {@link Message}s.
+     * @return List of sorted [Message]s.
      */
-    @NonNull
-    public List<Message> getUnreadMessages(@Nullable Predicate<Message> predicate) {
-        synchronized (inboxLock) {
-            List<Message> messages = new ArrayList<>(filterMessages(unreadMessages.values(), predicate));
-            Collections.sort(messages, MESSAGE_COMPARATOR);
-            return messages;
+    public fun getUnreadMessages(predicate: Predicate<Message>?): List<Message> =
+        synchronized(inboxLock) {
+            val messages: List<Message> =
+                ArrayList(filterMessages(unreadMessages.values, predicate))
+            Collections.sort(messages, MESSAGE_COMPARATOR)
+            return messages
         }
-    }
 
     /**
      * Gets a list of unread RichPushMessages. Sorted by descending sent-at date.
      *
-     * @return List of sorted {@link Message}s.
+     * @return List of sorted [Message]s.
      */
-    @NonNull
-    public List<Message> getUnreadMessages() {
-        return getUnreadMessages(null);
-    }
+    // TODO: could be a val if we renamed this.unreadMessages to this.unreadMessagesMap?
+    public fun getUnreadMessages(): List<Message> = getUnreadMessages(null)
 
     /**
      * Gets a list of read RichPushMessages, filtered by the provided predicate.
      * Sorted by descending sent-at date.
      *
      * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
-     * @return List of sorted {@link Message}s.
+     * @return List of sorted [Message]s.
      */
-    @NonNull
-    public List<Message> getReadMessages(@Nullable Predicate<Message> predicate) {
-        synchronized (inboxLock) {
-            List<Message> messages = new ArrayList<>(filterMessages(readMessages.values(), predicate));
-            Collections.sort(messages, MESSAGE_COMPARATOR);
-            return messages;
+    public fun getReadMessages(predicate: Predicate<Message>?): List<Message> =
+        synchronized(inboxLock) {
+            val messages: List<Message> = ArrayList(filterMessages(readMessages.values, predicate))
+            Collections.sort(messages, MESSAGE_COMPARATOR)
+            return messages
         }
-    }
 
     /**
      * Gets a list of read RichPushMessages. Sorted by descending sent-at date.
      *
-     * @return List of sorted {@link Message}s.
+     * @return List of sorted [Message]s.
      */
-    @NonNull
-    public List<Message> getReadMessages() {
-        return getReadMessages(null);
-    }
+    // TODO: could be a val if we renamed this.readMessages to this.readMessagesMap?
+    public fun getReadMessages(): List<Message> = getReadMessages(null)
 
     /**
-     * Get the {@link Message} with the corresponding message ID.
+     * Get the [Message] with the corresponding message ID.
      *
-     * @param messageId The message ID of the desired {@link Message}.
-     * @return A {@link Message} or <code>null</code> if one does not exist.
+     * @param messageId The message ID of the desired [Message].
+     * @return A [Message] or `null` if one does not exist.
      */
-    @Nullable
-    public Message getMessage(@Nullable String messageId) {
+    public fun getMessage(messageId: String?): Message? {
         if (messageId == null) {
-            return null;
+            return null
         }
-
-        synchronized (inboxLock) {
+        synchronized(inboxLock) {
             if (unreadMessages.containsKey(messageId)) {
-                return unreadMessages.get(messageId);
+                return unreadMessages[messageId]
             }
-            return readMessages.get(messageId);
+            return readMessages[messageId]
         }
     }
 
     /**
-     * Get the {@link Message} with the corresponding message body URL.
+     * Get the [Message] with the corresponding message body URL.
      *
-     * @param messageUrl The message body URL of the desired {@link Message}.
-     * @return A {@link Message} or <code>null</code> if one does not exist.
+     * @param messageUrl The message body URL of the desired [Message].
+     * @return A [Message] or `null` if one does not exist.
      */
-    @Nullable
-    public Message getMessageByUrl(@Nullable String messageUrl) {
+    public fun getMessageByUrl(messageUrl: String?): Message? {
         if (messageUrl == null) {
-            return null;
+            return null
         }
-
-        synchronized (inboxLock) {
-            return messageUrlMap.get(messageUrl);
-        }
+        synchronized(inboxLock) { return messageUrlMap[messageUrl] }
     }
 
     // actions
 
     /**
-     * Mark {@link Message}s read in bulk.
+     * Mark [Message]s read in bulk.
      *
      * @param messageIds A set of message ids.
      */
-    public void markMessagesRead(@NonNull final Set<String> messageIds) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                List<String> messageIdsList = new ArrayList<>(messageIds);
-                messageDao.markMessagesRead(messageIdsList);
-            }
-        });
-
-        synchronized (inboxLock) {
-            for (String messageId : messageIds) {
-
-                Message message = unreadMessages.get(messageId);
-
+    public fun markMessagesRead(messageIds: Set<String>) {
+        executor.execute {
+            messageDao.markMessagesRead(messageIds.toList())
+        }
+        synchronized(inboxLock) {
+            for (messageId: String in messageIds) {
+                val message: Message? = unreadMessages[messageId]
                 if (message != null) {
-                    message.unreadClient = false;
-                    unreadMessages.remove(messageId);
-                    readMessages.put(messageId, message);
+                    message.unreadClient = false
+                    unreadMessages.remove(messageId)
+                    readMessages[messageId] = message
                 }
             }
-
-            notifyInboxUpdated();
+            notifyInboxUpdated()
         }
     }
 
     /**
-     * Mark {@link Message}s unread in bulk.
+     * Mark [Message]s unread in bulk.
      *
      * @param messageIds A set of message ids.
      */
-    public void markMessagesUnread(@NonNull final Set<String> messageIds) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                ArrayList<String> messageIdsList = new ArrayList<>(messageIds);
-                messageDao.markMessagesUnread(messageIdsList);
-            }
-        });
-
-        synchronized (inboxLock) {
-            for (String messageId : messageIds) {
-
-                Message message = readMessages.get(messageId);
-
+    public fun markMessagesUnread(messageIds: Set<String>) {
+        executor.execute {
+            messageDao.markMessagesUnread(messageIds.toList())
+        }
+        synchronized(inboxLock) {
+            for (messageId: String in messageIds) {
+                val message: Message? = readMessages[messageId]
                 if (message != null) {
-                    message.unreadClient = true;
-                    readMessages.remove(messageId);
-                    unreadMessages.put(messageId, message);
+                    message.unreadClient = true
+                    readMessages.remove(messageId)
+                    unreadMessages[messageId] = message
                 }
             }
         }
-
-        notifyInboxUpdated();
+        notifyInboxUpdated()
     }
 
     /**
-     * Mark {@link Message}s deleted.
-     * <p>
+     * Mark [Message]s deleted.
+     *
      * Note that in most cases these messages aren't immediately deleted on the server, but they will
      * be inaccessible on the device as soon as they're marked deleted.
      *
      * @param messageIds A set of message ids.
      */
-    public void deleteMessages(@NonNull final Set<String> messageIds) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                ArrayList<String> messageIdsList = new ArrayList<>(messageIds);
-                messageDao.markMessagesDeleted(messageIdsList);
-            }
-        });
-
-        synchronized (inboxLock) {
-            for (String messageId : messageIds) {
-
-                Message message = getMessage(messageId);
+    public fun deleteMessages(messageIds: Set<String>) {
+        executor.execute {
+            val messageIdsList = ArrayList(messageIds)
+            messageDao.markMessagesDeleted(messageIdsList)
+        }
+        synchronized(inboxLock) {
+            for (messageId: String in messageIds) {
+                val message: Message? = getMessage(messageId)
                 if (message != null) {
-                    message.deleted = true;
-                    unreadMessages.remove(messageId);
-                    readMessages.remove(messageId);
-                    deletedMessageIds.add(messageId);
+                    message.deleted = true
+                    unreadMessages.remove(messageId)
+                    readMessages.remove(messageId)
+                    deletedMessageIds.add(messageId)
                 }
             }
         }
-
-        notifyInboxUpdated();
+        notifyInboxUpdated()
     }
 
     /**
@@ -669,156 +518,130 @@ public class Inbox {
      *
      * @hide
      */
-    private void deleteAllMessages() {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                messageDao.deleteAllMessages();
-            }
-        });
+    private fun deleteAllMessages() {
+        executor.execute { messageDao.deleteAllMessages() }
 
-        synchronized (inboxLock) {
-            unreadMessages.clear();
-            readMessages.clear();
-            deletedMessageIds.clear();
+        synchronized(inboxLock) {
+            unreadMessages.clear()
+            readMessages.clear()
+            deletedMessageIds.clear()
         }
-
-        notifyInboxUpdated();
+        notifyInboxUpdated()
     }
 
     /**
      * Refreshes the inbox messages from the DB.
      *
-     * @param notify {@code true} to notify listeners, otherwise {@code false}.
+     * @param notify `true` to notify listeners, otherwise `false`.
      */
-    void refresh(boolean notify) {
-
-        List<MessageEntity> messageList = messageDao.getMessages();
+    internal fun refresh(notify: Boolean) {
+        val messageList = messageDao.messages
 
         // Sync the messages
-        synchronized (inboxLock) {
+        synchronized(inboxLock) {
 
             // Save the unreadMessageIds
-            Set<String> previousUnreadMessageIds = new HashSet<>(unreadMessages.keySet());
-            Set<String> previousReadMessageIds = new HashSet<>(readMessages.keySet());
-            Set<String> previousDeletedMessageIds = new HashSet<>(deletedMessageIds);
+            val previousUnreadMessageIds: Set<String> = HashSet(unreadMessages.keys)
+            val previousReadMessageIds: Set<String> = HashSet(readMessages.keys)
+            val previousDeletedMessageIds: Set<String> = HashSet(deletedMessageIds)
 
             // Clear the current messages
-            unreadMessages.clear();
-            readMessages.clear();
-            messageUrlMap.clear();
+            unreadMessages.clear()
+            readMessages.clear()
+            messageUrlMap.clear()
 
             // Process the new messages
-            for (MessageEntity messageEntity : messageList) {
-
-                Message message = messageEntity.createMessageFromEntity(messageEntity);
-
-                if (message == null) {
-                    continue;
-                }
+            for (messageEntity: MessageEntity in messageList) {
+                val message = messageEntity.createMessageFromEntity(messageEntity) ?: continue
 
                 // Deleted
-                if (message.isDeleted() || previousDeletedMessageIds.contains(message.getMessageId())) {
-                    deletedMessageIds.add(message.getMessageId());
-                    continue;
+                if (message.isDeleted || previousDeletedMessageIds.contains(message.messageId)) {
+                    deletedMessageIds.add(message.messageId)
+                    continue
                 }
 
                 // Expired
-                if (message.isExpired()) {
-                    deletedMessageIds.add(message.getMessageId());
-                    continue;
+                if (message.isExpired) {
+                    deletedMessageIds.add(message.messageId)
+                    continue
                 }
 
                 // Populate message url map
-                messageUrlMap.put(message.getMessageBodyUrl(), message);
+                messageUrlMap[message.messageBodyUrl] = message
 
                 // Unread - check the previousUnreadMessageIds if any mark reads are still in process
-                if (previousUnreadMessageIds.contains(message.getMessageId())) {
-                    message.unreadClient = true;
-                    unreadMessages.put(message.getMessageId(), message);
-                    continue;
+                if (previousUnreadMessageIds.contains(message.messageId)) {
+                    message.unreadClient = true
+                    unreadMessages[message.messageId] = message
+                    continue
                 }
 
                 // Read - check the previousUnreadMessageIds if any mark reads are still in process
-                if (previousReadMessageIds.contains(message.getMessageId())) {
-                    message.unreadClient = false;
-                    readMessages.put(message.getMessageId(), message);
-                    continue;
+                if (previousReadMessageIds.contains(message.messageId)) {
+                    message.unreadClient = false
+                    readMessages[message.messageId] = message
+                    continue
                 }
 
                 // Otherwise fallback to the current state
                 if (message.unreadClient) {
-                    unreadMessages.put(message.getMessageId(), message);
+                    unreadMessages[message.messageId] = message
                 } else {
-                    readMessages.put(message.getMessageId(), message);
+                    readMessages[message.messageId] = message
                 }
             }
         }
-
         if (notify) {
-            notifyInboxUpdated();
+            notifyInboxUpdated()
         }
-
     }
 
-    /**
-     * Notifies all of the registered listeners that the
-     * inbox updated.
-     */
-    private void notifyInboxUpdated() {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                for (InboxListener listener : listeners) {
-                    listener.onInboxUpdated();
-                }
+    /** Notifies all of the registered listeners that the inbox updated. */
+    private fun notifyInboxUpdated() {
+        handler.post {
+            for (listener: InboxListener in listeners) {
+                listener.onInboxUpdated()
             }
-        });
+        }
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    void dispatchUpdateUserJob(boolean forcefully) {
-        UALog.d("Updating user.");
+    internal fun dispatchUpdateUserJob(forcefully: Boolean) {
+        UALog.d("Updating user.")
+        val jobInfo = JobInfo.newBuilder()
+            .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
+            .setAirshipComponent(MessageCenter::class.java)
+            .setExtras(
+                jsonMapOf(InboxJobHandler.EXTRA_FORCEFULLY to forcefully)
+            )
+            .setConflictStrategy(if (forcefully) JobInfo.REPLACE else JobInfo.KEEP)
+            .build()
 
-        JobInfo jobInfo = JobInfo.newBuilder()
-                                 .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-                                 .setAirshipComponent(MessageCenter.class)
-                                 .setExtras(JsonMap.newBuilder()
-                                                   .put(InboxJobHandler.EXTRA_FORCEFULLY, forcefully)
-                                                   .build())
-                                 .setConflictStrategy(forcefully ? JobInfo.REPLACE : JobInfo.KEEP)
-                                 .build();
-
-        jobDispatcher.dispatch(jobInfo);
+        jobDispatcher.dispatch(jobInfo)
     }
 
-    static class SentAtRichPushMessageComparator implements Comparator<Message> {
-
-        @Override
-        public int compare(@NonNull Message lhs, @NonNull Message rhs) {
-            if (rhs.getSentDateMS() == lhs.getSentDateMS()) {
-                return lhs.getMessageId().compareTo(rhs.getMessageId());
+    internal class SentAtRichPushMessageComparator() : Comparator<Message> {
+        override fun compare(lhs: Message, rhs: Message): Int {
+            return if (rhs.sentDateMS == lhs.sentDateMS) {
+                lhs.messageId.compareTo(rhs.messageId)
             } else {
-                return Long.compare(rhs.getSentDateMS(), lhs.getSentDateMS());
+                rhs.sentDateMS.compareTo(lhs.sentDateMS)
             }
         }
     }
 
-    static class PendingFetchMessagesCallback extends CancelableOperation {
-
-        private final FetchMessagesCallback callback;
-        boolean result;
-
-        PendingFetchMessagesCallback(FetchMessagesCallback callback, Looper looper) {
-            super(looper);
-            this.callback = callback;
+    internal class PendingFetchMessagesCallback(
+        private val callback: FetchMessagesCallback?,
+        looper: Looper?
+    ) : CancelableOperation(looper) {
+        var result = false
+        override fun onRun() {
+            callback?.onFinished(result)
         }
+    }
 
-        @Override
-        protected void onRun() {
-            if (callback != null) {
-                callback.onFinished(result);
-            }
-        }
+    private companion object {
+        private val MESSAGE_COMPARATOR = SentAtRichPushMessageComparator()
+        private val inboxLock = Any()
     }
 }

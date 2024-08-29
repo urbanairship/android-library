@@ -17,7 +17,7 @@ import java.net.HttpURLConnection
 import kotlin.time.Duration.Companion.hours
 
 /** Job handler for [Inbox] component. */
-internal class InboxJobHandler @VisibleForTesting constructor(
+public class InboxJobHandler @VisibleForTesting internal constructor(
     private val inbox: Inbox,
     private val user: User,
     private val channel: AirshipChannel,
@@ -25,7 +25,7 @@ internal class InboxJobHandler @VisibleForTesting constructor(
     private val messageDao: MessageDao,
     private val inboxApiClient: InboxApiClient
 ) {
-    constructor(
+    internal constructor(
         inbox: Inbox,
         user: User,
         channel: AirshipChannel,
@@ -41,14 +41,8 @@ internal class InboxJobHandler @VisibleForTesting constructor(
         inboxApiClient = InboxApiClient(runtimeConfig)
     )
 
-    /**
-     * Delete saved state from the data store.
-     *
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    // TODO: can be internal when Inbox is converted to Kotlin
-    fun removeStoredData() {
+    /** Delete saved state from the data store. */
+    internal fun removeStoredData() {
         dataStore.remove(LAST_MESSAGE_REFRESH_TIME)
         dataStore.remove(LAST_UPDATE_TIME)
     }
@@ -59,9 +53,7 @@ internal class InboxJobHandler @VisibleForTesting constructor(
      * @param jobInfo The airship jobInfo.
      * @return The job result.
      */
-    // TODO: can be internal when Inbox is converted to Kotlin
-
-    fun performJob(jobInfo: JobInfo): JobResult {
+    internal fun performJob(jobInfo: JobInfo): JobResult {
         when (jobInfo.action) {
             ACTION_RICH_PUSH_USER_UPDATE ->
                 onUpdateUser(jobInfo.extras.opt(EXTRA_FORCEFULLY).getBoolean(false))
@@ -336,7 +328,7 @@ internal class InboxJobHandler @VisibleForTesting constructor(
         }
     }
 
-    companion object {
+    internal companion object {
 
         /** Starts the service in order to update just the [Message]'s messages. */
         const val ACTION_RICH_PUSH_MESSAGES_UPDATE = "ACTION_RICH_PUSH_MESSAGES_UPDATE"
