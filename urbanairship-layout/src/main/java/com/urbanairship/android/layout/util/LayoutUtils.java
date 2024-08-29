@@ -9,6 +9,8 @@ import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.text.Html;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
@@ -29,6 +31,8 @@ import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.FormInputType;
+import com.urbanairship.android.layout.property.MarkdownOptions;
+import com.urbanairship.android.layout.property.MarkdownOptionsKt;
 import com.urbanairship.android.layout.property.SwitchStyle;
 import com.urbanairship.android.layout.property.TextAppearance;
 import com.urbanairship.android.layout.property.TextStyle;
@@ -198,7 +202,19 @@ public final class LayoutUtils {
             text += NARROW_NBSP;
         }
 
-        textView.setText(text);
+        Context context = textView.getContext();
+        MarkdownOptions markdown = label.getMarkdownOptions();
+        boolean isMarkdownEnabled = MarkdownOptionsKt.isEnabled(markdown);
+
+        if (isMarkdownEnabled) {
+            boolean underlineLinks = MarkdownOptionsKt.getUnderlineLinks(markdown);
+            @Nullable Integer linkColor = MarkdownOptionsKt.resolvedLinkColor(markdown, context);
+
+            Spanned html = Html.fromHtml(StringExtensionsKt.markdownToHtml(text));
+            ViewExtensionsKt.setHtml(textView, html, underlineLinks, linkColor);
+        } else {
+            textView.setText(text);
+        }
     }
 
     public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
@@ -331,13 +347,13 @@ public final class LayoutUtils {
     public static void doOnAttachToWindow(@NonNull View view, @NonNull Runnable callback) {
         view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
-            public void onViewAttachedToWindow(View v) {
+            public void onViewAttachedToWindow(@NonNull View v) {
                 v.removeOnAttachStateChangeListener(this);
                 callback.run();
             }
 
             @Override
-            public void onViewDetachedFromWindow(View v) { /* no-op */ }
+            public void onViewDetachedFromWindow(@NonNull View v) { /* no-op */ }
         });
     }
 
