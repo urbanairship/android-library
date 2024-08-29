@@ -1,13 +1,12 @@
 package com.urbanairship.messagecenter
 
-import androidx.annotation.RestrictTo
 import androidx.core.util.Consumer
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.urbanairship.UALog.e
+import com.urbanairship.UALog
 import com.urbanairship.analytics.data.BatchedQueryHelper
 
 /**
@@ -23,20 +22,20 @@ internal abstract class MessageDao {
     fun insert(message: MessageEntity) = try {
         insertInternal(message)
     } catch (e: Exception) {
-        e(e, "Failed to insert message!")
+        UALog.e(e) { "Failed to insert message!" }
     }
 
     fun insertMessages(messages: List<MessageEntity>) = try {
         insertMessagesInternal(messages)
     } catch (e: Exception) {
-        e(e, "Failed to insert messages!")
+        UALog.e(e) { "Failed to insert messages!" }
     }
 
     val messages: List<MessageEntity>
         get() = try {
             getMessagesInternal()
         } catch (e: Exception) {
-            e(e, "Failed to get messages!")
+            UALog.e(e) { "Failed to get messages!" }
             emptyList()
         }
 
@@ -44,7 +43,7 @@ internal abstract class MessageDao {
         get() = try {
             getMessageIdsInternal()
         } catch (e: Exception) {
-            e(e, "Failed to get message IDs!")
+            UALog.e(e) { "Failed to get message IDs!" }
             emptyList()
         }
 
@@ -52,7 +51,7 @@ internal abstract class MessageDao {
         get() = try {
             getLocallyReadMessagesInternal()
         } catch (e: Exception) {
-            e(e, "Failed to get locally read messages!")
+            UALog.e(e, "Failed to get locally read messages!")
             emptyList()
         }
 
@@ -60,7 +59,7 @@ internal abstract class MessageDao {
         get() = try {
             getLocallyDeletedMessagesInternal()
         } catch (e: Exception) {
-            e(e, "Failed to get locally deleted messages!")
+            UALog. e(e) { "Failed to get locally deleted messages!" }
             emptyList()
         }
 
@@ -68,7 +67,7 @@ internal abstract class MessageDao {
         try {
             markMessagesReadInternal(messageIds)
         } catch (e: Exception) {
-            e(e, "Failed to mark messages as read!")
+            UALog.e(e) { "Failed to mark messages as read!" }
         }
     }
 
@@ -76,7 +75,7 @@ internal abstract class MessageDao {
         try {
             markMessagesUnreadInternal(messageIds)
         } catch (e: Exception) {
-            e(e, "Failed to mark messages as unread!")
+            UALog.e(e) { "Failed to mark messages as unread!" }
         }
     }
 
@@ -84,7 +83,7 @@ internal abstract class MessageDao {
         try {
             markMessagesDeletedInternal(messageIds)
         } catch (e: Exception) {
-            e(e, "Failed to mark messages as deleted!")
+            UALog.e(e) { "Failed to mark messages as deleted!" }
         }
     }
 
@@ -92,7 +91,7 @@ internal abstract class MessageDao {
         try {
             markMessagesReadOriginInternal(messageIds)
         } catch (e: Exception) {
-            e(e, "Failed to mark messages as read (origin)!")
+            UALog.e(e) { "Failed to mark messages as read (origin)!" }
         }
     }
 
@@ -100,7 +99,7 @@ internal abstract class MessageDao {
         try {
             deleteMessagesInternal(messageIds)
         } catch (e: Exception) {
-            e(e, "Failed to delete messages!")
+            UALog.e(e) { "Failed to delete messages!" }
         }
     }
 
@@ -108,7 +107,7 @@ internal abstract class MessageDao {
         try {
             deleteAllMessagesInternal()
         } catch (e: Exception) {
-            e(e, "Failed to delete all messages!")
+            UALog.e(e) { "Failed to delete all messages!" }
         }
     }
 
@@ -116,7 +115,7 @@ internal abstract class MessageDao {
         return try {
             messageExistsInternal(messageId)
         } catch (e: Exception) {
-            e(e, "Failed to check if message exists!")
+            UALog.e(e) { "Failed to check if message exists!" }
             false
         }
     }
