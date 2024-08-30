@@ -1,203 +1,141 @@
 /* Copyright Airship and Contributors */
+package com.urbanairship.messagecenter
 
-package com.urbanairship.messagecenter;
+import android.net.Uri
+import com.urbanairship.UALog
+import com.urbanairship.UAirship
+import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.http.Request
+import com.urbanairship.http.RequestAuth
+import com.urbanairship.http.RequestAuth.BasicAuth
+import com.urbanairship.http.RequestAuth.ChannelTokenAuth
+import com.urbanairship.http.RequestBody
+import com.urbanairship.http.RequestException
+import com.urbanairship.http.RequestSession
+import com.urbanairship.http.Response
+import com.urbanairship.json.JsonList
+import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireField
+import com.urbanairship.util.UAHttpStatusUtil
 
-import android.net.Uri;
+/**  high level abstraction for performing Inbox API requests. */
+internal class InboxApiClient constructor(
+    private val runtimeConfig: AirshipRuntimeConfig,
+    private val session: RequestSession = runtimeConfig.requestSession
+) {
 
-import com.urbanairship.UALog;
-import com.urbanairship.UAirship;
-import com.urbanairship.config.AirshipRuntimeConfig;
-import com.urbanairship.config.UrlBuilder;
-import com.urbanairship.http.Request;
-import com.urbanairship.http.RequestAuth;
-import com.urbanairship.http.RequestBody;
-import com.urbanairship.http.RequestException;
-import com.urbanairship.http.RequestSession;
-import com.urbanairship.http.Response;
-import com.urbanairship.json.JsonList;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.json.JsonValue;
-import com.urbanairship.util.UAHttpStatusUtil;
+    @Throws(RequestException::class)
+    fun fetchMessages(user: User, channelId: String, ifModifiedSince: String?): Response<JsonList> {
+        val userId = user.id ?: throw RequestException("Failed to delete messages! User ID cannot be null!")
+        val url = getUserApiUrl(userId, MESSAGES_PATH)
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+        val headers = mutableMapOf(
+            "Accept" to "application/vnd.urbanairship+json; version=3;",
+            CHANNEL_ID_HEADER to channelId
+        )
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+        ifModifiedSince?.let { headers["If-Modified-Since"] = it }
 
-/**
- * A high level abstraction for performing Inbox API requests.
- */
-public class InboxApiClient {
+        val request = Request(url, "GET", getUserAuth(user), null, headers.toMap())
 
-    private static final String USER_API_PATH = "api/user/";
-
-    private static final String DELETE_MESSAGES_PATH = "messages/delete/";
-    private static final String MARK_READ_MESSAGES_PATH = "messages/unread/";
-    private static final String MESSAGES_PATH = "messages/";
-
-    private static final String MESSAGES_REPORTINGS_KEY = "messages";
-    private static final String CHANNEL_ID_HEADER = "X-UA-Channel-ID";
-
-    private static final String PAYLOAD_AMAZON_CHANNELS_KEY = "amazon_channels";
-    private static final String PAYLOAD_ANDROID_CHANNELS_KEY = "android_channels";
-    private static final String PAYLOAD_ADD_KEY = "add";
-
-    @NonNull
-    private final AirshipRuntimeConfig runtimeConfig;
-    @NonNull
-    private final RequestSession session;
-
-    InboxApiClient(@NonNull AirshipRuntimeConfig runtimeConfig) {
-        this(runtimeConfig, runtimeConfig.getRequestSession());
+        return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
+            return@execute if (UAHttpStatusUtil.inSuccessRange(status)) {
+                JsonValue.parseString(responseBody).optMap().opt("messages").requireList()
+            } else {
+                throw RequestException("Failed to fetch messages!")
+            }
+        }
     }
 
-    InboxApiClient(@NonNull AirshipRuntimeConfig runtimeConfig, @NonNull RequestSession session) {
-        this.runtimeConfig = runtimeConfig;
-        this.session = session;
+    @Throws(RequestException::class)
+    fun syncDeletedMessageState(
+        user: User, channelId: String, reportingsToDelete: List<JsonValue>
+    ): Response<Unit> {
+        val userId = user.id ?: throw RequestException("Failed to delete messages! User ID cannot be null!")
+        val url = getUserApiUrl(userId, DELETE_MESSAGES_PATH)
+
+        val payload = jsonMapOf(MESSAGES_REPORTINGS_KEY to JsonValue.wrapOpt(reportingsToDelete))
+
+        UALog.v { "Deleting inbox messages with payload: $payload" }
+
+        val headers = mapOf(
+            "Accept" to "application/vnd.urbanairship+json; version=3;",
+            CHANNEL_ID_HEADER to channelId
+        )
+
+        val request = Request(url, "POST", getUserAuth(user), RequestBody.Json(payload), headers)
+
+        return session.execute(request)
     }
 
-    @NonNull
-    Response<JsonList> fetchMessages(@NonNull User user, @NonNull String channelId, @Nullable String ifModifiedSince) throws RequestException {
-        Uri url = getUserApiUrl(user.getId(), MESSAGES_PATH);
+    @Throws(RequestException::class)
+    fun syncReadMessageState(
+        user: User, channelId: String, reportingsToUpdate: List<JsonValue>
+    ): Response<Unit> {
+        val userId = user.id ?: throw RequestException("Failed to delete messages! User ID cannot be null!")
+        val url = getUserApiUrl(userId, MARK_READ_MESSAGES_PATH)
 
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
-        headers.put(CHANNEL_ID_HEADER, channelId);
+        val payload = jsonMapOf(MESSAGES_REPORTINGS_KEY to JsonValue.wrapOpt(reportingsToUpdate))
 
-        if (ifModifiedSince != null) {
-            headers.put("If-Modified-Since", ifModifiedSince);
+        UALog.v { "Marking inbox messages read request with payload: $payload" }
+
+        val headers = mapOf(
+            "Accept" to "application/vnd.urbanairship+json; version=3;",
+            CHANNEL_ID_HEADER to channelId
+        )
+
+        val request = Request(url, "POST", getUserAuth(user), RequestBody.Json(payload), headers)
+
+        return session.execute(request)
+    }
+
+    @Throws(RequestException::class)
+    fun createUser(channelId: String): Response<UserCredentials> {
+        val url = getUserApiUrl()
+
+        val payload = JsonMap.newBuilder().putOpt(payloadChannelsKey, listOf(channelId)).build()
+
+        UALog.v("Creating Rich Push user with payload: %s", payload)
+
+        val headers = mapOf(
+            "Accept" to "application/vnd.urbanairship+json; version=3;",
+            CHANNEL_ID_HEADER to channelId
+        )
+
+        val request = Request(url, "POST", ChannelTokenAuth(channelId), RequestBody.Json(payload), headers)
+
+        return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
+            return@execute if (UAHttpStatusUtil.inSuccessRange(status)) {
+                val credentials = JsonValue.parseString(responseBody).requireMap()
+                val userId = credentials.requireField<String>("user_id")
+                val userToken = credentials.requireField<String>("password")
+                UserCredentials(userId, userToken)
+            } else {
+                throw RequestException("Failed to create user")
+            }
         }
 
-        Request request = new Request(
-                url,
-                "GET",
-                getUserAuth(user),
-                null,
-                headers
-        );
-
-        return session.execute(request, (status, responseHeaders, responseBody) -> {
-            if (!UAHttpStatusUtil.inSuccessRange(status)) {
-                return null;
-            }
-            return JsonValue.parseString(responseBody).optMap().opt("messages").requireList();
-        });
     }
 
-    @NonNull
-    Response<Void> syncDeletedMessageState(@NonNull User user, @NonNull String channelId, @NonNull List<JsonValue> reportingsToDelete) throws RequestException {
-        Uri url = getUserApiUrl(user.getId(), DELETE_MESSAGES_PATH);
+    @Throws(RequestException::class)
+    fun updateUser(user: User, channelId: String): Response<Unit> {
+        val userId = user.id ?: throw RequestException("Failed to update user! User ID cannot be null!")
+        val url = getUserApiUrl(userId)
 
-        JsonMap payload = JsonMap.newBuilder()
-                                 .put(MESSAGES_REPORTINGS_KEY, JsonValue.wrapOpt(reportingsToDelete))
-                                 .build();
+        val payload = jsonMapOf(payloadChannelsKey to jsonMapOf(PAYLOAD_ADD_KEY to listOf(channelId)))
 
-        UALog.v("Deleting inbox messages with payload: %s", payload);
+        UALog.v { "Updating user with payload: $payload" }
 
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
-        headers.put(CHANNEL_ID_HEADER, channelId);
+        val headers = mapOf(
+            "Accept" to "application/vnd.urbanairship+json; version=3;",
+            CHANNEL_ID_HEADER to channelId
+        )
 
-        Request request = new Request(
-                url,
-                "POST",
-                getUserAuth(user),
-                new RequestBody.Json(payload),
-                headers
-        );
+        val request = Request(url, "POST", getUserAuth(user), RequestBody.Json(payload), headers)
 
-        return session.execute(request, (status, responseHeaders, responseBody) -> null);
-    }
-
-    @NonNull
-    Response<Void> syncReadMessageState(@NonNull User user, @NonNull String channelId, @NonNull List<JsonValue> reportingsToUpdate) throws RequestException {
-        Uri url = getUserApiUrl(user.getId(), MARK_READ_MESSAGES_PATH);
-
-        JsonMap payload = JsonMap.newBuilder()
-                                 .put(MESSAGES_REPORTINGS_KEY, JsonValue.wrapOpt(reportingsToUpdate))
-                                 .build();
-
-        UALog.v("Marking inbox messages read request with payload: %s", payload);
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
-        headers.put(CHANNEL_ID_HEADER, channelId);
-
-        Request request = new Request(
-                url,
-                "POST",
-                getUserAuth(user),
-                new RequestBody.Json(payload),
-                headers
-        );
-
-        return session.execute(request, (status, responseHeaders, responseBody) -> null);
-    }
-
-    @NonNull
-    Response<UserCredentials> createUser(@NonNull String channelId) throws RequestException {
-        Uri url = getUserApiUrl();
-
-        JsonMap payload = JsonMap.newBuilder()
-                                 .putOpt(getPayloadChannelsKey(), Collections.singletonList(channelId))
-                                 .build();
-
-        UALog.v("Creating Rich Push user with payload: %s", payload);
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
-        headers.put(CHANNEL_ID_HEADER, channelId);
-
-        Request request = new Request(
-                url,
-                "POST",
-                new RequestAuth.ChannelTokenAuth(channelId),
-                new RequestBody.Json(payload),
-                headers
-        );
-
-        return session.execute(request, (status, responseHeaders, responseBody) -> {
-            if (!UAHttpStatusUtil.inSuccessRange(status)) {
-                return null;
-            }
-            JsonMap credentials = JsonValue.parseString(responseBody).requireMap();
-            String userId = credentials.opt("user_id").requireString();
-            String userToken = credentials.opt("password").requireString();
-            return new UserCredentials(userId, userToken);
-        });
-    }
-
-    @NonNull
-    Response<Void> updateUser(@NonNull User user, @NonNull String channelId) throws RequestException {
-        Uri url = getUserApiUrl(user.getId());
-
-        JsonMap payload = JsonMap.newBuilder()
-                                 .putOpt(
-                                         getPayloadChannelsKey(),
-                                         JsonMap.newBuilder()
-                                                .putOpt(PAYLOAD_ADD_KEY, Collections.singletonList(channelId))
-                                                .build()
-                                 )
-                                 .build();
-
-        UALog.v("Updating user with payload: %s", payload);
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Accept", "application/vnd.urbanairship+json; version=3;");
-        headers.put(CHANNEL_ID_HEADER, channelId);
-
-        Request request = new Request(
-                url,
-                "POST",
-                getUserAuth(user),
-                new RequestBody.Json(payload),
-                headers
-        );
-
-        return session.execute(request, (status, responseHeaders, responseBody) -> null);
+        return session.execute(request)
     }
 
     /**
@@ -206,46 +144,52 @@ public class InboxApiClient {
      * @param paths Additional paths.
      * @return The URL or null if an error occurred.
      */
-    @Nullable
-    private Uri getUserApiUrl(@NonNull String... paths) {
-        UrlBuilder builder = runtimeConfig.getDeviceUrl().appendEncodedPath(USER_API_PATH);
+    private fun getUserApiUrl(vararg paths: String): Uri? {
+        val builder = runtimeConfig.deviceUrl.appendEncodedPath(USER_API_PATH)
 
-        for (String path : paths) {
+        for (p in paths) {
+            var path = p
             if (!path.endsWith("/")) {
-                path = path + "/";
+                path = "$path/"
             }
-            builder.appendEncodedPath(path);
+            builder.appendEncodedPath(path)
         }
 
-        return builder.build();
+        return builder.build()
     }
 
-
-    /**
-     * Get the payload channels key based on the platform.
-     *
-     * @return The payload channels key as a string.
-     */
-    @NonNull
-    private String getPayloadChannelsKey() throws RequestException {
-        switch (runtimeConfig.getPlatform()) {
-            case UAirship.AMAZON_PLATFORM:
-                return PAYLOAD_AMAZON_CHANNELS_KEY;
-            case UAirship.ANDROID_PLATFORM:
-                return PAYLOAD_ANDROID_CHANNELS_KEY;
-            default:
-                throw new RequestException("Invalid platform");
+    /** The payload channels key based on the platform. */
+    @get:Throws(RequestException::class)
+    private val payloadChannelsKey: String
+        get() = when (runtimeConfig.platform) {
+            UAirship.AMAZON_PLATFORM -> PAYLOAD_AMAZON_CHANNELS_KEY
+            UAirship.ANDROID_PLATFORM -> PAYLOAD_ANDROID_CHANNELS_KEY
+            else -> throw RequestException("Invalid platform")
         }
-    }
 
-    @NonNull
-    private RequestAuth getUserAuth(@NonNull User user) throws RequestException {
-        String userId = user.getId();
-        String userPassword = user.getPassword();
+    @Throws(RequestException::class)
+    private fun getUserAuth(user: User): RequestAuth {
+        val userId = user.id
+        val userPassword = user.password
         if (userId == null || userPassword == null) {
-            throw new RequestException("Missing user credentials");
+            throw RequestException("Missing user credentials")
         }
-        return new RequestAuth.BasicAuth(userId, userPassword);
+        return BasicAuth(userId, userPassword)
     }
 
+    private companion object {
+
+        private const val USER_API_PATH = "api/user/"
+
+        private const val DELETE_MESSAGES_PATH = "messages/delete/"
+        private const val MARK_READ_MESSAGES_PATH = "messages/unread/"
+        private const val MESSAGES_PATH = "messages/"
+
+        private const val MESSAGES_REPORTINGS_KEY = "messages"
+        private const val CHANNEL_ID_HEADER = "X-UA-Channel-ID"
+
+        private const val PAYLOAD_AMAZON_CHANNELS_KEY = "amazon_channels"
+        private const val PAYLOAD_ANDROID_CHANNELS_KEY = "android_channels"
+        private const val PAYLOAD_ADD_KEY = "add"
+    }
 }
