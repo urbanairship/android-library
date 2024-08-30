@@ -233,8 +233,8 @@ public class InboxTest {
         assertEquals(7, inbox.unreadCount.toLong())
         assertEquals(3, inbox.readCount.toLong())
 
-        val readMessages = createIdToMessageMap(inbox.readMessages)
-        val unreadMessages = createIdToMessageMap(inbox.unreadMessages)
+        val readMessages = createIdToMessageMap(inbox.getReadMessages())
+        val unreadMessages = createIdToMessageMap(inbox.getUnreadMessages())
 
         // Verify the read message are in the right lists
         for (readId: String in markedReadIds) {
@@ -354,7 +354,7 @@ public class InboxTest {
         val cancelable = inbox.fetchMessages(callback)
 
         assertNotNull(cancelable)
-        cancelable!!.cancel()
+        cancelable.cancel()
 
         verify {
             mockDispatcher.dispatch(withArg { jobInfo ->
@@ -388,7 +388,7 @@ public class InboxTest {
         // Mark messages read
         inbox.markMessagesRead(messageIds)
 
-        val unreadMessages = inbox.unreadMessages
+        val unreadMessages = inbox.getUnreadMessages()
         assertEquals(unreadMessages.size.toLong(), 6)
 
         val filteredMessages = inbox.getUnreadMessages(testPredicate)
@@ -409,7 +409,7 @@ public class InboxTest {
         // Mark messages read
         inbox.markMessagesRead(messageIds)
 
-        val readMessages = inbox.readMessages
+        val readMessages = inbox.getReadMessages()
         assertEquals(readMessages.size, 4)
 
         val filteredMessages = inbox.getReadMessages(testPredicate)

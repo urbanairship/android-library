@@ -20,8 +20,12 @@ public class MessageDaoTest {
     private val db = MessageDatabase.createInMemoryDatabase(context)
     private val messageDao: MessageDao = db.dao
 
-    private val entity = MessageEntity.createMessageFromPayload(messageId, messageJson)
-    private val entity2 = MessageEntity.createMessageFromPayload(messageId2, messageJson2)
+    private val entity = requireNotNull(
+        MessageEntity.createMessageFromPayload(messageId, messageJson)
+    )
+    private val entity2 = requireNotNull(
+        MessageEntity.createMessageFromPayload(messageId2, messageJson2)
+    )
 
     @Before
     @Throws(JsonException::class)

@@ -26,7 +26,7 @@ public class User internal constructor(
     }
 
     /** A listener interface for receiving events for user updates. */
-    public interface Listener {
+    public fun interface Listener {
 
         /**
          * Called when the user is updated.

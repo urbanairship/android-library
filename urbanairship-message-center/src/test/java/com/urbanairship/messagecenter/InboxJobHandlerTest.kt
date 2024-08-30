@@ -13,6 +13,7 @@ import com.urbanairship.http.Response
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.InboxJobHandler.Companion.ACTION_RICH_PUSH_MESSAGES_UPDATE
 import com.urbanairship.messagecenter.InboxJobHandler.Companion.ACTION_RICH_PUSH_USER_UPDATE
@@ -20,6 +21,9 @@ import com.urbanairship.messagecenter.InboxJobHandler.Companion.LAST_MESSAGE_REF
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import java.net.HttpURLConnection
+import java.net.HttpURLConnection.HTTP_INTERNAL_ERROR
+import java.net.HttpURLConnection.HTTP_NOT_MODIFIED
+import java.net.HttpURLConnection.HTTP_OK
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
@@ -120,7 +124,7 @@ public class InboxJobHandlerTest {
         // Return a 304 response
         every {
             mockInboxApiClient.fetchMessages(user, "channelId", "some last modified")
-        } returns Response(HttpURLConnection.HTTP_NOT_MODIFIED, null)
+        } returns Response(HTTP_NOT_MODIFIED, JsonList.EMPTY_LIST)
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_MESSAGES_UPDATE).build()
 
@@ -156,10 +160,10 @@ public class InboxJobHandlerTest {
         every {
             mockInboxApiClient.fetchMessages(user, "channelId", "some last modified")
         } returns Response(
-            HttpURLConnection.HTTP_OK,
-            JsonValue.parseString(responseBody).optMap().opt("messages").list,
-            responseBody,
-            responseHeaders
+            status = HTTP_OK,
+            result = JsonValue.parseString(responseBody).optMap().opt("messages").requireList(),
+            body = responseBody,
+            headers = responseHeaders
         )
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_MESSAGES_UPDATE).build()
@@ -202,10 +206,10 @@ public class InboxJobHandlerTest {
         every {
             mockInboxApiClient.fetchMessages(user, "channelId", "some last modified")
         } returns Response(
-            HttpURLConnection.HTTP_OK,
-            JsonValue.parseString(responseBody).optMap().opt("messages").list,
-            responseBody,
-            emptyMap()
+            status = HTTP_OK,
+            result = JsonValue.parseString(responseBody).optMap().opt("messages").requireList(),
+            body = responseBody,
+            headers = emptyMap()
         )
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_MESSAGES_UPDATE).build()
@@ -238,7 +242,7 @@ public class InboxJobHandlerTest {
         // Return a 500 internal server error
         every {
             mockInboxApiClient.fetchMessages(user, "channelId", "some last modified")
-        } returns Response(HttpURLConnection.HTTP_INTERNAL_ERROR, null, "{ failed }")
+        } returns Response(HTTP_INTERNAL_ERROR, JsonList.EMPTY_LIST, "{ failed }")
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_MESSAGES_UPDATE).build()
 
@@ -272,34 +276,38 @@ public class InboxJobHandlerTest {
         every {
             mockInboxApiClient.fetchMessages(user, "channelId", "some last modified")
         } returns Response(
-            HttpURLConnection.HTTP_OK,
-            JsonValue.parseString(responseBody).optMap().opt("messages").list,
-            responseBody,
-            emptyMap()
+            status = HTTP_OK,
+            result = JsonValue.parseString(responseBody).optMap().opt("messages").requireList(),
+            body = responseBody,
+            headers = emptyMap()
         )
 
         val idsToDelete = ArrayList<String>()
         val messageToDelete = createFakeMessage("id1", false, true)
         val messageToDelete2 = createFakeMessage("id2", false, true)
-        val messageCollection = ArrayList<MessageEntity?>()
-        val reportingsToDelete: MutableList<JsonValue?> = ArrayList()
+        val messageCollection = mutableListOf<MessageEntity>()
+        val reportingsToDelete: MutableList<JsonValue> = ArrayList()
 
         messageCollection.add(
-            MessageEntity.createMessageFromPayload(
-                messageToDelete!!.messageId,
-                messageToDelete.rawMessageJson
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToDelete!!.messageId,
+                    messageToDelete.rawMessageJson
+                )
             )
         )
 
         messageCollection.add(
-            MessageEntity.createMessageFromPayload(
-                messageToDelete2!!.messageId,
-                messageToDelete2.rawMessageJson
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToDelete2!!.messageId,
+                    messageToDelete2.rawMessageJson
+                )
             )
         )
 
         for (message in messageCollection) {
-            reportingsToDelete.add(message!!.messageReporting)
+            message.messageReporting?.let { reportingsToDelete.add(it) }
             idsToDelete.add(message.getMessageId())
         }
 
@@ -308,7 +316,7 @@ public class InboxJobHandlerTest {
         // Return a 500 internal server error
         every {
             mockInboxApiClient.syncDeletedMessageState(user, "channelId", reportingsToDelete)
-        } returns Response(HttpURLConnection.HTTP_INTERNAL_ERROR, null, "{ failed }")
+        } returns Response(HTTP_INTERNAL_ERROR, Unit, "{ failed }")
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_MESSAGES_UPDATE).build()
 
@@ -336,28 +344,37 @@ public class InboxJobHandlerTest {
         every {
             mockInboxApiClient.fetchMessages(user, "channelId", "some last modified")
         } returns Response(
-            HttpURLConnection.HTTP_OK,
-            JsonValue.parseString(responseBody).optMap().opt("messages").list,
-            responseBody,
-            emptyMap()
+            status = HTTP_OK,
+            result = JsonValue.parseString(responseBody).optMap().opt("messages").requireList(),
+            body = responseBody,
+            headers = emptyMap()
         )
 
         val idsToDelete = ArrayList<String>()
-        val reportingsToDelete: MutableList<JsonValue?> = ArrayList()
-        val messageToDelete = createFakeMessage("id1", false, true)
-        val messageToDelete2 = createFakeMessage("id2", false, true)
-        val messagesToDelete = ArrayList<MessageEntity?>()
-
-        messagesToDelete.add(
-            MessageEntity.createMessageFromPayload(messageToDelete!!.messageId, messageToDelete.rawMessageJson)
+        val reportingsToDelete: MutableList<JsonValue> = ArrayList()
+        val messageToDelete = requireNotNull(
+            createFakeMessage(messageId = "id1", unread = false, deleted = true)
         )
-
-        messagesToDelete.add(
-            MessageEntity.createMessageFromPayload(messageToDelete2!!.messageId, messageToDelete2.rawMessageJson)
+        val messageToDelete2 = requireNotNull(
+            createFakeMessage(messageId = "id2", unread = false, deleted = true)
+        )
+        val messagesToDelete = listOf(
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToDelete.messageId,
+                    messageToDelete.rawMessageJson
+                )
+            ),
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToDelete2.messageId,
+                    messageToDelete2.rawMessageJson
+                )
+            )
         )
 
         for (message in messagesToDelete) {
-            reportingsToDelete.add(message!!.messageReporting)
+            message.messageReporting?.let { reportingsToDelete.add(it) }
             idsToDelete.add(message.getMessageId())
         }
 
@@ -366,7 +383,7 @@ public class InboxJobHandlerTest {
         // Return a 200 message list response with messages
         every {
             mockInboxApiClient.syncDeletedMessageState(user, "channelId", reportingsToDelete)
-        } returns Response(HttpURLConnection.HTTP_OK, null)
+        } returns Response(HTTP_OK, Unit)
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_MESSAGES_UPDATE).build()
 
@@ -394,28 +411,37 @@ public class InboxJobHandlerTest {
         every {
             mockInboxApiClient.fetchMessages(user, "channelId", "some last modified")
         } returns Response(
-            HttpURLConnection.HTTP_OK,
-            JsonValue.parseString(responseBody).optMap().opt("messages").list,
-            responseBody,
-            emptyMap()
+            status = HTTP_OK,
+            result = JsonValue.parseString(responseBody).optMap().opt("messages").requireList(),
+            body = responseBody,
+            headers = emptyMap()
         )
 
         val idsToUpdate = ArrayList<String>()
-        val reportingsToUpdate: MutableList<JsonValue?> = ArrayList()
-        val messageToUpdate = createFakeMessage("id1", false, false)
-        val messageToUpdate2 = createFakeMessage("id2", false, false)
-        val messagesToUpdate = ArrayList<MessageEntity?>()
-
-        messagesToUpdate.add(
-            MessageEntity.createMessageFromPayload(messageToUpdate!!.messageId, messageToUpdate.rawMessageJson)
+        val reportingsToUpdate: MutableList<JsonValue> = ArrayList()
+        val messageToUpdate = requireNotNull(
+            createFakeMessage(messageId = "id1", unread = false, deleted = false)
         )
-
-        messagesToUpdate.add(
-            MessageEntity.createMessageFromPayload(messageToUpdate2!!.messageId, messageToUpdate2.rawMessageJson)
+        val messageToUpdate2 = requireNotNull(
+            createFakeMessage(messageId = "id2", unread = false, deleted = false)
+        )
+        val messagesToUpdate = listOf(
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToUpdate.messageId,
+                    messageToUpdate.rawMessageJson
+                )
+            ),
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToUpdate2.messageId,
+                    messageToUpdate2.rawMessageJson
+                )
+            )
         )
 
         for (message in messagesToUpdate) {
-            reportingsToUpdate.add(message!!.messageReporting)
+            message.messageReporting?.let { reportingsToUpdate.add(it) }
             idsToUpdate.add(message.getMessageId())
         }
 
@@ -424,7 +450,7 @@ public class InboxJobHandlerTest {
         // Return a 500 internal server error
         every {
             mockInboxApiClient.syncReadMessageState(user, "channelId", reportingsToUpdate)
-        } returns Response(HttpURLConnection.HTTP_INTERNAL_ERROR, null, "{ failed }")
+        } returns Response(HTTP_INTERNAL_ERROR, Unit, "{ failed }")
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_MESSAGES_UPDATE).build()
 
@@ -452,26 +478,26 @@ public class InboxJobHandlerTest {
         every {
             mockInboxApiClient.fetchMessages(user, "channelId", "some last modified")
         } returns Response(
-            HttpURLConnection.HTTP_OK,
-            JsonValue.parseString(responseBody).optMap().opt("messages").list,
-            responseBody,
-            emptyMap()
+            status = HTTP_OK,
+            result = JsonValue.parseString(responseBody).optMap().opt("messages").requireList(),
+            body = responseBody,
+            headers = emptyMap()
         )
 
         val idsToUpdate = ArrayList<String>()
-        val reportingsToUpdate: MutableList<JsonValue?> = ArrayList()
+        val reportingsToUpdate: MutableList<JsonValue> = ArrayList()
         val messageToUpdate = createFakeMessage("id1", false, false)
-        val messagesToUpdate = ArrayList<MessageEntity?>()
-
-        messagesToUpdate.add(
-            MessageEntity.createMessageFromPayload(
-                messageToUpdate!!.messageId,
-                messageToUpdate.rawMessageJson
+        val messagesToUpdate = listOf(
+            requireNotNull(
+                MessageEntity.createMessageFromPayload(
+                    messageToUpdate!!.messageId,
+                    messageToUpdate.rawMessageJson
+                )
             )
         )
 
         for (message in messagesToUpdate) {
-            reportingsToUpdate.add(message!!.messageReporting)
+            message.messageReporting?.let { reportingsToUpdate.add(it) }
             idsToUpdate.add(message.getMessageId())
         }
 
@@ -480,7 +506,7 @@ public class InboxJobHandlerTest {
         // Return a 200 message list response with messages
         every {
             mockInboxApiClient.syncReadMessageState(user, "channelId", reportingsToUpdate)
-        } returns Response(HttpURLConnection.HTTP_OK, null, "{ \"messages\": []}")
+        } returns Response(HTTP_OK, Unit, "{ \"messages\": []}")
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_MESSAGES_UPDATE).build()
 
@@ -506,9 +532,9 @@ public class InboxJobHandlerTest {
         every {
             mockInboxApiClient.createUser("channelId")
         } returns Response(
-            HttpURLConnection.HTTP_CREATED,
-            UserCredentials("someUserId", "someUserToken"),
-            responseBody
+            status = HttpURLConnection.HTTP_CREATED,
+            result = UserCredentials("someUserId", "someUserToken"),
+            body = responseBody
         )
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_USER_UPDATE).build()
@@ -535,9 +561,9 @@ public class InboxJobHandlerTest {
         every {
             mockInboxApiClient.createUser("channelId")
         } returns Response(
-            HttpURLConnection.HTTP_CREATED,
-            UserCredentials("someUserId", "someUserToken"),
-            responseBody
+            status = HttpURLConnection.HTTP_CREATED,
+            result = UserCredentials("someUserId", "someUserToken"),
+            body = responseBody
         )
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_USER_UPDATE).build()
@@ -557,9 +583,7 @@ public class InboxJobHandlerTest {
     public fun testCreateUserNoChannel() {
         every { mockChannel.id } returns null
 
-        val jobInfo = JobInfo.newBuilder()
-            .setAction(ACTION_RICH_PUSH_USER_UPDATE)
-            .build()
+        val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_USER_UPDATE).build()
 
         assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo))
         assertFalse(userListener.lastUpdateUserResult == true)
@@ -580,7 +604,7 @@ public class InboxJobHandlerTest {
         // Set a error response
         every {
             mockInboxApiClient.createUser("channelId")
-        } returns Response(HttpURLConnection.HTTP_INTERNAL_ERROR, null)
+        } throws RequestException("Failed to create user")
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_USER_UPDATE).build()
 
@@ -608,7 +632,7 @@ public class InboxJobHandlerTest {
         // Set a successful response
         every {
             mockInboxApiClient.updateUser(user, "channelId")
-        } returns Response(HttpURLConnection.HTTP_OK, null, "{ \"ok\" }")
+        } returns Response(HTTP_OK, Unit, "{ \"ok\" }")
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_USER_UPDATE).build()
 
@@ -631,7 +655,7 @@ public class InboxJobHandlerTest {
         // Set a successful response
         every {
             mockInboxApiClient.updateUser(user, "channelId")
-        } returns Response(HttpURLConnection.HTTP_OK, null, "{ \"ok\" }")
+        } returns Response(HTTP_OK, Unit, "{ \"ok\" }")
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_USER_UPDATE).build()
 
@@ -669,7 +693,7 @@ public class InboxJobHandlerTest {
         // Set a error response
         every {
             mockInboxApiClient.updateUser(user, "channelId")
-        } returns Response(HttpURLConnection.HTTP_INTERNAL_ERROR, null)
+        } returns Response(HTTP_INTERNAL_ERROR, Unit)
 
         val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_USER_UPDATE).build()
 
@@ -697,7 +721,7 @@ public class InboxJobHandlerTest {
         // Set error response for user update
         every {
             mockInboxApiClient.updateUser(user, channelId)
-        } returns Response(HttpURLConnection.HTTP_UNAUTHORIZED, null)
+        } returns Response(HttpURLConnection.HTTP_UNAUTHORIZED, Unit)
 
         // Set success response for user create
         val result = UserCredentials(recreatedUserId, recreatedToken)
@@ -709,9 +733,7 @@ public class InboxJobHandlerTest {
             mockInboxApiClient.createUser(channelId)
         } returns Response(HttpURLConnection.HTTP_CREATED, result, responseBody)
 
-        val jobInfo = JobInfo.newBuilder()
-            .setAction(ACTION_RICH_PUSH_USER_UPDATE)
-            .build()
+        val jobInfo = JobInfo.newBuilder().setAction(ACTION_RICH_PUSH_USER_UPDATE).build()
 
         assertEquals(JobResult.SUCCESS, jobHandler.performJob(jobInfo))
         assertTrue(userListener.lastUpdateUserResult == true)

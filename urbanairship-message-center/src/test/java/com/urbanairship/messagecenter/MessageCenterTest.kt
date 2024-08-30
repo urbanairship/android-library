@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.Cancelable
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestAirshipRuntimeConfig
@@ -44,7 +45,9 @@ public class MessageCenterTest {
        every { isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns true
     }
     private val pushManager = mockk<PushManager>(relaxUnitFun = true) {}
-    private val inbox = mockk<Inbox>(relaxUnitFun = true) {}
+    private val inbox = mockk<Inbox>(relaxUnitFun = true) {
+        every { fetchMessages() } returns mockk<Cancelable>(relaxUnitFun = true)
+    }
     private val onShowMessageCenterListener = mockk<OnShowMessageCenterListener> {}
     private val config = TestAirshipRuntimeConfig()
 
@@ -56,7 +59,7 @@ public class MessageCenterTest {
 
     @Before
     public fun setup() {
-        messageCenter.init()
+        messageCenter.initialize()
 
         val pushListenerSlot = slot<PushListener>()
         verify { pushManager.addInternalPushListener(capture(pushListenerSlot)) }
