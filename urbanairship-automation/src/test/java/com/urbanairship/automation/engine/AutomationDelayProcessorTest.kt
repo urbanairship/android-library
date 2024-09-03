@@ -7,28 +7,28 @@ import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.AutomationAppState
 import com.urbanairship.automation.AutomationDelay
-import com.urbanairship.util.Clock
+import com.urbanairship.automation.ExecutionWindow
+import com.urbanairship.automation.ExecutionWindowProcessor
+import com.urbanairship.automation.Rule
 import com.urbanairship.util.TaskSleeper
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
+import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -65,9 +65,12 @@ public class AutomationDelayProcessorTest {
         }
     )
 
+    private val executionWindowProcessor: ExecutionWindowProcessor = mockk()
+
     private val processor =  AutomationDelayProcessor(
         analytics = analytics,
         activityMonitor = activityMonitor,
+        executionWindowProcessor = executionWindowProcessor,
         clock = clock,
         sleeper = sleeper
     )
@@ -104,6 +107,39 @@ public class AutomationDelayProcessorTest {
         coVerify {
             sleeper.sleep(100.seconds)
         }
+    }
+
+    @Test
+    public fun testProcess(): TestResult = runTest {
+        val executionWindow = ExecutionWindow(
+            includes = listOf(Rule.Weekly(daysOfWeek = listOf(1)))
+        )
+
+        val delay = AutomationDelay(
+            seconds = 100,
+            screens = listOf("screen1", "screen2"),
+            regionId = "region1",
+            appState = AutomationAppState.FOREGROUND,
+            executionWindow = executionWindow
+        )
+
+        coEvery { executionWindowProcessor.isActive(any()) } returns true
+
+        startProcessing(delay, this).test {
+            assertFalse(awaitItem())
+            screenState.value = "screen1"
+            expectNoEvents()
+            regionState.value = setOf("region1")
+            expectNoEvents()
+            foregroundState.value = true
+            assertTrue(awaitItem())
+        }
+
+        coVerify {
+            sleeper.sleep(100.seconds)
+        }
+
+        coVerify { executionWindowProcessor.isActive(executionWindow) }
     }
 
     @Test

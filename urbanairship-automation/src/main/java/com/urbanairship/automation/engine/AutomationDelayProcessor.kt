@@ -2,14 +2,15 @@
 
 package com.urbanairship.automation.engine
 
+import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
-import com.urbanairship.UALog
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.AutomationAppState
 import com.urbanairship.automation.AutomationDelay
-import com.urbanairship.util.TaskSleeper
+import com.urbanairship.automation.ExecutionWindowProcessor
 import com.urbanairship.util.Clock
+import com.urbanairship.util.TaskSleeper
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
@@ -24,12 +25,14 @@ import kotlinx.coroutines.yield
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface AutomationDelayProcessorInterface {
     suspend fun process(delay: AutomationDelay?, triggerDate: Long)
+    @MainThread
     fun areConditionsMet(delay: AutomationDelay?): Boolean
 }
 
 internal class AutomationDelayProcessor(
     private val analytics: Analytics,
     private val activityMonitor: ActivityMonitor,
+    private val executionWindowProcessor: ExecutionWindowProcessor,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val sleeper: TaskSleeper = TaskSleeper.default
 ) : AutomationDelayProcessorInterface {
@@ -71,12 +74,17 @@ internal class AutomationDelayProcessor(
                     it.contains(delay.regionId)
                 }.first()
             }
+
+            if (delay.executionWindow != null) {
+                executionWindowProcessor.process(delay.executionWindow)
+            }
         }
     }
 
     override fun areConditionsMet(delay: AutomationDelay?): Boolean {
         if (delay == null) {  return true  }
-        return isAppStateMatch(delay) && isScreenMatch(delay) && isRegionMatch(delay)
+        return isAppStateMatch(delay) && isScreenMatch(delay)
+                && isRegionMatch(delay) && isDisplayWindowMatch(delay)
     }
 
     private fun isAppStateMatch(delay: AutomationDelay): Boolean {
@@ -92,6 +100,11 @@ internal class AutomationDelayProcessor(
     private fun isRegionMatch(delay: AutomationDelay): Boolean {
         if (delay.regionId.isNullOrEmpty()) { return true }
         return analytics.regionState.value.contains(delay.regionId)
+    }
+
+    private fun isDisplayWindowMatch(delay: AutomationDelay): Boolean {
+        val window = delay.executionWindow ?: return true
+        return executionWindowProcessor.isActive(window)
     }
 
     private fun remainingSeconds(delay: AutomationDelay, triggerDate: Long): Long {

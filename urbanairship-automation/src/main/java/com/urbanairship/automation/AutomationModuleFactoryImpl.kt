@@ -140,7 +140,10 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 eventFeed = eventFeed
             ),
             triggerProcessor = AutomationTriggerProcessor(automationStore),
-            delayProcessor = AutomationDelayProcessor(analytics, activityMonitor),
+            delayProcessor = AutomationDelayProcessor(
+                analytics = analytics,
+                activityMonitor = activityMonitor,
+                executionWindowProcessor = ExecutionWindowProcessor(context)),
             automationStoreMigrator = AutomationStoreMigrator(
                 legacyDatabase = AutomationDatabase.createDatabase(context, runtimeConfig),
                 automationStore
