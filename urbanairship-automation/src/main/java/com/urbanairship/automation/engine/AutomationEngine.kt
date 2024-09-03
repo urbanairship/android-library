@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation.engine
 
+import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
@@ -12,8 +13,8 @@ import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.updateOrCreate
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
-import com.urbanairship.util.TaskSleeper
 import com.urbanairship.util.Clock
+import com.urbanairship.util.TaskSleeper
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -24,9 +25,7 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.skip
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -83,6 +82,7 @@ internal class AutomationEngine(
     private var isPaused = MutableStateFlow(false)
     private var isExecutionPaused = MutableStateFlow(false)
     private var restoreState = MutableStateFlow(ScheduleRestoreState.IDLE)
+    private var pendingExecution = MutableStateFlow(setOf<PreparedData>())
 
     @VisibleForTesting
     internal fun isStarted(): Boolean = restoreState.value != ScheduleRestoreState.IDLE
@@ -134,6 +134,13 @@ internal class AutomationEngine(
                     if (isActive && !paused) {
                         scheduleConditionsChangedNotifier.notifyChanged()
                     }
+                }
+            }
+
+            launch {
+                pendingExecution.collect {
+                    UALog.d { "Processing pending execution queue update ${it.map { it.scheduleId }}" }
+                    processNextPendingExecution()
                 }
             }
         }
@@ -367,11 +374,108 @@ internal class AutomationEngine(
             return
         }
 
-        val (scheduleData, preparedSchedule) = prepareSchedule(data) ?: return
-        executeSchedule(scheduleData, preparedSchedule)
+        prepareSchedule(data)?.let { processPrepared(it) }
     }
 
-    private suspend fun prepareSchedule(data: AutomationScheduleData): Pair<AutomationScheduleData, PreparedSchedule>? {
+    private suspend fun processPrepared(preparedData: PreparedData) {
+        waitForConditions(preparedData)
+
+        if (!checkStillValid(preparedData)) {
+            val updated = updateState(preparedData.scheduleId) {
+                it.executionInvalidated(clock.currentTimeMillis())
+            }
+
+            if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
+                startTaskToProcessTriggeredSchedule(preparedData.scheduleId)
+            } else {
+                preparer.cancelled(preparedData.schedule.schedule)
+            }
+
+            return
+        }
+
+        pendingExecution.update { value ->
+            value.toMutableSet().also { it.add(preparedData) }
+        }
+    }
+
+    private suspend fun processNextPendingExecution() {
+        val next = pendingExecution.value
+            .minByOrNull { it.priority } ?: return
+
+        UALog.d { "Processing next pending schedule for execution: ${next.schedule}" }
+
+        pendingExecution.update { value ->
+            value.toMutableSet().also { it.remove(next) }
+        }
+
+        val jobRan = MutableStateFlow(false)
+
+        scope.launch {
+            withContext(Dispatchers.Main) {
+                jobRan.update { true }
+                val isReady = checkStillValid(next) &&
+                        delayProcessor.areConditionsMet(next.schedule.schedule.delay)
+
+                if (!isReady) {
+                    UALog.v { "Schedule no loner ready for execution ${next.schedule}" }
+                    processPrepared(next)
+                } else {
+                    UALog.v { "Attempting to execute ${next.schedule}" }
+
+                    val handled = attemptExecute(next.schedule, next.preparedSchedule)
+                    UALog.v { "Execution attempt finished ${next.schedule}, success: $handled" }
+                    if (!handled) {
+                        pendingExecution.update { value ->
+                            value.toMutableSet().also { it.add(next) }
+                        }
+                    }
+                }
+            }
+        }
+
+        jobRan.first { it }
+    }
+
+    private suspend fun checkStillValid(prepared: PreparedData): Boolean {
+        // Make sure we are still up to date. Data might change due to a change
+        // in the data, schedule was cancelled, or if a delay cancellation trigger
+        // was fired.
+        val fromStore = store.getSchedule(prepared.scheduleId)
+        if (fromStore == null ||
+            fromStore.scheduleState != AutomationScheduleState.PREPARED ||
+            fromStore.schedule != prepared.schedule.schedule) {
+            UALog.v { "Prepared schedule no longer up to date, no longer valid ${prepared.schedule}" }
+            return false
+        }
+
+        if (!prepared.schedule.isActive(clock.currentTimeMillis())) {
+            UALog.v { "Prepared schedule no longer active, no longer valid ${prepared.schedule}" }
+            return false
+        }
+
+        if (!executor.isValid(prepared.schedule.schedule)) {
+            UALog.v { "Prepared schedule no longer valid ${prepared.schedule}" }
+            return false
+        }
+
+        return true
+    }
+
+    private suspend fun waitForConditions(preparedData: PreparedData) {
+        val triggerDate = preparedData.schedule.triggerInfo?.date ?: preparedData.schedule.scheduleStateChangeDate
+        // Wait for conditions
+        UALog.v { "Waiting for delay conditions $preparedData" }
+
+        delayProcessor.process(
+            delay = preparedData.schedule.schedule.delay,
+            triggerDate = triggerDate
+        )
+
+        UALog.v { "Delay conditions met $preparedData" }
+    }
+
+    private suspend fun prepareSchedule(data: AutomationScheduleData): PreparedData? {
         UALog.v { "Preparing schedule $data" }
 
         val result = preparer.prepare(data.schedule, data.triggerInfo?.context, data.triggerSessionId)
@@ -402,7 +506,7 @@ internal class AutomationEngine(
                 null
             }
             is SchedulePrepareResult.Prepared -> {
-                Pair(updated, result.schedule)
+                PreparedData(updated, result.schedule)
             }
             SchedulePrepareResult.Skip -> {
                 null
@@ -417,108 +521,89 @@ internal class AutomationEngine(
         }
     }
 
-    private suspend fun executeSchedule(data: AutomationScheduleData, preparedSchedule: PreparedSchedule) {
-        withContext(Dispatchers.Main) {
-            UALog.v { "Starting to execute schedule $data" }
+    @MainThread
+    private suspend fun attemptExecute(
+        data: AutomationScheduleData,
+        preparedSchedule: PreparedSchedule
+    ) : Boolean {
 
-            val scheduleID = data.schedule.identifier
-            while (true) {
-                when (checkReady(data, preparedSchedule)) {
-                    ScheduleReadyResult.READY -> {}
-                    ScheduleReadyResult.INVALIDATE -> {
-                        val updated = updateState(scheduleID) { it.executionInvalidated(clock.currentTimeMillis())}
-                        if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
-                            startTaskToProcessTriggeredSchedule(scheduleID)
-                        } else {
-                            preparer.cancelled(data.schedule)
-                        }
-                        return@withContext
-                    }
-                    ScheduleReadyResult.NOT_READY -> {
-                        scheduleConditionsChangedNotifier.wait()
-                        continue
-                    }
-                    ScheduleReadyResult.SKIP -> {
-                        updateState(scheduleID) { it.executionSkipped(clock.currentTimeMillis()) }
-                        preparer.cancelled(data.schedule)
-                        return@withContext
-                    }
+        val scheduleID = data.schedule.identifier
+        when (checkReady(data, preparedSchedule)) {
+            ScheduleReadyResult.READY -> {}
+            ScheduleReadyResult.INVALIDATE -> {
+                val updated =
+                    updateState(scheduleID) { it.executionInvalidated(clock.currentTimeMillis()) }
+                if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
+                    startTaskToProcessTriggeredSchedule(scheduleID)
+                } else {
+                    preparer.cancelled(data.schedule)
                 }
+                return true
+            }
 
-                UALog.v { "Executing schedule ${preparedSchedule.info.scheduleId}" }
+            ScheduleReadyResult.NOT_READY -> {
+                this.scheduleConditionsChangedNotifier.wait()
+                return false
+            }
 
-                val updateStateJob = async(dispatcher) {
-                    updateState(preparedSchedule.info.scheduleId) { it.executing(clock.currentTimeMillis()) }
-                }
-
-                val result = executor.execute(preparedSchedule)
-
-                updateStateJob.join()
-
-                UALog.v { "Executing result ${preparedSchedule.info.scheduleId} $result" }
-
-                when(result) {
-                    ScheduleExecuteResult.CANCEL -> {
-                        store.deleteSchedules(listOf(scheduleID))
-                        triggerProcessor.cancel(listOf(scheduleID))
-                    }
-                    ScheduleExecuteResult.FINISHED -> {
-                        val update = updateState(scheduleID) { it.finishedExecuting(clock.currentTimeMillis()) }
-                        if (update?.scheduleState == AutomationScheduleState.PAUSED) {
-                            val interval = update.schedule.interval?.toLong() ?: 0L
-                            handleInterval(interval, scheduleID)
-                        }
-                    }
-                    ScheduleExecuteResult.RETRY -> continue
-                }
-
-                return@withContext
+            ScheduleReadyResult.SKIP -> {
+                updateState(scheduleID) { it.executionSkipped(clock.currentTimeMillis()) }
+                preparer.cancelled(data.schedule)
+                return true
             }
         }
+
+        UALog.v { "Executing schedule ${preparedSchedule.info.scheduleId}" }
+
+        val updateStateJob = scope.launch {
+            updateState(preparedSchedule.info.scheduleId) { it.executing(clock.currentTimeMillis()) }
+        }
+
+        val result = executor.execute(preparedSchedule)
+
+        updateStateJob.join()
+
+        UALog.v { "Executing result ${preparedSchedule.info.scheduleId} $result" }
+
+        when (result) {
+            ScheduleExecuteResult.CANCEL -> {
+                store.deleteSchedules(listOf(scheduleID))
+                triggerProcessor.cancel(listOf(scheduleID))
+                return true
+            }
+
+            ScheduleExecuteResult.FINISHED -> {
+                val update =
+                    updateState(scheduleID) { it.finishedExecuting(clock.currentTimeMillis()) }
+                if (update?.scheduleState == AutomationScheduleState.PAUSED) {
+                    val interval = update.schedule.interval?.toLong() ?: 0L
+                    handleInterval(interval, scheduleID)
+                }
+                return true
+            }
+
+            ScheduleExecuteResult.RETRY -> return false
+        }
+
     }
 
-    private suspend fun checkReady(data: AutomationScheduleData, preparedSchedule: PreparedSchedule): ScheduleReadyResult {
+
+    private fun checkReady(data: AutomationScheduleData, preparedSchedule: PreparedSchedule): ScheduleReadyResult {
         UALog.v { "Checking if schedule is ready $data" }
 
-        val triggerDate = data.triggerInfo?.date ?: data.scheduleStateChangeDate
-        delayProcessor.process(data.schedule.delay, triggerDate)
-
-        UALog.v { "Delay conditions met $data" }
-
-        // Make sure we are still up to date. Data might change due to a change
-        // in the data, schedule was cancelled, or if a delay cancellation trigger
-        // was fired.
-        val stored = store.getSchedule(data.schedule.identifier)
-        if (stored?.scheduleState != AutomationScheduleState.PREPARED || stored.schedule != data.schedule) {
-            UALog.v { "Schedule no longer valid, invalidating $data" }
-            return ScheduleReadyResult.INVALIDATE
-        }
-
-        val precheckResult = executor.isReadyPrecheck(data.schedule)
-        if (precheckResult != ScheduleReadyResult.READY) {
-            UALog.v { "Precheck not ready $stored" }
-            return precheckResult
-        }
-
-        // Verify conditions still met
-        if (!delayProcessor.areConditionsMet(stored.schedule.delay)) {
-            UALog.v { "Delay conditions not met, not ready $stored" }
-            return ScheduleReadyResult.NOT_READY
-        }
-
         if (isExecutionPaused.value || isPaused.value) {
-            UALog.v { "Executor paused, not ready $stored" }
+            UALog.v { "Executor paused, not ready $data" }
             return ScheduleReadyResult.NOT_READY
         }
 
         if (!data.isActive(clock.currentTimeMillis())) {
-            UALog.v { "Schedule no longer active, Invalidating $stored" }
+            UALog.v { "Schedule no longer active, Invalidating $data" }
             return ScheduleReadyResult.INVALIDATE
         }
 
         val result = executor.isReady(preparedSchedule)
         if (result != ScheduleReadyResult.READY) {
-            UALog.v { "Schedule not ready $stored" }
+            UALog.v { "Schedule not ready $data" }
         }
 
         return result
@@ -531,5 +616,13 @@ internal class AutomationEngine(
                 it.idle(clock.currentTimeMillis())
             }
         }
+    }
+
+    private data class PreparedData(
+        val schedule: AutomationScheduleData,
+        val preparedSchedule: PreparedSchedule
+    ) {
+        val scheduleId: String = schedule.schedule.identifier
+        val priority: Int = schedule.schedule.priority ?: 0
     }
 }
