@@ -19,6 +19,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
@@ -83,6 +84,9 @@ internal class AutomationEngine(
     private var isExecutionPaused = MutableStateFlow(false)
     private var restoreState = MutableStateFlow(ScheduleRestoreState.IDLE)
     private var pendingExecution = MutableStateFlow(setOf<PreparedData>())
+
+    private var preprocessingDelayJobs = mutableListOf<Job>()
+
 
     @VisibleForTesting
     internal fun isStarted(): Boolean = restoreState.value != ScheduleRestoreState.IDLE
@@ -151,6 +155,30 @@ internal class AutomationEngine(
         supervisorJob.cancelChildren()
     }
 
+    private suspend fun cancelPreprocessDelayJobs(): Unit = withContext(dispatcher) {
+        preprocessingDelayJobs.removeAll {
+            it.cancel()
+            true
+        }
+    }
+
+    private suspend fun preprocessDelay(data: AutomationScheduleData): Boolean = withContext(dispatcher) {
+        val delay = data.schedule.delay ?: return@withContext true
+        val scheduleId = data.schedule.identifier
+        val triggerDate = data.triggerInfo?.date ?: data.scheduleStateChangeDate
+
+        val job = async {
+            UALog.v {"Preprocessing delay $scheduleId" }
+            delayProcessor.preprocess(delay, triggerDate)
+            UALog.v {"Finished preprocessing delay $scheduleId" }
+        }
+
+        preprocessingDelayJobs.add(job)
+        job.join()
+        preprocessingDelayJobs.remove(job)
+        return@withContext job.isCompleted
+    }
+
     private suspend fun waitForScheduleRestore() {
         restoreState.first { it == ScheduleRestoreState.RESTORED }
     }
@@ -167,6 +195,8 @@ internal class AutomationEngine(
                 data.finished(timestamp)
             }
         }
+
+        cancelPreprocessDelayJobs()
     }
 
     override suspend fun upsertSchedules(schedules: List<AutomationSchedule>) = withContext(dispatcher) {
@@ -184,6 +214,7 @@ internal class AutomationEngine(
         }
 
         triggerProcessor.updateSchedules(updatedSchedules)
+        cancelPreprocessDelayJobs()
     }
 
     override suspend fun cancelSchedules(identifiers: List<String>) = withContext(dispatcher) {
@@ -193,6 +224,7 @@ internal class AutomationEngine(
 
         store.deleteSchedules(identifiers)
         triggerProcessor.cancel(identifiers)
+        cancelPreprocessDelayJobs()
     }
 
     override suspend fun cancelSchedules(group: String) = withContext(dispatcher) {
@@ -202,6 +234,7 @@ internal class AutomationEngine(
 
         store.deleteSchedules(group)
         triggerProcessor.cancel(group)
+        cancelPreprocessDelayJobs()
     }
 
     override suspend fun cancelSchedulesWith(type: AutomationSchedule.ScheduleType) = withContext(dispatcher) {
@@ -238,6 +271,7 @@ internal class AutomationEngine(
 
         store.deleteSchedules(ids)
         triggerProcessor.cancel(ids)
+        cancelPreprocessDelayJobs()
     }
 
     override suspend fun getSchedules(): List<AutomationSchedule> = withContext(dispatcher) {
@@ -368,12 +402,10 @@ internal class AutomationEngine(
             return
         }
 
-        UALog.v {"Preprocessing delay $scheduleId" }
-        this.delayProcessor.preprocess(
-            data.schedule.delay,
-            data.triggerInfo?.date ?: data.scheduleStateChangeDate
-        )
-        UALog.v {"Finished preprocessing delay $scheduleId" }
+        if (!preprocessDelay(data)) {
+            UALog.v {"Preprocessing delay interrupted, retrying" }
+            processTriggeredSchedule(scheduleId)
+        }
 
         if (store.getSchedule(scheduleId) != data) {
             UALog.v {"Trigger data has changed since preprocessing, retrying $scheduleId" }

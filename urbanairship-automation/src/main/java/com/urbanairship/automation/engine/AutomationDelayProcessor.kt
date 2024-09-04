@@ -16,6 +16,8 @@ import kotlin.math.max
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
@@ -48,13 +50,19 @@ internal class AutomationDelayProcessor(
             return
         }
 
-        val wait = remainingDelay(delay, triggerDate) - PREPROCESS_DELAY_ALLOWANCE
-        if (wait.isPositive()) {
-            sleeper.sleep(wait)
-        }
+        return coroutineScope {
+            ensureActive()
 
-        delay.executionWindow?.let {
-            executionWindowProcessor.process(it)
+            val wait = remainingDelay(delay, triggerDate) - PREPROCESS_DELAY_ALLOWANCE
+            if (wait.isPositive()) {
+                sleeper.sleep(wait)
+            }
+
+            ensureActive()
+
+            delay.executionWindow?.let {
+                executionWindowProcessor.process(it)
+            }
         }
     }
 
@@ -62,6 +70,8 @@ internal class AutomationDelayProcessor(
         delay: AutomationDelay?,
         triggerDate: Long
     ) = withContext(Dispatchers.Main.immediate) {
+        ensureActive()
+
         if (delay == null) {
             return@withContext
         }
@@ -74,13 +84,15 @@ internal class AutomationDelayProcessor(
         while (isActive && !areConditionsMet(delay)) {
             yield()
 
+            ensureActive()
+
             if (!isAppStateMatch(delay)) {
                 activityMonitor.foregroundState.filter {
                     it == (delay.appState == AutomationAppState.FOREGROUND)
                 }.first()
             }
 
-            if (!isActive) { break }
+            ensureActive()
 
             if (!isScreenMatch(delay)) {
                 analytics.screenState.filter {
@@ -88,13 +100,15 @@ internal class AutomationDelayProcessor(
                 }.first()
             }
 
-            if (!isActive) { break }
+            ensureActive()
 
             if (!isRegionMatch(delay)) {
                 analytics.regionState.filter {
                     it.contains(delay.regionId)
                 }.first()
             }
+
+            ensureActive()
 
             if (delay.executionWindow != null) {
                 executionWindowProcessor.process(delay.executionWindow)

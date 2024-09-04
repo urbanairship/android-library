@@ -5,21 +5,17 @@ package com.urbanairship.automation.utils
 import com.urbanairship.UALog
 import com.urbanairship.remoteconfig.RetryingQueueConfig
 import com.urbanairship.util.TaskSleeper
-import java.util.Comparator
-import java.util.concurrent.atomic.AtomicLong
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 internal class RetryingQueue(
     private val maxConcurrentOperations: Int = DEFAULT_MAX_CONCURRENT_OPERATIONS,

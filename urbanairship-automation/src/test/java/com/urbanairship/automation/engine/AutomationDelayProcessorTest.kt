@@ -23,6 +23,8 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -67,7 +69,7 @@ public class AutomationDelayProcessorTest {
 
     private val executionWindowProcessor: ExecutionWindowProcessor = mockk()
 
-    private val processor =  AutomationDelayProcessor(
+    private val processor = AutomationDelayProcessor(
         analytics = analytics,
         activityMonitor = activityMonitor,
         executionWindowProcessor = executionWindowProcessor,
@@ -254,6 +256,55 @@ public class AutomationDelayProcessorTest {
 
         foregroundState.value = true
         assertFalse(processor.areConditionsMet(delay))
+    }
+
+    @Test
+    public fun testCancellation(): TestResult = runTest {
+        val delay = AutomationDelay(
+            seconds = 100,
+            screens = listOf("screen1", "screen2"),
+            regionId = "region1",
+            appState = AutomationAppState.FOREGROUND
+        )
+
+        val processor = AutomationDelayProcessor(
+            analytics = analytics,
+            activityMonitor = activityMonitor,
+            executionWindowProcessor = executionWindowProcessor,
+            clock = clock,
+            sleeper = TaskSleeper.default
+        )
+
+        val job = async {
+            processor.process(delay, 0)
+        }
+
+        job.cancel()
+
+        assertFalse(job.isCompleted)
+        assertTrue(job.isCancelled)
+    }
+
+    @Test
+    public fun testNotCancelled(): TestResult = runTest {
+        val delay = AutomationDelay()
+
+        val processor = AutomationDelayProcessor(
+            analytics = analytics,
+            activityMonitor = activityMonitor,
+            executionWindowProcessor = executionWindowProcessor,
+            clock = clock,
+            sleeper = TaskSleeper.default
+        )
+
+        val job = async {
+            processor.process(delay, 0)
+        }
+
+        job.join()
+
+        assertTrue(job.isCompleted)
+        assertFalse(job.isCancelled)
     }
 
     private fun startProcessing(

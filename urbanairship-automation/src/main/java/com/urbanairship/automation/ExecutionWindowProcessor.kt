@@ -10,19 +10,16 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
-import java.util.Date
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.yield
+import java.util.Date
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 
 internal class ExecutionWindowProcessor(
     context: Context,
@@ -79,14 +76,12 @@ internal class ExecutionWindowProcessor(
         }
     }
 
-    suspend fun process(window: ExecutionWindow) = withContext(Dispatchers.Main.immediate) {
+    suspend fun process(window: ExecutionWindow) {
         while (true) {
             when(val result = nextAvailability(window)) {
                 ExecutionWindowResult.Now -> break
                 is ExecutionWindowResult.Retry -> {
-                    yield()
                     sleep(result.delay)
-                    yield()
                 }
             }
         }
