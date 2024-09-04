@@ -6,6 +6,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.annotation.OpenForTesting
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 
 /**
@@ -26,7 +27,6 @@ public class TaskSleeper(
             while (remaining > 0) {
                 val interval = remaining.coerceAtMost(MAX_DELAY_INTERVAL)
                 onSleep(interval.milliseconds)
-
                 remaining = remainingMillis(start, duration)
             }
         }
@@ -44,6 +44,6 @@ public class TaskSleeper(
     public companion object {
         public val default: TaskSleeper = TaskSleeper(Clock.DEFAULT_CLOCK)
 
-        private const val MAX_DELAY_INTERVAL = 30_000L
+        private val MAX_DELAY_INTERVAL = 30.seconds.inWholeMilliseconds
     }
 }

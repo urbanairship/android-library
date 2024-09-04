@@ -48,7 +48,7 @@ internal class DisplayAdapterFactory(
         return CustomDisplayAdapterWrapper(custom)
     }
 
-    private fun makeDefaultAdapter(message: InAppMessage, assets: AirshipCachedAssets, actionRunner: InAppActionRunner): DisplayAdapter? {
+    private fun makeDefaultAdapter(message: InAppMessage, priority: Int, assets: AirshipCachedAssets, actionRunner: InAppActionRunner): DisplayAdapter? {
         val extendedMessage = extendMessage(message)
         val delegate = when(val extendedContent = extendedMessage.displayContent) {
             is BannerContent -> BannerDisplayDelegate(
@@ -79,6 +79,7 @@ internal class DisplayAdapterFactory(
             is InAppMessageDisplayContent.AirshipLayoutContent -> AirshipLayoutDisplayDelegate(
                 displayContent = extendedContent,
                 assets = assets,
+                priority = priority,
                 messageExtras = extendedMessage.extras,
                 activityMonitor = activityMonitor,
                 actionRunner = actionRunner
@@ -97,10 +98,11 @@ internal class DisplayAdapterFactory(
 
     fun makeAdapter(
         message: InAppMessage,
+        priority: Int,
         assets: AirshipCachedAssets,
         actionRunner: InAppActionRunner
     ): Result<DisplayAdapter> {
-        val adapter = makeCustomAdapter(context, message, assets) ?: makeDefaultAdapter(message, assets, actionRunner)
+        val adapter = makeCustomAdapter(context, message, assets) ?: makeDefaultAdapter(message, priority, assets, actionRunner)
         return if (adapter != null) {
             Result.success(adapter)
         } else {

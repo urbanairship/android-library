@@ -30,7 +30,8 @@ public class AutomationScheduleDataTest {
     private val preparedScheduleInfo = PreparedScheduleInfo(
         scheduleId = UUID.randomUUID().toString(),
         triggerSessionId = UUID.randomUUID().toString(),
-        additionalAudienceCheckResult = true
+        additionalAudienceCheckResult = true,
+        priority = 0
     )
 
     @Test

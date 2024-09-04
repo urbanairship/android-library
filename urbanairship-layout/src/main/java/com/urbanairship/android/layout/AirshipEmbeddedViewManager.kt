@@ -36,6 +36,7 @@ public interface AirshipEmbeddedViewManager {
     public fun addPending(
         embeddedViewId: String,
         viewInstanceId: String,
+        priority: Int = 0,
         extras: JsonMap = JsonMap.EMPTY_MAP,
         layoutInfoProvider: () -> LayoutInfo?,
         displayArgsProvider: () -> DisplayArgs,
@@ -43,7 +44,7 @@ public interface AirshipEmbeddedViewManager {
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun addPending(args: DisplayArgs, extras: JsonMap) {
+    public fun addPending(args: DisplayArgs, priority: Int = 0, extras: JsonMap) {
         val payload = args.payload
         val embeddedViewId = (payload.presentation as? EmbeddedPresentation)?.embeddedId ?: run {
             UALog.e { "Failed to add pending embedded view. Required embedded view ID is null!" }
@@ -54,6 +55,7 @@ public interface AirshipEmbeddedViewManager {
         addPending(
             embeddedViewId = embeddedViewId,
             viewInstanceId = viewInstanceId,
+            priority = priority,
             extras = extras,
             layoutInfoProvider = { payload },
             displayArgsProvider = { args },

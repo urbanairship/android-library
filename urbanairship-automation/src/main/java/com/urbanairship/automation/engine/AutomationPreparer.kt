@@ -156,7 +156,8 @@ internal class AutomationPreparer internal constructor(
                 experimentResult = experimentResult,
                 reportingContext = schedule.reportingContext,
                 triggerSessionId = triggerSessionId,
-                additionalAudienceCheckResult = additionalAudienceCheckResult
+                additionalAudienceCheckResult = additionalAudienceCheckResult,
+                priority = schedule.priority ?: 0
             )
         )
     }

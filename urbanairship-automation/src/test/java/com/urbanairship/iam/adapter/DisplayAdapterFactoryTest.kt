@@ -145,13 +145,13 @@ public class DisplayAdapterFactoryTest {
             )
         )
 
-        assertTrue(factory.makeAdapter(message, cachedAsset, actionRunner).isFailure)
+        assertTrue(factory.makeAdapter(message, 10, cachedAsset, actionRunner).isFailure)
     }
 
     private fun <T : DelegatingDisplayAdapter.Delegate> verifyAirshipAdapter(content: InAppMessageDisplayContent) {
         val message = InAppMessage(name = "test", displayContent = content)
 
-        val adapter = factory.makeAdapter(message, cachedAsset, actionRunner).getOrThrow()
+        val adapter = factory.makeAdapter(message, 1, cachedAsset, actionRunner).getOrThrow()
         val unwrappedAdapter = adapter as? DelegatingDisplayAdapter
         @Suppress("UNCHECKED_CAST")
         if (unwrappedAdapter == null || (unwrappedAdapter.delegate as? T) == null) {
@@ -173,7 +173,7 @@ public class DisplayAdapterFactoryTest {
             expected
         }
 
-        val actual = factory.makeAdapter(message, cachedAsset, actionRunner).getOrThrow()
+        val actual = factory.makeAdapter(message, 1, cachedAsset, actionRunner).getOrThrow()
         val unwrapped = actual as? CustomDisplayAdapterWrapper
         if (unwrapped == null || unwrapped.adapter != expected) {
             fail()
