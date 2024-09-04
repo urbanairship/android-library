@@ -93,15 +93,6 @@ internal class AutomationPreparer internal constructor(
                 return@run RetryingQueue.Result.Success(SchedulePrepareResult.Invalidate)
             }
 
-            // Check if schedule is already over limit
-            if (frequencyChecker?.isOverLimit() == true) {
-                UALog.v { "Frequency limits exceeded ${schedule.identifier}" }
-                return@run RetryingQueue.Result.Success(
-                    result = SchedulePrepareResult.Skip,
-                    ignoreReturnOrder = true
-                )
-            }
-
             // Audience checks
             schedule.audience?.let {
                 val match = it.audienceSelector.evaluate(

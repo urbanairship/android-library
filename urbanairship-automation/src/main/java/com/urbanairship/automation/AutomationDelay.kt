@@ -73,7 +73,7 @@ public class AutomationDelay(
         private const val SCREEN_KEY = "screen"
         private const val REGION_ID_KEY = "region_id"
         private const val CANCELLATION_TRIGGERS_KEY = "cancellation_triggers"
-        private const val DISPLAY_WINDOW_KEY = "display_window"
+        private const val EXECUTION_WINDOW_KEY = "execution_window"
 
         /**
          * Parses a AutomationDelay from JSON.
@@ -113,7 +113,7 @@ public class AutomationDelay(
                 cancellationTriggers = content.get(CANCELLATION_TRIGGERS_KEY)?.requireList()?.map {
                     AutomationTrigger.fromJson(it, TriggerExecutionType.DELAY_CANCELLATION)
                 },
-                executionWindow = content.get(DISPLAY_WINDOW_KEY)?.let(ExecutionWindow::fromJson)
+                executionWindow = content.get(EXECUTION_WINDOW_KEY)?.let(ExecutionWindow::fromJson)
             )
         }
     }
@@ -124,7 +124,7 @@ public class AutomationDelay(
         SCREEN_KEY to screens,
         REGION_ID_KEY to regionId,
         CANCELLATION_TRIGGERS_KEY to cancellationTriggers,
-        DISPLAY_WINDOW_KEY to executionWindow
+        EXECUTION_WINDOW_KEY to executionWindow
     ).toJsonValue()
 
     override fun toString(): String = toJsonValue().toString()

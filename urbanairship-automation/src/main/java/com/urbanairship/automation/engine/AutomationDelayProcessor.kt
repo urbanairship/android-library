@@ -13,6 +13,7 @@ import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
@@ -24,6 +25,7 @@ import kotlinx.coroutines.yield
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal interface AutomationDelayProcessorInterface {
+    suspend fun preprocess(delay: AutomationDelay?, triggerDate: Long)
     suspend fun process(delay: AutomationDelay?, triggerDate: Long)
     @MainThread
     fun areConditionsMet(delay: AutomationDelay?): Boolean
@@ -37,6 +39,25 @@ internal class AutomationDelayProcessor(
     private val sleeper: TaskSleeper = TaskSleeper.default
 ) : AutomationDelayProcessorInterface {
 
+    companion object {
+        private val PREPROCESS_DELAY_ALLOWANCE = 30.seconds
+
+    }
+    override suspend fun preprocess(delay: AutomationDelay?, triggerDate: Long) {
+        if (delay == null) {
+            return
+        }
+
+        val wait = remainingDelay(delay, triggerDate) - PREPROCESS_DELAY_ALLOWANCE
+        if (wait.isPositive()) {
+            sleeper.sleep(wait)
+        }
+
+        delay.executionWindow?.let {
+            executionWindowProcessor.process(it)
+        }
+    }
+
     override suspend fun process(
         delay: AutomationDelay?,
         triggerDate: Long
@@ -45,9 +66,9 @@ internal class AutomationDelayProcessor(
             return@withContext
         }
 
-        val wait = remainingSeconds(delay, triggerDate)
-        if (wait > 0) {
-            sleeper.sleep(wait.seconds)
+        val wait = remainingDelay(delay, triggerDate)
+        if (wait.isPositive()) {
+            sleeper.sleep(wait)
         }
 
         while (isActive && !areConditionsMet(delay)) {
@@ -107,9 +128,9 @@ internal class AutomationDelayProcessor(
         return executionWindowProcessor.isActive(window)
     }
 
-    private fun remainingSeconds(delay: AutomationDelay, triggerDate: Long): Long {
-        val seconds = delay.seconds ?: return 0
+    private fun remainingDelay(delay: AutomationDelay, triggerDate: Long): Duration {
+        val seconds = delay.seconds ?: return 0.seconds
         val remaining = seconds - TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis() - triggerDate)
-        return max(0, remaining)
+        return max(0, remaining).seconds
     }
 }

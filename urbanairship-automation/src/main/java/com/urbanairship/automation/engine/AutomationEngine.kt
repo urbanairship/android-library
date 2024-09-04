@@ -368,6 +368,19 @@ internal class AutomationEngine(
             return
         }
 
+        UALog.v {"Preprocessing delay $scheduleId" }
+        this.delayProcessor.preprocess(
+            data.schedule.delay,
+            data.triggerInfo?.date ?: data.scheduleStateChangeDate
+        )
+        UALog.v {"Finished preprocessing delay $scheduleId" }
+
+        if (store.getSchedule(scheduleId) != data) {
+            UALog.v {"Trigger data has changed since preprocessing, retrying $scheduleId" }
+            processTriggeredSchedule(scheduleId)
+            return
+        }
+
         if (!data.isActive(clock.currentTimeMillis())) {
             UALog.v { "Aborting processing schedule $data, no longer active." }
             preparer.cancelled(data.schedule)
