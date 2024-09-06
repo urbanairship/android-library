@@ -2,6 +2,19 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.2.0 September 6, 2024
+Minor release with several enhancements to In-App Automation, Scenes, and Surveys. This version also contains a fix
+for applications that are targeting API 35.
+
+### Changes
+- Updated compose bom to 2024.06.00.
+- Replaced the usage of `removeFirst` to avoid crashes when targeting API 35.
+- Added ability to customize the content per In-App Automation with the new `InAppMessageContentExtender`.
+- Added plain markdown support for text markup in Scenes.
+- Added execution window support to In-App Automation, Scenes, and Surveys.
+- Updated handling of priority for In-App Automation, Scenes, and Surveys. Priority is now taken into consideration at each step of displaying a message instead of just sorting messages that are
+triggered at the same time.
+- Updated handling of long delays for In-App Automation, Scenes, and Surveys. Delays will now be preprocessed up to 30 seconds before it ends before the message is prepared.
 
 ## Version 18.1.6 August 9, 2024
 Patch release that fixes in-app experience displays when resuming from a paused state. Apps that use in-app experiences are encouraged to update.
