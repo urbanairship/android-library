@@ -3,11 +3,8 @@ package com.urbanairship.permission
 
 import android.app.Activity
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
-import androidx.arch.core.util.Function
 import androidx.core.util.Consumer
 import com.urbanairship.PendingResult
 import com.urbanairship.UALog
@@ -15,6 +12,17 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.app.SimpleActivityListener
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Airship permission manager.
@@ -26,18 +34,17 @@ public class PermissionsManager internal constructor(
     private var context: Context,
     activityMonitor: ActivityMonitor
 ) {
+    private val permissionsJob = SupervisorJob()
+    private val permissionsScope = CoroutineScope(Dispatchers.Main + permissionsJob)
 
     private val permissionDelegateMap: MutableMap<Permission, PermissionDelegate?> = mutableMapOf()
     private val airshipEnablers: MutableList<Consumer<Permission>> = CopyOnWriteArrayList()
-    private val permissionStatusMap: MutableMap<Permission, PermissionStatus> = mutableMapOf()
-    private val mainHandler = Handler(Looper.getMainLooper())
-    private val onPermissionStatusChangedListeners: MutableList<OnPermissionStatusChangedListener> =
-        CopyOnWriteArrayList()
-    private val pendingRequestResults: MutableMap<PermissionDelegate, PendingResult<PermissionRequestResult?>> =
-        mutableMapOf()
-    private val pendingCheckResults: MutableMap<PermissionDelegate, PendingResult<PermissionStatus?>> =
-        mutableMapOf()
+    private val onPermissionStatusChangedListeners: MutableList<OnPermissionStatusChangedListener> = CopyOnWriteArrayList()
 
+    /// All modified on the main thread
+    private val permissionStatusMap: MutableMap<Permission, PermissionStatus> = mutableMapOf()
+    private val pendingRequestResults: MutableMap<Permission, Flow<PermissionRequestResult>> = mutableMapOf()
+    private val pendingCheckResults: MutableMap<Permission, Flow<PermissionStatus>> = mutableMapOf()
 
     /**
      * @hide
@@ -56,9 +63,7 @@ public class PermissionsManager internal constructor(
     @MainThread
     private fun updatePermissions() {
         for (permission in configuredPermissions) {
-            checkPermissionStatus(
-                permission
-            ) { status: PermissionStatus ->
+            checkPermissionStatus(permission) { status ->
                 updatePermissionStatus(permission, status)
             }
         }
@@ -133,7 +138,8 @@ public class PermissionsManager internal constructor(
      * @param callback The callback with the result.
      */
     public fun checkPermissionStatus(
-        permission: Permission, callback: Consumer<PermissionStatus>
+        permission: Permission,
+        callback: Consumer<PermissionStatus>
     ) {
         checkPermissionStatus(permission).addResultCallback {
             callback.accept(it)
@@ -147,34 +153,11 @@ public class PermissionsManager internal constructor(
      * @return A pending result.
      */
     public fun checkPermissionStatus(permission: Permission): PendingResult<PermissionStatus?> {
-        UALog.d { "Checking permission for $permission" }
-
-        synchronized(pendingCheckResults) {
-            return pendingOrCall(permission, pendingCheckResults) { delegate: PermissionDelegate? ->
-                val pendingResult = PendingResult<PermissionStatus?>()
-                if (delegate == null) {
-                    UALog.d { "No delegate for permission $permission" }
-                    pendingResult.result = PermissionStatus.NOT_DETERMINED
-                    return@pendingOrCall pendingResult
-                }
-
-                synchronized(pendingCheckResults) {
-                    pendingCheckResults.put(delegate, pendingResult)
-                }
-
-                mainHandler.post {
-                    delegate.checkPermissionStatus(context, Consumer { status: PermissionStatus ->
-                        UALog.d { "Check permission $permission status result: $status" }
-                        updatePermissionStatus(permission, status)
-                        pendingResult.result = status
-                        synchronized(pendingCheckResults) {
-                            pendingCheckResults.remove(delegate)
-                        }
-                    })
-                }
-                pendingResult
-            }
+        val pendingResult = PendingResult<PermissionStatus?>()
+        permissionsScope.launch {
+            pendingResult.result = suspendingCheckPermissionRequest(permission)
         }
+        return pendingResult
     }
 
     /**
@@ -194,7 +177,7 @@ public class PermissionsManager internal constructor(
      *
      * @param permission The permission.
      * @param enableAirshipUsageOnGrant If granted, any Airship features that need the permission will
-     * be enabled, e.g., enabling [com.urbanairship.PrivacyManager.FEATURE_PUSH] and
+     * be enabled, e.g., enabling [com.urbanairship.PrivacyManager.Feature.PUSH] and
      * [com.urbanairship.push.PushManager.setUserNotificationsEnabled] if the push permission
      * is granted.
      * @param callback The callback.
@@ -204,9 +187,9 @@ public class PermissionsManager internal constructor(
         enableAirshipUsageOnGrant: Boolean,
         callback: Consumer<PermissionRequestResult?>
     ) {
-        requestPermission(
-            permission, enableAirshipUsageOnGrant
-        ).addResultCallback { t: PermissionRequestResult? -> callback.accept(t) }
+        requestPermission(permission, enableAirshipUsageOnGrant).addResultCallback {
+            callback.accept(it)
+        }
     }
 
     /**
@@ -215,63 +198,89 @@ public class PermissionsManager internal constructor(
      *
      * @param permission The permission.
      * @param enableAirshipUsageOnGrant If granted, any Airship features that need the permission will
-     * be enabled, e.g., enabling [com.urbanairship.PrivacyManager.FEATURE_PUSH] and
+     * be enabled, e.g., enabling [com.urbanairship.PrivacyManager.Feature.PUSH] and
      * [com.urbanairship.push.PushManager.setUserNotificationsEnabled] if the push permission
      * is granted.
      * @return A pending result.
      */
-    /**
-     * Requests a permission. If a delegate is not set to handle the permission [PermissionStatus.NOT_DETERMINED] will
-     * be returned.
-     *
-     * @param permission The permission.
-     * @return A pending result.
-     */
     @JvmOverloads
     public fun requestPermission(
-        permission: Permission, enableAirshipUsageOnGrant: Boolean = false
+        permission: Permission,
+        enableAirshipUsageOnGrant: Boolean = false
     ): PendingResult<PermissionRequestResult?> {
-        UALog.d { "Requesting permission for $permission" }
+        val pendingResult = PendingResult<PermissionRequestResult?>()
+        permissionsScope.launch {
+            pendingResult.result =
+                suspendingPermissionRequest(permission, enableAirshipUsageOnGrant)
+        }
+        return pendingResult
+    }
 
-        synchronized(pendingRequestResults) {
-            val result =
-                pendingOrCall(permission, pendingRequestResults) { delegate: PermissionDelegate? ->
-                    val pendingResult = PendingResult<PermissionRequestResult?>()
-                    if (delegate == null) {
-                        UALog.d { "No delegate for permission $permission" }
-                        pendingResult.result = PermissionRequestResult.notDetermined()
-                        return@pendingOrCall pendingResult
-                    }
+    private suspend fun suspendingPermissionRequest(
+        permission: Permission,
+        enableAirshipUsageOnGrant: Boolean = false
+    ): PermissionRequestResult {
+        return withContext(Dispatchers.Main.immediate) {
+            val delegate = getDelegate(permission)
+                ?: return@withContext PermissionRequestResult.notDetermined()
 
-                    synchronized(pendingRequestResults) {
-                        pendingRequestResults.put(delegate, pendingResult)
-                    }
-
-                    mainHandler.post {
-                        delegate.requestPermission(context,
-                            Consumer { requestResult: PermissionRequestResult ->
-                                UALog.d { "Permission $permission request result: $requestResult" }
-                                updatePermissionStatus(permission, requestResult.permissionStatus)
-                                pendingResult.result = requestResult
-                                synchronized(pendingRequestResults) {
-                                    pendingRequestResults.remove(delegate)
-                                }
-                            })
-                    }
-                    pendingResult
-                }
-            if (enableAirshipUsageOnGrant) {
-                result.addResultCallback { requestResult: PermissionRequestResult? ->
-                    if (requestResult != null && requestResult.permissionStatus == PermissionStatus.GRANTED) {
-                        for (enabler in this.airshipEnablers) {
-                            enabler.accept(permission)
-                        }
-                    }
-                }
+            val existing = pendingRequestResults[permission]
+            if (existing != null) {
+                return@withContext existing.first()
             }
-            return result
+
+            UALog.d { "Requesting permission for $permission" }
+
+            val flow = delegate.requestPermissionFlow(context, scope = permissionsScope)
+            pendingRequestResults[permission] = flow
+
+            val result = flow.first()
+            updatePermissionStatus(permission, result.permissionStatus)
+
+            if (pendingRequestResults[permission] == flow) {
+                pendingRequestResults.remove(permission)
+            }
+
+            UALog.d { "Permission $permission request result: $result" }
+
+            if (result.permissionStatus == PermissionStatus.GRANTED && enableAirshipUsageOnGrant) {
+                airshipEnablers.forEach { it.accept(permission) }
+            }
+
+            return@withContext result
         }
     }
+
+    private suspend fun suspendingCheckPermissionRequest(
+        permission: Permission,
+    ): PermissionStatus {
+        return withContext(Dispatchers.Main.immediate) {
+            val delegate = getDelegate(permission)
+                ?: return@withContext PermissionStatus.NOT_DETERMINED
+
+            val existing = pendingCheckResults[permission]
+            if (existing != null) {
+                return@withContext existing.first()
+            }
+
+            UALog.d { "Checking permission status for $permission" }
+
+            val flow = delegate.checkPermissionFlow(context, scope = permissionsScope)
+            pendingCheckResults[permission] = flow
+
+            val result = flow.first()
+            updatePermissionStatus(permission, result)
+
+            if (pendingCheckResults[permission] == flow) {
+                pendingCheckResults.remove(permission)
+            }
+
+            UALog.d { "Permission $permission request result: $result" }
+
+            return@withContext result
+        }
+    }
+
 
     private fun getDelegate(permission: Permission): PermissionDelegate? {
         synchronized(permissionDelegateMap) {
@@ -279,18 +288,29 @@ public class PermissionsManager internal constructor(
         }
     }
 
-    private fun <T> pendingOrCall(
-        permission: Permission,
-        pending: Map<PermissionDelegate, PendingResult<T>>,
-        delegateFunction: Function<PermissionDelegate?, PendingResult<T>>
-    ): PendingResult<T> {
-        val delegate = getDelegate(permission)
-        if (delegate != null) {
-            val result = pending[delegate]
-            if (result != null) {
-                return result
+}
+
+
+private fun PermissionDelegate.requestPermissionFlow(context: Context, scope: CoroutineScope): Flow<PermissionRequestResult> {
+    val stateFlow = MutableStateFlow<PermissionRequestResult?>(null)
+    scope.launch {
+        stateFlow.value = suspendCoroutine { continuation ->
+            requestPermission(context) { requestResult ->
+                continuation.resume(requestResult)
             }
         }
-        return delegateFunction.apply(delegate)
     }
+    return stateFlow.mapNotNull { it }
+}
+
+private fun PermissionDelegate.checkPermissionFlow(context: Context, scope: CoroutineScope): Flow<PermissionStatus> {
+    val stateFlow = MutableStateFlow<PermissionStatus?>(null)
+    scope.launch {
+        stateFlow.value = suspendCoroutine { continuation ->
+            checkPermissionStatus(context) { permissionStatus ->
+                continuation.resume(permissionStatus)
+            }
+        }
+    }
+    return stateFlow.mapNotNull { it }
 }
