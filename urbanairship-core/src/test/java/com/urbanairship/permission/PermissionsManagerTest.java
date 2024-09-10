@@ -32,7 +32,7 @@ public class PermissionsManagerTest extends BaseTestCase {
 
     private TestActivityMonitor activityMonitor = new TestActivityMonitor();
     private final Context context = ApplicationProvider.getApplicationContext();
-    private final PermissionsManager permissionsManager = PermissionsManager.newPermissionsManager(context, activityMonitor);
+    private final PermissionsManager permissionsManager = new PermissionsManager(context, activityMonitor);
     private final PermissionDelegate mockDelegate = mock(PermissionDelegate.class);
     private final TestConsumer<PermissionStatus> testStatusCallback = new TestConsumer<>();
     private final TestConsumer<PermissionRequestResult> testRequestCallback = new TestConsumer<>();
