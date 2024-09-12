@@ -1,7 +1,7 @@
 [versions]
 
 # Gradle plugins
-androidGradlePlugin = '8.3.2'
+androidGradlePlugin = '8.2.2'
 googleServicesPlugin = '4.4.1'
 spotlessPlugin = '6.25.0'
 nexusPublishPlugin = '1.1.0'
@@ -24,21 +24,22 @@ compose-bom = '2024.02.02'
 compose-compiler = '1.5.7'
 
 # Androidx
-androidx-annotation = '1.7.1'
-androidx-appcompat = '1.6.1'
-androidx-concurrentfutures = '1.1.0'
+androidx-activity = '1.9.1'
+androidx-annotation = '1.8.1'
+androidx-appcompat = '1.7.0'
+androidx-concurrentfutures = '1.2.0'
 androidx-constraintlayout-xml = '2.1.4'
 androidx-constraintlayout-compose = '1.0.1'
-androidx-core = '1.12.0'
+androidx-core = '1.13.1'
 androidx-customview = '1.1.0'
-androidx-fragment = '1.6.2'
-androidx-lifecycle = '2.7.0'
+androidx-fragment = '1.8.2'
+androidx-lifecycle = '2.8.4'
 androidx-navigation = '2.7.7'
 
 # Using the RC to test the new features from I/O 2024 (Scaffold, TitleBar, LazyColumn, etc.)
 androidx-glance = '1.1.0-rc01' # Only used in Sample app
 
-androidx-activity-compose = '1.8.2'
+androidx-activity-compose = '1.9.1'
 
 androidx-paging = '2.1.2'
 
@@ -129,6 +130,8 @@ glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = 
 glance-material3 = { module = "androidx.glance:glance-material3", version.ref = "androidx-glance" }
 
 # Androidx
+androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
+androidx-activityktx = { module = "androidx.activity:activity-ktx", version.ref = "androidx-activity" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }

@@ -1,16 +1,21 @@
 package com.urbanairship.preferencecenter.ui
 
+import android.os.Build
 import android.os.Bundle
-import android.view.MenuItem
+import android.view.LayoutInflater
+import androidx.activity.enableEdgeToEdge
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentContainerView
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
-import com.urbanairship.activity.ThemedActivity
+import com.urbanairship.preferencecenter.R
+import com.google.android.material.appbar.MaterialToolbar
 
 /**
  * `Activity` that displays a Preference Center via the hosted [PreferenceCenterFragment].
  */
-public class PreferenceCenterActivity : ThemedActivity() {
+public class PreferenceCenterActivity : FragmentActivity() {
 
     public companion object {
         /**
@@ -24,6 +29,13 @@ public class PreferenceCenterActivity : ThemedActivity() {
     private lateinit var fragment: PreferenceCenterFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Enable edge to edge on API 35 and up, which is the
+        // first version  where edge to edge rendering is forced.
+        // TODO: replace with Build.VERSION_CODES.VANILLA_ICE_CREAM
+        // once we've bumped our compile/target SDK to 35.
+        if (Build.VERSION.SDK_INT >= 35) {
+            enableEdgeToEdge()
+        }
         super.onCreate(savedInstanceState)
         Autopilot.automaticTakeOff(application)
 
@@ -33,31 +45,31 @@ public class PreferenceCenterActivity : ThemedActivity() {
             return
         }
 
-        setDisplayHomeAsUpEnabled(true)
+        val view = LayoutInflater.from(this).inflate(R.layout.ua_activity_preference_center, null, false)
+        setContentView(view)
 
-        val id = intent.getStringExtra(EXTRA_ID)
-            ?: throw IllegalArgumentException("Missing required extra: EXTRA_ID")
-
-        if (savedInstanceState != null) {
-            fragment = supportFragmentManager.findFragmentByTag(FRAGMENT_TAG) as PreferenceCenterFragment
+        // Setup the top app bar
+        val topAppBar = findViewById<MaterialToolbar>(R.id.toolbar)
+        topAppBar.setNavigationOnClickListener {
+            finish()
         }
 
+        // Restore the fragment, if we can
+        val fragmentContainer = findViewById<FragmentContainerView>(R.id.fragment_container)
+        if (savedInstanceState != null) {
+            fragment = fragmentContainer.getFragment() as PreferenceCenterFragment
+        }
+
+        // Otherwise, create and add the fragment
         if (!this::fragment.isInitialized) {
+            val id = intent.getStringExtra(EXTRA_ID)
+                ?: throw IllegalArgumentException("Missing required extra: EXTRA_ID")
+
             fragment = PreferenceCenterFragment.create(preferenceCenterId = id)
 
             supportFragmentManager.beginTransaction()
-                .add(android.R.id.content, fragment, FRAGMENT_TAG)
+                .add(R.id.fragment_container, fragment, FRAGMENT_TAG)
                 .commitNow()
-        }
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            android.R.id.home -> {
-                finish()
-                true
-            }
-            else -> false
         }
     }
 }
