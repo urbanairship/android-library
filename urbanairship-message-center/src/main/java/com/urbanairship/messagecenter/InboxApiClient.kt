@@ -11,8 +11,9 @@ import com.urbanairship.http.RequestAuth.BasicAuth
 import com.urbanairship.http.RequestAuth.ChannelTokenAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestException
-import com.urbanairship.http.RequestSession
-import com.urbanairship.http.Response
+import com.urbanairship.http.RequestResult
+import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -23,12 +24,16 @@ import com.urbanairship.util.UAHttpStatusUtil
 /**  high level abstraction for performing Inbox API requests. */
 internal class InboxApiClient constructor(
     private val runtimeConfig: AirshipRuntimeConfig,
-    private val session: RequestSession = runtimeConfig.requestSession
+    private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
 ) {
 
-    @Throws(RequestException::class)
-    fun fetchMessages(user: User, channelId: String, ifModifiedSince: String?): Response<JsonList> {
-        val userId = user.id ?: throw RequestException("Failed to delete messages! User ID cannot be null!")
+    suspend fun fetchMessages(
+        user: User,
+        channelId: String,
+        ifModifiedSince: String?
+    ): RequestResult<JsonList> {
+        val userId = user.id ?: return errorResult("Failed to delete messages! User ID cannot be null!")
+
         val url = getUserApiUrl(userId, MESSAGES_PATH)
 
         val headers = mutableMapOf(
@@ -44,16 +49,18 @@ internal class InboxApiClient constructor(
             return@execute if (UAHttpStatusUtil.inSuccessRange(status)) {
                 JsonValue.parseString(responseBody).optMap().opt("messages").requireList()
             } else {
-                throw RequestException("Failed to fetch messages!")
+                null
             }
         }
     }
 
-    @Throws(RequestException::class)
-    fun syncDeletedMessageState(
-        user: User, channelId: String, reportingsToDelete: List<JsonValue>
-    ): Response<Unit> {
-        val userId = user.id ?: throw RequestException("Failed to delete messages! User ID cannot be null!")
+    suspend fun syncDeletedMessageState(
+        user: User,
+        channelId: String,
+        reportingsToDelete: List<JsonValue>
+    ): RequestResult<Unit> {
+        val userId = user.id ?: return errorResult("Failed to delete messages! User ID cannot be null!")
+
         val url = getUserApiUrl(userId, DELETE_MESSAGES_PATH)
 
         val payload = jsonMapOf(MESSAGES_REPORTINGS_KEY to JsonValue.wrapOpt(reportingsToDelete))
@@ -70,11 +77,13 @@ internal class InboxApiClient constructor(
         return session.execute(request)
     }
 
-    @Throws(RequestException::class)
-    fun syncReadMessageState(
-        user: User, channelId: String, reportingsToUpdate: List<JsonValue>
-    ): Response<Unit> {
-        val userId = user.id ?: throw RequestException("Failed to delete messages! User ID cannot be null!")
+    suspend fun syncReadMessageState(
+        user: User,
+        channelId: String,
+        reportingsToUpdate: List<JsonValue>
+    ): RequestResult<Unit> {
+        val userId = user.id ?: return errorResult("Failed to delete messages! User ID cannot be null!")
+
         val url = getUserApiUrl(userId, MARK_READ_MESSAGES_PATH)
 
         val payload = jsonMapOf(MESSAGES_REPORTINGS_KEY to JsonValue.wrapOpt(reportingsToUpdate))
@@ -92,7 +101,7 @@ internal class InboxApiClient constructor(
     }
 
     @Throws(RequestException::class)
-    fun createUser(channelId: String): Response<UserCredentials> {
+    suspend fun createUser(channelId: String): RequestResult<UserCredentials> {
         val url = getUserApiUrl()
 
         val payload = JsonMap.newBuilder().putOpt(payloadChannelsKey, listOf(channelId)).build()
@@ -113,15 +122,15 @@ internal class InboxApiClient constructor(
                 val userToken = credentials.requireField<String>("password")
                 UserCredentials(userId, userToken)
             } else {
-                throw RequestException("Failed to create user")
+                null
             }
         }
 
     }
 
-    @Throws(RequestException::class)
-    fun updateUser(user: User, channelId: String): Response<Unit> {
-        val userId = user.id ?: throw RequestException("Failed to update user! User ID cannot be null!")
+    suspend fun updateUser(user: User, channelId: String): RequestResult<Unit> {
+        val userId = user.id ?: return errorResult("Failed to update user! User ID cannot be null!")
+
         val url = getUserApiUrl(userId)
 
         val payload = jsonMapOf(payloadChannelsKey to jsonMapOf(PAYLOAD_ADD_KEY to listOf(channelId)))
@@ -175,6 +184,10 @@ internal class InboxApiClient constructor(
             throw RequestException("Missing user credentials")
         }
         return BasicAuth(userId, userPassword)
+    }
+
+    private fun  <T> errorResult(message: String): RequestResult<T> {
+        return RequestResult(RequestException(message))
     }
 
     private companion object {

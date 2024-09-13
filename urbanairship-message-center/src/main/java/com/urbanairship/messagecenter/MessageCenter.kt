@@ -91,7 +91,7 @@ internal constructor(
         dataStore,
         config,
         privacyManager,
-        Inbox(context, dataStore, channel, config.configOptions, privacyManager),
+        Inbox(context, dataStore, channel, config, privacyManager),
         pushManager
     )
 

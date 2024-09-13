@@ -18,6 +18,8 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
+import kotlinx.coroutines.CoroutineDispatcher;
+import kotlinx.coroutines.ExecutorsKt;
 
 /**
  * Message database
@@ -71,9 +73,11 @@ public abstract class MessageDatabase extends RoomDatabase {
 
     @NonNull
     @VisibleForTesting
-    public static MessageDatabase createInMemoryDatabase(@NonNull Context context) {
+    public static MessageDatabase createInMemoryDatabase(@NonNull Context context, @NonNull CoroutineDispatcher dispatcher) {
         return Room.inMemoryDatabaseBuilder(context, MessageDatabase.class)
                    .allowMainThreadQueries()
+                   .setTransactionExecutor(ExecutorsKt.asExecutor(dispatcher))
+                   .setQueryExecutor(ExecutorsKt.asExecutor(dispatcher))
                    .build();
     }
 }

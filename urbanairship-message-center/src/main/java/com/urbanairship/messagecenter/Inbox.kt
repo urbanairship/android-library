@@ -7,7 +7,6 @@ import android.os.Looper
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
-import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.AirshipExecutors
 import com.urbanairship.Cancelable
 import com.urbanairship.CancelableOperation
@@ -21,6 +20,7 @@ import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.GlobalActivityMonitor.Companion.shared
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AirshipChannelListener
+import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
@@ -29,6 +29,12 @@ import java.util.Collections
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 /**
  * The inbox provides access to the device's local inbox data. Modifications (e.g., deletions or
@@ -37,16 +43,18 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @property user The [User].
  */
 public class Inbox @VisibleForTesting internal constructor(
-    context: Context,
-    private val dataStore: PreferenceDataStore,
+    dataStore: PreferenceDataStore,
     private val jobDispatcher: JobDispatcher,
     public val user: User,
     private val messageDao: MessageDao,
-    private val executor: Executor,
     private val activityMonitor: ActivityMonitor,
     private val airshipChannel: AirshipChannel,
-    private val privacyManager: PrivacyManager
+    private val privacyManager: PrivacyManager,
+    config: AirshipRuntimeConfig,
+    dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
+    private val job = SupervisorJob()
+    private val scope = CoroutineScope(dispatcher + job)
 
     /** A callback used to be notified when refreshing messages. */
     public fun interface FetchMessagesCallback {
@@ -68,18 +76,17 @@ public class Inbox @VisibleForTesting internal constructor(
         context: Context,
         dataStore: PreferenceDataStore,
         airshipChannel: AirshipChannel,
-        configOptions: AirshipConfigOptions,
+        config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager
     ) : this(
-        context = context,
         dataStore = dataStore,
         jobDispatcher = JobDispatcher.shared(context),
         user = User(dataStore, airshipChannel),
-        messageDao = MessageDatabase.createDatabase(context, configOptions).dao,
-        executor = AirshipExecutors.newSerialExecutor(),
+        messageDao = MessageDatabase.createDatabase(context, config.configOptions).dao,
         activityMonitor = shared(context),
         airshipChannel = airshipChannel,
-        privacyManager = privacyManager
+        privacyManager = privacyManager,
+        config = config
     )
 
     private val listeners: MutableList<InboxListener> = CopyOnWriteArrayList()
@@ -87,13 +94,20 @@ public class Inbox @VisibleForTesting internal constructor(
     private val unreadMessages: MutableMap<String, Message> = HashMap()
     private val readMessages: MutableMap<String, Message> = HashMap()
     private val messageUrlMap: MutableMap<String, Message> = HashMap()
-    private val context: Context = context.applicationContext
     private val handler = Handler(Looper.getMainLooper())
 
     private var isFetchingMessages = false
 
     @VisibleForTesting
-    internal var inboxJobHandler: InboxJobHandler? = null
+    internal var inboxJobHandler: InboxJobHandler = InboxJobHandler(
+        inbox = this,
+        user = user,
+        channel = airshipChannel,
+        runtimeConfig = config,
+        dataStore = dataStore,
+        messageDao = messageDao
+    )
+
     private val isEnabled = AtomicBoolean(false)
     private val isStarted = AtomicBoolean(false)
     private val pendingFetchCallbacks: MutableList<PendingFetchMessagesCallback> = ArrayList()
@@ -149,12 +163,8 @@ public class Inbox @VisibleForTesting internal constructor(
         if (!isEnabled.get()) {
             return JobResult.SUCCESS
         }
-        if (inboxJobHandler == null) {
-            inboxJobHandler = InboxJobHandler(
-                this, user, airshipChannel, airship.runtimeConfig, dataStore, messageDao
-            )
-        }
-        return inboxJobHandler!!.performJob(jobInfo)
+
+        return inboxJobHandler.performJob(jobInfo)
     }
 
     /**
@@ -168,7 +178,9 @@ public class Inbox @VisibleForTesting internal constructor(
             if (!isStarted.getAndSet(true)) {
                 // Refresh the inbox whenever the user is updated.
                 user.addListener(userListener)
-                refresh(false)
+                scope.launch {
+                    refresh(false)
+                }
                 activityMonitor.addApplicationListener(applicationListener)
                 airshipChannel.addChannelListener(channelListener)
                 if (user.shouldUpdate()) {
@@ -181,8 +193,7 @@ public class Inbox @VisibleForTesting internal constructor(
         } else {
             // Clean up any Message Center data stored on the device.
             deleteAllMessages()
-            val jobHandler = inboxJobHandler
-            jobHandler?.removeStoredData()
+            inboxJobHandler.removeStoredData()
             tearDown()
         }
     }
@@ -448,7 +459,7 @@ public class Inbox @VisibleForTesting internal constructor(
      * @param messageIds A set of message ids.
      */
     public fun markMessagesRead(messageIds: Set<String>) {
-        executor.execute {
+        scope.launch {
             messageDao.markMessagesRead(messageIds.toList())
         }
         synchronized(inboxLock) {
@@ -470,7 +481,7 @@ public class Inbox @VisibleForTesting internal constructor(
      * @param messageIds A set of message ids.
      */
     public fun markMessagesUnread(messageIds: Set<String>) {
-        executor.execute {
+        scope.launch {
             messageDao.markMessagesUnread(messageIds.toList())
         }
         synchronized(inboxLock) {
@@ -495,14 +506,12 @@ public class Inbox @VisibleForTesting internal constructor(
      * @param messageIds A set of message ids.
      */
     public fun deleteMessages(messageIds: Set<String>) {
-        executor.execute {
-            val messageIdsList = ArrayList(messageIds)
-            messageDao.markMessagesDeleted(messageIdsList)
+        scope.launch {
+            messageDao.markMessagesDeleted(messageIds.toList())
         }
         synchronized(inboxLock) {
             for (messageId: String in messageIds) {
-                val message: Message? = getMessage(messageId)
-                if (message != null) {
+                getMessage(messageId)?.let { message ->
                     message.deleted = true
                     unreadMessages.remove(messageId)
                     readMessages.remove(messageId)
@@ -519,7 +528,9 @@ public class Inbox @VisibleForTesting internal constructor(
      * @hide
      */
     private fun deleteAllMessages() {
-        executor.execute { messageDao.deleteAllMessages() }
+        scope.launch {
+            messageDao.deleteAllMessages()
+        }
 
         synchronized(inboxLock) {
             unreadMessages.clear()
@@ -534,12 +545,11 @@ public class Inbox @VisibleForTesting internal constructor(
      *
      * @param notify `true` to notify listeners, otherwise `false`.
      */
-    internal fun refresh(notify: Boolean) {
-        val messageList = messageDao.messages
+    internal suspend fun refresh(notify: Boolean) {
+        val messageList = messageDao.getMessages()
 
         // Sync the messages
         synchronized(inboxLock) {
-
             // Save the unreadMessageIds
             val previousUnreadMessageIds: Set<String> = HashSet(unreadMessages.keys)
             val previousReadMessageIds: Set<String> = HashSet(readMessages.keys)
@@ -620,7 +630,7 @@ public class Inbox @VisibleForTesting internal constructor(
         jobDispatcher.dispatch(jobInfo)
     }
 
-    internal class SentAtRichPushMessageComparator() : Comparator<Message> {
+    internal class SentAtRichPushMessageComparator : Comparator<Message> {
         override fun compare(lhs: Message, rhs: Message): Int {
             return if (rhs.sentDateMS == lhs.sentDateMS) {
                 lhs.messageId.compareTo(rhs.messageId)

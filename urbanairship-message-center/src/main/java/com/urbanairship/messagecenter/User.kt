@@ -2,7 +2,6 @@
 package com.urbanairship.messagecenter
 
 import androidx.annotation.RestrictTo
-import androidx.annotation.VisibleForTesting
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import com.urbanairship.channel.AirshipChannel
@@ -56,12 +55,7 @@ public class User internal constructor(
         listeners.remove(listener)
     }
 
-    /**
-    * @hide
-    */
-    // TODO: could be internal when UserTest is converted to Kotlin
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun onUserUpdated(success: Boolean) {
+    internal fun onUserUpdated(success: Boolean) {
         for (listener in listeners) {
             listener.onUserUpdated(success)
         }
@@ -90,13 +84,8 @@ public class User internal constructor(
         setUser(userId, userToken)
     }
 
-    // TODO: could be internal when Inbox is converted to Kotlin?
+    /** Returns `true` if the user credentials are available, otherwise `false. */
     public val isUserCreated: Boolean
-        /**
-         * Checks if the user credentials are available.
-         *
-         * @return `true` if the credentials are available, otherwise `false`.
-         */
         get() = !id.isNullOrEmpty() && !password.isNullOrEmpty()
 
     /**
@@ -104,12 +93,8 @@ public class User internal constructor(
      *
      * @param userId The user ID from the response
      * @param userToken The user token from the response
-     *
-     * @hide
      */
-    // TODO: could be internal when UserTest is converted to Kotlin
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun setUser(userId: String?, userToken: String?) {
+    internal fun setUser(userId: String?, userToken: String?) {
         UALog.d("Setting Rich Push user: %s", userId)
         preferences.put(USER_ID_KEY, userId)
         preferences.put(USER_TOKEN_KEY, encode(userToken, userId))
@@ -136,14 +121,8 @@ public class User internal constructor(
         get() = preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "")
         set(channelId) = preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId)
 
-    /**
-     * Returns `true` if the user should be updated.
-     *
-     * @hide
-     */
-    // TODO: can be internal when Inbox is converted to Kotlin
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun shouldUpdate(): Boolean {
+    /** Returns `true` if the user should be updated. */
+    internal fun shouldUpdate(): Boolean {
         return channel.id != null && registeredChannelId != channel.id
     }
 

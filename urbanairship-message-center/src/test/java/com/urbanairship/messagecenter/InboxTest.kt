@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
+import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.UAirship
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.channel.AirshipChannel
@@ -18,8 +19,13 @@ import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.messagecenter.Inbox.FetchMessagesCallback
 import com.urbanairship.mockk.clearInvocations
+import com.urbanairship.remoteconfig.RemoteAirshipConfig
+import com.urbanairship.remoteconfig.RemoteConfig
 import java.util.concurrent.Executor
 import io.mockk.Called
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
@@ -31,14 +37,27 @@ import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowLooper
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class InboxTest {
+
+    private val testDispatcher = StandardTestDispatcher()
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val mainLooper: ShadowLooper = shadowOf(Looper.getMainLooper())
@@ -54,18 +73,28 @@ public class InboxTest {
         dataStore = dataStore,
         defaultEnabledFeatures = PrivacyManager.Feature.ALL
     )
-    private val executor: Executor = Executor { runnable -> runnable.run() }
+    private val runtimeConfig = TestAirshipRuntimeConfig(
+        RemoteConfig(
+            RemoteAirshipConfig(
+                "https://remote-data",
+                "https://example.com",
+                "https://wallet",
+                "https://analytics",
+                "https://metered-usage"
+            )
+        )
+    )
 
     private val inbox = Inbox(
-        context,
-        dataStore,
-        mockDispatcher,
-        mockUser,
-        mockMessageDao,
-        executor,
-        spyActivityMonitor,
-        mockChannel,
-        privacyManager
+        dataStore = dataStore,
+        jobDispatcher = mockDispatcher,
+        user = mockUser,
+        messageDao = mockMessageDao,
+        activityMonitor = spyActivityMonitor,
+        airshipChannel = mockChannel,
+        privacyManager = privacyManager,
+        config = runtimeConfig,
+        dispatcher = testDispatcher
     )
 
     private var testPredicate: Predicate<Message> = Predicate<Message> { message ->
@@ -79,6 +108,8 @@ public class InboxTest {
 
     @Before
     public fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+
         MessageCenterTestUtils.setup()
 
         inbox.setEnabled(true)
@@ -101,11 +132,18 @@ public class InboxTest {
             messageEntities.add(entity)
         }
 
-        every { mockMessageDao.messages } returns messageEntities
+        coEvery { mockMessageDao.getMessages() } returns messageEntities
 
-        inbox.refresh(false)
+        runBlocking {
+            inbox.refresh(false)
+        }
 
         clearInvocations(mockMessageDao)
+    }
+
+    @After
+    public fun teardown() {
+        Dispatchers.resetMain()
     }
 
     /** Test init dispatches the user update job if necessary. */
@@ -449,11 +487,13 @@ public class InboxTest {
 
     /** Verify updateEnabledState when disabled. */
     @Test
-    public fun testUpdateEnabledStateNotEnabled() {
+    public fun testUpdateEnabledStateNotEnabled(): TestResult = runTest {
         inbox.setEnabled(false)
         inbox.updateEnabledState()
 
-        verifyOrder {
+        advanceUntilIdle()
+
+        coVerify {
             mockMessageDao.deleteAllMessages()
             spyActivityMonitor.removeApplicationListener(any())
             mockChannel.removeChannelListener(any())
@@ -466,7 +506,7 @@ public class InboxTest {
      * Verify updateEnabledState when enabled.
      */
     @Test
-    public fun testUpdateEnabledStateEnabled() {
+    public fun testUpdateEnabledStateEnabled(): TestResult = runTest {
         every { mockUser.shouldUpdate() } returns false
 
         inbox.setEnabled(true)
@@ -474,11 +514,14 @@ public class InboxTest {
         // Update again to make sure that we don't restart the Inbox if already started.
         inbox.updateEnabledState()
 
-        verifyOrder {
+        advanceUntilIdle()
+
+        coVerify {
             mockUser.addListener(any())
-            mockMessageDao.messages
             spyActivityMonitor.addApplicationListener(any())
+            mockMessageDao.getMessages()
             mockChannel.addChannelListener(any())
+            mockUser.shouldUpdate()
             mockChannel.addChannelRegistrationPayloadExtender(any())
         }
     }

@@ -16,6 +16,8 @@ import com.urbanairship.messagecenter.Message.TITLE_KEY
 import com.urbanairship.messagecenter.Message.UNREAD_KEY
 import com.urbanairship.messagecenter.Message.create
 import com.urbanairship.util.DateUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 
 public object MessageCenterTestUtils {
 
@@ -24,7 +26,7 @@ public object MessageCenterTestUtils {
     private lateinit var messageDatabase: MessageDatabase
     public fun setup() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        messageDatabase = MessageDatabase.createInMemoryDatabase(context)
+        messageDatabase = MessageDatabase.createInMemoryDatabase(context, Dispatchers.IO)
         messageDao = messageDatabase.dao
     }
 
@@ -36,8 +38,10 @@ public object MessageCenterTestUtils {
     ) {
         val message = createMessage(messageId, extras, expired)
         val entity = requireNotNull(MessageEntity.createMessageFromPayload(messageId, message.rawMessageJson))
-        messageDao.insert(entity)
-        messageEntities = messageDao.messages
+        runBlocking {
+            messageDao.insert(entity)
+            messageEntities = messageDao.getMessages()
+        }
     }
 
     public fun createMessage(

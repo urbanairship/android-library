@@ -2,7 +2,6 @@
 
 package com.urbanairship.messagecenter
 
-import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
@@ -15,6 +14,7 @@ import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
 import java.net.HttpURLConnection
 import kotlin.time.Duration.Companion.hours
+import kotlinx.coroutines.runBlocking
 
 /** Job handler for [Inbox] component. */
 public class InboxJobHandler @VisibleForTesting internal constructor(
@@ -23,7 +23,7 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
     private val channel: AirshipChannel,
     private val dataStore: PreferenceDataStore,
     private val messageDao: MessageDao,
-    private val inboxApiClient: InboxApiClient
+    private val inboxApiClient: InboxApiClient,
 ) {
     internal constructor(
         inbox: Inbox,
@@ -53,38 +53,34 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
      * @param jobInfo The airship jobInfo.
      * @return The job result.
      */
-    internal fun performJob(jobInfo: JobInfo): JobResult {
+    internal fun performJob(jobInfo: JobInfo): JobResult = runBlocking {
         when (jobInfo.action) {
-            ACTION_RICH_PUSH_USER_UPDATE ->
-                onUpdateUser(jobInfo.extras.opt(EXTRA_FORCEFULLY).getBoolean(false))
-            ACTION_RICH_PUSH_MESSAGES_UPDATE ->
-                onUpdateMessages()
-            ACTION_SYNC_MESSAGE_STATE ->
-                onSyncMessages()
+            ACTION_RICH_PUSH_USER_UPDATE -> onUpdateUser(
+                jobInfo.extras.opt(EXTRA_FORCEFULLY).getBoolean(false)
+            ).let { JobResult.SUCCESS }
+
+            ACTION_RICH_PUSH_MESSAGES_UPDATE -> onUpdateMessages().let { JobResult.SUCCESS }
+            ACTION_SYNC_MESSAGE_STATE -> onSyncMessages().let { JobResult.SUCCESS }
+            else -> JobResult.SUCCESS
         }
-        return JobResult.SUCCESS
     }
 
-    /**
-     * Updates the message list.
-     */
-    private fun onUpdateMessages() {
+    /** Updates the message list. */
+    private suspend fun onUpdateMessages() {
         if (!user.isUserCreated) {
             UALog.d { "User has not been created, canceling messages update" }
             inbox.onUpdateMessagesFinished(false)
         } else {
-            val success = updateMessages()
+            val result = updateMessages()
             inbox.refresh(true)
-            inbox.onUpdateMessagesFinished(success)
+            inbox.onUpdateMessagesFinished(result.getOrDefault(false))
             syncReadMessageState()
             syncDeletedMessageState()
         }
     }
 
-    /**
-     * Sync message sate.
-     */
-    private fun onSyncMessages() {
+    /** Sync message state. */
+    private suspend fun onSyncMessages() {
         syncReadMessageState()
         syncDeletedMessageState()
     }
@@ -94,7 +90,7 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
      *
      * @param forcefully If the user should be updated even if its been recently updated.
      */
-    private fun onUpdateUser(forcefully: Boolean) {
+    private suspend fun onUpdateUser(forcefully: Boolean) {
         if (!forcefully) {
             val lastUpdateTime = dataStore.getLong(LAST_UPDATE_TIME, 0)
             val now = System.currentTimeMillis()
@@ -103,8 +99,8 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
                 return
             }
         }
-        val success: Boolean = if (!user.isUserCreated) createUser() else updateUser()
-        user.onUserUpdated(success)
+        val result = if (!user.isUserCreated) createUser() else updateUser()
+        user.onUserUpdated(result.getOrDefault(false))
     }
 
     /**
@@ -112,13 +108,14 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
      *
      * @return `true` if messages were updated, otherwise `false`.
      */
-    private fun updateMessages(): Boolean {
+    private suspend fun updateMessages(): Result<Boolean> {
         UALog.i { "Refreshing inbox messages." }
         val channelId = channel.id
         if (channelId.isNullOrEmpty()) {
             UALog.v { "The channel ID does not exist." }
-            return false
+            return Result.failure(IllegalStateException("Channel ID does not exist."))
         }
+
         UALog.v { "Fetching inbox messages." }
         return try {
             val response = inboxApiClient.fetchMessages(
@@ -127,24 +124,24 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
             UALog.v { "Fetch inbox messages response: $response" }
 
             // 200-299
-            if (response.isSuccessful) {
-                val result = response.result
-                UALog.i { "InboxJobHandler - Received ${result.size()} inbox messages." }
-                updateInbox(result)
-                dataStore.put(LAST_MESSAGE_REFRESH_TIME, response.headers["Last-Modified"])
-                return true
+            val responseValue = response.value
+            if (response.isSuccessful && responseValue != null) {
+                UALog.i { "InboxJobHandler - Received ${responseValue.size()} inbox messages." }
+                updateInbox(responseValue)
+                dataStore.put(LAST_MESSAGE_REFRESH_TIME, response.headers?.get("Last-Modified"))
+                return Result.success(true)
             }
 
             // 304
             if (response.status == HttpURLConnection.HTTP_NOT_MODIFIED) {
                 UALog.d { "Inbox messages already up-to-date." }
-                return true
+                return  Result.success(true)
             }
             UALog.d { "Unable to update inbox messages $response." }
-            false
+            Result.success(false)
         } catch (e: RequestException) {
             UALog.d(e) { "Update Messages failed." }
-            false
+            Result.failure(e)
         }
     }
 
@@ -153,7 +150,7 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
      *
      * @param serverMessages The messages from the server.
      */
-    private fun updateInbox(serverMessages: JsonList) {
+    private suspend fun updateInbox(serverMessages: JsonList) {
         val messagesToInsert: MutableList<JsonValue> = ArrayList()
         val serverMessageIds = HashSet<String>()
         for (message in serverMessages) {
@@ -181,20 +178,18 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
         if (messagesToInsert.size > 0) {
             messageDao.insertMessages(MessageEntity.createMessagesFromPayload(messagesToInsert))
         }
-        val deletedMessageIds = messageDao.messageIds.toMutableList()
+        val deletedMessageIds = messageDao.getMessageIds().toMutableList()
         deletedMessageIds.removeAll(serverMessageIds)
         messageDao.deleteMessages(deletedMessageIds)
     }
 
-    /**
-     * Synchronizes local deleted message state with the server.
-     */
-    private fun syncDeletedMessageState() {
+    /** Synchronizes local deleted message state with the server. */
+    private suspend fun syncDeletedMessageState() {
         val channelId = channel.id
         if (channelId.isNullOrEmpty()) {
             return
         }
-        val messagesToUpdate: Collection<MessageEntity> = messageDao.locallyDeletedMessages
+        val messagesToUpdate: Collection<MessageEntity> = messageDao.getLocallyDeletedMessages()
         val idsToDelete = mutableListOf<String>()
         val reportings = mutableListOf<JsonValue>()
 
@@ -224,15 +219,13 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
         }
     }
 
-    /**
-     * Synchronizes local read messages state with the server.
-     */
-    private fun syncReadMessageState() {
+    /** Synchronizes local read messages state with the server. */
+    private suspend fun syncReadMessageState() {
         val channelId = channel.id
         if (channelId.isNullOrEmpty()) {
             return
         }
-        val messagesToUpdate: Collection<MessageEntity> = messageDao.locallyReadMessages
+        val messagesToUpdate: Collection<MessageEntity> = messageDao.getLocallyReadMessages()
         val idsToUpdate = mutableListOf<String>()
         val reportings = mutableListOf<JsonValue>()
 
@@ -266,29 +259,29 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
      *
      * @return `true` if user was created, otherwise `false`.
      */
-    private fun createUser(): Boolean {
+    private suspend fun createUser(): Result<Boolean> {
         val channelId = channel.id
         if (channelId.isNullOrEmpty()) {
             UALog.d { "No Channel. User will be created after channel registration finishes." }
-            return false
+            return Result.failure(IllegalStateException("Channel ID does not exist."))
         }
         return try {
             val response = inboxApiClient.createUser(channelId)
 
             // 200-209
-            if (response.isSuccessful) {
-                val userCredentials = response.result
+            val userCredentials = response.value
+            if (response.isSuccessful && userCredentials != null) {
                 UALog.i { "InboxJobHandler - Created Rich Push user: ${userCredentials.username }" }
                 dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis())
                 dataStore.remove(LAST_MESSAGE_REFRESH_TIME)
                 user.onCreated(userCredentials.username, userCredentials.password, channelId)
-                return true
+                return Result.success(true)
             }
             UALog.d { "Rich Push user creation failed: $response" }
-            false
+            Result.success(false)
         } catch (e: RequestException) {
             UALog.d(e) { "User creation failed." }
-            false
+            Result.failure(e)
         }
     }
 
@@ -300,31 +293,35 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
      *
      * @return `true` if user was updated, otherwise `false`.
      */
-    private fun updateUser(): Boolean {
+    private suspend fun updateUser(): Result<Boolean> {
         val channelId = channel.id
         if (channelId.isNullOrEmpty()) {
             UALog.d { "No Channel. Skipping Rich Push user update." }
-            return false
+            return Result.failure(IllegalStateException("Channel ID does not exist."))
         }
         return try {
             val response = inboxApiClient.updateUser(user, channelId)
             UALog.v { "Update Rich Push user response: $response" }
-            val status = response.status
-            if (status == HttpURLConnection.HTTP_OK) {
-                UALog.i { "Rich Push user updated." }
-                dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis())
-                user.onUpdated(channelId)
-                return true
-            } else if (status == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                UALog.d { "Re-creating Rich Push user." }
-                dataStore.put(LAST_UPDATE_TIME, 0)
-                return createUser()
+            when (response.status) {
+                HttpURLConnection.HTTP_OK -> {
+                    UALog.i { "Rich Push user updated." }
+                    dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis())
+                    user.onUpdated(channelId)
+                    Result.success(true)
+                }
+                HttpURLConnection.HTTP_UNAUTHORIZED -> {
+                    UALog.d { "Re-creating Rich Push user." }
+                    dataStore.put(LAST_UPDATE_TIME, 0)
+                    createUser()
+                }
+                else -> {
+                    dataStore.put(LAST_UPDATE_TIME, 0)
+                    Result.success(false)
+                }
             }
-            dataStore.put(LAST_UPDATE_TIME, 0)
-            false
         } catch (e: RequestException) {
             UALog.d(e) { "User update failed." }
-            false
+            Result.failure(e)
         }
     }
 
@@ -342,8 +339,11 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
         /** Extra key to indicate if the rich push user needs to be updated forcefully. */
         const val EXTRA_FORCEFULLY = "EXTRA_FORCEFULLY"
 
-        public const val LAST_MESSAGE_REFRESH_TIME = "com.urbanairship.messages.LAST_MESSAGE_REFRESH_TIME"
+        @VisibleForTesting
+        internal const val LAST_MESSAGE_REFRESH_TIME = "com.urbanairship.messages.LAST_MESSAGE_REFRESH_TIME"
+
         private const val LAST_UPDATE_TIME = "com.urbanairship.user.LAST_UPDATE_TIME"
+
         private val USER_UPDATE_INTERVAL_MS = 24.hours.inWholeMilliseconds
     }
 }
