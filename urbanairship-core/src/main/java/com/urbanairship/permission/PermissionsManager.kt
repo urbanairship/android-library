@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
 import androidx.core.util.Consumer
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.UALog
 import com.urbanairship.app.ActivityMonitor
@@ -14,12 +15,19 @@ import com.urbanairship.app.SimpleActivityListener
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.getAndUpdate
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -31,18 +39,21 @@ import kotlinx.coroutines.withContext
  * be handled by the application by setting a delegate with [PermissionDelegate].
  */
 public class PermissionsManager internal constructor(
-    private var context: Context,
-    activityMonitor: ActivityMonitor
+    private val context: Context,
+    private val activityMonitor: ActivityMonitor,
+    private val systemSettingsLauncher: SystemSettingsLauncher,
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) {
+
     private val permissionsJob = SupervisorJob()
-    private val permissionsScope = CoroutineScope(Dispatchers.Main + permissionsJob)
+    private val permissionsScope = CoroutineScope(dispatcher + permissionsJob)
 
     private val permissionDelegateMap: MutableMap<Permission, PermissionDelegate?> = mutableMapOf()
     private val airshipEnablers: MutableList<Consumer<Permission>> = CopyOnWriteArrayList()
     private val onPermissionStatusChangedListeners: MutableList<OnPermissionStatusChangedListener> = CopyOnWriteArrayList()
 
     /// All modified on the main thread
-    private val permissionStatusMap: MutableMap<Permission, PermissionStatus> = mutableMapOf()
+    private val permissionStatusMap = MutableStateFlow(emptyMap<Permission, PermissionStatus>())
     private val pendingRequestResults: MutableMap<Permission, Flow<PermissionRequestResult>> = mutableMapOf()
     private val pendingCheckResults: MutableMap<Permission, Flow<PermissionStatus>> = mutableMapOf()
 
@@ -50,34 +61,30 @@ public class PermissionsManager internal constructor(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public constructor(context: Context): this(context, GlobalActivityMonitor.shared(context))
+    public constructor(context: Context): this(context, GlobalActivityMonitor.shared(context), SystemSettingsLauncher())
 
     init {
-        activityMonitor.addActivityListener(object : SimpleActivityListener() {
-            override fun onActivityResumed(activity: Activity) {
-                updatePermissions()
-            }
-        })
-    }
-
-    @MainThread
-    private fun updatePermissions() {
-        for (permission in configuredPermissions) {
-            checkPermissionStatus(permission) { status ->
-                updatePermissionStatus(permission, status)
+        permissionsScope.launch {
+            activityMonitor.resumedActivities().collect { activity ->
+                if (activity.javaClass != PermissionsActivity::class.java) {
+                    configuredPermissions.forEach { suspendingCheckPermissionStatus(it) }
+                }
             }
         }
     }
 
+
     @MainThread
     private fun updatePermissionStatus(permission: Permission, status: PermissionStatus) {
-        val previous = permissionStatusMap[permission]
-        if (previous != null && previous != status) {
+        val previous = permissionStatusMap.getAndUpdate {
+            it.toMutableMap().apply { put(permission, status) }
+        }
+
+        if (previous[permission] != null && previous[permission] != status) {
             for (listener in this.onPermissionStatusChangedListeners) {
                 listener.onPermissionStatusChanged(permission, status)
             }
         }
-        permissionStatusMap[permission] = status
     }
 
     /**
@@ -155,21 +162,19 @@ public class PermissionsManager internal constructor(
     public fun checkPermissionStatus(permission: Permission): PendingResult<PermissionStatus?> {
         val pendingResult = PendingResult<PermissionStatus?>()
         permissionsScope.launch {
-            pendingResult.result = suspendingCheckPermissionRequest(permission)
+            pendingResult.result = suspendingCheckPermissionStatus(permission)
         }
         return pendingResult
     }
 
     /**
-     * Requests a permission.
+     * Returns a flow of permission status changes for the specified permission.
      *
      * @param permission The permission.
-     * @param callback The callback.
+     * @return A pending result.
      */
-    public fun requestPermission(
-        permission: Permission, callback: Consumer<PermissionRequestResult?>
-    ) {
-        requestPermission(permission, false, callback)
+    public fun permissionsUpdate(permission: Permission): Flow<PermissionStatus> {
+        return permissionStatusMap.map { it[permission] }.filterNotNull().distinctUntilChanged()
     }
 
     /**
@@ -182,12 +187,18 @@ public class PermissionsManager internal constructor(
      * is granted.
      * @param callback The callback.
      */
+    @JvmOverloads
     public fun requestPermission(
         permission: Permission,
-        enableAirshipUsageOnGrant: Boolean,
+        enableAirshipUsageOnGrant: Boolean = false,
+        fallback: PermissionPromptFallback = PermissionPromptFallback.None,
         callback: Consumer<PermissionRequestResult?>
     ) {
-        requestPermission(permission, enableAirshipUsageOnGrant).addResultCallback {
+        permissionsScope.launch {
+            suspendingRequestPermission(permission, enableAirshipUsageOnGrant)
+        }
+
+        requestPermission(permission, enableAirshipUsageOnGrant, fallback).addResultCallback {
             callback.accept(it)
         }
     }
@@ -206,21 +217,23 @@ public class PermissionsManager internal constructor(
     @JvmOverloads
     public fun requestPermission(
         permission: Permission,
-        enableAirshipUsageOnGrant: Boolean = false
+        enableAirshipUsageOnGrant: Boolean = false,
+        fallback: PermissionPromptFallback = PermissionPromptFallback.None,
     ): PendingResult<PermissionRequestResult?> {
         val pendingResult = PendingResult<PermissionRequestResult?>()
         permissionsScope.launch {
             pendingResult.result =
-                suspendingPermissionRequest(permission, enableAirshipUsageOnGrant)
+                suspendingRequestPermission(permission, enableAirshipUsageOnGrant, fallback)
         }
         return pendingResult
     }
 
-    private suspend fun suspendingPermissionRequest(
+    public suspend fun suspendingRequestPermission(
         permission: Permission,
-        enableAirshipUsageOnGrant: Boolean = false
+        enableAirshipUsageOnGrant: Boolean = false,
+        fallback: PermissionPromptFallback = PermissionPromptFallback.None
     ): PermissionRequestResult {
-        return withContext(Dispatchers.Main.immediate) {
+        val result = withContext(Dispatchers.Main.immediate) {
             val delegate = getDelegate(permission)
                 ?: return@withContext PermissionRequestResult.notDetermined()
 
@@ -249,9 +262,38 @@ public class PermissionsManager internal constructor(
 
             return@withContext result
         }
+
+        if (!result.isSilentlyDenied) {
+            return result
+        }
+
+        return when(fallback) {
+            is PermissionPromptFallback.None -> result
+            is PermissionPromptFallback.Callback -> {
+                fallback.callback()
+                val updatedStatus = suspendingCheckPermissionStatus(permission)
+                if (updatedStatus == PermissionStatus.GRANTED) {
+                    PermissionRequestResult.granted()
+                } else {
+                    result
+                }
+            }
+            is PermissionPromptFallback.SystemSettings -> {
+                if (launchSettingsForPermission(permission)) {
+                    waitForResume()
+                    if (suspendingCheckPermissionStatus(permission) == PermissionStatus.GRANTED) {
+                        PermissionRequestResult.granted()
+                    } else {
+                        result
+                    }
+                } else {
+                    result
+                }
+            }
+        }
     }
 
-    private suspend fun suspendingCheckPermissionRequest(
+    public suspend fun suspendingCheckPermissionStatus(
         permission: Permission,
     ): PermissionStatus {
         return withContext(Dispatchers.Main.immediate) {
@@ -281,15 +323,25 @@ public class PermissionsManager internal constructor(
         }
     }
 
-
     private fun getDelegate(permission: Permission): PermissionDelegate? {
         synchronized(permissionDelegateMap) {
             return permissionDelegateMap[permission]
         }
     }
 
-}
+    @MainThread
+    private fun launchSettingsForPermission(permission: Permission): Boolean {
+        return if (permission == Permission.DISPLAY_NOTIFICATIONS) {
+            systemSettingsLauncher.openAppNotificationSettings(context)
+        } else {
+            systemSettingsLauncher.openAppSettings(context)
+        }
+    }
 
+    private suspend fun waitForResume() {
+        activityMonitor.resumedActivities().first()
+    }
+}
 
 private fun PermissionDelegate.requestPermissionFlow(context: Context, scope: CoroutineScope): Flow<PermissionRequestResult> {
     val stateFlow = MutableStateFlow<PermissionRequestResult?>(null)
@@ -313,4 +365,18 @@ private fun PermissionDelegate.checkPermissionFlow(context: Context, scope: Coro
         }
     }
     return stateFlow.mapNotNull { it }
+}
+
+private suspend fun ActivityMonitor.resumedActivities() = callbackFlow<Activity> {
+    val listener = object : SimpleActivityListener() {
+        override fun onActivityResumed(activity: Activity) {
+            this@callbackFlow.trySend(activity)
+        }
+    }
+
+    addActivityListener(listener)
+
+    awaitClose {
+        removeActivityListener(listener)
+    }
 }

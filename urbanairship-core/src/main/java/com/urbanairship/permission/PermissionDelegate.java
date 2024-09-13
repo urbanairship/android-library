@@ -18,7 +18,6 @@ public interface PermissionDelegate {
      *
      * @param context The application context.
      * @param callback The callback.
-     * @return The {@link PermissionStatus}.
      */
     @MainThread
     void checkPermissionStatus(@NonNull Context context, @NonNull Consumer<PermissionStatus> callback);
