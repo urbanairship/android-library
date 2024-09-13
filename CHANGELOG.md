@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.3.0 September 13, 2024
+Minor release that adds a new method `enableUserNotifications(PermissionPromptFallback)` on `PushManager`.
+
+### Changes
+- Added a `enableUserNotifications(PermissionPromptFallback)` method on `PushManager` that will attempt to enable notifications and use the fallback if the permission is denied.
+
 ## Version 18.2.0 September 6, 2024
 Minor release with several enhancements to In-App Automation, Scenes, and Surveys. This version also contains a fix
 for applications that are targeting API 35.
