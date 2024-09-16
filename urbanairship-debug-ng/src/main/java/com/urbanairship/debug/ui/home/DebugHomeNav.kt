@@ -13,6 +13,7 @@ import com.urbanairship.debug.ui.automations.automationNav
 import com.urbanairship.debug.ui.deviceinfo.DeviceInfoScreen
 import com.urbanairship.debug.ui.deviceinfo.deviceInfoNav
 import com.urbanairship.debug.ui.events.eventNav
+import com.urbanairship.debug.ui.featureflag.featureFlagNav
 import com.urbanairship.debug.ui.preferencecenter.preferenceCenterNav
 import com.urbanairship.debug.ui.push.pushNav
 
@@ -42,14 +43,7 @@ internal fun DebugNavHost(
         automationNav(navController = navController)
         eventNav(navController = navController)
         pushNav(navController = navController)
-
-        composable(route = TopLevelScreens.FeatureFlags.route) {
-            // TODO
-            DeviceInfoScreen(
-                onNavigateUp = { navController.popBackStack() },
-                onNavigate = { route -> navController.navigate(route) }
-            )
-        }
+        featureFlagNav(navController = navController)
 
         composable(route = TopLevelScreens.Contacts.route) {
             // TODO
