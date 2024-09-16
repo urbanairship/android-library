@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.view.ActionMode;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -20,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.urbanairship.PendingResult;
 import com.urbanairship.Predicate;
 import com.urbanairship.util.ViewUtils;
 
@@ -289,16 +289,6 @@ public class MessageCenterFragment extends Fragment {
     }
 
     /**
-     * Gets messages from the inbox filtered by the local predicate
-     *
-     * @return The filtered list of messages.
-     */
-    @NonNull
-    private List<Message> getMessages() {
-        return MessageCenter.shared().getInbox().getMessages(predicate);
-    }
-
-    /**
      * Sets the message ID to display.
      *
      * @param messageId The message ID.
@@ -321,36 +311,47 @@ public class MessageCenterFragment extends Fragment {
             return;
         }
 
-        Message message = MessageCenter.shared().getInbox().getMessage(messageId);
-        if (message == null) {
-            currentMessagePosition = -1;
-        } else {
-            currentMessagePosition = getMessages().indexOf(message);
-        }
+        Inbox inbox = MessageCenter.shared().getInbox();
 
-        this.currentMessageId = messageId;
+        PendingResult<Message> pendingMessage = inbox.getMessagePendingResult(messageId);
+        pendingMessage.addResultCallback(message -> {
+            if (message == null) {
+                currentMessagePosition = -1;
+            } else {
+                PendingResult<List<Message>> pendingMessages = inbox.getMessagesPendingResult(predicate);
+                pendingMessages.addResultCallback(messages -> {
+                    if (messages == null || messages.isEmpty()) {
+                        currentMessagePosition = -1;
+                    } else {
+                        currentMessagePosition = messages.indexOf(message);
+                    }
+                });
+            }
 
-        if (messageListFragment == null) {
-            return;
-        }
+            this.currentMessageId = messageId;
 
-        if (isTwoPane) {
-            String tag = messageId == null ? "EMPTY_MESSAGE" : messageId;
-            if (getChildFragmentManager().findFragmentByTag(tag) != null) {
-                // Already displaying
+            if (messageListFragment == null) {
                 return;
             }
 
-            Fragment fragment = messageId == null ? new NoMessageSelectedFragment() : MessageFragment.newInstance(messageId);
-            getChildFragmentManager().beginTransaction()
-                                     .replace(R.id.message_container, fragment, tag)
-                                     .commit();
+            if (isTwoPane) {
+                String tag = messageId == null ? "EMPTY_MESSAGE" : messageId;
+                if (getChildFragmentManager().findFragmentByTag(tag) != null) {
+                    // Already displaying
+                    return;
+                }
 
-            messageListFragment.setCurrentMessage(messageId);
+                Fragment fragment = messageId == null ? new NoMessageSelectedFragment() : MessageFragment.newInstance(messageId);
+                getChildFragmentManager().beginTransaction()
+                                         .replace(R.id.message_container, fragment, tag)
+                                         .commit();
 
-        } else if (messageId != null) {
-            showMessageExternally(getContext(), messageId);
-        }
+                messageListFragment.setCurrentMessage(messageId);
+
+            } else if (messageId != null) {
+                showMessageExternally(getContext(), messageId);
+            }
+        });
     }
 
     /**
@@ -378,22 +379,26 @@ public class MessageCenterFragment extends Fragment {
     }
 
     private void updateCurrentMessage() {
-        Message message = MessageCenter.shared().getInbox().getMessage(currentMessageId);
-        List<Message> messages = getMessages();
+        PendingResult<Message> pendingMessage = MessageCenter.shared().getInbox().getMessagePendingResult(currentMessageId);
+        PendingResult<List<Message>> pendingMessages = MessageCenter.shared().getInbox().getMessagesPendingResult(predicate);
 
-        if (isTwoPane && currentMessagePosition != -1 && !messages.contains(message)) {
-            if (messages.size() == 0) {
-                currentMessageId = null;
-                currentMessagePosition = -1;
-            } else {
-                currentMessagePosition = Math.min(messages.size() - 1, currentMessagePosition);
-                currentMessageId = messages.get(currentMessagePosition).getMessageId();
-            }
+        pendingMessage.addResultCallback(message -> {
+            pendingMessages.addResultCallback(messages -> {
+                if (isTwoPane && currentMessagePosition != -1 && messages != null && !messages.contains(message)) {
+                    if (messages.isEmpty()) {
+                        currentMessageId = null;
+                        currentMessagePosition = -1;
+                    } else {
+                        currentMessagePosition = Math.min(messages.size() - 1, currentMessagePosition);
+                        currentMessageId = messages.get(currentMessagePosition).getMessageId();
+                    }
 
-            if (isTwoPane) {
-                showMessage(currentMessageId);
-            }
-        }
+                    if (isTwoPane) {
+                        showMessage(currentMessageId);
+                    }
+                }
+            });
+        });
     }
 
     /**

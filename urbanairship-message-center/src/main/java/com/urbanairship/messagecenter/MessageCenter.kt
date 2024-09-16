@@ -23,6 +23,11 @@ import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * Airship Message Center.
@@ -38,8 +43,12 @@ internal constructor(
     private val config: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     public val inbox: Inbox,
-    private val pushManager: PushManager
+    private val pushManager: PushManager,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : AirshipComponent(context, dataStore) {
+
+    private val job = SupervisorJob()
+    private val scope = CoroutineScope(dispatcher + job)
 
     /** The default inbox predicate. */
     public var predicate: Predicate<Message>? = null
@@ -64,12 +73,14 @@ internal constructor(
     private var onShowMessageCenterListener: OnShowMessageCenterListener? = null
 
     private val pushListener: PushListener = PushListener { message: PushMessage, _: Boolean ->
-        val hasMessageId = !message.richPushMessageId.isNullOrEmpty()
-        val isMessageMissing = inbox.getMessage(message.richPushMessageId) == null
-        // If we have a message ID, but the message is not in the inbox, fetch messages.
-        if (hasMessageId && isMessageMissing) {
-            UALog.d("Received a Rich Push.")
-            inbox.fetchMessages()
+        scope.launch {
+            val hasMessageId = !message.richPushMessageId.isNullOrEmpty()
+            val hasMessageData = inbox.getMessage(message.richPushMessageId) != null
+            // If we have a message ID, but the message is not in the inbox, fetch messages.
+            if (hasMessageId && !hasMessageData) {
+                UALog.d("Received a Rich Push.")
+                inbox.fetchMessages()
+            }
         }
     }
 

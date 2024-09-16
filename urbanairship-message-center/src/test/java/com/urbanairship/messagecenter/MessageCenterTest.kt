@@ -8,6 +8,7 @@ import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.Cancelable
+import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestAirshipRuntimeConfig
@@ -21,24 +22,40 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowApplication
 
 /** Tests for [MessageCenter] */
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class MessageCenterTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
+    private val testDispatcher = StandardTestDispatcher()
+    private val unconfinedTestDispatcher = UnconfinedTestDispatcher()
+
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
     private val shadowApplication: ShadowApplication = Shadows.shadowOf(context as Application?)
     private val privacyManager = mockk<PrivacyManager>(relaxUnitFun = true) {
@@ -51,14 +68,22 @@ public class MessageCenterTest {
     private val onShowMessageCenterListener = mockk<OnShowMessageCenterListener> {}
     private val config = TestAirshipRuntimeConfig()
 
-    private val messageCenter: MessageCenter =
-        MessageCenter(context, dataStore, config, privacyManager, inbox, pushManager)
+    private val messageCenter: MessageCenter = MessageCenter(
+        context = context,
+        dataStore = dataStore,
+        config = config,
+        privacyManager = privacyManager,
+        inbox = inbox,
+        pushManager = pushManager,
+        dispatcher = unconfinedTestDispatcher
+    )
 
     private lateinit var pushListener: PushListener
     private lateinit var privacyManagerListener: PrivacyManager.Listener
 
     @Before
     public fun setup() {
+        Dispatchers.setMain(testDispatcher)
         messageCenter.initialize()
 
         val pushListenerSlot = slot<PushListener>()
@@ -68,6 +93,11 @@ public class MessageCenterTest {
         val privacyListenerSlot = slot<PrivacyManager.Listener>()
         verify { privacyManager.addListener(capture(privacyListenerSlot)) }
         privacyManagerListener = privacyListenerSlot.captured
+    }
+
+    @After
+    public fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
@@ -160,11 +190,12 @@ public class MessageCenterTest {
     }
 
     @Test
-    public fun testPushListener() {
+    public fun testPushListener(): TestResult = runTest {
         val message = PushMessage(mapOf(PushMessage.EXTRA_RICH_PUSH_ID to "messageID"))
-        every { inbox.getMessage("messageID") } returns null
+        coEvery { inbox.getMessage("messageID") } returns null
 
         pushListener.onPushReceived(message, true)
+        advanceUntilIdle()
 
         verify { inbox.fetchMessages() }
     }

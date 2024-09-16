@@ -15,10 +15,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.urbanairship.Cancelable;
+import com.urbanairship.PendingResult;
 import com.urbanairship.Predicate;
 import com.urbanairship.util.ViewUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.CallSuper;
@@ -68,19 +70,17 @@ public class MessageListFragment extends Fragment {
 
     private final InboxListener inboxListener = this::updateAdapterMessages;
 
-    /**
-     * Gets messages from the inbox filtered by the local predicate
-     *
-     * @return The filtered list of messages.
-     */
-    @NonNull
-    private List<Message> getMessages() {
-        return inbox.getMessages(predicate);
-    }
-
     private void updateAdapterMessages() {
-        if (getAdapter() != null) {
-            getAdapter().set(getMessages());
+        MessageViewAdapter adapter = getAdapter();
+        if (adapter != null) {
+            PendingResult<List<Message>> pendingResult = inbox.getMessagesPendingResult(predicate);
+            pendingResult.addResultCallback(result -> {
+                if (result == null) {
+                    adapter.set(Collections.emptyList());
+                } else {
+                    adapter.set(result);
+                }
+            });
         }
     }
 

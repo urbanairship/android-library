@@ -130,12 +130,32 @@ public class MessageEntity {
     }
 
     @Nullable
-    protected Message createMessageFromEntity(@NonNull MessageEntity entity) {
+    protected Message toMessage() {
         try {
-            return Message.create(JsonValue.parseString(entity.rawMessageObject), entity.unread, entity.deleted);
+            return Message.create(JsonValue.parseString(rawMessageObject), unread, deleted);
         } catch (JsonException e) {
             UALog.e("Failed to create Message from JSON");
             return null;
         }
     }
+
+    @Override
+    public String toString() {
+        return "MessageEntity{" +
+                "id=" + id +
+                ", messageId='" + messageId + '\'' +
+                ", messageUrl='" + messageUrl + '\'' +
+                ", messageBodyUrl='" + messageBodyUrl + '\'' +
+                ", messageReadUrl='" + messageReadUrl + '\'' +
+                ", title='" + title + '\'' +
+                ", extra='" + extra + '\'' +
+                ", unread=" + unread +
+                ", unreadOrig=" + unreadOrig +
+                ", deleted=" + deleted +
+                ", timestamp='" + timestamp + '\'' +
+                ", rawMessageObject='" + rawMessageObject + '\'' +
+                ", expirationTimestamp='" + expirationTimestamp + '\'' +
+                '}';
+    }
+
 }

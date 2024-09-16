@@ -72,7 +72,7 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
             inbox.onUpdateMessagesFinished(false)
         } else {
             val result = updateMessages()
-            inbox.refresh(true)
+            inbox.notifyInboxUpdated()
             inbox.onUpdateMessagesFinished(result.getOrDefault(false))
             syncReadMessageState()
             syncDeletedMessageState()

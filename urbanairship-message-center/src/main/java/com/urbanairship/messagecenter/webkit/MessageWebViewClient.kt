@@ -17,6 +17,9 @@ import com.urbanairship.webkit.AirshipWebViewClient
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 /** A web view client that enables the Airship Native Bridge for Message Center. */
 public open class MessageWebViewClient : AirshipWebViewClient() {
@@ -70,16 +73,19 @@ public open class MessageWebViewClient : AirshipWebViewClient() {
      * @note This method should only be called from the main thread.
      */
     @MainThread
-    private fun getMessage(webView: WebView): Message? {
-        return MessageCenter.shared().inbox.getMessageByUrl(webView.url)
+    private fun getMessage(webView: WebView): Message? = runBlocking {
+        val url = withContext(Dispatchers.Main) {
+            webView.url
+        }
+        withContext(Dispatchers.IO) {
+            MessageCenter.shared().inbox.getMessageByUrl(url)
+        }
     }
 
     private companion object {
 
-        private val DATE_FORMATTER = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ", Locale.US)
-
-        init {
-            DATE_FORMATTER.timeZone = TimeZone.getTimeZone("UTC")
+        private val DATE_FORMATTER = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
         }
     }
 }

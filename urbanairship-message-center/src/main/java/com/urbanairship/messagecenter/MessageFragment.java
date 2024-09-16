@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.urbanairship.Cancelable;
+import com.urbanairship.PendingResult;
 import com.urbanairship.UALog;
 import com.urbanairship.messagecenter.webkit.MessageWebView;
 import com.urbanairship.messagecenter.webkit.MessageWebViewClient;
@@ -337,36 +338,37 @@ public class MessageFragment extends Fragment {
         showProgress();
         error = null;
 
-        message = MessageCenter.shared().getInbox().getMessage(getMessageId());
+        PendingResult<Message> pendingResult = MessageCenter.shared().getInbox().getMessagePendingResult(getMessageId());
+        pendingResult.addResultCallback(result -> {
+            message = result;
 
-        if (message == null) {
-            UALog.d("Fetching messages.");
-            fetchMessageRequest = MessageCenter.shared().getInbox().fetchMessages(new Inbox.FetchMessagesCallback() {
-                @Override
-                public void onFinished(boolean success) {
-                    message = MessageCenter.shared().getInbox().getMessage(getMessageId());
+            if (message == null) {
+                UALog.d("Fetching messages.");
+                fetchMessageRequest = MessageCenter.shared().getInbox().fetchMessages(success -> {
+                    PendingResult<Message> pendingResult2 = MessageCenter.shared().getInbox().getMessagePendingResult(getMessageId());
+                    pendingResult2.addResultCallback(result2 -> {
+                        if (!success) {
+                            showErrorPage(ERROR_FETCHING_MESSAGES);
+                            return;
+                        } else if (message == null || message.isExpired()) {
+                            showErrorPage(ERROR_MESSAGE_UNAVAILABLE);
+                            return;
+                        }
 
-                    if (!success) {
-                        showErrorPage(ERROR_FETCHING_MESSAGES);
-                        return;
-                    } else if (message == null || message.isExpired()) {
-                        showErrorPage(ERROR_MESSAGE_UNAVAILABLE);
-                        return;
-                    }
-
-                    UALog.i("Loading message: " + message.getMessageId());
-                    webView.loadMessage(message);
+                        UALog.i("Loading message: " + message.getMessageId());
+                        webView.loadMessage(message);
+                    });
+                });
+            } else {
+                if (message.isExpired()) {
+                    showErrorPage(ERROR_MESSAGE_UNAVAILABLE);
+                    return;
                 }
-            });
-        } else {
-            if (message.isExpired()) {
-                showErrorPage(ERROR_MESSAGE_UNAVAILABLE);
-                return;
-            }
 
-            UALog.i("Loading message: %s", message.getMessageId());
-            webView.loadMessage(message);
-        }
+                UALog.i("Loading message: %s", message.getMessageId());
+                webView.loadMessage(message);
+            }
+        });
     }
 
 }

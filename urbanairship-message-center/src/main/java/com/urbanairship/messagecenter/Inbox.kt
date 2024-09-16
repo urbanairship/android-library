@@ -2,14 +2,13 @@
 package com.urbanairship.messagecenter
 
 import android.content.Context
-import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
-import com.urbanairship.AirshipExecutors
 import com.urbanairship.Cancelable
 import com.urbanairship.CancelableOperation
+import com.urbanairship.PendingResult
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
@@ -25,16 +24,14 @@ import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.json.jsonMapOf
-import java.util.Collections
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * The inbox provides access to the device's local inbox data. Modifications (e.g., deletions or
@@ -90,11 +87,6 @@ public class Inbox @VisibleForTesting internal constructor(
     )
 
     private val listeners: MutableList<InboxListener> = CopyOnWriteArrayList()
-    private val deletedMessageIds: MutableSet<String> = HashSet()
-    private val unreadMessages: MutableMap<String, Message> = HashMap()
-    private val readMessages: MutableMap<String, Message> = HashMap()
-    private val messageUrlMap: MutableMap<String, Message> = HashMap()
-    private val handler = Handler(Looper.getMainLooper())
 
     private var isFetchingMessages = false
 
@@ -178,9 +170,6 @@ public class Inbox @VisibleForTesting internal constructor(
             if (!isStarted.getAndSet(true)) {
                 // Refresh the inbox whenever the user is updated.
                 user.addListener(userListener)
-                scope.launch {
-                    refresh(false)
-                }
                 activityMonitor.addApplicationListener(applicationListener)
                 airshipChannel.addChannelListener(channelListener)
                 if (user.shouldUpdate()) {
@@ -241,49 +230,37 @@ public class Inbox @VisibleForTesting internal constructor(
     /**
      * Fetches the latest inbox changes from Airship.
      *
-     *
      * Normally this method is not called directly as the message list is automatically fetched when
      * the application foregrounds or when a notification with an associated message is received.
      *
-     *
      * If the fetch request completes and results in a change to the messages,
      * [InboxListener.onInboxUpdated] will be called.
+     *
+     * @param callback Optional callback to be notified when the request finishes fetching the messages.
+     * @return A cancelable object that can be used to cancel the callback.
      */
-    public fun fetchMessages(): Cancelable = fetchMessages(null, null)
+    @JvmOverloads
+    public fun fetchMessages(callback: FetchMessagesCallback? = null): Cancelable {
+        return fetchMessages(null, callback)
+    }
 
     /**
      * Fetches the latest inbox changes from Airship.
      *
-     *
      * Normally this method is not called directly as the message list is automatically fetched when
      * the application foregrounds or when a notification with an associated message is received.
-     *
      *
      * If the fetch request completes and results in a change to the messages,
      * [InboxListener.onInboxUpdated] will be called.
      *
-     * @param callback Callback to be notified when the request finishes fetching the messages.
+     * @param callback Optional callback to be notified when the request finishes fetching the messages.
+     * @param looper Optional `Looper` to post the callback on.
      * @return A cancelable object that can be used to cancel the callback.
      */
-    public fun fetchMessages(callback: FetchMessagesCallback): Cancelable =
-        fetchMessages(null, callback)
-
-    /**
-     * Fetches the latest inbox changes from Airship.
-     *
-     *
-     * Normally this method is not called directly as the message list is automatically fetched when
-     * the application foregrounds or when a notification with an associated message is received.
-     *
-     *
-     * If the fetch request completes and results in a change to the messages,
-     * [InboxListener.onInboxUpdated] will be called.
-     *
-     * @param callback Callback to be notified when the request finishes fetching the messages.
-     * @param looper The looper to post the callback on.
-     * @return A cancelable object that can be used to cancel the callback.
-     */
-    public fun fetchMessages(looper: Looper?, callback: FetchMessagesCallback?): Cancelable {
+    public fun fetchMessages(
+        looper: Looper? = null,
+        callback: FetchMessagesCallback? = null
+    ): Cancelable {
         val cancelableOperation = PendingFetchMessagesCallback(callback, looper)
         synchronized(pendingFetchCallbacks) {
             pendingFetchCallbacks.add(cancelableOperation)
@@ -310,27 +287,16 @@ public class Inbox @VisibleForTesting internal constructor(
         }
 
     /** The total message count. */
-    public val count: Int
-        get() = synchronized(inboxLock) { return unreadMessages.size + readMessages.size }
+    public suspend fun getCount(): Int = messageDao.getMessageCount()
 
     /** All the message IDs in the [Inbox]. */
-    public val messageIds: Set<String>
-        get() = synchronized(inboxLock) {
-            val messageIds: MutableSet<String> = HashSet(count)
-            messageIds.addAll(readMessages.keys)
-            messageIds.addAll(unreadMessages.keys)
-            return messageIds
-        }
-
+    public suspend fun getMessageIds(): Set<String> = messageDao.getMessageIds().toSet()
 
     /** The number of read messages currently in the [Inbox]. */
-    public val readCount: Int
-        get() = synchronized(inboxLock) { return readMessages.size }
-
+    public suspend fun getReadCount(): Int = messageDao.getReadMessageCount()
 
     /** The number of unread messages currently in the [Inbox]. */
-    public val unreadCount: Int
-        get() = synchronized(inboxLock) { return unreadMessages.size }
+    public suspend fun getUnreadCount(): Int = messageDao.getUnreadMessageCount()
 
     /**
      * Filters a collection of messages according to the supplied predicate
@@ -342,61 +308,66 @@ public class Inbox @VisibleForTesting internal constructor(
     private fun filterMessages(
         messages: Collection<Message>,
         predicate: Predicate<Message>?
-    ): Collection<Message> {
-        val filteredMessages = mutableListOf<Message>()
-        if (predicate == null) {
-            return messages
-        }
-        for (message: Message in messages) {
-            if (predicate.apply(message)) {
-                filteredMessages.add(message)
-            }
-        }
-        return filteredMessages
-    }
+    ): Collection<Message> = predicate?.let { messages.filter(it::apply) } ?: messages
 
     /**
-     * Gets a list of RichPushMessages, filtered by the provided predicate.
-     * Sorted by descending sent-at date.
+     * Gets a list of RichPushMessages, filtered by the provided predicate, and sorted by descending sent-at date.
      *
      * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
      * @return List of filtered and sorted [Message]s.
      */
-    public fun getMessages(predicate: Predicate<Message>?): List<Message> =
-        synchronized(inboxLock) {
-            val messages: MutableList<Message> = ArrayList()
-            messages.addAll(filterMessages(unreadMessages.values, predicate))
-            messages.addAll(filterMessages(readMessages.values, predicate))
-            Collections.sort(messages, MESSAGE_COMPARATOR)
-            return messages
-        }
-
-    /** The list of messages in the [Inbox]. Sorted by descending sent-at date. */
-    public val messages: List<Message>
-        get() = getMessages(null)
+    @JvmSynthetic
+    public suspend fun getMessages(predicate: Predicate<Message>? = null): List<Message> =
+        messageDao.getMessages()
+            .mapNotNull { it.toMessage() }
+            .let { filterMessages(it, predicate) }
+            .sortedWith(MESSAGE_COMPARATOR)
 
     /**
-     * Gets a list of unread RichPushMessages, filtered by the provided predicate.
-     * Sorted by descending sent-at date.
+     * Gets a list of RichPushMessages as a [PendingResult], filtered by the provided predicate,
+     * and sorted by descending sent-at date.
+     *
+     * @param predicate Optional predicate for filtering messages. If null, no predicate will be applied.
+     * @return A [PendingResult] containing the list of filtered and sorted [Message]s.
+     */
+    @JvmOverloads
+    public fun getMessagesPendingResult(predicate: Predicate<Message>? = null): PendingResult<List<Message>?> {
+        val result = PendingResult<List<Message>?>()
+        scope.launch {
+            result.result = getMessages(predicate)
+        }
+        return result
+    }
+
+    /**
+     * Gets a list of unread RichPushMessages, filtered by the provided predicate,
+     * and sorted by descending sent-at date.
      *
      * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
      * @return List of sorted [Message]s.
      */
-    public fun getUnreadMessages(predicate: Predicate<Message>?): List<Message> =
-        synchronized(inboxLock) {
-            val messages: List<Message> =
-                ArrayList(filterMessages(unreadMessages.values, predicate))
-            Collections.sort(messages, MESSAGE_COMPARATOR)
-            return messages
-        }
+    @JvmSynthetic
+    public suspend fun getUnreadMessages(predicate: Predicate<Message>? = null): List<Message> =
+        messageDao.getUnreadMessages()
+            .mapNotNull { it.toMessage() }
+            .let { filterMessages(it, predicate) }
+            .sortedWith(MESSAGE_COMPARATOR)
 
     /**
-     * Gets a list of unread RichPushMessages. Sorted by descending sent-at date.
+     * Gets a list of unread RichPushMessages as a [PendingResult], filtered by the provided predicate,
+     * and sorted by descending sent-at date.
      *
-     * @return List of sorted [Message]s.
+     * @param predicate Optional predicate for filtering messages. If null, no predicate will be applied.
+     * @return A [PendingResult] containing the list of filtered [Message]s.
      */
-    // TODO: could be a val if we renamed this.unreadMessages to this.unreadMessagesMap?
-    public fun getUnreadMessages(): List<Message> = getUnreadMessages(null)
+    @JvmOverloads
+    public fun getUnreadMessagesPendingResult(predicate: Predicate<Message>? = null): PendingResult<List<Message>?> {
+        val result = PendingResult<List<Message>?>()
+        scope.launch {
+            result.result = getUnreadMessages(predicate)
+        }
+        return result
+    }
 
     /**
      * Gets a list of read RichPushMessages, filtered by the provided predicate.
@@ -405,20 +376,28 @@ public class Inbox @VisibleForTesting internal constructor(
      * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
      * @return List of sorted [Message]s.
      */
-    public fun getReadMessages(predicate: Predicate<Message>?): List<Message> =
-        synchronized(inboxLock) {
-            val messages: List<Message> = ArrayList(filterMessages(readMessages.values, predicate))
-            Collections.sort(messages, MESSAGE_COMPARATOR)
-            return messages
-        }
+    @JvmSynthetic
+    public suspend fun getReadMessages(predicate: Predicate<Message>? = null): List<Message> =
+        messageDao.getReadMessages()
+            .mapNotNull { it.toMessage() }
+            .let { filterMessages(it, predicate) }
+            .sortedWith(MESSAGE_COMPARATOR)
 
     /**
-     * Gets a list of read RichPushMessages. Sorted by descending sent-at date.
+     * Gets a list of read RichPushMessages as a [PendingResult], filtered by the provided predicate,
+     * and sorted by descending sent-at date.
      *
-     * @return List of sorted [Message]s.
+     * @param predicate Optional predicate for filtering messages. If null, no predicate will be applied.
+     * @return A [PendingResult] containing the list of filtered [Message]s.
      */
-    // TODO: could be a val if we renamed this.readMessages to this.readMessagesMap?
-    public fun getReadMessages(): List<Message> = getReadMessages(null)
+    @JvmOverloads
+    public fun getReadMessagesPendingResult(predicate: Predicate<Message>? = null): PendingResult<List<Message>?> {
+        val result = PendingResult<List<Message>?>()
+        scope.launch {
+            result.result = getReadMessages(predicate)
+        }
+        return result
+    }
 
     /**
      * Get the [Message] with the corresponding message ID.
@@ -426,16 +405,22 @@ public class Inbox @VisibleForTesting internal constructor(
      * @param messageId The message ID of the desired [Message].
      * @return A [Message] or `null` if one does not exist.
      */
-    public fun getMessage(messageId: String?): Message? {
-        if (messageId == null) {
-            return null
+    @JvmSynthetic
+    public suspend fun getMessage(messageId: String?): Message? =
+        messageId?.let { messageDao.getMessage(it)?.toMessage() }
+
+    /**
+     * Get the [Message] with the corresponding message ID as a [PendingResult].
+     *
+     * @param messageId The message ID of the desired [Message].
+     * @return A [PendingResult] containing the [Message] or `null` if one does not exist.
+     */
+    public fun getMessagePendingResult(messageId: String?): PendingResult<Message?> {
+        val result = PendingResult<Message?>()
+        scope.launch {
+            result.result = getMessage(messageId)
         }
-        synchronized(inboxLock) {
-            if (unreadMessages.containsKey(messageId)) {
-                return unreadMessages[messageId]
-            }
-            return readMessages[messageId]
-        }
+        return result
     }
 
     /**
@@ -444,11 +429,22 @@ public class Inbox @VisibleForTesting internal constructor(
      * @param messageUrl The message body URL of the desired [Message].
      * @return A [Message] or `null` if one does not exist.
      */
-    public fun getMessageByUrl(messageUrl: String?): Message? {
-        if (messageUrl == null) {
-            return null
+    @JvmSynthetic
+    public suspend fun getMessageByUrl(messageUrl: String?): Message? =
+        messageUrl?.let { messageDao.getMessageByUrl(it)?.toMessage() }
+
+    /**
+     * Get the [Message] with the corresponding message body URL as a [PendingResult].
+     *
+     * @param messageUrl The message body URL of the desired [Message].
+     * @return A [PendingResult] containing the [Message] or `null` if one does not exist.
+     */
+    public fun getMessageByUrlPendingResult(messageUrl: String?): PendingResult<Message?> {
+        val result = PendingResult<Message?>()
+        scope.launch {
+            result.result = getMessageByUrl(messageUrl)
         }
-        synchronized(inboxLock) { return messageUrlMap[messageUrl] }
+        return result
     }
 
     // actions
@@ -461,16 +457,6 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun markMessagesRead(messageIds: Set<String>) {
         scope.launch {
             messageDao.markMessagesRead(messageIds.toList())
-        }
-        synchronized(inboxLock) {
-            for (messageId: String in messageIds) {
-                val message: Message? = unreadMessages[messageId]
-                if (message != null) {
-                    message.unreadClient = false
-                    unreadMessages.remove(messageId)
-                    readMessages[messageId] = message
-                }
-            }
             notifyInboxUpdated()
         }
     }
@@ -483,18 +469,8 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun markMessagesUnread(messageIds: Set<String>) {
         scope.launch {
             messageDao.markMessagesUnread(messageIds.toList())
+            notifyInboxUpdated()
         }
-        synchronized(inboxLock) {
-            for (messageId: String in messageIds) {
-                val message: Message? = readMessages[messageId]
-                if (message != null) {
-                    message.unreadClient = true
-                    readMessages.remove(messageId)
-                    unreadMessages[messageId] = message
-                }
-            }
-        }
-        notifyInboxUpdated()
     }
 
     /**
@@ -508,18 +484,8 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun deleteMessages(messageIds: Set<String>) {
         scope.launch {
             messageDao.markMessagesDeleted(messageIds.toList())
+            notifyInboxUpdated()
         }
-        synchronized(inboxLock) {
-            for (messageId: String in messageIds) {
-                getMessage(messageId)?.let { message ->
-                    message.deleted = true
-                    unreadMessages.remove(messageId)
-                    readMessages.remove(messageId)
-                    deletedMessageIds.add(messageId)
-                }
-            }
-        }
-        notifyInboxUpdated()
     }
 
     /**
@@ -530,87 +496,17 @@ public class Inbox @VisibleForTesting internal constructor(
     private fun deleteAllMessages() {
         scope.launch {
             messageDao.deleteAllMessages()
-        }
-
-        synchronized(inboxLock) {
-            unreadMessages.clear()
-            readMessages.clear()
-            deletedMessageIds.clear()
-        }
-        notifyInboxUpdated()
-    }
-
-    /**
-     * Refreshes the inbox messages from the DB.
-     *
-     * @param notify `true` to notify listeners, otherwise `false`.
-     */
-    internal suspend fun refresh(notify: Boolean) {
-        val messageList = messageDao.getMessages()
-
-        // Sync the messages
-        synchronized(inboxLock) {
-            // Save the unreadMessageIds
-            val previousUnreadMessageIds: Set<String> = HashSet(unreadMessages.keys)
-            val previousReadMessageIds: Set<String> = HashSet(readMessages.keys)
-            val previousDeletedMessageIds: Set<String> = HashSet(deletedMessageIds)
-
-            // Clear the current messages
-            unreadMessages.clear()
-            readMessages.clear()
-            messageUrlMap.clear()
-
-            // Process the new messages
-            for (messageEntity: MessageEntity in messageList) {
-                val message = messageEntity.createMessageFromEntity(messageEntity) ?: continue
-
-                // Deleted
-                if (message.isDeleted || previousDeletedMessageIds.contains(message.messageId)) {
-                    deletedMessageIds.add(message.messageId)
-                    continue
-                }
-
-                // Expired
-                if (message.isExpired) {
-                    deletedMessageIds.add(message.messageId)
-                    continue
-                }
-
-                // Populate message url map
-                messageUrlMap[message.messageBodyUrl] = message
-
-                // Unread - check the previousUnreadMessageIds if any mark reads are still in process
-                if (previousUnreadMessageIds.contains(message.messageId)) {
-                    message.unreadClient = true
-                    unreadMessages[message.messageId] = message
-                    continue
-                }
-
-                // Read - check the previousUnreadMessageIds if any mark reads are still in process
-                if (previousReadMessageIds.contains(message.messageId)) {
-                    message.unreadClient = false
-                    readMessages[message.messageId] = message
-                    continue
-                }
-
-                // Otherwise fallback to the current state
-                if (message.unreadClient) {
-                    unreadMessages[message.messageId] = message
-                } else {
-                    readMessages[message.messageId] = message
-                }
-            }
-        }
-        if (notify) {
             notifyInboxUpdated()
         }
     }
 
     /** Notifies all of the registered listeners that the inbox updated. */
-    private fun notifyInboxUpdated() {
-        handler.post {
-            for (listener: InboxListener in listeners) {
-                listener.onInboxUpdated()
+    internal fun notifyInboxUpdated() {
+        scope.launch {
+            for (listener in listeners) {
+                withContext(Dispatchers.Main) {
+                    listener.onInboxUpdated()
+                }
             }
         }
     }
@@ -652,6 +548,5 @@ public class Inbox @VisibleForTesting internal constructor(
 
     private companion object {
         private val MESSAGE_COMPARATOR = SentAtRichPushMessageComparator()
-        private val inboxLock = Any()
     }
 }
