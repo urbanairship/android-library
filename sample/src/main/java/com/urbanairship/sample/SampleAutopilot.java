@@ -81,6 +81,9 @@ public class SampleAutopilot extends Autopilot {
         airship.getPushManager().addPushTokenListener(airshipListener);
         airship.getPushManager().setNotificationListener(airshipListener);
         airship.getChannel().addChannelListener(airshipListener);
+
+        // Register the "squareview" InApp Message Content Extender
+        SampleInAppMessageContentExtender.register();
     }
 
     @Nullable

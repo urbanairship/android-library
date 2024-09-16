@@ -23,6 +23,7 @@ import com.urbanairship.channel.ChannelRegistrationPayload;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.permission.OnPermissionStatusChangedListener;
 import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionPromptFallback;
 import com.urbanairship.permission.PermissionRequestResult;
 import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
@@ -35,7 +36,9 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.robolectric.RuntimeEnvironment;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -492,6 +495,69 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     @Test
+    public void testEnableUserNotifications() {
+        TestConsumer<Boolean> consumer = new TestConsumer<>();
+
+        doAnswer(invocation -> {
+            Consumer<PermissionRequestResult> callback = invocation.getArgument(3);
+            callback.accept(PermissionRequestResult.granted());
+            return null;
+        }).when(mockPermissionManager).requestPermission(
+                eq(Permission.DISPLAY_NOTIFICATIONS),
+                eq(false),
+                eq(PermissionPromptFallback.None.INSTANCE),
+                any()
+        );
+
+        pushManager.enableUserNotifications(consumer);
+
+        assertTrue(consumer.lastResult);
+        assertTrue(pushManager.getUserNotificationsEnabled());
+    }
+
+    @Test
+    public void testEnableUserNotificationsDenied() {
+        TestConsumer<Boolean> consumer = new TestConsumer<>();
+
+        doAnswer(invocation -> {
+            Consumer<PermissionRequestResult> callback = invocation.getArgument(3);
+            callback.accept(PermissionRequestResult.denied(true));
+            return null;
+        }).when(mockPermissionManager).requestPermission(
+                eq(Permission.DISPLAY_NOTIFICATIONS),
+                eq(false),
+                eq(PermissionPromptFallback.None.INSTANCE),
+                any()
+        );
+
+        pushManager.enableUserNotifications(consumer);
+
+        assertFalse(consumer.lastResult);
+        assertTrue(pushManager.getUserNotificationsEnabled());
+    }
+
+    @Test
+    public void testEnableUserNotificationsFallback() {
+        TestConsumer<Boolean> consumer = new TestConsumer<>();
+
+        doAnswer(invocation -> {
+            Consumer<PermissionRequestResult> callback = invocation.getArgument(3);
+            callback.accept(PermissionRequestResult.granted());
+            return null;
+        }).when(mockPermissionManager).requestPermission(
+                eq(Permission.DISPLAY_NOTIFICATIONS),
+                eq(false),
+                eq(PermissionPromptFallback.SystemSettings.INSTANCE),
+                any()
+        );
+
+        pushManager.enableUserNotifications(PermissionPromptFallback.SystemSettings.INSTANCE, consumer);
+
+        assertTrue(consumer.lastResult);
+        assertTrue(pushManager.getUserNotificationsEnabled());
+    }
+
+    @Test
     public void testPrivacyManagerEnablesNotifications() {
         pushManager.onAirshipReady(UAirship.shared());
 
@@ -687,5 +753,17 @@ public class PushManagerTest extends BaseTestCase {
                 new PushNotificationStatus(true, true, false, false),
                 pushManager.getPushNotificationStatus()
         );
+    }
+
+    private static class TestConsumer<T> implements Consumer<T> {
+        T lastResult;
+        List<T> results = new ArrayList<>();
+
+        @Override
+        public void accept(T result) {
+            this.lastResult = result;
+            this.results.add(result);
+        }
+
     }
 }

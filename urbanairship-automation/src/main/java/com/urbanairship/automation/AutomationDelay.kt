@@ -52,7 +52,7 @@ public class AutomationDelay(
     /**
      * Display window for automation
      */
-    internal val displayWindow: DisplayWindow? = null,
+    internal val executionWindow: ExecutionWindow? = null,
     /**
      * The execution region ID.
      */
@@ -73,7 +73,7 @@ public class AutomationDelay(
         private const val SCREEN_KEY = "screen"
         private const val REGION_ID_KEY = "region_id"
         private const val CANCELLATION_TRIGGERS_KEY = "cancellation_triggers"
-        private const val DISPLAY_WINDOW_KEY = "display_window"
+        private const val EXECUTION_WINDOW_KEY = "execution_window"
 
         /**
          * Parses a AutomationDelay from JSON.
@@ -113,7 +113,7 @@ public class AutomationDelay(
                 cancellationTriggers = content.get(CANCELLATION_TRIGGERS_KEY)?.requireList()?.map {
                     AutomationTrigger.fromJson(it, TriggerExecutionType.DELAY_CANCELLATION)
                 },
-                displayWindow = content.get(DISPLAY_WINDOW_KEY)?.let(DisplayWindow::fromJson)
+                executionWindow = content.get(EXECUTION_WINDOW_KEY)?.let(ExecutionWindow::fromJson)
             )
         }
     }
@@ -124,7 +124,7 @@ public class AutomationDelay(
         SCREEN_KEY to screens,
         REGION_ID_KEY to regionId,
         CANCELLATION_TRIGGERS_KEY to cancellationTriggers,
-        DISPLAY_WINDOW_KEY to displayWindow
+        EXECUTION_WINDOW_KEY to executionWindow
     ).toJsonValue()
 
     override fun toString(): String = toJsonValue().toString()
@@ -139,11 +139,11 @@ public class AutomationDelay(
         if (screens != other.screens) return false
         if (regionId != other.regionId) return false
         if (appState != other.appState) return false
-        if (displayWindow != other.displayWindow) return false
+        if (executionWindow != other.executionWindow) return false
         return cancellationTriggers == other.cancellationTriggers
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(seconds, screens, regionId, appState, cancellationTriggers, displayWindow)
+        return Objects.hash(seconds, screens, regionId, appState, cancellationTriggers, executionWindow)
     }
 }

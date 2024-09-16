@@ -17,7 +17,6 @@ import com.urbanairship.android.layout.util.Factory
 import com.urbanairship.android.layout.util.ImageCache
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.json.JsonMap
-import com.urbanairship.json.JsonValue
 import com.urbanairship.webkit.AirshipWebViewClient
 
 /**
@@ -56,6 +55,7 @@ public object Thomas {
     @Throws(DisplayException::class)
     public fun prepareDisplay(
         payload: LayoutInfo,
+        priority: Int,
         extras: JsonMap,
         activityMonitor: ActivityMonitor,
         listener: ThomasListenerInterface,
@@ -88,7 +88,7 @@ public object Thomas {
             }
             is EmbeddedPresentation -> {
                 { _: Context, args: DisplayArgs ->
-                    embeddedViewManager.addPending(args, extras)
+                    embeddedViewManager.addPending(args, priority, extras)
                 }
             }
             else -> {

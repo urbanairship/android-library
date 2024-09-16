@@ -388,7 +388,10 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private const val QUEUE = "queue"
         private const val ADDITIONAL_AUDIENCE_CHECK_OVERRIDES = "additional_audience_check_overrides"
 
-        @Throws(JsonException::class)
+        @Throws(
+            JsonException::class,
+            IllegalArgumentException::class,
+            NoSuchElementException::class)
         fun fromJson(value: JsonValue): AutomationSchedule {
             val content = value.requireMap()
 

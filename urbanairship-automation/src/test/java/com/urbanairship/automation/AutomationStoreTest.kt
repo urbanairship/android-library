@@ -93,7 +93,8 @@ public class AutomationStoreTest {
                 allEvaluatedExperimentsMetadata = listOf(jsonMapOf("full" to "reporting"))
             ),
             triggerSessionId = "some trigger session id",
-            additionalAudienceCheckResult = true
+            additionalAudienceCheckResult = true,
+            priority = 0
         )
 
         val date = 1L

@@ -193,7 +193,8 @@ internal class AutomationStoreMigrator(
                 experimentResult = null,
                 reportingContext = schedule.reportingContext,
                 triggerSessionId = UUID.randomUUID().toString(),
-                additionalAudienceCheckResult = audienceCheck
+                additionalAudienceCheckResult = audienceCheck,
+                priority = schedule.priority
             )
         }
         return null

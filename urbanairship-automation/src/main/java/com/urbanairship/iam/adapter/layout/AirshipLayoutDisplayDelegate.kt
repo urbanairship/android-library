@@ -4,6 +4,7 @@ package com.urbanairship.iam.adapter.layout
 import android.app.Activity
 import android.content.Context
 import com.urbanairship.Predicate
+import com.urbanairship.analytics.Event.Priority
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.display.DisplayException
 import com.urbanairship.app.ActivityMonitor
@@ -28,6 +29,7 @@ import kotlinx.coroutines.withContext
 internal class AirshipLayoutDisplayDelegate(
     private val displayContent: InAppMessageDisplayContent.AirshipLayoutContent,
     private val assets: AirshipCachedAssets?,
+    private val priority: Int,
     private val messageExtras: JsonMap?,
     private val activityMonitor: ActivityMonitor,
     private val actionRunner: InAppActionRunner
@@ -57,6 +59,7 @@ internal class AirshipLayoutDisplayDelegate(
             activityMonitor = activityMonitor,
             actionRunner = actionRunner,
             webViewClientFactory = { InAppMessageWebViewClient( NativeBridge(actionRunner), messageExtras) },
+            priority = priority,
             extras = extras,
             imageCache = { url -> assets?.cacheUri(url)?.path },
             embeddedViewManager = EmbeddedViewManager

@@ -10,6 +10,7 @@ import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
+import com.urbanairship.android.layout.property.MarkdownOptions
 import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.view.LabelView
@@ -17,6 +18,7 @@ import com.urbanairship.android.layout.view.LabelView
 internal class LabelModel(
     val text: String,
     val textAppearance: TextAppearance,
+    val markdownOptions: MarkdownOptions?,
     val contentDescription: String? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
@@ -38,6 +40,7 @@ internal class LabelModel(
     constructor(info: LabelInfo, env: ModelEnvironment, props: ModelProperties) : this(
         text = info.text,
         textAppearance = info.textAppearance,
+        markdownOptions = info.markdownOptions,
         contentDescription = info.contentDescription,
         backgroundColor = info.backgroundColor,
         border = info.border,

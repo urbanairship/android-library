@@ -69,6 +69,37 @@ public class Banner @VisibleForTesting internal constructor(
      */
     public val actions: JsonMap? = null
 ) : JsonSerializable {
+
+    /** Returns a copy of the Banner display content with the provided changes. */
+    @JvmOverloads
+    public fun copy(
+        heading: InAppMessageTextInfo? = this.heading,
+        body: InAppMessageTextInfo? = this.body,
+        media: InAppMessageMediaInfo? = this.media,
+        buttons: List<InAppMessageButtonInfo>? = this.buttons,
+        buttonLayoutType: InAppMessageButtonLayoutType = this.buttonLayoutType,
+        template: Template = this.template,
+        backgroundColor: InAppMessageColor = this.backgroundColor,
+        dismissButtonColor: InAppMessageColor = this.dismissButtonColor,
+        borderRadius: Float = this.borderRadius,
+        durationMs: Long = this.durationMs,
+        placement: Placement = this.placement,
+        actions: JsonMap? = this.actions
+    ): Banner = Banner(
+        heading = heading,
+        body = body,
+        media = media,
+        buttons = buttons,
+        buttonLayoutType = buttonLayoutType,
+        template = template,
+        backgroundColor = backgroundColor,
+        dismissButtonColor = dismissButtonColor,
+        borderRadius = borderRadius,
+        durationMs = durationMs,
+        placement = placement,
+        actions = actions
+    )
+
     public enum class Template(internal val json: String) : JsonSerializable {
         /**
          * Template to display the optional media on the left.

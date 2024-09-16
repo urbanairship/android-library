@@ -705,7 +705,7 @@ public class UAirship {
                 airshipConfigOptions.resetEnabledFeatures
         );
 
-        this.permissionsManager = PermissionsManager.newPermissionsManager(application);
+        this.permissionsManager = new PermissionsManager(application);
 
         this.localeManager = new LocaleManager(application, preferenceDataStore);
 
