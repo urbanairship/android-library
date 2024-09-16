@@ -3,9 +3,11 @@
 package com.urbanairship.featureflag
 
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
@@ -86,6 +88,18 @@ public class FeatureFlag private constructor(
         KEY_REPORTING_INFO to reportingInfo
     ).toJsonValue()
 
+    internal fun copyWith(
+        isEligible: Boolean? = null,
+        variables: JsonMap? = null): FeatureFlag {
+        return FeatureFlag(
+            name = this.name,
+            isEligible = isEligible ?: this.isEligible,
+            exists = this.exists,
+            reportingInfo = this.reportingInfo,
+            variables = variables ?: this.variables
+        )
+    }
+
     override fun toString(): String {
         return "FeatureFlag(name='$name', isEligible=$isEligible, exists=$exists, reportingInfo=$reportingInfo, variables=$variables)"
     }
@@ -143,13 +157,15 @@ public class FeatureFlag private constructor(
     }
 
     internal data class ReportingInfo(
-        val reportingMetadata: JsonMap,
+        var reportingMetadata: JsonMap,
+        var supersededReportingMetadata: List<JsonMap>? = null,
         val channelId: String? = null,
         val contactId: String? = null
     ) : JsonSerializable {
 
         companion object {
             private const val KEY_REPORTING_METADATA = "reporting_metadata"
+            private const val KEY_SUPERSEDED_REPORTING_METADATA = "superseded_reporting_metadata"
             private const val KEY_CHANNEL_ID = "channel_id"
             private const val KEY_CONTACT_ID = "contact_id"
 
@@ -163,11 +179,21 @@ public class FeatureFlag private constructor(
             }
         }
 
+        fun addSuperseded(metadata: JsonMap?) {
+            val value = metadata ?: return
+            val mutable = (supersededReportingMetadata ?: emptyList()).toMutableList()
+
+            mutable.add(value)
+
+            supersededReportingMetadata = mutable
+        }
+
         @Throws(JsonException::class)
         override fun toJsonValue() = jsonMapOf(
             KEY_REPORTING_METADATA to reportingMetadata,
             KEY_CHANNEL_ID to channelId,
-            KEY_CONTACT_ID to contactId
+            KEY_CONTACT_ID to contactId,
+            KEY_SUPERSEDED_REPORTING_METADATA to supersededReportingMetadata
         ).toJsonValue()
     }
 }
