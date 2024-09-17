@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.urbanairship.PendingResult;
 import com.urbanairship.messagecenter.Message;
 import com.urbanairship.messagecenter.MessageCenter;
 import com.urbanairship.messagecenter.MessageFragment;
@@ -39,18 +40,19 @@ public class InboxMessageFragment extends MessageFragment {
 
         NavController navController =  Navigation.findNavController(view);
 
-        Message message = MessageCenter.shared().getInbox().getMessage(getMessageId());
+        PendingResult<Message> pendingResult = MessageCenter.shared().getInbox().getMessagePendingResult(getMessageId());
 
-        NavDestination navDestination = navController.getCurrentDestination();
-        if (navDestination != null) {
-            if (message != null) {
-                navController.getCurrentDestination().setLabel(message.getTitle());
-            } else {
-                navController.getCurrentDestination().setLabel(view.getContext().getString(R.string.message));
+        pendingResult.addResultCallback(message -> {
+            NavDestination navDestination = navController.getCurrentDestination();
+            if (navDestination != null) {
+                if (message != null) {
+                    navController.getCurrentDestination().setLabel(message.getTitle());
+                } else {
+                    navController.getCurrentDestination().setLabel(view.getContext().getString(R.string.message));
+                }
             }
-        }
+        });
 
         NavigationUI.setupWithNavController(toolbar, Navigation.findNavController(view));
     }
-
 }
