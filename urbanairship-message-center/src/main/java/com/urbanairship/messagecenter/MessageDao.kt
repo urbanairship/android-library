@@ -202,7 +202,7 @@ internal interface MessageDao {
 
     @Transaction
     @Query("""
-        SELECT * FROM richpush 
+        SELECT * FROM richpush
         WHERE deleted = 0
         AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
         """)
@@ -210,7 +210,7 @@ internal interface MessageDao {
 
     @Transaction
     @Query("""
-        SELECT COUNT(*) FROM richpush 
+        SELECT COUNT(*) FROM richpush
         WHERE deleted = 0
         AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
         """)
@@ -218,7 +218,7 @@ internal interface MessageDao {
 
     @Transaction
     @Query("""
-        SELECT * FROM richpush 
+        SELECT * FROM richpush
         WHERE unread = 0
         AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
         """)
@@ -226,8 +226,8 @@ internal interface MessageDao {
 
     @Transaction
     @Query("""
-        SELECT COUNT(*) FROM richpush 
-        WHERE unread = 0 
+        SELECT COUNT(*) FROM richpush
+        WHERE unread = 0
         AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
         """)
     suspend fun getReadMessageCountInternal(): Int
@@ -244,7 +244,7 @@ internal interface MessageDao {
     @Transaction
     @Query("""
         SELECT COUNT(*) FROM richpush
-        WHERE unread = 1 
+        WHERE unread = 1
         AND deleted = 0
         AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
         """)
@@ -260,7 +260,7 @@ internal interface MessageDao {
 
     @Transaction
     @Query("""
-        SELECT * FROM richpush 
+        SELECT * FROM richpush
         WHERE unread = 0
         AND unread <> unread_orig
         """)
