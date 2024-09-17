@@ -74,12 +74,8 @@ public open class MessageWebViewClient : AirshipWebViewClient() {
      */
     @MainThread
     private fun getMessage(webView: WebView): Message? = runBlocking {
-        val url = withContext(Dispatchers.Main) {
-            webView.url
-        }
-        withContext(Dispatchers.IO) {
-            MessageCenter.shared().inbox.getMessageByUrl(url)
-        }
+        val url = webView.url
+        MessageCenter.shared().inbox.getMessageByUrl(url)
     }
 
     private companion object {
