@@ -21,27 +21,26 @@ import com.urbanairship.messagecenter.Inbox.FetchMessagesCallback
 import com.urbanairship.mockk.clearInvocations
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
-import java.util.concurrent.Executor
 import io.mockk.Called
-import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.coVerifyOrder
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
-import io.mockk.verifyOrder
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -58,6 +57,8 @@ import org.robolectric.shadows.ShadowLooper
 public class InboxTest {
 
     private val testDispatcher = StandardTestDispatcher()
+    private val testScope = CoroutineScope(testDispatcher)
+    private val unconfinedTestDispatcher = UnconfinedTestDispatcher()
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val mainLooper: ShadowLooper = shadowOf(Looper.getMainLooper())
@@ -65,8 +66,10 @@ public class InboxTest {
     private val mockUser = mockk<User>(relaxUnitFun = true) {}
     private val mockDispatcher = mockk<JobDispatcher>(relaxUnitFun = true) {}
     private val mockChannel = mockk<AirshipChannel>(relaxUnitFun = true) {}
-    private val mockMessageDao = mockk<MessageDao>(relaxUnitFun = true) {}
     private val spyActivityMonitor = spyk(GlobalActivityMonitor.shared(context))
+
+    private val db = MessageDatabase.createInMemoryDatabase(context, unconfinedTestDispatcher)
+    private val spyMessageDao: MessageDao = spyk(db.dao)
 
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
     private val privacyManager = PrivacyManager(
@@ -89,7 +92,7 @@ public class InboxTest {
         dataStore = dataStore,
         jobDispatcher = mockDispatcher,
         user = mockUser,
-        messageDao = mockMessageDao,
+        messageDao = spyMessageDao,
         activityMonitor = spyActivityMonitor,
         airshipChannel = mockChannel,
         privacyManager = privacyManager,
@@ -104,7 +107,6 @@ public class InboxTest {
         index % 2 == 0
     }
 
-    private val messageEntities = mutableListOf<MessageEntity>()
 
     @Before
     public fun setUp() {
@@ -113,6 +115,8 @@ public class InboxTest {
         MessageCenterTestUtils.setup()
 
         inbox.setEnabled(true)
+
+        val messageEntities = mutableListOf<MessageEntity>()
 
         // Populate the MCRAP database with 10 messages
         for (i in 0..9) {
@@ -123,22 +127,24 @@ public class InboxTest {
             messageEntities.add(entity)
         }
 
-        // Put some expired messages in there (these should not show up after refresh)
+        // Put 5 more expired messages in there (these should not show up after refresh)
         for (i in 10..14) {
             val message = MessageCenterTestUtils.createMessage("${i + 1}_message_id", null, true)
             val entity = requireNotNull(
                 MessageEntity.createMessageFromPayload(message.messageId, message.rawMessageJson)
             )
+
             messageEntities.add(entity)
         }
 
-        coEvery { mockMessageDao.getMessages() } returns messageEntities
-
-        runBlocking {
-            inbox.refresh(false)
+        testScope.launch {
+            spyMessageDao.insertMessages(messageEntities)
+            inbox.notifyInboxUpdated()
         }
 
-        clearInvocations(mockMessageDao)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        clearInvocations(spyMessageDao)
     }
 
     @After
@@ -234,42 +240,55 @@ public class InboxTest {
 
     /** Tests the inbox reports the correct number of messages. */
     @Test
-    public fun testNewRichPushInbox() {
-        assertEquals(10, inbox.count)
-        assertEquals(10, inbox.unreadCount)
-        assertEquals(0, inbox.readCount)
+    public fun testNewRichPushInbox(): TestResult = runTest {
+        assertEquals(10, inbox.getCount())
+        assertEquals(10, inbox.getUnreadCount())
+        assertEquals(0, inbox.getReadCount())
     }
 
     /** Test mark messages are marked deleted in the database and the inbox. */
     @Test
-    public fun testMarkMessagesDeleted() {
-        assertEquals(10, inbox.count)
+    public fun testMarkMessagesDeleted(): TestResult = runTest {
+        assertEquals(10, inbox.getCount())
+        advanceUntilIdle()
 
         val deletedIds = setOf("1_message_id", "3_message_id", "6_message_id")
 
         inbox.deleteMessages(deletedIds)
+        mainLooper.runToEndOfTasks()
+        advanceUntilIdle()
 
         // Should have 3 less messages
-        assertEquals(7, inbox.count.toLong())
-        assertEquals(7, inbox.unreadCount.toLong())
-        assertEquals(0, inbox.readCount.toLong())
+        val count = inbox.getCount()
+        assertEquals(7, count)
+
+        val unreadCount = inbox.getUnreadCount()
+        assertEquals(7, unreadCount)
+
+        val readCount = inbox.getReadCount()
+        assertEquals(0, readCount)
+
+        val messageIds = inbox.getMessageIds()
+
         for (deletedId: String? in deletedIds) {
-            assertFalse(inbox.messageIds.contains(deletedId))
+            assertFalse(messageIds.contains(deletedId))
         }
     }
 
     /** Test mark messages are marked read in the database and the inbox. */
     @Test
-    public fun testMarkMessagesRead() {
+    public fun testMarkMessagesRead(): TestResult = runTest {
         val markedReadIds = setOf("1_message_id", "3_message_id", "6_message_id")
 
         inbox.markMessagesRead(markedReadIds)
-        assertEquals(3, inbox.readCount.toLong())
+        advanceUntilIdle()
+
+        assertEquals(3, inbox.getReadCount())
 
         // Should have 3 read messages
-        assertEquals(10, inbox.count.toLong())
-        assertEquals(7, inbox.unreadCount.toLong())
-        assertEquals(3, inbox.readCount.toLong())
+        assertEquals(10, inbox.getCount())
+        assertEquals(7, inbox.getUnreadCount())
+        assertEquals(3, inbox.getReadCount())
 
         val readMessages = createIdToMessageMap(inbox.getReadMessages())
         val unreadMessages = createIdToMessageMap(inbox.getUnreadMessages())
@@ -283,19 +302,25 @@ public class InboxTest {
 
     /** Test mark messages are marked unread in the database and the inbox. */
     @Test
-    public fun testMarkMessagesUnread() {
+    public fun testMarkMessagesUnread(): TestResult = runTest {
+        assertEquals(10, inbox.getCount())
+
         val messageIds = setOf("1_message_id", "3_message_id", "6_message_id")
 
         // Mark messages read
         inbox.markMessagesRead(messageIds)
-        assertEquals(3, inbox.readCount.toLong())
-        assertEquals(7, inbox.unreadCount.toLong())
+        advanceUntilIdle()
+
+        assertEquals(3, inbox.getReadCount())
+        assertEquals(7, inbox.getUnreadCount())
 
         // Mark messages as unread
         inbox.markMessagesUnread(messageIds)
-        assertEquals(10, inbox.count.toLong())
-        assertEquals(10, inbox.unreadCount.toLong())
-        assertEquals(0, inbox.readCount.toLong())
+        advanceUntilIdle()
+
+        assertEquals(10, inbox.getCount())
+        assertEquals(10, inbox.getUnreadCount())
+        assertEquals(0, inbox.getReadCount())
     }
 
     /** Test fetch messages starts the AirshipService. */
@@ -409,43 +434,50 @@ public class InboxTest {
 
     /** Test getting messages with or without a predicate */
     @Test
-    public fun testGetMessages() {
+    public fun testGetMessages(): TestResult = runTest {
         // regular style
-        val messages = inbox.messages
-        assertEquals(messages.size, inbox.count)
+        val messages = inbox.getMessages()
+        advanceUntilIdle()
+
+        assertEquals(10, messages.size)
+        assertEquals(messages.size, inbox.getCount())
 
         // filtered style
         val filteredMessages = inbox.getMessages(testPredicate)
-        assertEquals(filteredMessages.size, inbox.count / 2)
+        assertEquals(inbox.getCount() / 2, filteredMessages.size)
     }
 
     @Test
-    public fun testGetUnreadMessages() {
+    public fun testGetUnreadMessages(): TestResult = runTest {
         val messageIds = (1..4).map { "${it}_message_id" }.toSet()
 
         // Mark messages read
         inbox.markMessagesRead(messageIds)
+        advanceUntilIdle()
+
+        assertEquals(6, inbox.getUnreadCount())
 
         val unreadMessages = inbox.getUnreadMessages()
-        assertEquals(unreadMessages.size.toLong(), 6)
+        assertEquals(6, unreadMessages.size)
 
         val filteredMessages = inbox.getUnreadMessages(testPredicate)
-        assertEquals(filteredMessages.size.toLong(), 3)
+        assertEquals(3, filteredMessages.size)
 
         for (message: Message in filteredMessages) {
             val substring = message.messageId.replace("_message_id", "")
             val index = substring.toInt()
 
-            assertEquals((index % 2), 0)
+            assertEquals(0, index % 2)
         }
     }
 
     @Test
-    public fun testGetReadMessages() {
+    public fun testGetReadMessages(): TestResult = runTest {
         val messageIds = (1..4).map { "${it}_message_id" }.toSet()
 
         // Mark messages read
         inbox.markMessagesRead(messageIds)
+        advanceUntilIdle()
 
         val readMessages = inbox.getReadMessages()
         assertEquals(readMessages.size, 4)
@@ -494,7 +526,7 @@ public class InboxTest {
         advanceUntilIdle()
 
         coVerify {
-            mockMessageDao.deleteAllMessages()
+            spyMessageDao.deleteAllMessages()
             spyActivityMonitor.removeApplicationListener(any())
             mockChannel.removeChannelListener(any())
             mockChannel.removeChannelRegistrationPayloadExtender(any())
@@ -502,24 +534,25 @@ public class InboxTest {
         }
     }
 
-    /**
-     * Verify updateEnabledState when enabled.
-     */
+    /** Verify updateEnabledState when enabled. */
     @Test
     public fun testUpdateEnabledStateEnabled(): TestResult = runTest {
         every { mockUser.shouldUpdate() } returns false
 
         inbox.setEnabled(true)
         inbox.updateEnabledState()
+        advanceUntilIdle()
+        mainLooper.runToEndOfTasks()
+
         // Update again to make sure that we don't restart the Inbox if already started.
         inbox.updateEnabledState()
-
         advanceUntilIdle()
+        mainLooper.runToEndOfTasks()
 
         coVerify {
             mockUser.addListener(any())
             spyActivityMonitor.addApplicationListener(any())
-            mockMessageDao.getMessages()
+            //spyMessageDao.getMessages()
             mockChannel.addChannelListener(any())
             mockUser.shouldUpdate()
             mockChannel.addChannelRegistrationPayloadExtender(any())

@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 
 import com.urbanairship.Autopilot;
+import com.urbanairship.PendingResult;
 import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.activity.ThemedActivity;
@@ -111,12 +112,14 @@ public class MessageActivity extends ThemedActivity {
      * @param messageId The message Id.
      */
     private void updateTitle(@Nullable String messageId) {
-        Message message = MessageCenter.shared().getInbox().getMessage(messageId);
-        if (message == null) {
-            setTitle(null);
-        } else {
-            setTitle(message.getTitle());
-        }
+        PendingResult<Message> pendingResult = MessageCenter.shared().getInbox().getMessagePendingResult(messageId);
+        pendingResult.addResultCallback(message -> {
+            if (message == null) {
+                setTitle(null);
+            } else {
+                setTitle(message.getTitle());
+            }
+        });
     }
 
     @SuppressLint("UnknownNullness")

@@ -211,7 +211,7 @@ public class InboxJobHandlerTest {
             // Verify result receiver
             inbox.onUpdateMessagesFinished(true)
             // Verify we updated the inbox
-            inbox.refresh(true)
+            inbox.notifyInboxUpdated()
         }
     }
 
@@ -250,7 +250,7 @@ public class InboxJobHandlerTest {
             // Verify result receiver
             inbox.onUpdateMessagesFinished(true)
             // Verify we updated the inbox
-            inbox.refresh(true)
+            inbox.notifyInboxUpdated()
         }
     }
 
@@ -294,7 +294,7 @@ public class InboxJobHandlerTest {
             // Verify result receiver
             inbox.onUpdateMessagesFinished(false)
             // Verify we updated the inbox
-            inbox.refresh(true)
+            inbox.notifyInboxUpdated()
         }
     }
 
