@@ -35,5 +35,31 @@ internal fun NavGraphBuilder.eventNav(navController: NavController) {
                 onNavigateUp = { navController.popBackStack() }
             )
         }
+
+        composable(route = EventScreens.AddCustom.route) {
+            AddCustomEventScreen(
+                onNavigateUp = { navController.popBackStack() },
+                onNavigate = { route -> navController.navigate(route) },
+                createdProperty = {
+                    navController
+                        .currentBackStackEntry
+                        ?.savedStateHandle
+                        ?.remove(KEY_CREATED_PROPERTY)
+                }
+            )
+        }
+
+        composable(route = EventScreens.CreatePropertyAttribute.route) {
+            AddEventPropertyScreen(onNavigateUp = {
+                navController
+                    .previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.set(KEY_CREATED_PROPERTY, it)
+
+                navController.popBackStack()
+            })
+        }
     }
 }
+
+private const val KEY_CREATED_PROPERTY = "created"

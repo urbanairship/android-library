@@ -69,7 +69,7 @@ internal fun DebugHomeScreenContent(
                     }
                 )
 
-                if (index < topLevelScreens.size - 1) {
+                if (index < topLevelScreens.size) {
                     HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
                 }
             }

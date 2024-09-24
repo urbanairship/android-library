@@ -1,7 +1,9 @@
 package com.urbanairship.debug.ui
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.automirrored.rounded.EventNote
+import androidx.compose.material.icons.automirrored.rounded.Login
 import androidx.compose.material.icons.automirrored.rounded.Message
 import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.ContactPage
@@ -38,6 +40,12 @@ internal enum class TopLevelScreens(
         titleRes = R.string.ua_debug_device_info_title,
         descRes = R.string.ua_debug_device_info_desc,
         icon = Icons.Rounded.Smartphone,
+        isTopLevel = true,
+    ),
+    Channel(
+        titleRes = R.string.ua_debug_channel_title,
+        descRes = R.string.ua_debug_channel_desc,
+        icon = Icons.AutoMirrored.Rounded.Login,
         isTopLevel = true,
     ),
     Events(

@@ -11,6 +11,14 @@
     <string name="ua_debug_events_title">Events</string>
     <string name="ua_debug_events_desc">Search and filter a list of recent events</string>
 
+    <string name="ua_debug_channel_title">Channel</string>
+    <string name="ua_debug_channel_desc">View channel info and tags</string>
+
+    <string name="ua_debug_tags_list_title">Tags</string>
+    <string name="ua_debug_tag_groups_list_title">Tag Groups</string>
+    <string name="ua_debug_attributes_list_title">Attributes</string>
+    <string name="ua_debug_subscription_list_title">Subscription Lists</string>
+
     <string name="ua_debug_automations_title">In-App Automation</string>
     <string name="ua_debug_automations_desc">View scheduled messages</string>
 
@@ -25,6 +33,13 @@
 
     <string name="ua_debug_contacts_title">Contacts</string>
     <string name="ua_debug_contacts_desc">Register platforms to the contact</string>
+    <string name="ua_debug_contacts_named_user_title">Named User</string>
+    <string name="ua_debug_contacts_subscription_lists_title">Subscription Lists</string>
+    <string name="ua_debug_contacts_add_channel_title">Add Channel</string>
+    <string name="ua_debug_contacts_channel_open_title">Open Channel</string>
+    <string name="ua_debug_contacts_channel_sms_title">SMS Channel</string>
+    <string name="ua_debug_contacts_channel_email_title">Email Channel</string>
+    <string name="ua_debug_contacts_channel_email_property_title">Identifier</string>
 
     <string name="ua_debug_app_info_title">App Info</string>
     <string name="ua_debug_app_info_desc">View application info</string>

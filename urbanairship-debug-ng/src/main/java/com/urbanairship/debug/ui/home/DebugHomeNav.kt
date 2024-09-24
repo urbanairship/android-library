@@ -1,7 +1,6 @@
 package com.urbanairship.debug.ui.home
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -10,14 +9,14 @@ import androidx.navigation.compose.composable
 import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.ui.appinfo.appInfoNav
 import com.urbanairship.debug.ui.automations.automationNav
-import com.urbanairship.debug.ui.deviceinfo.DeviceInfoScreen
+import com.urbanairship.debug.ui.channel.channelNav
+import com.urbanairship.debug.ui.contact.contactsNav
 import com.urbanairship.debug.ui.deviceinfo.deviceInfoNav
 import com.urbanairship.debug.ui.events.eventNav
 import com.urbanairship.debug.ui.featureflag.featureFlagNav
 import com.urbanairship.debug.ui.preferencecenter.preferenceCenterNav
 import com.urbanairship.debug.ui.push.pushNav
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DebugNavHost(
     navController: NavHostController,
@@ -44,15 +43,7 @@ internal fun DebugNavHost(
         eventNav(navController = navController)
         pushNav(navController = navController)
         featureFlagNav(navController = navController)
-
-        composable(route = TopLevelScreens.Contacts.route) {
-            // TODO
-            DeviceInfoScreen(
-                onNavigateUp = { navController.popBackStack() },
-                onNavigate = { route -> navController.navigate(route) }
-            )
-        }
-
-
+        channelNav(navController)
+        contactsNav(navController)
     }
 }

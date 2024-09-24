@@ -2,46 +2,38 @@
 
 package com.urbanairship.debug.ui.featureflag
 
-import android.content.Intent
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.JsonItem
+import com.urbanairship.debug.ui.components.LoadingView
+import com.urbanairship.debug.ui.components.RowItem
+import com.urbanairship.debug.ui.components.Section
 import com.urbanairship.debug.ui.components.TopBarNavigation
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import com.urbanairship.json.JsonSerializable
@@ -163,63 +155,6 @@ internal fun FeatureFlagDetailsScreenContent(
             }
         }
     } ?: LoadingView()
-}
-
-@Composable
-internal fun Section(
-    modifier: Modifier = Modifier.fillMaxWidth(),
-    title: String,
-    accessory: @Composable () -> Unit = {},
-    content: @Composable () -> Unit
-) {
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = title.uppercase(), fontWeight = FontWeight.Light)
-            accessory()
-        }
-
-        Spacer(modifier = Modifier.padding(bottom = 10.dp))
-
-        content()
-    }
-}
-
-@Composable
-internal fun RowItem(
-    modifier: Modifier = Modifier.fillMaxWidth(),
-    title: String,
-    addDivider: Boolean = true,
-    details: String? = null
-) {
-    ListItem(
-        modifier = modifier,
-        headlineContent = {
-            Text(text = title, fontWeight = FontWeight.Medium)
-        }, trailingContent = {
-            details?.let { Text(text = it, fontSize = 16.sp, fontWeight = FontWeight.Light) }
-        }
-    )
-
-    if (addDivider) {
-        HorizontalDivider()
-    }
-}
-
-@Composable
-private fun LoadingView(modifier: Modifier = Modifier.width(64.dp)) {
-    Box(contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(
-            modifier = modifier,
-            color = MaterialTheme.colorScheme.secondary,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
-        )
-    }
 }
 
 internal fun JsonSerializable.toFormattedJsonString(): String {

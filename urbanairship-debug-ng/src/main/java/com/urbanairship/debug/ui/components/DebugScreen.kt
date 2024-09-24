@@ -20,6 +20,7 @@ internal fun DebugScreen(
     title: String,
     modifier: Modifier = Modifier.fillMaxSize(),
     navigation: TopBarNavigation = TopBarNavigation.None,
+    actionButton: @Composable () -> Unit = {},
     content: @Composable () -> Unit = {},
 
 ) {
@@ -42,7 +43,8 @@ internal fun DebugScreen(
                 }
             )
         },
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        floatingActionButton = actionButton
     ) { padding ->
         Surface(modifier = modifier.padding(padding)) {
             content()

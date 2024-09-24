@@ -5,9 +5,16 @@ package com.urbanairship.debug.ui.events
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -18,6 +25,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.debug.ServiceLocator
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.TopBarNavigation
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 
 @Composable
 internal fun EventScreen(
@@ -26,9 +35,18 @@ internal fun EventScreen(
 ) {
     val viewModel: EventViewModel =
         viewModel(factory = EventViewModelFactory(ServiceLocator.shared(LocalContext.current).getEventRepository()))
+
     DebugScreen(
         title = stringResource(id = EventScreens.Root.titleRes),
-        navigation = TopBarNavigation.Back(onNavigateUp)
+        navigation = TopBarNavigation.Back(onNavigateUp),
+        actionButton = {
+            FloatingActionButton(
+                onClick = { onNavigate(EventScreens.AddCustom.route) },
+                shape = CircleShape
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add custom event")
+            }
+        }
     ) {
         EventScreenContent(
             viewModel = viewModel,
@@ -37,7 +55,6 @@ internal fun EventScreen(
     }
 }
 
-
 @Composable
 internal fun EventScreenContent(
     modifier: Modifier = Modifier.fillMaxSize(),
@@ -45,8 +62,15 @@ internal fun EventScreenContent(
     onNavigate: (String) -> Unit = {}
 ) {
     val items by viewModel.events.collectAsState(initial = listOf())
+    val listState = rememberLazyListState()
 
-    LazyColumn(modifier = modifier) {
+    LaunchedEffect(key1 = "refresh") {
+        viewModel.refresh()
+        delay(300.milliseconds)
+        listState.animateScrollToItem(0)
+    }
+
+    LazyColumn(modifier = modifier, state = listState) {
         items(
             count = items.size,
             key = { index -> items[index].id },
