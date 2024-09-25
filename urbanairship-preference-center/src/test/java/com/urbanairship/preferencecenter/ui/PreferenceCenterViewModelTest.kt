@@ -21,7 +21,6 @@ import com.urbanairship.preferencecenter.data.Condition
 import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status
 import com.urbanairship.preferencecenter.data.IconDisplay
 import com.urbanairship.preferencecenter.data.Item
-import com.urbanairship.preferencecenter.data.Item.ContactManagement.RegistrationOptions
 import com.urbanairship.preferencecenter.data.Item.ContactSubscriptionGroup.Component
 import com.urbanairship.preferencecenter.data.Options
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
@@ -31,7 +30,6 @@ import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Effect
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State.Content.ContactChannelState
 import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
-import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import io.mockk.Runs

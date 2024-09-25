@@ -97,6 +97,7 @@ public class ButtonModelTest {
             identifier = "test_button_id",
             label = LabelModel(
                 text = "test",
+                markdownOptions = null,
                 textAppearance = TextAppearance(Color(Color.WHITE, emptyList()), 14, TextAlignment.START, emptyList(), emptyList()),
                 environment = mockEnv,
                 properties = ModelProperties(null)
