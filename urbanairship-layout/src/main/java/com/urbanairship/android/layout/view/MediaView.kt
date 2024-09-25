@@ -21,15 +21,18 @@ import androidx.core.view.isGone
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.MediaModel
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
-import com.urbanairship.android.layout.property.Position
+import com.urbanairship.android.layout.property.Size
+import com.urbanairship.android.layout.property.Size.Dimension
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
@@ -40,12 +43,12 @@ import com.urbanairship.app.FilteredActivityListener
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
-import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import org.intellij.lang.annotations.Language
+import java.lang.ref.WeakReference
 
 /**
  * Media view.
@@ -55,7 +58,8 @@ import org.intellij.lang.annotations.Language
 internal class MediaView(
     context: Context,
     model: MediaModel,
-    private val viewEnvironment: ViewEnvironment
+    private val viewEnvironment: ViewEnvironment,
+    private val itemProperties: ItemProperties?
 ) : FrameLayout(context, null), BaseView, TappableView {
 
     private val activityListener = object : SimpleActivityListener() {
@@ -79,13 +83,11 @@ internal class MediaView(
         FilteredActivityListener(activityListener, viewEnvironment.hostingActivityPredicate())
 
     private var visibilityChangeListener: BaseView.VisibilityChangeListener? = null
-
     private var webView: TouchAwareWebView? = null
     private var imageView: ImageView? = null
 
     init {
         id = model.viewId
-
         LayoutUtils.applyBorderAndBackground(this, model)
 
         when (model.mediaType) {
@@ -161,62 +163,78 @@ internal class MediaView(
             return
         }
 
-        val parentLayoutParams = layoutParams
 
-        val iv = CropImageView(context).apply {
-            id = model.mediaViewId
-            layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
-            adjustViewBounds = true
+        doOnAttach {
+            val parentLayoutParams = layoutParams
 
-            if (model.mediaFit == MediaFit.FIT_CROP) {
-                // Use parent size and a matrix to crop the image.
-                setParentLayoutParams(parentLayoutParams)
-                setImagePosition(model.position)
-            } else {
-                // Use ImageView scaleType to fit the image.
-                scaleType = model.mediaFit.scaleType
+            val iv = CropImageView(context).apply {
+                id = model.mediaViewId
+                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                adjustViewBounds = true
+
+                if (model.mediaFit == MediaFit.FIT_CROP) {
+                    // Use parent size and a matrix to crop the image.
+                    setParentLayoutParams(parentLayoutParams)
+                    setImagePosition(model.position)
+                } else {
+                    // Use ImageView scaleType to fit the image.
+                    scaleType = model.mediaFit.scaleType
+                }
+
+                importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+                model.contentDescription.ifNotEmpty {
+                    contentDescription = it
+                    importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+                }
             }
+            imageView = iv
+            addView(iv)
 
-            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
-            model.contentDescription.ifNotEmpty {
-                contentDescription = it
-                importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
-            }
-        }
-        imageView = iv
-        addView(iv)
+            var isLoaded = false
 
-        var isLoaded = false
+            fun loadImage(url: String) {
+                val fallbackWidth = calculateFallbackSize(
+                    dimension = itemProperties?.size?.width,
+                    maxSize = ResourceUtils.getDisplayWidthPixels(context)
+                )
 
-        fun loadImage(url: String) {
-            // Falling back to the screen dimensions keeps the image as large as possible,
-            // while still allowing for sampling to occur.
-            val fallbackWidth = ResourceUtils.getDisplayWidthPixels(context)
-            val fallbackHeight = ResourceUtils.getDisplayHeightPixels(context)
-            val options = ImageRequestOptions.newBuilder(url)
-                .setFallbackDimensions(fallbackWidth, fallbackHeight)
-                .setImageLoadedCallback { success ->
-                    if (success) {
-                        isLoaded = true
-                    } else {
-                        // Listen for visibility changes and load images for default GONE views
-                        // once they are made visible (and have a measured size).
-                        visibilityChangeListener = object : BaseView.VisibilityChangeListener {
-                            override fun onVisibilityChanged(visibility: Int) {
-                                if (visibility == View.VISIBLE && !isLoaded) {
-                                    loadImage(url)
+                val fallbackHeight = calculateFallbackSize(
+                    dimension = itemProperties?.size?.height,
+                    maxSize = ResourceUtils.getDisplayHeightPixels(context)
+                )
+
+                val options = ImageRequestOptions.newBuilder(url)
+                    .setFallbackDimensions(fallbackWidth, fallbackHeight)
+                    .setImageLoadedCallback { success ->
+                        if (success) {
+                            isLoaded = true
+                        } else {
+                            // Listen for visibility changes and load images for default GONE views
+                            // once they are made visible (and have a measured size).
+                            visibilityChangeListener = object : BaseView.VisibilityChangeListener {
+                                override fun onVisibilityChanged(visibility: Int) {
+                                    if (visibility == View.VISIBLE && !isLoaded) {
+                                        loadImage(url)
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                .build()
+                    .build()
 
-            UAirship.shared().imageLoader.load(context, iv, options)
-        }
+                UAirship.shared().imageLoader.load(context, iv, options)
+            }
 
-        doOnAttach {
             loadImage(url)
+        }
+    }
+
+    private fun calculateFallbackSize(dimension: Dimension?, maxSize: Int): Int {
+        return when (dimension?.type) {
+            Size.DimensionType.AUTO ->  0
+            Size.DimensionType.PERCENT -> (dimension.float * maxSize).toInt()
+            Size.DimensionType.ABSOLUTE -> dpToPx(context, dimension.int).toInt()
+            null -> maxSize
         }
     }
 

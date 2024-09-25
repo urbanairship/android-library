@@ -60,8 +60,8 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
 
     val viewId: Int = View.generateViewId()
 
-    fun createView(context: Context, viewEnvironment: ViewEnvironment): T {
-        val view = onCreateView(context, viewEnvironment)
+    fun createView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?): T {
+        val view = onCreateView(context, viewEnvironment, itemProperties)
         onViewCreated(view)
 
         view.addOnAttachStateChangeListener(object : OnAttachStateChangeListener {
@@ -144,7 +144,7 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
         }
     }
 
-    protected abstract fun onCreateView(context: Context, viewEnvironment: ViewEnvironment): T
+    protected abstract fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?): T
 
     protected open fun onViewCreated(view: T) = Unit
 

@@ -14,6 +14,7 @@ import androidx.core.view.isGone
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LinearLayoutItemInfo
 import com.urbanairship.android.layout.model.BaseModel
+import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.LinearLayoutModel
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.Size.DimensionType.ABSOLUTE
@@ -70,7 +71,7 @@ internal class LinearLayoutView(
         for (i in items.indices) {
             val (itemInfo, itemModel) = items[i]
             val lp = generateItemLayoutParams(itemInfo)
-            val itemView = itemModel.createView(context, viewEnvironment).apply {
+            val itemView = itemModel.createView(context, viewEnvironment, ItemProperties(itemInfo.size)).apply {
                 layoutParams = lp
             }
             // Add view after any existing children, without requesting a layout pass on the child.

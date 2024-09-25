@@ -83,7 +83,7 @@ internal class ThomasEmbeddedView(
 
             LayoutUtils.applyBorderAndBackground(container, placement.border, placement.backgroundColor)
 
-            container.addView(model.createView(context, environment))
+            container.addView(model.createView(context, environment, null))
             frame.addView(container)
 
             addView(frame)

@@ -47,7 +47,7 @@ internal class EmptyModel(
         properties = props
     )
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         EmptyView(context, this).apply {
             id = viewId
         }

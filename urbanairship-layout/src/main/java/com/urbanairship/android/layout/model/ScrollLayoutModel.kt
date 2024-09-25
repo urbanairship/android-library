@@ -51,7 +51,7 @@ internal class ScrollLayoutModel(
         properties = props
     )
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         ScrollLayoutView(context, this, viewEnvironment).apply {
             id = viewId
         }

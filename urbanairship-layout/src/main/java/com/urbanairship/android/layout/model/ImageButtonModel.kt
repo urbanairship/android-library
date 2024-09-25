@@ -77,7 +77,7 @@ internal class ImageButtonModel(
 
     override val reportingDescription: String = contentDescription ?: identifier
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         ImageButtonView(context, this, viewEnvironment).apply {
             id = viewId
         }

@@ -76,7 +76,7 @@ internal class RadioInputModel(
         properties = props
     )
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         RadioInputView(context, this).apply {
             id = viewId
         }

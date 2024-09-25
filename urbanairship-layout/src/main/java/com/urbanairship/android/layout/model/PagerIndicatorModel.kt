@@ -63,7 +63,7 @@ internal class PagerIndicatorModel(
 
     private val indicatorViewIds = HashMap<Int, Int>()
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         PagerIndicatorView(context, this).apply {
             id = viewId
         }

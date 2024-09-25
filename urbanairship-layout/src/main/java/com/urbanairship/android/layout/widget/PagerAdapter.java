@@ -2,10 +2,17 @@
 
 package com.urbanairship.android.layout.widget;
 
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.core.view.ViewCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.urbanairship.android.layout.environment.ViewEnvironment;
 import com.urbanairship.android.layout.model.BaseModel;
@@ -14,13 +21,6 @@ import com.urbanairship.android.layout.util.LayoutUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.RestrictTo;
-import androidx.core.view.ViewCompat;
-import androidx.recyclerview.widget.RecyclerView;
-
-import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> {
@@ -91,7 +91,7 @@ public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> 
         }
 
         public void bind(@NonNull BaseModel<?, ?> item, @NonNull ViewEnvironment viewEnvironment) {
-            View view = item.createView(itemView.getContext(), viewEnvironment);
+            View view = item.createView(itemView.getContext(), viewEnvironment, null);
             container.addView(view, MATCH_PARENT, MATCH_PARENT);
 
             // Register a listener, so we can request insets when the view is attached.

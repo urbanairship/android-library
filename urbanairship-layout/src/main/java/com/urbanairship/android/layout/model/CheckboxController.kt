@@ -103,8 +103,8 @@ internal class CheckboxController(
         }
     }
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
-        view.createView(context, viewEnvironment)
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
+        view.createView(context, viewEnvironment, itemProperties)
 
     private fun isValid(selectedItems: Set<JsonValue>): Boolean {
         val count = selectedItems.size

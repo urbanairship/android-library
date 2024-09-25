@@ -3,9 +3,7 @@ package com.urbanairship.images
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.Size
-import android.view.View
 import android.view.ViewGroup
-import android.view.ViewParent
 import android.view.ViewTreeObserver
 import android.view.ViewTreeObserver.OnPreDrawListener
 import android.widget.ImageView
@@ -86,7 +84,7 @@ internal object AirshipGlideImageLoader : ImageLoader {
 
         override fun getSize(cb: SizeReadyCallback) {
             // Fast path: the view is already measured or has fallback width/height
-            val size = getSize()
+            val size = getSize(false)
             if (size.width > 0 && size.height > 0) {
                 cb.onSizeReady(size.width, size.height)
             } else {
@@ -96,7 +94,7 @@ internal object AirshipGlideImageLoader : ImageLoader {
                     private var isResumed = false
 
                     override fun onPreDraw(): Boolean {
-                        getSize().let { size ->
+                        getSize(true).let { size ->
                             viewTreeObserver.removePreDrawListenerSafe(this)
 
                             if (!isResumed) {
@@ -112,42 +110,31 @@ internal object AirshipGlideImageLoader : ImageLoader {
             }
         }
 
-        fun getSize(): Size = Size(getWidth(), getHeight())
+        fun getSize(allowTargetSize: Boolean): Size = Size(
+            getWidth().let { value ->  if (value <= 0 && allowTargetSize) zeroWidthFallback?: Target.SIZE_ORIGINAL else value  },
+            getHeight().let { value ->  if (value <= 0 && allowTargetSize) zeroHeightFallback?: Target.SIZE_ORIGINAL else value  },
+        )
 
         fun getWidth() = getDimension(
             paramSize = view.layoutParams?.width ?: ViewGroup.LayoutParams.MATCH_PARENT,
             viewSize = view.width,
+            fallbackSize = zeroWidthFallback,
             paddingSize = if (subtractPadding) view.paddingLeft + view.paddingRight else 0
-        ) ?: zeroWidthFallback.let {
-            if (it == null || it < 0) {
-                Target.SIZE_ORIGINAL
-            } else {
-                it
-            }
-        }
+        )
 
         fun getHeight() = getDimension(
             paramSize = view.layoutParams?.height ?: ViewGroup.LayoutParams.MATCH_PARENT,
             viewSize = view.height,
+            fallbackSize = zeroHeightFallback,
             paddingSize = if (subtractPadding) view.paddingTop + view.paddingBottom else 0
-        ) ?: zeroHeightFallback.let {
-            if (it == null || it < 0) {
-                Target.SIZE_ORIGINAL
-            } else {
-                it
-            }
-        }
+        )
 
         fun getDimension(
             paramSize: Int,
             viewSize: Int,
+            fallbackSize: Int?,
             paddingSize: Int
-        ): Int? {
-            // If the dimension is set to WRAP_CONTENT or MATCH_PARENT, then the dimension is undefined.
-            if (paramSize <= 0) {
-                return null
-            }
-
+        ): Int {
             // Assume the dimension will match the value in the view's layout params.
             val insetParamSize = paramSize - paddingSize
             if (insetParamSize > 0) {
@@ -160,8 +147,12 @@ internal object AirshipGlideImageLoader : ImageLoader {
                 return insetViewSize
             }
 
+            if (paramSize == ViewGroup.LayoutParams.MATCH_PARENT) {
+                return fallbackSize ?: 0
+            }
+
             // Unable to resolve the dimension's value.
-            return null
+            return 0
         }
 
         private fun ViewTreeObserver.removePreDrawListenerSafe(victim: OnPreDrawListener) {

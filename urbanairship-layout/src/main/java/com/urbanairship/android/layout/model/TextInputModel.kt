@@ -93,7 +93,7 @@ internal class TextInputModel(
         }
     }
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         TextInputView(context, this).apply {
             id = viewId
 

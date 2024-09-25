@@ -51,7 +51,7 @@ internal class LabelModel(
         properties = props
     )
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         LabelView(context, this).apply {
             id = viewId
         }

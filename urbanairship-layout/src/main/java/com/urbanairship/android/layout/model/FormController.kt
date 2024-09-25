@@ -79,8 +79,8 @@ internal class FormController(
         properties = props
     )
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
-        view.createView(context, viewEnvironment)
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
+        view.createView(context, viewEnvironment, itemProperties)
 
     override fun buildFormData(state: State.Form) =
         FormData.Form(identifier, responseType, state.data.values.toSet())

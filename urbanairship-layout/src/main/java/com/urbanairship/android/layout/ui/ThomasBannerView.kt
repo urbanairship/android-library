@@ -123,7 +123,7 @@ internal class ThomasBannerView(
         val position = placement.position
         val margin = placement.margin
         val frame = makeFrame(size)
-        val containerView = model.createView(context, environment)
+        val containerView = model.createView(context, environment, null)
         frame.addView(containerView)
         addView(frame)
         LayoutUtils.applyBorderAndBackground(frame, placement.border, placement.backgroundColor)

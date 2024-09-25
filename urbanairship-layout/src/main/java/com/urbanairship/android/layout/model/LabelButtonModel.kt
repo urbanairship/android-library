@@ -78,7 +78,7 @@ internal class LabelButtonModel(
     override val reportingDescription: String =
         contentDescription ?: label.text.ifEmpty { identifier }
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         LabelButtonView(context, this).apply {
             id = viewId
         }

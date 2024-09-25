@@ -72,8 +72,8 @@ internal class PagerController(
         }
     }
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
-        view.createView(context, viewEnvironment)
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
+        view.createView(context, viewEnvironment, itemProperties)
 
     private fun reportPageView(pagerContext: PagerData) {
         report(

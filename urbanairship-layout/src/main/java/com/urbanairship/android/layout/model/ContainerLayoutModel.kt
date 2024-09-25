@@ -55,7 +55,7 @@ internal class ContainerLayoutModel(
         val model: AnyModel
     )
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         ContainerLayoutView(context, this, viewEnvironment).apply {
             id = viewId
         }

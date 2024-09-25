@@ -72,8 +72,8 @@ internal class MediaModel(
         fun onResume()
     }
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
-        MediaView(context, this, viewEnvironment).apply {
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
+        MediaView(context, this, viewEnvironment, itemProperties).apply {
             id = viewId
         }
 

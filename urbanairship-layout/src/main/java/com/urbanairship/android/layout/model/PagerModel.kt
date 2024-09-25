@@ -147,7 +147,7 @@ internal class PagerModel(
         }
     }
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         PagerView(context, this, viewEnvironment).apply {
             id = viewId
         }

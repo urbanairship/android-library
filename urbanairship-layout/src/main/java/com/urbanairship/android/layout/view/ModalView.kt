@@ -65,7 +65,7 @@ internal class ModalView(
             }
         }
 
-        container.addView(model.createView(context, viewEnvironment))
+        container.addView(model.createView(context, viewEnvironment, null))
 
         LayoutUtils.applyBorderAndBackground(container, placement.border, placement.backgroundColor)
         containerView = container

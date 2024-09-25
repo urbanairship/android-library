@@ -50,7 +50,7 @@ internal class WebViewModel(
 
     var savedState: Bundle? = null
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         WebViewView(context, this, viewEnvironment).apply {
             id = viewId
         }

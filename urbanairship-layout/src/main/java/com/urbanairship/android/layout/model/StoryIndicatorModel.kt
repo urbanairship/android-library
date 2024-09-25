@@ -65,7 +65,7 @@ internal class StoryIndicatorModel(
 
     private val indicatorViewIds = HashMap<Int, Int>()
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         StoryIndicatorView(context, this).apply {
             id = viewId
         }

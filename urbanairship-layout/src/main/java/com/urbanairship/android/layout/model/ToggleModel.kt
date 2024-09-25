@@ -81,7 +81,7 @@ internal class ToggleModel(
         properties = props
     )
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         ToggleView(context, this).apply {
             id = viewId
         }

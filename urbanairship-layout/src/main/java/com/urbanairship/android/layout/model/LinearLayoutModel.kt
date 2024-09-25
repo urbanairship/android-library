@@ -57,7 +57,7 @@ internal class LinearLayoutModel(
         val model: AnyModel
     )
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
+    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         LinearLayoutView(context, this, viewEnvironment).apply {
             id = viewId
         }
