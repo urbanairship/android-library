@@ -18,6 +18,7 @@ import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.app.SimpleApplicationListener
+import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AirshipSmsValidator
@@ -29,25 +30,23 @@ import com.urbanairship.channel.TagGroupsEditor
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.AuthTokenProvider
-import com.urbanairship.http.RequestException
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.locale.LocaleManager
-import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
-import com.urbanairship.push.PushMessage
-import com.urbanairship.util.CachedValue
 import com.urbanairship.util.Clock
-import com.urbanairship.util.SerialQueue
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -66,17 +65,24 @@ public class Contact internal constructor(
     private val audienceOverridesProvider: AudienceOverridesProvider,
     activityMonitor: ActivityMonitor,
     private val clock: Clock,
-    private val subscriptionListApiClient: SubscriptionListApiClient,
     private val contactManager: ContactManager,
     private val smsValidator: SmsValidator,
     pushManager: PushManager,
-    contactChannelsProvider: ContactChannelsProvider = ContactChannelsProvider(
+    private val subscriptionsProvider: SubscriptionsProvider = SubscriptionsProvider(
         config,
-        audienceOverridesProvider,
-        contactManager.contactIdUpdates
+        privacyManager,
+        contactManager.stableContactIdUpdates,
+        audienceOverridesProvider.contactUpdates(contactManager.stableContactIdUpdates)
+    ),
+    private val contactChannelsProvider: ContactChannelsProvider = ContactChannelsProvider(
+        config,
+        privacyManager,
+        contactManager.stableContactIdUpdates,
+        audienceOverridesProvider.contactUpdates(contactManager.stableContactIdUpdates)
     ),
     subscriptionListDispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) : AirshipComponent(context, preferenceDataStore) {
+
     internal constructor(
         context: Context,
         preferenceDataStore: PreferenceDataStore,
@@ -95,7 +101,6 @@ public class Contact internal constructor(
         audienceOverridesProvider,
         GlobalActivityMonitor.shared(context),
         Clock.DEFAULT_CLOCK,
-        SubscriptionListApiClient(config),
         ContactManager(
             preferenceDataStore,
             airshipChannel,
@@ -114,9 +119,7 @@ public class Contact internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val authTokenProvider: AuthTokenProvider = this.contactManager
 
-    private val subscriptionListCache: CachedValue<Subscriptions> = CachedValue(clock)
     private val subscriptionsScope = CoroutineScope(subscriptionListDispatcher + SupervisorJob())
-    private val subscriptionFetchQueue = SerialQueue()
 
     /**
      * Named user Id updates.
@@ -520,34 +523,12 @@ public class Contact internal constructor(
 
     @JvmSynthetic
     public suspend fun fetchSubscriptionLists(): Result<Map<String, Set<Scope>>> {
-        if (!privacyManager.isContactsAudienceEnabled) {
-            return Result.failure(
-                IllegalStateException("Unable to fetch subscriptions when FEATURE_TAGS_AND_ATTRIBUTES or FEATURE_CONTACTS are disabled")
-            )
-        }
-
-        val contactId = stableContactInfo().contactId
-
-        // Get the subscription lists from the in-memory cache, if available.
-        val result = fetchContactSubscriptionList(contactId)
-        val subscriptions = result.getOrNull()
-            ?.toMutableMap()
-            ?.mapValues { it.value.toMutableSet() }
-
-        if (result.isFailure || subscriptions == null) {
-            return result
-        }
-
-        audienceOverridesProvider.contactOverrides(contactId).apply {
-            this.subscriptions?.forEach { mutation ->
-                mutation.apply(subscriptions)
-            }
-        }
-
-        return Result.success(subscriptions)
+        return subscriptionsProvider.updates.first()
     }
 
-    public val channelContacts: Flow<Result<List<ContactChannel>>> = contactChannelsProvider.contactChannels
+    public val channelContacts: Flow<Result<List<ContactChannel>>> = contactChannelsProvider.updates
+
+    public val subscriptions: Flow<Result<Map<String, Set<Scope>>>> = subscriptionsProvider.updates
 
     /**
      * Returns the current set of subscription lists for the current contact.
@@ -582,26 +563,6 @@ public class Contact internal constructor(
         return pendingResult
     }
 
-    private suspend fun fetchContactSubscriptionList(contactId: String): Result<Map<String, Set<Scope>>> {
-        return subscriptionFetchQueue.run {
-            val cached = subscriptionListCache.get()
-            if (cached != null && cached.contactId == contactId) {
-                return@run Result.success(cached.subscriptions)
-            }
-
-            val response = subscriptionListApiClient.getSubscriptionLists(contactId)
-            if (response.isSuccessful && response.value != null) {
-                subscriptionListCache.set(
-                    Subscriptions(contactId, response.value),
-                    clock.currentTimeMillis() + SUBSCRIPTION_CACHE_LIFETIME_MS
-                )
-                return@run Result.success(response.value)
-            }
-
-            return@run Result.failure(RequestException("Failed to fetch subscription lists with status: ${response.status}"))
-        }
-    }
-
 
 
     internal companion object {
@@ -620,9 +581,6 @@ public class Contact internal constructor(
 
         private const val LAST_RESOLVED_DATE_KEY = "com.urbanairship.contacts.LAST_RESOLVED_DATE_KEY"
 
-        /** Max age for the contact subscription listing cache. */
-        private val SUBSCRIPTION_CACHE_LIFETIME_MS = TimeUnit.MINUTES.toMillis(10)
-
         /** Default foreground refresh interval. */
         private val FOREGROUND_INTERVAL = TimeUnit.MINUTES.toMillis(60)
 
@@ -639,5 +597,16 @@ public class Contact internal constructor(
     )
 }
 
-private val PrivacyManager.isContactsEnabled get() = this.isEnabled(PrivacyManager.Feature.CONTACTS)
-private val PrivacyManager.isContactsAudienceEnabled get() = this.isEnabled(PrivacyManager.Feature.CONTACTS, PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
+internal  val PrivacyManager.isContactsEnabled get() = this.isEnabled(PrivacyManager.Feature.CONTACTS)
+internal val PrivacyManager.isContactsAudienceEnabled get() = this.isEnabled(PrivacyManager.Feature.CONTACTS, PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
+
+internal val ContactManager.stableContactIdUpdates: Flow<String>
+    get() = this.contactIdUpdates.mapNotNull {
+        if (it?.isStable == true) { it.contactId } else { null }
+    }
+
+internal fun AudienceOverridesProvider.contactUpdates(stableContactIdUpdates: Flow<String>): Flow<AudienceOverrides.Contact> {
+    return combine(stableContactIdUpdates, this.updates) { contactId, _ ->
+        this.contactOverrides(contactId)
+    }
+}

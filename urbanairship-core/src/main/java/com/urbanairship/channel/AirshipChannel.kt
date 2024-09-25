@@ -39,7 +39,10 @@ import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
@@ -56,9 +59,10 @@ public class AirshipChannel internal constructor(
     private val runtimeConfig: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val localeManager: LocaleManager,
-    private val channelSubscriptions: ChannelSubscriptions,
     private val channelManager: ChannelBatchUpdateManager,
     private val channelRegistrar: ChannelRegistrar,
+    private val audienceOverridesProvider: AudienceOverridesProvider,
+    private val subscriptionsProvider: SubscriptionsProvider,
     private val activityMonitor: ActivityMonitor = GlobalActivityMonitor.shared(context),
     private val jobDispatcher: JobDispatcher = JobDispatcher.shared(context),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
@@ -75,19 +79,27 @@ public class AirshipChannel internal constructor(
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         localeManager: LocaleManager,
-        audienceOverridesProvider: AudienceOverridesProvider
+        audienceOverridesProvider: AudienceOverridesProvider,
+        channelRegistrar: ChannelRegistrar
     ) : this(
-        context, dataStore, runtimeConfig, privacyManager, localeManager,
-        ChannelSubscriptions(
-            runtimeConfig, audienceOverridesProvider
-        ),
-        ChannelBatchUpdateManager(
+        context = context,
+        dataStore = dataStore,
+        runtimeConfig = runtimeConfig,
+        privacyManager = privacyManager,
+        localeManager = localeManager,
+        channelManager = ChannelBatchUpdateManager(
             dataStore, runtimeConfig, audienceOverridesProvider
         ),
-        ChannelRegistrar(
-            context, dataStore, runtimeConfig
-        )
+        channelRegistrar = channelRegistrar,
+        audienceOverridesProvider = audienceOverridesProvider,
+        subscriptionsProvider = SubscriptionsProvider(runtimeConfig,
+            privacyManager,
+            channelRegistrar.channelIdFlow.mapNotNull { it },
+            combine(channelRegistrar.channelIdFlow.mapNotNull { it }, audienceOverridesProvider.updates) { channelId, _ ->
+                audienceOverridesProvider.channelOverrides(channelId)
+            })
     )
+
 
     init {
         this.runtimeConfig.addConfigListener {
@@ -121,6 +133,9 @@ public class AirshipChannel internal constructor(
      * Channel Id flow. Can be used to listen for when the channel is created.
      */
     public var channelIdFlow: StateFlow<String?> = channelRegistrar.channelIdFlow
+
+    public val subscriptions: Flow<Result<Set<String>>> = subscriptionsProvider.updates
+
 
     init {
         channelRegistrar.channelId?.let {
@@ -422,20 +437,7 @@ public class AirshipChannel internal constructor(
      */
     @JvmSynthetic
     public suspend fun fetchSubscriptionLists(): Result<Set<String>> {
-        if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
-            return Result.failure(
-                IllegalStateException("Unable to fetch subscriptions when FEATURE_TAGS_AND_ATTRIBUTES are disabled")
-            )
-        }
-
-        if (!isRegistrationAllowed) {
-            return Result.failure(
-                IllegalStateException("Unable to fetch subscriptions when channel registration is disabled")
-            )
-        }
-
-        val channelId = channelIdFlow.mapNotNull { it }.first()
-        return channelSubscriptions.fetchSubscriptionLists(channelId)
+        return subscriptionsProvider.updates.first()
     }
 
     /**

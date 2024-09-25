@@ -25,6 +25,7 @@ import com.urbanairship.audience.DeviceInfoProviderImpl;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.cache.AirshipCache;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.ChannelRegistrar;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.RemoteConfigObserver;
 import com.urbanairship.contacts.Contact;
@@ -714,10 +715,9 @@ public class UAirship {
         AudienceOverridesProvider audienceOverridesProvider = new AudienceOverridesProvider();
         DeferredPlatformProvider platformProvider = new DeferredPlatformProvider(application, preferenceDataStore, privacyManager, pushProviders);
         DefaultRequestSession requestSession = new DefaultRequestSession(airshipConfigOptions, platformProvider);
-
-        this.runtimeConfig = new AirshipRuntimeConfig(() -> airshipConfigOptions, requestSession, remoteConfigObserver, platformProvider);
-
-        this.channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, localeManager, audienceOverridesProvider);
+        runtimeConfig = new AirshipRuntimeConfig(() -> airshipConfigOptions, requestSession, remoteConfigObserver, platformProvider);
+        ChannelRegistrar channelRegistrar = new ChannelRegistrar(getApplicationContext(), preferenceDataStore, runtimeConfig);
+        channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, localeManager, audienceOverridesProvider, channelRegistrar);
         requestSession.setChannelAuthTokenProvider(this.channel.getAuthTokenProvider());
 
         components.add(channel);
