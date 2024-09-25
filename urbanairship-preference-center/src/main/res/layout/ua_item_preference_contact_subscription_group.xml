@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:baselineAligned="false"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:importantForAccessibility="no">
 
     <LinearLayout
         android:layout_width="0dp"
@@ -13,21 +14,28 @@
         android:layout_weight="1"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/ua_pref_title"
-            style="@style/UrbanAirship.PreferenceCenter.Item.PreferenceTitle"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            tools:text="Title" />
+            android:orientation="vertical"
+            android:importantForAccessibility="yes"
+            android:screenReaderFocusable="true">
+            <TextView
+                android:id="@+id/ua_pref_title"
+                style="@style/UrbanAirship.PreferenceCenter.Item.PreferenceTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Title" />
 
-        <TextView
-            android:id="@+id/ua_pref_description"
-            style="@style/UrbanAirship.PreferenceCenter.Item.PreferenceDescription"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            tools:text="Description"
-            tools:visibility="visible" />
+            <TextView
+                android:id="@+id/ua_pref_description"
+                style="@style/UrbanAirship.PreferenceCenter.Item.PreferenceDescription"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                tools:text="Description"
+                tools:visibility="visible" />
+        </LinearLayout>
 
         <com.google.android.material.chip.ChipGroup
             android:id="@+id/ua_pref_chip_group"

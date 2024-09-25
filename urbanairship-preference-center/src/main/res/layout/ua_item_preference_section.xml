@@ -5,13 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:baselineAligned="false"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:importantForAccessibility="no">
 
     <TextView
         android:id="@+id/ua_pref_title"
         style="@style/UrbanAirship.PreferenceCenter.Item.SectionTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:accessibilityHeading="true"
         tools:text="Section title" />
 
     <TextView

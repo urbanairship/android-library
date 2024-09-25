@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:baselineAligned="false"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:importantForAccessibility="no">
 
     <!-- This view is hidden by default in the HeaderTitle style. -->
     <TextView
@@ -13,6 +14,7 @@
         style="@style/UrbanAirship.PreferenceCenter.Item.HeaderTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:accessibilityHeading="true"
         tools:visibility="visible"
         tools:text="Preference Center Title" />
 
