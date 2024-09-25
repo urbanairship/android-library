@@ -240,7 +240,8 @@ public class InAppMessageTest {
                     template = Modal.Template.MEDIA_HEADER_BODY,
                     dismissButtonColor = InAppMessageColor(Color.parseColor("#000000")),
                     backgroundColor = InAppMessageColor(Color.parseColor("#ffffff")),
-                    allowFullscreenDisplay = true
+                    allowFullscreenDisplay = true,
+                    borderRadius = 5F
                 )
             ),
             source =  InAppMessage.Source.APP_DEFINED
