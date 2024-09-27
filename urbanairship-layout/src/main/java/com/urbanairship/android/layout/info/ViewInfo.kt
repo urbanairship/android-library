@@ -15,6 +15,8 @@ import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.Margin
+import com.urbanairship.android.layout.property.MarkdownAppearance
+import com.urbanairship.android.layout.property.MarkdownOptions
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
 import com.urbanairship.android.layout.property.PagerGesture
@@ -25,6 +27,7 @@ import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
 import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.property.TextInputTextAppearance
+import com.urbanairship.android.layout.property.TextStyle
 import com.urbanairship.android.layout.property.ToggleStyle
 import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.property.ViewType
@@ -61,6 +64,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
+import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 
 /** @hide */
@@ -311,6 +315,7 @@ internal class LabelInfo(
     val text: String = json.requireField("text")
     val textAppearance: TextAppearance =
         TextAppearance.fromJson(json.requireField("text_appearance"))
+    val markdownOptions: MarkdownOptions? = json.optionalMap("markdown")?.let { MarkdownOptions(it) }
 }
 
 internal class LabelButtonInfo(json: JsonMap) : ButtonInfo(json) {

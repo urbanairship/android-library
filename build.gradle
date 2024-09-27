@@ -1,13 +1,15 @@
 buildscript {
     ext {
         // Airship Version - major.minor.patch
-        airshipVersion = '18.1.6'
+        airshipVersion = '18.3.0'
 
         // Airship Version Qualifier beta, release, etc...
         // airshipVersionQualifier = "alpha"
 
         // Android SDK Versions
         minSdkVersion = 21
+        // TODO: update to 35 once Robolectric supports it:
+        //     https://github.com/robolectric/robolectric/issues/9203
         compileSdkVersion = 34
         targetSdkVersion = 34
 

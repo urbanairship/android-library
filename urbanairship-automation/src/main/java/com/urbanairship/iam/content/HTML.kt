@@ -52,6 +52,30 @@ public class HTML @VisibleForTesting internal constructor(
     public val allowFullscreenDisplay: Boolean
 ) : JsonSerializable {
 
+    /** Returns a copy of the HTML display content with the provided changes. */
+    @JvmOverloads
+    public fun copy(
+        url: String = this.url,
+        height: Long = this.height,
+        width: Long = this.width,
+        aspectLock: Boolean? = this.aspectLock,
+        requiresConnectivity: Boolean? = this.requiresConnectivity,
+        backgroundColor: InAppMessageColor = this.backgroundColor,
+        dismissButtonColor: InAppMessageColor = this.dismissButtonColor,
+        borderRadius: Float = this.borderRadius,
+        allowFullscreenDisplay: Boolean = this.allowFullscreenDisplay
+    ): HTML = HTML(
+        url = url,
+        height = height,
+        width = width,
+        aspectLock = aspectLock,
+        requiresConnectivity = requiresConnectivity,
+        backgroundColor = backgroundColor,
+        dismissButtonColor = dismissButtonColor,
+        borderRadius = borderRadius,
+        allowFullscreenDisplay = allowFullscreenDisplay
+    )
+
     public companion object {
         private const val URL_KEY = "url"
         private const val WIDTH_KEY = "width"

@@ -48,6 +48,7 @@ dependencies {
 
     // AndroidX
     implementation(libs.androidx.core)
+    implementation(libs.androidx.activityktx)
     implementation(libs.androidx.fragment.fragmentktx)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.runtimektx)

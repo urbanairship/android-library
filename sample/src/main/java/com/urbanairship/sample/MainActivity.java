@@ -15,6 +15,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import androidx.activity.EdgeToEdge;
+import androidx.activity.SystemBarStyle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,10 +38,11 @@ public class MainActivity extends AppCompatActivity {
      */
     private static final String LAST_MESSAGE_SENT_DATE = "LAST_MC_SENT_DATE";
 
-    private static final Set<Integer> TOP_LEVEL_DESTINATIONS = new HashSet<Integer>() {{
+    public static final Set<Integer> TOP_LEVEL_DESTINATIONS = new HashSet<Integer>() {{
         add(R.id.homeFragment);
-        add(R.id.inboxFragment);
-        add(R.id.settingsFragment);
+        add(R.id.inbox);
+        add(R.id.prefCenter);
+        add(R.id.settings);
         add(com.urbanairship.debug.R.id.debugFragment);
     }};
 
@@ -53,7 +56,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         NavHostFragment navHostFragment =

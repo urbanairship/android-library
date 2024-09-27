@@ -66,6 +66,34 @@ public class Modal @VisibleForTesting internal constructor(
     public val allowFullscreenDisplay: Boolean = false
 ) : JsonSerializable {
 
+    /** Returns a copy of the Modal display content with the provided changes. */
+    @JvmOverloads
+    public fun copy(
+        heading: InAppMessageTextInfo? = this.heading,
+        body: InAppMessageTextInfo? = this.body,
+        media: InAppMessageMediaInfo? = this.media,
+        footer: InAppMessageButtonInfo? = this.footer,
+        buttons: List<InAppMessageButtonInfo> = this.buttons,
+        buttonLayoutType: InAppMessageButtonLayoutType = this.buttonLayoutType,
+        template: Template = this.template,
+        backgroundColor: InAppMessageColor = this.backgroundColor,
+        @FloatRange(from = 0.0) borderRadius: Float = this.borderRadius,
+        dismissButtonColor: InAppMessageColor = this.dismissButtonColor,
+        allowFullscreenDisplay: Boolean = this.allowFullscreenDisplay
+    ): Modal = Modal(
+        heading = heading,
+        body = body,
+        media = media,
+        footer = footer,
+        buttons = buttons,
+        buttonLayoutType = buttonLayoutType,
+        template = template,
+        backgroundColor = backgroundColor,
+        borderRadius = borderRadius,
+        dismissButtonColor = dismissButtonColor,
+        allowFullscreenDisplay = allowFullscreenDisplay
+    )
+
     public enum class Template(internal val json: String) : JsonSerializable {
         /**
          * Template with display order of header, media, body, buttons, footer.

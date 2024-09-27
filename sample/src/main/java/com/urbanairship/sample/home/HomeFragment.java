@@ -6,16 +6,13 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ClipboardAction;
-import com.urbanairship.json.JsonMap;
-import com.urbanairship.liveupdate.LiveUpdateManager;
+import com.urbanairship.messagecenter.MessageCenter;
+import com.urbanairship.preferencecenter.PreferenceCenter;
 import com.urbanairship.sample.R;
 import com.urbanairship.sample.databinding.FragmentHomeBinding;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -37,11 +34,19 @@ public class HomeFragment extends Fragment {
         binding.setLifecycleOwner(this);
         binding.setViewModel(viewModel);
 
-        binding.channelId.setOnClickListener(v -> {
+        binding.channelId.setOnClickListener(v ->
             ActionRunRequest.createRequest(ClipboardAction.DEFAULT_REGISTRY_NAME)
                             .setValue(binding.channelId.getText())
-                            .run();
-        });
+                            .run()
+        );
+
+        binding.prefCenter.setOnClickListener(v ->
+                PreferenceCenter.shared().open("app_default")
+        );
+
+        binding.messageCenter.setOnClickListener(v ->
+                MessageCenter.shared().showMessageCenter()
+        );
 
         return binding.getRoot();
     }

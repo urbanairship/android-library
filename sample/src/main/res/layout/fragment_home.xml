@@ -14,11 +14,24 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <include layout="@layout/include_appbar" />
+        <include layout="@layout/include_appbar"/>
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
+
+            <androidx.constraintlayout.helper.widget.Flow
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:orientation="vertical"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:flow_verticalAlign="top"
+                app:flow_verticalBias="0.5"
+                app:flow_verticalStyle="packed"
+                app:constraint_referenced_ids="channel_title,channelId,spacer1,prefCenter,spacer2,messageCenter" />
 
             <TextView
                 android:id="@+id/channel_title"
@@ -26,29 +39,48 @@
                 android:layout_height="wrap_content"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:paddingBottom="8dp"
                 android:text="@string/channel_id"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                app:layout_constraintBottom_toTopOf="@+id/channelId"
-                app:layout_constraintStart_toStartOf="parent" />
+                android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
 
             <Button
                 android:id="@+id/channelId"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="match_parent"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
                 android:layout_height="?listPreferredItemHeight"
-                android:layout_marginTop="8dp"
                 android:layout_marginBottom="8dp"
+                android:layout_marginHorizontal="16dp"
                 android:text="@{viewModel.channelId}"
                 android:textColor="?colorAccent"
                 android:maxLines="1"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintVertical_bias="0.3"
                 tools:text="a61635e7-60c5-47e7-b9fb-870754e70a86" />
+
+            <Space
+                android:id="@+id/spacer1"
+                android:layout_width="0dp"
+                android:layout_height="96dp"/>
+
+            <Button
+                android:id="@+id/prefCenter"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="?listPreferredItemHeight"
+                android:text="Default Preference Center"
+                android:textColor="?colorSecondary"
+                android:maxLines="1" />
+
+            <Space
+                android:id="@+id/spacer2"
+                android:layout_width="0dp"
+                android:layout_height="8dp"/>
+
+            <Button
+                android:id="@+id/messageCenter"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="?listPreferredItemHeight"
+                android:text="Default Message Center"
+                android:textColor="?colorSecondary"
+                android:maxLines="1" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

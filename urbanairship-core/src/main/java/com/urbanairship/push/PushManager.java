@@ -8,6 +8,7 @@ import android.os.Build;
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.AirshipComponentGroups;
 import com.urbanairship.AirshipExecutors;
+import com.urbanairship.PendingResult;
 import com.urbanairship.UALog;
 import com.urbanairship.Predicate;
 import com.urbanairship.PreferenceDataStore;
@@ -31,6 +32,7 @@ import com.urbanairship.json.JsonList;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
 import com.urbanairship.permission.PermissionDelegate;
+import com.urbanairship.permission.PermissionPromptFallback;
 import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.notifications.AirshipNotificationProvider;
@@ -55,6 +57,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 import androidx.annotation.XmlRes;
+import androidx.core.util.Consumer;
 import androidx.core.util.ObjectsCompat;
 
 /**
@@ -222,10 +225,10 @@ public class PushManager extends AirshipComponent {
     private final Analytics analytics;
     private final AirshipRuntimeConfig config;
     private final Supplier<PushProviders> pushProvidersSupplier;
-    private final PermissionsManager permissionsManager;
+    protected final PermissionsManager permissionsManager;
     private NotificationProvider notificationProvider;
     private final Map<String, NotificationActionButtonGroup> actionGroupMap = new HashMap<>();
-    private final PreferenceDataStore preferenceDataStore;
+    protected final PreferenceDataStore preferenceDataStore;
     private final ActivityMonitor activityMonitor;
 
     private final JobDispatcher jobDispatcher;
@@ -578,6 +581,32 @@ public class PushManager extends AirshipComponent {
     }
 
     /**
+     * Enables user notifications on Airship and tries to prompt for the notification permission.
+     *
+     * @note This does NOT enable the {@link com.urbanairship.PrivacyManager.Feature#PUSH} feature.
+     *
+     * @param consumer A consumer that will be passed the success of the permission prompt.
+     */
+    public void enableUserNotifications(Consumer<Boolean> consumer) {
+        enableUserNotifications(PermissionPromptFallback.None.INSTANCE, consumer);
+    }
+
+    /**
+     * Enables user notifications on Airship and tries to prompt for the notification permission.
+     *
+     * @note This does NOT enable the {@link com.urbanairship.PrivacyManager.Feature#PUSH} feature.
+     *
+     * @param promptFallback Prompt fallback if the the notification permission is silently denied.
+     * @param consumer A consumer that will be passed the success of the permission prompt.
+     */
+    public void enableUserNotifications(PermissionPromptFallback promptFallback, Consumer<Boolean> consumer) {
+        preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true);
+        permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS, false, promptFallback, (result) -> {
+            consumer.accept(result.getPermissionStatus() == PermissionStatus.GRANTED);
+        });
+    }
+
+                                        /**
      * Determines whether user-facing push notifications are enabled.
      *
      * @return <code>true</code> if user push is enabled, <code>false</code> otherwise.

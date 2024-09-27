@@ -70,9 +70,9 @@ public class InAppMessageAutomationPreparerTest {
         }
 
         val adapter: DisplayAdapter = mockk()
-        every { adapterFactory.makeAdapter(any(), any(), any()) } answers {
+        every { adapterFactory.makeAdapter(any(), any(), any(), any()) } answers {
             assertEquals(message, firstArg())
-            assertEquals(cachedAsset, secondArg())
+            assertEquals(cachedAsset, thirdArg())
             Result.success(adapter)
         }
 
@@ -88,7 +88,7 @@ public class InAppMessageAutomationPreparerTest {
         every { coordinatorManager.displayCoordinator(any()) } returns coordinator
 
         val adapter: DisplayAdapter = mockk()
-        every { adapterFactory.makeAdapter(any(), any(), any()) } returns Result.success(adapter)
+        every { adapterFactory.makeAdapter(any(), any(), any(), any()) } returns Result.success(adapter)
 
         coEvery { assetsManager.cacheAsset(any(), any()) } answers  {
             throw IllegalArgumentException()
@@ -108,7 +108,7 @@ public class InAppMessageAutomationPreparerTest {
         val coordinator: DisplayCoordinator = mockk()
         every { coordinatorManager.displayCoordinator(any()) } returns coordinator
 
-        every { adapterFactory.makeAdapter(any(), any(), any()) } returns Result.failure(IllegalArgumentException("failed"))
+        every { adapterFactory.makeAdapter(any(), any(), any(), any()) } returns Result.failure(IllegalArgumentException("failed"))
 
         assertTrue(preparer.prepare(message, preparedScheduleInfo).isFailure)
     }

@@ -91,6 +91,58 @@ public class RetryingQueueTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
+    public fun testResultOrderPriority(): TestResult = runTest(UnconfinedTestDispatcher()) {
+        val results = MutableSharedFlow<String>(extraBufferCapacity = Int.MAX_VALUE)
+
+        val taskFlows = listOf<MutableSharedFlow<RetryingQueue.Result<Unit>?>>(
+            MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE),
+            MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE),
+            MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE),
+        )
+
+        launch {
+            queue.run("operation 1", priority = 1) {
+                taskFlows[1].filterNotNull().first()
+            }
+            results.emit("operation 1")
+        }
+
+        launch {
+            queue.run("operation 0", priority = 0) {
+                taskFlows[0].filterNotNull().first()
+            }
+            results.emit("operation 0")
+        }
+
+        launch {
+            queue.run("operation 2", priority = 2) {
+                taskFlows[2].filterNotNull().first()
+            }
+            results.emit("operation 2")
+        }
+
+        results.test {
+            expectNoEvents()
+
+            // Finish 2
+            taskFlows[2].emit(RetryingQueue.Result.Success(Unit))
+            expectNoEvents()
+
+            // Finish 0
+            taskFlows[0].emit(RetryingQueue.Result.Success(Unit))
+            assertEquals("operation 0", awaitItem())
+            expectNoEvents()
+
+            // Finish 1
+            taskFlows[1].emit(RetryingQueue.Result.Success(Unit))
+            assertEquals("operation 1", awaitItem())
+            assertEquals("operation 2", awaitItem())
+            expectNoEvents()
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
     public fun testBackOff(): TestResult = runTest(UnconfinedTestDispatcher()) {
         val results = MutableSharedFlow<String>(extraBufferCapacity = Int.MAX_VALUE)
 

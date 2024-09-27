@@ -16,7 +16,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
 import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+
+import static com.urbanairship.sample.MainActivity.TOP_LEVEL_DESTINATIONS;
 
 /**
  * MessageCenterFragment that supports navigation and maintains its own toolbar.
@@ -38,7 +41,8 @@ public class InboxFragment extends MessageCenterFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Toolbar toolbar = view.findViewById(R.id.toolbar);
-        NavigationUI.setupWithNavController(toolbar, Navigation.findNavController(view));
+        NavigationUI.setupWithNavController(toolbar, Navigation.findNavController(view),
+                new AppBarConfiguration.Builder(TOP_LEVEL_DESTINATIONS).build());
     }
 
     @Override
