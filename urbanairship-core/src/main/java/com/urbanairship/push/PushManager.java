@@ -603,6 +603,7 @@ public class PushManager extends AirshipComponent {
         preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true);
         permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS, false, promptFallback, (result) -> {
             consumer.accept(result.getPermissionStatus() == PermissionStatus.GRANTED);
+            updateStatusObserver();
         });
     }
 
@@ -1248,7 +1249,7 @@ public class PushManager extends AirshipComponent {
         );
     }
 
-    private void updateStatusObserver() {
+    void updateStatusObserver() {
         this.statusObserver.update(getPushNotificationStatus());
     }
 }
