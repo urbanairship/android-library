@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.3.1 September 30, 2024
+Patch release that fixes modal IAA border radius and fixes scenes with wide images.
+
+### Changes
+- Fixed modal IAA border radius.
+- Fixed scenes with wide images.
+
 ## Version 18.3.0 September 13, 2024
 Minor release that adds a new method `enableUserNotifications(PermissionPromptFallback)` on `PushManager`.
 
