@@ -15,6 +15,7 @@ import com.urbanairship.util.Clock
 import com.urbanairship.util.SerialQueue
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -55,7 +56,8 @@ internal class FrequencyLimitManager(
                 info.occurrences.sortWith(OccurrenceEntity.Comparator())
 
                 val occurrenceTimestamp = info.occurrences[info.occurrences.size - info.constraint.count].timeStamp
-                return@any (clock.currentTimeMillis() - occurrenceTimestamp) <= info.constraint.range
+                val elapsed = (clock.currentTimeMillis() - occurrenceTimestamp).milliseconds
+                return@any elapsed <= info.constraint.range
             }
         }
     }
@@ -210,8 +212,9 @@ internal class FrequencyLimitManager(
                 toUpsert.forEach { entity ->
                     dao.insert(entity)
                     entity.constraintId?.let {
+                        val occurrences = dao.getOccurrences(it).orEmpty().toMutableList()
                         lock.withLock {
-                            constraintMap[it] = ConstraintInfo(entity, mutableListOf())
+                            constraintMap[it] = ConstraintInfo(entity, occurrences)
                         }
                     }
                 }
