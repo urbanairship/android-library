@@ -367,9 +367,9 @@ internal class AutomationEngine(
         schedules
             .filter { it.scheduleState == AutomationScheduleState.PAUSED }
             .forEach { data ->
-                val interval = (data.schedule.interval?.toLong() ?: 0).seconds.inWholeMilliseconds
-                val remaining = interval -  clock.currentTimeMillis() - data.scheduleStateChangeDate
-                handleInterval(remaining.milliseconds, data.schedule.identifier)
+                val interval = (data.schedule.interval?.toLong() ?: 0).seconds
+                val remaining = interval - (clock.currentTimeMillis() - data.scheduleStateChangeDate).milliseconds
+                handleInterval(remaining, data.schedule.identifier)
             }
 
         // Delete finished schedules
