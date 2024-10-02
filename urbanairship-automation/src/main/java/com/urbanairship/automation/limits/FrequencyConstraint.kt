@@ -12,7 +12,7 @@ import kotlin.time.Duration.Companion.seconds
 internal data class FrequencyConstraint(
     val identifier: String,
     val range: Duration,
-    val count: UInt
+    val count: Int
 ) {
     companion object {
         private const val IDENTIFIER = "id"
@@ -29,7 +29,7 @@ internal data class FrequencyConstraint(
             return FrequencyConstraint(
                 identifier = content.requireField(IDENTIFIER),
                 range = period.toSeconds(range),
-                count = content.requireField<Int>(BOUNDARY).toUInt()
+                count = content.requireField<Int>(BOUNDARY)
             )
         }
     }
@@ -70,7 +70,7 @@ internal data class FrequencyConstraint(
         val result = ConstraintEntity()
         result.constraintId = identifier
         result.range = range
-        result.count = count.toInt()
+        result.count = count
         return result
     }
 }

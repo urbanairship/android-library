@@ -4,6 +4,7 @@ package com.urbanairship.automation.limits.storage
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlin.time.Duration
@@ -23,6 +24,7 @@ internal class ConstraintEntity {
     var _rawRange: Long = 0
 
     /** Number of seconds in the constraint's time range. */
+    @get:Ignore
     var range: Duration
         get() = _rawRange.seconds
         set(value) {
