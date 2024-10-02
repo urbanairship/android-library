@@ -85,33 +85,6 @@ class SampleAutopilot : Autopilot() {
 
         airship.channel.addChannelListener(airshipListener)
 
-        val scope = MainScope() + CoroutineName("SampleAutopilot")
-
-        scope.launch {
-            airship.pushManager.pushNotificationStatusFlow.collect {
-                UALog.d("Push notification status updated: $it")
-            }
-        }
-
-        scope.launch {
-            airship.analytics.events
-                .filter { it.type == EventType.CUSTOM_EVENT }
-                .collect { event ->
-                    // Do what you need to do, probably want the event.body. Event
-                    // value in a custom event is multiplied by 1000000 to preserve
-                    // decimals during storage, so to get the original value you
-                    // have to divide the value.
-                    print("Custom event: $event)")
-                }
-        }
-
-        val event = CustomEvent.newBuilder("my-cool-event")
-            .setEventValue(100)
-            .addProperty("my", "property")
-            .build()
-
-        airship.analytics.recordCustomEvent(event)
-
         // Register the "squareview" InApp Message Content Extender
         SampleInAppMessageContentExtender.register()
     }
