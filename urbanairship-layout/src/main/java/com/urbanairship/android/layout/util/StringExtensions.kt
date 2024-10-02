@@ -54,8 +54,7 @@ private const val newline = "\n"
 private const val newlineEscaped = "\\n"
 private const val newlineTag = "<br>"
 
-@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-internal fun basicMarkdownToHtml(markdown: String): String =
+private fun basicMarkdownToHtml(markdown: String): String =
    markdown.also { println(it) }
         // Encode any HTML characters in the original input so that we don't lose
         // symbols like < or & after converting to HTML and rendering the text.

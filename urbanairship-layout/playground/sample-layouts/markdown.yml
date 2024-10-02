@@ -4,7 +4,7 @@ presentation:
   type: modal
   default_placement:
     size:
-      width: 90%
+      width: 100%
       height: auto
     shade_color:
       default:
@@ -85,7 +85,7 @@ view:
               height: auto
             view:
               type: label
-              text: Normal,\n**Bold**,\n*Italic*,\n***Bold + Italic***
+              text: Normal, **Bold**, *Italic*, ***Bold + Italic***\nNormal, __Bold__, _Italic_, ___Bold + Italic___
               text_appearance:
                 alignment: start
                 font_size: 14
@@ -93,24 +93,7 @@ view:
                   default:
                     hex: "#000000"
                     alpha: 1
-          - margin:
-              top: 0
-              bottom: 8
-              start: 8
-              end: 8
-            size:
-              width: 100%
-              height: auto
-            view:
-              type: label
-              text: Normal, __Bold__, _Italic_, ___Bold + Italic___
-              text_appearance:
-                alignment: start
-                font_size: 14
-                color:
-                  default:
-                    hex: "#000000"
-                    alpha: 1
+
           - margin:
               top: 0
               bottom: 8
@@ -160,7 +143,7 @@ view:
               height: auto
             view:
               type: label
-              text: Markdown formatting will *preserve* **symbols**, **punctuation**, & **newlines** in the original text.\n\nThe next line should have **26 characters**, without any **bold** or *italic* styles:\n!@#$%^&*()_+-=[]{}|;':,.<>
+              text: "symbols, punctuation, & newlines will be *preserved*:\n!@#$%^&*()_+-=[]{}|;':,.<>"
               text_appearance:
                 alignment: start
                 font_size: 14
@@ -400,7 +383,7 @@ view:
                     alpha: 1
 
           - margin:
-              top: 24
+              top: 0
               bottom: 8
               start: 8
               end: 8

@@ -138,8 +138,8 @@ public class StringExtensionsTest {
 
     @Test
     public fun markdownToHtmlIgnoredUnpairedMarkdown() {
-        val input = "*** _ ** __"
-        val expected = "*** _ ** __"
+        val input = "*** _ ** __ ~~ * ~"
+        val expected = "*** _ ** __ ~~ * ~"
         assertEquals(expected, input.markdownToHtml())
     }
 
