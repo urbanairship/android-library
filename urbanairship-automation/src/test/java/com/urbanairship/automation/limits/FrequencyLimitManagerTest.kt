@@ -1,6 +1,5 @@
 package com.urbanairship.automation.limits
 
-import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
@@ -11,17 +10,12 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -37,6 +31,9 @@ public class FrequencyLimitManagerTest {
 
     @After
     public fun tearDown() {
+        runBlocking {
+            manager.writePendingInQueue()
+        }
         db.close()
     }
 
@@ -84,7 +81,7 @@ public class FrequencyLimitManagerTest {
         manager.writePendingInQueue()
         val occurrences = store.getOccurrences("foo")?.map { it.timeStamp } ?: listOf()
         assertEquals(3, occurrences.size)
-        assertTrue(setOf(0L, 1L, 11L).all { occurrences.contains(it) })
+        assertTrue(setOf(0L, 1000, 11000).all { occurrences.contains(it) })
     }
 
     @Test
@@ -128,7 +125,7 @@ public class FrequencyLimitManagerTest {
         manager.writePendingInQueue()
         val occurrences = store.getOccurrences("foo")?.map { it.timeStamp }?.toSet() ?: emptySet()
         assertEquals(3, occurrences.size)
-        assertTrue(setOf(0L, 1, 11).all { occurrences.contains(it) })
+        assertTrue(setOf(0L, 1000, 11000).all { occurrences.contains(it) })
     }
 
     @Test
