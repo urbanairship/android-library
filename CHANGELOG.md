@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.3.2 October 2, 2024
+Patch release that improves markdown support in Scenes and fixes for automation display interval and frequency limit handling.
+Apps that make use of markdown in Scenes, or automations with display intervals or frequency limits should update.
+
+### Changes
+- Improve markdown support in Scenes, including better handling of newlines in the input text.
+- Fixed automation display interval and frequency limit handling.
+
 ## Version 18.3.1 September 30, 2024
 Patch release that fixes modal IAA border radius and fixes scenes with wide images.
 
