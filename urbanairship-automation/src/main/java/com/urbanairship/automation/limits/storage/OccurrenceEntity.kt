@@ -27,7 +27,7 @@ internal class OccurrenceEntity {
 
     class Comparator : kotlin.Comparator<OccurrenceEntity> {
         override fun compare(self: OccurrenceEntity, other: OccurrenceEntity): Int {
-            return java.lang.Long.compare(self.timeStamp, other.timeStamp)
+            return self.timeStamp.compareTo(other.timeStamp)
         }
     }
 }

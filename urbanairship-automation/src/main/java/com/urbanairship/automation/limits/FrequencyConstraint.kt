@@ -6,11 +6,13 @@ import com.urbanairship.automation.limits.storage.ConstraintEntity
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.requireField
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 internal data class FrequencyConstraint(
     val identifier: String,
-    val range: Long,
-    val count: UInt
+    val range: Duration,
+    val count: Int
 ) {
     companion object {
         private const val IDENTIFIER = "id"
@@ -27,7 +29,7 @@ internal data class FrequencyConstraint(
             return FrequencyConstraint(
                 identifier = content.requireField(IDENTIFIER),
                 range = period.toSeconds(range),
-                count = content.requireField<Int>(BOUNDARY).toUInt()
+                count = content.requireField<Int>(BOUNDARY)
             )
         }
     }
@@ -51,7 +53,7 @@ internal data class FrequencyConstraint(
             }
         }
 
-        fun toSeconds(value: Long): Long {
+        fun toSeconds(value: Long): Duration {
             return when(this) {
                 SECONDS -> value
                 MINUTES -> value * 60
@@ -60,7 +62,7 @@ internal data class FrequencyConstraint(
                 WEEKS -> value * 60 * 60 * 24 * 7
                 MONTHS -> value * 60 * 60 * 24 * 30
                 YEARS -> value * 60 * 60 * 24 * 365
-            }
+            }.seconds
         }
     }
 
@@ -68,7 +70,7 @@ internal data class FrequencyConstraint(
         val result = ConstraintEntity()
         result.constraintId = identifier
         result.range = range
-        result.count = count.toInt()
+        result.count = count
         return result
     }
 }
