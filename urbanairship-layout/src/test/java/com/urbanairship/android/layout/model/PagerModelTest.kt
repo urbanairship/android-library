@@ -1,6 +1,9 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import android.content.Context
+import android.view.accessibility.AccessibilityManager
+import androidx.test.core.app.ApplicationProvider
 import app.cash.turbine.test
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
@@ -48,7 +51,9 @@ public class PagerModelTest {
         every { actionsRunner } returns mockActionsRunner
         every { modelScope } returns testScope
     }
-    private val mockView: PagerView = mockk(relaxed = true)
+    private val mockView: PagerView = mockk(relaxed = true) {
+        every { context } returns ApplicationProvider.getApplicationContext()
+    }
     private val mockViewListener: PagerModel.Listener = mockk(relaxed = true)
 
     private val pagerState: SharedState<State.Pager> =

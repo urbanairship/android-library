@@ -92,6 +92,10 @@ public abstract class Timer {
         return (int) (getRunTime() * 100 / duration);
     }
 
+    public boolean isStarted() {
+        return isStarted;
+    }
+
     /**
      * Called when the timer finishes.
      */

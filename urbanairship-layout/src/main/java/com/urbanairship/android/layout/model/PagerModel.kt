@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import android.view.View
+import android.view.accessibility.AccessibilityManager
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
@@ -111,6 +112,8 @@ internal class PagerModel(
     private var navigationActionTimer: Timer? = null
     private val automatedActionsTimers: MutableList<Timer> = ArrayList()
 
+    private var accessibilityListener: AccessibilityManager.TouchExplorationStateChangeListener? = null
+
     init {
         // Update pager state with our page identifiers
         pagerState.update { state ->
@@ -137,7 +140,7 @@ internal class PagerModel(
                     items[it.pageIndex].run {
                         handlePageActions(displayActions, automatedActions)
                         // Pause the story if the video is not ready
-                        if (!it.isMediaPaused) {
+                        if (!it.isMediaPaused && !it.isTouchExplorationEnabled) {
                             resumeStory()
                         } else {
                             pauseStory()
@@ -189,10 +192,27 @@ internal class PagerModel(
         } else {
             UALog.v { "No gestures defined." }
         }
+
+        val accessibilityManager = view.context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+        accessibilityManager?.let { am ->
+            accessibilityListener = AccessibilityManager.TouchExplorationStateChangeListener { enabled ->
+                updateTouchExplorationState(enabled)
+            }.also {
+                am.addTouchExplorationStateChangeListener(it)
+            }
+            updateTouchExplorationState(am.isTouchExplorationEnabled)
+        }
     }
 
     override fun onViewDetached(view: PagerView) {
         clearAutomatedActions()
+
+        val accessibilityManager = view.context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+        accessibilityManager?.let { am ->
+            accessibilityListener?.let {
+                am.removeTouchExplorationStateChangeListener(it)
+            }
+        }
     }
 
     /** Returns a stable viewId for the pager item view at the given adapter `position`.  */
@@ -403,7 +423,7 @@ internal class PagerModel(
     }
 
     private fun resumeStory() {
-        if (automatedActionsTimers.isNotEmpty()) {
+        if (navigationActionTimer?.isStarted != true || automatedActionsTimers.isNotEmpty()) {
             UALog.v { "resume story" }
         }
 
@@ -436,6 +456,17 @@ internal class PagerModel(
         }
 
         automatedActionsTimers.clear()
+    }
+
+    private fun updateTouchExplorationState(enabled: Boolean) {
+        pagerState.update {
+            it.copyWithTouchExplorationState(enabled)
+        }
+        if (enabled) {
+            pauseStory()
+        } else {
+            resumeStory()
+        }
     }
 }
 
