@@ -8,6 +8,8 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.urbanairship.UALog
 import com.urbanairship.analytics.data.BatchedQueryHelper
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * Message Data Access Object.
@@ -57,6 +59,15 @@ internal interface MessageDao {
         }
     }
 
+    fun getMessagesFlow(): Flow<List<MessageEntity>> {
+        return try {
+            getMessagesFlowInternal()
+        } catch (e: Exception) {
+            UALog.e(e) { "Failed to get messages flow!" }
+            emptyFlow()
+        }
+    }
+
     suspend fun getMessageCount(): Int {
         return try {
             getMessageCountInternal()
@@ -90,6 +101,15 @@ internal interface MessageDao {
         } catch (e: Exception) {
             UALog.e(e) { "Failed to get unread messages!" }
             emptyList()
+        }
+    }
+
+    fun getUnreadMessagesFlow(): Flow<List<MessageEntity>> {
+        return try {
+            getUnreadMessagesFlowInternal()
+        } catch (e: Exception) {
+            UALog.e(e) { "Failed to get unread messages flow!" }
+            emptyFlow()
         }
     }
 
@@ -210,6 +230,14 @@ internal interface MessageDao {
 
     @Transaction
     @Query("""
+        SELECT * FROM richpush
+        WHERE deleted = 0
+        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
+        """)
+    fun getMessagesFlowInternal(): Flow<List<MessageEntity>>
+
+    @Transaction
+    @Query("""
         SELECT COUNT(*) FROM richpush
         WHERE deleted = 0
         AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
@@ -240,6 +268,15 @@ internal interface MessageDao {
         AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
         """)
     suspend fun getUnreadMessagesInternal(): List<MessageEntity>
+
+    @Transaction
+    @Query("""
+        SELECT * FROM richpush
+        WHERE unread = 1
+        AND deleted = 0
+        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
+        """)
+    fun getUnreadMessagesFlowInternal(): Flow<List<MessageEntity>>
 
     @Transaction
     @Query("""

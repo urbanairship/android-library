@@ -29,8 +29,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
 /**
@@ -134,7 +139,7 @@ public class Inbox @VisibleForTesting internal constructor(
 
     private val userListener = User.Listener { success: Boolean ->
         if (success) {
-            fetchMessages()
+            fetchMessages { UALog.v { "Inbox updated (triggered by user update)" } }
         }
     }
 
@@ -239,7 +244,6 @@ public class Inbox @VisibleForTesting internal constructor(
      * @param callback Optional callback to be notified when the request finishes fetching the messages.
      * @return A cancelable object that can be used to cancel the callback.
      */
-    @JvmOverloads
     public fun fetchMessages(callback: FetchMessagesCallback? = null): Cancelable {
         return fetchMessages(null, callback)
     }
@@ -274,6 +278,30 @@ public class Inbox @VisibleForTesting internal constructor(
             isFetchingMessages = true
         }
         return cancelableOperation
+    }
+
+    /**
+     * Suspending function to fetch the latest inbox changes from Airship.
+     *
+     * If the fetch request completes and results in a change to the messages,
+     * [InboxListener.onInboxUpdated] will be called.
+     *
+     * @return `true` if the fetch was successful, `false` otherwise.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @JvmSynthetic
+    public suspend fun fetchMessages(): Boolean = suspendCancellableCoroutine { continuation ->
+        val callback = FetchMessagesCallback { success: Boolean ->
+            continuation.resume(success) {
+                UALog.e { "Failed to resume fetchMessages coroutine." }
+            }
+        }
+
+        val cancelable = fetchMessages(callback)
+
+        continuation.invokeOnCancellation {
+            cancelable.cancel()
+        }
     }
 
     internal fun onUpdateMessagesFinished(result: Boolean) =
@@ -324,6 +352,23 @@ public class Inbox @VisibleForTesting internal constructor(
             .sortedWith(MESSAGE_COMPARATOR)
 
     /**
+     * Subscribes to the list of messages as a flow. The flow will emit the current list of messages,
+     * filtered by the provided predicate, and sorted by descending sent-at date, and will emit new lists
+     * whenever the inbox is updated.
+     *
+     * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
+     * @return A flow of filtered and sorted [Message]s.
+     */
+    @JvmSynthetic
+    public fun getMessagesFlow(predicate: Predicate<Message>? = null): Flow<List<Message>> =
+        messageDao.getMessagesFlow()
+            .map {
+                val messages = it.mapNotNull(MessageEntity::toMessage)
+                filterMessages(messages, predicate).sortedWith(MESSAGE_COMPARATOR)
+            }
+            .distinctUntilChanged()
+
+    /**
      * Gets a list of RichPushMessages as a [PendingResult], filtered by the provided predicate,
      * and sorted by descending sent-at date.
      *
@@ -352,6 +397,23 @@ public class Inbox @VisibleForTesting internal constructor(
             .mapNotNull { it.toMessage() }
             .let { filterMessages(it, predicate) }
             .sortedWith(MESSAGE_COMPARATOR)
+
+    /**
+     * Subscribes to the list of unread messages as a flow. The flow will emit the current list of unread messages,
+     * filtered by the provided predicate, and sorted by descending sent-at date, and will emit new lists whenever
+     * the inbox is updated.
+     *
+     * @param predicate A predicate for filtering messages. If null, no predicate will be applied.
+     * @return A flow of filtered and sorted [Message]s.
+     */
+    @JvmSynthetic
+    public fun getUnreadMessagesFlow(predicate: Predicate<Message>? = null): Flow<List<Message>> =
+        messageDao.getUnreadMessagesFlow()
+            .map {
+                val messages = it.mapNotNull(MessageEntity::toMessage)
+                filterMessages(messages, predicate).sortedWith(MESSAGE_COMPARATOR)
+            }
+            .distinctUntilChanged()
 
     /**
      * Gets a list of unread RichPushMessages as a [PendingResult], filtered by the provided predicate,
