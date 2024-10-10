@@ -351,6 +351,7 @@ internal class TextInputInfo(
     val hintText: String? = json.optionalField("place_holder")
     val textAppearance: TextInputTextAppearance =
         TextInputTextAppearance.fromJson(json.requireField("text_appearance"))
+    val attributeName: AttributeName? = attributeNameFromJson(json)
 }
 
 internal class ScoreInfo(

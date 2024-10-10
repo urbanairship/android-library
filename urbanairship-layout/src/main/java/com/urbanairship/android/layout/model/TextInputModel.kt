@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.environment.inputData
 import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
+import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
@@ -18,6 +19,7 @@ import com.urbanairship.android.layout.property.TextInputTextAppearance
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.property.hasTapHandler
+import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.util.textChanges
 import com.urbanairship.android.layout.view.TextInputView
@@ -29,6 +31,7 @@ internal class TextInputModel(
     val hintText: String? = null,
     val identifier: String,
     val contentDescription: String? = null,
+    val attributeName: AttributeName? = null,
     private val isRequired: Boolean = false,
     backgroundColor: Color? = null,
     border: Border? = null,
@@ -57,6 +60,7 @@ internal class TextInputModel(
     ) : this(
         inputType = info.inputType,
         textAppearance = info.textAppearance,
+        attributeName = info.attributeName,
         hintText = info.hintText,
         identifier = info.identifier,
         contentDescription = info.contentDescription,
@@ -81,7 +85,9 @@ internal class TextInputModel(
                 FormData.TextInput(
                     identifier = identifier,
                     value = null,
-                    isValid = !isRequired
+                    isValid = !isRequired,
+                    attributeName = attributeName,
+                    attributeValue = null
                 )
             )
         }
@@ -123,7 +129,9 @@ internal class TextInputModel(
                             FormData.TextInput(
                                 identifier = identifier,
                                 value = value,
-                                isValid = !isRequired || value.isNotEmpty()
+                                isValid = !isRequired || value.isNotEmpty(),
+                                attributeName = attributeName,
+                                attributeValue = if (value.isNotEmpty()) { AttributeValue.wrap(value) } else { null }
                             )
                         )
                     }
