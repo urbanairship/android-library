@@ -23,6 +23,7 @@ import com.urbanairship.push.PushMessage
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -63,7 +64,7 @@ public class MessageCenterTest {
     }
     private val pushManager = mockk<PushManager>(relaxUnitFun = true) {}
     private val inbox = mockk<Inbox>(relaxUnitFun = true) {
-        every { fetchMessages(null) } returns mockk<Cancelable>(relaxUnitFun = true)
+        coEvery { fetchMessages() } returns true
     }
     private val onShowMessageCenterListener = mockk<OnShowMessageCenterListener> {}
     private val config = TestAirshipRuntimeConfig()
@@ -197,7 +198,7 @@ public class MessageCenterTest {
         pushListener.onPushReceived(message, true)
         advanceUntilIdle()
 
-        verify { inbox.fetchMessages(null) }
+        coVerify { inbox.fetchMessages() }
     }
 
     @Test
