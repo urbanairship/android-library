@@ -215,7 +215,7 @@ public class PermissionsManagerTest {
         val delegate: PermissionDelegate = mockk {
             every { requestPermission(any(), any()) } answers {
                 launch {
-                    secondArg<Consumer<PermissionRequestResult>>().accept(resultFlow.first { it != null })
+                    secondArg<Consumer<PermissionRequestResult?>>().accept(resultFlow.first { it != null })
                 }
             }
             every { checkPermissionStatus(any(), any()) } answers {

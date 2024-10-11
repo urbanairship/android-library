@@ -244,7 +244,7 @@ public class Inbox @VisibleForTesting internal constructor(
      * @param callback Optional callback to be notified when the request finishes fetching the messages.
      * @return A cancelable object that can be used to cancel the callback.
      */
-    public fun fetchMessages(callback: FetchMessagesCallback? = null): Cancelable {
+    public fun fetchMessages(callback: FetchMessagesCallback?): Cancelable {
         return fetchMessages(null, callback)
     }
 
@@ -262,8 +262,8 @@ public class Inbox @VisibleForTesting internal constructor(
      * @return A cancelable object that can be used to cancel the callback.
      */
     public fun fetchMessages(
-        looper: Looper? = null,
-        callback: FetchMessagesCallback? = null
+        looper: Looper?,
+        callback: FetchMessagesCallback?
     ): Cancelable {
         val cancelableOperation = PendingFetchMessagesCallback(callback, looper)
         synchronized(pendingFetchCallbacks) {

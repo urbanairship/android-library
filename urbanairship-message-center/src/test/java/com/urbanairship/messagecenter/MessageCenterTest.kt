@@ -63,7 +63,7 @@ public class MessageCenterTest {
     }
     private val pushManager = mockk<PushManager>(relaxUnitFun = true) {}
     private val inbox = mockk<Inbox>(relaxUnitFun = true) {
-        every { fetchMessages() } returns mockk<Cancelable>(relaxUnitFun = true)
+        every { fetchMessages(null) } returns mockk<Cancelable>(relaxUnitFun = true)
     }
     private val onShowMessageCenterListener = mockk<OnShowMessageCenterListener> {}
     private val config = TestAirshipRuntimeConfig()
@@ -197,7 +197,7 @@ public class MessageCenterTest {
         pushListener.onPushReceived(message, true)
         advanceUntilIdle()
 
-        verify { inbox.fetchMessages() }
+        verify { inbox.fetchMessages(null) }
     }
 
     @Test

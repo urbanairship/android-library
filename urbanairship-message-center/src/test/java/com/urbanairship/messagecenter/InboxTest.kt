@@ -326,7 +326,7 @@ public class InboxTest {
     /** Test fetch messages starts the AirshipService. */
     @Test
     public fun testFetchMessages() {
-        inbox.fetchMessages()
+        inbox.fetchMessages(null, null)
 
         verify {
             mockDispatcher.dispatch(withArg { jobInfo ->
@@ -339,10 +339,10 @@ public class InboxTest {
     @Test
     public fun testRefreshMessagesAlreadyRefreshing() {
         // Start refreshing messages
-        inbox.fetchMessages()
+        inbox.fetchMessages(null)
 
         // Try to refresh again
-        inbox.fetchMessages()
+        inbox.fetchMessages(null)
 
         verify(exactly = 1) {
             mockDispatcher.dispatch(withArg { jobInfo ->
@@ -357,7 +357,7 @@ public class InboxTest {
         val callback = mockk<FetchMessagesCallback>(relaxUnitFun = true)
 
         // Start refreshing messages
-        inbox.fetchMessages()
+        inbox.fetchMessages(null)
 
         // Force another update
         inbox.fetchMessages(callback)
