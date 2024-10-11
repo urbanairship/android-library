@@ -98,6 +98,8 @@ public class ButtonModelTest {
             label = LabelModel(
                 text = "test",
                 textAppearance = TextAppearance(Color(Color.WHITE, emptyList()), 14, TextAlignment.START, emptyList(), emptyList()),
+                markdownOptions = null,
+                contentDescription = null,
                 environment = mockEnv,
                 properties = ModelProperties(null)
             ),
