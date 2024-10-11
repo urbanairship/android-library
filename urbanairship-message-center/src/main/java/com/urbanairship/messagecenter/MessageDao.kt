@@ -1,5 +1,6 @@
 package com.urbanairship.messagecenter
 
+import androidx.annotation.VisibleForTesting
 import androidx.core.util.Consumer
 import androidx.room.Dao
 import androidx.room.Insert
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.emptyFlow
 @Dao
 internal interface MessageDao {
 
+    @VisibleForTesting
     suspend fun insert(message: MessageEntity) = try {
         insertInternal(message)
     } catch (e: Exception) {
@@ -221,86 +223,43 @@ internal interface MessageDao {
     suspend fun getMessageByUrlInternal(url: String): MessageEntity?
 
     @Transaction
-    @Query("""
-        SELECT * FROM richpush
-        WHERE deleted = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
+    @Query("SELECT * FROM richpush WHERE $NOT_EXPIRED_OR_DELETED")
     suspend fun getMessagesInternal(): List<MessageEntity>
 
     @Transaction
-    @Query("""
-        SELECT * FROM richpush
-        WHERE deleted = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
+    @Query("SELECT * FROM richpush WHERE $NOT_EXPIRED_OR_DELETED")
     fun getMessagesFlowInternal(): Flow<List<MessageEntity>>
 
     @Transaction
-    @Query("""
-        SELECT COUNT(*) FROM richpush
-        WHERE deleted = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
+    @Query("SELECT COUNT(*) FROM richpush WHERE $NOT_EXPIRED_OR_DELETED")
     suspend fun getMessageCountInternal(): Int
 
     @Transaction
-    @Query("""
-        SELECT * FROM richpush
-        WHERE unread = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
+    @Query("SELECT * FROM richpush WHERE unread = 0 AND $NOT_EXPIRED_OR_DELETED")
     suspend fun getReadMessagesInternal(): List<MessageEntity>
 
     @Transaction
-    @Query("""
-        SELECT COUNT(*) FROM richpush
-        WHERE unread = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
+    @Query("SELECT COUNT(*) FROM richpush WHERE unread = 0 AND $NOT_EXPIRED_OR_DELETED")
     suspend fun getReadMessageCountInternal(): Int
 
     @Transaction
-    @Query("""
-        SELECT * FROM richpush
-        WHERE unread = 1
-        AND deleted = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
+    @Query("SELECT * FROM richpush WHERE unread = 1 AND $NOT_EXPIRED_OR_DELETED")
     suspend fun getUnreadMessagesInternal(): List<MessageEntity>
 
     @Transaction
-    @Query("""
-        SELECT * FROM richpush
-        WHERE unread = 1
-        AND deleted = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
+    @Query("SELECT * FROM richpush WHERE unread = 1 AND $NOT_EXPIRED_OR_DELETED")
     fun getUnreadMessagesFlowInternal(): Flow<List<MessageEntity>>
 
     @Transaction
-    @Query("""
-        SELECT COUNT(*) FROM richpush
-        WHERE unread = 1
-        AND deleted = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
+    @Query("SELECT COUNT(*) FROM richpush WHERE unread = 1 AND $NOT_EXPIRED_OR_DELETED")
     suspend fun getUnreadMessageCountInternal(): Int
 
     @Transaction
-    @Query("""
-        SELECT message_id FROM richpush
-        WHERE deleted = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
+    @Query("SELECT message_id FROM richpush WHERE $NOT_EXPIRED_OR_DELETED")
     suspend fun getMessageIdsInternal(): List<String>
 
     @Transaction
-    @Query("""
-        SELECT * FROM richpush
-        WHERE unread = 0
-        AND unread <> unread_orig
-        """)
+    @Query("SELECT * FROM richpush WHERE unread = 0 AND unread <> unread_orig")
     suspend fun getLocallyReadMessagesInternal(): List<MessageEntity>
 
     @Transaction
@@ -340,6 +299,13 @@ internal interface MessageDao {
     @Query("DELETE FROM richpush")
     suspend fun deleteAllMessagesInternal()
 
-    @Query("SELECT EXISTS (SELECT 1 FROM richpush WHERE message_id = :id)")
+    @Query("SELECT 1 FROM richpush WHERE message_id = :id LIMIT 1")
     suspend fun messageExistsInternal(id: String): Boolean
+
+    private companion object {
+        private const val NOT_EXPIRED = "(expiration_timestamp IS NULL OR datetime(expiration_timestamp) >= datetime('now'))"
+        private const val NOT_DELETED = "deleted = 0"
+
+        private const val NOT_EXPIRED_OR_DELETED = "$NOT_EXPIRED AND $NOT_DELETED"
+    }
 }

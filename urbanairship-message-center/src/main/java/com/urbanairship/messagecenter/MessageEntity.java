@@ -18,7 +18,10 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "richpush", indices = {
-    @Index(value = {"message_id"}, unique = true)
+    @Index(value = {"message_id"}, unique = true),
+    @Index(value = {"unread"}),
+    @Index(value = {"deleted"}),
+    @Index(value = {"expiration_timestamp"})
 })
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class MessageEntity {
