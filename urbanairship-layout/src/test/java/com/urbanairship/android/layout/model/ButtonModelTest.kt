@@ -10,7 +10,6 @@ import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.TextAlignment
 import com.urbanairship.android.layout.property.TextAppearance
-import com.urbanairship.android.layout.view.ImageButtonView
 import com.urbanairship.android.layout.view.LabelButtonView
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -18,7 +17,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -97,6 +95,7 @@ public class ButtonModelTest {
             identifier = "test_button_id",
             label = LabelModel(
                 text = "test",
+                markdownOptions = null,
                 textAppearance = TextAppearance(Color(Color.WHITE, emptyList()), 14, TextAlignment.START, emptyList(), emptyList()),
                 markdownOptions = null,
                 contentDescription = null,

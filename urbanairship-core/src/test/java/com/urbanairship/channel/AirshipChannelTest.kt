@@ -18,6 +18,8 @@ import com.urbanairship.locale.LocaleChangedListener
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import java.util.Locale
+import java.util.TimeZone
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -25,10 +27,9 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
-import java.util.Locale
-import java.util.TimeZone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -37,7 +38,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -75,8 +75,12 @@ public class AirshipChannelTest {
     }
 
     private val mockBatchUpdateManager = mockk<ChannelBatchUpdateManager>(relaxed = true)
-    private val mockSubscriptions = mockk<ChannelSubscriptions>()
     private val mockJobDispatcher = mockk<JobDispatcher>(relaxed = true)
+    private val mockSubscriptions = mockk<ChannelSubscriptions>(relaxed = false)
+    private val subscriptionsProviderFlow = MutableSharedFlow<Result<Set<String>>>(replay = 1)
+    private val mockSubscriptionsProvider = mockk<SubscriptionsProvider>(relaxed = false) {
+        coEvery {this@mockk.updates} returns subscriptionsProviderFlow
+    }
 
     private val testClock = TestClock()
     private val testActivityMonitor = TestActivityMonitor()
@@ -101,9 +105,10 @@ public class AirshipChannelTest {
         testConfig,
         privacyManager,
         mockLocaleManager,
-        mockSubscriptions,
         mockBatchUpdateManager,
         mockRegistrar,
+        mockk(relaxed = true),
+        mockSubscriptionsProvider,
         testActivityMonitor,
         mockJobDispatcher,
         testClock,
@@ -316,18 +321,15 @@ public class AirshipChannelTest {
     @Test
     public fun testFetchSubscriptionLists(): TestResult = runTest {
         val result = Result.success(setOf("one", "two", "three"))
+
         coEvery {
             mockSubscriptions.fetchSubscriptionLists("some channel")
         } returns result
 
+        subscriptionsProviderFlow.tryEmit(Result.success(setOf("one", "two", "three")))
         channelIdFlow.tryEmit("some channel")
-        assertEquals(result, channel.fetchSubscriptionLists())
-    }
 
-    @Test
-    public fun testFetchSubscriptionListsFeatureDisabled(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
-        assertTrue(channel.fetchSubscriptionLists().isFailure)
+        assertEquals(result, channel.fetchSubscriptionLists())
     }
 
     @Test

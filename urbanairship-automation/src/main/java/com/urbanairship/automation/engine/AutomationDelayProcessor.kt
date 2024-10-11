@@ -107,7 +107,6 @@ internal class AutomationDelayProcessor(
                     it.contains(delay.regionId)
                 }.first()
             }
-
             ensureActive()
 
             if (delay.executionWindow != null) {
