@@ -264,7 +264,7 @@ public class MessageListFragment extends Fragment {
         updateAdapterMessages();
 
         // refresh the inbox
-        inbox.fetchMessages();
+        inbox.fetchMessages(null);
 
         if (getAbsListView() != null) {
             getAbsListView().invalidate();
