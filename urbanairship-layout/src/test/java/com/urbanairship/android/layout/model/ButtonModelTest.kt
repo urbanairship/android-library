@@ -97,7 +97,6 @@ public class ButtonModelTest {
                 text = "test",
                 markdownOptions = null,
                 textAppearance = TextAppearance(Color(Color.WHITE, emptyList()), 14, TextAlignment.START, emptyList(), emptyList()),
-                markdownOptions = null,
                 contentDescription = null,
                 environment = mockEnv,
                 properties = ModelProperties(null)
