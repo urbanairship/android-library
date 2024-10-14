@@ -6,14 +6,13 @@ import android.os.Build
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import androidx.annotation.RequiresApi
 import androidx.core.view.ViewCompat
+import androidx.core.view.descendants
 import androidx.core.view.isGone
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -84,8 +83,8 @@ internal class PagerView(
         val accessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
         val accessibilityListener = AccessibilityManager.AccessibilityStateChangeListener { isEnabled ->
             if (isEnabled) {
-                val accessibleView = getFirstReadableView(view.getAllChildren())
-                accessibleView?.postDelayed({
+                val accessibleView = view.descendants.first { it.isImportantForAccessibility }
+                accessibleView.postDelayed({
                     accessibleView.performAccessibilityAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
                 }, 800)
             }
@@ -100,28 +99,6 @@ internal class PagerView(
         ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
             ViewCompat.dispatchApplyWindowInsets(view, insets)
         }
-    }
-
-    private fun View.getAllChildren(): List<View> {
-        val result = ArrayList<View>()
-        if (this !is ViewGroup) {
-            result.add(this)
-        } else {
-            for (index in 0 until this.childCount) {
-                val child = this.getChildAt(index)
-                result.addAll(child.getAllChildren())
-            }
-        }
-        return result
-    }
-
-    private fun getFirstReadableView(views: List<View>): View? {
-        for (view in views) {
-            if (view.isImportantForAccessibility) {
-                return view
-            }
-        }
-        return null
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
