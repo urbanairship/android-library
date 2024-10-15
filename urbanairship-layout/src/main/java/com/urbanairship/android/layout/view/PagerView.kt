@@ -81,15 +81,15 @@ internal class PagerView(
 
         // If Talkback is enabled, focus the first focusable view
         val accessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-        val accessibilityListener = AccessibilityManager.AccessibilityStateChangeListener { isEnabled ->
+        val accessibilityListener = AccessibilityManager.TouchExplorationStateChangeListener { isEnabled ->
             if (isEnabled) {
                 val accessibleView = view.descendants.first { it.isImportantForAccessibility }
                 accessibleView.postDelayed({
                     accessibleView.performAccessibilityAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
-                }, 800)
+                }, 1000)
             }
         }
-        accessibilityManager.addAccessibilityStateChangeListener(accessibilityListener)
+        accessibilityManager.addTouchExplorationStateChangeListener(accessibilityListener)
 
         view.setPagerScrollListener { position, isInternalScroll ->
             scrollListener?.onScrollTo(position, isInternalScroll)
