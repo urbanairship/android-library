@@ -7,9 +7,12 @@ import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.accessibility.AccessibilityManager
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import androidx.annotation.RequiresApi
 import androidx.core.view.ViewCompat
+import androidx.core.view.descendants
 import androidx.core.view.isGone
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -75,6 +78,18 @@ internal class PagerView(
         addView(view, MATCH_PARENT, MATCH_PARENT)
         LayoutUtils.applyBorderAndBackground(this, model)
         model.listener = modelListener
+
+        // If Talkback is enabled, focus the first focusable view
+        val accessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+        val accessibilityListener = AccessibilityManager.TouchExplorationStateChangeListener { isEnabled ->
+            if (isEnabled) {
+                val accessibleView = view.descendants.first { it.isImportantForAccessibility }
+                accessibleView.postDelayed({
+                    accessibleView.performAccessibilityAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
+                }, 1000)
+            }
+        }
+        accessibilityManager.addTouchExplorationStateChangeListener(accessibilityListener)
 
         view.setPagerScrollListener { position, isInternalScroll ->
             scrollListener?.onScrollTo(position, isInternalScroll)
