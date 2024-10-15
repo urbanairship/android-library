@@ -7,6 +7,7 @@ import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ImageButtonInfo
+import com.urbanairship.android.layout.info.LocalizedContentDescription
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
@@ -24,6 +25,8 @@ internal class ImageButtonModel(
     actions: Map<String, JsonValue>? = null,
     buttonClickBehaviors: List<ButtonClickBehaviorType>,
     contentDescription: String? = null,
+    localizedContentDescription: LocalizedContentDescription? = null,
+    contentDescriptionFallback: String? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -40,6 +43,7 @@ internal class ImageButtonModel(
     actions = actions,
     clickBehaviors = buttonClickBehaviors,
     contentDescription = contentDescription,
+    localizedContentDescription = localizedContentDescription,
     backgroundColor = backgroundColor,
     border = border,
     visibility = visibility,
@@ -63,6 +67,7 @@ internal class ImageButtonModel(
         actions = info.actions,
         buttonClickBehaviors = info.clickBehaviors,
         contentDescription = info.contentDescription,
+        localizedContentDescription = info.localizedContentDescription,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,
@@ -75,10 +80,15 @@ internal class ImageButtonModel(
         properties = props
     )
 
-    override val reportingDescription: String = contentDescription ?: identifier
+    override val reportingDescription: String = contentDescription
+        ?: contentDescriptionFallback
+        ?: identifier
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
-        ImageButtonView(context, this, viewEnvironment).apply {
-            id = viewId
-        }
+    override fun onCreateView(
+        context: Context,
+        viewEnvironment: ViewEnvironment,
+        itemProperties: ItemProperties?
+    ) = ImageButtonView(context, this, viewEnvironment).apply {
+        id = viewId
+    }
 }

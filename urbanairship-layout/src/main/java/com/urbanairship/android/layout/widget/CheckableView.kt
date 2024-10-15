@@ -2,10 +2,15 @@
 package com.urbanairship.android.layout.widget
 
 import android.content.Context
+import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.widget.CheckBox
 import android.widget.FrameLayout
 import androidx.annotation.Dimension
 import androidx.appcompat.widget.SwitchCompat
+import androidx.core.view.AccessibilityDelegateCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.property.CheckboxStyle
 import com.urbanairship.android.layout.property.SwitchStyle
@@ -29,9 +34,32 @@ internal abstract class CheckableView<M : CheckableModel<*>>(
             ToggleType.SWITCH -> configureSwitch(model.style as SwitchStyle)
             ToggleType.CHECKBOX -> configureCheckbox(model.style as CheckboxStyle)
         }
+
         LayoutUtils.applyBorderAndBackground(this, model)
         model.contentDescription.ifNotEmpty { checkableView.setContentDescription(it) }
+
+        ViewCompat.setAccessibilityDelegate(this, object : AccessibilityDelegateCompat() {
+            override fun onInitializeAccessibilityNodeInfo(
+                host: View,
+                info: AccessibilityNodeInfoCompat
+            ) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+
+                // Determine className based on toggle type
+                when (model.toggleType) {
+                    ToggleType.CHECKBOX -> info.className = CheckBox::class.java.name
+                    ToggleType.SWITCH -> info.className = SwitchCompat::class.java.name
+                }
+
+                info.isCheckable = host.isEnabled
+
+                if (host.isEnabled) {
+                    info.isChecked = checkableView.isChecked
+                }
+            }
+        })
     }
+
 
     private val minWidth: Int
         get() = when (model.toggleType) {

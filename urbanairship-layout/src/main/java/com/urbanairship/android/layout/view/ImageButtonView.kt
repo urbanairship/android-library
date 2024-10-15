@@ -20,6 +20,7 @@ import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.images.ImageRequestOptions
+import com.urbanairship.util.UAStringUtil
 import kotlinx.coroutines.flow.Flow
 
 internal class ImageButtonView(
@@ -39,7 +40,23 @@ internal class ImageButtonView(
 
         LayoutUtils.applyBorderAndBackground(this, model)
 
-        model.contentDescription.ifNotEmpty { contentDescription = it }
+        // Get the localized description
+        val description = model.localizedContentDescription?.ref?.let { ref ->
+            UAStringUtil.namedStringResource(
+                context,
+                ref,
+                model.localizedContentDescription?.fallback ?: "Unknown" // Should never be hit
+            )
+        } ?: model.localizedContentDescription?.fallback ?: "Unknown" // Should never be hit
+
+        // Set the content description, resolving localization if necessary
+        model.contentDescription?.ifNotEmpty {
+            contentDescription = model.contentDescription
+        } ?: run {
+            if (description.isNotEmpty()) {
+                contentDescription = description
+            }
+        }
 
         val image = model.image
         when (image.type) {

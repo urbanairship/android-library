@@ -13,6 +13,7 @@ import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.FormInputType
+import com.urbanairship.android.layout.property.GestureType
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.MarkdownAppearance
@@ -20,6 +21,10 @@ import com.urbanairship.android.layout.property.MarkdownOptions
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
 import com.urbanairship.android.layout.property.PagerGesture
+import com.urbanairship.android.layout.property.PagerGesture.Companion.from
+import com.urbanairship.android.layout.property.PagerGesture.Hold
+import com.urbanairship.android.layout.property.PagerGesture.Swipe
+import com.urbanairship.android.layout.property.PagerGesture.Tap
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.ScoreStyle
 import com.urbanairship.android.layout.property.Size
@@ -159,14 +164,57 @@ internal class BaseViewInfo(json: JsonMap) : View {
 
 private fun view(json: JsonMap): View = BaseViewInfo(json)
 
-internal interface Accessible {
-    val contentDescription: String?
+internal enum class AccessibleRoleInfo {
+    HEADING,
+    BUTTON,
+    CHECKBOX,
+    FORM,
+    RADIO,
+    RADIOGROUP,
+    PRESENTATION;
+
+    companion object {
+        @JvmStatic
+        fun from(value: String): AccessibleRoleInfo = when (value.toLowerCase()) {
+            "heading" -> HEADING
+            "button" -> BUTTON
+            "checkbox" -> CHECKBOX
+            "form" -> FORM
+            "radio" -> RADIO
+            "radiogroup" -> RADIOGROUP
+            "presentation" -> PRESENTATION
+            else -> throw JsonException("Unknown AccessibleRoleInfo: $value")
+        }
+
+        @JvmStatic
+        fun fromJson(json: JsonMap): AccessibleRoleInfo? =
+            json.optionalField<String>("accessibility_role")?.let { from(it) }
+
+        @JvmStatic
+        fun fromJson(json: JsonValue): AccessibleRoleInfo? =
+            json.optString()?.let { from(it) }
+    }
 }
 
-internal data class AccessibleInfo(override val contentDescription: String?) : Accessible
+// Extension function to easily get AccessibleRoleInfo from JsonMap
+internal fun JsonMap.getAccessibleRoleInfo(): AccessibleRoleInfo? =
+    AccessibleRoleInfo.fromJson(this)
 
-private fun accessible(json: JsonMap): Accessible =
-    AccessibleInfo(contentDescription = json.optionalField("content_description"))
+internal interface Accessible {
+    val contentDescription: String?
+    val localizedContentDescription: LocalizedContentDescription?
+    val accessibilityRole: AccessibleRoleInfo?
+}
+
+private fun accessible(json: JsonMap): Accessible = object : Accessible {
+    override val contentDescription: String? = json.optionalField("content_description")
+
+    override val localizedContentDescription: LocalizedContentDescription? =
+        json.optionalField<JsonMap>("localized_content_description")?.let { LocalizedContentDescription(it) }
+
+    override val accessibilityRole: AccessibleRoleInfo? =
+        json.optionalField<String>("accessibility_role")?.let { AccessibleRoleInfo.valueOf(it.toUpperCase()) }
+}
 
 internal interface Identifiable {
     val identifier: String
@@ -374,6 +422,102 @@ internal class PagerInfo(json: JsonMap) : ViewGroupInfo<PagerItemInfo>(), View b
     override val children: List<PagerItemInfo> = items
 }
 
+internal enum class AutomatedAccessibilityActionType {
+    ANNOUNCE;
+
+    companion object {
+        fun from(value: String?): AutomatedAccessibilityActionType? = when (value?.lowercase()) {
+            "announce" -> ANNOUNCE
+            else -> null
+        }
+    }
+}
+
+internal enum class AccessibilityActionType {
+    DEFAULT,
+    ESCAPE;
+
+    companion object {
+        fun from(value: String?): AccessibilityActionType? = when (value?.lowercase()) {
+            "default" -> DEFAULT
+            "escape" -> ESCAPE
+            else -> null
+        }
+    }
+}
+
+internal class LocalizedContentDescription(json: JsonMap) {
+    val ref: String? = json.optionalField("ref")
+    val fallback: String = json.requireField("fallback")
+}
+
+internal class AutomatedAccessibilityAction(val type: AutomatedAccessibilityActionType) {
+    companion object {
+        @Throws(JsonException::class)
+        fun from(json: JsonMap): AutomatedAccessibilityAction? {
+            val typeString: String? = json.opt("type").optString()
+
+            return AutomatedAccessibilityActionType.from(typeString)?.let { AutomatedAccessibilityAction(it) }
+        }
+
+        @Throws(JsonException::class)
+        fun fromList(jsonList: JsonList): List<AutomatedAccessibilityAction> {
+            return if (jsonList.isEmpty) {
+                emptyList()
+            } else {
+                jsonList.mapNotNull { from(it.optMap()) }
+            }
+        }
+    }
+}
+
+internal class AccessibilityAction(json: JsonMap) : Accessible by accessible(json), Identifiable {
+
+    val type: AccessibilityActionType? = AccessibilityActionType.from(json.optionalField<String>("type"))
+    val reportingMetadata: JsonMap? = json.optionalField("reporting_metadata")
+    val actions: Map<String, JsonValue>? = json.optionalField<JsonList>("actions")
+        ?.let { parseActionsList(it) }
+    val behaviors: List<ButtonClickBehaviorType>? = json.optionalField<JsonList>("behaviors")
+        ?.let { ButtonClickBehaviorType.fromList(it) }
+
+    override val identifier: String
+
+    init {
+        val fallback = localizedContentDescription?.fallback
+        if (fallback == null) {
+            throw JsonException("Missing 'fallback' in 'localized_content_description'")
+        }
+        identifier = fallback
+    }
+
+    companion object {
+        @Throws(JsonException::class)
+        fun from(json: JsonMap): AccessibilityAction? {
+            return try {
+                AccessibilityAction(json)
+            } catch (e: JsonException) {
+                // Fail gracefully without creating the action if fields are missing
+                null
+            }
+        }
+
+        @Throws(JsonException::class)
+        fun fromList(jsonList: JsonList): List<AccessibilityAction> =
+            jsonList.mapNotNull { from(it.requireMap()) }
+
+        private fun parseActionsList(actionsList: JsonList): Map<String, JsonValue> {
+            val actionsMap = mutableMapOf<String, JsonValue>()
+            for (jsonValue in actionsList) {
+                val actionMap = jsonValue.requireMap()
+                for ((key, value) in actionMap.map) {
+                    actionsMap[key] = value
+                }
+            }
+            return actionsMap
+        }
+    }
+}
+
 internal class PagerItemInfo(
     json: JsonMap
 ) : ItemInfo(viewInfoFromJson(json.requireField("view"))), Identifiable by identifiable(json) {
@@ -381,11 +525,17 @@ internal class PagerItemInfo(
         json.optionalField<JsonMap>("display_actions")?.map
     val automatedActions = json.optionalField<JsonList>("automated_actions")
         ?.let { AutomatedAction.fromList(it) }
+    val accessibilityActions = json.optionalField<JsonList>("accessibility_actions")
+        ?.let { AccessibilityAction.fromList(it) }
 }
 
-internal class PagerIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json) {
+internal class PagerIndicatorInfo(
+    json: JsonMap
+) : ViewInfo(), View by view(json) {
     val bindings: Bindings = Bindings(json.requireField("bindings"))
     val indicatorSpacing: Int = json.optionalField<Int>("spacing") ?: 4
+    val automatedAccessibilityActions = json.optionalField<JsonList>("automated_accessibility_actions")
+        ?.let { AutomatedAccessibilityAction.fromList(it) }
 
     internal class Bindings(json: JsonMap) {
         val selected: Binding = Binding(json.requireField("selected"))
@@ -405,6 +555,8 @@ internal class StoryIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json
         .requireField<String>("type")
         .let { StoryIndicatorSource.from(it) }
     val style = StoryIndicatorStyle.from(json.requireField("style"))
+    val automatedAccessibilityActions = json.optionalField<JsonList>("automated_accessibility_actions")
+        ?.let { AutomatedAccessibilityAction.fromList(it) }
 }
 
 internal class StateControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), View by view(json) {

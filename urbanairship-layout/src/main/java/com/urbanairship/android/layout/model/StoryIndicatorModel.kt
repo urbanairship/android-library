@@ -4,6 +4,8 @@ import android.content.Context
 import android.view.View
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.AutomatedAccessibilityAction
+import com.urbanairship.android.layout.info.AutomatedAccessibilityActionType
 import com.urbanairship.android.layout.info.StoryIndicatorInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -21,6 +23,7 @@ import kotlinx.coroutines.launch
 internal class StoryIndicatorModel(
     val style: StoryIndicatorStyle,
     val source: StoryIndicatorSource,
+    val automatedAccessibilityActions: List<AutomatedAccessibilityAction>? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -41,6 +44,7 @@ internal class StoryIndicatorModel(
     constructor(info: StoryIndicatorInfo, env: ModelEnvironment, props: ModelProperties) : this(
         style = info.style,
         source = info.source,
+        automatedAccessibilityActions = info.automatedAccessibilityActions,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,
@@ -51,7 +55,7 @@ internal class StoryIndicatorModel(
     )
 
     interface Listener : BaseModel.Listener {
-        fun onUpdate(size: Int, pageIndex: Int, progress: Int, durations: List<Int?>)
+        fun onUpdate(size: Int, pageIndex: Int, progress: Int, durations: List<Int?>, announcePage: Boolean)
     }
 
     override var listener: Listener? = null
@@ -59,11 +63,20 @@ internal class StoryIndicatorModel(
             field = value
 
             layoutState.pager?.changes?.value?.let { state ->
-                listener?.onUpdate(state.pageIds.size, state.pageIndex, state.progress, state.durations)
+                listener?.onUpdate(
+                    size = state.pageIds.size,
+                    pageIndex = state.pageIndex,
+                    progress = state.progress,
+                    durations = state.durations,
+                    announcePage = this.announcePage
+                )
             }
         }
 
     private val indicatorViewIds = HashMap<Int, Int>()
+
+    val announcePage: Boolean
+        get() = automatedAccessibilityActions?.any { it.type == AutomatedAccessibilityActionType.ANNOUNCE } ?: false
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         StoryIndicatorView(context, this).apply {
@@ -75,10 +88,10 @@ internal class StoryIndicatorModel(
             layoutState.pager?.changes
                 // Pull out the state we care about so that we can use distinctUntilChanged to
                 // avoid unnecessary updates.
-                ?.map { StoryIndicatorUpdate(it.pageIds.size, it.pageIndex, it.progress, it.durations) }
+                ?.map { StoryIndicatorUpdate(it.pageIds.size, it.pageIndex, it.progress, it.durations, announcePage) }
                 ?.distinctUntilChanged()
-                ?.collect { (size, pageIndex, progress, durations) ->
-                    listener?.onUpdate(size, pageIndex, progress, durations)
+                ?.collect { (size, pageIndex, progress, durations, announcePage) ->
+                    listener?.onUpdate(size, pageIndex, progress, durations, announcePage)
                 }
         }
     }
@@ -87,7 +100,8 @@ internal class StoryIndicatorModel(
         val size: Int,
         val pageIndex: Int,
         val progress: Int,
-        val durations: List<Int?>
+        val durations: List<Int?>,
+        val announcePage: Boolean
     )
 
     /** Returns a stable viewId for the indicator view at the given `position`.  */

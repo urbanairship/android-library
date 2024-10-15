@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Checkable
@@ -24,6 +25,12 @@ internal class PagerIndicatorView(
         gravity = Gravity.CENTER
 
         LayoutUtils.applyBorderAndBackground(this, model)
+
+        if (model.announcePage == true) {
+            isFocusable = true
+            isFocusableInTouchMode = true
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+        }
 
         model.listener = object : PagerIndicatorModel.Listener {
             private var isInitialized = false
@@ -63,6 +70,9 @@ internal class PagerIndicatorView(
                     .apply {
                         id = model.getIndicatorViewId(i)
                         adjustViewBounds = true
+                        isFocusable = false
+                        isFocusableInTouchMode = false
+                        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                     }
 
             val lp = LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
@@ -81,6 +91,11 @@ internal class PagerIndicatorView(
     fun setPosition(position: Int) {
         for (i in 0 until childCount) {
             (getChildAt(i) as Checkable).isChecked = i == position
+        }
+        if (model.announcePage == true) {
+            val announcement = "Page ${position + 1} of ${childCount}"
+            this.contentDescription = announcement
+            this.announceForAccessibility(announcement)
         }
     }
 }

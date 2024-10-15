@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.model
 import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.AccessibleRoleInfo
 import com.urbanairship.android.layout.info.LabelInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -20,6 +21,7 @@ internal class LabelModel(
     val textAppearance: TextAppearance,
     val markdownOptions: MarkdownOptions?,
     val contentDescription: String? = null,
+    val roleInfo: AccessibleRoleInfo?,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -40,6 +42,7 @@ internal class LabelModel(
     constructor(info: LabelInfo, env: ModelEnvironment, props: ModelProperties) : this(
         text = info.text,
         textAppearance = info.textAppearance,
+        roleInfo = info.accessibilityRole,
         markdownOptions = info.markdownOptions,
         contentDescription = info.contentDescription,
         backgroundColor = info.backgroundColor,

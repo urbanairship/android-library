@@ -97,9 +97,10 @@ public class PagerControllerTest {
     public fun testCreateView() {
         val context: Context = mockk(relaxed = true)
         val viewEnv: ViewEnvironment = mockk(relaxed = true)
-        pagerController.createView(context, viewEnv, null)
+        val itemProperties = ItemProperties(size = null)
+        pagerController.createView(context, viewEnv, itemProperties)
 
-        verify { mockView.createView(eq(context), eq(viewEnv), null) }
+        verify { mockView.createView(eq(context), eq(viewEnv), itemProperties) }
     }
 
     private companion object {

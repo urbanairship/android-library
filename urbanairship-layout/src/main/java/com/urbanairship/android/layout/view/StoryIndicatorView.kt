@@ -16,6 +16,7 @@ import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.util.UAStringUtil.namedStringResource
 
 internal class StoryIndicatorView(
     context: Context,
@@ -35,10 +36,23 @@ internal class StoryIndicatorView(
 
         LayoutUtils.applyBorderAndBackground(this, model)
 
+        // Set accessibility properties on the parent view if announcePage is true
+        if (model.announcePage) {
+            isFocusable = true
+            isFocusableInTouchMode = true
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+        }
+
         model.listener = object : StoryIndicatorModel.Listener {
             private var isInitialized = false
 
-            override fun onUpdate(size: Int, pageIndex: Int, progress: Int, durations: List<Int?>) {
+            override fun onUpdate(
+                size: Int,
+                pageIndex: Int,
+                progress: Int,
+                durations: List<Int?>,
+                announcePage: Boolean
+            ) {
                 if (!isInitialized) {
                     isInitialized = true
                     setCount(size, durations)
@@ -47,7 +61,7 @@ internal class StoryIndicatorView(
                 val animated = progress > lastProgress
                 lastProgress = progress
 
-                setProgress(size, pageIndex, progress, animated)
+                setProgress(size, pageIndex, progress, animated, announcePage)
             }
 
             override fun setVisibility(visible: Boolean) {
@@ -73,6 +87,11 @@ internal class StoryIndicatorView(
                         trackColor = style.trackColor.resolve(context)
                         indicatorDirection = INDICATOR_DIRECTION_START_TO_END
                         isIndeterminate = false
+
+                        // Ensure individual indicators are not focusable for accessibility
+                        isFocusable = false
+                        isFocusableInTouchMode = false
+                        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                     }
 
                     val lp = LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
@@ -106,29 +125,51 @@ internal class StoryIndicatorView(
         }
     }
 
-    fun setProgress(count: Int, pageIndex: Int, progress: Int, animated: Boolean) {
+    fun setProgress(
+        count: Int,
+        pageIndex: Int,
+        progress: Int,
+        animated: Boolean,
+        announcePage: Boolean
+    ) {
         if (progressIndicators.isEmpty() || progressIndicators.size <= pageIndex) {
             return
         }
 
         for (i in 0 until count) {
-            (progressIndicators[i] as? LinearProgressIndicator)?.let {
+            (progressIndicators[i] as? LinearProgressIndicator)?.let { indicator ->
                 if (i == pageIndex) {
                     if (model.source == StoryIndicatorSource.CURRENT_PAGE) {
-                        it.visibility = View.VISIBLE
+                        indicator.visibility = View.VISIBLE
                     }
-                    it.setProgressCompat(progress, animated)
+                    indicator.setProgressCompat(progress, animated)
                 } else {
                     if (model.source == StoryIndicatorSource.CURRENT_PAGE) {
-                        it.visibility = View.GONE
+                        indicator.visibility = View.GONE
                     }
                     if (i > pageIndex) {
-                        it.setProgressCompat(0, false)
+                        indicator.setProgressCompat(0, false)
                     } else {
-                        it.setProgressCompat(100, false)
+                        indicator.setProgressCompat(100, false)
                     }
                 }
             }
+        }
+
+
+        // Announce the page change at the parent view level
+        if (announcePage) {
+            val resourceName = "ua_pager_progress"
+            val defaultAnnouncement = "Page ${pageIndex + 1} of $count"
+
+            val announcement = namedStringResource(
+                context,
+                resourceName,
+                defaultAnnouncement
+            ).format(pageIndex + 1, count)
+
+            contentDescription = announcement
+            announceForAccessibility(announcement)
         }
     }
 }

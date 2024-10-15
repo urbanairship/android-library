@@ -80,4 +80,15 @@
     <string name="ua_min_priority_channel_name">최소 우선 순위 알림</string>
     <string name="ua_min_priority_channel_description">최소 우선 순위 메시지</string>
     <string name="ua_min_priority_channel_id">최소 채널 ID</string>
+    <!-- General -->
+    <string name="ua_dismiss">해제</string>
+    <string name="ua_escape">벗어남</string>
+    <string name="ua_next">다음</string>
+    <string name="ua_previous">이전</string>
+    <string name="ua_submit">제출</string>
+    <string name="ua_loading">로딩 중</string>
+    <string name="ua_pager_progress">%2$s 중 %1$s페이지</string>
+    <string name="ua_play">재생</string>
+    <string name="ua_pause">일시중지</string>
+    <string name="ua_stop">정지</string>
 </resources>

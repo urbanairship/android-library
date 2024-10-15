@@ -82,4 +82,15 @@
     <string name="ua_min_priority_channel_name">Обавештења минималног приоритета</string>
     <string name="ua_min_priority_channel_description">Поруке минималног приоритета</string>
     <string name="ua_min_priority_channel_id">Минимални ID канала</string>
+    <!-- General -->
+    <string name="ua_dismiss">Одбаци</string>
+    <string name="ua_escape">Излаз</string>
+    <string name="ua_next">Следећи</string>
+    <string name="ua_previous">Претходни</string>
+    <string name="ua_submit">Поднеси</string>
+    <string name="ua_loading">Учитавање</string>
+    <string name="ua_pager_progress">Страница %1$s од %2$s</string>
+    <string name="ua_play">Репродукуј</string>
+    <string name="ua_pause">Пауза</string>
+    <string name="ua_stop">Заустави</string>
 </resources>

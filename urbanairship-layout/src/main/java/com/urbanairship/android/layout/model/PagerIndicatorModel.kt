@@ -6,6 +6,9 @@ import android.view.View
 import androidx.annotation.Dimension
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.AccessibilityActionType
+import com.urbanairship.android.layout.info.AutomatedAccessibilityAction
+import com.urbanairship.android.layout.info.AutomatedAccessibilityActionType
 import com.urbanairship.android.layout.info.PagerIndicatorInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -20,6 +23,7 @@ internal class PagerIndicatorModel(
     val bindings: PagerIndicatorInfo.Bindings,
     @get:Dimension(unit = Dimension.DP)
     val indicatorSpacing: Int,
+    val automatedAccessibilityActions: List<AutomatedAccessibilityAction>? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -40,6 +44,7 @@ internal class PagerIndicatorModel(
     constructor(info: PagerIndicatorInfo, env: ModelEnvironment, props: ModelProperties) : this(
         bindings = info.bindings,
         indicatorSpacing = info.indicatorSpacing,
+        automatedAccessibilityActions = info.automatedAccessibilityActions,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,
@@ -62,6 +67,9 @@ internal class PagerIndicatorModel(
         }
 
     private val indicatorViewIds = HashMap<Int, Int>()
+
+    val announcePage: Boolean
+        get() = automatedAccessibilityActions?.any { it.type == AutomatedAccessibilityActionType.ANNOUNCE } ?: false
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         PagerIndicatorView(context, this).apply {

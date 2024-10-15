@@ -10,6 +10,7 @@ import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasActionRunner
+import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.util.PagerScrollEvent
 import com.urbanairship.android.layout.util.pagerScrolls
@@ -191,10 +192,12 @@ public class PagerModelTest {
         private const val PAGE_3_ID = "page-two-identifier"
         private val EMPTY_ACTIONS = emptyMap<String, JsonValue>()
         private val EMPTY_AUTOMATED_ACTIONS = emptyList<AutomatedAction>()
+        private val EMPTY_ACCESSIBILITY_ACTIONS = emptyList<AccessibilityAction>()
+
         private val ITEMS = listOf(
-            PagerModel.Item(mockk(relaxed = true), PAGE_1_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS),
-            PagerModel.Item(mockk(relaxed = true), PAGE_2_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS),
-            PagerModel.Item(mockk(relaxed = true), PAGE_3_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS)
+            PagerModel.Item(mockk(relaxed = true), PAGE_1_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS),
+            PagerModel.Item(mockk(relaxed = true), PAGE_2_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS),
+            PagerModel.Item(mockk(relaxed = true), PAGE_3_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS)
         )
         private val PAGE_IDS = ITEMS.map { it.identifier }
     }

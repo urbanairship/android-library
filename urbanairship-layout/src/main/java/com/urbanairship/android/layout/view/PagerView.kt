@@ -2,19 +2,25 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
+import android.os.Bundle
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
+import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isGone
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.gestures.PagerGestureDetector
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
+import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.isWithinClickableDescendant
 import com.urbanairship.android.layout.widget.PagerRecyclerView
+import com.urbanairship.util.UAStringUtil
 
 internal class PagerView(
     context: Context,
@@ -28,6 +34,40 @@ internal class PagerView(
 
     interface OnPagerGestureListener {
         fun onGesture(event: PagerGestureEvent)
+    }
+
+    fun setAccessibilityActions(
+        actions: List<AccessibilityAction>?,
+        onActionPerformed: (AccessibilityAction) -> Unit
+    ) {
+        ViewCompat.setAccessibilityDelegate(this, object : AccessibilityDelegateCompat() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfoCompat) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+
+                // Iterate through each action provided
+                actions?.forEach { action ->
+                    // Get the localized description
+                    val description = action.localizedContentDescription?.ref?.let { ref ->
+                        UAStringUtil.namedStringResource(
+                            context,
+                            ref,
+                            action.localizedContentDescription?.fallback ?: "Unknown" // Should never be hit, should fail gracefully in parsing
+                        )
+                    } ?: action.localizedContentDescription?.fallback ?: "Unknown" // Should never be hit, should fail gracefully in parsing
+
+                    ViewCompat.addAccessibilityAction(
+                        // View to add accessibility action
+                        host,
+                        // Label surfaced to user by an accessibility service
+                        description
+                    ) { _, _ ->
+                        // Pass the current action to the onActionPerformed callback
+                        onActionPerformed(action)
+                        true // Return true to indicate the action was handled
+                    }
+                }
+            }
+        })
     }
 
     var scrollListener: OnScrollListener? = null

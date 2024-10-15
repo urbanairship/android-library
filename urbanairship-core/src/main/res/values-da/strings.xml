@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">Mindsteprioritetsmeddelelser</string>
     <string name="ua_min_priority_channel_description">Beskeder med minimum prioritet</string>
     <string name="ua_min_priority_channel_id">Minimum kanal-ID</string>
+    <!-- General -->
+    <string name="ua_dismiss">Afvis</string>
+    <string name="ua_escape">Undvig</string>
+    <string name="ua_next">Næste</string>
+    <string name="ua_previous">Forrige</string>
+    <string name="ua_submit">Indsend</string>
+    <string name="ua_loading">Indlæser</string>
+    <string name="ua_pager_progress">Side %1$s af %2$s</string>
+    <string name="ua_play">Afspil</string>
+    <string name="ua_pause">Pause</string>
+    <string name="ua_stop">Stop</string>
 </resources>

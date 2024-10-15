@@ -83,4 +83,15 @@
     <string name="ua_min_priority_channel_name">Minimalaus prioriteto pranešimai</string>
     <string name="ua_min_priority_channel_description">Minimalaus prioriteto žinutės</string>
     <string name="ua_min_priority_channel_id">Minimalaus kanalo ID</string>
+    <!-- General -->
+    <string name="ua_dismiss">Atsisakyti</string>
+    <string name="ua_escape">Išeiti</string>
+    <string name="ua_next">Kitas</string>
+    <string name="ua_previous">Ankstesnis</string>
+    <string name="ua_submit">Pateikti</string>
+    <string name="ua_loading">Įkeliama</string>
+    <string name="ua_pager_progress">%1$s puslapis iš %2$s</string>
+    <string name="ua_play">Leisti</string>
+    <string name="ua_pause">Pristabdyti</string>
+    <string name="ua_stop">Sustabdyti</string>
 </resources>

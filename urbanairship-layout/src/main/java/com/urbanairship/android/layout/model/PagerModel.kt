@@ -13,6 +13,9 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.gestures.PagerGestureEvent.Hold
+import com.urbanairship.android.layout.info.AccessibilityAction
+import com.urbanairship.android.layout.info.AccessibilityActionType
+import com.urbanairship.android.layout.info.AutomatedAccessibilityActionType
 import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.AutomatedAction
@@ -93,7 +96,8 @@ internal class PagerModel(
         val view: AnyModel,
         val identifier: String,
         val displayActions: Map<String, JsonValue>?,
-        val automatedActions: List<AutomatedAction>?
+        val automatedActions: List<AutomatedAction>?,
+        val accessibilityActions: List<AccessibilityAction>?
     )
 
     interface Listener : BaseModel.Listener {
@@ -192,7 +196,7 @@ internal class PagerModel(
         } else {
             UALog.v { "No gestures defined." }
         }
-
+        // Set up accessibility actions and manage touch exploration state
         val accessibilityManager = view.context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
         accessibilityManager?.let { am ->
             accessibilityListener = AccessibilityManager.TouchExplorationStateChangeListener { enabled ->
@@ -201,6 +205,15 @@ internal class PagerModel(
                 am.addTouchExplorationStateChangeListener(it)
             }
             updateTouchExplorationState(am.isTouchExplorationEnabled)
+        }
+
+        viewScope.launch {
+            pagerState.changes.collect { state ->
+                val currentItem = items[state.pageIndex]
+                view.setAccessibilityActions(currentItem.accessibilityActions) { action ->
+                    handleAccessibilityAction(action, state)
+                }
+            }
         }
     }
 
@@ -252,6 +265,13 @@ internal class PagerModel(
                 pagerContext
             ), layoutState.reportingContext(pagerContext = pagerContext)
         )
+    }
+
+    private fun handleAccessibilityAction(action: AccessibilityAction, pagerState: State.Pager) {
+        action.behaviors?.let { evaluateClickBehaviors(it) }
+        action.actions?.let { runActions(it) }
+
+        // TODO: Report the accessibility action
     }
 
     private suspend fun handlePageActions(
