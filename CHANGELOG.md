@@ -2,7 +2,16 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
-## Version 18.3.2 October 2, 2024
+## Version 18.3.3, October 16, 2024
+Patch release that fixes a potential crash when displaying In-App Automation messages, improves WebView security, and improves accessibility in Scenes and Stories. 
+Apps that make use of In-App Automation, Landing Pages, or Message Center should update.
+
+### Changes
+- Fix a potential crash when displaying In-App messages
+- Explicitly disallow file and content access in all WebViews
+- Accessibility improvements for Scenes and Stories
+
+## Version 18.3.2, October 2, 2024
 Patch release that improves markdown support in Scenes and fixes for automation display interval and frequency limit handling.
 Apps that make use of markdown in Scenes, or automations with display intervals or frequency limits should update.
 
@@ -10,20 +19,20 @@ Apps that make use of markdown in Scenes, or automations with display intervals 
 - Improve markdown support in Scenes, including better handling of newlines in the input text.
 - Fixed automation display interval and frequency limit handling.
 
-## Version 18.3.1 September 30, 2024
+## Version 18.3.1, September 30, 2024
 Patch release that fixes modal IAA border radius and fixes scenes with wide images.
 
 ### Changes
 - Fixed modal IAA border radius.
 - Fixed scenes with wide images.
 
-## Version 18.3.0 September 13, 2024
+## Version 18.3.0, September 13, 2024
 Minor release that adds a new method `enableUserNotifications(PermissionPromptFallback)` on `PushManager`.
 
 ### Changes
 - Added a `enableUserNotifications(PermissionPromptFallback)` method on `PushManager` that will attempt to enable notifications and use the fallback if the permission is denied.
 
-## Version 18.2.0 September 6, 2024
+## Version 18.2.0, September 6, 2024
 Minor release with several enhancements to In-App Automation, Scenes, and Surveys. This version also contains a fix
 for applications that are targeting API 35.
 
@@ -37,7 +46,7 @@ for applications that are targeting API 35.
 triggered at the same time.
 - Updated handling of long delays for In-App Automation, Scenes, and Surveys. Delays will now be preprocessed up to 30 seconds before it ends before the message is prepared.
 
-## Version 18.1.6 August 9, 2024
+## Version 18.1.6, August 9, 2024
 Patch release that fixes in-app experience displays when resuming from a paused state. Apps that use in-app experiences are encouraged to update.
 
 ### Changes
