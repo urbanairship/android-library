@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.content.ContextCompat;
+import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -25,8 +26,11 @@ import kotlinx.coroutines.ExecutorsKt;
  * Message database
  */
 @Database(
-    version = 5,
-    entities = { MessageEntity.class }
+    version = 6,
+    entities = { MessageEntity.class },
+    autoMigrations = {
+        @AutoMigration(from = 5, to = 6)
+    }
 )
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class MessageDatabase extends RoomDatabase {

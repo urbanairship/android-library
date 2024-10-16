@@ -2,6 +2,7 @@
 
 package com.urbanairship.audience
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.SubscriptionListMutation
 import com.urbanairship.channel.TagGroupsMutation
@@ -15,25 +16,32 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.update
 
-internal class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
-    companion object {
+
+/**
+ * Audience overrides provider.
+ *
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
+    internal companion object {
         internal const val EXPIRY_MS: Long = 600000 // 10 minutes
     }
 
-    var stableContactIdDelegate: (suspend () -> String)? = null
-    var pendingChannelOverridesDelegate: ((String) -> AudienceOverrides.Channel)? = null
-    var pendingContactOverridesDelegate: ((String) -> AudienceOverrides.Contact)? = null
+    internal var stableContactIdDelegate: (suspend () -> String)? = null
+    internal var pendingChannelOverridesDelegate: ((String) -> AudienceOverrides.Channel)? = null
+    internal var pendingContactOverridesDelegate: ((String) -> AudienceOverrides.Contact)? = null
 
     private val records = CachedList<Record<*>>(clock)
 
     private val _updates = MutableStateFlow(0U)
-    val updates: SharedFlow<UInt> = _updates.asSharedFlow()
+    internal val updates: SharedFlow<UInt> = _updates.asSharedFlow()
 
-    fun notifyPendingChanged() {
+    internal fun notifyPendingChanged() {
        _updates.update { it.inc() }
     }
 
-    fun recordContactUpdate(
+    internal fun recordContactUpdate(
         contactId: String,
         tags: List<TagGroupsMutation>? = null,
         attributes: List<AttributeMutation>? = null,
@@ -45,7 +53,7 @@ internal class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
         notifyPendingChanged()
     }
 
-    fun recordChannelUpdate(
+    internal fun recordChannelUpdate(
         channelId: String,
         tags: List<TagGroupsMutation>? = null,
         attributes: List<AttributeMutation>? = null,
@@ -66,7 +74,7 @@ internal class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
         }
     }
 
-    suspend fun contactOverrides(contactId: String?): AudienceOverrides.Contact {
+    internal suspend fun contactOverrides(contactId: String?): AudienceOverrides.Contact {
         val resolvedContactId = contactId ?: stableContactIdDelegate?.invoke() ?: return AudienceOverrides.Contact()
         val pendingContact = pendingContactOverridesDelegate?.invoke(resolvedContactId)
 
@@ -99,7 +107,7 @@ internal class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
         )
     }
 
-    suspend fun channelOverrides(channelId: String, contactId: String? = null): AudienceOverrides.Channel {
+    internal suspend fun channelOverrides(channelId: String, contactId: String? = null): AudienceOverrides.Channel {
         val resolvedContactId = contactId ?: stableContactIdDelegate?.invoke()
         val pendingChannel = pendingChannelOverridesDelegate?.invoke(channelId)
         val pendingContact = resolvedContactId?.let { pendingContactOverridesDelegate?.invoke(it) }

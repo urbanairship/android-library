@@ -3,120 +3,58 @@
 package com.urbanairship.contacts
 
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.audience.AudienceOverridesProvider
+import com.urbanairship.PrivacyManager
+import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.config.AirshipRuntimeConfig
-import com.urbanairship.util.CachedValue
+import com.urbanairship.util.AutoRefreshingDataProvider
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
-import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.Flow
 
 internal class ContactChannelsProvider(
     private val apiClient: ContactChannelsApiClient,
-    private val audienceOverridesProvider: AudienceOverridesProvider,
-    private val contactUpdates: StateFlow<ContactIdUpdate?>,
-    private val clock: Clock = Clock.DEFAULT_CLOCK,
-    private val taskSleeper: TaskSleeper = TaskSleeper.default,
+    private val privacyManager: PrivacyManager,
+    stableContactIdUpdates: Flow<String>,
+    overrideUpdates: Flow<AudienceOverrides.Contact>,
+    clock: Clock = Clock.DEFAULT_CLOCK,
+    taskSleeper: TaskSleeper = TaskSleeper.default,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
+) : AutoRefreshingDataProvider<List<ContactChannel>, AudienceOverrides.Contact> (
+    identifierUpdates = stableContactIdUpdates,
+    overrideUpdates = overrideUpdates,
+    clock = clock,
+    taskSleeper = taskSleeper,
+    dispatcher = dispatcher
 ) {
-    private val scope = CoroutineScope(dispatcher + SupervisorJob())
-    /// Map to cache address to channels to make matching easier
-    private val addressToChannelIdMap = mutableMapOf<String, String>()
-    private val lock = ReentrantLock()
-    private val changeTokenFlow = MutableStateFlow(UUID.randomUUID())
-    private val fetchCache = FetchCache(clock, maxCacheAge)
-    internal constructor(
+
+    constructor(
         config: AirshipRuntimeConfig,
-        audienceOverridesProvider: AudienceOverridesProvider,
-        contactUpdates: StateFlow<ContactIdUpdate?>
+        privacyManager: PrivacyManager,
+        stableContactIdUpdates: Flow<String>,
+        overrideUpdates: Flow<AudienceOverrides.Contact>,
     ): this(
         apiClient = ContactChannelsApiClient(config),
-        audienceOverridesProvider = audienceOverridesProvider,
-        contactUpdates = contactUpdates
+        privacyManager = privacyManager,
+        stableContactIdUpdates = stableContactIdUpdates,
+        overrideUpdates = overrideUpdates
     )
 
-    fun refresh() {
-        changeTokenFlow.value = UUID.randomUUID()
-    }
+    private val addressToChannelIdMap = mutableMapOf<String, String>()
+    private val lock = ReentrantLock()
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val contactChannels: SharedFlow<Result<List<ContactChannel>>> by lazy {
-        var lastContactId: String? = null
-
-        val stableContactIdUpdates = contactUpdates.mapNotNull {
-            if (it?.isStable == true) { it.contactId } else { null }
+    override suspend fun onFetch(identifier: String): Result<List<ContactChannel>> {
+        if (!privacyManager.isContactsEnabled) {
+            return Result.failure(
+                IllegalStateException("Unable to fetch subscriptions when FEATURE_TAGS_AND_ATTRIBUTES or FEATURE_CONTACTS are disabled")
+            )
         }
 
-        combine(stableContactIdUpdates, changeTokenFlow) { contactId, changeToken ->
-            Pair(contactId, changeToken)
-        }.flatMapLatest { (contactId, changeToken) ->
-            val fetchUpdates = flow {
-
-                var backoff: Duration = initialBackoff
-
-                while (true) {
-                    val fetched = fetch(contactId, changeToken)
-                    backoff = if (fetched.isSuccess) {
-                        emit(fetched)
-                        taskSleeper.sleep(fetchCache.remainingCacheTimeMillis)
-                        initialBackoff
-                    } else {
-                        if (lastContactId != contactId) {
-                            emit(fetched)
-                        }
-                        taskSleeper.sleep(backoff)
-                        backoff.times(2).coerceAtMost(maxBackoff)
-                    }
-                    lastContactId = contactId
-                }
-            }
-
-            val overridesUpdates = audienceOverridesProvider.updates.map { _ ->
-                audienceOverridesProvider.contactOverrides(contactId)
-            }
-
-            combine(fetchUpdates, overridesUpdates) { fetchUpdate, overrides ->
-                fetchUpdate.fold(onSuccess = {
-                    Result.success(applyOverrides(it, overrides.channels))
-                }, onFailure = {
-                    Result.failure(it)
-                })
-            }
-        }.shareIn(
-            scope  = scope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 100),
-            replay =  1
-        )
-    }
-
-    private suspend fun fetch(contactId: String, changeToken: UUID): Result<List<ContactChannel>> {
-        val cached = fetchCache.getCache(contactId, changeToken)
-        if (cached != null) {
-            return Result.success(cached)
-        }
-
-        val result = apiClient.fetch(contactId)
+        val result = apiClient.fetch(identifier)
         if (result.isSuccessful && result.value != null) {
-            fetchCache.setCache(contactId, changeToken, result.value)
             return Result.success(result.value)
         }
 
@@ -125,14 +63,15 @@ internal class ContactChannelsProvider(
         )
     }
 
-    private fun applyOverrides(list: List<ContactChannel>, overrides: List<ContactChannelMutation>?): List<ContactChannel> {
-        if (overrides.isNullOrEmpty()) {
-            return list
+    override fun onApplyOverrides(data: List<ContactChannel>, overrides: AudienceOverrides.Contact): List<ContactChannel> {
+        val channelMutations = overrides.channels
+        if (channelMutations.isNullOrEmpty()) {
+            return data
         }
 
         lock.withLock {
             /// Update map with any address to channel Id before trying to match
-            overrides.forEach {
+            channelMutations.forEach {
                 when (it) {
                     is ContactChannelMutation.Associate -> {
                         val address = it.channel.canonicalAddress
@@ -155,8 +94,8 @@ internal class ContactChannelsProvider(
             }
         }
 
-        val mutable = list.toMutableList()
-        overrides.forEach { mutation ->
+        val mutable = data.toMutableList()
+        channelMutations.forEach { mutation ->
             when (mutation) {
                 is ContactChannelMutation.Associate -> {
                     val found = mutable.firstOrNull {
@@ -209,14 +148,7 @@ internal class ContactChannelsProvider(
 
         return null
     }
-
-    companion object {
-        private val maxCacheAge = 10.minutes
-        private val initialBackoff = 8.seconds
-        private val maxBackoff = 64.seconds
-    }
 }
-
 
 private val ContactChannelMutation.canonicalAddress: String?
     get() {
@@ -279,28 +211,3 @@ private val ContactChannel.channelId: String?
             }
         }
     }
-
-
-private class FetchCache(private val clock: Clock, private val maxCacheAge: Duration) {
-    private val cachedResponse  = CachedValue<Triple<String, UUID, List<ContactChannel>>>(clock)
-
-    fun getCache(contactId: String, changeToken: UUID): List<ContactChannel>? {
-        val cached = cachedResponse.get()
-        if (cached != null && cached.first == contactId && cached.second == changeToken) {
-            return cached.third
-        }
-
-        return null
-    }
-
-    fun setCache(contactId: String, changeToken: UUID, value: List<ContactChannel>) {
-        cachedResponse.set(
-            Triple(contactId, changeToken, value),
-            clock.currentTimeMillis() + maxCacheAge.inWholeMilliseconds
-        )
-    }
-
-    val remainingCacheTimeMillis: Duration
-        get() = cachedResponse.remainingCacheTimeMillis().milliseconds
-
-}

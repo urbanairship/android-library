@@ -20,7 +20,6 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.isWithinClickableDescendant
 import com.urbanairship.android.layout.widget.PagerRecyclerView
 
-@RequiresApi(Build.VERSION_CODES.O)
 internal class PagerView(
     context: Context,
     val model: PagerModel,
@@ -71,7 +70,9 @@ internal class PagerView(
 
     init {
         this@PagerView.isFocusable = true
-        this@PagerView.isFocusedByDefault = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            this@PagerView.isFocusedByDefault = true
+        }
         addView(view, MATCH_PARENT, MATCH_PARENT)
         LayoutUtils.applyBorderAndBackground(this, model)
         model.listener = modelListener

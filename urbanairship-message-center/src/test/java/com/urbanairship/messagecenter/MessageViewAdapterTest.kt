@@ -60,8 +60,8 @@ public class MessageViewAdapterTest {
         const val messageId2 = "id-1"
 
         val messages = listOf(
-            createMessage(messageId1, null, false),
-            createMessage(messageId2, null, false)
+            createMessage(messageId1, null),
+            createMessage(messageId2, null)
         )
     }
 }

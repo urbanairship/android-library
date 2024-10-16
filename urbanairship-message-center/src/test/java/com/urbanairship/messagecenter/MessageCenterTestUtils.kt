@@ -16,6 +16,7 @@ import com.urbanairship.messagecenter.Message.TITLE_KEY
 import com.urbanairship.messagecenter.Message.UNREAD_KEY
 import com.urbanairship.messagecenter.Message.create
 import com.urbanairship.util.DateUtils
+import java.util.Date
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
@@ -34,9 +35,11 @@ public object MessageCenterTestUtils {
     public fun insertMessage(
         messageId: String?,
         extras: Map<String, String>? = null,
-        expired: Boolean = false
+        expired: Boolean = false,
+        expirationDate: Date? = null
     ) {
-        val message = createMessage(messageId, extras, expired)
+        val expiration = expirationDate ?: if (expired) Date(0) else null
+        val message = createMessage(messageId, extras, expiration)
         val entity = requireNotNull(MessageEntity.createMessageFromPayload(messageId, message.rawMessageJson))
         runBlocking {
             messageDao.insert(entity)
@@ -46,8 +49,8 @@ public object MessageCenterTestUtils {
 
     public fun createMessage(
         messageId: String?,
-        extras: Map<String, String>?,
-        expired: Boolean
+        extras: Map<String, String>? = null,
+        expirationDate: Date? = null
     ): Message {
         val payload: MutableMap<String, Any?> = mutableMapOf(
             MESSAGE_ID_KEY to messageId,
@@ -62,8 +65,9 @@ public object MessageCenterTestUtils {
         if (extras != null) {
             payload[EXTRA_KEY] = extras
         }
-        if (expired) {
-            payload[MESSAGE_EXPIRY_KEY] = DateUtils.createIso8601TimeStamp(0)
+
+        expirationDate?.let {
+            payload[MESSAGE_EXPIRY_KEY] = DateUtils.createIso8601TimeStamp(it.time)
         }
 
         return requireNotNull(create(JsonValue.wrapOpt(payload), true, false))

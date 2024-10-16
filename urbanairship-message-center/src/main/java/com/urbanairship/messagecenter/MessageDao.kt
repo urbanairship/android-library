@@ -1,5 +1,6 @@
 package com.urbanairship.messagecenter
 
+import androidx.annotation.VisibleForTesting
 import androidx.core.util.Consumer
 import androidx.room.Dao
 import androidx.room.Insert
@@ -8,16 +9,28 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.urbanairship.UALog
 import com.urbanairship.analytics.data.BatchedQueryHelper
+import com.urbanairship.util.Clock
+import com.urbanairship.util.DateUtils
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * Message Data Access Object.
  *
  * Note: In order to avoid potential crashes in customer apps, all generated DAO methods
- * should be call through to a separate "internal" method that wraps the internal DAO call with a try/catch.
+ * should call through to a separate "internal" method that wraps the internal DAO call with a try/catch.
  */
 @Dao
-internal interface MessageDao {
+internal abstract class MessageDao {
 
+    @VisibleForTesting
+    internal var queryClock: Clock = Clock.DEFAULT_CLOCK
+
+    @VisibleForTesting
+    internal val currentTimestamp: String
+        get() = DateUtils.createIso8601TimeStamp(queryClock.currentTimeMillis())
+
+    @VisibleForTesting
     suspend fun insert(message: MessageEntity) = try {
         insertInternal(message)
     } catch (e: Exception) {
@@ -50,16 +63,25 @@ internal interface MessageDao {
 
     suspend fun getMessages(): List<MessageEntity> {
         return try {
-            getMessagesInternal()
+            getMessagesInternal(currentTimestamp)
         } catch (e: Exception) {
             UALog.e(e) { "Failed to get messages!" }
             emptyList()
         }
     }
 
+    fun getMessagesFlow(): Flow<List<MessageEntity>> {
+        return try {
+            getMessagesFlowInternal(currentTimestamp)
+        } catch (e: Exception) {
+            UALog.e(e) { "Failed to get messages flow!" }
+            emptyFlow()
+        }
+    }
+
     suspend fun getMessageCount(): Int {
         return try {
-            getMessageCountInternal()
+            getMessageCountInternal(currentTimestamp)
         } catch (e: Exception) {
             UALog.e(e) { "Failed to get message count!" }
             0
@@ -68,7 +90,7 @@ internal interface MessageDao {
 
     suspend fun getReadMessages(): List<MessageEntity> {
         return try {
-            getReadMessagesInternal()
+            getReadMessagesInternal(currentTimestamp)
         } catch (e: Exception) {
             UALog.e(e) { "Failed to get read messages!" }
             emptyList()
@@ -77,7 +99,7 @@ internal interface MessageDao {
 
     suspend fun getReadMessageCount(): Int {
         return try {
-            getReadMessageCountInternal()
+            getReadMessageCountInternal(currentTimestamp)
         } catch (e: Exception) {
             UALog.e(e) { "Failed to get read message count!" }
             0
@@ -86,16 +108,25 @@ internal interface MessageDao {
 
     suspend fun getUnreadMessages(): List<MessageEntity> {
         return try {
-            getUnreadMessagesInternal()
+            getUnreadMessagesInternal(currentTimestamp)
         } catch (e: Exception) {
             UALog.e(e) { "Failed to get unread messages!" }
             emptyList()
         }
     }
 
+    fun getUnreadMessagesFlow(): Flow<List<MessageEntity>> {
+        return try {
+            getUnreadMessagesFlowInternal(currentTimestamp)
+        } catch (e: Exception) {
+            UALog.e(e) { "Failed to get unread messages flow!" }
+            emptyFlow()
+        }
+    }
+
     suspend fun getUnreadMessageCount(): Int {
         return try {
-            getUnreadMessageCountInternal()
+            getUnreadMessageCountInternal(currentTimestamp)
         } catch (e: Exception) {
             UALog.e(e) { "Failed to get unread message count!" }
             0
@@ -104,7 +135,7 @@ internal interface MessageDao {
 
     suspend fun getMessageIds(): List<String> {
         return try {
-            getMessageIdsInternal()
+            getMessageIdsInternal(currentTimestamp)
         } catch (e: Exception) {
             UALog.e(e) { "Failed to get message IDs!" }
             emptyList()
@@ -161,7 +192,7 @@ internal interface MessageDao {
         }
     }
 
-    suspend fun deleteMessages(messageIds: List<String>) {
+    fun deleteMessages(messageIds: List<String>) {
         try {
             deleteMessagesInternal(messageIds)
         } catch (e: Exception) {
@@ -187,107 +218,99 @@ internal interface MessageDao {
     }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertInternal(message: MessageEntity)
+    abstract suspend fun insertInternal(message: MessageEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMessagesInternal(messages: List<MessageEntity>)
+    abstract suspend fun insertMessagesInternal(messages: List<MessageEntity>)
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE message_id = :id")
-    suspend fun getMessageInternal(id: String): MessageEntity?
+    abstract suspend fun getMessageInternal(id: String): MessageEntity?
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE message_body_url = :url")
-    suspend fun getMessageByUrlInternal(url: String): MessageEntity?
+    abstract suspend fun getMessageByUrlInternal(url: String): MessageEntity?
 
     @Transaction
-    @Query("""
-        SELECT * FROM richpush
-        WHERE deleted = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
-    suspend fun getMessagesInternal(): List<MessageEntity>
+    @Query("SELECT * FROM richpush WHERE $NOT_EXPIRED_OR_DELETED")
+    abstract suspend fun getMessagesInternal(
+        currentTimestamp: String
+    ): List<MessageEntity>
 
     @Transaction
-    @Query("""
-        SELECT COUNT(*) FROM richpush
-        WHERE deleted = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
-    suspend fun getMessageCountInternal(): Int
+    @Query("SELECT * FROM richpush WHERE $NOT_EXPIRED_OR_DELETED")
+    abstract fun getMessagesFlowInternal(
+        currentTimestamp: String
+    ): Flow<List<MessageEntity>>
 
     @Transaction
-    @Query("""
-        SELECT * FROM richpush
-        WHERE unread = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
-    suspend fun getReadMessagesInternal(): List<MessageEntity>
+    @Query("SELECT COUNT(*) FROM richpush WHERE $NOT_EXPIRED_OR_DELETED")
+    abstract suspend fun getMessageCountInternal(
+        currentTimestamp: String
+    ): Int
 
     @Transaction
-    @Query("""
-        SELECT COUNT(*) FROM richpush
-        WHERE unread = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
-    suspend fun getReadMessageCountInternal(): Int
+    @Query("SELECT * FROM richpush WHERE unread = 0 AND $NOT_EXPIRED_OR_DELETED")
+    abstract suspend fun getReadMessagesInternal(
+        currentTimestamp: String
+    ): List<MessageEntity>
 
     @Transaction
-    @Query("""
-        SELECT * FROM richpush
-        WHERE unread = 1
-        AND deleted = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
-    suspend fun getUnreadMessagesInternal(): List<MessageEntity>
+    @Query("SELECT COUNT(*) FROM richpush WHERE unread = 0 AND $NOT_EXPIRED_OR_DELETED")
+    abstract suspend fun getReadMessageCountInternal(
+        currentTimestamp: String
+    ): Int
 
     @Transaction
-    @Query("""
-        SELECT COUNT(*) FROM richpush
-        WHERE unread = 1
-        AND deleted = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
-    suspend fun getUnreadMessageCountInternal(): Int
+    @Query("SELECT * FROM richpush WHERE unread = 1 AND $NOT_EXPIRED_OR_DELETED")
+    abstract suspend fun getUnreadMessagesInternal(
+        currentTimestamp: String
+    ): List<MessageEntity>
 
     @Transaction
-    @Query("""
-        SELECT message_id FROM richpush
-        WHERE deleted = 0
-        AND (expiration_timestamp IS NULL OR expiration_timestamp <= strftime('%s', 'now'))
-        """)
-    suspend fun getMessageIdsInternal(): List<String>
+    @Query("SELECT * FROM richpush WHERE unread = 1 AND $NOT_EXPIRED_OR_DELETED")
+    abstract fun getUnreadMessagesFlowInternal(
+        currentTimestamp: String
+    ): Flow<List<MessageEntity>>
 
     @Transaction
-    @Query("""
-        SELECT * FROM richpush
-        WHERE unread = 0
-        AND unread <> unread_orig
-        """)
-    suspend fun getLocallyReadMessagesInternal(): List<MessageEntity>
+    @Query("SELECT COUNT(*) FROM richpush WHERE unread = 1 AND $NOT_EXPIRED_OR_DELETED")
+    abstract suspend fun getUnreadMessageCountInternal(
+        currentTimestamp: String
+    ): Int
+
+    @Transaction
+    @Query("SELECT message_id FROM richpush WHERE $NOT_EXPIRED_OR_DELETED")
+    abstract suspend fun getMessageIdsInternal(
+        currentTimestamp: String
+    ): List<String>
+
+    @Transaction
+    @Query("SELECT * FROM richpush WHERE unread = 0 AND unread <> unread_orig")
+    abstract suspend fun getLocallyReadMessagesInternal(): List<MessageEntity>
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE deleted = 1")
-    suspend fun getLocallyDeletedMessagesInternal(): List<MessageEntity>
+    abstract suspend fun getLocallyDeletedMessagesInternal(): List<MessageEntity>
 
     @Transaction
     @Query("UPDATE richpush SET unread = 0 WHERE message_id IN (:messageIds)")
-    suspend fun markMessagesReadInternal(messageIds: List<String>)
+    abstract suspend fun markMessagesReadInternal(messageIds: List<String>)
 
     @Transaction
     @Query("UPDATE richpush SET unread = 1 WHERE message_id IN (:messageIds)")
-    suspend fun markMessagesUnreadInternal(messageIds: List<String>)
+    abstract suspend fun markMessagesUnreadInternal(messageIds: List<String>)
 
     @Transaction
     @Query("UPDATE richpush SET deleted = 1 WHERE message_id IN (:messageIds)")
-    suspend fun markMessagesDeletedInternal(messageIds: List<String>)
+    abstract suspend fun markMessagesDeletedInternal(messageIds: List<String>)
 
     @Transaction
     @Query("UPDATE richpush SET unread_orig = 0 WHERE message_id IN (:messageIds)")
-    suspend fun markMessagesReadOriginInternal(messageIds: List<String>)
+    abstract suspend fun markMessagesReadOriginInternal(messageIds: List<String>)
 
     @Transaction
-    fun deleteMessagesInternal(messageIds: List<String>) {
+    open fun deleteMessagesInternal(messageIds: List<String>) {
         val consumer = Consumer { ids: List<String> -> deleteMessagesBatchInternal(ids) }
         BatchedQueryHelper.runBatched(messageIds, consumer)
     }
@@ -297,12 +320,19 @@ internal interface MessageDao {
      * which stops us from bumping into the max query params limit of 999.
      */
     @Query("DELETE FROM richpush WHERE message_id IN (:messageIds)")
-    fun deleteMessagesBatchInternal(messageIds: List<String>)
+    abstract fun deleteMessagesBatchInternal(messageIds: List<String>)
 
     @Transaction
     @Query("DELETE FROM richpush")
-    suspend fun deleteAllMessagesInternal()
+    abstract suspend fun deleteAllMessagesInternal()
 
-    @Query("SELECT EXISTS (SELECT 1 FROM richpush WHERE message_id = :id)")
-    suspend fun messageExistsInternal(id: String): Boolean
+    @Query("SELECT 1 FROM richpush WHERE message_id = :id LIMIT 1")
+    abstract suspend fun messageExistsInternal(id: String): Boolean
+
+    private companion object {
+        private const val NOT_EXPIRED = "(expiration_timestamp IS NULL OR datetime(expiration_timestamp) >= datetime(:currentTimestamp))"
+        private const val NOT_DELETED = "deleted = 0"
+
+        private const val NOT_EXPIRED_OR_DELETED = "$NOT_EXPIRED AND $NOT_DELETED"
+    }
 }
