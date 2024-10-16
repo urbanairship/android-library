@@ -24,17 +24,23 @@ import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.util.Clock
+import com.urbanairship.util.TaskSleeper
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
@@ -53,6 +59,8 @@ public class Inbox @VisibleForTesting internal constructor(
     private val airshipChannel: AirshipChannel,
     private val privacyManager: PrivacyManager,
     config: AirshipRuntimeConfig,
+    private val taskSleeper: TaskSleeper = TaskSleeper.default,
+    private val clock: Clock = Clock.DEFAULT_CLOCK,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val job = SupervisorJob()
@@ -94,6 +102,7 @@ public class Inbox @VisibleForTesting internal constructor(
     private val listeners: MutableList<InboxListener> = CopyOnWriteArrayList()
 
     private var isFetchingMessages = false
+    private var refreshOnMessageExpiresJob: Job? = null
 
     @VisibleForTesting
     internal var inboxJobHandler: InboxJobHandler = InboxJobHandler(
@@ -110,20 +119,19 @@ public class Inbox @VisibleForTesting internal constructor(
     private val pendingFetchCallbacks: MutableList<PendingFetchMessagesCallback> = ArrayList()
 
     private val applicationListener: ApplicationListener = object : ApplicationListener {
-        override fun onForeground(time: Long) = jobDispatcher.dispatch(
-            JobInfo.newBuilder()
-                .setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                .setAirshipComponent(MessageCenter::class.java)
-                .setConflictStrategy(JobInfo.KEEP)
-                .build()
-        )
-        override fun onBackground(time: Long) = jobDispatcher.dispatch(
-            JobInfo.newBuilder()
-                .setAction(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
-                .setAirshipComponent(MessageCenter::class.java)
-                .setConflictStrategy(JobInfo.KEEP)
-                .build()
-        )
+        override fun onForeground(time: Long) = dispatchUpdateUserJob(false)
+
+        override fun onBackground(time: Long) {
+            jobDispatcher.dispatch(
+                JobInfo.newBuilder()
+                    .setAction(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
+                    .setAirshipComponent(MessageCenter::class.java)
+                    .setConflictStrategy(JobInfo.KEEP)
+                    .build()
+            )
+
+            refreshOnMessageExpiresJob?.cancel()
+        }
     }
 
     private val channelListener: AirshipChannelListener =
@@ -202,6 +210,26 @@ public class Inbox @VisibleForTesting internal constructor(
         airshipChannel.removeChannelRegistrationPayloadExtender(channelRegistrationPayloadExtender)
         user.removeListener(userListener)
         isStarted.set(false)
+        refreshOnMessageExpiresJob?.cancel()
+    }
+
+    private fun setupRefreshOnMessageExpiresJob() {
+        refreshOnMessageExpiresJob?.cancel()
+
+        refreshOnMessageExpiresJob = scope.launch {
+            val now = clock.currentTimeMillis()
+
+            val refreshDate = getMessages()
+                .mapNotNull { it.expirationDate }
+                .filter { it.time > now }
+                .minOrNull()
+            ?: return@launch
+
+            val delay = (refreshDate.time - clock.currentTimeMillis()).milliseconds
+
+            taskSleeper.sleep(delay)
+            fetchMessages()
+        }
     }
 
     /**
@@ -304,7 +332,7 @@ public class Inbox @VisibleForTesting internal constructor(
         }
     }
 
-    internal fun onUpdateMessagesFinished(result: Boolean) =
+    internal fun onUpdateMessagesFinished(result: Boolean) {
         synchronized(pendingFetchCallbacks) {
             for (callback: PendingFetchMessagesCallback in pendingFetchCallbacks) {
                 callback.result = result
@@ -313,6 +341,10 @@ public class Inbox @VisibleForTesting internal constructor(
             isFetchingMessages = false
             pendingFetchCallbacks.clear()
         }
+
+        setupRefreshOnMessageExpiresJob()
+    }
+
 
     /** The total message count. */
     public suspend fun getCount(): Int = messageDao.getMessageCount()
@@ -576,6 +608,8 @@ public class Inbox @VisibleForTesting internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     internal fun dispatchUpdateUserJob(forcefully: Boolean) {
         UALog.d("Updating user.")
+        refreshOnMessageExpiresJob?.cancel()
+
         val jobInfo = JobInfo.newBuilder()
             .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
             .setAirshipComponent(MessageCenter::class.java)
