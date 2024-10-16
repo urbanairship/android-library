@@ -125,6 +125,12 @@ internal class WebViewView(
                 domStorageEnabled = true
                 databaseEnabled = true
             }
+
+            // Disallow all file and content access, which could pose a security risk if enabled.
+            allowFileAccess = false
+            allowFileAccessFromFileURLs = false
+            allowUniversalAccessFromFileURLs = false
+            allowContentAccess = false
         }
 
         val client = viewEnvironment.webViewClientFactory().create().apply {
