@@ -15,7 +15,7 @@ import com.urbanairship.messagecenter.R
 import com.google.android.material.divider.MaterialDividerItemDecoration
 
 /** Base Message Center `RecyclerView` that displays a list of messages. */
-public class MessageRecyclerView @JvmOverloads constructor(
+internal class MessageRecyclerView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
@@ -89,7 +89,7 @@ public class MessageRecyclerView @JvmOverloads constructor(
 }
 
 /** `Adapter` for displaying messages in [MessageRecyclerView]. */
-public class MessageRecyclerAdapter(
+internal class MessageRecyclerAdapter(
     listener: Listener<Message>,
     isEditingProvider: () -> Boolean,
 ) : EditableListAdapter<Message, MessageRecyclerAdapter.ViewHolder>(listener, isEditingProvider, DIFF_CALLBACK) {

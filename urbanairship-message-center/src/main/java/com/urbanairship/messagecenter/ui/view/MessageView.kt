@@ -119,19 +119,6 @@ public class MessageView @JvmOverloads constructor(
             message?.let { viewModel?.loadMessage(it.messageId) }
                 ?: UALog.w { "MessageView does not have a message to retry loading!" }
         }
-
-        findViewTreeLifecycleOwner()?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
-            override fun onResume(owner: LifecycleOwner) {
-                UALog.e("onResume!!!")
-                views.webView.onResume()
-            }
-
-            override fun onPause(owner: LifecycleOwner) {
-                views.webView.onPause()
-                // Also pause javascript timers
-                views.webView.pauseTimers()
-            }
-        })
     }
 
     override fun onAttachedToWindow() {
@@ -141,12 +128,19 @@ public class MessageView @JvmOverloads constructor(
             viewModel = ViewModelProvider(
                 owner = requireNotNull(findViewTreeViewModelStoreOwner()) {
                     "MessageView must be hosted in a view that has a ViewModelStoreOwner!"
-                }, factory = MessageViewViewModel.factory()
+                },
+                factory = MessageViewViewModel.factory()
             ).get<MessageViewViewModel>().also {
-                viewModel = it
                 observeViewModel(it)
             }
         }
+
+        findViewTreeLifecycleOwner()?.lifecycle?.run {
+            // Remove any previously attached observer
+            removeObserver(lifecycleObserver)
+            // Add the observer
+            addObserver(lifecycleObserver)
+        } ?: UALog.w("MessageView must be hosted in a view that has a LifecycleOwner!")
     }
 
     private fun observeViewModel(viewModel: MessageViewViewModel) {
@@ -165,6 +159,18 @@ public class MessageView @JvmOverloads constructor(
             }
             .flowOn(Dispatchers.Main)
             .launchIn(scope)
+    }
+
+    private val lifecycleObserver = object : DefaultLifecycleObserver {
+        override fun onResume(owner: LifecycleOwner) {
+            views.webView.onResume()
+        }
+
+        override fun onPause(owner: LifecycleOwner) {
+            views.webView.onPause()
+            // Also pause javascript timers
+            views.webView.pauseTimers()
+        }
     }
 
     private data class Views(

@@ -11,14 +11,14 @@ import com.urbanairship.UALog
 import com.urbanairship.messagecenter.ui.widget.EditableRecyclerView.Payload
 
 /** Base class for a `RecyclerView` that supports editing. */
-public abstract class EditableRecyclerView<T, VH : EditableViewHolder<T, *>> @JvmOverloads constructor(
+internal abstract class EditableRecyclerView<T, VH : EditableViewHolder<T, *>> @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : RecyclerView(context, attrs, defStyleAttr) {
 
     /** Listener interface for `EditableRecyclerView`. */
-    public interface Listener<T> {
+    internal interface Listener<T> {
         /** Called when the edit mode is changed. */
         public fun onEditModeChanged(isEditing: Boolean)
         /** Called when the selection is changed. */
@@ -28,10 +28,10 @@ public abstract class EditableRecyclerView<T, VH : EditableViewHolder<T, *>> @Jv
     }
 
     /** Listener for `EditableRecyclerView` events. */
-    public var listener: Listener<T>? = null
+    internal var listener: Listener<T>? = null
 
     /** Flag that controls whether the list is in editing mode. */
-    public var isEditing: Boolean = false
+    internal var isEditing: Boolean = false
         set(value) {
             field = value
             listener?.onEditModeChanged(value)
@@ -90,7 +90,7 @@ public abstract class EditableRecyclerView<T, VH : EditableViewHolder<T, *>> @Jv
      *
      * Used to update list items without triggering a full rebind.
      */
-    public sealed class Payload {
+    internal sealed class Payload {
         /** Update editing mode. */
         public data class UpdateEditing(val isEditing: Boolean) : Payload()
         /** Update selected state. */
@@ -106,7 +106,7 @@ public abstract class EditableRecyclerView<T, VH : EditableViewHolder<T, *>> @Jv
  * @param T The item type.
  * @param VH The view holder type, which must extend from [EditableViewHolder].
  */
-public abstract class EditableListAdapter<T, VH : EditableViewHolder<T, *>>(
+internal abstract class EditableListAdapter<T, VH : EditableViewHolder<T, *>>(
     protected val listener: Listener<T>,
     protected val isEditing: () -> Boolean,
     diffCallback: DiffUtil.ItemCallback<T>
@@ -249,16 +249,16 @@ public abstract class EditableListAdapter<T, VH : EditableViewHolder<T, *>>(
  * @param T The item type.
  * @param V The view type. Must extend from an Android `View`.
  */
-public abstract class EditableViewHolder<T, V: View>(itemView: V) : RecyclerView.ViewHolder(itemView) {
+internal abstract class EditableViewHolder<T, V: View>(itemView: V) : RecyclerView.ViewHolder(itemView) {
 
     /** The editable item view. */
-    protected val editableItemView: V = itemView
+    internal val editableItemView: V = itemView
 
     /** Binds the [item] to the view. */
-    public abstract fun bind(item: T)
+    internal abstract fun bind(item: T)
 
     /** Binds the [item] to the view with the given [payload]. */
-    public fun bind(item: T, payload: Payload) {
+    internal fun bind(item: T, payload: Payload) {
         when (payload) {
             is Payload.UpdateEditing -> updateEditing(payload.isEditing)
             is Payload.UpdateSelected -> updateSelected(payload.isSelected)

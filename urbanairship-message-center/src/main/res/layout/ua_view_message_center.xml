@@ -11,6 +11,7 @@
         android:layout_height="match_parent">
 
         <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/message_list_appbar_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -39,6 +40,7 @@
         android:layout_weight="1">
 
         <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/message_appbar_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -59,18 +61,5 @@
             app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
-<!--   <include-->
-<!--        android:id="@+id/message_list_pane"-->
-<!--        layout="@layout/include_message_center_list_pane"-->
-<!--        android:layout_width="360dp"-->
-<!--        android:layout_height="match_parent"/>-->
-
-<!--    <include-->
-<!--        android:id="@+id/message_view_pane"-->
-<!--        layout="@layout/include_message_center_message_pane"-->
-<!--        android:layout_width="420dp"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:layout_weight="1" />-->
 
 </androidx.slidingpanelayout.widget.SlidingPaneLayout>

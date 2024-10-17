@@ -85,13 +85,14 @@ public class MessageCenterView @JvmOverloads constructor(
     }
 
     private fun openMessagePane(message: Message) {
+        UALog.v("openMessagePane! ${message.messageId}")
         messageView.messageId = message.messageId
         messageToolbar.title = message.title
 
         if (slidingPaneLayout.isSlideable) {
             messageToolbar.navigationIcon = context.getDrawable(R.drawable.ua_ic_message_center_arrow_back)
             messageToolbar.setNavigationOnClickListener {
-                closeMessageView()
+                closeMessagePane()
             }
         } else {
             messageToolbar.navigationIcon = null
@@ -101,7 +102,7 @@ public class MessageCenterView @JvmOverloads constructor(
         slidingPaneLayout.open()
     }
 
-    private fun closeMessageView() {
+    private fun closeMessagePane() {
         slidingPaneLayout.closePane()
     }
 
@@ -116,7 +117,7 @@ public class MessageCenterView @JvmOverloads constructor(
 
         override fun handleOnBackPressed() {
             // Close the message view pane on back press
-           closeMessageView()
+           closeMessagePane()
         }
 
         override fun onPanelOpened(panel: View) {
