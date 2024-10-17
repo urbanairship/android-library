@@ -16,7 +16,6 @@ import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.GestureType
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.Margin
-import com.urbanairship.android.layout.property.MarkdownAppearance
 import com.urbanairship.android.layout.property.MarkdownOptions
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
@@ -30,12 +29,13 @@ import com.urbanairship.android.layout.property.ScoreStyle
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
+import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.property.TextInputTextAppearance
-import com.urbanairship.android.layout.property.TextStyle
 import com.urbanairship.android.layout.property.ToggleStyle
 import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.property.ViewType.BUTTON_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.CHECKBOX
 import com.urbanairship.android.layout.property.ViewType.CHECKBOX_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.CONTAINER
@@ -91,6 +91,7 @@ public sealed class ViewInfo : View {
                 LABEL -> LabelInfo(json)
                 LABEL_BUTTON -> LabelButtonInfo(json)
                 IMAGE_BUTTON -> ImageButtonInfo(json)
+                BUTTON_LAYOUT -> ButtonLayoutInfo(json)
                 PAGER_CONTROLLER -> PagerControllerInfo(json)
                 PAGER -> PagerInfo(json)
                 PAGER_INDICATOR -> PagerIndicatorInfo(json)
@@ -277,6 +278,7 @@ internal interface Button : View, Accessible, Identifiable {
     val clickBehaviors: List<ButtonClickBehaviorType>
     val actions: Map<String, JsonValue>?
     val reportingMetadata: JsonValue?
+    val tapEffect: TapEffect
 }
 
 internal open class ButtonInfo(
@@ -291,6 +293,16 @@ internal open class ButtonInfo(
 
     override val reportingMetadata: JsonValue? =
         json.optionalField<JsonValue>("reporting_metadata")
+
+    override val tapEffect: TapEffect =
+        json.optionalField<JsonMap>("tap_effect").let { TapEffect.fromJson(it) }
+}
+
+/** ButtonLayout is a bit special because it's both a ViewGroup and a Button. */
+internal class ButtonLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), Button by ButtonInfo(json) {
+    val view = viewInfoFromJson(json.requireField("view"))
+
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }
 
 internal interface Checkable : View, Accessible {

@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.model.CheckboxModel
 import com.urbanairship.android.layout.property.CheckboxStyle
@@ -22,7 +23,7 @@ internal class CheckboxView(
                 this@CheckboxView.isEnabled = enabled
             }
             override fun setVisibility(visible: Boolean) {
-                this@CheckboxView.isGone = visible
+                this@CheckboxView.isVisible = visible
             }
         }
     }

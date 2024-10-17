@@ -157,7 +157,7 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
     protected val modelScope = environment.modelScope
 
     private val viewJob = SupervisorJob()
-    protected val viewScope = CoroutineScope(Dispatchers.Main.immediate + viewJob)
+    internal val viewScope = CoroutineScope(Dispatchers.Main.immediate + viewJob)
 
     protected val layoutState = environment.layoutState
 
@@ -182,9 +182,9 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
         val match = matcher.apply(state.state.toJsonMap())
 
         return if (match) {
-                visibility.default
-            } else {
                 !visibility.default
+            } else {
+                visibility.default
             }
     }
 

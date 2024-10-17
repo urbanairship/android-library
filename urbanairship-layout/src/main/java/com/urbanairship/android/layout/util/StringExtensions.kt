@@ -55,24 +55,24 @@ private const val newlineEscaped = "\\n"
 private const val newlineTag = "<br>"
 
 private fun basicMarkdownToHtml(markdown: String): String =
-   markdown.also { println(it) }
+   markdown
         // Encode any HTML characters in the original input so that we don't lose
         // symbols like < or & after converting to HTML and rendering the text.
         // This must be done first, before any other formatting is applied.
-        .htmlEncode().also { println(it) }
+        .htmlEncode()
         // Replace newlines with <br>
-       .replace(newline, newlineTag).also { println(it) }
-       .replace(newlineEscaped, newlineTag).also { println(it) }
+       .replace(newline, newlineTag)
+       .replace(newlineEscaped, newlineTag)
         // Replace [link](url) with <a href="url">link</a>
-        .replace(linkRegex, linkTag).also { println(it) }
+        .replace(linkRegex, linkTag)
         // Replace ***bold + italic*** and ___bold + italic___ with <b><i>bold + italic</i></b>
         .replace(boldAndItalicRegexStar, boldAndItalicTag)
-        .replace(boldAndItalicRegexBar, boldAndItalicTag).also { println(it) }
+        .replace(boldAndItalicRegexBar, boldAndItalicTag)
         // Replace **bold** and __bold__ with <b>bold</b>
         .replace(boldRegexStar, boldTag)
-        .replace(boldRegexBar, boldTag).also { println(it) }
+        .replace(boldRegexBar, boldTag)
         // Replace *italic* and _italic_ with <i>italic</i>
         .replace(italicRegexStar, italicTag)
-        .replace(italicRegexBar, italicTag).also { println(it) }
+        .replace(italicRegexBar, italicTag)
         // Replace ~~strikethrough~~ with <s>strikethrough</s>
-        .replace(strikethroughRegex, strikethroughTag).also { println(it) }
+        .replace(strikethroughRegex, strikethroughTag)

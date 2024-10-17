@@ -17,6 +17,7 @@ import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
 import android.widget.ProgressBar
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.UrlAllowList
@@ -78,7 +79,7 @@ internal class WebViewView(
 
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
-                this@WebViewView.isGone = visible
+                this@WebViewView.isVisible = visible
             }
 
             override fun setEnabled(enabled: Boolean) {

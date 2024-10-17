@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import android.view.View
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.EmptyModel
 import com.urbanairship.android.layout.util.LayoutUtils
@@ -25,7 +26,7 @@ internal class EmptyView(
 
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
-                this@EmptyView.isGone = visible
+                this@EmptyView.isVisible = visible
             }
 
             override fun setEnabled(enabled: Boolean) {

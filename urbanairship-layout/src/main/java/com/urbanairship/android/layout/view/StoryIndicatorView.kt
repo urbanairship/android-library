@@ -8,6 +8,7 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator.INDICATOR_DIRECTION_START_TO_END
 import com.urbanairship.android.layout.model.StoryIndicatorModel
@@ -65,7 +66,7 @@ internal class StoryIndicatorView(
             }
 
             override fun setVisibility(visible: Boolean) {
-                this@StoryIndicatorView.isGone = visible
+                this@StoryIndicatorView.isVisible = visible
             }
 
             override fun setEnabled(enabled: Boolean) {

@@ -16,6 +16,7 @@ import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
+import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasCancel
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
@@ -33,16 +34,17 @@ import kotlinx.coroutines.launch
 internal abstract class ButtonModel<T>(
     viewType: ViewType,
     val identifier: String,
-    val actions: Map<String, JsonValue>? = null,
+    val actions: Map<String, JsonValue>?,
     private val clickBehaviors: List<ButtonClickBehaviorType>,
-    val contentDescription: String? = null,
-    val localizedContentDescription: LocalizedContentDescription? = null,
-    backgroundColor: Color? = null,
-    border: Border? = null,
-    visibility: VisibilityInfo? = null,
-    eventHandlers: List<EventHandler>? = null,
-    enableBehaviors: List<EnableBehaviorType>? = null,
-    private val reportingMetadata: JsonValue? = null,
+    val tapEffect: TapEffect,
+    val contentDescription: String?,
+    val localizedContentDescription: LocalizedContentDescription?,
+    backgroundColor: Color?,
+    border: Border?,
+    visibility: VisibilityInfo?,
+    eventHandlers: List<EventHandler>?,
+    enableBehaviors: List<EnableBehaviorType>?,
+    private val reportingMetadata: JsonValue?,
     private val formState: SharedState<State.Form>?,
     private val pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,

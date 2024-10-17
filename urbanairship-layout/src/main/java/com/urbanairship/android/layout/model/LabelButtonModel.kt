@@ -13,6 +13,7 @@ import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
+import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.view.LabelButtonView
 import com.urbanairship.json.JsonValue
@@ -22,6 +23,7 @@ internal class LabelButtonModel(
     val label: LabelModel,
     actions: Map<String, JsonValue>? = null,
     clickBehaviors: List<ButtonClickBehaviorType>,
+    tapEffect: TapEffect,
     contentDescription: String? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
@@ -38,7 +40,9 @@ internal class LabelButtonModel(
     identifier = identifier,
     actions = actions,
     clickBehaviors = clickBehaviors,
+    tapEffect = tapEffect,
     contentDescription = contentDescription,
+    localizedContentDescription = null,
     backgroundColor = backgroundColor,
     border = border,
     visibility = visibility,
@@ -62,6 +66,7 @@ internal class LabelButtonModel(
         label = label,
         actions = info.actions,
         clickBehaviors = info.clickBehaviors,
+        tapEffect = info.tapEffect,
         contentDescription = info.contentDescription,
         backgroundColor = info.backgroundColor,
         border = info.border,

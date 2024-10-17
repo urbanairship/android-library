@@ -9,12 +9,16 @@ import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.RippleDrawable;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.RoundRectShape;
 import android.text.Html;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
@@ -25,6 +29,7 @@ import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.Fonts;
 import com.urbanairship.android.layout.R;
 import com.urbanairship.android.layout.model.BaseModel;
+import com.urbanairship.android.layout.model.ButtonLayoutModel;
 import com.urbanairship.android.layout.model.LabelButtonModel;
 import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.model.TextInputModel;
@@ -34,11 +39,13 @@ import com.urbanairship.android.layout.property.FormInputType;
 import com.urbanairship.android.layout.property.MarkdownOptions;
 import com.urbanairship.android.layout.property.MarkdownOptionsKt;
 import com.urbanairship.android.layout.property.SwitchStyle;
+import com.urbanairship.android.layout.property.TapEffect;
 import com.urbanairship.android.layout.property.TextAppearance;
 import com.urbanairship.android.layout.property.TextStyle;
 import com.urbanairship.android.layout.widget.Clippable;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.Arrays;
 import java.util.List;
 
 import androidx.annotation.ColorInt;
@@ -135,7 +142,34 @@ public final class LayoutUtils {
         view.setBackground(background);
     }
 
-    public static void applyButtonModel(@NonNull MaterialButton button, @NonNull LabelButtonModel model) {
+    public static void applyButtonLayoutModel(@NonNull FrameLayout button, @NonNull ButtonLayoutModel model) {
+        LayoutUtils.applyBorderAndBackground(button, model);
+
+        TapEffect tapEffect = model.getTapEffect();
+        if (tapEffect instanceof TapEffect.Default) {
+            Border border = model.getBorder();
+            Integer borderRadius = border != null ? border.getRadius() : null;
+            applyRippleEffect(button, borderRadius);
+        } else if (tapEffect instanceof TapEffect.None) {
+            button.setForeground(null);
+        }
+    }
+
+    private static void applyRippleEffect(@NonNull FrameLayout frameLayout, @Nullable Integer borderRadius) {
+        Context context = frameLayout.getContext();
+        float radius = ResourceUtils.dpToPx(context, borderRadius != null ? borderRadius : 0);
+        float[] outerRadii = new float[8];
+        Arrays.fill(outerRadii, radius);
+        ShapeDrawable mask = new ShapeDrawable(new RoundRectShape(outerRadii, null, null));
+        ColorStateList colors = MaterialColors.getColorStateList(context,
+                com.google.android.material.R.attr.colorControlHighlight,
+                ColorStateList.valueOf(Color.TRANSPARENT)
+        );
+
+        frameLayout.setForeground(new RippleDrawable(colors, null, mask));
+    }
+
+    public static void applyLabelButtonModel(@NonNull MaterialButton button, @NonNull LabelButtonModel model) {
         applyLabelModel(button, model.getLabel());
 
         Context context = button.getContext();
@@ -145,7 +179,9 @@ public final class LayoutUtils {
         int backgroundColor = model.getBackgroundColor() == null
                 ? Color.TRANSPARENT
                 : model.getBackgroundColor().resolve(button.getContext());
-        int pressedColor = ColorUtils.setAlphaComponent(textColor, Math.round(Color.alpha(textColor) * PRESSED_ALPHA_PERCENT));
+        int pressedColor = model.getTapEffect() instanceof TapEffect.None
+                ? Color.TRANSPARENT
+                : ColorUtils.setAlphaComponent(textColor, Math.round(Color.alpha(textColor) * PRESSED_ALPHA_PERCENT));
         int disabledColor = generateDisabledColor(backgroundColor);
         int strokeWidth = model.getBorder() == null || model.getBorder().getStrokeWidth() == null
                 ? DEFAULT_STROKE_WIDTH_DPS

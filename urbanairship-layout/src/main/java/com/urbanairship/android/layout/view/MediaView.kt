@@ -18,6 +18,7 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.core.view.doOnAttach
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -126,7 +127,7 @@ internal class MediaView(
             }
 
             override fun setVisibility(visible: Boolean) {
-                this@MediaView.isGone = visible
+                this@MediaView.isVisible = visible
             }
             override fun setEnabled(enabled: Boolean) {
                 this@MediaView.isEnabled = enabled

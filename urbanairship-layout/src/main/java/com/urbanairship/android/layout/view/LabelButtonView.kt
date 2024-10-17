@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import android.text.TextUtils
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.LabelButtonModel
 import com.urbanairship.android.layout.util.LayoutUtils
@@ -28,7 +29,7 @@ internal class LabelButtonView(
         insetTop = 0
         insetBottom = 0
 
-        LayoutUtils.applyButtonModel(this, model)
+        LayoutUtils.applyLabelButtonModel(this, model)
 
         model.contentDescription.ifNotEmpty { contentDescription = it }
 
@@ -38,7 +39,7 @@ internal class LabelButtonView(
             }
 
             override fun setVisibility(visible: Boolean) {
-                this@LabelButtonView.isGone = visible
+                this@LabelButtonView.isVisible = visible
             }
 
             override fun dismissSoftKeyboard() =

@@ -14,6 +14,7 @@ import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.util.Patterns
 import android.view.MotionEvent
+import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MASK
 import android.view.MotionEvent.ACTION_UP
 import android.view.View
@@ -27,10 +28,8 @@ import androidx.core.text.toSpannable
 import androidx.core.view.descendants
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
-import com.urbanairship.android.layout.view.MediaView
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.android.layout.view.ScoreView
-import com.urbanairship.android.layout.view.WebViewView
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.CheckableViewAdapter
 import kotlinx.coroutines.FlowPreview
@@ -134,6 +133,9 @@ internal fun PagerView.pagerGestures(): Flow<PagerGestureEvent> =
 internal val MotionEvent.isActionUp: Boolean
     get() = action and ACTION_MASK == ACTION_UP
 
+internal val MotionEvent.isActionDown: Boolean
+    get() = action and ACTION_MASK == ACTION_DOWN
+
 /** Returns view bounds in the view's coordinate space. */
 internal val View.localBounds: RectF
     get() = RectF(0f, 0f, width.toFloat(), height.toFloat())
@@ -141,19 +143,22 @@ internal val View.localBounds: RectF
 internal val View.isLayoutRtl: Boolean
     get() = TextUtilsCompat.getLayoutDirectionFromLocale(UAirship.shared().locale) == View.LAYOUT_DIRECTION_RTL
 
-internal fun MotionEvent.isWithinClickableDescendant(view: View): Boolean {
-    fun isTouchWithin(v: View): Boolean {
+
+internal fun MotionEvent.findTargetDescendant(
+    view: View,
+    filter: ((View) -> Boolean)
+): View? {
+    fun MotionEvent.isTouchWithin(v: View): Boolean {
         val rect = Rect().apply { v.getGlobalVisibleRect(this) }
         return rect.contains(rawX.toInt(), rawY.toInt())
     }
 
     return if (view is ViewGroup) {
-        view.descendants
-            .filter { it.isClickable }
-            .filter { it is MediaView || it is WebViewView }
-            .any(::isTouchWithin)
+        view.descendants.filter { filter.invoke(it) }
+            .sortedByDescending { it.z }
+            .firstOrNull(::isTouchWithin)
     } else {
-        isTouchWithin(view)
+        if (filter.invoke(view) && isTouchWithin(view)) view else null
     }
 }
 

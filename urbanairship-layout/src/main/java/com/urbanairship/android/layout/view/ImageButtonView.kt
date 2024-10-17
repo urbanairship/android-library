@@ -7,12 +7,14 @@ import androidx.annotation.ColorInt
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.ImageButtonModel
 import com.urbanairship.android.layout.property.Image
+import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.ColorStateListBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -32,11 +34,15 @@ internal class ImageButtonView(
     private var visibilityChangeListener: BaseView.VisibilityChangeListener? = null
 
     init {
-        background = ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple)
         isClickable = true
         isFocusable = true
         setPadding(0, 0, 0, 0)
         scaleType = ScaleType.FIT_CENTER
+
+        background = when (model.tapEffect) {
+            is TapEffect.Default -> ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple)
+            is TapEffect.None -> null
+        }
 
         LayoutUtils.applyBorderAndBackground(this, model)
 
@@ -112,7 +118,7 @@ internal class ImageButtonView(
             }
 
             override fun setVisibility(visible: Boolean) {
-                this@ImageButtonView.isGone = visible
+                this@ImageButtonView.isVisible = visible
             }
 
             override fun dismissSoftKeyboard() =

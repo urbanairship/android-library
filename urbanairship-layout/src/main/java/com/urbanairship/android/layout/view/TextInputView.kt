@@ -10,6 +10,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.TextInputModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ifNotEmpty
@@ -54,7 +55,7 @@ internal class TextInputView(
             }
 
             override fun setVisibility(visible: Boolean) {
-                this@TextInputView.isGone = visible
+                this@TextInputView.isVisible = visible
             }
 
             override fun setEnabled(enabled: Boolean) {

@@ -8,6 +8,7 @@ import android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.BaseModel
@@ -38,7 +39,7 @@ internal class ScrollLayoutView(
 
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
-                this@ScrollLayoutView.isGone = visible
+                this@ScrollLayoutView.isVisible = visible
             }
             override fun setEnabled(enabled: Boolean) {
                 this@ScrollLayoutView.isEnabled = enabled

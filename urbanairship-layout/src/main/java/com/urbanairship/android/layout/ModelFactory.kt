@@ -5,6 +5,7 @@ import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.info.ButtonLayoutInfo
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.android.layout.info.CheckboxInfo
 import com.urbanairship.android.layout.info.ContainerLayoutInfo
@@ -36,6 +37,7 @@ import com.urbanairship.android.layout.info.ViewGroupInfo
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.info.WebViewInfo
 import com.urbanairship.android.layout.model.AnyModel
+import com.urbanairship.android.layout.model.ButtonLayoutModel
 import com.urbanairship.android.layout.model.CheckboxController
 import com.urbanairship.android.layout.model.CheckboxModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel
@@ -364,6 +366,14 @@ internal class ThomasModelFactory : ModelFactory {
                 info = info,
                 view = children.first().first,
                 env = environment,
+                props = properties
+            )
+            is ButtonLayoutInfo -> ButtonLayoutModel(
+                info = info,
+                formState = environment.layoutState.form,
+                pagerState = environment.layoutState.pager,
+                env = environment,
+                view = children.first().first,
                 props = properties
             )
             is FormControllerInfo -> FormController(

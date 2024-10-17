@@ -10,6 +10,7 @@ import android.widget.Checkable
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.PagerIndicatorModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -44,7 +45,7 @@ internal class PagerIndicatorView(
             }
 
             override fun setVisibility(visible: Boolean) {
-                this@PagerIndicatorView.isGone = visible
+                this@PagerIndicatorView.isVisible = visible
             }
 
             override fun setEnabled(enabled: Boolean) {

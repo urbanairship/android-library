@@ -9,6 +9,7 @@ import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.model.RadioInputModel
 import com.urbanairship.android.layout.property.CheckboxStyle
@@ -29,7 +30,7 @@ internal class RadioInputView(
                 this@RadioInputView.isEnabled = enabled
             }
             override fun setVisibility(visible: Boolean) {
-                this@RadioInputView.isGone = visible
+                this@RadioInputView.isVisible = visible
             }
         }
 

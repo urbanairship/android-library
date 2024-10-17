@@ -9,6 +9,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.ScoreModel
 import com.urbanairship.android.layout.property.ScoreStyle.NumberRange
 import com.urbanairship.android.layout.property.ScoreType
@@ -62,7 +63,7 @@ internal class ScoreView(
             }
 
             override fun setVisibility(visible: Boolean) {
-                this@ScoreView.isGone = visible
+                this@ScoreView.isVisible = visible
             }
         }
     }

@@ -14,6 +14,7 @@ import androidx.core.view.OnApplyWindowInsetsListener as OnApplyWindowInsetsList
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel
@@ -47,7 +48,7 @@ internal class ContainerLayoutView(
 
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
-                this@ContainerLayoutView.isGone = visible
+                this@ContainerLayoutView.isVisible = visible
             }
 
             override fun setEnabled(enabled: Boolean) {

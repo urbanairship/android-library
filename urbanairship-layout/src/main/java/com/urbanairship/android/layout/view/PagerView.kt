@@ -11,6 +11,7 @@ import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.gestures.PagerGestureDetector
@@ -18,7 +19,7 @@ import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.util.LayoutUtils
-import com.urbanairship.android.layout.util.isWithinClickableDescendant
+import com.urbanairship.android.layout.util.findTargetDescendant
 import com.urbanairship.android.layout.widget.PagerRecyclerView
 import com.urbanairship.util.UAStringUtil
 
@@ -96,7 +97,7 @@ internal class PagerView(
         }
 
         override fun setVisibility(visible: Boolean) {
-            this@PagerView.isGone = visible
+            this@PagerView.isVisible = visible
         }
 
         override fun setEnabled(enabled: Boolean) {
@@ -123,7 +124,7 @@ internal class PagerView(
         // If a gesture detector is attached, check if the event should be intercepted.
         // We only want to intercept events that are not within a clickable descendant.
         gestureDetector?.let { detector ->
-            if (!event.isWithinClickableDescendant(view)) {
+            if (!event.isWithinClickableDescendantOf(view)) {
                 detector.onTouchEvent(event)
             }
         }
@@ -131,4 +132,9 @@ internal class PagerView(
         // We're just snooping, so always let the event pass through.
         return super.onInterceptTouchEvent(event)
     }
+
+    private fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean =
+        findTargetDescendant(view) {
+            it.isClickable && (it is MediaView || it is WebViewView)
+        } != null
 }
