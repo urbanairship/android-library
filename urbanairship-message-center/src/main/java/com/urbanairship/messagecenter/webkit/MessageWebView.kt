@@ -7,6 +7,8 @@ import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.webkit.AirshipWebView
 
 /** A web view that sets settings appropriate for Airship message center content. */
+// TODO(m3-message-center): Delete me!
+@Deprecated("Replaced with com.urbanairship.messagecenter.ui.widget.MessageWebView")
 public open class MessageWebView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,

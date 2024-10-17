@@ -51,6 +51,8 @@
     <string name="ua_delete">Delete</string>
     <string name="ua_mc_no_longer_available">The selected message is no longer available.</string>
     <string name="ua_content_error">Content Error</string>
+    <!-- TODO: translate! -->
+    <string name="ua_edit">Edit</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">

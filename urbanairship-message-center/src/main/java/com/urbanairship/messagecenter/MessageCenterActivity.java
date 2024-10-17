@@ -13,10 +13,14 @@ import com.urbanairship.activity.ThemedActivity;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import kotlin.Deprecated;
 
 /**
  * Displays the Airship Message Center using {@link MessageCenterFragment}.
+ *
+ * @deprecated Use {@link com.urbanairship.messagecenter.ui.MessageCenterActivity} instead.
  */
+@Deprecated(message = "Replace with ui.MessageCenterActivity")
 public class MessageCenterActivity extends ThemedActivity {
 
     @Nullable

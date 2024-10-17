@@ -10,12 +10,13 @@ import android.view.ViewGroup;
 import com.urbanairship.PendingResult;
 import com.urbanairship.messagecenter.Message;
 import com.urbanairship.messagecenter.MessageCenter;
-import com.urbanairship.messagecenter.MessageFragment;
+import com.urbanairship.messagecenter.ui.view.MessageView;
 import com.urbanairship.sample.R;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.Navigation;
@@ -24,8 +25,9 @@ import androidx.navigation.ui.NavigationUI;
 /**
  * MessageFragment that supports navigation and maintains its own toolbar.
  */
-public class InboxMessageFragment extends MessageFragment {
+public class InboxMessageFragment extends Fragment {
 
+    private static final String ARG_MESSAGE_ID = "messageReporting";
 
     @NonNull
     @Override
@@ -40,7 +42,17 @@ public class InboxMessageFragment extends MessageFragment {
 
         NavController navController =  Navigation.findNavController(view);
 
-        PendingResult<Message> pendingResult = MessageCenter.shared().getInbox().getMessagePendingResult(getMessageId());
+        Bundle args = getArguments();
+        if (args == null || !args.containsKey(ARG_MESSAGE_ID)) {
+            throw new IllegalStateException("Argument 'ARG_MESSAGE_ID' is required to display a message!");
+        }
+
+        String messageId = args.getString(ARG_MESSAGE_ID);
+
+        MessageView messageView = view.findViewById(R.id.message_view);
+        messageView.setMessageId(messageId);
+
+        PendingResult<Message> pendingResult = MessageCenter.shared().getInbox().getMessagePendingResult(messageId);
 
         pendingResult.addResultCallback(message -> {
             NavDestination navDestination = navController.getCurrentDestination();
@@ -55,5 +67,4 @@ public class InboxMessageFragment extends MessageFragment {
 
         NavigationUI.setupWithNavController(toolbar, Navigation.findNavController(view));
     }
-
 }

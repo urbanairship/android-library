@@ -3,10 +3,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:fitsSystemWindows="true">
+    android:fitsSystemWindows="false">
 
-    <include layout="@layout/include_appbar" />
-
-    <include layout="@layout/ua_fragment_mc" />
+    <com.urbanairship.messagecenter.ui.view.MessageCenterView
+        android:id="@+id/message_center"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </LinearLayout>

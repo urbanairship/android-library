@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/message_item_thumbnail_size"
+    android:layout_height="match_parent"
+    android:layout_marginEnd="16dp"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <FrameLayout
+        android:id="@+id/unread_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="4dp"
+        android:paddingStart="4dp"
+        android:visibility="visible"
+        android:clipToPadding="false"
+        android:clipChildren="false">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/thumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            tools:src="@drawable/message_item_thumbnail_placeholder"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.MediumComponent" />
+
+        <ImageView
+            android:id="@+id/unread_indicator"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_gravity="top|start"
+            android:translationX="-4dp"
+            android:translationY="-4dp"
+            android:visibility="gone"
+            tools:visibility="visible"
+            android:src="@drawable/message_item_unread_indicator" />
+    </FrameLayout>
+
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/checkable"
+        style="@style/UrbanAirship.MessageCenter.Item.CheckBox"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:translationX="2dp"
+        android:translationY="2dp"
+        android:duplicateParentState="true"
+        android:clickable="false"
+        android:focusable="false"
+        android:layout_gravity="center"
+        android:alpha="0"
+        tools:checked="true"/>
+</FrameLayout>

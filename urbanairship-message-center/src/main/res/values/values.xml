@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Message List Item -->
+    <dimen name="message_list_item_padding_top">6dp</dimen>
+    <dimen name="message_list_item_padding_bottom">2dp</dimen>
+    <dimen name="message_list_item_padding_start">0dp</dimen>
+    <dimen name="message_list_item_padding_end">0dp</dimen>
+
+    <!-- Message List Item edit mode animations -->
+    <integer name="flip_animation_duration_full">300</integer>
+    <integer name="flip_animation_duration_half">150</integer>
+
+    <!-- Message List Item dividers -->
+    <dimen name="divider_inset_start">84dp</dimen>
+    <dimen name="divider_inset_end">16dp</dimen>
+
+    <!-- Message Item Checkbox (Shown in the thumbnail in the message list) -->
+    <dimen name="message_item_thumbnail_size">56dp</dimen>
+    <dimen name="message_item_checkable_no_thumbnail_size">24dp</dimen>
+    <dimen name="message_item_checkable_icon_size">36dp</dimen>
+
+    <string name="message_item_sent_date_format">@null</string>
+</resources>

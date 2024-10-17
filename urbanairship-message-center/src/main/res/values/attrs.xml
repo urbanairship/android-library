@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <!-- Theme attributes -->
     <declare-styleable name="Theme">
         <!-- Attribute to allow style override for the Message Center -->
@@ -30,8 +31,17 @@
         <!-- Empty Message Center message text -->
         <attr name="messageCenterEmptyMessageText" format="string" />
 
+        <!-- If the Message Center list should display dividers between messages -->
+        <attr name="messageCenterDividersEnabled" format="boolean" />
+
         <!-- Message Center list divider color -->
         <attr name="messageCenterDividerColor" format="color" />
+
+        <!-- Message Center list divider inset start -->
+        <attr name="messageCenterDividerInsetStart" format="dimension" />
+
+        <!-- Message Center list divider inset end -->
+        <attr name="messageCenterDividerInsetEnd" format="dimension" />
 
         <!-- If the Message Center should display message icons or not -->
         <attr name="messageCenterItemIconEnabled" format="boolean" />
@@ -40,5 +50,4 @@
         <attr name="messageCenterItemIconPlaceholder" format="reference" />
 
     </declare-styleable>
-
 </resources>

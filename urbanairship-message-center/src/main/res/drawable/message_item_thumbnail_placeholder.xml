@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:width="@dimen/message_item_thumbnail_size"
+        android:height="@dimen/message_item_thumbnail_size">
+
+        <shape android:shape="rectangle" android:tint="?attr/colorButtonNormal">
+            <solid android:color="?attr/colorAccent" />
+        </shape>
+    </item>
+
+    <item android:drawable="@drawable/ic_thumbnail_placeholder_24"
+        android:width="36dp"
+        android:height="36dp"
+        android:gravity="center"/>
+
+</layer-list>

@@ -14,13 +14,13 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.urbanairship.PendingResult;
 import com.urbanairship.Predicate;
+import com.urbanairship.messagecenter.ui.MessageActivity;
+import com.urbanairship.messagecenter.ui.MessageFragment;
 import com.urbanairship.util.ViewUtils;
 
 import java.util.List;
@@ -30,12 +30,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.fragment.app.Fragment;
+import kotlin.Deprecated;
 
 /**
- * The Airship Message Center. The message list will be displayed using the {@link MessageListFragment},
+ * The Airship Message Center. The message list will be displayed using the {@link com.urbanairship.messagecenter.ui.MessageListFragment},
  * and messages will be displayed either in a split view using {@link MessageFragment} or by starting
  * an activity with the action {@link MessageCenter#VIEW_MESSAGE_INTENT_ACTION}.
+ *
+ * @deprecated Use {@link com.urbanairship.messagecenter.ui.MessageCenterActivity} instead.
  */
+@Deprecated(message = "Replaced with ui.MessageCenterActivity")
 public class MessageCenterFragment extends Fragment {
 
     // State
@@ -47,7 +51,7 @@ public class MessageCenterFragment extends Fragment {
     @Nullable
     private Predicate<Message> predicate;
 
-    private MessageListFragment messageListFragment;
+    private com.urbanairship.messagecenter.ui.MessageListFragment messageListFragment;
     private boolean isTwoPane;
     private boolean isViewConfigured;
 
@@ -156,16 +160,6 @@ public class MessageCenterFragment extends Fragment {
         configureView(view);
 
         messageListFragment.setPredicate(predicate);
-
-        // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
-        if (savedInstanceState != null && savedInstanceState.containsKey(STATE_ABS_LIST_VIEW)) {
-            messageListFragment.getAbsListViewAsync(new MessageListFragment.OnListViewReadyCallback() {
-                @Override
-                public void onListViewReady(@NonNull AbsListView absListView) {
-                    absListView.onRestoreInstanceState(savedInstanceState.getParcelable(STATE_ABS_LIST_VIEW));
-                }
-            });
-        }
     }
 
     /**
@@ -187,7 +181,7 @@ public class MessageCenterFragment extends Fragment {
             throw new RuntimeException("Content must have a place holder view whose id attribute is 'R.id.message_list_container'");
         }
 
-        messageListFragment = new MessageListFragment();
+        messageListFragment = new com.urbanairship.messagecenter.ui.MessageListFragment();
         getChildFragmentManager()
                 .beginTransaction()
                 .replace(R.id.message_list_container, messageListFragment, "messageList")
@@ -226,16 +220,16 @@ public class MessageCenterFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
-        savedInstanceState.putString(STATE_CURRENT_MESSAGE_ID, currentMessageId);
-        savedInstanceState.putInt(STATE_CURRENT_MESSAGE_POSITION, currentMessagePosition);
-        savedInstanceState.putString(STATE_PENDING_MESSAGE_ID, pendingMessageId);
-
-        // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
-        if (messageListFragment != null && messageListFragment.getAbsListView() != null) {
-            savedInstanceState.putParcelable(STATE_ABS_LIST_VIEW, messageListFragment.getAbsListView().onSaveInstanceState());
-        }
-
-        super.onSaveInstanceState(savedInstanceState);
+//        savedInstanceState.putString(STATE_CURRENT_MESSAGE_ID, currentMessageId);
+//        savedInstanceState.putInt(STATE_CURRENT_MESSAGE_POSITION, currentMessagePosition);
+//        savedInstanceState.putString(STATE_PENDING_MESSAGE_ID, pendingMessageId);
+//
+//        // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
+//        if (messageListFragment != null && messageListFragment.getAbsListView() != null) {
+//            savedInstanceState.putParcelable(STATE_ABS_LIST_VIEW, messageListFragment.getAbsListView().onSaveInstanceState());
+//        }
+//
+//        super.onSaveInstanceState(savedInstanceState);
     }
 
     /**
@@ -243,27 +237,27 @@ public class MessageCenterFragment extends Fragment {
      *
      * @param messageListFragment The message list fragment.
      */
-    protected void configureMessageListFragment(@NonNull final MessageListFragment messageListFragment) {
-        messageListFragment.getAbsListViewAsync(new MessageListFragment.OnListViewReadyCallback() {
-            @Override
-            public void onListViewReady(@NonNull AbsListView absListView) {
-                absListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        Message message = messageListFragment.getMessage(position);
-                        if (message != null) {
-                            showMessage(message.getMessageId());
-                        }
-                    }
-                });
-
-                absListView.setMultiChoiceModeListener(new DefaultMultiChoiceModeListener(messageListFragment, actionModeListener));
-                absListView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
-
-                // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
-                absListView.setSaveEnabled(false);
-            }
-        });
+    protected void configureMessageListFragment(@NonNull final com.urbanairship.messagecenter.ui.MessageListFragment messageListFragment) {
+//        messageListFragment.getAbsListViewAsync(new MessageListFragment.OnListViewReadyCallback() {
+//            @Override
+//            public void onListViewReady(@NonNull AbsListView absListView) {
+//                absListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//                    @Override
+//                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                        Message message = messageListFragment.getMessage(position);
+//                        if (message != null) {
+//                            showMessage(message.getMessageId());
+//                        }
+//                    }
+//                });
+//
+//                absListView.setMultiChoiceModeListener(new DefaultMultiChoiceModeListener(messageListFragment, actionModeListener));
+//                absListView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+//
+//                // Work around Android bug - https://code.google.com/p/android/issues/detail?id=200059
+//                absListView.setSaveEnabled(false);
+//            }
+//        });
     }
 
     @Override

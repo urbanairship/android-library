@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import com.urbanairship.PendingResult;
 import com.urbanairship.messagecenter.Message;
 import com.urbanairship.messagecenter.MessageCenter;
-import com.urbanairship.messagecenter.MessageFragment;
+import com.urbanairship.messagecenter.ui.MessageFragment;
 import com.urbanairship.sample.R;
 
 import androidx.annotation.NonNull;
