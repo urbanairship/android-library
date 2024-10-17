@@ -143,4 +143,3 @@ public sealed class MessageViewState {
     /** Empty state (no messages available). */
     public data object Empty : MessageViewState()
 }
-

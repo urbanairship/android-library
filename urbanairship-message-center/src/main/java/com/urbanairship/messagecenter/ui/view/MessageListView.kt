@@ -97,7 +97,7 @@ public class MessageListView @JvmOverloads constructor(
                 viewModel?.markMessagesRead(list.selectedItems)
                 isEditing = false
             }
-            
+
             list.listener = object : EditableRecyclerView.Listener<Message> {
                 override fun onEditModeChanged(isEditing: Boolean) {
                     UALog.d { "onEditModeChanged: $isEditing" }
@@ -199,7 +199,7 @@ public class MessageListView @JvmOverloads constructor(
         val errorRetryButton: Button = error.findViewById(R.id.error_button),
     ) {
         private val context = view.context
-        
+
         fun showContent() {
             error.visibility = View.GONE
             loading.visibility = View.GONE
@@ -235,7 +235,7 @@ public class MessageListView @JvmOverloads constructor(
                 listEditingToolbar.slideOutBottomAnimator.start()
             }
         }
-        
+
         fun updateSelectionCount(count: Int, isAllSelected: Boolean) {
             listEditSelectAll.text = if (isAllSelected) {
                 context.getString(com.urbanairship.R.string.ua_select_none)
