@@ -27,10 +27,15 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
+import kotlin.Deprecated;
+import kotlin.DeprecationLevel;
 
 /**
  * Message Center item view.
+ * @deprecated Replaced with {@link com.urbanairship.messagecenter.ui.widget.MessageListItem}.
  */
+// TODO(m3-message-center): Delete me!
+@Deprecated(message = "Replaced with MessageListItem")
 public class MessageItemView extends FrameLayout {
 
     private static final int[] STATE_HIGHLIGHTED = { com.urbanairship.R.attr.ua_state_highlighted };

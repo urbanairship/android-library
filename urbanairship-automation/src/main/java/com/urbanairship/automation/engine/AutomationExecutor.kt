@@ -23,7 +23,7 @@ internal enum class InterruptedBehavior {
 }
 
 internal interface AutomationExecutorInterface {
-    suspend fun isValid(schedule: AutomationSchedule): Boolean
+    fun isValid(schedule: AutomationSchedule): Boolean
 
     @MainThread
     fun isReady(preparedSchedule: PreparedSchedule): ScheduleReadyResult
@@ -52,7 +52,7 @@ internal class AutomationExecutor(
     private val remoteDataAccess: AutomationRemoteDataAccess
 ) : AutomationExecutorInterface {
 
-    override suspend fun isValid(schedule: AutomationSchedule): Boolean {
+    override fun isValid(schedule: AutomationSchedule): Boolean {
         return remoteDataAccess.isCurrent(schedule)
     }
 

@@ -21,7 +21,6 @@ import com.urbanairship.meteredusage.MeteredUsageType
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 import io.mockk.coEvery
-import io.mockk.confirmVerified
 import io.mockk.mockk
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
@@ -31,6 +30,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -39,6 +39,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class InAppMessageAnalyticsTest {
     private val eventRecorder: InAppEventRecorderInterface = mockk(relaxed = true)
@@ -65,7 +66,6 @@ public class InAppMessageAnalyticsTest {
     private var event: InAppEventData? = null
     private var displayHistory: MessageDisplayHistory? = null
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Before
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
@@ -81,7 +81,6 @@ public class InAppMessageAnalyticsTest {
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @After
     public fun tearDown() {
         Dispatchers.resetMain()
@@ -148,8 +147,11 @@ public class InAppMessageAnalyticsTest {
         val analytics = makeAnalytics(source = InAppMessage.Source.LEGACY_PUSH)
 
         analytics.recordEvent(InAppDisplayEvent(), null)
+        advanceUntilIdle()
+
         // This second run should not trigger a recordImpressionEvent
         analytics.recordEvent(InAppDisplayEvent(), null)
+        advanceUntilIdle()
 
         verify (exactly = 1) { eventRecorder.recordImpressionEvent(withArg {
             assertEquals(preparedInfo.scheduleId, it.entityId)
@@ -175,6 +177,7 @@ public class InAppMessageAnalyticsTest {
         )
 
         analytics.recordEvent(InAppDisplayEvent(), null)
+        advanceUntilIdle()
 
         verify (exactly = 1) { eventRecorder.recordImpressionEvent(withArg {
             assertEquals(preparedInfo.scheduleId, it.entityId)
@@ -187,6 +190,7 @@ public class InAppMessageAnalyticsTest {
 
         // This second run should not trigger a recordImpressionEvent
         analytics.recordEvent(InAppDisplayEvent(), null)
+        advanceUntilIdle()
 
         var displayHistory = historyStore.get(preparedInfo.scheduleId)
         assertEquals(0L, displayHistory.lastImpression?.date)
@@ -195,9 +199,11 @@ public class InAppMessageAnalyticsTest {
         clock.currentTimeMillis += 9999L // 9.999 seconds
         // This third run should still not trigger a recordImpressionEvent
         analytics.recordEvent(InAppDisplayEvent(), null)
+        advanceUntilIdle()
 
         clock.currentTimeMillis += 1L
         analytics.recordEvent(InAppDisplayEvent(), null)
+        advanceUntilIdle()
 
         verify (exactly = 1) { eventRecorder.recordImpressionEvent(withArg {
             assertEquals(preparedInfo.scheduleId, it.entityId)
@@ -387,7 +393,8 @@ public class InAppMessageAnalyticsTest {
             displayImpressionRule = displayImpressionRule,
             historyStore = historyStore,
             displayHistory = displayHistory,
-            clock = clock
+            clock = clock,
+            dispatcher = testDispatcher
         )
     }
 }

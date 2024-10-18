@@ -34,6 +34,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 /**
  * Fragment that displays the Airship Message Center.
+ *
+ * @deprecated Replaced with {@link com.urbanairship.messagecenter.ui.MessageCenterFragment}
  */
 public class MessageListFragment extends Fragment {
 

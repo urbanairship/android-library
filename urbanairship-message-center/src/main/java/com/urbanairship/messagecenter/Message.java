@@ -399,4 +399,24 @@ public class Message implements Comparable<Message> {
         return result;
     }
 
+    @NonNull
+    @Override
+    public String toString() {
+        // Skipped rawJson in this string representation
+        return "Message{" +
+                "unreadOrigin=" + unreadOrigin +
+                ", extrasMap=" + extrasMap +
+                ", sentMS=" + sentMS +
+                ", expirationMS=" + expirationMS +
+                ", messageId='" + messageId + '\'' +
+                ", messageUrl='" + messageUrl + '\'' +
+                ", messageBodyUrl='" + messageBodyUrl + '\'' +
+                ", messageReadUrl='" + messageReadUrl + '\'' +
+                ", messageReporting=" + messageReporting +
+                ", title='" + title + '\'' +
+                ", deleted=" + deleted +
+                ", unreadClient=" + unreadClient +
+                '}';
+    }
+
 }

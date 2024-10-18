@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base style -->
+    <style name="UrbanAirship.MessageCenter" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/ua_message_center_background</item>
+        <item name="colorOnPrimary">@color/ua_message_center_ui_text_color</item>
+        <item name="colorPrimaryVariant">@color/ua_message_center_background</item>
+        <item name="colorSecondary">@color/ua_message_center_background</item>
+        <item name="colorSecondaryVariant">@color/ua_message_center_status_bar</item>
+        <item name="colorOnSecondary">@color/ua_message_center_ui_text_color</item>
+        <item name="colorSurface">@color/ua_message_center_surface</item>
+        <item name="colorAccent">@color/ua_message_center_accent</item>
+        <item name="android:colorBackground">@color/ua_message_center_background</item>
+        <item name="android:textColorPrimary">@color/ua_message_center_ui_text_color</item>
+        <item name="toolbarStyle">@style/UrbanAirship.MessageCenter.Toolbar</item>
+
+        <item name="checkboxStyle">@style/UrbanAirship.MessageCenter.Item.CheckBox</item>
+        <!-- Status bar color. On API 35+, this color will be ignored and the status bar will be transparent. -->
+        <item name="android:statusBarColor">?android:colorBackground</item>
+
+        <!-- Nav bar color. On API 35+, this color will be ignored and the nav bar will be transparent. -->
+        <item name="android:navigationBarColor">?android:colorBackground</item>
+
+        <item name="messageCenterDividerInsetStart">@dimen/divider_inset_start</item>
+        <item name="messageCenterDividerInsetEnd">@dimen/divider_inset_end</item>
+    </style>
+
+    <style name="UrbanAirship.MessageCenter.Base">
+    </style>
+
+    <!-- Default Activity -->
+    <style name="UrbanAirship.MessageCenter.Activity" parent="@style/UrbanAirship.MessageCenter.Base"/>
+
+    <!-- Default Fragment -->
+    <style name="UrbanAirship.MessageCenter.Fragment" parent="@style/UrbanAirship.MessageCenter.Base"/>
+
+    <!-- Toolbar -->
+    <style name="UrbanAirship.MessageCenter.Toolbar" parent="@style/Widget.Material3.Toolbar.Surface">
+        <item name="title">@string/ua_message_center_title</item>
+        <item name="navigationIcon">@drawable/ua_ic_message_center_arrow_back</item>
+    </style>
+
+    <!-- Message Center list view -->
+    <style name="UrbanAirship.MessageCenter.List">
+        <item name="android:fillViewport">false</item>
+        <item name="android:background">?android:colorBackground</item>
+    </style>
+
+    <!-- Message Center error view -->
+    <style name="UrbanAirship.MessageCenter.Error">
+        <item name="android:background">?android:colorBackground</item>
+        <item name="android:padding">16dp</item>
+    </style>
+
+    <!-- Message Center error view icon -->
+    <style name="UrbanAirship.MessageCenter.ErrorIcon">
+        <item name="android:src">@drawable/ua_ic_message_center_round_error_outline</item>
+        <item name="android:tint">?android:textColorSecondary</item>
+        <item name="android:contentDescription">@null</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <!-- Message Center error view text -->
+    <style name="UrbanAirship.MessageCenter.ErrorText">
+        <item name="android:textAlignment">center</item>
+        <item name="android:textAppearance">?textAppearanceBodyLarge</item>
+        <item name="android:text">@string/ua_empty_message_list</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">48dp</item>
+        <item name="android:paddingStart">56dp</item>
+        <item name="android:paddingEnd">56dp</item>
+    </style>
+
+    <!-- Message Center error view retry button -->
+    <style name="UrbanAirship.MessageCenter.ErrorButton" parent="Widget.Material3.Button">
+        <item name="android:text">@string/ua_mc_failed_to_load</item>
+        <item name="android:textAppearance">?textAppearanceButton</item>
+    </style>
+
+    <!-- Message Center loading view group -->
+    <style name="UrbanAirship.MessageCenter.ListLoading">
+        <item name="android:background">?android:colorBackground</item>
+    </style>
+
+    <!-- Message Center loading progress indicator -->
+    <style name="UrbanAirship.MessageCenter.ListLoadingIndicator" parent="Widget.Material3.CircularProgressIndicator">
+        <item name="android:layout_gravity">center</item>
+        <item name="android:indeterminate">true</item>
+        <item name="indicatorColor">?colorAccent</item>
+        <item name="minHideDelay">@android:integer/config_mediumAnimTime</item>
+    </style>
+
+    <!-- Message Center list header -->
+    <style name="UrbanAirship.MessageCenter.Header">
+        <item name="android:minHeight">?listPreferredItemHeightLarge</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+
+    <!-- Message Center list item -->
+    <style name="UrbanAirship.MessageCenter.Item">
+        <item name="android:background">?colorSurface</item>
+        <item name="android:foreground">?selectableItemBackground</item>
+        <item name="android:minHeight">?listPreferredItemHeight</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:descendantFocusability">blocksDescendants</item>
+    </style>
+
+    <!-- Message Center list item title -->
+    <style name="UrbanAirship.MessageCenter.Item.MessageTitle" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textAppearance">?textAppearanceListItem</item>
+        <item name="android:textColor">?colorOnSurface</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
+    <!-- Message Center list item title -->
+    <style name="UrbanAirship.MessageCenter.Item.MessagePreview" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textAppearance">?textAppearanceListItem</item>
+        <item name="android:textColor">?colorOnSurface</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
+
+    <!-- Message Center list item date -->
+    <style name="UrbanAirship.MessageCenter.Item.MessageDate" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">?textAppearanceListItemSecondary</item>
+        <item name="android:textColor">?colorOnSurfaceVariant</item>
+        <item name="android:paddingEnd">16dp</item>
+    </style>
+
+    <!-- Message Center list item thumbnail -->
+    <style name="UrbanAirship.MessageCenter.Item.Thumbnail" parent="">
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:scaleType">centerCrop</item>
+        <item name="android:layout_width">64dp</item>
+        <item name="android:layout_height">64dp</item>
+    </style>
+
+    <!-- Message Center list item checkbox (in edit mode) -->
+    <style name="UrbanAirship.MessageCenter.Item.CheckBox" parent="Widget.Material3.CompoundButton.CheckBox">
+        <item name="buttonTint">?colorOnSurface</item>
+        <item name="buttonIconTint">?colorSurface</item>
+    </style>
+
+    <style name="UrbanAirship.MessageCenter.TextAppearance.MessageTitle" parent="TextAppearance.Material3.TitleMedium">
+    </style>
+
+    <style name="UrbanAirship.MessageCenter.TextAppearance.MessageTitle.Unread">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="UrbanAirship.MessageCenter.TextAppearance.MessageTitle.Read">
+        <item name="android:textStyle">normal</item>
+        <item name="android:alpha">0.8</item>
+    </style>
+
+    <style name="UrbanAirship.MessageCenter.TextAppearance.MessageSubtitle" parent="TextAppearance.Material3.BodyMedium">
+    </style>
+
+    <style name="UrbanAirship.MessageCenter.TextAppearance.MessageSubtitle.Unread">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="UrbanAirship.MessageCenter.TextAppearance.MessageSubtitle.Read">
+        <item name="android:textStyle">bold</item>
+        <item name="android:alpha">0.8</item>
+    </style>
+
+</resources>

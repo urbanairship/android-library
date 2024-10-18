@@ -24,11 +24,11 @@ import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.messagecenter.Inbox.FetchMessagesCallback
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -40,7 +40,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
@@ -147,7 +146,7 @@ public class Inbox @VisibleForTesting internal constructor(
 
     private val userListener = User.Listener { success: Boolean ->
         if (success) {
-            fetchMessages { UALog.v { "Inbox updated (triggered by user update)" } }
+            fetchMessages { UALog.v { "Inbox updated after user update." } }
         }
     }
 
@@ -272,7 +271,7 @@ public class Inbox @VisibleForTesting internal constructor(
      * @param callback Optional callback to be notified when the request finishes fetching the messages.
      * @return A cancelable object that can be used to cancel the callback.
      */
-    public fun fetchMessages(callback: FetchMessagesCallback?): Cancelable {
+    public fun fetchMessages(callback: FetchMessagesCallback): Cancelable {
         return fetchMessages(null, callback)
     }
 
@@ -290,8 +289,8 @@ public class Inbox @VisibleForTesting internal constructor(
      * @return A cancelable object that can be used to cancel the callback.
      */
     public fun fetchMessages(
-        looper: Looper?,
-        callback: FetchMessagesCallback?
+        looper: Looper? = null,
+        callback: FetchMessagesCallback? = null
     ): Cancelable {
         val cancelableOperation = PendingFetchMessagesCallback(callback, looper)
         synchronized(pendingFetchCallbacks) {

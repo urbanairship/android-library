@@ -17,11 +17,11 @@ import com.urbanairship.webkit.AirshipWebViewClient
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 
 /** A web view client that enables the Airship Native Bridge for Message Center. */
+// TODO(m3-message-center): Delete me!
+@Deprecated("Replaced with MessageWebViewClient in com.urbanairship.messagecenter.ui.widget.MessageWebView")
 public open class MessageWebViewClient : AirshipWebViewClient() {
 
     /**

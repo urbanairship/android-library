@@ -270,7 +270,7 @@ public class PermissionsManagerTest {
         mockDelegateStatus = PermissionRequestResult.denied(true)
         permissionsManager.setPermissionDelegate(Permission.LOCATION, mockDelegate)
 
-        val job = async(Dispatchers.Default) {
+        val job = async {
             permissionsManager.suspendingRequestPermission(Permission.LOCATION, fallback = PermissionPromptFallback.SystemSettings)
         }
         advanceUntilIdle()

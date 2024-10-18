@@ -5,7 +5,7 @@
     <application>
 
         <activity
-            android:name="com.urbanairship.messagecenter.MessageActivity"
+            android:name="com.urbanairship.messagecenter.ui.MessageActivity"
             android:exported="false" />
 
         <activity

@@ -14,8 +14,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import com.urbanairship.UALog;
 import com.urbanairship.R;
+import com.urbanairship.UALog;
 import com.urbanairship.util.ManifestUtils;
 
 import java.util.Map;
@@ -32,8 +32,6 @@ import androidx.webkit.WebViewFeature;
 public class AirshipWebView extends WebView {
 
     private WebViewClient webViewClient;
-
-    private static final String CACHE_DIRECTORY = "urbanairship";
 
     private String currentClientAuthRequestUrl;
 

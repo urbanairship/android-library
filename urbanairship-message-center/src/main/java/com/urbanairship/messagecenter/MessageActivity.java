@@ -12,13 +12,16 @@ import com.urbanairship.PendingResult;
 import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.activity.ThemedActivity;
+import com.urbanairship.messagecenter.ui.MessageFragment;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentTransaction;
+import kotlin.Deprecated;
 
 /**
  * Manages the message view pager and display messages
+ * @deprecated Use {@link com.urbanairship.messagecenter.ui.MessageActivity} instead.
  */
 public class MessageActivity extends ThemedActivity {
 
