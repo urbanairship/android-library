@@ -41,6 +41,8 @@ import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -617,9 +619,15 @@ public class InboxTest {
             messageEntities.add(entity)
         }
 
-        runBlocking {
+        val job = MainScope().launch {
             spyMessageDao.insertMessages(messageEntities)
             inbox.notifyInboxUpdated()
+        }
+
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        runBlocking {
+            job.join()
         }
 
         clearInvocations(spyMessageDao)
