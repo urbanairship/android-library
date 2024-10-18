@@ -34,6 +34,7 @@ import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -49,6 +50,7 @@ public class AutomationRemoteDataSubscriberTest {
     private val clock = TestClock().apply { currentTimeMillis = 1000 }
 
     private val testDispatcher = StandardTestDispatcher()
+    private val unconfinedTestDispatcher = UnconfinedTestDispatcher()
 
     private var updatesFlow = MutableSharedFlow<InAppRemoteData>(extraBufferCapacity = Int.MAX_VALUE)
     private val remoteDataAccess: AutomationRemoteDataAccessInterface = mockk {
@@ -64,7 +66,7 @@ public class AutomationRemoteDataSubscriberTest {
         coEvery { this@mockk.setConstraints(any()) } returns Result.success(Unit)
     }
     private var subscriber: AutomationRemoteDataSubscriber = AutomationRemoteDataSubscriber(
-        dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.11", testDispatcher
+        dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.11", unconfinedTestDispatcher
     )
 
     @Before
@@ -95,17 +97,15 @@ public class AutomationRemoteDataSubscriberTest {
             )
         )
 
-        coEvery {
-            engine.upsertSchedules(any())
-        } just runs
+        coJustRun { engine.upsertSchedules(any()) }
 
         subscriber.subscribe()
         advanceUntilIdle()
 
-        updatesFlow.emit(data)
+        assertTrue(updatesFlow.tryEmit(data))
         advanceUntilIdle()
 
-        coVerify {
+        coVerify(timeout = 1000) {
             engine.upsertSchedules(appSchedules)
             engine.upsertSchedules(contactSchedules)
         }
@@ -124,10 +124,10 @@ public class AutomationRemoteDataSubscriberTest {
         subscriber.subscribe()
         advanceUntilIdle()
 
-        updatesFlow.emit(emptyData)
+        assertTrue(updatesFlow.tryEmit(emptyData))
         advanceUntilIdle()
 
-        coVerify { engine.stopSchedules(eq(scheduleIDs)) }
+        coVerify(timeout = 1000) { engine.stopSchedules(eq(scheduleIDs)) }
     }
 
     @Test
