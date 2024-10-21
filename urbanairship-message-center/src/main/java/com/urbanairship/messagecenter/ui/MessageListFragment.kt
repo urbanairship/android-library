@@ -10,7 +10,7 @@ import com.urbanairship.messagecenter.ui.view.MessageListView
 import com.urbanairship.messagecenter.ui.view.MessageListView.OnShowMessageListener
 
 /** `Fragment` that displays the Message Center list and message view. */
-public open class MessageListFragment: Fragment(R.layout.ua_fragment_message_list) {
+public class MessageListFragment: Fragment(R.layout.ua_fragment_message_list) {
 
     private lateinit var messageListView: MessageListView
 
