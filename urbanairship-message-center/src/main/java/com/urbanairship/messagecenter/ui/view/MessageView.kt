@@ -134,6 +134,8 @@ public class MessageView @JvmOverloads constructor(
             ).get<MessageViewViewModel>().also {
                 observeViewModel(it)
             }
+
+            messageId?.let { viewModel?.loadMessage(it) }
         }
 
         findViewTreeLifecycleOwner()?.lifecycle?.run {
