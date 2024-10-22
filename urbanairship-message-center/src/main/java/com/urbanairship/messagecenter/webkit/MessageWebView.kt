@@ -30,9 +30,9 @@ public open class MessageWebView @JvmOverloads constructor(
         // Set the auth
         val (userId, password) = user.id to user.password
         if (userId != null && password != null) {
-            setClientAuthRequest(message.messageBodyUrl, userId, password)
+            setClientAuthRequest(message.bodyUrl, userId, password)
             headers["Authorization"] = createBasicAuth(userId, password)
         }
-        loadUrl(message.messageBodyUrl, headers)
+        loadUrl(message.bodyUrl, headers)
     }
 }

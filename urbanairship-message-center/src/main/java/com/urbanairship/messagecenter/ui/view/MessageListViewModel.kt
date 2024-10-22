@@ -70,13 +70,13 @@ public class MessageListViewModel(
     /** Marks the given list of [messages] as read. */
     public fun markMessagesRead(messages: List<Message>) {
         UALog.d { "Marking ${messages.size} messages read" }
-        inbox.markMessagesRead(messages.map { it.messageId }.toSet())
+        inbox.markMessagesRead(messages.map { it.id }.toSet())
     }
 
     /** Deletes the given list of [messages]. */
     public fun deleteMessages(messages: List<Message>) {
         UALog.d { "Deleting  ${messages.size} messages" }
-        inbox.deleteMessages(messages.map { it.messageId }.toSet())
+        inbox.deleteMessages(messages.map { it.id }.toSet())
     }
 
     /** Refreshes the inbox. */

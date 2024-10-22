@@ -380,7 +380,7 @@ public class Inbox @VisibleForTesting internal constructor(
         messageDao.getMessages()
             .mapNotNull { it.toMessage() }
             .let { filterMessages(it, predicate) }
-            .sortedWith(MESSAGE_COMPARATOR)
+            .sortedWith(Message.SENT_DATE_COMPARATOR)
 
     /**
      * Subscribes to the list of messages as a flow. The flow will emit the current list of messages,
@@ -395,7 +395,8 @@ public class Inbox @VisibleForTesting internal constructor(
         messageDao.getMessagesFlow()
             .map {
                 val messages = it.mapNotNull(MessageEntity::toMessage)
-                filterMessages(messages, predicate).sortedWith(MESSAGE_COMPARATOR)
+                filterMessages(messages, predicate)
+                    .sortedWith(Message.SENT_DATE_COMPARATOR)
             }
             .distinctUntilChanged()
 
@@ -427,7 +428,7 @@ public class Inbox @VisibleForTesting internal constructor(
         messageDao.getUnreadMessages()
             .mapNotNull { it.toMessage() }
             .let { filterMessages(it, predicate) }
-            .sortedWith(MESSAGE_COMPARATOR)
+            .sortedWith(Message.SENT_DATE_COMPARATOR)
 
     /**
      * Subscribes to the list of unread messages as a flow. The flow will emit the current list of unread messages,
@@ -442,7 +443,8 @@ public class Inbox @VisibleForTesting internal constructor(
         messageDao.getUnreadMessagesFlow()
             .map {
                 val messages = it.mapNotNull(MessageEntity::toMessage)
-                filterMessages(messages, predicate).sortedWith(MESSAGE_COMPARATOR)
+                filterMessages(messages, predicate)
+                    .sortedWith(Message.SENT_DATE_COMPARATOR)
             }
             .distinctUntilChanged()
 
@@ -474,7 +476,7 @@ public class Inbox @VisibleForTesting internal constructor(
         messageDao.getReadMessages()
             .mapNotNull { it.toMessage() }
             .let { filterMessages(it, predicate) }
-            .sortedWith(MESSAGE_COMPARATOR)
+            .sortedWith(Message.SENT_DATE_COMPARATOR)
 
     /**
      * Gets a list of read RichPushMessages as a [PendingResult], filtered by the provided predicate,
@@ -549,7 +551,19 @@ public class Inbox @VisibleForTesting internal constructor(
      */
     public fun markMessagesRead(messageIds: Set<String>) {
         scope.launch {
-            messageDao.markMessagesRead(messageIds.toList())
+            messageDao.markMessagesRead(messageIds)
+            notifyInboxUpdated()
+        }
+    }
+
+    /**
+     * Mark [Message]s read in bulk.
+     *
+     * @param messageIds A vararg of message IDs.
+     */
+    public fun markMessagesRead(vararg messageIds: String) {
+        scope.launch {
+            messageDao.markMessagesRead(messageIds.toSet())
             notifyInboxUpdated()
         }
     }
@@ -561,7 +575,19 @@ public class Inbox @VisibleForTesting internal constructor(
      */
     public fun markMessagesUnread(messageIds: Set<String>) {
         scope.launch {
-            messageDao.markMessagesUnread(messageIds.toList())
+            messageDao.markMessagesUnread(messageIds)
+            notifyInboxUpdated()
+        }
+    }
+
+    /**
+     * Mark [Message]s unread in bulk.
+     *
+     * @param messageIds A vararg of message ids.
+     */
+    public fun markMessagesUnread(vararg messageIds: String) {
+        scope.launch {
+            messageDao.markMessagesUnread(messageIds.toSet())
             notifyInboxUpdated()
         }
     }
@@ -576,7 +602,22 @@ public class Inbox @VisibleForTesting internal constructor(
      */
     public fun deleteMessages(messageIds: Set<String>) {
         scope.launch {
-            messageDao.markMessagesDeleted(messageIds.toList())
+            messageDao.markMessagesDeleted(messageIds)
+            notifyInboxUpdated()
+        }
+    }
+
+    /**
+     * Mark [Message]s deleted.
+     *
+     * Note that in most cases these messages aren't immediately deleted on the server, but they will
+     * be inaccessible on the device as soon as they're marked deleted.
+     *
+     * @param messageIds A vararg of message ids.
+     */
+    public fun deleteMessages(vararg messageIds: String) {
+        scope.launch {
+            messageDao.markMessagesDeleted(messageIds.toSet())
             notifyInboxUpdated()
         }
     }
@@ -621,16 +662,6 @@ public class Inbox @VisibleForTesting internal constructor(
         jobDispatcher.dispatch(jobInfo)
     }
 
-    internal class SentAtRichPushMessageComparator : Comparator<Message> {
-        override fun compare(lhs: Message, rhs: Message): Int {
-            return if (rhs.sentDateMS == lhs.sentDateMS) {
-                lhs.messageId.compareTo(rhs.messageId)
-            } else {
-                rhs.sentDateMS.compareTo(lhs.sentDateMS)
-            }
-        }
-    }
-
     internal class PendingFetchMessagesCallback(
         private val callback: FetchMessagesCallback?,
         looper: Looper?
@@ -639,9 +670,5 @@ public class Inbox @VisibleForTesting internal constructor(
         override fun onRun() {
             callback?.onFinished(result)
         }
-    }
-
-    private companion object {
-        private val MESSAGE_COMPARATOR = SentAtRichPushMessageComparator()
     }
 }

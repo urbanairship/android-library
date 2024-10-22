@@ -39,7 +39,7 @@ public class MessageViewViewModel(
 
     /** The currently loaded message ID, if we have one. */
     private val currentMessageId: String?
-        get() = (_states.value as? MessageViewState.Content)?.message?.messageId
+        get() = (_states.value as? MessageViewState.Content)?.message?.id
 
     /**
      * A `Flow` of MessageView [States][MessageViewState] (data consumed by the view in order to display the message).
@@ -82,7 +82,13 @@ public class MessageViewViewModel(
     /** Marks the given list of [messages] as read. */
     public fun markMessagesRead(messages: List<Message>) {
         UALog.d { "Marking ${messages.size} messages read" }
-        inbox.markMessagesRead(messages.map { it.messageId }.toSet())
+        inbox.markMessagesRead(messages.map { it.id }.toSet())
+    }
+
+    /** Marks the given [messages] as read. */
+    public fun markMessagesRead(vararg messages: Message) {
+        UALog.d { "Marking ${messages.size} messages read" }
+        inbox.markMessagesRead(messages.map { it.id }.toSet())
     }
 
     internal fun subscribeForMessageUpdates(): SubscriptionCancellation {

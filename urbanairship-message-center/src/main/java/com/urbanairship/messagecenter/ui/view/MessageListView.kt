@@ -167,7 +167,7 @@ public class MessageListView @JvmOverloads constructor(
     public fun setHighlightedMessage(messageId: String) {
         val state = viewModel?.states?.value ?: return
         val message = when(state) {
-            is MessageListViewState.Content -> state.messages.firstOrNull { it.messageId == messageId }
+            is MessageListViewState.Content -> state.messages.firstOrNull { it.id == messageId }
             else -> { null }
         } ?: return
 

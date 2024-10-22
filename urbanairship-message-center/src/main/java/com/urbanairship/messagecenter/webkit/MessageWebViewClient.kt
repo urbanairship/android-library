@@ -35,7 +35,7 @@ public open class MessageWebViewClient : AirshipWebViewClient() {
         val metadata = Bundle()
         val message = getMessage(webView)
         if (message != null) {
-            metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.messageId)
+            metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.id)
         }
         request.setMetadata(metadata)
         return request
@@ -53,11 +53,11 @@ public open class MessageWebViewClient : AirshipWebViewClient() {
         val message = getMessage(webView)
         var extras = JsonMap.EMPTY_MAP
         if (message != null) {
-            extras = JsonValue.wrapOpt(message.extrasMap).optMap()
+            extras = JsonValue.wrapOpt(message.extras).optMap()
         }
         return super.extendJavascriptEnvironment(builder, webView)
-            .addGetter("getMessageSentDateMS", message?.sentDateMS ?: -1)
-            .addGetter("getMessageId", message?.messageId)
+            .addGetter("getMessageSentDateMS", message?.sentDate?.time ?: -1)
+            .addGetter("getMessageId", message?.id)
             .addGetter("getMessageTitle", message?.title).addGetter(
                 "getMessageSentDate",
                 if (message != null) DATE_FORMATTER.format(message.sentDate) else null

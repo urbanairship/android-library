@@ -67,9 +67,6 @@ public class MessageView @JvmOverloads constructor(
             value?.let { id -> viewModel?.loadMessage(id) }
         }
 
-    private val inbox: Inbox
-        get() = MessageCenter.shared().inbox
-
     private var message: Message? = null
 
     private var error: Int? = null
@@ -96,7 +93,7 @@ public class MessageView @JvmOverloads constructor(
                         message?.let {
                             UALog.i { "Mark read and show message! $url" }
 
-                            it.markRead()
+                            viewModel?.markMessagesRead(it)
                             views.showMessage()
                         }
                     }
@@ -106,7 +103,7 @@ public class MessageView @JvmOverloads constructor(
                 override fun onReceivedError(view: WebView, errorCode: Int, description: String, failingUrl: String?) {
                     UALog.i { "onReceivedError! $errorCode $description $failingUrl" }
 
-                    if (message != null && failingUrl != null && failingUrl == message!!.messageBodyUrl) {
+                    if (message != null && failingUrl != null && failingUrl == message?.bodyUrl) {
                         error = errorCode
                     }
                 }
@@ -117,7 +114,7 @@ public class MessageView @JvmOverloads constructor(
         }
 
         views.errorRetryButton.setOnClickListener {
-            message?.let { viewModel?.loadMessage(it.messageId) }
+            message?.let { viewModel?.loadMessage(it.id) }
                 ?: UALog.w { "MessageView does not have a message to retry loading!" }
         }
     }

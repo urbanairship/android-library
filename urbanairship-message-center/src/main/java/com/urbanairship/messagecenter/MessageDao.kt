@@ -160,7 +160,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun markMessagesRead(messageIds: List<String>) {
+    suspend fun markMessagesRead(messageIds: Set<String>) {
         try {
             markMessagesReadInternal(messageIds)
         } catch (e: Exception) {
@@ -168,7 +168,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun markMessagesUnread(messageIds: List<String>) {
+    suspend fun markMessagesUnread(messageIds: Set<String>) {
         try {
             markMessagesUnreadInternal(messageIds)
         } catch (e: Exception) {
@@ -176,7 +176,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun markMessagesDeleted(messageIds: List<String>) {
+    suspend fun markMessagesDeleted(messageIds: Set<String>) {
         try {
             markMessagesDeletedInternal(messageIds)
         } catch (e: Exception) {
@@ -184,7 +184,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun markMessagesReadOrigin(messageIds: List<String>) {
+    suspend fun markMessagesReadOrigin(messageIds: Set<String>) {
         try {
             markMessagesReadOriginInternal(messageIds)
         } catch (e: Exception) {
@@ -192,7 +192,7 @@ internal abstract class MessageDao {
         }
     }
 
-    fun deleteMessages(messageIds: List<String>) {
+    fun deleteMessages(messageIds: Set<String>) {
         try {
             deleteMessagesInternal(messageIds)
         } catch (e: Exception) {
@@ -295,24 +295,24 @@ internal abstract class MessageDao {
 
     @Transaction
     @Query("UPDATE richpush SET unread = 0 WHERE message_id IN (:messageIds)")
-    abstract suspend fun markMessagesReadInternal(messageIds: List<String>)
+    abstract suspend fun markMessagesReadInternal(messageIds: Set<String>)
 
     @Transaction
     @Query("UPDATE richpush SET unread = 1 WHERE message_id IN (:messageIds)")
-    abstract suspend fun markMessagesUnreadInternal(messageIds: List<String>)
+    abstract suspend fun markMessagesUnreadInternal(messageIds: Set<String>)
 
     @Transaction
     @Query("UPDATE richpush SET deleted = 1 WHERE message_id IN (:messageIds)")
-    abstract suspend fun markMessagesDeletedInternal(messageIds: List<String>)
+    abstract suspend fun markMessagesDeletedInternal(messageIds: Set<String>)
 
     @Transaction
     @Query("UPDATE richpush SET unread_orig = 0 WHERE message_id IN (:messageIds)")
-    abstract suspend fun markMessagesReadOriginInternal(messageIds: List<String>)
+    abstract suspend fun markMessagesReadOriginInternal(messageIds: Set<String>)
 
     @Transaction
-    open fun deleteMessagesInternal(messageIds: List<String>) {
+    open fun deleteMessagesInternal(messageIds: Set<String>) {
         val consumer = Consumer { ids: List<String> -> deleteMessagesBatchInternal(ids) }
-        BatchedQueryHelper.runBatched(messageIds, consumer)
+        BatchedQueryHelper.runBatched(messageIds.toList(), consumer)
     }
 
     /**
@@ -326,7 +326,7 @@ internal abstract class MessageDao {
     @Query("DELETE FROM richpush")
     abstract suspend fun deleteAllMessagesInternal()
 
-    @Query("SELECT 1 FROM richpush WHERE message_id = :id LIMIT 1")
+    @Query("SELECT EXISTS(SELECT 1 FROM richpush WHERE message_id = :id)")
     abstract suspend fun messageExistsInternal(id: String): Boolean
 
     private companion object {

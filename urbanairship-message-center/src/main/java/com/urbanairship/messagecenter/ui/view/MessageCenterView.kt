@@ -125,8 +125,8 @@ public class MessageCenterView @JvmOverloads constructor(
     }
 
     private fun openMessagePane(message: Message) {
-        UALog.v("openMessagePane! ${message.messageId}")
-        messageView.messageId = message.messageId
+        UALog.v("openMessagePane! ${message.id}")
+        messageView.messageId = message.id
         messageToolbar.title = message.title
 
         if (slidingPaneLayout.isSlideable) {

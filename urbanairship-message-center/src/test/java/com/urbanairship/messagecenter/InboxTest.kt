@@ -111,7 +111,7 @@ public class InboxTest {
     )
 
     private var testPredicate: Predicate<Message> = Predicate<Message> { message ->
-        val substring = message.messageId.replace("_message_id", "")
+        val substring = message.id.replace("_message_id", "")
         val index = substring.toInt()
         // Only the "even" messages
         index % 2 == 0
@@ -391,7 +391,7 @@ public class InboxTest {
             createMessage("expires_soon", expirationDate = Date(now + 1000)),
             createMessage("expires_later", expirationDate = Date(now + 2000))
         ).mapNotNull {
-            MessageEntity.createMessageFromPayload(it.messageId, it.rawMessageJson)
+            MessageEntity.createMessageFromPayload(it.id, it.rawMessageJson)
         }
 
         spyMessageDao.getMessagesFlow().test {
@@ -500,7 +500,7 @@ public class InboxTest {
         assertEquals(3, filteredMessages.size)
 
         for (message: Message in filteredMessages) {
-            val substring = message.messageId.replace("_message_id", "")
+            val substring = message.id.replace("_message_id", "")
             val index = substring.toInt()
 
             assertEquals(0, index % 2)
@@ -524,7 +524,7 @@ public class InboxTest {
         assertEquals(filteredMessages.size, 2)
 
         for (message: Message in filteredMessages) {
-            val substring = message.messageId.replace("_message_id", "")
+            val substring = message.id.replace("_message_id", "")
             val index = substring.toInt()
 
             assertEquals((index % 2).toLong(), 0)
@@ -604,7 +604,7 @@ public class InboxTest {
         for (i in 0..9) {
             val message = createMessage("${i + 1}_message_id", null)
             val entity = requireNotNull(
-                MessageEntity.createMessageFromPayload(message.messageId, message.rawMessageJson)
+                MessageEntity.createMessageFromPayload(message.id, message.rawMessageJson)
             )
             messageEntities.add(entity)
         }
@@ -613,7 +613,7 @@ public class InboxTest {
         for (i in 10..14) {
             val message = createMessage("${i + 1}_message_id", null, Date(0))
             val entity = requireNotNull(
-                MessageEntity.createMessageFromPayload(message.messageId, message.rawMessageJson)
+                MessageEntity.createMessageFromPayload(message.id, message.rawMessageJson)
             )
 
             messageEntities.add(entity)
@@ -644,6 +644,6 @@ public class InboxTest {
          */
         private fun createIdToMessageMap(
             messages: List<Message>
-        ): Map<String, Message> = messages.associateBy { it.messageId }
+        ): Map<String, Message> = messages.associateBy { it.id }
     }
 }

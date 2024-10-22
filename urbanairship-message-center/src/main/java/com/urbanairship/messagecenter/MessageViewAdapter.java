@@ -59,7 +59,7 @@ public abstract class MessageViewAdapter extends BaseAdapter {
             return -1;
         }
 
-        return items.get(position).getMessageId().hashCode();
+        return items.get(position).getId().hashCode();
     }
 
     @NonNull

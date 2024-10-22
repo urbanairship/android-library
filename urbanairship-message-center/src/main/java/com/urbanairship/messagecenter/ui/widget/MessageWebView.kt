@@ -36,7 +36,7 @@ internal class MessageWebView @JvmOverloads constructor(
      * @param message The message that will be displayed.
      */
     fun loadMessage(message: Message) {
-        UALog.v { "Loading message: ${message.messageId}" }
+        UALog.v { "Loading message: ${message.id}" }
         val user = MessageCenter.shared().user
 
         // Send authorization in the headers if the web view supports it
@@ -45,11 +45,11 @@ internal class MessageWebView @JvmOverloads constructor(
         // Set the auth
         val (userId, password) = user.id to user.password
         if (userId != null && password != null) {
-            setClientAuthRequest(message.messageBodyUrl, userId, password)
+            setClientAuthRequest(message.bodyUrl, userId, password)
             headers["Authorization"] = createBasicAuth(userId, password)
         }
-        UALog.v { "Load URL: ${message.messageBodyUrl}" }
-        loadUrl(message.messageBodyUrl, headers)
+        UALog.v { "Load URL: ${message.bodyUrl}" }
+        loadUrl(message.bodyUrl, headers)
     }
 }
 
@@ -67,7 +67,7 @@ internal open class MessageWebViewClient : AirshipWebViewClient() {
         val metadata = Bundle()
         val message = getMessage(webView)
         if (message != null) {
-            metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.messageId)
+            metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, message.id)
         }
         request.setMetadata(metadata)
         return request
@@ -85,11 +85,11 @@ internal open class MessageWebViewClient : AirshipWebViewClient() {
         val message = getMessage(webView)
         var extras = JsonMap.EMPTY_MAP
         if (message != null) {
-            extras = JsonValue.wrapOpt(message.extrasMap).optMap()
+            extras = JsonValue.wrapOpt(message.extras).optMap()
         }
         return super.extendJavascriptEnvironment(builder, webView)
-            .addGetter("getMessageSentDateMS", message?.sentDateMS ?: -1)
-            .addGetter("getMessageId", message?.messageId)
+            .addGetter("getMessageSentDateMS", message?.sentDate?.time ?: -1)
+            .addGetter("getMessageId", message?.id)
             .addGetter("getMessageTitle", message?.title).addGetter(
                 "getMessageSentDate",
                 if (message != null) DATE_FORMATTER.format(message.sentDate) else null

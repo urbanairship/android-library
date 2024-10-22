@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.DateUtils
+import java.util.Date
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
@@ -20,37 +21,33 @@ public class MessageTest {
     @Test
     @Throws(JsonException::class)
     public fun testMessage() {
-        val message = Message.create(JsonValue.parseString(MCRAP_MESSAGE), true, false)
-        assertEquals("MESSAGE_ID", message!!.messageId)
+        val message = requireNotNull(
+            Message.create(JsonValue.parseString(MCRAP_MESSAGE), true, false)
+        )
+        assertEquals("MESSAGE_ID", message.id)
         assertEquals("MESSAGE_TITLE", message.title)
         assertEquals(
             "https://dl.urbanairship.com/binary/token/app/MESSAGE_ID/body/",
-            message.messageBodyUrl
-        )
-        assertEquals(
-            "https://device-api.urbanairship.com/api/user/test/messages/message/MESSAGE_ID/read/",
-            message.messageReadUrl
+            message.bodyUrl
         )
         assertEquals(
             "https://device-api.urbanairship.com/api/user/test/messages/message/MESSAGE_ID/",
             message.messageUrl
         )
-        assertEquals(1443026786000L, message.sentDateMS)
+        assertEquals(Date(1443026786000L), message.sentDate)
         assertFalse(message.isRead)
         assertFalse(message.isDeleted)
 
         // Extras
         assertEquals(1, message.extras.size())
         assertEquals("some_value", message.extras.getString("some_key"))
-        assertEquals("some_value", message.extrasMap["some_key"])
 
         // Expiry
         assertNull(message.expirationDate)
-        assertNull(message.expirationDateMS)
         assertFalse(message.isExpired)
 
         // Raw message JSON
-        assertEquals(JsonValue.parseString(MCRAP_MESSAGE), message.rawMessageJson)
+        assertEquals(JsonValue.parseString(MCRAP_MESSAGE).toString(true), message.rawMessageJson.toString(true))
     }
 
     /** Test message parses its data correctly. */
@@ -60,10 +57,12 @@ public class MessageTest {
         // Add expiry
         val map = JsonValue.parseString(MCRAP_MESSAGE).requireMap().map
         map["message_expiry"] = JsonValue.wrap(DateUtils.createIso8601TimeStamp(10000L))
-        val message = Message.create(JsonValue.wrap(map), true, false)
+        val message = requireNotNull(
+            Message.create(JsonValue.wrap(map), true, false)
+        )
 
         // Expiry
-        assertEquals(10000L, message!!.expirationDateMS)
+        assertEquals(Date(10000L), message.expirationDate)
         assertTrue(message.isExpired)
     }
 

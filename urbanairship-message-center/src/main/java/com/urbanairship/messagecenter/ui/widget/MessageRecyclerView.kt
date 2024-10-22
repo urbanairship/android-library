@@ -102,7 +102,7 @@ internal class MessageRecyclerAdapter(
         setHasStableIds(true)
     }
 
-    override fun getItemId(position: Int): Long = getItem(position).messageId.hashCode().toLong()
+    override fun getItemId(position: Int): Long = getItem(position).id.hashCode().toLong()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder = ViewHolder(
         parent,
@@ -153,7 +153,7 @@ internal class MessageRecyclerAdapter(
     internal companion object {
         val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Message>() {
             override fun areItemsTheSame(oldItem: Message, newItem: Message): Boolean =
-                oldItem.messageId == newItem.messageId
+                oldItem.id == newItem.id
 
             override fun areContentsTheSame(oldItem: Message, newItem: Message): Boolean =
                 oldItem == newItem

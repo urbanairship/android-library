@@ -29,8 +29,8 @@ public class MessageViewAdapterTest {
         messageViewAdapter.set(messages)
 
         // Verify messages are available
-        assertEquals(messageId1, (messageViewAdapter.getItem(0) as Message?)?.messageId)
-        assertEquals(messageId2, (messageViewAdapter.getItem(1) as Message?)?.messageId)
+        assertEquals(messageId1, (messageViewAdapter.getItem(0) as Message?)?.id)
+        assertEquals(messageId2, (messageViewAdapter.getItem(1) as Message?)?.id)
 
         // Test non-empty message view adapter
         assertNull(messageViewAdapter.getItem(2))

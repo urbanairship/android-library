@@ -139,7 +139,7 @@ public class MessageListItem @JvmOverloads constructor(
     /** Sets the title, optional subtitle, and sent date. */
     private fun setText(item: Message) = with(views) {
         primaryText.text = item.title
-        secondaryText.setTextOrHide(item.extras.getString(subtitleExtra))
+        secondaryText.setTextOrHide(item.subtitle)
         tertiaryText.text = dateFormatter.format(item.sentDate)
     }
 
@@ -308,8 +308,6 @@ public class MessageListItem @JvmOverloads constructor(
 
     private companion object {
         private val dateFormatter = DateFormat.getDateInstance(DateFormat.LONG)
-
-        private val subtitleExtra = "com.urbanairship.listing.field1"
 
         @JvmStatic
         private val STATE_HIGHLIGHTED: IntArray = intArrayOf(com.urbanairship.R.attr.ua_state_highlighted)
