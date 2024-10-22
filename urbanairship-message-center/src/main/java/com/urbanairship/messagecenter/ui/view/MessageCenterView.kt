@@ -6,6 +6,10 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.findViewTreeOnBackPressedDispatcherOwner
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.findViewTreeViewModelStoreOwner
+import androidx.lifecycle.get
+import androidx.lifecycle.viewModelScope
 import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
@@ -13,6 +17,7 @@ import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.view.MessageListView.OnShowMessageListener
 import com.google.android.material.appbar.MaterialToolbar
+import kotlinx.coroutines.runBlocking
 
 /**
  * `View` that wraps a `SlidingPaneLayout` to display a [MessageListView] and [MessageView] in an
@@ -34,6 +39,9 @@ public class MessageCenterView @JvmOverloads constructor(
     private val messageToolbar: MaterialToolbar by lazy { findViewById(R.id.message_toolbar) }
     private val messageView: MessageView by lazy { findViewById(R.id.message_view) }
 
+    private var viewModel: MessageCenterViewModel? = null
+    private var pendingMessageId: String? = null
+
     init {
         inflate(context, R.layout.ua_view_message_center, this)
 
@@ -48,6 +56,22 @@ public class MessageCenterView @JvmOverloads constructor(
             field = value
             listView.predicate = value
         }
+
+    public fun displayMessage(messageId: String) {
+        if (viewModel == null) {
+            pendingMessageId = messageId
+            return
+        }
+
+        pendingMessageId = null
+
+        val message = runBlocking { viewModel?.getOrFetchMessage(messageId) } ?: return
+        openMessagePane(message)
+    }
+
+    public fun popMessageView() {
+        slidingPaneLayout.closePane()
+    }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -82,6 +106,22 @@ public class MessageCenterView @JvmOverloads constructor(
             "No OnBackPressedDispatcherOwner found! MessageCenterView must be hosted by an " +
                     "Activity or Fragment that implements OnBackPressedDispatcherOwner."
         }
+
+        if (viewModel == null) {
+            viewModel = ViewModelProvider(
+                owner = requireNotNull(findViewTreeViewModelStoreOwner()) {
+                    "MessageView must be hosted in a view that has a ViewModelStoreOwner!"
+                },
+                factory = MessageCenterViewModel.factory()
+            ).get<MessageCenterViewModel>()
+
+            pendingMessageId?.let(::displayMessage)
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        viewModel = null
     }
 
     private fun openMessagePane(message: Message) {

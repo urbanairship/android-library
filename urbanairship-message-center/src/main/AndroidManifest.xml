@@ -9,7 +9,7 @@
             android:exported="false" />
 
         <activity
-            android:name="com.urbanairship.messagecenter.MessageCenterActivity"
+            android:name="com.urbanairship.messagecenter.ui.MessageCenterActivity"
             android:exported="false"
             android:label="@string/ua_message_center_title" />
 
