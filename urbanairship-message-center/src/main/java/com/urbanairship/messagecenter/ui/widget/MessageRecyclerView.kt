@@ -67,6 +67,10 @@ internal class MessageRecyclerView @JvmOverloads constructor(
 
     public fun submitList(messages: List<Message>): Unit = adapter.submitList(messages)
 
+    public fun setHighlightedMessage(message: Message) {
+        adapter.setHighlighted(message)
+    }
+
     private fun TypedArray.applyDividerStyles() {
         //TODO(m3-inbox): Fix this! it's not actually loading values from the theme attrs...
         val showDividers = getBoolean(R.styleable.MessageCenter_messageCenterDividersEnabled, false)

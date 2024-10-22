@@ -203,7 +203,7 @@ public class MessageCenterFragment extends Fragment {
             attributes.recycle();
 
             if (currentMessageId != null) {
-                messageListFragment.setCurrentMessage(currentMessageId);
+                messageListFragment.setHighlightedMessage(currentMessageId);
             }
         } else {
             isTwoPane = false;
@@ -340,7 +340,7 @@ public class MessageCenterFragment extends Fragment {
                                          .replace(R.id.message_container, fragment, tag)
                                          .commit();
 
-                messageListFragment.setCurrentMessage(messageId);
+                messageListFragment.setHighlightedMessage(messageId);
 
             } else if (messageId != null) {
                 showMessageExternally(getContext(), messageId);
