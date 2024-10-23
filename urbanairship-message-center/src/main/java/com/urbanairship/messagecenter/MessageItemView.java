@@ -28,7 +28,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.ViewCompat;
 import kotlin.Deprecated;
-import kotlin.DeprecationLevel;
 
 /**
  * Message Center item view.

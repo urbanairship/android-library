@@ -6,7 +6,6 @@ import android.os.Parcelable
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.emptyJsonMap
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
@@ -16,7 +15,6 @@ import com.urbanairship.util.DateUtils
 import java.util.Date
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
-import kotlinx.parcelize.TypeParceler
 import kotlinx.parcelize.WriteWith
 
 /**

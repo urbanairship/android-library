@@ -15,13 +15,12 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import androidx.lifecycle.get
 import com.urbanairship.UALog
-import com.urbanairship.messagecenter.Inbox
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.animator.animateFadeIn
 import com.urbanairship.messagecenter.animator.animateFadeOut
-import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.*
+import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.LOAD_FAILED
+import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.UNAVAILABLE
 import com.urbanairship.messagecenter.ui.widget.MessageWebView
 import com.urbanairship.messagecenter.ui.widget.MessageWebViewClient
 import com.urbanairship.messagecenter.util.getActivity
@@ -29,7 +28,6 @@ import com.urbanairship.webkit.AirshipWebChromeClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 

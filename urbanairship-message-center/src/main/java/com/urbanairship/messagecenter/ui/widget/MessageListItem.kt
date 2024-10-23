@@ -18,14 +18,13 @@ import androidx.core.view.accessibility.AccessibilityViewCommand.CommandArgument
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.widget.TextViewCompat
-import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.images.ImageLoader
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.ui.view.MessageListView
-import com.urbanairship.messagecenter.ui.view.MessageCenterView
 import com.urbanairship.messagecenter.R
+import com.urbanairship.messagecenter.ui.view.MessageCenterView
+import com.urbanairship.messagecenter.ui.view.MessageListView
 import com.urbanairship.messagecenter.util.setTextOrHide
 import com.urbanairship.util.AccessibilityUtils
 import java.text.DateFormat

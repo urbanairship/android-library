@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.UALog
-import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.ui.widget.EditableRecyclerView.Payload
 import kotlinx.parcelize.Parcelize
 

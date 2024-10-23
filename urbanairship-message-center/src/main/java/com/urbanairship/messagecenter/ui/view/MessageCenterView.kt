@@ -124,7 +124,7 @@ public class MessageCenterView @JvmOverloads constructor(
 
     /** Refreshes the message list. */
     public fun refreshMessages(): Unit = listView.refresh(animateSwipeRefresh = true)
-    
+
     private fun openMessagePane(message: Message) {
         messageView.messageId = message.id
 
