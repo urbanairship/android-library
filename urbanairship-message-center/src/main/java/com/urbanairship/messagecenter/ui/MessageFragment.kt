@@ -16,15 +16,18 @@ import com.urbanairship.messagecenter.ui.view.MessageView
 public open class MessageFragment public constructor() : Fragment(R.layout.ua_fragment_message) {
 
     /** The current [Message] ID. */
-    public val messageId: String = requireNotNull(arguments?.getString(MESSAGE_ID)) {
-        "Missing required argument 'MESSAGE_ID'!"
-    }
+    public val messageId: String
+        get() {
+            return requireNotNull(arguments?.getString(MESSAGE_ID)) {
+                "Missing required argument 'MESSAGE_ID'!"
+            }
+        }
 
     @CallSuper
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val messageView = view.findViewById<MessageView>(android.R.id.message)
+        val messageView = view.findViewById<MessageView>(R.id.message)
         messageView.messageId = messageId
     }
 

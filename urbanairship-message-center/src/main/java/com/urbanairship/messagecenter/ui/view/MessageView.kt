@@ -53,6 +53,7 @@ public class MessageView @JvmOverloads constructor(
     private val views: Views by lazy { Views(this) }
 
     private var viewModel: MessageViewViewModel? = null
+    private var refreshSubscription: SubscriptionCancellation? = null
 
     init {
         inflate(context, R.layout.ua_view_message, this)
@@ -133,6 +134,8 @@ public class MessageView @JvmOverloads constructor(
             ).get<MessageViewViewModel>().also {
                 observeViewModel(it)
             }
+
+            messageId?.let { viewModel?.loadMessage(it) }
         }
 
         findViewTreeLifecycleOwner()?.lifecycle?.run {
@@ -164,12 +167,14 @@ public class MessageView @JvmOverloads constructor(
     private val lifecycleObserver = object : DefaultLifecycleObserver {
         override fun onResume(owner: LifecycleOwner) {
             views.webView.onResume()
+            refreshSubscription = viewModel?.subscribeForMessageUpdates()
         }
 
         override fun onPause(owner: LifecycleOwner) {
             views.webView.onPause()
             // Also pause javascript timers
             views.webView.pauseTimers()
+            refreshSubscription?.cancel()
         }
     }
 

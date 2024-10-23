@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Inbox
+import com.urbanairship.messagecenter.InboxListener
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.LOAD_FAILED
@@ -84,6 +85,23 @@ public class MessageViewViewModel(
         inbox.markMessagesRead(messages.map { it.messageId }.toSet())
     }
 
+    internal fun subscribeForMessageUpdates(): SubscriptionCancellation {
+        val listener = object : InboxListener {
+            override fun onInboxUpdated() {
+                val messageId = currentMessageId ?: return
+
+                viewModelScope.launch {
+                    _states.value = getOrFetchMessage(messageId)
+                }
+            }
+        }
+        inbox.addListener(listener)
+
+        return object : SubscriptionCancellation {
+            override fun cancel() = inbox.removeListener(listener)
+        }
+    }
+
     private suspend fun getOrFetchMessage(messageId: String): MessageViewState {
         // Try to load the message from local storage
         val message = inbox.getMessage(messageId) ?: run {
@@ -142,4 +160,8 @@ public sealed class MessageViewState {
 
     /** Empty state (no messages available). */
     public data object Empty : MessageViewState()
+}
+
+internal interface SubscriptionCancellation {
+    fun cancel()
 }
