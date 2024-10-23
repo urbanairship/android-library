@@ -3,7 +3,8 @@
 
     <style name="UrbanAirship.Layout" parent="Theme.MaterialComponents.DayNight.NoActionBar"/>
 
-    <style name="UrbanAirship.Layout.ModalActivity">
+
+    <style name="UrbanAirship.Layout.ModalActivityBase">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:colorBackgroundCacheHint">@null</item>
         <item name="android:windowIsTranslucent">true</item>
@@ -12,6 +13,8 @@
         <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
+
+    <style name="UrbanAirship.Layout.ModalActivity" parent="UrbanAirship.Layout.ModalActivityBase" />
 
 </resources>
 

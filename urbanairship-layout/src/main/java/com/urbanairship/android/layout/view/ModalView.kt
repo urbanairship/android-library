@@ -2,10 +2,13 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Rect
+import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
+import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -48,8 +51,22 @@ internal class ModalView(
         val frame = ConstrainedFrameLayout(context, size).apply {
             id = View.generateViewId()
             layoutParams = LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT)
-            elevation = ResourceUtils.dpToPx(context, 16)
+            clipChildren = false
+            clipToPadding = false
+            outlineProvider = ViewOutlineProvider.BOUNDS
+
+            LayoutUtils.applyBorderAndBackground(this, placement.border, placement.backgroundColor)
+
+            if (placement.shadow != null) {
+                placement.shadow.androidShadow?.let { shadow ->
+                    applyShadow(this, shadow.color.resolve(context), shadow.elevation)
+                }
+            } else {
+                // If shadow is not defined fall back to a default
+                applyShadow(this, DEFAULT_SHADOW_COLOR, DEFAULT_SHADOW_ELEVATION)
+            }
         }
+
         modalFrame = frame
 
         val container = ClippableFrameLayout(context).apply {
@@ -63,11 +80,12 @@ internal class ModalView(
                     )
                 }
             }
+            placement.border?.innerRadius?.let {
+                setClipPathBorderRadius(ResourceUtils.dpToPx(context, it))
+            }
         }
 
         container.addView(model.createView(context, viewEnvironment, null))
-
-        LayoutUtils.applyBorderAndBackground(container, placement.border, placement.backgroundColor)
         containerView = container
 
         frame.addView(container)
@@ -109,6 +127,14 @@ internal class ModalView(
         clickOutsideListener = listener
     }
 
+    private fun applyShadow(view: View, color: Int, elevation: Float) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            view.outlineAmbientShadowColor = color
+            view.outlineSpotShadowColor = color
+        }
+        view.elevation = ResourceUtils.dpToPx(context, elevation.toInt())
+    }
+
     private fun isTouchOutside(event: MotionEvent): Boolean {
         // Get the bounds of the modal
         val r = Rect()
@@ -116,5 +142,11 @@ internal class ModalView(
         // Expand the bounds by the amount of slop needed to be considered an outside touch
         r.inset(-windowTouchSlop, -windowTouchSlop)
         return !r.contains(event.x.toInt(), event.y.toInt())
+    }
+
+    companion object {
+        val DEFAULT_SHADOW_COLOR = Color.argb(63, 0, 0, 0)
+        val DEFAULT_SHADOW_ELEVATION = 16f
+
     }
 }
