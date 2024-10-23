@@ -14,21 +14,19 @@
         <deepLink
             android:id="@+id/inboxDeepLink"
             app:uri="vnd.urbanairship.sample://deepLink/inbox" />
-        <argument
-            android:name="messageId"
-            app:nullable="true"
-            app:argType="string" />
+
         <action
             android:id="@+id/action_messageCenterFragment_to_messageFragment"
             app:destination="@id/inboxMessageFragment" />
     </fragment>
+
     <fragment
         android:id="@+id/inboxMessageFragment"
-        android:name="com.urbanairship.sample.inbox.InboxMessageFragment"
-        android:label="@string/message">
+        android:name="com.urbanairship.sample.inbox.InboxMessageFragment">
+
         <argument
-            android:name="messageId"
-            app:argType="string"
+            android:name="message"
+            app:argType="com.urbanairship.messagecenter.Message"
             app:nullable="true" />
     </fragment>
 
