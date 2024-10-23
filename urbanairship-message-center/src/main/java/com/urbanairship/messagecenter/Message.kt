@@ -2,56 +2,67 @@
 package com.urbanairship.messagecenter;
 
 import android.os.Bundle
+import android.os.Parcelable
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.emptyJsonMap
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 import com.urbanairship.json.toBundle
+import com.urbanairship.messagecenter.util.JsonMapParceler
 import com.urbanairship.util.DateUtils
 import java.util.Date
+import kotlinx.parcelize.IgnoredOnParcel
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.TypeParceler
+import kotlinx.parcelize.WriteWith
 
 /**
  * Message Center Message data.
  *
  * @property id The Airship message ID. May be used to match an incoming push notification to a specific `Message`.
  * @property title The message title.
- * @property extras (Optional) Message extras.
  * @property bodyUrl The URL for the message body. URL may only be accessed with Basic Auth credentials set to the user ID and password.
  * @property sentDate The date and time the message was sent (UTC).
  * @property expirationDate (Optional) The date and time the message will expire (UTC).
  */
+@Parcelize
 public class Message internal constructor(
     public val id: String,
     public val title: String,
-    public val extras: Bundle,
     public val bodyUrl: String,
     public val sentDate: Date,
     public val expirationDate: Date?,
     public val isUnread: Boolean,
+    internal val extrasJson: @WriteWith<JsonMapParceler> JsonMap?,
     internal val messageUrl: String,
     internal val reporting: JsonValue?,
-    internal val rawMessageJson: JsonMap,
+    internal val rawMessageJson: JsonValue,
     internal var isUnreadClient: Boolean = isUnread,
     internal var isDeletedClient: Boolean,
-) {
+) : Parcelable {
 
     /** Indicates whether the message has been read. */
+    @IgnoredOnParcel
     public val isRead: Boolean = !isUnreadClient
 
     /** Indicates whether the message has been expired. */
+    @IgnoredOnParcel
     public val isExpired: Boolean
         get() = expirationDate?.before(Date()) ?: false
 
     /** Indicates whether the message has been deleted. */
+    @IgnoredOnParcel
     public val isDeleted: Boolean
         get() = isDeletedClient
 
     /** Optional list icon URL for this `Message`. */
+    @IgnoredOnParcel
     public val listIconUrl: String? by lazy {
         try {
-            rawMessageJson.optionalMap(KEY_ICONS)?.optionalField(KEY_LIST_ICON)
+            rawMessageJson.optMap().optionalMap(KEY_ICONS)?.optionalField(KEY_LIST_ICON)
         } catch (e: Exception) {
             UALog.w(e, "Failed to get Message Center Message list icon!")
             null
@@ -64,9 +75,19 @@ public class Message internal constructor(
      * This is a custom extra that can be set when creating the message, using the key:
      * `com.urbanairship.listing.field1`
      */
+    @IgnoredOnParcel
     public val subtitle: String? by lazy {
-        extras.getString(EXTRA_SUBTITLE)
+        extrasJson?.optionalField(EXTRA_SUBTITLE)
     }
+
+    /** Returns the message extras as a `Bundle`. */
+    @IgnoredOnParcel
+    public val extras: Bundle?
+        get() = extrasJson?.toBundle()
+
+    // TODO: Remove when deprecated methods below are removed
+    private val inbox: Inbox
+        get() = MessageCenter.shared().inbox
 
     /** Marks this `Message` as read. */
     @Deprecated(
@@ -104,8 +125,45 @@ public class Message internal constructor(
         }
     }
 
-    private val inbox: Inbox
-        get() = MessageCenter.shared().inbox
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Message
+
+        if (id != other.id) return false
+        if (title != other.title) return false
+        if (extrasJson != other.extrasJson) return false
+        if (bodyUrl != other.bodyUrl) return false
+        if (sentDate != other.sentDate) return false
+        if (expirationDate != other.expirationDate) return false
+        if (isUnread != other.isUnread) return false
+        if (messageUrl != other.messageUrl) return false
+        if (reporting != other.reporting) return false
+        if (rawMessageJson != other.rawMessageJson) return false
+        if (isUnreadClient != other.isUnreadClient) return false
+        if (isDeletedClient != other.isDeletedClient) return false
+        if (isRead != other.isRead) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + title.hashCode()
+        result = 31 * result + extrasJson.hashCode()
+        result = 31 * result + bodyUrl.hashCode()
+        result = 31 * result + sentDate.hashCode()
+        result = 31 * result + (expirationDate?.hashCode() ?: 0)
+        result = 31 * result + isUnread.hashCode()
+        result = 31 * result + messageUrl.hashCode()
+        result = 31 * result + (reporting?.hashCode() ?: 0)
+        result = 31 * result + rawMessageJson.hashCode()
+        result = 31 * result + isUnreadClient.hashCode()
+        result = 31 * result + isDeletedClient.hashCode()
+        result = 31 * result + isRead.hashCode()
+        return result
+    }
 
     public companion object {
         internal const val KEY_ID: String = "message_id"
@@ -129,7 +187,7 @@ public class Message internal constructor(
                 Message(
                     id = json.requireField(KEY_ID),
                     title = json.requireField(KEY_TITLE),
-                    extras = json.optionalMap(KEY_EXTRAS)?.toBundle() ?: Bundle.EMPTY,
+                    extrasJson = json.optionalMap(KEY_EXTRAS),
                     bodyUrl = json.requireField(KEY_BODY_URL),
                     sentDate = json.optionalField<String>(KEY_SENT_DATE)
                         ?.let { Date(DateUtils.parseIso8601(it)) } ?: Date(),
@@ -138,7 +196,7 @@ public class Message internal constructor(
                     isUnread = json.optionalField(KEY_IS_UNREAD) ?: false,
                     messageUrl = json.requireField(KEY_MESSAGE_URL),
                     reporting = json[KEY_MESSAGE_REPORTING],
-                    rawMessageJson = json,
+                    rawMessageJson = json.toJsonValue(),
                     isUnreadClient = isUnreadClient,
                     isDeletedClient = isDeleted
                 )
