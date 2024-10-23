@@ -19,6 +19,7 @@ import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
+import com.urbanairship.messagecenter.ui.MessageCenterActivity
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
@@ -201,7 +202,7 @@ internal constructor(
      * - The optional [OnShowMessageCenterListener].
      * - An implicit intent with `com.urbanairship.VIEW_RICH_PUSH_INBOX`.
      * - If the message ID is provided, an implicit intent with `com.urbanairship.VIEW_MESSAGE_INTENT_ACTION`.
-     * - Finally it will fallback to the provided [MessageCenterActivity].
+     * - Finally it will fallback to the provided [com.urbanairship.messagecenter.ui.MessageCenterActivity].
      *
      * Implicit intents will have the message ID encoded as the intent's data with the format `message:<MESSAGE_ID>`.
      *

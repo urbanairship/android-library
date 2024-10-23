@@ -8,7 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.urbanairship.messagecenter.MessageCenterFragment;
+import com.urbanairship.messagecenter.ui.MessageCenterFragment;
 import com.urbanairship.messagecenter.ui.MessageFragment;
 import com.urbanairship.sample.R;
 
@@ -41,7 +41,8 @@ public class InboxFragment extends MessageCenterFragment {
         NavigationUI.setupWithNavController(toolbar, Navigation.findNavController(view));
     }
 
-    @Override
+    //TODO: not used
+//    @Override
     protected void showMessageExternally(@NonNull Context context, @NonNull String messageId) {
         if (getView() != null) {
             Bundle arguments = new Bundle();
