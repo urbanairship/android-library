@@ -55,6 +55,15 @@ public class MessageView @JvmOverloads constructor(
     private var viewModel: MessageViewViewModel? = null
     private var refreshSubscription: SubscriptionCancellation? = null
 
+    /** Listener interface that will be called when a message is loaded. */
+    public interface Listener {
+        public fun onMessageLoaded(message: Message)
+        public fun onMessageLoadError(error: MessageViewState.Error.Type)
+    }
+
+    /** Listener for the loaded message. */
+    public var listener: Listener? = null
+
     init {
         inflate(context, R.layout.ua_view_message, this)
         onViewCreated()
@@ -75,10 +84,6 @@ public class MessageView @JvmOverloads constructor(
         with (views.webView) {
             alpha = 0f
 
-            // Set a custom RichPushWebViewClient view client to listen for the page finish
-            // Note: MessageWebViewClient is required to load the proper auth and to
-            // inject the Airship Javascript interface.  When overriding any methods
-            // make sure to call through to the super's implementation.
             setWebViewClient(object : MessageWebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
@@ -89,12 +94,16 @@ public class MessageView @JvmOverloads constructor(
                         UALog.i { "Showing error! $url" }
 
                         views.showError(LOAD_FAILED)
+                        listener?.onMessageLoadError(LOAD_FAILED)
                     } else {
                         message?.let {
                             UALog.i { "Mark read and show message! $url" }
 
-                            viewModel?.markMessagesRead(it)
+                            if (!it.isRead) {
+                                viewModel?.markMessagesRead(it)
+                            }
                             views.showMessage()
+                            listener?.onMessageLoaded(it)
                         }
                     }
                 }
@@ -157,7 +166,6 @@ public class MessageView @JvmOverloads constructor(
                     MessageViewState.Loading -> views.showProgress()
                 }
             }
-            .flowOn(Dispatchers.Main)
             .launchIn(scope)
     }
 
@@ -187,11 +195,12 @@ public class MessageView @JvmOverloads constructor(
     ) {
 
         fun showProgress() {
+            progressBar.alpha = 1f
+
             if (errorPage.isVisible) {
                 errorPage.animateFadeOut()
             }
             webView.animateFadeOut()
-            progressBar.animateFadeIn()
             emptyPage.animateFadeOut()
         }
 
@@ -211,7 +220,6 @@ public class MessageView @JvmOverloads constructor(
             }
 
             progressBar.animateFadeOut()
-
             emptyPage.animateFadeIn()
         }
 

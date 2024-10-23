@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.annotation.AttrRes
 import androidx.annotation.DrawableRes
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.content.withStyledAttributes
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityViewCommand.CommandArguments
@@ -116,8 +117,11 @@ public class MessageListItem @JvmOverloads constructor(
      * @param highlighted `true` to highlight the view, `false` to remove the highlight.
      */
     public fun updateHighlighted(highlighted: Boolean) {
-        UALog.d("updateHighlighted: $highlighted")
         isHighlighted = highlighted
+
+        // TODO(m3-inbox): update to properly set up selectors for the background state-list drawable
+        val color = if (highlighted) R.color.ua_message_center_status_bar else android.R.color.transparent
+        setBackgroundColor(ResourcesCompat.getColor(resources, color, context.theme))
         refreshDrawableState()
     }
 

@@ -51,13 +51,16 @@ public class MessageListView @JvmOverloads constructor(
             viewModel?.setPredicate(value)
         }
 
-    /** Listener interface that will be called when a message is selected for display. */
-    public fun interface OnShowMessageListener {
+    /** Listener interface for responding to `MessageListView` events. */
+    public interface Listener {
+        /** Called when the list enters or exits editing mode. */
+        public fun onEditModeChanged(isEditing: Boolean)
+        /** Called when a message is clicked. */
         public fun onShowMessage(message: Message)
     }
 
-    /** Listener for showing a message. */
-    public var onShowMessageListener: OnShowMessageListener? = null
+    /** `MessageListView` listener. */
+    public var listener: Listener? = null
 
     /** Flag that controls whether the list is in editing mode. */
     public var isEditing: Boolean
@@ -100,20 +103,18 @@ public class MessageListView @JvmOverloads constructor(
 
             list.listener = object : EditableRecyclerView.Listener<Message> {
                 override fun onEditModeChanged(isEditing: Boolean) {
-                    UALog.d { "onEditModeChanged: $isEditing" }
+                    listener?.onEditModeChanged(isEditing)
                     views.updateEditing(isEditing)
                 }
 
                 override fun onItemClicked(item: Message) {
-                    UALog.d { "onItemClicked: ${item.title}" }
-                    onShowMessageListener?.onShowMessage(item) ?: run {
+                    listener?.onShowMessage(item) ?: run {
                         // TODO: should this fall back to opening via MessageCenter.shared()?
                         UALog.w { "No listener set for onShowMessage!" }
                     }
                 }
 
                 override fun onSelectionChanged(selectedItems: List<Message>, isAllSelected: Boolean) {
-                    UALog.d { "onSelectionChanged: ${selectedItems.map { it.title }}" }
                     updateSelectionCount(selectedItems.size, isAllSelected)
                 }
             }
@@ -147,23 +148,38 @@ public class MessageListView @JvmOverloads constructor(
         viewModel = null
     }
 
-
     /** Triggers a network request to refresh the message list. */
     @JvmOverloads
     public fun refresh(animateSwipeRefresh: Boolean = false, onRefreshed: (() -> Unit)? = null) {
+        if (animateSwipeRefresh) {
+            views.listRefresh.isRefreshing = true
+        }
+
         viewModel?.refresh {
             if (animateSwipeRefresh) {
                 views.listRefresh.isRefreshing = false
             }
 
             onRefreshed?.invoke()
-
-            if (animateSwipeRefresh) {
-                views.listRefresh.isRefreshing = true
-            }
         }
     }
 
+    /**
+     * Sets the currently highlighted [message].
+     *
+     * This represents the selected message that is currently being displayed and may be
+     * useful if this `RecyclerView` is being displayed in a two-pane master-detail layout.
+     */
+    public fun setHighlightedMessage(message: Message) {
+        views.list.setHighlightedMessage(message)
+    }
+
+    /**
+     * Sets the currently highlighted [Message], by ID.
+     *
+     * This represents the selected message that is currently being displayed and may be
+     * useful if this `RecyclerView` is being displayed in a two-pane master-detail layout.
+     */
     public fun setHighlightedMessage(messageId: String) {
         val state = viewModel?.states?.value ?: return
         val message = when(state) {
@@ -172,6 +188,11 @@ public class MessageListView @JvmOverloads constructor(
         } ?: return
 
         views.list.setHighlightedMessage(message)
+    }
+
+    /** Clears the currently highlighted item. */
+    public fun clearHighlightedMessage() {
+        views.list.setHighlightedMessage(null)
     }
 
     private fun observeViewModel(viewModel: MessageListViewModel) {
