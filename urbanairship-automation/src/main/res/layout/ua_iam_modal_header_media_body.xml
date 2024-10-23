@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,12 +7,12 @@
     style="@style/UrbanAirship.InAppModal.Content.HeaderMediaBody"
     android:orientation="vertical">
 
-
     <TextView
         android:id="@+id/heading"
         style="@style/UrbanAirship.InAppModal.Heading.HeaderMediaBody"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:accessibilityHeading="true" />
 
     <com.urbanairship.iam.view.MediaView
         android:id="@+id/media"
