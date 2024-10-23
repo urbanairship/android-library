@@ -12,21 +12,35 @@ import com.urbanairship.messagecenter.ui.view.MessageCenterView
 /** `Fragment` that displays the Message Center list and message view. */
 public open class MessageCenterFragment: Fragment(R.layout.ua_fragment_mc) {
 
-    private lateinit var messageCenter: MessageCenterView
+    private var messageCenter: MessageCenterView? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        messageCenter = view.findViewById(R.id.message_center)
         super.onViewCreated(view, savedInstanceState)
 
+        messageCenter = view.findViewById(R.id.message_center)
         arguments?.getString(MESSAGE_ID)?.let(::displayMessage)
+
+        pendingPredicate.let { messageCenter?.predicate = it }
+        pendingPredicate = null
     }
 
+    private var pendingPredicate: Predicate<Message>? = null
     public var predicate: Predicate<Message>?
-        get() = messageCenter.predicate
-        set(value) { messageCenter.predicate = value }
+        get() = messageCenter?.predicate
+        set(value) {
+            if (messageCenter == null) {
+                pendingPredicate = predicate
+            } else {
+                messageCenter?.predicate = value
+            }
+        }
 
-    public fun displayMessage(messageId: String): Unit = messageCenter.displayMessage(messageId)
-    public fun popMessageView(): Unit = messageCenter.popMessageView()
+    public fun displayMessage(messageId: String) {
+        messageCenter?.displayMessage(messageId)
+    }
+    public fun popMessageView() {
+        messageCenter?.popMessageView()
+    }
 
     public companion object {
         /** Argument key to specify the message */
