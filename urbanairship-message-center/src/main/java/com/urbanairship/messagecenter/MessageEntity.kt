@@ -65,6 +65,11 @@ internal data class MessageEntity(
     }
 
     companion object {
+        @Throws(JsonException::class)
+        fun createMessageFromPayload(messageId: String?, payload: JsonValue): MessageEntity? =
+            createMessageFromPayload(messageId, payload.optMap())
+
+        @Throws(JsonException::class)
         fun createMessageFromPayload(messageId: String?, messagePayload: JsonMap): MessageEntity? {
 
             if (UAStringUtil.isEmpty(messagePayload.opt(Message.KEY_ID).string)) {
@@ -73,7 +78,7 @@ internal data class MessageEntity(
             }
 
             return MessageEntity(
-                messageId = messageId ?: messagePayload.opt(Message.KEY_ID).optString(),
+                messageId = messageId ?: messagePayload.opt(Message.KEY_ID).requireString(),
                 messageUrl = messagePayload.opt(Message.KEY_MESSAGE_URL).string,
                 messageBodyUrl = messagePayload.opt(Message.KEY_BODY_URL).string,
                 messageReadUrl = messagePayload.opt(Message.KEY_MESSAGE_READ_URL).string,
@@ -93,7 +98,7 @@ internal data class MessageEntity(
             val messageEntities = ArrayList<MessageEntity>()
 
             for (messagePayload in messagePayloads) {
-                val messageEntity = createMessageFromPayload(null, messagePayload.requireMap())
+                val messageEntity = createMessageFromPayload(null, messagePayload)
                 if (messageEntity != null) {
                     messageEntities.add(messageEntity)
                 }

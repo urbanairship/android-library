@@ -39,8 +39,8 @@ public class MessageTest {
         assertFalse(message.isDeleted)
 
         // Extras
-        assertEquals(1, message.extras.size())
-        assertEquals("some_value", message.extras.getString("some_key"))
+        assertEquals(1, message.extrasJson?.size())
+        assertEquals("some_value", message.extras?.getString("some_key"))
 
         // Expiry
         assertNull(message.expirationDate)
@@ -65,6 +65,26 @@ public class MessageTest {
         assertEquals(Date(10000L), message.expirationDate)
         assertTrue(message.isExpired)
     }
+
+
+    /** Test message parses its data correctly. */
+    @Test
+    @Throws(JsonException::class)
+    public fun testMessageMissingSentDate() {
+        val map = JsonValue.parseString(MCRAP_MESSAGE).requireMap().map
+
+        // remove sent date
+        map.remove("message_sent")
+
+        val now = Date()
+        val message = requireNotNull(
+            Message.create(JsonValue.wrap(map), true, false)
+        )
+
+        // Verify that we set the sent date to now when the message was created
+        assertEquals(now.toString(), message.sentDate.toString())
+    }
+
 
     private companion object {
         @Language("JSON")
