@@ -293,7 +293,7 @@ public class PermissionsManagerTest {
     }
 
     @Test
-    public fun testFallbackSystemSettingsFails(): TestResult = runTest(UnconfinedTestDispatcher()) {
+    public fun testFallbackSystemSettingsFails(): TestResult = runTest {
         val settingsLaunched = MutableStateFlow(false)
 
         every {
@@ -309,6 +309,7 @@ public class PermissionsManagerTest {
         val job = async(Dispatchers.Default) {
             permissionsManager.suspendingRequestPermission(Permission.LOCATION, fallback = PermissionPromptFallback.SystemSettings)
         }
+        advanceUntilIdle()
 
         settingsLaunched.first { it }
         mockDelegateStatus = PermissionRequestResult.granted()
@@ -316,6 +317,7 @@ public class PermissionsManagerTest {
         MainScope().launch {
             activityMonitor.resumeActivity(Activity())
         }
+        advanceUntilIdle()
 
         assertEquals(
             PermissionRequestResult.denied(true),
@@ -329,7 +331,7 @@ public class PermissionsManagerTest {
     }
 
     @Test
-    public fun testFallbackSystemSettingsNotifications(): TestResult = runTest(UnconfinedTestDispatcher()) {
+    public fun testFallbackSystemSettingsNotifications(): TestResult = runTest {
         val settingsLaunched = MutableStateFlow(false)
 
         every {
@@ -342,9 +344,10 @@ public class PermissionsManagerTest {
         mockDelegateStatus = PermissionRequestResult.denied(true)
         permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
 
-        val job = async(Dispatchers.Default) {
+        val job = async {
             permissionsManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, fallback = PermissionPromptFallback.SystemSettings)
         }
+        advanceUntilIdle()
 
         settingsLaunched.first { it }
 
@@ -353,6 +356,7 @@ public class PermissionsManagerTest {
         MainScope().launch {
             activityMonitor.resumeActivity(Activity())
         }
+        advanceUntilIdle()
 
         assertEquals(
             PermissionRequestResult.granted(),
