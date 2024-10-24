@@ -39,7 +39,7 @@ public open class MessageCenterFragment: Fragment(R.layout.ua_fragment_mc) {
         messageCenter?.displayMessage(messageId)
     }
 
-    public fun closeMessage() {
+    public fun closeMessagePane() {
         messageCenter?.closeMessagePane()
     }
 
