@@ -39,8 +39,8 @@ public class MessageTest {
         assertFalse(message.isDeleted)
 
         // Extras
-        assertEquals(1, message.extrasJson?.size())
-        assertEquals("some_value", message.extras?.getString("some_key"))
+        assertEquals(1, message.extras?.size)
+        assertEquals("some_value", message.extras?.get("some_key"))
 
         // Expiry
         assertNull(message.expirationDate)

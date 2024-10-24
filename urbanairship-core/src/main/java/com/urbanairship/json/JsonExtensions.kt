@@ -172,22 +172,3 @@ internal inline fun <reified T> JsonMap.optionalFieldConverted(key: String, buil
     }
     return result
 }
-
-/** Helper for converting a [JsonMap] to a `Bundle` */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public fun JsonMap.toBundle(): Bundle = Bundle().apply {
-    for ((key, value) in  map.entries) {
-        if (value.isString) {
-            val stringValue = try {
-                value.requireString()
-            } catch (e: JsonException) {
-                UALog.w(e, "Failed to convert json value to string: $value")
-                value.toString()
-            }
-
-            putString(key, stringValue)
-        } else {
-            putString(key, value.toString())
-        }
-    }
-}

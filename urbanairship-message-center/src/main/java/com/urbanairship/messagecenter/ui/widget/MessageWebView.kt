@@ -83,17 +83,15 @@ internal open class MessageWebViewClient : AirshipWebViewClient() {
         webView: WebView
     ): JavaScriptEnvironment.Builder {
         val message = getMessage(webView)
-        var extras = JsonMap.EMPTY_MAP
-        if (message != null) {
-            extras = JsonValue.wrapOpt(message.extras).optMap()
-        }
+        val extras = message?.extras?.let { JsonValue.wrapOpt(it).optMap() } ?: JsonMap.EMPTY_MAP
+        val formattedSentDate = message?.sentDate?.let { DATE_FORMATTER.format(it) }
+
         return super.extendJavascriptEnvironment(builder, webView)
             .addGetter("getMessageSentDateMS", message?.sentDate?.time ?: -1)
             .addGetter("getMessageId", message?.id)
-            .addGetter("getMessageTitle", message?.title).addGetter(
-                "getMessageSentDate",
-                if (message != null) DATE_FORMATTER.format(message.sentDate) else null
-            ).addGetter("getUserId", MessageCenter.shared().user.id)
+            .addGetter("getMessageTitle", message?.title)
+            .addGetter("getMessageSentDate", formattedSentDate)
+            .addGetter("getUserId", MessageCenter.shared().user.id)
             .addGetter("getMessageExtras", extras)
     }
 
@@ -111,7 +109,6 @@ internal open class MessageWebViewClient : AirshipWebViewClient() {
     }
 
     private companion object {
-        // TODO(m3-inbox): Use LONG date format and maybe allow a format string to be set via theme attr?
         private val DATE_FORMATTER = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ", Locale.US).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }

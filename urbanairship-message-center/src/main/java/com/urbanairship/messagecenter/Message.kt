@@ -1,21 +1,17 @@
 
 package com.urbanairship.messagecenter;
 
-import android.os.Bundle
 import android.os.Parcelable
 import com.urbanairship.UALog
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
-import com.urbanairship.json.toBundle
-import com.urbanairship.messagecenter.util.JsonMapParceler
 import com.urbanairship.util.DateUtils
 import java.util.Date
+import java.util.Objects
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
-import kotlinx.parcelize.WriteWith
 
 /**
  * Message Center Message data.
@@ -25,6 +21,7 @@ import kotlinx.parcelize.WriteWith
  * @property bodyUrl The URL for the message body. URL may only be accessed with Basic Auth credentials set to the user ID and password.
  * @property sentDate The date and time the message was sent (UTC).
  * @property expirationDate (Optional) The date and time the message will expire (UTC).
+ * @property extras (Optional) Additional key-value pairs associated with the message.
  */
 @Parcelize
 public class Message internal constructor(
@@ -34,7 +31,7 @@ public class Message internal constructor(
     public val sentDate: Date,
     public val expirationDate: Date?,
     public val isUnread: Boolean,
-    internal val extrasJson: @WriteWith<JsonMapParceler> JsonMap?,
+    public val extras: Map<String, String?>?,
     internal val messageUrl: String,
     internal val reporting: JsonValue?,
     internal val rawMessageJson: JsonValue,
@@ -75,13 +72,8 @@ public class Message internal constructor(
      */
     @IgnoredOnParcel
     public val subtitle: String? by lazy {
-        extrasJson?.optionalField(EXTRA_SUBTITLE)
+        extras?.get(EXTRA_SUBTITLE)
     }
-
-    /** Returns the message extras as a `Bundle`. */
-    @IgnoredOnParcel
-    public val extras: Bundle?
-        get() = extrasJson?.toBundle()
 
     // TODO: Remove when deprecated methods below are removed
     private val inbox: Inbox
@@ -129,39 +121,36 @@ public class Message internal constructor(
 
         other as Message
 
-        if (id != other.id) return false
-        if (title != other.title) return false
-        if (extrasJson != other.extrasJson) return false
-        if (bodyUrl != other.bodyUrl) return false
-        if (sentDate != other.sentDate) return false
-        if (expirationDate != other.expirationDate) return false
-        if (isUnread != other.isUnread) return false
-        if (messageUrl != other.messageUrl) return false
-        if (reporting != other.reporting) return false
-        if (rawMessageJson != other.rawMessageJson) return false
-        if (isUnreadClient != other.isUnreadClient) return false
-        if (isDeletedClient != other.isDeletedClient) return false
-        if (isRead != other.isRead) return false
-
-        return true
+        return id == other.id &&
+            title == other.title &&
+            extras == other.extras &&
+            bodyUrl == other.bodyUrl &&
+            sentDate == other.sentDate &&
+            expirationDate == other.expirationDate &&
+            isUnread == other.isUnread &&
+            messageUrl == other.messageUrl &&
+            reporting == other.reporting &&
+            rawMessageJson == other.rawMessageJson &&
+            isUnreadClient == other.isUnreadClient &&
+            isDeletedClient == other.isDeletedClient &&
+            isRead == other.isRead
     }
 
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + title.hashCode()
-        result = 31 * result + extrasJson.hashCode()
-        result = 31 * result + bodyUrl.hashCode()
-        result = 31 * result + sentDate.hashCode()
-        result = 31 * result + (expirationDate?.hashCode() ?: 0)
-        result = 31 * result + isUnread.hashCode()
-        result = 31 * result + messageUrl.hashCode()
-        result = 31 * result + (reporting?.hashCode() ?: 0)
-        result = 31 * result + rawMessageJson.hashCode()
-        result = 31 * result + isUnreadClient.hashCode()
-        result = 31 * result + isDeletedClient.hashCode()
-        result = 31 * result + isRead.hashCode()
-        return result
-    }
+    override fun hashCode(): Int = Objects.hash(
+        id,
+        title,
+        extras,
+        bodyUrl,
+        sentDate,
+        expirationDate,
+        isUnread,
+        messageUrl,
+        reporting,
+        rawMessageJson,
+        isUnreadClient,
+        isDeletedClient,
+        isRead
+    )
 
     public companion object {
         internal const val KEY_ID: String = "message_id"
@@ -185,7 +174,7 @@ public class Message internal constructor(
                 Message(
                     id = json.requireField(KEY_ID),
                     title = json.requireField(KEY_TITLE),
-                    extrasJson = json.optionalMap(KEY_EXTRAS),
+                    extras = json.optionalMap(KEY_EXTRAS)?.map?.mapValues { it.value.coerceString() },
                     bodyUrl = json.requireField(KEY_BODY_URL),
                     sentDate = json.optionalField<String>(KEY_SENT_DATE)
                         ?.let { Date(DateUtils.parseIso8601(it)) } ?: Date(),
