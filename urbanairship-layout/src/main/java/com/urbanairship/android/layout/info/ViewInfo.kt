@@ -13,17 +13,12 @@ import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.FormInputType
-import com.urbanairship.android.layout.property.GestureType
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.MarkdownOptions
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
 import com.urbanairship.android.layout.property.PagerGesture
-import com.urbanairship.android.layout.property.PagerGesture.Companion.from
-import com.urbanairship.android.layout.property.PagerGesture.Hold
-import com.urbanairship.android.layout.property.PagerGesture.Swipe
-import com.urbanairship.android.layout.property.PagerGesture.Tap
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.ScoreStyle
 import com.urbanairship.android.layout.property.Size
@@ -165,7 +160,7 @@ internal class BaseViewInfo(json: JsonMap) : View {
 
 private fun view(json: JsonMap): View = BaseViewInfo(json)
 
-internal enum class AccessibleRoleInfo {
+internal enum class AccessibleRoleInfoType {
     HEADING,
     BUTTON,
     CHECKBOX,
@@ -174,37 +169,76 @@ internal enum class AccessibleRoleInfo {
     RADIOGROUP,
     PRESENTATION;
 
+    val value: String
+        get() = name.lowercase()
+
     companion object {
-        @JvmStatic
-        fun from(value: String): AccessibleRoleInfo = when (value.toLowerCase()) {
-            "heading" -> HEADING
-            "button" -> BUTTON
-            "checkbox" -> CHECKBOX
-            "form" -> FORM
-            "radio" -> RADIO
-            "radiogroup" -> RADIOGROUP
-            "presentation" -> PRESENTATION
-            else -> throw JsonException("Unknown AccessibleRoleInfo: $value")
+        fun fromString(value: String): AccessibleRoleInfoType? {
+            return try {
+                valueOf(value.uppercase())
+            } catch (e: IllegalArgumentException) {
+                null
+            }
         }
-
-        @JvmStatic
-        fun fromJson(json: JsonMap): AccessibleRoleInfo? =
-            json.optionalField<String>("accessibility_role")?.let { from(it) }
-
-        @JvmStatic
-        fun fromJson(json: JsonValue): AccessibleRoleInfo? =
-            json.optString()?.let { from(it) }
     }
 }
 
-// Extension function to easily get AccessibleRoleInfo from JsonMap
-internal fun JsonMap.getAccessibleRoleInfo(): AccessibleRoleInfo? =
-    AccessibleRoleInfo.fromJson(this)
+internal sealed class AccessibleRoleInfo {
+    abstract val type: AccessibleRoleInfoType
+
+    data object Button : AccessibleRoleInfo() {
+        override val type = AccessibleRoleInfoType.BUTTON
+    }
+
+    data object Checkbox : AccessibleRoleInfo() {
+        override val type = AccessibleRoleInfoType.CHECKBOX
+    }
+
+    data object Form : AccessibleRoleInfo() {
+        override val type = AccessibleRoleInfoType.FORM
+    }
+
+    data object Radio : AccessibleRoleInfo() {
+        override val type = AccessibleRoleInfoType.RADIO
+    }
+
+    data object RadioGroup : AccessibleRoleInfo() {
+        override val type = AccessibleRoleInfoType.RADIOGROUP
+    }
+
+    data object Presentation : AccessibleRoleInfo() {
+        override val type = AccessibleRoleInfoType.PRESENTATION
+    }
+
+    data class Heading(
+        val level: Int
+    ) : AccessibleRoleInfo() {
+        override val type = AccessibleRoleInfoType.HEADING
+    }
+
+    companion object {
+        fun fromJson(json: JsonMap): AccessibleRoleInfo? {
+            val typeStr = json.optionalField<String>("type") ?: return null
+            return when (val type = AccessibleRoleInfoType.fromString(typeStr)) {
+                AccessibleRoleInfoType.HEADING -> Heading(
+                    level = json.optionalField("level") ?: 1
+                )
+                AccessibleRoleInfoType.BUTTON -> Button
+                AccessibleRoleInfoType.CHECKBOX -> Checkbox
+                AccessibleRoleInfoType.FORM -> Form
+                AccessibleRoleInfoType.RADIO -> Radio
+                AccessibleRoleInfoType.RADIOGROUP -> RadioGroup
+                AccessibleRoleInfoType.PRESENTATION -> Presentation
+                null -> null
+            }
+        }
+    }
+}
 
 internal interface Accessible {
     val contentDescription: String?
     val localizedContentDescription: LocalizedContentDescription?
-    val accessibilityRole: AccessibleRoleInfo?
+    val accessibleRole: AccessibleRoleInfo?
 }
 
 private fun accessible(json: JsonMap): Accessible = object : Accessible {
@@ -213,8 +247,8 @@ private fun accessible(json: JsonMap): Accessible = object : Accessible {
     override val localizedContentDescription: LocalizedContentDescription? =
         json.optionalField<JsonMap>("localized_content_description")?.let { LocalizedContentDescription(it) }
 
-    override val accessibilityRole: AccessibleRoleInfo? =
-        json.optionalField<String>("accessibility_role")?.let { AccessibleRoleInfo.valueOf(it.toUpperCase()) }
+    override val accessibleRole: AccessibleRoleInfo? =
+        json.optionalField<JsonMap>("accessible_role")?.let { AccessibleRoleInfo.fromJson(it)}
 }
 
 internal interface Identifiable {

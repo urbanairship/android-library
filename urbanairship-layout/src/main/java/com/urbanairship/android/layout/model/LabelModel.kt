@@ -42,7 +42,7 @@ internal class LabelModel(
     constructor(info: LabelInfo, env: ModelEnvironment, props: ModelProperties) : this(
         text = info.text,
         textAppearance = info.textAppearance,
-        roleInfo = info.accessibilityRole,
+        roleInfo = info.accessibleRole,
         markdownOptions = info.markdownOptions,
         contentDescription = info.contentDescription,
         backgroundColor = info.backgroundColor,

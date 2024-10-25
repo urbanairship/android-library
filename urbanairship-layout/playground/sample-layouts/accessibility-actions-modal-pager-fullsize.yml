@@ -79,6 +79,9 @@ view:
                 width: auto
               view:
                 type: label
+                accessible_role:
+                  type: heading
+                  level: 1
                 text: This is the first page about stuff.
                 text_appearance:
                   alignment: center
@@ -162,6 +165,9 @@ view:
                 width: auto
               view:
                 type: label
+                accessible_role:
+                  type: heading
+                  level: 2
                 text: More stuff is here on the second page.
                 text_appearance:
                   alignment: center

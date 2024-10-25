@@ -5,7 +5,7 @@ import android.content.Context
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
-import com.urbanairship.android.layout.info.AccessibleRoleInfo
+import com.urbanairship.android.layout.info.AccessibleRoleInfoType
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.LabelModel
 import com.urbanairship.android.layout.util.LayoutUtils
@@ -23,7 +23,7 @@ internal class LabelView(
         model.contentDescription.ifNotEmpty { contentDescription = it }
 
         isClickable = false
-        ViewCompat.setAccessibilityHeading(this, model.roleInfo == AccessibleRoleInfo.HEADING);
+        ViewCompat.setAccessibilityHeading(this, model.roleInfo?.type == AccessibleRoleInfoType.HEADING)
 
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
