@@ -9,14 +9,11 @@ import androidx.activity.findViewTreeOnBackPressedDispatcherOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import androidx.lifecycle.get
-import androidx.lifecycle.viewModelScope
 import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
-import com.urbanairship.messagecenter.ui.view.MessageListView.OnShowMessageListener
-import com.google.android.material.appbar.MaterialToolbar
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -34,9 +31,7 @@ public class MessageCenterView @JvmOverloads constructor(
 ): FrameLayout(context, attrs, defStyle) {
 
     private val slidingPaneLayout: SlidingPaneLayout by lazy { findViewById(R.id.message_center_sliding_pane_layout) }
-    private val listToolbar: MaterialToolbar by lazy { findViewById(R.id.message_list_toolbar) }
     private val listView: MessageListView by lazy { findViewById(R.id.message_list) }
-    private val messageToolbar: MaterialToolbar by lazy { findViewById(R.id.message_toolbar) }
     private val messageView: MessageView by lazy { findViewById(R.id.message_view) }
 
     private var viewModel: MessageCenterViewModel? = null
@@ -46,9 +41,17 @@ public class MessageCenterView @JvmOverloads constructor(
         inflate(context, R.layout.ua_view_message_center, this)
 
         slidingPaneLayout.lockMode = SlidingPaneLayout.LOCK_MODE_LOCKED
-
-        listToolbar.inflateMenu(R.menu.message_list_menu)
     }
+
+    /** Listener interface that will be called when a message should be shown or closed. */
+    public interface Listener {
+        public fun onShowMessage(message: Message): Boolean
+        public fun onCloseMessage()
+        public fun onListEditingChanged(isEditing: Boolean)
+    }
+
+    /** MessageCenterView listener. */
+    public var listener: Listener? = null
 
     /** Optional `Predicate` to filter messages. */
     public var predicate: Predicate<Message>? = null
@@ -69,35 +72,21 @@ public class MessageCenterView @JvmOverloads constructor(
         openMessagePane(message)
     }
 
-    public fun popMessageView() {
-        slidingPaneLayout.closePane()
-    }
-
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-
-        listToolbar.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.toggle_edit_mode -> {
-                    listView.isEditing = !listView.isEditing
-                    item.icon = context.getDrawable(
-                        // TODO(m3-inbox): load icons from styles!
-                        if (listView.isEditing) R.drawable.ic_edit_off_24 else R.drawable.ic_edit_24
-                    )
-                    true
-                }
-                R.id.refresh -> {
-                    listView.refresh(animateSwipeRefresh = true)
-                    true
-                }
-                else -> false
-            }
-        }
 
         listView.predicate = predicate
 
         // Listen for message clicks in the list view pane and show the message view pane
-        listView.onShowMessageListener = OnShowMessageListener(::openMessagePane)
+        listView.listener = object : MessageListView.Listener {
+            override fun onShowMessage(message: Message) {
+                openMessagePane(message)
+            }
+
+            override fun onEditModeChanged(isEditing: Boolean) {
+                listener?.onListEditingChanged(isEditing)
+            }
+        }
 
         // Listen for back presses to close the message view pane
         findViewTreeOnBackPressedDispatcherOwner()?.onBackPressedDispatcher?.addCallback(
@@ -124,27 +113,44 @@ public class MessageCenterView @JvmOverloads constructor(
         viewModel = null
     }
 
-    private fun openMessagePane(message: Message) {
-        UALog.v("openMessagePane! ${message.messageId}")
-        messageView.messageId = message.messageId
-        messageToolbar.title = message.title
+    /** Indicates whether the message list is in editing mode. */
+    public val isListEditing: Boolean
+        get() = listView.isEditing
 
-        if (slidingPaneLayout.isSlideable) {
-            messageToolbar.navigationIcon = context.getDrawable(R.drawable.ua_ic_message_center_arrow_back)
-            messageToolbar.setNavigationOnClickListener {
-                closeMessagePane()
-            }
-        } else {
-            messageToolbar.navigationIcon = null
-            messageToolbar.setNavigationOnClickListener(null)
-        }
-
-        slidingPaneLayout.open()
+    /** Sets the message list to editing mode. */
+    public fun setListEditing(editing: Boolean) {
+        listView.isEditing = editing
     }
 
-    private fun closeMessagePane() {
+    /** Refreshes the message list. */
+    public fun refreshMessages(): Unit = listView.refresh(animateSwipeRefresh = true)
+
+    private fun openMessagePane(message: Message) {
+        messageView.messageId = message.id
+
+        if (listener?.onShowMessage(message) == false) {
+            if (isTwoPane) {
+                listView.setHighlightedMessage(message)
+            }
+            slidingPaneLayout.open()
+        }
+    }
+
+    /**
+     * Closes the message view pane.
+     *
+     * This method will trigger a call to [Listener.onCloseMessage].
+     */
+    public fun closeMessagePane() {
+        if (isTwoPane) {
+            listView.clearHighlightedMessage()
+        }
         slidingPaneLayout.closePane()
     }
+
+    /** Indicates whether the displayed layout is a two-pane layout. */
+    public val isTwoPane: Boolean
+        get() = slidingPaneLayout.isSlideable.not()
 
     private inner class SlidingPaneLayoutListener(
         private val slidingPaneLayout: SlidingPaneLayout

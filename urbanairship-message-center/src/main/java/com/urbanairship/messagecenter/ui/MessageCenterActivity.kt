@@ -53,7 +53,8 @@ public class MessageCenterActivity : FragmentActivity() {
         set(value) { messageCenterFragment.predicate = value }
 
     public fun displayMessage(messageId: String): Unit = messageCenterFragment.displayMessage(messageId)
-    public fun popMessageView(): Unit = messageCenterFragment.popMessageView()
+
+    public fun closeMessagePane(): Unit = messageCenterFragment.closeMessagePane()
 
     protected override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -71,7 +72,6 @@ public class MessageCenterActivity : FragmentActivity() {
         }
         return false
     }
-
 
     internal companion object {
         private const val FRAGMENT_TAG = "MESSAGE_CENTER_FRAGMENT"

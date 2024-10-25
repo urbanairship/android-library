@@ -38,8 +38,9 @@ public open class MessageCenterFragment: Fragment(R.layout.ua_fragment_mc) {
     public fun displayMessage(messageId: String) {
         messageCenter?.displayMessage(messageId)
     }
-    public fun popMessageView() {
-        messageCenter?.popMessageView()
+
+    public fun closeMessagePane() {
+        messageCenter?.closeMessagePane()
     }
 
     public companion object {

@@ -26,10 +26,11 @@ import kotlinx.coroutines.ExecutorsKt;
  * Message database
  */
 @Database(
-    version = 6,
+    version = 7,
     entities = { MessageEntity.class },
     autoMigrations = {
-        @AutoMigration(from = 5, to = 6)
+            @AutoMigration(from = 5, to = 6),
+            @AutoMigration(from = 6, to = 7)
     }
 )
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

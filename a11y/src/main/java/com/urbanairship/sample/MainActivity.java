@@ -122,12 +122,12 @@ public class MainActivity extends AppCompatActivity {
 
         pendingResult.addResultCallback(messages -> {
             // Skip showing the indicator if we have no unread messages or no new messages since the last display
-            if (messages == null || messages.isEmpty() || messageCenterLastSentDate >= messages.get(0).getSentDateMS()) {
+            if (messages == null || messages.isEmpty() || messageCenterLastSentDate >= messages.get(0).getSentDate().getTime()) {
                 return;
             }
 
             // Track the message sent date to track if we have a new message
-            messageCenterLastSentDate = messages.get(0).getSentDateMS();
+            messageCenterLastSentDate = messages.get(0).getSentDate().getTime();
 
             // Skip showing the indicator if its already displaying
             if (messageCenterSnackbar != null && messageCenterSnackbar.isShownOrQueued()) {

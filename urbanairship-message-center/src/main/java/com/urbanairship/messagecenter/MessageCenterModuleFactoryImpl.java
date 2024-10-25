@@ -2,7 +2,6 @@ package com.urbanairship.messagecenter;
 
 import android.content.Context;
 
-import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.channel.AirshipChannel;

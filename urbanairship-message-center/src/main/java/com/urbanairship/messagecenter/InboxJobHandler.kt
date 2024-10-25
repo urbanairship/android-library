@@ -10,6 +10,7 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.RequestException
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
 import java.net.HttpURLConnection
@@ -158,17 +159,27 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
                 UALog.e { "InboxJobHandler - Invalid message payload: $message" }
                 continue
             }
-            val messageId = message.optMap().opt(Message.MESSAGE_ID_KEY).string
+
+            val messageId = message.optMap().opt(Message.KEY_ID).string
             if (messageId == null) {
                 UALog.e { "InboxJobHandler - Invalid message payload, missing message ID: $message" }
                 continue
             }
+
             serverMessageIds.add(messageId)
-            val messageEntity = MessageEntity.createMessageFromPayload(messageId, message)
+
+            val jsonMap = message.map
+            if (jsonMap == null) {
+                UALog.e { "InboxJobHandler - Invalid message payload: $message" }
+                continue
+            }
+
+            val messageEntity = MessageEntity.createMessageFromPayload(messageId, jsonMap)
             if (messageEntity == null) {
                 UALog.e { "InboxJobHandler - Message Entity is null" }
                 continue
             }
+
             if (!messageDao.messageExists(messageEntity.messageId)) {
                 messagesToInsert.add(message)
             }
@@ -176,9 +187,15 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
 
         // Bulk insert any new messages
         if (messagesToInsert.size > 0) {
-            messageDao.insertMessages(MessageEntity.createMessagesFromPayload(messagesToInsert))
+            try {
+                val messages = MessageEntity.createMessagesFromPayload(messagesToInsert)
+                messageDao.insertMessages(messages)
+            } catch (e: JsonException) {
+                UALog.e(e) { "Failed to create messages from payload." }
+            }
         }
-        val deletedMessageIds = messageDao.getMessageIds().toMutableList()
+
+        val deletedMessageIds = messageDao.getMessageIds().toMutableSet()
         deletedMessageIds.removeAll(serverMessageIds)
         messageDao.deleteMessages(deletedMessageIds)
     }
@@ -196,7 +213,7 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
         for (message in messagesToUpdate) {
             message.messageReporting?.let { reporting ->
                 reportings.add(reporting)
-                idsToDelete.add(message.getMessageId())
+                idsToDelete.add(message.messageId)
             }
         }
 
@@ -212,7 +229,7 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
             UALog.v { "Delete inbox messages response: $response" }
 
             if (response.status == HttpURLConnection.HTTP_OK) {
-                messageDao.deleteMessages(idsToDelete)
+                messageDao.deleteMessages(idsToDelete.toSet())
             }
         } catch (e: RequestException) {
             UALog.d(e) { "Deleted message state synchronize failed." }
@@ -232,7 +249,7 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
         for (message in messagesToUpdate) {
             message.messageReporting?.let { reporting ->
                 reportings.add(reporting)
-                idsToUpdate.add(message.getMessageId())
+                idsToUpdate.add(message.messageId)
             }
         }
 
@@ -247,7 +264,7 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
             )
             UALog.v { "Mark inbox messages read response: $response" }
             if (response.status == HttpURLConnection.HTTP_OK) {
-                messageDao.markMessagesReadOrigin(idsToUpdate)
+                messageDao.markMessagesReadOrigin(idsToUpdate.toSet())
             }
         } catch (e: RequestException) {
             UALog.d(e) { "Read message state synchronize failed." }

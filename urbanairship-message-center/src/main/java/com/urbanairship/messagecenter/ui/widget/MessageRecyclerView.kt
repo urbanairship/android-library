@@ -9,9 +9,9 @@ import android.view.ViewGroup
 import androidx.core.content.withStyledAttributes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
+import com.urbanairship.messagecenter.ui.widget.EditableRecyclerView.Payload
 import com.google.android.material.divider.MaterialDividerItemDecoration
 
 /** Base Message Center `RecyclerView` that displays a list of messages. */
@@ -24,7 +24,6 @@ internal class MessageRecyclerView @JvmOverloads constructor(
     attrs,
     defStyleAttr
 ) {
-
     private val adapterListener = object : EditableListAdapter.Listener<Message> {
         override fun onItemClicked(item: Message) {
             if (isEditing) {
@@ -67,7 +66,7 @@ internal class MessageRecyclerView @JvmOverloads constructor(
 
     public fun submitList(messages: List<Message>): Unit = adapter.submitList(messages)
 
-    public fun setHighlightedMessage(message: Message) {
+    public fun setHighlightedMessage(message: Message?) {
         adapter.setHighlighted(message)
     }
 
@@ -102,7 +101,9 @@ internal class MessageRecyclerAdapter(
         setHasStableIds(true)
     }
 
-    override fun getItemId(position: Int): Long = getItem(position).messageId.hashCode().toLong()
+    private var highlightedItem: Message? = null
+
+    override fun getItemId(position: Int): Long = getItem(position).id.hashCode().toLong()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder = ViewHolder(
         parent,
@@ -112,6 +113,39 @@ internal class MessageRecyclerAdapter(
         onItemClicked = ::onItemClicked,
         onItemLongClicked = ::onItemLongClicked,
     )
+
+    /**
+     * Sets the currently highlighted [item].
+     *
+     * This represents the selected message that is currently being displayed (if this
+     * `RecyclerView` is being displayed in `MessageCenterView` in a two-pane master-detail layout).
+     */
+    override fun setHighlighted(item: Message?) {
+        // If the item is already highlighted, do nothing
+        if (highlightedItem?.id == item?.id) return
+
+        highlightedItem = item
+
+        // Clear previous highlighted item
+        notifyItemRangeChanged(0, currentList.size, Payload.UpdateHighlighted(false))
+
+        // Highlight current item
+        notifyItemChanged(currentList.indexOf(item), Payload.UpdateHighlighted(true))
+    }
+
+    /** Returns the currently highlighted item, or `null`, if no item is highlighted. */
+    override fun getHighlighted(): Message? = highlightedItem
+
+    /** Clears the currently highlighted item. */
+    override fun clearHighlighted() {
+        highlightedItem = null
+
+        notifyItemRangeChanged(0, currentList.size, Payload.UpdateHighlighted(false))
+    }
+
+    /** Returns `true` if the given [Message] is highlighted. */
+    override fun isHighlighted(item: Message): Boolean =
+        highlightedItem?.id == item.id
 
     /** `ViewHolder` for message items displayed in [MessageRecyclerView]. */
     public class ViewHolder(
@@ -153,7 +187,7 @@ internal class MessageRecyclerAdapter(
     internal companion object {
         val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Message>() {
             override fun areItemsTheSame(oldItem: Message, newItem: Message): Boolean =
-                oldItem.messageId == newItem.messageId
+                oldItem.id == newItem.id
 
             override fun areContentsTheSame(oldItem: Message, newItem: Message): Boolean =
                 oldItem == newItem

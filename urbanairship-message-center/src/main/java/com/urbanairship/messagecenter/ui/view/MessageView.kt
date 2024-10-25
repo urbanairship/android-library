@@ -15,13 +15,12 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.findViewTreeViewModelStoreOwner
 import androidx.lifecycle.get
 import com.urbanairship.UALog
-import com.urbanairship.messagecenter.Inbox
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.animator.animateFadeIn
 import com.urbanairship.messagecenter.animator.animateFadeOut
-import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.*
+import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.LOAD_FAILED
+import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.UNAVAILABLE
 import com.urbanairship.messagecenter.ui.widget.MessageWebView
 import com.urbanairship.messagecenter.ui.widget.MessageWebViewClient
 import com.urbanairship.messagecenter.util.getActivity
@@ -29,7 +28,6 @@ import com.urbanairship.webkit.AirshipWebChromeClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -55,6 +53,15 @@ public class MessageView @JvmOverloads constructor(
     private var viewModel: MessageViewViewModel? = null
     private var refreshSubscription: SubscriptionCancellation? = null
 
+    /** Listener interface that will be called when a message is loaded. */
+    public interface Listener {
+        public fun onMessageLoaded(message: Message)
+        public fun onMessageLoadError(error: MessageViewState.Error.Type)
+    }
+
+    /** Listener for the loaded message. */
+    public var listener: Listener? = null
+
     init {
         inflate(context, R.layout.ua_view_message, this)
         onViewCreated()
@@ -67,9 +74,6 @@ public class MessageView @JvmOverloads constructor(
             value?.let { id -> viewModel?.loadMessage(id) }
         }
 
-    private val inbox: Inbox
-        get() = MessageCenter.shared().inbox
-
     private var message: Message? = null
 
     private var error: Int? = null
@@ -78,10 +82,6 @@ public class MessageView @JvmOverloads constructor(
         with (views.webView) {
             alpha = 0f
 
-            // Set a custom RichPushWebViewClient view client to listen for the page finish
-            // Note: MessageWebViewClient is required to load the proper auth and to
-            // inject the Airship Javascript interface.  When overriding any methods
-            // make sure to call through to the super's implementation.
             setWebViewClient(object : MessageWebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
@@ -92,12 +92,16 @@ public class MessageView @JvmOverloads constructor(
                         UALog.i { "Showing error! $url" }
 
                         views.showError(LOAD_FAILED)
+                        listener?.onMessageLoadError(LOAD_FAILED)
                     } else {
                         message?.let {
                             UALog.i { "Mark read and show message! $url" }
 
-                            it.markRead()
+                            if (!it.isRead) {
+                                viewModel?.markMessagesRead(it)
+                            }
                             views.showMessage()
+                            listener?.onMessageLoaded(it)
                         }
                     }
                 }
@@ -106,7 +110,7 @@ public class MessageView @JvmOverloads constructor(
                 override fun onReceivedError(view: WebView, errorCode: Int, description: String, failingUrl: String?) {
                     UALog.i { "onReceivedError! $errorCode $description $failingUrl" }
 
-                    if (message != null && failingUrl != null && failingUrl == message!!.messageBodyUrl) {
+                    if (message != null && failingUrl != null && failingUrl == message?.bodyUrl) {
                         error = errorCode
                     }
                 }
@@ -117,7 +121,7 @@ public class MessageView @JvmOverloads constructor(
         }
 
         views.errorRetryButton.setOnClickListener {
-            message?.let { viewModel?.loadMessage(it.messageId) }
+            message?.let { viewModel?.loadMessage(it.id) }
                 ?: UALog.w { "MessageView does not have a message to retry loading!" }
         }
     }
@@ -160,7 +164,6 @@ public class MessageView @JvmOverloads constructor(
                     MessageViewState.Loading -> views.showProgress()
                 }
             }
-            .flowOn(Dispatchers.Main)
             .launchIn(scope)
     }
 
@@ -190,11 +193,12 @@ public class MessageView @JvmOverloads constructor(
     ) {
 
         fun showProgress() {
+            progressBar.alpha = 1f
+
             if (errorPage.isVisible) {
                 errorPage.animateFadeOut()
             }
             webView.animateFadeOut()
-            progressBar.animateFadeIn()
             emptyPage.animateFadeOut()
         }
 
@@ -214,7 +218,6 @@ public class MessageView @JvmOverloads constructor(
             }
 
             progressBar.animateFadeOut()
-
             emptyPage.animateFadeIn()
         }
 

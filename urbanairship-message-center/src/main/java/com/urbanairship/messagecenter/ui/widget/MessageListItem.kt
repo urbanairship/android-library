@@ -11,20 +11,20 @@ import android.widget.TextView
 import androidx.annotation.AttrRes
 import androidx.annotation.DrawableRes
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.content.withStyledAttributes
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityViewCommand.CommandArguments
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.widget.TextViewCompat
-import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.images.ImageLoader
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.ui.view.MessageListView
-import com.urbanairship.messagecenter.ui.view.MessageCenterView
 import com.urbanairship.messagecenter.R
+import com.urbanairship.messagecenter.ui.view.MessageCenterView
+import com.urbanairship.messagecenter.ui.view.MessageListView
 import com.urbanairship.messagecenter.util.setTextOrHide
 import com.urbanairship.util.AccessibilityUtils
 import java.text.DateFormat
@@ -116,8 +116,11 @@ public class MessageListItem @JvmOverloads constructor(
      * @param highlighted `true` to highlight the view, `false` to remove the highlight.
      */
     public fun updateHighlighted(highlighted: Boolean) {
-        UALog.d("updateHighlighted: $highlighted")
         isHighlighted = highlighted
+
+        // TODO(m3-inbox): update to properly set up selectors for the background state-list drawable
+        val color = if (highlighted) R.color.ua_message_center_status_bar else android.R.color.transparent
+        setBackgroundColor(ResourcesCompat.getColor(resources, color, context.theme))
         refreshDrawableState()
     }
 
@@ -139,7 +142,7 @@ public class MessageListItem @JvmOverloads constructor(
     /** Sets the title, optional subtitle, and sent date. */
     private fun setText(item: Message) = with(views) {
         primaryText.text = item.title
-        secondaryText.setTextOrHide(item.extras.getString(subtitleExtra))
+        secondaryText.setTextOrHide(item.subtitle)
         tertiaryText.text = dateFormatter.format(item.sentDate)
     }
 
@@ -308,8 +311,6 @@ public class MessageListItem @JvmOverloads constructor(
 
     private companion object {
         private val dateFormatter = DateFormat.getDateInstance(DateFormat.LONG)
-
-        private val subtitleExtra = "com.urbanairship.listing.field1"
 
         @JvmStatic
         private val STATE_HIGHLIGHTED: IntArray = intArrayOf(com.urbanairship.R.attr.ua_state_highlighted)

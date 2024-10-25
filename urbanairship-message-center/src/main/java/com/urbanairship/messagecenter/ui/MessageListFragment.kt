@@ -7,7 +7,6 @@ import com.urbanairship.Predicate
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.view.MessageListView
-import com.urbanairship.messagecenter.ui.view.MessageListView.OnShowMessageListener
 
 /** `Fragment` that displays the Message Center list and message view. */
 public class MessageListFragment: Fragment(R.layout.ua_fragment_message_list) {
@@ -27,10 +26,9 @@ public class MessageListFragment: Fragment(R.layout.ua_fragment_message_list) {
         set(value) { messageListView.isEditing = value }
         get() = messageListView.isEditing
 
-    public var onShowMessageListener: OnShowMessageListener?
-        set(value) { messageListView.onShowMessageListener = value }
-        get() = messageListView.onShowMessageListener
-
+    public var listener: MessageListView.Listener?
+        set(value) { messageListView.listener = value }
+        get() = messageListView.listener
 
     public fun setHighlightedMessage(messageId: String) {
         messageListView.setHighlightedMessage(messageId)

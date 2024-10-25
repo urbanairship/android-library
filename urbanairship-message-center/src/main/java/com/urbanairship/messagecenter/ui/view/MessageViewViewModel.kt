@@ -1,5 +1,6 @@
 package com.urbanairship.messagecenter.ui.view
 
+import android.os.Parcelable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
 
 /** `ViewModel` for [MessageView]. */
 public class MessageViewViewModel(
@@ -25,7 +27,8 @@ public class MessageViewViewModel(
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val restoredState: MessageViewState.Content? = null //savedStateHandle.get<State.Content>("state")
+    private val restoredState: MessageViewState.Content? =
+        savedStateHandle.get<MessageViewState.Content>("state")
 
     /**
      * Internal chanel for States (information consumed by the view, in order to display the message view).
@@ -39,7 +42,7 @@ public class MessageViewViewModel(
 
     /** The currently loaded message ID, if we have one. */
     private val currentMessageId: String?
-        get() = (_states.value as? MessageViewState.Content)?.message?.messageId
+        get() = (_states.value as? MessageViewState.Content)?.message?.id
 
     /**
      * A `Flow` of MessageView [States][MessageViewState] (data consumed by the view in order to display the message).
@@ -52,7 +55,7 @@ public class MessageViewViewModel(
                 UALog.v("> $state")
 
                 // Save state if we're showing content
-                //(state as? State.Content)?.let { savedStateHandle["state"] = it }
+                (state as? MessageViewState.Content)?.let { savedStateHandle["state"] = it }
             }
         }
     }
@@ -82,7 +85,13 @@ public class MessageViewViewModel(
     /** Marks the given list of [messages] as read. */
     public fun markMessagesRead(messages: List<Message>) {
         UALog.d { "Marking ${messages.size} messages read" }
-        inbox.markMessagesRead(messages.map { it.messageId }.toSet())
+        inbox.markMessagesRead(messages.map { it.id }.toSet())
+    }
+
+    /** Marks the given [messages] as read. */
+    public fun markMessagesRead(vararg messages: Message) {
+        UALog.d { "Marking ${messages.size} messages read" }
+        inbox.markMessagesRead(messages.map { it.id }.toSet())
     }
 
     internal fun subscribeForMessageUpdates(): SubscriptionCancellation {
@@ -144,7 +153,10 @@ public sealed class MessageViewState {
     public data object Loading : MessageViewState()
 
     /** Content state. */
-    public data class Content(val message: Message) : MessageViewState()
+    @Parcelize
+    public data class Content(
+        val message: Message
+    ) : MessageViewState(), Parcelable
 
     /** Error state. */
     public data class Error(val error: Type) : MessageViewState() {

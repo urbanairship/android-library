@@ -11,8 +11,6 @@ import com.urbanairship.UAirship
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.http.RequestException
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.RequestSession
-import com.urbanairship.http.Response
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.json.JsonException
@@ -23,7 +21,6 @@ import com.urbanairship.messagecenter.InboxJobHandler.Companion.ACTION_RICH_PUSH
 import com.urbanairship.messagecenter.InboxJobHandler.Companion.LAST_MESSAGE_REFRESH_TIME
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
-import java.net.HttpURLConnection
 import java.net.HttpURLConnection.HTTP_CREATED
 import java.net.HttpURLConnection.HTTP_INTERNAL_ERROR
 import java.net.HttpURLConnection.HTTP_NOT_MODIFIED
@@ -35,8 +32,6 @@ import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
-import io.mockk.verifyOrder
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
@@ -113,6 +108,7 @@ public class InboxJobHandlerTest {
     @After
     public fun teardown() {
         Dispatchers.resetMain()
+        dataStore.tearDown()
     }
 
     /**
@@ -321,7 +317,7 @@ public class InboxJobHandlerTest {
             headers = emptyMap()
         )
 
-        val idsToDelete = ArrayList<String>()
+        val idsToDelete = mutableSetOf<String>()
         val messageToDelete = createFakeMessage(messageId = "id1", unread = false, deleted = true)
         val messageToDelete2 = createFakeMessage(messageId = "id2", unread = false, deleted = true)
         val messageCollection = mutableListOf<MessageEntity>()
@@ -330,7 +326,7 @@ public class InboxJobHandlerTest {
         messageCollection.add(
             requireNotNull(
                 MessageEntity.createMessageFromPayload(
-                    messageToDelete!!.messageId,
+                    messageToDelete.id,
                     messageToDelete.rawMessageJson
                 )
             )
@@ -339,15 +335,15 @@ public class InboxJobHandlerTest {
         messageCollection.add(
             requireNotNull(
                 MessageEntity.createMessageFromPayload(
-                    messageToDelete2!!.messageId,
+                    messageToDelete2.id,
                     messageToDelete2.rawMessageJson
                 )
             )
         )
 
-        for (message in messageCollection) {
-            message.messageReporting?.let { reportingsToDelete.add(it) }
-            idsToDelete.add(message.getMessageId())
+        for (entity in messageCollection) {
+            entity.messageReporting?.let { reportingsToDelete.add(it) }
+            idsToDelete.add(entity.messageId)
         }
 
         coEvery { mockMessageDao.getLocallyDeletedMessages() } returns messageCollection
@@ -392,32 +388,29 @@ public class InboxJobHandlerTest {
             headers = null
         )
 
-        val idsToDelete = ArrayList<String>()
+        val idsToDelete = mutableSetOf<String>()
         val reportingsToDelete: MutableList<JsonValue> = ArrayList()
-        val messageToDelete = requireNotNull(
-            createFakeMessage(messageId = "id1", unread = false, deleted = true)
-        )
-        val messageToDelete2 = requireNotNull(
-            createFakeMessage(messageId = "id2", unread = false, deleted = true)
-        )
+        val messageToDelete = createFakeMessage(messageId = "id1", unread = false, deleted = true)
+        val messageToDelete2 =  createFakeMessage(messageId = "id2", unread = false, deleted = true)
+
         val messagesToDelete = listOf(
             requireNotNull(
                 MessageEntity.createMessageFromPayload(
-                    messageToDelete.messageId,
+                    messageToDelete.id,
                     messageToDelete.rawMessageJson
                 )
             ),
             requireNotNull(
                 MessageEntity.createMessageFromPayload(
-                    messageToDelete2.messageId,
+                    messageToDelete2.id,
                     messageToDelete2.rawMessageJson
                 )
             )
         )
 
-        for (message in messagesToDelete) {
-            message.messageReporting?.let { reportingsToDelete.add(it) }
-            idsToDelete.add(message.getMessageId())
+        for (entity in messagesToDelete) {
+            entity.messageReporting?.let { reportingsToDelete.add(it) }
+            idsToDelete.add(entity.messageId)
         }
 
         coEvery { mockMessageDao.getLocallyDeletedMessages() } returns messagesToDelete
@@ -462,32 +455,29 @@ public class InboxJobHandlerTest {
             headers = emptyMap()
         )
 
-        val idsToUpdate = ArrayList<String>()
+        val idsToUpdate = mutableSetOf<String>()
         val reportingsToUpdate: MutableList<JsonValue> = ArrayList()
-        val messageToUpdate = requireNotNull(
-            createFakeMessage(messageId = "id1", unread = false, deleted = false)
-        )
-        val messageToUpdate2 = requireNotNull(
-            createFakeMessage(messageId = "id2", unread = false, deleted = false)
-        )
+        val messageToUpdate = createFakeMessage(messageId = "id1", unread = false, deleted = false)
+        val messageToUpdate2 = createFakeMessage(messageId = "id2", unread = false, deleted = false)
+
         val messagesToUpdate = listOf(
             requireNotNull(
                 MessageEntity.createMessageFromPayload(
-                    messageToUpdate.messageId,
+                    messageToUpdate.id,
                     messageToUpdate.rawMessageJson
                 )
             ),
             requireNotNull(
                 MessageEntity.createMessageFromPayload(
-                    messageToUpdate2.messageId,
+                    messageToUpdate2.id,
                     messageToUpdate2.rawMessageJson
                 )
             )
         )
 
-        for (message in messagesToUpdate) {
-            message.messageReporting?.let { reportingsToUpdate.add(it) }
-            idsToUpdate.add(message.getMessageId())
+        for (entity in messagesToUpdate) {
+            entity.messageReporting?.let { reportingsToUpdate.add(it) }
+            idsToUpdate.add(entity.messageId)
         }
 
         coEvery { mockMessageDao.getLocallyReadMessages() } returns messagesToUpdate
@@ -532,23 +522,22 @@ public class InboxJobHandlerTest {
             headers = null
         )
 
-        val idsToUpdate = ArrayList<String>()
+        val idsToUpdate = mutableSetOf<String>()
         val reportingsToUpdate: MutableList<JsonValue> = ArrayList()
-        val messageToUpdate =  requireNotNull(
-            createFakeMessage(messageId = "id1", unread = false, deleted = false)
-        )
+        val messageToUpdate = createFakeMessage(messageId = "id1", unread = false, deleted = false)
+
         val messagesToUpdate = listOf(
             requireNotNull(
                 MessageEntity.createMessageFromPayload(
-                    messageToUpdate.messageId,
+                    messageToUpdate.id,
                     messageToUpdate.rawMessageJson
                 )
             )
         )
 
-        for (message in messagesToUpdate) {
-            message.messageReporting?.let { reportingsToUpdate.add(it) }
-            idsToUpdate.add(message.getMessageId())
+        for (entity in messagesToUpdate) {
+            entity.messageReporting?.let { reportingsToUpdate.add(it) }
+            idsToUpdate.add(entity.messageId)
         }
 
         coEvery { mockMessageDao.getLocallyReadMessages() } returns messagesToUpdate
@@ -838,7 +827,7 @@ public class InboxJobHandlerTest {
 
     @Throws(JsonException::class)
     @Suppress("SameParameterValue") // unread is always false
-    private fun createFakeMessage(messageId: String, unread: Boolean, deleted: Boolean): Message? {
+    private fun createFakeMessage(messageId: String, unread: Boolean, deleted: Boolean): Message {
         @Language("JSON")
         val messageJson = JsonValue.parseString("""
             {
@@ -850,7 +839,7 @@ public class InboxJobHandlerTest {
                 "message_id": "$messageId"
               },
               "unread": true,
-              "message_sent": "2010-09-05 12:13 -0000",
+              "message_sent": "2024-10-21 18:41:03",
               "title": "Message title",
               "extra": {
                 "some_key": "some_value"
@@ -860,7 +849,7 @@ public class InboxJobHandlerTest {
             }
         """.trimIndent())
 
-        return Message.create(messageJson, unread, deleted)
+        return Message.create(messageJson, unread, deleted)!!
     }
 
     /**

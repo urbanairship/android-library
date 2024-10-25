@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import java.util.UUID
 import junit.framework.TestCase.assertEquals
@@ -95,7 +96,7 @@ public class MessageDaoTest {
         messageDao.insert(entity2)
         assertEquals(2, messageDao.getMessages().size)
 
-        messageDao.markMessagesRead(listOf(MESSAGE_ID_1))
+        messageDao.markMessagesRead(setOf(MESSAGE_ID_1))
 
         val messageEntities = messageDao.getLocallyReadMessages()
         assertEquals(1, messageEntities.size)
@@ -108,7 +109,7 @@ public class MessageDaoTest {
         messageDao.insert(entity2)
         assertEquals(2, messageDao.getMessages().size)
 
-        messageDao.markMessagesDeleted(listOf(MESSAGE_ID_1))
+        messageDao.markMessagesDeleted(setOf(MESSAGE_ID_1))
 
         val messageEntities = messageDao.getLocallyDeletedMessages()
         assertEquals(1, messageEntities.size)
@@ -126,18 +127,18 @@ public class MessageDaoTest {
     }
 
     @Suppress("SameParameterValue") // count is always 2000
-    private suspend fun insertMessages(count: Int): List<String> {
-        val messageIds: MutableList<String> = ArrayList()
+    private suspend fun insertMessages(count: Int): Set<String> {
+        val messageIds = mutableSetOf<String>()
         for (i in 0 until count) {
             messageIds.add(insertMessage(UUID.randomUUID().toString(), messageJson))
         }
         return messageIds
     }
 
-    private suspend fun insertMessage(id: String, json: JsonValue): String {
-        val message = requireNotNull(MessageEntity.createMessageFromPayload(id, json))
-        messageDao.insert(message)
-        return message.getMessageId()
+    private suspend fun insertMessage(id: String, json: JsonMap): String {
+        val entity = requireNotNull(MessageEntity.createMessageFromPayload(id, json))
+        messageDao.insert(entity)
+        return entity.messageId
     }
 
     private companion object {
@@ -186,7 +187,7 @@ public class MessageDaoTest {
             }
         """.trimIndent()
 
-        private val messageJson = JsonValue.parseString(messagePayload1)
-        private val messageJson2 = JsonValue.parseString(messagePayload2)
+        private val messageJson = JsonValue.parseString(messagePayload1).requireMap()
+        private val messageJson2 = JsonValue.parseString(messagePayload2).requireMap()
     }
 }

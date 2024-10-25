@@ -31,7 +31,7 @@ jobs:
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
         
       - name: Test
-        run: bash ./gradlew spotlessCheck assembleDebug testDebugUnitTest --info --stacktrace
+        run: bash ./gradlew spotlessCheck testDebugUnitTest --stacktrace --fail-fast
 
       - name: Publish unit test reports
         if: always()

@@ -1,5 +1,6 @@
 package com.urbanairship.messagecenter.ui.view
 
+import android.os.Parcelable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
 
 /** `ViewModel` for [MessageListView]. */
 public class MessageListViewModel(
@@ -28,8 +30,8 @@ public class MessageListViewModel(
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    // TODO(m3-inbox): save and restore state
-    private val restoredState: MessageListViewState.Content? = null //savedStateHandle.get<State.Content>("state")
+    private val restoredState: MessageListViewState.Content? =
+        savedStateHandle.get<MessageListViewState.Content>("state")
 
     /**
      * Internal chanel for States (information consumed by the view, in order to display the message list).
@@ -52,9 +54,8 @@ public class MessageListViewModel(
             states.collect { state ->
                 UALog.v("> $state")
 
-                // TODO(m3-inbox): save and restore state (need to make Message
                 // Save state if we're showing content
-                //(state as? State.Content)?.let { savedStateHandle["state"] = it }
+                (state as? MessageListViewState.Content)?.let { savedStateHandle["state"] = it }
             }
         }
 
@@ -70,13 +71,13 @@ public class MessageListViewModel(
     /** Marks the given list of [messages] as read. */
     public fun markMessagesRead(messages: List<Message>) {
         UALog.d { "Marking ${messages.size} messages read" }
-        inbox.markMessagesRead(messages.map { it.messageId }.toSet())
+        inbox.markMessagesRead(messages.map { it.id }.toSet())
     }
 
     /** Deletes the given list of [messages]. */
     public fun deleteMessages(messages: List<Message>) {
         UALog.d { "Deleting  ${messages.size} messages" }
-        inbox.deleteMessages(messages.map { it.messageId }.toSet())
+        inbox.deleteMessages(messages.map { it.id }.toSet())
     }
 
     /** Refreshes the inbox. */
@@ -132,23 +133,13 @@ public sealed class MessageListViewState {
     public data object Loading : MessageListViewState()
 
     /** Content state. */
-    public class Content(public val messages: List<Message>) : MessageListViewState() {
+    @Parcelize
+    public data class Content(
+        public val messages: List<Message>
+    ) : MessageListViewState(), Parcelable {
 
         // Avoids spamming the logs with full message payloads
         override fun toString(): String = "Content(messages=[size=${messages.size}])"
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Content
-
-            return messages == other.messages
-        }
-
-        override fun hashCode(): Int {
-            return messages.hashCode()
-        }
     }
 
     /** Error state. */

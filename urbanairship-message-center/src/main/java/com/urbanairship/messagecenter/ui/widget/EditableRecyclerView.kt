@@ -1,6 +1,7 @@
 package com.urbanairship.messagecenter.ui.widget
 
 import android.content.Context
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
@@ -9,16 +10,17 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.ui.widget.EditableRecyclerView.Payload
+import kotlinx.parcelize.Parcelize
 
 /** Base class for a `RecyclerView` that supports editing. */
-internal abstract class EditableRecyclerView<T, VH : EditableViewHolder<T, *>> @JvmOverloads constructor(
+internal abstract class EditableRecyclerView<T : Parcelable, VH : EditableViewHolder<T, *>> @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : RecyclerView(context, attrs, defStyleAttr) {
 
     /** Listener interface for `EditableRecyclerView`. */
-    internal interface Listener<T> {
+    interface Listener<T> {
         /** Called when the edit mode is changed. */
         public fun onEditModeChanged(isEditing: Boolean)
         /** Called when the selection is changed. */
@@ -28,17 +30,20 @@ internal abstract class EditableRecyclerView<T, VH : EditableViewHolder<T, *>> @
     }
 
     /** Listener for `EditableRecyclerView` events. */
-    internal var listener: Listener<T>? = null
+    var listener: Listener<T>? = null
 
     /** Flag that controls whether the list is in editing mode. */
-    internal var isEditing: Boolean = false
+    var isEditing: Boolean = false
         set(value) {
-            field = value
-            listener?.onEditModeChanged(value)
-            editableAdapter?.run {
-                if (!value) clearSelected()
-                notifyItemRangeChanged(0, itemCount, Payload.UpdateEditing(value))
-            } ?: UALog.w { "Adapter is not set!" }
+            if (field != value) {
+                field = value
+
+                listener?.onEditModeChanged(value)
+                editableAdapter?.run {
+                    if (!value) clearSelected()
+                    notifyItemRangeChanged(0, itemCount, Payload.UpdateEditing(value))
+                } ?: UALog.w { "Adapter is not set!" }
+            }
         }
 
     /** Adapter for `EditableRecyclerView`. */
@@ -63,25 +68,56 @@ internal abstract class EditableRecyclerView<T, VH : EditableViewHolder<T, *>> @
         }
     }
 
+    override fun onSaveInstanceState(): Parcelable? {
+        return SavedState(
+            superState = super.onSaveInstanceState(),
+            isEditing = isEditing,
+            selectedItems = editableAdapter?.getSelected() ?: emptyList(),
+            highlightedItem = editableAdapter?.getHighlighted()
+        )
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        val superState: Parcelable? = if (state is SavedState<*>) {
+            isEditing = state.isEditing
+
+            editableAdapter?.restoreSelected(state.selectedItems.mapNotNull {
+                @Suppress("UNCHECKED_CAST")
+                it as? T
+            })
+
+            @Suppress("UNCHECKED_CAST")
+            (state.highlightedItem as? T)?.let {
+                editableAdapter?.setHighlighted(it)
+            }
+
+            state.superState
+        } else {
+            null
+        }
+
+        super.onRestoreInstanceState(superState)
+    }
+
     /**
      * Returns a list of the currently selected items.
      *
      * @return A list of selected items.
      */
-    public val selectedItems: List<T>
+    val selectedItems: List<T>
         get() = editableAdapter?.getSelected() ?: emptyList()
 
     /** Returns `true` if all items are selected. */
-    public val isAllSelected: Boolean
+    val isAllSelected: Boolean
         get() = editableAdapter?.isAllSelected ?: false
 
     /** Selects all items in the list. */
-    public fun selectAll() {
+    fun selectAll() {
         editableAdapter?.selectAll()
     }
 
     /** Clears any selected items in the list. */
-    public fun clearSelected() {
+    fun clearSelected() {
         editableAdapter?.clearSelected()
     }
 
@@ -92,12 +128,21 @@ internal abstract class EditableRecyclerView<T, VH : EditableViewHolder<T, *>> @
      */
     internal sealed class Payload {
         /** Update editing mode. */
-        public data class UpdateEditing(val isEditing: Boolean) : Payload()
+        data class UpdateEditing(val isEditing: Boolean) : Payload()
         /** Update selected state. */
-        public data class UpdateSelected(val isSelected: Boolean) : Payload()
+        data class UpdateSelected(val isSelected: Boolean) : Payload()
         /** Update highlighted state. */
-        public data class UpdateHighlighted(val isHighlighted: Boolean) : Payload()
+        data class UpdateHighlighted(val isHighlighted: Boolean) : Payload()
     }
+
+    /** Saved state for `EditableListAdapter`. */
+    @Parcelize
+    private data class SavedState<T : Parcelable>(
+        val superState: Parcelable?,
+        val isEditing: Boolean,
+        val selectedItems: List<T>,
+        val highlightedItem: T?
+    ) : Parcelable
 }
 
 /**
@@ -114,17 +159,15 @@ internal abstract class EditableListAdapter<T, VH : EditableViewHolder<T, *>>(
 
     private val selected: MutableSet<T> = mutableSetOf()
 
-    private var highlightedItem: T? = null
-
     /** Listener interface for `EditableListAdapter`. */
-    public interface Listener<T> {
+    interface Listener<T> {
         public fun onItemClicked(item: T)
         public fun onItemLongClicked(item: T)
         public fun onSelectionChanged(selectedItems: List<T>, isAllSelected: Boolean)
     }
 
     /** Returns `true` if all items are selected. */
-    public val isAllSelected: Boolean
+    val isAllSelected: Boolean
         get() = selected.size == itemCount
 
     /**
@@ -132,13 +175,23 @@ internal abstract class EditableListAdapter<T, VH : EditableViewHolder<T, *>>(
      *
      * @return A list of selected items.
      */
-    public fun getSelected(): List<T> = selected.toList()
+    fun getSelected(): List<T> = selected.toList()
+
+    /** Restores the list of [selectedItems]. */
+    fun restoreSelected(selectedItems: List<T>) {
+        selected.clear()
+        selected.addAll(selectedItems)
+        for (item in selectedItems) {
+            notifyItemChanged(currentList.indexOf(item), Payload.UpdateSelected(true))
+        }
+        listener.onSelectionChanged(selectedItems, isAllSelected)
+    }
 
     /** Returns `true` if the given item is selected. */
-    public fun isSelected(item: T): Boolean = selected.contains(item)
+    fun isSelected(item: T): Boolean = selected.contains(item)
 
     /** Sets whether the given [item] is [selected][isSelected]. */
-    public fun setSelected(item: T, isSelected: Boolean) {
+    fun setSelected(item: T, isSelected: Boolean) {
         with(selected) {
             if (isSelected) {
                 add(item)
@@ -150,48 +203,18 @@ internal abstract class EditableListAdapter<T, VH : EditableViewHolder<T, *>>(
         listener.onSelectionChanged(selected.toList(), isAllSelected)
     }
 
-    /** Returns `true` if the given [item] is highlighted. */
-    public fun isHighlighted(item: T): Boolean = highlightedItem == item
-
-    /**
-     * Sets the currently highlighted [item].
-     *
-     * This represents the selected message that is currently being displayed (if this
-     * `RecyclerView` is being displayed in `MessageCenterView` in a two-pane master-detail layout).
-     */
-    public fun setHighlighted(item: T?) {
-        if (highlightedItem == item) return
-
-        // Clear previous highlighted item
-        notifyItemChanged(currentList.indexOf(highlightedItem), Payload.UpdateHighlighted(false))
-
-        // Highlight current item
-        notifyItemChanged(currentList.indexOf(item), Payload.UpdateHighlighted(true))
-
-        highlightedItem = item
-    }
-
-    /** Clears the currently highlighted item. */
-    public fun clearHighlighted() {
-        if (highlightedItem == null) return
-
-        notifyItemChanged(currentList.indexOf(highlightedItem), Payload.UpdateHighlighted(false))
-
-        highlightedItem = null
-    }
-
     /** Toggles the selected state of the given [item]. */
-    public fun toggleSelected(item: T): Unit = setSelected(item, !isSelected(item))
+    fun toggleSelected(item: T): Unit = setSelected(item, !isSelected(item))
 
     /** Clears all selected items. */
-    public fun clearSelected() {
+    fun clearSelected() {
         selected.clear()
         notifyItemRangeChanged(0, itemCount, Payload.UpdateSelected(false))
         listener.onSelectionChanged(emptyList(), isAllSelected)
     }
 
     /** Selects all items in the list. */
-    public fun selectAll() {
+    fun selectAll() {
         selected.clear()
         selected.addAll(currentList)
         notifyItemRangeChanged(0, itemCount, Payload.UpdateSelected(true))
@@ -199,17 +222,16 @@ internal abstract class EditableListAdapter<T, VH : EditableViewHolder<T, *>>(
     }
 
     /** Called when an [item] is clicked. */
-    protected fun onItemClicked(item: T) {
+    fun onItemClicked(item: T) {
         if (isEditing()) {
             toggleSelected(item)
         } else {
-            setHighlighted(item)
             listener.onItemClicked(item)
         }
     }
 
     /** Called when an [item] is long clicked. */
-    protected fun onItemLongClicked(item: T): Boolean {
+    fun onItemLongClicked(item: T): Boolean {
         return if (!isEditing()) {
             setSelected(item, true)
             listener.onItemLongClicked(item)
@@ -233,6 +255,23 @@ internal abstract class EditableListAdapter<T, VH : EditableViewHolder<T, *>>(
             payloads.filterIsInstance<Payload>().forEach { holder.bind(item, it) }
         }
     }
+
+    /**
+     * Sets the currently highlighted [item].
+     *
+     * This represents the selected message that is currently being displayed (if this
+     * `RecyclerView` is being displayed in `MessageCenterView` in a two-pane master-detail layout).
+     */
+    abstract fun setHighlighted(item: T?)
+
+    /** Returns the currently highlighted item, or `null`, if no item is highlighted. */
+    abstract fun getHighlighted(): T?
+
+    /** Clears the currently highlighted item. */
+    abstract fun clearHighlighted()
+
+    /** Returns `true` if the given [item] is highlighted. */
+    abstract fun isHighlighted(item: T): Boolean
 
     /**
      * Called to create a new `ViewHolder` for the given [viewType].
