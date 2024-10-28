@@ -57,13 +57,8 @@ internal class ModalView(
 
             LayoutUtils.applyBorderAndBackground(this, placement.border, placement.backgroundColor)
 
-            if (placement.shadow != null) {
-                placement.shadow.androidShadow?.let { shadow ->
-                    applyShadow(this, shadow.color.resolve(context), shadow.elevation)
-                }
-            } else {
-                // If shadow is not defined fall back to a default
-                applyShadow(this, DEFAULT_SHADOW_COLOR, DEFAULT_SHADOW_ELEVATION)
+            placement.shadow?.androidShadow?.let { shadow ->
+                applyShadow(this, shadow.color.resolve(context), shadow.elevation)
             }
         }
 
@@ -142,11 +137,5 @@ internal class ModalView(
         // Expand the bounds by the amount of slop needed to be considered an outside touch
         r.inset(-windowTouchSlop, -windowTouchSlop)
         return !r.contains(event.x.toInt(), event.y.toInt())
-    }
-
-    companion object {
-        val DEFAULT_SHADOW_COLOR = Color.argb(63, 0, 0, 0)
-        val DEFAULT_SHADOW_ELEVATION = 16f
-
     }
 }

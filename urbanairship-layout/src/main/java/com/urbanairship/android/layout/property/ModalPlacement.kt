@@ -42,13 +42,11 @@ public class ModalPlacement(
             val ignoreSafeArea = ignoreSafeAreaFromJson(json)
 
             val shadow = json.optionalMap("shadow")?.let { map ->
-                val selectorShadow = map.optionalList("selectors")?.map {
+                map.optionalList("selectors")?.map {
                     ShadowSelector.fromJson(it)
                 }?.first {
                    it.platform == null || it.platform == Platform.ANDROID
                 }?.shadow
-
-                selectorShadow ?: Shadow.fromJson(map.requireField("default"))
             }
 
             return ModalPlacement(
