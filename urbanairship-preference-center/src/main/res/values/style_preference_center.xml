@@ -23,7 +23,9 @@
     </style>
 
     <!-- Default Activity -->
-    <style name="UrbanAirship.PreferenceCenter.Activity" parent="@style/UrbanAirship.PreferenceCenter.Base"/>
+    <style name="UrbanAirship.PreferenceCenter.Activity" parent="@style/UrbanAirship.PreferenceCenter.Base">
+        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
+    </style>
 
     <!-- Default Fragment -->
     <style name="UrbanAirship.PreferenceCenter.Fragment" parent="@style/UrbanAirship.PreferenceCenter.Base"/>
