@@ -12,6 +12,7 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
     </style>
 
     <style name="UrbanAirship.Layout.ModalActivity" parent="UrbanAirship.Layout.ModalActivityBase" />
