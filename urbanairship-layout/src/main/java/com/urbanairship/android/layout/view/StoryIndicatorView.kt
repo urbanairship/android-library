@@ -8,7 +8,6 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import androidx.core.view.isGone
-import com.urbanairship.UALog
 import com.urbanairship.android.layout.model.StoryIndicatorModel
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.StoryIndicatorSource
