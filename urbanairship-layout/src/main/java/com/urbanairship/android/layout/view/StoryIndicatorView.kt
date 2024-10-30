@@ -8,14 +8,15 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import androidx.core.view.isGone
-import com.google.android.material.progressindicator.LinearProgressIndicator
-import com.google.android.material.progressindicator.LinearProgressIndicator.INDICATOR_DIRECTION_START_TO_END
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.model.StoryIndicatorModel
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.progressindicator.LinearProgressIndicator.INDICATOR_DIRECTION_START_TO_END
 
 internal class StoryIndicatorView(
     context: Context,
@@ -46,7 +47,6 @@ internal class StoryIndicatorView(
 
                 val animated = progress > lastProgress
                 lastProgress = progress
-
                 setProgress(size, pageIndex, progress, animated)
             }
 
@@ -110,21 +110,24 @@ internal class StoryIndicatorView(
         if (progressIndicators.isEmpty() || progressIndicators.size <= pageIndex) {
             return
         }
-
+        val storyHeight = this.height
         for (i in 0 until count) {
             (progressIndicators[i] as? LinearProgressIndicator)?.let {
                 if (i == pageIndex) {
                     if (model.source == StoryIndicatorSource.CURRENT_PAGE) {
                         it.visibility = View.VISIBLE
                     }
+                    it.trackThickness = (storyHeight * 0.8).toInt()
                     it.setProgressCompat(progress, animated)
                 } else {
                     if (model.source == StoryIndicatorSource.CURRENT_PAGE) {
                         it.visibility = View.GONE
                     }
                     if (i > pageIndex) {
+                        it.trackThickness = (storyHeight * 0.3).toInt()
                         it.setProgressCompat(0, false)
                     } else {
+                        it.trackThickness = (storyHeight * 0.3).toInt()
                         it.setProgressCompat(100, false)
                     }
                 }
