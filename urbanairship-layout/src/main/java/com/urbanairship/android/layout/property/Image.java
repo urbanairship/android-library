@@ -68,21 +68,56 @@ public abstract class Image {
 
     public static final class Url extends Image {
         @NonNull private final String url;
+        @Nullable private final MediaFit mediaFit;
+        @Nullable private final Position position;
 
-        public Url(@NonNull String url) {
+        public Url(
+                @NonNull String url,
+                @Nullable MediaFit mediaFit,
+                @Nullable Position position
+        ) {
             super(Type.URL);
             this.url = url;
+            this.mediaFit = mediaFit;
+            this.position = position;
         }
 
         @NonNull
         public static Url fromJson(@NonNull JsonMap json) {
             String url = json.opt("url").optString();
-            return new Url(url);
+
+            String mediaFitString = json.opt("media_fit").getString();
+            MediaFit mediaFit;
+            try {
+                mediaFit = mediaFitString != null ? MediaFit.from(mediaFitString) : null;
+            } catch (JsonException e) {
+                mediaFit = null;
+            }
+
+            JsonMap positionJson = json.opt("position").getMap();
+            Position position;
+            try {
+                position = positionJson != null ? Position.fromJson(positionJson) : null;
+            } catch (JsonException e) {
+                position = null;
+            }
+
+            return new Url(url, mediaFit, position);
         }
 
         @NonNull
         public String getUrl() {
             return url;
+        }
+
+        @Nullable
+        public MediaFit getMediaFit() {
+            return mediaFit;
+        }
+
+        @Nullable
+        public Position getPosition() {
+            return position;
         }
     }
 
@@ -116,10 +151,6 @@ public abstract class Image {
         @DrawableRes
         public int getDrawableRes() {
             return drawable.resId;
-        }
-
-        public Drawable getDrawable(@NonNull Context context) {
-            return getDrawable(context, true);
         }
 
         @Nullable

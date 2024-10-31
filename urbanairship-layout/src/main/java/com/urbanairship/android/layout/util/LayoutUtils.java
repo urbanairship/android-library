@@ -5,6 +5,7 @@ package com.urbanairship.android.layout.util;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -12,6 +13,7 @@ import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RoundRectShape;
+import android.os.Build;
 import android.text.Html;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -19,6 +21,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.android.material.button.MaterialButton;
@@ -53,6 +56,7 @@ import androidx.annotation.Dimension;
 import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.SwitchCompat;
@@ -68,11 +72,11 @@ import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class LayoutUtils {
 
+    private static final float HOVERED_ALPHA_PERCENT = 0.1f;
     private static final float PRESSED_ALPHA_PERCENT = 0.2f;
     private static final int DEFAULT_STROKE_WIDTH_DPS = 2;
     private static final int DEFAULT_BORDER_RADIUS = 0;
 
-    private static final float MATERIAL_ALPHA_FULL = 1.0f;
     private static final float MATERIAL_ALPHA_LOW = 0.32f;
     private static final float MATERIAL_ALPHA_DISABLED = 0.38f;
 
@@ -155,8 +159,7 @@ public final class LayoutUtils {
         }
     }
 
-    private static void applyRippleEffect(@NonNull FrameLayout frameLayout, @Nullable Integer borderRadius) {
-        Context context = frameLayout.getContext();
+    private static RippleDrawable generateRippleDrawable(@NonNull Context context, @Nullable Integer borderRadius) {
         float radius = ResourceUtils.dpToPx(context, borderRadius != null ? borderRadius : 0);
         float[] outerRadii = new float[8];
         Arrays.fill(outerRadii, radius);
@@ -166,7 +169,51 @@ public final class LayoutUtils {
                 ColorStateList.valueOf(Color.TRANSPARENT)
         );
 
-        frameLayout.setForeground(new RippleDrawable(colors, null, mask));
+        return new RippleDrawable(colors, null, mask);
+    }
+
+    private static void applyRippleEffect(@NonNull FrameLayout frameLayout, @Nullable Integer borderRadius) {
+        RippleDrawable ripple = generateRippleDrawable(frameLayout.getContext(), borderRadius);
+        frameLayout.setForeground(ripple);
+    }
+
+    /** Applies a ripple effect and tint list to handle various interactions with an ImageButton button. */
+    public static void applyImageButtonRippleAndTint(@NonNull ImageButton view, @Nullable Integer borderRadius) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            applyImageButtonRippleAndTintApi23(view, borderRadius);
+        } else {
+            applyImageButtonRippleAndTintCompat(view, borderRadius);
+        }
+    }
+
+    /** Applies a ripple effect to the view's foreground and sets a disabled color for API 23 and above. */
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private static void applyImageButtonRippleAndTintApi23(@NonNull ImageButton view, @Nullable Integer borderRadius) {
+        // Sets the view's foreground to a ripple drawable
+        view.setForeground(generateRippleDrawable(view.getContext(), borderRadius));
+
+        // Discard source pixels that don't overlap the destination pixels
+        view.setImageTintMode(PorterDuff.Mode.SRC_ATOP);
+
+        // Using transparent as the normal color means no tint unless the image is disabled
+        int normalColor = Color.TRANSPARENT;
+        ColorStateList compatStateList = new ColorStateListBuilder()
+                .add(generateDisabledColor(normalColor), -android.R.attr.state_enabled)
+                .add(normalColor)
+                .build();
+
+        view.setImageTintList(compatStateList);
+    }
+
+    /** Applies a compat tap effect that is similar to a ripple, and disabled/hover colors for API 22 and below. */
+    private static void applyImageButtonRippleAndTintCompat(@NonNull ImageButton view, @Nullable Integer borderRadius) {
+        // Discard source pixels that don't overlap the destination pixels
+        view.setImageTintMode(PorterDuff.Mode.SRC_ATOP);
+
+        // Using transparent as the color means no tint unless the image is pressed or disabled
+        ColorStateList compatStateList = pressedColorStateList(Color.TRANSPARENT);
+
+        view.setImageTintList(compatStateList);
     }
 
     public static void applyLabelButtonModel(@NonNull MaterialButton button, @NonNull LabelButtonModel model) {
@@ -373,6 +420,15 @@ public final class LayoutUtils {
                 .build();
     }
 
+    public static ColorStateList pressedColorStateList(@ColorInt int normalColor) {
+        return new ColorStateListBuilder()
+                .add(generatePressedColor(normalColor, Color.BLACK), android.R.attr.state_pressed)
+                .add(generateHoveredColor(normalColor, Color.BLACK), android.R.attr.state_hovered)
+                .add(generateDisabledColor(normalColor), -android.R.attr.state_enabled)
+                .add(normalColor)
+                .build();
+    }
+
     public static void dismissSoftKeyboard(@NonNull View view) {
         InputMethodManager imm = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) {
@@ -417,6 +473,11 @@ public final class LayoutUtils {
     }
 
     @ColorInt
+    public static int generateHoveredColor(@ColorInt int baseColor) {
+        return generateHoveredColor(baseColor, Color.WHITE);
+    }
+
+    @ColorInt
     public static int generatePressedColor(@ColorInt int background, @ColorInt int foreground) {
         return overlayColors(background, foreground, PRESSED_ALPHA_PERCENT);
     }
@@ -424,6 +485,11 @@ public final class LayoutUtils {
     @ColorInt
     public static int generateDisabledColor(@ColorInt int background, @ColorInt int foreground) {
         return overlayColors(background, foreground, MATERIAL_ALPHA_DISABLED);
+    }
+
+    @ColorInt
+    public static int generateHoveredColor(@ColorInt int background, @ColorInt int foreground) {
+        return overlayColors(background, foreground, HOVERED_ALPHA_PERCENT);
     }
 
     @ColorInt

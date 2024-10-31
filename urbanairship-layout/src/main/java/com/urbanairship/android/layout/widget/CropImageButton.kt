@@ -5,21 +5,17 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.annotation.AttrRes
-import androidx.appcompat.widget.AppCompatImageView
+import androidx.appcompat.widget.AppCompatImageButton
 import com.urbanairship.android.layout.property.Position
 
-/** Base `AppCompatImageView` with support for "fit_crop" and image positioning. */
-internal class CropImageView(
+/** Base `AppCompatImageButton` with support for "fit_crop" and image positioning. */
+internal class CropImageButton(
     context: Context,
     attrs: AttributeSet? = null,
     @AttrRes defStyleAttr: Int = 0
-) : AppCompatImageView(context, attrs, defStyleAttr) {
+) : AppCompatImageButton(context, attrs, defStyleAttr) {
 
     private val delegate = CropImageDelegate(this)
-
-    init {
-        setScaleType(ScaleType.MATRIX)
-    }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)

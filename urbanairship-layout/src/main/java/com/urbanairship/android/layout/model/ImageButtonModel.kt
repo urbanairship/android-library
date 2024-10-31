@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
+import android.view.View
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
@@ -83,6 +84,8 @@ internal class ImageButtonModel(
         environment = env,
         properties = props
     )
+
+    val buttonViewId: Int = View.generateViewId()
 
     override val reportingDescription: String = contentDescription
         ?: contentDescriptionFallback
