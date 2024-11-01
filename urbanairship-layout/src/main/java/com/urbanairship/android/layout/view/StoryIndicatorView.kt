@@ -7,7 +7,6 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
 import android.widget.ProgressBar
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator.INDICATOR_DIRECTION_START_TO_END
@@ -136,21 +135,24 @@ internal class StoryIndicatorView(
         if (progressIndicators.isEmpty() || progressIndicators.size <= pageIndex) {
             return
         }
-
+        val storyHeight = this.height
         for (i in 0 until count) {
             (progressIndicators[i] as? LinearProgressIndicator)?.let { indicator ->
                 if (i == pageIndex) {
                     if (model.source == StoryIndicatorSource.CURRENT_PAGE) {
                         indicator.visibility = View.VISIBLE
                     }
+                    indicator.trackThickness = storyHeight
                     indicator.setProgressCompat(progress, animated)
                 } else {
                     if (model.source == StoryIndicatorSource.CURRENT_PAGE) {
                         indicator.visibility = View.GONE
                     }
                     if (i > pageIndex) {
+                        indicator.trackThickness = (storyHeight * 0.5).toInt()
                         indicator.setProgressCompat(0, false)
                     } else {
+                        indicator.trackThickness = (storyHeight * 0.5).toInt()
                         indicator.setProgressCompat(100, false)
                     }
                 }
