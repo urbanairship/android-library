@@ -161,6 +161,38 @@ public class PushManagerTest extends BaseTestCase {
     }
 
     /**
+     * Test push provider unavailable exceptions keep the token.
+     */
+    @Test
+    public void testPushProviderUnavailableException() throws PushProvider.RegistrationException {
+        pushManager.init();
+        when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
+        pushManager.performPushRegistration(true);
+        assertEquals("token", pushManager.getPushToken());
+
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenThrow(new PushProvider.PushProviderUnavailableException("test"));
+        pushManager.performPushRegistration(true);
+        assertEquals("token", pushManager.getPushToken());
+    }
+
+    /**
+     * Test registration exceptions clear the token.
+     */
+    @Test
+    public void tesRegistrationException() throws PushProvider.RegistrationException {
+        pushManager.init();
+        when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
+        pushManager.performPushRegistration(true);
+        assertEquals("token", pushManager.getPushToken());
+
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenThrow(new PushProvider.RegistrationException("test", true));
+        pushManager.performPushRegistration(true);
+        assertNull(pushManager.getPushToken());
+    }
+
+    /**
      * Test OptIn is only true if push and notifications are enabled and we have a push token.
      */
     @Test

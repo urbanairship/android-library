@@ -44,9 +44,15 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
     @Override
     @Nullable
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
+        FirebaseMessaging firebaseMessaging;
+        try {
+            firebaseMessaging = getFirebaseMessaging();
+        } catch(Exception e) {
+            throw new PushProviderUnavailableException("Firebase messaging unavailable: " + e.getMessage(), e);
+        }
 
         try {
-            return Tasks.await(getFirebaseMessaging().getToken());
+            return Tasks.await(firebaseMessaging.getToken());
         } catch (Exception e) {
             throw new RegistrationException("FCM error " + e.getMessage(), true, e);
         }
