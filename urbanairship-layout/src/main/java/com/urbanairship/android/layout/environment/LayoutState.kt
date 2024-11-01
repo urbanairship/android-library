@@ -18,24 +18,6 @@ internal class LayoutState(
     val radio: SharedState<State.Radio>?,
     val layout: SharedState<State.Layout>?,
 ) {
-    fun override(
-        pagerState: SharedState<State.Pager>?,
-        formState: SharedState<State.Form>?,
-        parentForm: SharedState<State.Form>?,
-        checkboxState: SharedState<State.Checkbox>?,
-        radioState: SharedState<State.Radio>?,
-        layoutState: SharedState<State.Layout>?,
-    ): LayoutState {
-        return LayoutState(
-            pager = pagerState ?: this.pager,
-            form = formState ?: this.form,
-            parentForm = parentForm ?: this.parentForm,
-            checkbox = checkboxState ?: this.checkbox,
-            radio = radioState ?: this.radio,
-            layout = layoutState ?: this.layout,
-        )
-    }
-
     fun reportingContext(
         formContext: FormInfo? = null,
         pagerContext: PagerData? = null,

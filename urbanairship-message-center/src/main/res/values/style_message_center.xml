@@ -2,8 +2,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!--- MESSAGE CENTER -->
 
-    <style name="UrbanAirship.MessageCenter.NoEdgeToEdge" parent="Theme.AppCompat.DayNight">
-        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
+    <!-- Base style for Message Center and Message Activities -->
+    <style name="UrbanAirship.MessageCenter.Activity" parent="Theme.AppCompat.DayNight">
     </style>
 
     <!-- Item Container -->

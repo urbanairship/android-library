@@ -10,7 +10,6 @@
         <item name="colorOnPrimary">#ffffff</item>
         <item name="colorOnSecondary">#000000</item>
         <item name="android:statusBarColor" tools:targetApi="lollipop">#0023ca</item>
-        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
     </style>
 
     <style name="Widget.AirshipDebug.TextInputLayout" parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox" />

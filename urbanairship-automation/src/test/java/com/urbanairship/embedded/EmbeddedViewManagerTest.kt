@@ -31,16 +31,16 @@ public class EmbeddedViewManagerTest {
         val job = Job()
         EmbeddedViewManager.displayRequests(testEmbeddedId, scope = this + job).test {
             addPending("low priority", 100)
-            assertEquals("low priority", awaitItem()?.viewInstanceId);
+            assertEquals("low priority", awaitItem().next?.viewInstanceId);
             addPending("medium priority", 0)
             addPending("high priority", -100)
             cancelAndIgnoreRemainingEvents()
         }
 
         EmbeddedViewManager.displayRequests(testEmbeddedId, scope = this + job).test {
-            assertEquals("low priority", awaitItem()?.viewInstanceId);
+            assertEquals("low priority", awaitItem().next?.viewInstanceId);
             EmbeddedViewManager.dismiss(testEmbeddedId, "low priority")
-            assertEquals("high priority", awaitItem()?.viewInstanceId);
+            assertEquals("high priority", awaitItem().next?.viewInstanceId);
             cancelAndIgnoreRemainingEvents()
         }
         job.cancel()
@@ -55,10 +55,10 @@ public class EmbeddedViewManagerTest {
 
         val job = Job()
         EmbeddedViewManager.displayRequests(testEmbeddedId, scope = this + job).test {
-            assertEquals("high priority", awaitItem()?.viewInstanceId);
+            assertEquals("high priority", awaitItem().next?.viewInstanceId);
             EmbeddedViewManager.dismiss(testEmbeddedId, "high priority")
 
-            assertEquals("medium priority", awaitItem()?.viewInstanceId);
+            assertEquals("medium priority", awaitItem().next?.viewInstanceId);
             EmbeddedViewManager.dismiss(testEmbeddedId, "medium priority")
 
             addPending("low priority", 0)
@@ -81,18 +81,18 @@ public class EmbeddedViewManagerTest {
             comparator = compareByDescending { it.priority },
             scope = this + job
         ).test {
-            assertEquals("low priority", awaitItem()?.viewInstanceId);
+            assertEquals("low priority", awaitItem().next?.viewInstanceId);
             cancelAndIgnoreRemainingEvents()
         }
 
         // Make sure standard sort still works
         EmbeddedViewManager.displayRequests(testEmbeddedId, scope = this + job).test {
-            assertEquals("medium priority", awaitItem()?.viewInstanceId);
+            assertEquals("medium priority", awaitItem().next?.viewInstanceId);
             cancelAndIgnoreRemainingEvents()
         }
         addPending("high priority", -100)
         EmbeddedViewManager.displayRequests(testEmbeddedId, scope = this + job).test {
-            assertEquals("medium priority", awaitItem()?.viewInstanceId);
+            assertEquals("medium priority", awaitItem().next?.viewInstanceId);
             cancelAndIgnoreRemainingEvents()
         }
 

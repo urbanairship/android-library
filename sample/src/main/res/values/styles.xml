@@ -14,7 +14,6 @@
         <item name="colorOnSecondary">#000000</item>
         <item name="messageCenterStyle">@style/AppTheme.MessageCenter</item>
         <item name="android:statusBarColor" tools:ignore="NewApi">@color/airshipBlue</item>
-        <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:ignore="NewApi">true</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -34,7 +33,5 @@
 
     <!-- Custom message date text style -->
     <style name="AppTheme.MessageCenter.DateTextAppearance" parent="TextAppearance.MaterialComponents.Body2" />
-
-
 
 </resources>

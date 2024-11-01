@@ -8,8 +8,8 @@ buildscript {
 
         // Android SDK Versions
         minSdkVersion = 21
-        compileSdkVersion = 35
-        targetSdkVersion = 35
+        compileSdkVersion = 34
+        targetSdkVersion = 34
 
         // Looking for dependency versions?
         // See: ./gradle/libs.versions.toml

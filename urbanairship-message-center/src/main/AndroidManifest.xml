@@ -6,12 +6,12 @@
 
         <activity
             android:name="com.urbanairship.messagecenter.MessageActivity"
-            android:theme="@style/UrbanAirship.MessageCenter.NoEdgeToEdge"
+            android:theme="@style/UrbanAirship.MessageCenter.Activity"
             android:exported="false" />
 
         <activity
             android:name="com.urbanairship.messagecenter.MessageCenterActivity"
-            android:theme="@style/UrbanAirship.MessageCenter.NoEdgeToEdge"
+            android:theme="@style/UrbanAirship.MessageCenter.Activity"
             android:exported="false"
             android:label="@string/ua_message_center_title" />
 
