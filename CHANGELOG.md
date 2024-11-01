@@ -2,6 +2,17 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.4.0 November 1, 2024
+Minor release with several enhancements to Scenes and In-App Automations.
+
+### Changes
+- Added shadow support for modal Scenes
+- Added new Scene layout to allow adding actions to anything within a Scene
+- Added new `AirshipEmbeddedViewGroup` composable to make it possible to show a carousel of embedded views for the same embedded ID
+- Improved accessibility of scene story indicator. Indicator has been updated to make it obvious which page is active by reducing the height of the inactive pages. Previously this was conveyed only through color
+- improved accessibility for In-App Automation views
+- Fixed issue with FCM registration if the FCM application is not configured before Airship starts, causing launch notifications to be ignored
+
 ## Version 18.3.3, October 16, 2024
 Patch release that fixes a potential crash when displaying In-App Automation messages, improves WebView security, and improves accessibility in Scenes and Stories. 
 Apps that make use of In-App Automation, Landing Pages, or Message Center should update.
