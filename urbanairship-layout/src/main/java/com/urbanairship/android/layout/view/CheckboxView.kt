@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import androidx.appcompat.widget.SwitchCompat
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.model.CheckboxModel

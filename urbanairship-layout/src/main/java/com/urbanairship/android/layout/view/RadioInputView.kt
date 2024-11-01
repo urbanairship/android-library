@@ -8,13 +8,13 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.model.RadioInputModel
 import com.urbanairship.android.layout.property.CheckboxStyle
 import com.urbanairship.android.layout.property.SwitchStyle
 import com.urbanairship.android.layout.util.ifNotEmpty
+import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.ShapeButton
 
@@ -34,7 +34,9 @@ internal class RadioInputView(
             }
         }
 
-        model.contentDescription.ifNotEmpty { checkableView.setContentDescription(it) }
+        context.resolveContentDescription(model.contentDescription, model.localizedContentDescription)?.ifNotEmpty {
+            contentDescription = it
+        }
 
         // Apply accessibility role and state handling
         ViewCompat.setAccessibilityDelegate(this, object : AccessibilityDelegateCompat() {

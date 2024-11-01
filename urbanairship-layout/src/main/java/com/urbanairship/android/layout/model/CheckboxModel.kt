@@ -7,6 +7,7 @@ import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.CheckboxInfo
+import com.urbanairship.android.layout.info.LocalizedContentDescription
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
@@ -31,6 +32,7 @@ internal class CheckboxModel(
     toggleStyle: ToggleStyle,
     private val reportingValue: JsonValue,
     contentDescription: String? = null,
+    localizedContentDescription: LocalizedContentDescription? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -45,6 +47,7 @@ internal class CheckboxModel(
     style = toggleStyle,
     toggleType = toggleStyle.type,
     contentDescription = contentDescription,
+    localizedContentDescription = localizedContentDescription,
     backgroundColor = backgroundColor,
     border = border,
     visibility = visibility,
@@ -63,6 +66,7 @@ internal class CheckboxModel(
         toggleStyle = info.style,
         reportingValue = info.reportingValue,
         contentDescription = info.contentDescription,
+        localizedContentDescription = info.localizedContentDescription,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,

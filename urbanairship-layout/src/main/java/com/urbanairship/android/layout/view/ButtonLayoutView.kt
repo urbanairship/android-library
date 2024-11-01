@@ -5,12 +5,14 @@ import android.content.Context
 import android.graphics.drawable.RippleDrawable
 import android.view.MotionEvent
 import android.view.View
+import android.view.accessibility.AccessibilityManager
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.model.BaseModel
+import com.urbanairship.android.layout.info.ButtonLayoutInfo
 import com.urbanairship.android.layout.model.ButtonLayoutModel
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.property.TapEffect
@@ -31,10 +33,18 @@ internal class ButtonLayoutView(
     viewEnvironment: ViewEnvironment
 ) : FrameLayout(context), BaseView, TappableView {
 
+    private val isButtonForAccessibility: Boolean
+    get() = when (model.accessibilityRole) {
+        ButtonLayoutInfo.AccessibilityRole.Button -> true
+        ButtonLayoutInfo.AccessibilityRole.Container -> false
+        null -> true /// defaults to button
+    }
+
     private val view = model.view.createView(context, viewEnvironment, null)
 
     private val rippleAnimationDuration =
         resources.getInteger(android.R.integer.config_shortAnimTime).milliseconds
+
 
     init {
         isClickable = true
@@ -44,7 +54,14 @@ internal class ButtonLayoutView(
 
         addView(view, MATCH_PARENT, MATCH_PARENT)
 
-        model.contentDescription.ifNotEmpty { contentDescription = it }
+        if (isButtonForAccessibility) {
+            view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            model.contentDescription(context)?.ifNotEmpty {
+                contentDescription = it
+            }
+        }  else {
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
 
         model.listener = object : ButtonModel.Listener {
             override fun setVisibility(visible: Boolean) {
@@ -64,6 +81,10 @@ internal class ButtonLayoutView(
      * a clickable descendant of this view.
      */
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+        if (!isButtonForAccessibility && context.isTouchExplorationEnabled) {
+            return false
+        }
+
         if (event.action == MotionEvent.ACTION_UP && !event.isWithinClickableDescendantOf(view)) {
             when (model.tapEffect) {
                 TapEffect.Default -> triggerDefaultAnimation()
@@ -106,3 +127,10 @@ internal class ButtonLayoutView(
         this.isPressed = false
     }
 }
+
+internal val Context.isTouchExplorationEnabled: Boolean
+    get() {
+        return ContextCompat.getSystemService(this, AccessibilityManager::class.java)?.let {
+            it.isTouchExplorationEnabled
+        } ?: false
+    }

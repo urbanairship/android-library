@@ -7,7 +7,6 @@ import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
 import android.widget.ImageButton
 import android.widget.ImageView.ScaleType.FIT_CENTER
-import android.widget.ImageView.ScaleType.MATRIX
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnAttach
 import androidx.core.view.isVisible
@@ -26,7 +25,6 @@ import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.widget.CropImageButton
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.images.ImageRequestOptions
-import com.urbanairship.util.UAStringUtil
 import kotlinx.coroutines.flow.Flow
 
 internal class ImageButtonView(
@@ -141,7 +139,7 @@ internal class ImageButtonView(
             setPadding(0, 0, 0, 0)
 
             // Set the content description, resolving localization if necessary
-            (model.contentDescription ?: model.localizedContentDescriptionString)?.ifNotEmpty {
+            model.contentDescription(context)?.ifNotEmpty {
                 contentDescription = it
             }
         }
@@ -163,12 +161,4 @@ internal class ImageButtonView(
             is TapEffect.None -> null
         }
     }
-
-    /** Helper extension to load the localized content description for an image button. */
-    private val ImageButtonModel.localizedContentDescriptionString: String?
-        get() = localizedContentDescription?.let { localizedDescription ->
-            localizedDescription.ref?.let { ref ->
-                UAStringUtil.namedStringResource(context, ref, localizedDescription.fallback)
-            } ?: localizedDescription.fallback
-        }
 }

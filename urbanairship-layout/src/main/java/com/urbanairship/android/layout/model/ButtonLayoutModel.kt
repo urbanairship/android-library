@@ -7,6 +7,10 @@ import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ButtonLayoutInfo
+import com.urbanairship.android.layout.info.LabelInfo
+import com.urbanairship.android.layout.info.MediaInfo
+import com.urbanairship.android.layout.info.ViewGroupInfo
+import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
@@ -15,6 +19,7 @@ import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.view.ButtonLayoutView
 import com.urbanairship.json.JsonValue
 
@@ -29,12 +34,14 @@ internal class ButtonLayoutModel(
     clickBehaviors: List<ButtonClickBehaviorType>,
     actions: Map<String, JsonValue>?,
     tapEffect: TapEffect,
-    contentDescription: String? = null,
     reportingMetadata: JsonValue?,
     formState: SharedState<State.Form>?,
     pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
     properties: ModelProperties,
+    private val contentDescriptionResolver: (Context) -> String?,
+    private val reportingDescriptionResolver: (Context) -> String,
+    val accessibilityRole: ButtonLayoutInfo.AccessibilityRole? = null
 ) : ButtonModel<ButtonLayoutView>(
     viewType = ViewType.BUTTON_LAYOUT,
     backgroundColor = backgroundColor,
@@ -46,8 +53,6 @@ internal class ButtonLayoutModel(
     clickBehaviors = clickBehaviors,
     actions = actions,
     tapEffect = tapEffect,
-    contentDescription = contentDescription,
-    localizedContentDescription = null,
     reportingMetadata = reportingMetadata,
     formState = formState,
     pagerState = pagerState,
@@ -72,15 +77,23 @@ internal class ButtonLayoutModel(
         clickBehaviors = info.clickBehaviors,
         actions = info.actions,
         tapEffect = info.tapEffect,
-        contentDescription = info.contentDescription,
         reportingMetadata = info.reportingMetadata,
         formState = formState,
         pagerState = pagerState,
         environment = env,
         properties = props,
+        contentDescriptionResolver = info.contentDescriptionResolver,
+        reportingDescriptionResolver = info.reportingDescriptionResolver,
+        accessibilityRole = info.accessibilityRole
     )
 
-    override val reportingDescription: String = contentDescription ?: identifier
+    override fun contentDescription(context: Context): String? {
+        return contentDescriptionResolver(context)
+    }
+
+    override fun reportingDescription(context: Context): String {
+        return reportingDescriptionResolver(context)
+    }
 
     override fun onCreateView(
         context: Context,
@@ -90,3 +103,48 @@ internal class ButtonLayoutModel(
         id = viewId
     }
 }
+
+private val ViewInfo.childContentDescriptionResolvers: List<(Context) -> String?>
+    get() {
+        return when (this) {
+            is LabelInfo -> listOf { context: Context ->
+                context.resolveContentDescription(
+                    this.contentDescription, this.localizedContentDescription
+                ) ?: text
+            }
+
+            is MediaInfo -> listOf { context: Context ->
+                context.resolveContentDescription(
+                    this.contentDescription, this.localizedContentDescription
+                )
+            }
+
+            is ButtonLayoutInfo -> emptyList()
+
+            is ViewGroupInfo<*> -> this.children.toList()
+                .flatMap { it.info.childContentDescriptionResolvers }
+
+            else -> emptyList()
+        }
+    }
+
+private val ButtonLayoutInfo.contentDescriptionResolver: (Context) -> String?
+    get() {
+        if (contentDescription != null || localizedContentDescription != null) {
+            return { context ->
+                context.resolveContentDescription(
+                    contentDescription, localizedContentDescription
+                )
+            }
+        }
+
+        val childResolvers = this.view.childContentDescriptionResolvers
+        return { context -> childResolvers.mapNotNull { it.invoke(context) }.joinToString(", ") }
+    }
+
+private val ButtonLayoutInfo.reportingDescriptionResolver: (Context) -> String
+    get() = { context ->
+        context.resolveContentDescription(
+            contentDescription, localizedContentDescription
+        ) ?: identifier
+    }

@@ -4,8 +4,8 @@ package com.urbanairship.android.layout.model
 import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.info.AccessibleRoleInfo
 import com.urbanairship.android.layout.info.LabelInfo
+import com.urbanairship.android.layout.info.LocalizedContentDescription
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
@@ -21,7 +21,9 @@ internal class LabelModel(
     val textAppearance: TextAppearance,
     val markdownOptions: MarkdownOptions?,
     val contentDescription: String? = null,
-    val roleInfo: AccessibleRoleInfo?,
+    val localizedContentDescription: LocalizedContentDescription? = null,
+    val accessibilityHidden: Boolean = false,
+    val accessibilityRole: LabelInfo.AccessibilityRole?,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -42,9 +44,11 @@ internal class LabelModel(
     constructor(info: LabelInfo, env: ModelEnvironment, props: ModelProperties) : this(
         text = info.text,
         textAppearance = info.textAppearance,
-        roleInfo = info.accessibleRole,
+        accessibilityRole = info.accessibilityRole,
         markdownOptions = info.markdownOptions,
         contentDescription = info.contentDescription,
+        localizedContentDescription = info.localizedContentDescription,
+        accessibilityHidden = info.accessibilityHidden ?: false,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,
@@ -53,6 +57,7 @@ internal class LabelModel(
         environment = env,
         properties = props
     )
+
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         LabelView(context, this).apply {

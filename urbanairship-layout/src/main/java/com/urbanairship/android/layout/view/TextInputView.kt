@@ -9,7 +9,6 @@ import android.view.View.OnTouchListener
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import androidx.appcompat.widget.AppCompatEditText
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.TextInputModel
 import com.urbanairship.android.layout.util.LayoutUtils

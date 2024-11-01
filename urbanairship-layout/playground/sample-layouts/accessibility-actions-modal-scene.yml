@@ -110,9 +110,7 @@ view:
               view:
                 type: label
                 text: This is the first page about stuff.
-                accessible_role:
-                  type: heading
-                  level: 1
+                role: heading
                 text_appearance:
                   alignment: center
                   color:
@@ -133,8 +131,6 @@ view:
                 type: image_button
                 identifier: close_button_1
                 button_click: [ dismiss ]
-                accessible_role:
-                  type: button
                 localized_content_description:
                   ref: "ua_cancel"
                   fallback: "dismiss button test"
@@ -173,9 +169,6 @@ view:
               view:
                 type: label
                 text: More stuff is here on the second page.
-                accessible_role:
-                  type: heading
-                  level: 2
                 text_appearance:
                   alignment: center
                   color:

@@ -31,7 +31,9 @@ internal class LabelButtonView(
 
         LayoutUtils.applyLabelButtonModel(this, model)
 
-        model.contentDescription.ifNotEmpty { contentDescription = it }
+        model.contentDescription(context)?.ifNotEmpty {
+            contentDescription = it
+        }
 
         model.listener = object : ButtonModel.Listener {
             override fun setEnabled(enabled: Boolean) {

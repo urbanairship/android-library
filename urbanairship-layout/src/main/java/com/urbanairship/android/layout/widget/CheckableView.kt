@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.property.ToggleType
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.ifNotEmpty
+import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.view.BaseView
 
 internal abstract class CheckableView<M : CheckableModel<*>>(
@@ -36,7 +37,10 @@ internal abstract class CheckableView<M : CheckableModel<*>>(
         }
 
         LayoutUtils.applyBorderAndBackground(this, model)
-        model.contentDescription.ifNotEmpty { checkableView.setContentDescription(it) }
+
+        context.resolveContentDescription(model.contentDescription, model.localizedContentDescription)?.ifNotEmpty {
+            contentDescription = it
+        }
 
         ViewCompat.setAccessibilityDelegate(this, object : AccessibilityDelegateCompat() {
             override fun onInitializeAccessibilityNodeInfo(

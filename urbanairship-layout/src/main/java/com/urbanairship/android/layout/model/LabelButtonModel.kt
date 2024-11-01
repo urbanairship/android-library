@@ -7,6 +7,7 @@ import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LabelButtonInfo
+import com.urbanairship.android.layout.info.LocalizedContentDescription
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
@@ -15,6 +16,7 @@ import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.view.LabelButtonView
 import com.urbanairship.json.JsonValue
 
@@ -24,7 +26,8 @@ internal class LabelButtonModel(
     actions: Map<String, JsonValue>? = null,
     clickBehaviors: List<ButtonClickBehaviorType>,
     tapEffect: TapEffect,
-    contentDescription: String? = null,
+    private val contentDescription: String? = null,
+    private val localizedContentDescription: LocalizedContentDescription? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -41,8 +44,6 @@ internal class LabelButtonModel(
     actions = actions,
     clickBehaviors = clickBehaviors,
     tapEffect = tapEffect,
-    contentDescription = contentDescription,
-    localizedContentDescription = null,
     backgroundColor = backgroundColor,
     border = border,
     visibility = visibility,
@@ -80,8 +81,13 @@ internal class LabelButtonModel(
         properties = props,
     )
 
-    override val reportingDescription: String =
-        contentDescription ?: label.text.ifEmpty { identifier }
+    override fun contentDescription(context: Context): String? {
+        return context.resolveContentDescription(contentDescription, localizedContentDescription)
+    }
+
+    override fun reportingDescription(context: Context): String {
+        return context.resolveContentDescription(contentDescription, localizedContentDescription) ?: identifier
+    }
 
     override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
         LabelButtonView(context, this).apply {

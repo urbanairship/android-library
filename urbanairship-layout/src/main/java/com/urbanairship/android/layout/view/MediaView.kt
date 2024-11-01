@@ -37,6 +37,7 @@ import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
+import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.widget.CropImageView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.android.layout.widget.TouchAwareWebView
@@ -183,9 +184,11 @@ internal class MediaView(
                 }
 
                 importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
-                model.contentDescription.ifNotEmpty {
+                context.resolveContentDescription(model.contentDescription, model.localizedContentDescription)?.ifNotEmpty {
                     contentDescription = it
-                    importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+                    if (!model.accessibilityHidden) {
+                        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+                    }
                 }
             }
             imageView = iv
@@ -390,7 +393,13 @@ internal class MediaView(
             }
         }
 
-        model.contentDescription.ifNotEmpty { wv.contentDescription = it }
+        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        context.resolveContentDescription(model.contentDescription, model.localizedContentDescription)?.ifNotEmpty {
+            wv.contentDescription = it
+            if (!model.accessibilityHidden) {
+                wv.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+            }
+        }
 
         wv.visibility = INVISIBLE
         wv.webViewClient = object : MediaWebViewClient(load) {

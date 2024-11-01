@@ -6,6 +6,7 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.LocalizedContentDescription
 import com.urbanairship.android.layout.info.RadioInputInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.AttributeValue
@@ -32,6 +33,7 @@ internal class RadioInputModel(
     private val reportingValue: JsonValue,
     private val attributeValue: AttributeValue? = null,
     contentDescription: String? = null,
+    localizedContentDescription: LocalizedContentDescription? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -46,6 +48,7 @@ internal class RadioInputModel(
     style = toggleStyle,
     toggleType = toggleStyle.type,
     contentDescription = contentDescription,
+    localizedContentDescription = localizedContentDescription,
     backgroundColor = backgroundColor,
     border = border,
     visibility = visibility,
@@ -65,6 +68,7 @@ internal class RadioInputModel(
         reportingValue = info.reportingValue,
         attributeValue = info.attributeValue,
         contentDescription = info.contentDescription,
+        localizedContentDescription = info.localizedContentDescription,
         backgroundColor = info.backgroundColor,
         border = info.border,
         visibility = info.visibility,

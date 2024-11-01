@@ -7,6 +7,7 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.LocalizedContentDescription
 import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
@@ -29,6 +30,8 @@ internal class MediaModel(
     val mediaFit: MediaFit,
     val position: Position,
     val contentDescription: String? = null,
+    val localizedContentDescription: LocalizedContentDescription? = null,
+    val accessibilityHidden: Boolean = false,
     val video: Video?,
     val pagerState: SharedState<State.Pager>?,
     backgroundColor: Color? = null,
@@ -54,6 +57,8 @@ internal class MediaModel(
         mediaFit = info.mediaFit,
         position = info.position,
         contentDescription = info.contentDescription,
+        localizedContentDescription = info.localizedContentDescription,
+        accessibilityHidden = info.accessibilityHidden ?: false,
         video = info.video,
         backgroundColor = info.backgroundColor,
         border = info.border,

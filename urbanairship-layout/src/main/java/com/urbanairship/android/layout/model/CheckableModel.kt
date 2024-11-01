@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.model
 
 import android.view.View
 import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.info.LocalizedContentDescription
 import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
@@ -17,6 +18,7 @@ internal abstract class CheckableModel<T : View>(
     val style: ToggleStyle,
     val toggleType: ToggleType,
     val contentDescription: String? = null,
+    val localizedContentDescription: LocalizedContentDescription? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,

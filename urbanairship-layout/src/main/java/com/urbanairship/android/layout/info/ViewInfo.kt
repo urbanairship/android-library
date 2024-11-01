@@ -160,85 +160,10 @@ internal class BaseViewInfo(json: JsonMap) : View {
 
 private fun view(json: JsonMap): View = BaseViewInfo(json)
 
-internal enum class AccessibleRoleInfoType {
-    HEADING,
-    BUTTON,
-    CHECKBOX,
-    FORM,
-    RADIO,
-    RADIOGROUP,
-    PRESENTATION;
-
-    val value: String
-        get() = name.lowercase()
-
-    companion object {
-        fun fromString(value: String): AccessibleRoleInfoType? {
-            return try {
-                valueOf(value.uppercase())
-            } catch (e: IllegalArgumentException) {
-                null
-            }
-        }
-    }
-}
-
-internal sealed class AccessibleRoleInfo {
-    abstract val type: AccessibleRoleInfoType
-
-    data object Button : AccessibleRoleInfo() {
-        override val type = AccessibleRoleInfoType.BUTTON
-    }
-
-    data object Checkbox : AccessibleRoleInfo() {
-        override val type = AccessibleRoleInfoType.CHECKBOX
-    }
-
-    data object Form : AccessibleRoleInfo() {
-        override val type = AccessibleRoleInfoType.FORM
-    }
-
-    data object Radio : AccessibleRoleInfo() {
-        override val type = AccessibleRoleInfoType.RADIO
-    }
-
-    data object RadioGroup : AccessibleRoleInfo() {
-        override val type = AccessibleRoleInfoType.RADIOGROUP
-    }
-
-    data object Presentation : AccessibleRoleInfo() {
-        override val type = AccessibleRoleInfoType.PRESENTATION
-    }
-
-    data class Heading(
-        val level: Int
-    ) : AccessibleRoleInfo() {
-        override val type = AccessibleRoleInfoType.HEADING
-    }
-
-    companion object {
-        fun fromJson(json: JsonMap): AccessibleRoleInfo? {
-            val typeStr = json.optionalField<String>("type") ?: return null
-            return when (val type = AccessibleRoleInfoType.fromString(typeStr)) {
-                AccessibleRoleInfoType.HEADING -> Heading(
-                    level = json.optionalField("level") ?: 1
-                )
-                AccessibleRoleInfoType.BUTTON -> Button
-                AccessibleRoleInfoType.CHECKBOX -> Checkbox
-                AccessibleRoleInfoType.FORM -> Form
-                AccessibleRoleInfoType.RADIO -> Radio
-                AccessibleRoleInfoType.RADIOGROUP -> RadioGroup
-                AccessibleRoleInfoType.PRESENTATION -> Presentation
-                null -> null
-            }
-        }
-    }
-}
-
 internal interface Accessible {
     val contentDescription: String?
     val localizedContentDescription: LocalizedContentDescription?
-    val accessibleRole: AccessibleRoleInfo?
+    val accessibilityHidden: Boolean?
 }
 
 private fun accessible(json: JsonMap): Accessible = object : Accessible {
@@ -247,8 +172,8 @@ private fun accessible(json: JsonMap): Accessible = object : Accessible {
     override val localizedContentDescription: LocalizedContentDescription? =
         json.optionalField<JsonMap>("localized_content_description")?.let { LocalizedContentDescription(it) }
 
-    override val accessibleRole: AccessibleRoleInfo? =
-        json.optionalField<JsonMap>("accessible_role")?.let { AccessibleRoleInfo.fromJson(it)}
+    override val accessibilityHidden: Boolean? =
+        json.optionalField<Boolean>("accessibility_hidden")
 }
 
 internal interface Identifiable {
@@ -333,10 +258,52 @@ internal open class ButtonInfo(
 }
 
 /** ButtonLayout is a bit special because it's both a ViewGroup and a Button. */
-internal class ButtonLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), Button by ButtonInfo(json) {
+internal class ButtonLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), Button by ButtonInfo(json), Accessible by accessible(json) {
     val view = viewInfoFromJson(json.requireField("view"))
 
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
+
+    override val localizedContentDescription: LocalizedContentDescription? = json.optionalField<JsonMap>("localized_content_description")?.let { LocalizedContentDescription(it) }
+    override val accessibilityHidden: Boolean? = json.optionalField("accessibility_hidden")
+    override val contentDescription: String? = json.optionalField("content_description")
+
+    var accessibilityRole: AccessibilityRole? = json.optionalField<JsonMap>("accessibility_role")?.let { AccessibilityRole.fromJson(it) }
+
+    internal enum class AccessibilityRoleType {
+        BUTTON,
+        CONTAINER;
+
+        companion object {
+            fun fromString(value: String): AccessibilityRoleType? = when (value.lowercase()) {
+                "button" -> BUTTON
+                "container" -> CONTAINER
+                else -> null
+            }
+        }
+    }
+
+    internal sealed class AccessibilityRole {
+        abstract val type: AccessibilityRoleType
+
+        data object Button : AccessibilityRole() {
+            override val type = AccessibilityRoleType.BUTTON
+        }
+
+        data object Container : AccessibilityRole() {
+            override val type = AccessibilityRoleType.CONTAINER
+        }
+
+        companion object {
+            fun fromJson(json: JsonMap): AccessibilityRole? {
+                val typeStr = json.optionalField<String>("type") ?: return null
+                return when (AccessibilityRoleType.fromString(typeStr)) {
+                    AccessibilityRoleType.BUTTON -> Button
+                    AccessibilityRoleType.CONTAINER -> Container
+                    null -> null
+                }
+            }
+        }
+    }
 }
 
 internal interface Checkable : View, Accessible {
@@ -410,6 +377,40 @@ internal class LabelInfo(
     val textAppearance: TextAppearance =
         TextAppearance.fromJson(json.requireField("text_appearance"))
     val markdownOptions: MarkdownOptions? = json.optionalMap("markdown")?.let { MarkdownOptions(it) }
+    var accessibilityRole: AccessibilityRole? = json.optionalField<JsonMap>("accessibility_role")?.let { AccessibilityRole.fromJson(it) }
+
+    internal enum class AccessibilityRoleType {
+        HEADING;
+
+        companion object {
+            fun fromString(value: String): AccessibilityRoleType? = when (value.lowercase()) {
+                "heading" -> HEADING
+                else -> null
+            }
+        }
+    }
+
+    internal sealed class AccessibilityRole {
+        abstract val type: AccessibilityRoleType
+
+        data class Heading(
+            val level: Int
+        ) : AccessibilityRole() {
+            override val type = AccessibilityRoleType.HEADING
+        }
+
+        companion object {
+            fun fromJson(json: JsonMap): AccessibilityRole? {
+                val typeStr = json.optionalField<String>("type") ?: return null
+                return when (AccessibilityRoleType.fromString(typeStr)) {
+                    AccessibilityRoleType.HEADING -> Heading(
+                        level = json.optionalField("level") ?: 1
+                    )
+                    null -> null
+                }
+            }
+        }
+    }
 }
 
 internal class LabelButtonInfo(json: JsonMap) : ButtonInfo(json) {
@@ -501,7 +502,7 @@ internal class AutomatedAccessibilityAction(val type: AutomatedAccessibilityActi
     companion object {
         @Throws(JsonException::class)
         fun from(json: JsonMap): AutomatedAccessibilityAction? {
-            val typeString: String? = json.opt("type").optString()
+            val typeString: String = json.opt("type").optString()
 
             return AutomatedAccessibilityActionType.from(typeString)?.let { AutomatedAccessibilityAction(it) }
         }
@@ -529,10 +530,7 @@ internal class AccessibilityAction(json: JsonMap) : Accessible by accessible(jso
     override val identifier: String
 
     init {
-        val fallback = localizedContentDescription?.fallback
-        if (fallback == null) {
-            throw JsonException("Missing 'fallback' in 'localized_content_description'")
-        }
+        val fallback = localizedContentDescription?.fallback ?: throw JsonException("Missing 'fallback' in 'localized_content_description'")
         identifier = fallback
     }
 

@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.view.ImageButtonView
 import com.urbanairship.json.JsonValue
 
@@ -27,9 +28,8 @@ internal class ImageButtonModel(
     actions: Map<String, JsonValue>? = null,
     buttonClickBehaviors: List<ButtonClickBehaviorType>,
     tapEffect: TapEffect,
-    contentDescription: String? = null,
-    localizedContentDescription: LocalizedContentDescription? = null,
-    contentDescriptionFallback: String? = null,
+    private val contentDescription: String? = null,
+    private val localizedContentDescription: LocalizedContentDescription? = null,
     backgroundColor: Color? = null,
     border: Border? = null,
     visibility: VisibilityInfo? = null,
@@ -46,8 +46,6 @@ internal class ImageButtonModel(
     actions = actions,
     clickBehaviors = buttonClickBehaviors,
     tapEffect = tapEffect,
-    contentDescription = contentDescription,
-    localizedContentDescription = localizedContentDescription,
     backgroundColor = backgroundColor,
     border = border,
     visibility = visibility,
@@ -87,9 +85,13 @@ internal class ImageButtonModel(
 
     val buttonViewId: Int = View.generateViewId()
 
-    override val reportingDescription: String = contentDescription
-        ?: contentDescriptionFallback
-        ?: identifier
+    override fun contentDescription(context: Context): String? {
+        return context.resolveContentDescription(contentDescription, localizedContentDescription)
+    }
+
+    override fun reportingDescription(context: Context): String {
+        return context.resolveContentDescription(contentDescription, localizedContentDescription) ?: identifier
+    }
 
     override fun onCreateView(
         context: Context,
