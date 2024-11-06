@@ -2,8 +2,11 @@
 
 package com.urbanairship.permission;
 
+import java.util.Objects;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Permission request result. See {@link PermissionsManager#requestPermission(Permission, boolean)}
@@ -67,6 +70,19 @@ public class PermissionRequestResult {
     @NonNull
     public PermissionStatus getPermissionStatus() {
         return permissionStatus;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PermissionRequestResult that = (PermissionRequestResult) o;
+        return isSilentlyDenied == that.isSilentlyDenied && permissionStatus == that.permissionStatus;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(permissionStatus, isSilentlyDenied);
     }
 
     @Override

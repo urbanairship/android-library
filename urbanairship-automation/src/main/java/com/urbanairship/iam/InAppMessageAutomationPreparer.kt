@@ -24,6 +24,10 @@ internal class InAppMessageAutomationPreparer(
     private val actionRunnerFactory: InAppActionRunnerFactory = InAppActionRunnerFactory()
 ) : AutomationPreparerDelegate<InAppMessage, PreparedInAppMessageData> {
 
+    var messageContentExtender: InAppMessageContentExtender?
+        get() { synchronized(displayAdapterFactory) { return displayAdapterFactory.messageContentExtender } }
+        set(value) { synchronized(displayAdapterFactory) { displayAdapterFactory.messageContentExtender = value } }
+
     var displayInterval: Long
         get() { synchronized(displayCoordinatorManager) { return displayCoordinatorManager.displayInterval } }
         set(value) { synchronized(displayCoordinatorManager) { displayCoordinatorManager.displayInterval = value} }
@@ -45,7 +49,7 @@ internal class InAppMessageAutomationPreparer(
         val analytics = analyticsFactory.makeAnalytics(data, preparedScheduleInfo)
         val actionRunner = actionRunnerFactory.makeRunner(analytics = analytics, inAppMessage = data)
 
-        val adapter = displayAdapterFactory.makeAdapter(data, assets, actionRunner).getOrElse {
+        val adapter = displayAdapterFactory.makeAdapter(data, preparedScheduleInfo.priority, assets, actionRunner).getOrElse {
             UALog.w(it) { "Failed to resolve adapter ${preparedScheduleInfo.scheduleId}" }
             return Result.failure(it)
         }

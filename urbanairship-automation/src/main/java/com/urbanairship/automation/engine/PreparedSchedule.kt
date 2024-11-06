@@ -39,7 +39,8 @@ public data class PreparedScheduleInfo(
     internal val experimentResult: ExperimentResult? = null,
     internal val reportingContext: JsonValue? = null,
     internal val triggerSessionId: String,
-    internal val additionalAudienceCheckResult: Boolean = true
+    internal val additionalAudienceCheckResult: Boolean = true,
+    internal val priority: Int = 0
 ) : JsonSerializable {
 
     internal companion object {
@@ -51,6 +52,7 @@ public data class PreparedScheduleInfo(
         private const val REPORTING_CONTEXT = "reporting_context"
         private const val TRIGGER_SESSION_ID = "trigger_session_id"
         private const val ADDITIONAL_AUDIENCE_CHECK_RESULT = "additional_audience_check_result"
+        private const val PRIORITY = "PRIORITY"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): PreparedScheduleInfo {
@@ -64,7 +66,8 @@ public data class PreparedScheduleInfo(
                 reportingContext = content.get(REPORTING_CONTEXT),
                 // Default to a UUID for backwards compatibility
                 triggerSessionId = content.optionalField(TRIGGER_SESSION_ID) ?: UUID.randomUUID().toString(),
-                additionalAudienceCheckResult = content.requireField(ADDITIONAL_AUDIENCE_CHECK_RESULT)
+                additionalAudienceCheckResult = content.optionalField(ADDITIONAL_AUDIENCE_CHECK_RESULT) ?: true,
+                priority = content.optionalField(PRIORITY) ?: 0,
             )
         }
     }
@@ -77,6 +80,7 @@ public data class PreparedScheduleInfo(
         EXPERIMENT_RESULT to experimentResult,
         REPORTING_CONTEXT to reportingContext,
         TRIGGER_SESSION_ID to triggerSessionId,
-        ADDITIONAL_AUDIENCE_CHECK_RESULT to additionalAudienceCheckResult
+        ADDITIONAL_AUDIENCE_CHECK_RESULT to additionalAudienceCheckResult,
+        PRIORITY to priority
     ).toJsonValue()
 }

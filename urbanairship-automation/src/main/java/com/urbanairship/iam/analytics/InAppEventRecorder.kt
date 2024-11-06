@@ -6,6 +6,7 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
+import com.urbanairship.analytics.ConversionData
 import com.urbanairship.analytics.Event
 import com.urbanairship.analytics.EventType
 import com.urbanairship.automation.engine.AutomationEventFeed
@@ -44,7 +45,7 @@ internal class InAppEventRecorder(
 
     override fun recordEvent(event: InAppEventData) {
         try {
-            val trackEvent = AnalyticsEvent(event, analytics)
+            val trackEvent = AnalyticsEvent(event)
             analytics.addEvent(trackEvent)
         } catch (ex: Exception) {
             UALog.e(ex) { "Failed to record event $event" }
@@ -62,19 +63,15 @@ private data class AnalyticsEvent(
     val identifier: InAppEventMessageId,
     val source: InAppEventSource,
     val context: InAppEventContext?,
-    val conversionSendID: String?,
-    val conversionPushMetadata: String?,
     val renderedLocale: JsonValue?,
     val baseData: JsonSerializable?
 ) : Event() {
-    constructor(eventData: InAppEventData, analytics: Analytics) :
+    constructor(eventData: InAppEventData) :
             this(
                 eventType = eventData.event.eventType,
                 identifier = eventData.messageId,
                 source = eventData.source,
                 context = eventData.context,
-                conversionSendID = analytics.conversionSendId,
-                conversionPushMetadata = analytics.conversionMetadata,
                 renderedLocale = eventData.renderedLocale,
                 baseData = eventData.event.data
             )
@@ -89,14 +86,14 @@ private data class AnalyticsEvent(
 
     override fun getType(): EventType = eventType
 
-    override fun getEventData(): JsonMap {
+    override fun getEventData(conversionData: ConversionData): JsonMap {
         return JsonMap.newBuilder()
             .putAll(baseData?.toJsonValue()?.requireMap() ?: jsonMapOf())
             .put(IDENTIFIER, identifier)
             .put(SOURCE, source)
             .putOpt(CONTEXT, context)
-            .putOpt(CONVERSION_SEND_ID, conversionSendID)
-            .putOpt(CONVERSION_PUSH_METADATA, conversionPushMetadata)
+            .putOpt(CONVERSION_SEND_ID, conversionData.conversionSendId)
+            .putOpt(CONVERSION_PUSH_METADATA, conversionData.conversionMetadata)
             .putOpt(RENDERED_LOCALE, renderedLocale)
             .build()
     }

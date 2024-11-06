@@ -279,7 +279,7 @@ public class WeightlessLinearLayout extends ViewGroup {
                 // Determine how big this child would like to be.
                 measureChildWithMargins(child,
                     widthMeasureSpec, childHorizontalMargins,
-                    heightMeasureSpec, childrenWithMaxPercent.size() > 0 ? totalLength : 0);
+                    heightMeasureSpec, !childrenWithMaxPercent.isEmpty() ? totalLength : 0);
 
                 if (oldHeight != Integer.MIN_VALUE) {
                     lp.height = oldHeight;
@@ -330,7 +330,7 @@ public class WeightlessLinearLayout extends ViewGroup {
         // Either expand children with percentage dimensions to take up available space or shrink them if they extend
         // beyond our current bounds.
         int delta = height - totalLength;
-        if (skippedMeasure || (delta != 0 && childrenWithMaxPercent.size() > 0)) {
+        if (skippedMeasure || (delta != 0 && !childrenWithMaxPercent.isEmpty())) {
             Collections.sort(childrenWithMaxPercent, (v1, v2) -> {
                 float p1 = ((LayoutParams) v1.getLayoutParams()).maxHeightPercent;
                 float p2 = ((LayoutParams) v2.getLayoutParams()).maxHeightPercent;
@@ -338,6 +338,7 @@ public class WeightlessLinearLayout extends ViewGroup {
             });
 
             int maxPercentCount = childrenWithMaxPercent.size();
+
             int lastChildIndex = maxPercentCount - 1;
             for (int i = 0; i < maxPercentCount; i++) {
                 View child = childrenWithMaxPercent.get(i);
@@ -352,7 +353,7 @@ public class WeightlessLinearLayout extends ViewGroup {
                         actualPercent = ((float) delta) / ((float)(childrenWithMaxPercent.size() - i)) / ((float) height);
                     }
 
-                    int childHeight = (int) (actualPercent * height) + lp.topMargin + lp.bottomMargin;
+                    int childHeight = (int) (actualPercent * height);
                     if (i == lastChildIndex) {
                         childHeight = Math.min(childHeight, delta);
                     }
@@ -506,7 +507,7 @@ public class WeightlessLinearLayout extends ViewGroup {
 
                 // Determine how big this child would like to be.
                 measureChildWithMargins(child,
-                    widthMeasureSpec, childrenWithMaxPercent.size() > 0 ? totalLength : 0,
+                    widthMeasureSpec, !childrenWithMaxPercent.isEmpty() ? totalLength : 0,
                     heightMeasureSpec, childVerticalMargins);
 
                 if (oldWidth != Integer.MIN_VALUE) {
@@ -558,7 +559,7 @@ public class WeightlessLinearLayout extends ViewGroup {
         // Either expand children with percentage dimensions to take up available space or shrink them if they extend
         // beyond our current bounds.
         int delta = width - totalLength;
-        if (skippedMeasure || (delta != 0 && childrenWithMaxPercent.size() > 0)) {
+        if (skippedMeasure || (delta != 0 && !childrenWithMaxPercent.isEmpty())) {
             Collections.sort(childrenWithMaxPercent, (v1, v2) -> {
                 float p1 = ((LayoutParams) v1.getLayoutParams()).maxWidthPercent;
                 float p2 = ((LayoutParams) v2.getLayoutParams()).maxWidthPercent;
@@ -566,6 +567,7 @@ public class WeightlessLinearLayout extends ViewGroup {
             });
 
             int maxPercentCount = childrenWithMaxPercent.size();
+
             int lastChildIndex = maxPercentCount - 1;
             for (int i = 0; i < maxPercentCount; i++) {
                 View child = childrenWithMaxPercent.get(i);
@@ -580,7 +582,7 @@ public class WeightlessLinearLayout extends ViewGroup {
                         actualPercent = ((float) delta) / ((float)(childrenWithMaxPercent.size() - i)) / ((float) width);
                     }
 
-                    int childWidth = (int) (actualPercent * width) + lp.getMarginStart() + lp.getMarginEnd();
+                    int childWidth = (int) (actualPercent * width);
                     if (i == lastChildIndex) {
                         childWidth = Math.min(childWidth, delta);
                     }
@@ -598,7 +600,7 @@ public class WeightlessLinearLayout extends ViewGroup {
                             heightSpec = MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.EXACTLY);
                         }
                     } else {
-                        heightSpec = getChildMeasureSpec(widthMeasureSpec, getPaddingTop() + getPaddingBottom() + lp.topMargin + lp.bottomMargin, lp.height);
+                        heightSpec = getChildMeasureSpec(heightMeasureSpec, getPaddingTop() + getPaddingBottom() + lp.topMargin + lp.bottomMargin, lp.height);
                     }
 
                     int widthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY);
@@ -786,6 +788,7 @@ public class WeightlessLinearLayout extends ViewGroup {
                 break;
 
             case Gravity.CENTER_HORIZONTAL:
+
                 // mTotalLength contains the padding already
                 childLeft = getPaddingLeft() + (right - left - totalLength) / 2;
                 break;
@@ -912,7 +915,7 @@ public class WeightlessLinearLayout extends ViewGroup {
         @NonNull
         @Override
         public String toString() {
-            return String.format("LayoutParams{ width = %d, height = %d, maxWidth = %.2f, maxHeight = %.2f",
+            return String.format("LayoutParams{ width = %d, height = %d, maxWidth = %.2f, maxHeight = %.2f }",
                 width, height, maxWidthPercent, maxHeightPercent);
         }
     }

@@ -2,6 +2,7 @@ package com.urbanairship.iam.analytics
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.analytics.Analytics
+import com.urbanairship.analytics.ConversionData
 import com.urbanairship.analytics.Event
 import com.urbanairship.analytics.EventType
 import com.urbanairship.experiment.ExperimentResult
@@ -12,7 +13,6 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.meteredusage.AirshipMeteredUsage
 import java.util.UUID
-import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.slot
@@ -62,8 +62,6 @@ public class InAppEventRecorderTest {
 
         val json = """
             {
-               "conversion_send_id":"",
-               "conversion_metadata":"",
                "context":{
                   "reporting_context":"reporting info",
                   "experiments":[{
@@ -86,16 +84,16 @@ public class InAppEventRecorderTest {
             }
         """.trimIndent()
         val expectedData = JsonValue.parseString(json)
-        assertEquals(expectedData.toString(true), recordedEvent.eventData.toString(true))
+        assertEquals(expectedData.toString(true), recordedEvent.getEventData(ConversionData()).toString(true))
     }
 
     @Test
     public fun testConversionIDs() {
-        val conversionSendID = UUID.randomUUID().toString()
-        val conversionMetadata = UUID.randomUUID().toString()
-        every { analytics.conversionSendId } returns conversionSendID
-        every { analytics.conversionMetadata } returns conversionMetadata
-
+        val conversionData = ConversionData(
+            UUID.randomUUID().toString(),
+            UUID.randomUUID().toString(),
+            UUID.randomUUID().toString()
+        )
         val data = InAppEventData(
             event = defaultAppEvent,
             context = InAppEventContext(
@@ -118,8 +116,8 @@ public class InAppEventRecorderTest {
 
         val json = """
             {
-               "conversion_send_id":"$conversionSendID",
-               "conversion_metadata":"$conversionMetadata",
+               "conversion_send_id":"${conversionData.conversionSendId}",
+               "conversion_metadata":"${conversionData.conversionMetadata}",
                "context":{
                   "reporting_context":"reporting info",
                   "experiments":[{
@@ -142,7 +140,7 @@ public class InAppEventRecorderTest {
             }
         """.trimIndent()
         val expectedData = JsonValue.parseString(json)
-        assertEquals(expectedData.toString(true), recordedEvent.eventData.toString(true))
+        assertEquals(expectedData.toString(true), recordedEvent.getEventData(conversionData).toString(true))
     }
 
     @Test

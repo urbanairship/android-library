@@ -235,11 +235,11 @@ public class CustomEvent extends Event implements JsonSerializable {
     @NonNull
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public final JsonMap getEventData() {
+    public final JsonMap getEventData(@NonNull ConversionData conversionData) {
         JsonMap.Builder data = JsonMap.newBuilder();
 
-        String conversionSendId = UAirship.shared().getAnalytics().getConversionSendId();
-        String conversionMetadata = UAirship.shared().getAnalytics().getConversionMetadata();
+        String conversionSendId = conversionData.getConversionSendId();
+        String conversionMetadata = conversionData.getConversionMetadata();
 
         data.put(EVENT_NAME, eventName);
         data.put(INTERACTION_ID, interactionId);
@@ -261,7 +261,7 @@ public class CustomEvent extends Event implements JsonSerializable {
         if (conversionMetadata != null) {
             data.put(CONVERSION_METADATA, conversionMetadata);
         } else {
-            data.put(LAST_RECEIVED_METADATA, UAirship.shared().getPushManager().getLastReceivedMetadata());
+            data.put(LAST_RECEIVED_METADATA, conversionData.getLastReceivedMetadata());
         }
 
         if (!properties.getMap().isEmpty()) {

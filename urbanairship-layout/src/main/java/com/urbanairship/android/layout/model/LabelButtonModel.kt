@@ -2,6 +2,8 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
+import com.urbanairship.Provider
+import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
@@ -33,6 +35,7 @@ internal class LabelButtonModel(
     pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
     properties: ModelProperties,
+    platformProvider: Provider<Int> = Provider { UAirship.shared().platformType }
 ) : ButtonModel<LabelButtonView>(
     viewType = ViewType.LABEL_BUTTON,
     identifier = identifier,
@@ -49,6 +52,7 @@ internal class LabelButtonModel(
     pagerState = pagerState,
     environment = environment,
     properties = properties,
+    platformProvider = platformProvider
 ) {
     constructor(
         info: LabelButtonInfo,

@@ -187,6 +187,7 @@ private fun displayLayout(context: Context, fileName: String, embeddedId: String
         Thomas.prepareDisplay(
             payload = payload,
             extras = emptyJsonMap(),
+            priority = 0,
             activityMonitor = GlobalActivityMonitor.shared(context.applicationContext),
             listener = listener,
             actionRunner = object: ThomasActionRunner {

@@ -5,6 +5,7 @@ package com.urbanairship.featureflag
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
+import com.urbanairship.analytics.ConversionData
 import com.urbanairship.json.jsonMapOf
 import java.util.UUID
 import io.mockk.coEvery
@@ -32,7 +33,7 @@ public class FeatureFlagAnalyticsTest {
         verify {
             analytics.addEvent(withArg {
                 // The event has a different time stamp so we are just comparing the data
-                assert(it.eventData == FeatureFlagInteractionEvent(flag).data)
+                assert(it.getEventData(ConversionData()) == FeatureFlagInteractionEvent(flag).data)
             })
         }
     }
@@ -47,7 +48,7 @@ public class FeatureFlagAnalyticsTest {
         verify {
             analytics.addEvent(withArg {
                 // The event has a different time stamp so we are just comparing the data
-                assert(it.eventData == FeatureFlagInteractionEvent(flag).data)
+                assert(it.getEventData(ConversionData()) == FeatureFlagInteractionEvent(flag).data)
             })
         }
     }

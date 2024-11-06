@@ -3,12 +3,12 @@
 package com.urbanairship.android.layout
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.AirshipScopes
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.embedded.AirshipEmbeddedInfo
 import com.urbanairship.json.JsonMap
+import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 
@@ -36,6 +36,7 @@ public interface AirshipEmbeddedViewManager {
     public fun addPending(
         embeddedViewId: String,
         viewInstanceId: String,
+        priority: Int = 0,
         extras: JsonMap = JsonMap.EMPTY_MAP,
         layoutInfoProvider: () -> LayoutInfo?,
         displayArgsProvider: () -> DisplayArgs,
@@ -43,17 +44,18 @@ public interface AirshipEmbeddedViewManager {
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun addPending(args: DisplayArgs, extras: JsonMap) {
+    public fun addPending(args: DisplayArgs, priority: Int = 0, extras: JsonMap) {
         val payload = args.payload
         val embeddedViewId = (payload.presentation as? EmbeddedPresentation)?.embeddedId ?: run {
             UALog.e { "Failed to add pending embedded view. Required embedded view ID is null!" }
             return@addPending
         }
-        val viewInstanceId = payload.hash.toString()
+        val viewInstanceId = UUID.randomUUID().toString()
 
         addPending(
             embeddedViewId = embeddedViewId,
             viewInstanceId = viewInstanceId,
+            priority = priority,
             extras = extras,
             layoutInfoProvider = { payload },
             displayArgsProvider = { args },
@@ -69,6 +71,6 @@ public interface AirshipEmbeddedViewManager {
     public fun displayRequests(
         embeddedViewId: String,
         comparator: Comparator<AirshipEmbeddedInfo>? = null,
-        scope: CoroutineScope = AirshipScopes.AppForegroundScope,
+        scope: CoroutineScope
     ): Flow<EmbeddedDisplayRequest?>
 }

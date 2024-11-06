@@ -53,17 +53,6 @@ jobs:
       - name: Build
         run: ./gradlew assembleRelease packageDocs --stacktrace
 
-      - name: Github Release
-        uses: actions/create-release@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.get_version.outputs.VERSION }}
-          release_name: ${{ steps.get_version.outputs.VERSION }}
-          body: ${{ steps.get_release_notes.outputs.NOTES }}
-          draft: false
-          prerelease: false
-
       - name: Publish to Maven Central
         env:
           SONATYPE_USERNAME: ${{ secrets.MAVEN_USER }}
@@ -88,6 +77,17 @@ jobs:
           --max-workers 1
           closeAndReleaseSonatypeStagingRepository
 
+      - name: Github Release
+        uses: actions/create-release@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: ${{ steps.get_version.outputs.VERSION }}
+          body: ${{ steps.get_release_notes.outputs.NOTES }}
+          draft: false
+          prerelease: false
+          
       - name: Upload java doc assets
         uses: actions/upload-artifact@v3
         with:

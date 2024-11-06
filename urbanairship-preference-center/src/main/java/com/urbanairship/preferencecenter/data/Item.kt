@@ -202,8 +202,8 @@ public sealed class Item(
         }
 
         public sealed class Platform(public val channelType: ChannelType) {
-            public class Sms(public val registrationOptions: RegistrationOptions.Sms): Platform(ChannelType.SMS)
-            public class Email(public val registrationOptions: RegistrationOptions.Email): Platform(ChannelType.EMAIL)
+            public data class Sms(public val registrationOptions: RegistrationOptions.Sms): Platform(ChannelType.SMS)
+            public data class Email(public val registrationOptions: RegistrationOptions.Email): Platform(ChannelType.EMAIL)
 
             internal val resendOptions: ResendOptions
                 get() {
@@ -577,7 +577,7 @@ public sealed class Item(
 
             internal companion object {
                 private const val KEY_SENDER_ID = "sender_id"
-                private const val KEY_COUNTRY_CODE = "country_code"
+                private const val KEY_COUNTRY_CODE = "country_calling_code"
                 private const val KEY_DISPLAY_NAME = "display_name"
 
                 @Throws(JsonException::class)

@@ -18,7 +18,7 @@ import com.urbanairship.analytics.location.RegionEvent
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
-import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireField
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
@@ -46,7 +46,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class)
-public class AnalyticsTest() {
+public class AnalyticsTest {
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val mockEventManager: EventManager = mockk(relaxed = true)
@@ -131,8 +131,10 @@ public class AnalyticsTest() {
 
         verify {
             mockEventManager.addEvent(
-                ofType(AppBackgroundEvent::class),
-                any()
+                match {
+                    it.type == EventType.APP_BACKGROUND
+                },
+                eq(Event.NORMAL_PRIORITY),
             )
         }
     }
@@ -164,7 +166,19 @@ public class AnalyticsTest() {
     public fun testAddEvent() {
         val event = CustomEvent.newBuilder("cool").build()
         analytics.addEvent(event)
-        verify { mockEventManager.addEvent(event, analytics.sessionId) }
+
+        verify {
+            mockEventManager.addEvent(
+                AirshipEventData(
+                    event.eventId,
+                    analytics.sessionId,
+                    event.getEventData(ConversionData()).toJsonValue(),
+                    event.type,
+                    event.timeMilliseconds
+                ),
+                event.priority
+            )
+        }
     }
 
     /**
@@ -201,7 +215,6 @@ public class AnalyticsTest() {
         val event: Event = mockk() {
             every { eventId } returns "event-id"
             every { type } returns EventType.APP_BACKGROUND
-            every { createEventPayload(any()) } returns "event-data"
             every { time } returns "1000"
             every { priority } returns Event.HIGH_PRIORITY
             every { isValid } returns false
@@ -229,8 +242,10 @@ public class AnalyticsTest() {
 
         verify {
             mockEventManager.addEvent(
-                ofType(AssociateIdentifiersEvent::class),
-                any()
+                match {
+                    it.type == EventType.ASSOCIATE_IDENTIFIERS
+                },
+                eq(Event.NORMAL_PRIORITY),
             )
         }
 
@@ -251,8 +266,10 @@ public class AnalyticsTest() {
         // Verify we don't add an event more than once
         verify(exactly = 1) {
             mockEventManager.addEvent(
-                ofType(AssociateIdentifiersEvent::class),
-                any()
+                match {
+                    it.type == EventType.ASSOCIATE_IDENTIFIERS
+                },
+                eq(Event.NORMAL_PRIORITY),
             )
         }
     }
@@ -270,9 +287,9 @@ public class AnalyticsTest() {
         verify{
             mockEventManager.addEvent(
                 match {
-                   it.getEventData().opt("screen").optString() == "test_screen"
+                    it.type == EventType.SCREEN_TRACKING && it.body.requireMap().requireField<String>("screen") == "test_screen"
                 },
-                any()
+                eq(Event.NORMAL_PRIORITY),
             )
         }
     }
@@ -291,9 +308,9 @@ public class AnalyticsTest() {
         verify{
             mockEventManager.addEvent(
                 match {
-                    it.getEventData().opt("screen").optString() == "test_screen_1"
+                    it.type == EventType.SCREEN_TRACKING && it.body.requireMap().requireField<String>("screen") == "test_screen_1"
                 },
-                any()
+                eq(Event.NORMAL_PRIORITY),
             )
         }
     }
@@ -311,7 +328,7 @@ public class AnalyticsTest() {
 
         verify(exactly = 0){
             mockEventManager.addEvent(
-                ofType(ScreenTrackingEvent::class),
+                any(),
                 any()
             )
         }
@@ -665,7 +682,7 @@ public class AnalyticsTest() {
             mockEventFeed.emit(
                 AirshipEventFeed.Event.Analytics(
                     EventType.REGION_ENTER,
-                    regionEnter.eventData.toJsonValue(),
+                    regionEnter.getEventData(ConversionData(null, null, null)).toJsonValue(),
                     null
                 )
             )
@@ -682,7 +699,7 @@ public class AnalyticsTest() {
             mockEventFeed.emit(
                 AirshipEventFeed.Event.Analytics(
                     EventType.REGION_EXIT,
-                    regionExit.eventData.toJsonValue(),
+                    regionExit.getEventData(ConversionData(null, null, null)).toJsonValue(),
                     null
                 )
             )

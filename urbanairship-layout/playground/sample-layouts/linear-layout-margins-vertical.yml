@@ -1,0 +1,379 @@
+---
+version: 1
+presentation:
+  dismiss_on_touch_outside: true
+  type: modal
+  default_placement:
+    size:
+      width: 95%
+      height: 30%
+    shade_color:
+      default:
+        hex: '#000000'
+        alpha: 0.7
+view:
+  type: pager_controller
+  identifier: dfbeb4be-acce-411e-b211-4fabefb4b1b8
+  view:
+    type: container
+    background_color:
+      default:
+        hex: "#ffffff"
+        alpha: 1.0
+    items:
+      - position:
+          horizontal: center
+          vertical: center
+        size:
+          width: 100%
+          height: 100%
+        view:
+          type: pager
+          disable_swipe: false
+          items:
+            - identifier: 58bb45b8-de18-49a2-ba2c-2dab129233ac
+              type: pager_item
+              view:
+                type: container
+                items:
+                  - position:
+                      horizontal: center
+                      vertical: center
+                    size:
+                      width: 100%
+                      height: 100%
+                    view:
+                      type: linear_layout
+                      direction: horizontal
+                      items:
+                        - size:
+                            width: 50%
+                            height: 100%
+                          view:
+                            type: linear_layout
+                            direction: vertical
+                            items:
+                            - position:
+                                horizontal: center
+                                vertical: center
+                              size:
+                                width: 100%
+                                height: 100%
+                              margin:
+                                start: 0
+                                end: 0
+                              view:
+                                type: label
+                                text: 100%
+                                background_color:
+                                  default:
+                                    hex: "#FF0000"
+                                    alpha: 0.35
+                                text_appearance:
+                                  color:
+                                    default:
+                                      hex: "#000000"
+                                      alpha: 1
+                                  alignment: center
+                                  font_size: 12
+
+                            - position:
+                                horizontal: center
+                                vertical: center
+                              size:
+                                width: 100%
+                                height: 100%
+                              margin:
+                                start: 0
+                                end: 0
+                              view:
+                                type: label
+                                text: 100%
+                                background_color:
+                                  default:
+                                    hex: "#00FF00"
+                                    alpha: 0.35
+                                text_appearance:
+                                  color:
+                                    default:
+                                      hex: "#000000"
+                                      alpha: 1
+                                  alignment: center
+                                  font_size: 12
+
+                            - position:
+                                horizontal: center
+                                vertical: center
+                              size:
+                                width: 100%
+                                height: 100%
+                              margin:
+                                start: 0
+                                end: 0
+                              view:
+                                type: label
+                                text: 100%
+                                background_color:
+                                  default:
+                                    hex: "#0000FF"
+                                    alpha: 0.35
+                                text_appearance:
+                                  color:
+                                    default:
+                                      hex: "#000000"
+                                      alpha: 1
+                                  alignment: center
+                                  font_size: 12
+                        - size:
+                            width: 50%
+                            height: 100%
+                          view:
+                            type: linear_layout
+                            direction: vertical
+                            items:
+                              - position:
+                                  horizontal: center
+                                  vertical: center
+                                size:
+                                  width: 100%
+                                  height: 100%
+                                margin:
+                                  top: 16
+                                  bottom: 16
+                                view:
+                                  type: label
+                                  text: 100%
+                                  background_color:
+                                    default:
+                                      hex: "#FF0000"
+                                      alpha: 0.35
+                                  text_appearance:
+                                    color:
+                                      default:
+                                        hex: "#000000"
+                                        alpha: 1
+                                    alignment: center
+                                    font_size: 12
+
+                              - position:
+                                  horizontal: center
+                                  vertical: center
+                                size:
+                                  width: 100%
+                                  height: 100%
+                                margin:
+                                  top: 16
+                                  bottom: 16
+                                view:
+                                  type: label
+                                  text: 100%
+                                  background_color:
+                                    default:
+                                      hex: "#00FF00"
+                                      alpha: 0.35
+                                  text_appearance:
+                                    color:
+                                      default:
+                                        hex: "#000000"
+                                        alpha: 1
+                                    alignment: center
+                                    font_size: 12
+
+                              - position:
+                                  horizontal: center
+                                  vertical: center
+                                size:
+                                  width: 100%
+                                  height: 100%
+                                margin:
+                                  top: 16
+                                  bottom: 16
+                                view:
+                                  type: label
+                                  text: 100%
+                                  background_color:
+                                    default:
+                                      hex: "#0000FF"
+                                      alpha: 0.35
+                                  text_appearance:
+                                    color:
+                                      default:
+                                        hex: "#000000"
+                                        alpha: 1
+                                    alignment: center
+                                    font_size: 12
+            - identifier: 58bb45b8-de18-49a2-ba2c-2dab129233ad
+              type: pager_item
+              view:
+                type: container
+                items:
+                  - position:
+                      horizontal: center
+                      vertical: center
+                    size:
+                      width: 100%
+                      height: 100%
+                    view:
+                      type: linear_layout
+                      direction: horizontal
+                      background_color:
+                        default:
+                          hex: "#ffffff"
+                          alpha: 0.35
+                      items:
+                        - size:
+                            width: 50%
+                            height: 100%
+                          view:
+                            type: linear_layout
+                            direction: vertical
+                            items:
+                              - position:
+                                  horizontal: center
+                                  vertical: center
+                                size:
+                                  width: 100%
+                                  height: 25%
+                                margin:
+                                  start: 0
+                                  end: 0
+                                view:
+                                  type: label
+                                  text: 25%
+                                  background_color:
+                                    default:
+                                      hex: "#FF0000"
+                                      alpha: 0.35
+                                  text_appearance:
+                                    color:
+                                      default:
+                                        hex: "#000000"
+                                        alpha: 1
+                                    alignment: center
+                                    font_size: 12
+
+                              - position:
+                                  horizontal: center
+                                  vertical: center
+                                size:
+                                  width: 100%
+                                  height: 25%
+                                margin:
+                                  start: 0
+                                  end: 0
+                                view:
+                                  type: label
+                                  text: 25%
+                                  background_color:
+                                    default:
+                                      hex: "#00FF00"
+                                      alpha: 0.35
+                                  text_appearance:
+                                    color:
+                                      default:
+                                        hex: "#000000"
+                                        alpha: 1
+                                    alignment: center
+                                    font_size: 12
+
+                              - position:
+                                  horizontal: center
+                                  vertical: center
+                                size:
+                                  width: 100%
+                                  height: 25%
+                                margin:
+                                  start: 0
+                                  end: 0
+                                view:
+                                  type: label
+                                  text: 25%
+                                  background_color:
+                                    default:
+                                      hex: "#0000FF"
+                                      alpha: 0.35
+                                  text_appearance:
+                                    color:
+                                      default:
+                                        hex: "#000000"
+                                        alpha: 1
+                                    alignment: center
+                                    font_size: 12
+                        - size:
+                            width: 50%
+                            height: 100%
+                          view:
+                            type: linear_layout
+                            direction: vertical
+                            items:
+                              - position:
+                                  horizontal: center
+                                  vertical: center
+                                size:
+                                  width: 100%
+                                  height: 25%
+                                margin:
+                                  top: 16
+                                  bottom: 16
+                                view:
+                                  type: label
+                                  text: 25%
+                                  background_color:
+                                    default:
+                                      hex: "#FF0000"
+                                      alpha: 0.35
+                                  text_appearance:
+                                    color:
+                                      default:
+                                        hex: "#000000"
+                                        alpha: 1
+                                    alignment: center
+                                    font_size: 12
+
+                              - position:
+                                  horizontal: center
+                                  vertical: center
+                                size:
+                                  width: 100%
+                                  height: 25%
+                                margin:
+                                  top: 16
+                                  bottom: 16
+                                view:
+                                  type: label
+                                  text: 25%
+                                  background_color:
+                                    default:
+                                      hex: "#00FF00"
+                                      alpha: 0.35
+                                  text_appearance:
+                                    color:
+                                      default:
+                                        hex: "#000000"
+                                        alpha: 1
+                                    alignment: center
+                                    font_size: 12
+
+                              - position:
+                                  horizontal: center
+                                  vertical: center
+                                size:
+                                  width: 100%
+                                  height: 25%
+                                margin:
+                                  top: 16
+                                  bottom: 16
+                                view:
+                                  type: label
+                                  text: 25%
+                                  background_color:
+                                    default:
+                                      hex: "#0000FF"
+                                      alpha: 0.35
+                                  text_appearance:
+                                    color:
+                                      default:
+                                        hex: "#000000"
+                                        alpha: 1
+                                    alignment: center
+                                    font_size: 12

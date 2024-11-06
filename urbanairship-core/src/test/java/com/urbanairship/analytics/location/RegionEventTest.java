@@ -3,6 +3,7 @@
 package com.urbanairship.analytics.location;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.analytics.ConversionData;
 import com.urbanairship.analytics.EventTestUtils;
 import com.urbanairship.json.JsonValue;
 
@@ -44,7 +45,7 @@ public class RegionEventTest extends BaseTestCase {
                 "\"longitude\":\"180.0000000\",\"latitude\":\"90.0000000\"}}");
 
         // test isValid returns true for valid region event
-        assertEquals(expectedData.getMap(), event.getEventData());
+        assertEquals(expectedData.getMap(), event.getEventData(new ConversionData(null, null, null)));
     }
 
     /**

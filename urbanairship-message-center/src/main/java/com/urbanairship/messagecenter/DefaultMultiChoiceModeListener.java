@@ -7,12 +7,16 @@ import android.util.SparseBooleanArray;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Window;
 import android.widget.AbsListView;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
 
 /**
  * The default {@link AbsListView.MultiChoiceModeListener} for the {@link MessageListFragment}
@@ -24,6 +28,9 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
 
     private final MessageListFragment messageListFragment;
 
+    @Nullable
+    private MessageCenterFragment.OnActionModeListener actionModeListener = null;
+
     /**
      * Default constructor.
      *
@@ -31,6 +38,17 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
      */
     public DefaultMultiChoiceModeListener(@NonNull MessageListFragment messageListFragment) {
         this.messageListFragment = messageListFragment;
+    }
+
+    /**
+     * Default constructor with {@link ActionMode} listener.
+     *
+     * @param messageListFragment The {@link MessageListFragment}.
+     * @param actionModeListener The {@link MessageCenterFragment.OnActionModeListener}.
+     */
+    public DefaultMultiChoiceModeListener(@NonNull MessageListFragment messageListFragment, @Nullable MessageCenterFragment.OnActionModeListener actionModeListener) {
+        this.messageListFragment = messageListFragment;
+        this.actionModeListener = actionModeListener;
     }
 
     @Override
@@ -71,6 +89,10 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
 
         MenuItem markRead = menu.findItem(R.id.mark_read);
         markRead.setVisible(containsUnreadMessage);
+
+        if (actionModeListener != null) {
+            actionModeListener.onActionModeCreated(mode, menu);
+        }
 
         return true;
     }
@@ -131,6 +153,9 @@ public class DefaultMultiChoiceModeListener implements AbsListView.MultiChoiceMo
 
     @Override
     public void onDestroyActionMode(@NonNull ActionMode mode) {
+        if (actionModeListener != null) {
+            actionModeListener.onActionModeDestroyed(mode);
+        }
     }
 
     @NonNull

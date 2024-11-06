@@ -9,6 +9,9 @@ import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.text.Html;
+import android.text.Spanned;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -28,6 +31,8 @@ import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
 import com.urbanairship.android.layout.property.FormInputType;
+import com.urbanairship.android.layout.property.MarkdownOptions;
+import com.urbanairship.android.layout.property.MarkdownOptionsKt;
 import com.urbanairship.android.layout.property.SwitchStyle;
 import com.urbanairship.android.layout.property.TextAppearance;
 import com.urbanairship.android.layout.property.TextStyle;
@@ -50,10 +55,12 @@ import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 
 /**
  * Helpers for layout rendering.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class LayoutUtils {
+
     private static final float PRESSED_ALPHA_PERCENT = 0.2f;
     private static final int DEFAULT_STROKE_WIDTH_DPS = 2;
     private static final int DEFAULT_BORDER_RADIUS = 0;
@@ -72,9 +79,9 @@ public final class LayoutUtils {
     }
 
     public static void applyBorderAndBackground(
-        @NonNull View view,
-        @Nullable Border border,
-        @Nullable Color backgroundColor
+            @NonNull View view,
+            @Nullable Border border,
+            @Nullable Color backgroundColor
     ) {
         Context context = view.getContext();
 
@@ -123,7 +130,7 @@ public final class LayoutUtils {
     private static void mergeBackground(@NonNull View view, @NonNull Drawable drawable) {
         Drawable background = drawable;
         if (view.getBackground() != null) {
-            background = new LayerDrawable(new Drawable[]{view.getBackground(), drawable});
+            background = new LayerDrawable(new Drawable[] { view.getBackground(), drawable });
         }
         view.setBackground(background);
     }
@@ -136,35 +143,35 @@ public final class LayoutUtils {
 
         int textColor = textAppearance.getColor().resolve(context);
         int backgroundColor = model.getBackgroundColor() == null
-            ? Color.TRANSPARENT
-            : model.getBackgroundColor().resolve(button.getContext());
+                ? Color.TRANSPARENT
+                : model.getBackgroundColor().resolve(button.getContext());
         int pressedColor = ColorUtils.setAlphaComponent(textColor, Math.round(Color.alpha(textColor) * PRESSED_ALPHA_PERCENT));
         int disabledColor = generateDisabledColor(backgroundColor);
         int strokeWidth = model.getBorder() == null || model.getBorder().getStrokeWidth() == null
-            ? DEFAULT_STROKE_WIDTH_DPS
-            : model.getBorder().getStrokeWidth();
+                ? DEFAULT_STROKE_WIDTH_DPS
+                : model.getBorder().getStrokeWidth();
         int strokeColor = model.getBorder() == null || model.getBorder().getStrokeColor() == null
-            ? backgroundColor
-            : model.getBorder().getStrokeColor().resolve(context);
+                ? backgroundColor
+                : model.getBorder().getStrokeColor().resolve(context);
         int disabledStrokeColor = generateDisabledColor(strokeColor);
         int borderRadius = model.getBorder() == null || model.getBorder().getRadius() == null
-            ? DEFAULT_BORDER_RADIUS
-            : model.getBorder().getRadius();
+                ? DEFAULT_BORDER_RADIUS
+                : model.getBorder().getRadius();
 
         button.setBackgroundTintList(new ColorStateListBuilder()
-            .add(disabledColor, -android.R.attr.state_enabled)
-            .add(backgroundColor)
-            .build());
+                .add(disabledColor, -android.R.attr.state_enabled)
+                .add(backgroundColor)
+                .build());
         button.setRippleColor(ColorStateList.valueOf(pressedColor));
-        int strokeWidthDp = (int) dpToPx(context, strokeWidth);
-        button.setStrokeWidth(strokeWidthDp);
-        if (strokeWidthDp > 0) {
-            addPadding(button, strokeWidthDp);
-        }
+        int strokeWidthPixels = (int) dpToPx(context, strokeWidth);
+        button.setStrokeWidth(strokeWidthPixels);
         button.setStrokeColor(new ColorStateListBuilder()
-            .add(disabledStrokeColor, -android.R.attr.state_enabled)
-            .add(strokeColor)
-            .build());
+                .add(disabledStrokeColor, -android.R.attr.state_enabled)
+                .add(strokeColor)
+                .build());
+
+        button.setEllipsize(TextUtils.TruncateAt.END);
+        button.setIncludeFontPadding(false);
         button.setCornerRadius((int) dpToPx(context, borderRadius));
         button.setSingleLine(false);
     }
@@ -195,7 +202,19 @@ public final class LayoutUtils {
             text += NARROW_NBSP;
         }
 
-        textView.setText(text);
+        Context context = textView.getContext();
+        MarkdownOptions markdown = label.getMarkdownOptions();
+        boolean isMarkdownEnabled = MarkdownOptionsKt.isEnabled(markdown);
+
+        if (isMarkdownEnabled) {
+            boolean underlineLinks = MarkdownOptionsKt.getUnderlineLinks(markdown);
+            @Nullable Integer linkColor = MarkdownOptionsKt.resolvedLinkColor(markdown, context);
+
+            Spanned html = Html.fromHtml(StringExtensionsKt.markdownToHtml(text));
+            ViewExtensionsKt.setHtml(textView, html, underlineLinks, linkColor);
+        } else {
+            textView.setText(text);
+        }
     }
 
     public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
@@ -229,9 +248,9 @@ public final class LayoutUtils {
         int disabledTextColor = generateDisabledColor(Color.TRANSPARENT, textColor);
 
         textView.setTextColor(new ColorStateListBuilder()
-            .add(disabledTextColor, -android.R.attr.state_enabled)
-            .add(textColor)
-            .build());
+                .add(disabledTextColor, -android.R.attr.state_enabled)
+                .add(textColor)
+                .build());
 
         int typefaceFlags = Typeface.NORMAL;
         int paintFlags = Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
@@ -328,13 +347,13 @@ public final class LayoutUtils {
     public static void doOnAttachToWindow(@NonNull View view, @NonNull Runnable callback) {
         view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
-            public void onViewAttachedToWindow(View v) {
+            public void onViewAttachedToWindow(@NonNull View v) {
                 v.removeOnAttachStateChangeListener(this);
                 callback.run();
             }
 
             @Override
-            public void onViewDetachedFromWindow(View v) { /* no-op */ }
+            public void onViewDetachedFromWindow(@NonNull View v) { /* no-op */ }
         });
     }
 
@@ -344,10 +363,10 @@ public final class LayoutUtils {
 
     public static void addPadding(@NonNull View view, int left, int top, int right, int bottom) {
         view.setPadding(
-            view.getPaddingLeft() + left,
-            view.getPaddingTop() + top,
-            view.getPaddingRight() + right,
-            view.getPaddingBottom() + bottom
+                view.getPaddingLeft() + left,
+                view.getPaddingTop() + top,
+                view.getPaddingRight() + right,
+                view.getPaddingBottom() + bottom
         );
     }
 
@@ -373,12 +392,13 @@ public final class LayoutUtils {
 
     @ColorInt
     private static int overlayColors(
-        @ColorInt int backgroundColor,
-        @ColorInt int overlayColor,
-        @FloatRange(from = 0, to = 1) float overlayAlpha
+            @ColorInt int backgroundColor,
+            @ColorInt int overlayColor,
+            @FloatRange(from = 0, to = 1) float overlayAlpha
     ) {
         int alpha = Math.round(Color.alpha(overlayColor) * overlayAlpha);
         int overlay = ColorUtils.setAlphaComponent(overlayColor, alpha);
         return ColorUtils.compositeColors(overlay, backgroundColor);
     }
+
 }

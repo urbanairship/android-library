@@ -19,27 +19,28 @@ kotlinx-coroutines = '1.7.3'
 kotlinx-serialization = '1.6.3' # Only used in Sample app
 
 # Compose
-compose-bom = '2024.04.00'
+compose-bom = '2024.06.00'
 # compose compiler must be updated along with kotlin version
 # see: https://developer.android.com/jetpack/androidx/releases/compose-kotlin
 compose-compiler = '1.5.11'
 
 # Androidx
-androidx-annotation = '1.7.1'
-androidx-appcompat = '1.6.1'
-androidx-concurrentfutures = '1.1.0'
+androidx-activity = '1.9.1'
+androidx-annotation = '1.8.1'
+androidx-appcompat = '1.7.0'
+androidx-concurrentfutures = '1.2.0'
 androidx-constraintlayout-xml = '2.1.4'
 androidx-constraintlayout-compose = '1.0.1'
-androidx-core = '1.12.0'
+androidx-core = '1.13.1'
 androidx-customview = '1.1.0'
-androidx-fragment = '1.6.2'
-androidx-lifecycle = '2.7.0'
+androidx-fragment = '1.8.2'
+androidx-lifecycle = '2.8.4'
 androidx-navigation = '2.7.7'
 
 # Using the RC to test the new features from I/O 2024 (Scaffold, TitleBar, LazyColumn, etc.)
 androidx-glance = '1.1.0-rc01' # Only used in Sample app
 
-androidx-activity-compose = '1.8.2'
+androidx-activity-compose = '1.9.1'
 
 androidx-paging = '2.1.2'
 
@@ -134,6 +135,8 @@ glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = 
 glance-material3 = { module = "androidx.glance:glance-material3", version.ref = "androidx-glance" }
 
 # Androidx
+androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
+androidx-activityktx = { module = "androidx.activity:activity-ktx", version.ref = "androidx-activity" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
@@ -147,7 +150,7 @@ androidx-fragment-fragment = { module = "androidx.fragment:fragment", version.re
 androidx-fragment-fragmentktx = { module = "androidx.fragment:fragment-ktx", version.ref = "androidx-fragment" }
 androidx-fragment-testing = { module = "androidx.fragment:fragment-testing", version.ref = "androidx-fragment" }
 androidx-lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8", version.ref="androidx-lifecycle" }
-androidx-lifecycle-livedata = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref="androidx-lifecycle" }
+androidx-lifecycle-livedataktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref="androidx-lifecycle" }
 androidx-lifecycle-runtimektx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref="androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref="androidx-lifecycle" }

@@ -3,7 +3,9 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import android.view.View
+import com.urbanairship.Provider
 import com.urbanairship.UALog
+import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
@@ -57,7 +59,8 @@ internal class PagerModel(
     enableBehaviors: List<EnableBehaviorType>? = null,
     private val pagerState: SharedState<State.Pager>,
     environment: ModelEnvironment,
-    properties: ModelProperties
+    properties: ModelProperties,
+    platformProvider: Provider<Int> = Provider { UAirship.shared().platformType }
 ) : BaseModel<PagerView, PagerModel.Listener>(
     viewType = ViewType.PAGER,
     backgroundColor = backgroundColor,
@@ -66,7 +69,8 @@ internal class PagerModel(
     eventHandlers = eventHandlers,
     enableBehaviors = enableBehaviors,
     environment = environment,
-    properties = properties
+    properties = properties,
+    platformProvider = platformProvider
 ) {
     constructor(
         info: PagerInfo,
@@ -403,7 +407,10 @@ internal class PagerModel(
     }
 
     private fun resumeStory() {
-        UALog.v { "resume story" }
+        if (automatedActionsTimers.isNotEmpty()) {
+            UALog.v { "resume story" }
+        }
+
         navigationActionTimer?.start()
         for (timer in automatedActionsTimers) {
             timer.start()

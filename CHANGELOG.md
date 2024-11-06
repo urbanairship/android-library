@@ -2,6 +2,82 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.3.0 September 13, 2024
+Minor release that adds a new method `enableUserNotifications(PermissionPromptFallback)` on `PushManager`.
+
+### Changes
+- Added a `enableUserNotifications(PermissionPromptFallback)` method on `PushManager` that will attempt to enable notifications and use the fallback if the permission is denied.
+
+## Version 18.2.0 September 6, 2024
+Minor release with several enhancements to In-App Automation, Scenes, and Surveys. This version also contains a fix
+for applications that are targeting API 35.
+
+### Changes
+- Updated compose bom to 2024.06.00.
+- Replaced the usage of `removeFirst` to avoid crashes when targeting API 35.
+- Added ability to customize the content per In-App Automation with the new `InAppMessageContentExtender`.
+- Added plain markdown support for text markup in Scenes.
+- Added execution window support to In-App Automation, Scenes, and Surveys.
+- Updated handling of priority for In-App Automation, Scenes, and Surveys. Priority is now taken into consideration at each step of displaying a message instead of just sorting messages that are
+triggered at the same time.
+- Updated handling of long delays for In-App Automation, Scenes, and Surveys. Delays will now be preprocessed up to 30 seconds before it ends before the message is prepared.
+
+## Version 18.1.6 August 9, 2024
+Patch release that fixes in-app experience displays when resuming from a paused state. Apps that use in-app experiences are encouraged to update.
+
+### Changes
+- Fixed Automation Engine updates when pause state changes.
+
+## Version 18.1.5, August 06, 2024
+Patch release that fixes test devices audience check and holdout group experiments displays.
+
+### Changes
+- Fixed test devices audience check.
+- Fixed holdout group experiment displays.
+
+## Version 18.1.4, July 31, 2024
+Patch release that includes bug fixes for Embedded Content.
+
+### Changes
+- Fixed an issue with dismissing Embedded Content after pausing and resuming the app.
+- Updated the default `PreferenceCenterFragment` to scope the `PreferenceCenterViewModel` to the fragment's view lifecycle.
+
+## Version 18.1.3, July 30, 2024
+Patch release that includes bug fixes for Embedded Content and Preference Center, and accessibility improvements for Message Center. 
+
+### Changes
+- Fixed an issue with container child item measurement in Scenes, when margins were set on the container items.
+- Fixed a Preference Center bug that could lead to subscription channel chips not being visible when initially displaying a Preference Center.
+- Fixed dismissing multiple embedded views in the same session.
+- Fixed an issue with automation trigger state not correctly persisting across sessions.
+- Message Center accessibility improvements.
+- Updated the default style for the pull to dismiss view in In-App Message Banners to better match iOS.
+
+## Version 18.1.2, July 15, 2024
+Patch release that includes fixes for Preference Center.
+
+### Changes
+- Fixed warning message on preference center email entry field.
+- Fixed country code listing.
+
+## Version 18.1.1, June 28, 2024
+Patch release that includes fixes for Preference Center, Privacy Manager, and Embedded Content.
+
+### Changes
+- Fixed a Preference Center issue that caused contact subscription toggles to show the incorrect state after being toggled
+- Fixed test dependency being included in the automation module
+- Fixed Embedded Content impression event interval
+- Fixed privacy manager crash when enabling, disabling, or setting an empty set of features
+- Contact channel listing is now refreshed on foreground and from a background push
+
+## Version 18.1.0, June 20, 2024
+Minor SDK release that fixes a potential crash related to analytics during app init and adds public
+builders for modifying `InAppMessage` and `AutomationSchedule` objects via extenders set on`LegacyInAppMessaging`.
+
+### Changes
+- Fixed a potential crash related to analytics during app init
+- Added builders for modifying `InAppMessage` and `AutomationSchedule` objects via extenders set on `LegacyInAppMessaging`
+
 ## Version 18.0.0, June 14, 2024
 Major SDK release with several breaking changes. 
 See the [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-17-18.md) for more info.

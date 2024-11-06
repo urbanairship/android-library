@@ -1,17 +1,29 @@
 package com.urbanairship.android.layout.util
 
+import android.content.Intent
 import android.graphics.Rect
 import android.graphics.RectF
+import android.net.Uri
 import android.os.Looper
 import android.text.Editable
+import android.text.Spannable
+import android.text.Spanned
+import android.text.TextPaint
 import android.text.TextWatcher
+import android.text.style.ClickableSpan
+import android.text.style.URLSpan
+import android.util.Patterns
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_MASK
 import android.view.MotionEvent.ACTION_UP
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.text.TextUtilsCompat
+import androidx.core.text.method.LinkMovementMethodCompat
+import androidx.core.text.toSpannable
 import androidx.core.view.descendants
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
@@ -149,5 +161,79 @@ internal fun MotionEvent.isWithinClickableDescendant(view: View): Boolean {
 private fun checkMainThread() {
     check(Thread.currentThread() == Looper.getMainLooper().thread) {
         "Must be called from main thread!"
+    }
+}
+
+/** Sets the given [html] on the TextView and supports both html links and plain text links. */
+internal fun TextView.setHtml(html: Spanned?, underline: Boolean = false, color: Int? = null) {
+    movementMethod = LinkMovementMethodCompat.getInstance()
+
+    text = if (html.isNullOrEmpty()) {
+        null
+    } else {
+        html.toSpannable().apply {
+            convertUrlSpans(underline, color)
+            linkifyText(underline, color)
+        }
+    }
+}
+
+/** Replaces URLSpans with ClickableSpans. */
+private fun Spannable.convertUrlSpans(underline: Boolean?, color: Int?) {
+    val urlSpans = getSpans(0, length, URLSpan::class.java) ?: emptyArray()
+    urlSpans.forEach { span ->
+        val linkSpan = LinkSpan(span.url, underline, color)
+        setSpan(linkSpan, getSpanStart(span), getSpanEnd(span), getSpanFlags(span))
+        removeSpan(span)
+    }
+}
+
+/** Converts text URLs and email addresses to clickable links. */
+private fun Spannable.linkifyText(underline: Boolean?, color: Int?) = with(this) {
+    forEachMatching(emailPattern, underline, color) { email -> "mailto:$email" }
+
+    forEachMatching(urlPattern, underline, color) { url ->
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            "https://$url"
+        } else {
+            url
+        }
+    }
+}
+
+private fun Spannable.forEachMatching(regex: Regex, underline: Boolean?, color: Int?, linkFactory: (url: String) -> String) =
+    regex.findAll(this).forEach { match ->
+        val startIndex = match.range.first
+        val endIndex = match.range.last + 1
+
+        val isSpanAlreadyCreated = getSpans(startIndex, endIndex, ClickableSpan::class.java).isNotEmpty()
+        if (!isSpanAlreadyCreated) {
+            val linkSpan = LinkSpan(linkFactory.invoke(match.value.trim()), underline, color)
+            setSpan(linkSpan, startIndex, endIndex, 0)
+        }
+    }
+
+private val emailPattern = Patterns.EMAIL_ADDRESS.toRegex()
+private val urlPattern = Patterns.WEB_URL.toRegex()
+
+/** ClickableSpan that opens a URL in the browser. */
+private class LinkSpan(
+    private val url: String,
+    private val underline: Boolean?,
+    private val color: Int?
+) : ClickableSpan() {
+    override fun onClick(view: View) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        ContextCompat.startActivity(view.context, intent, null)
+    }
+
+    override fun updateDrawState(ds: TextPaint) {
+        super.updateDrawState(ds)
+
+        // Optionally draw or remove the underline, defaulting to no underline.
+        ds.isUnderlineText = underline ?: false
+
+        // Optionally set the color, defaulting to the default color from ClickableSpan.
+        ds.color = color ?: ds.color
     }
 }

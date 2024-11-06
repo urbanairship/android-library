@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import com.urbanairship.Provider
+import com.urbanairship.UAirship
 import app.cash.turbine.test
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
@@ -63,7 +65,8 @@ public class PagerModelTest {
             isSwipeDisabled = false,
             pagerState = pagerState,
             environment = mockEnv,
-            properties = ModelProperties(pagerPageId = null)
+            properties = ModelProperties(pagerPageId = null),
+            platformProvider = { UAirship.ANDROID_PLATFORM }
         )).apply {
             listener = mockViewListener
         }

@@ -49,7 +49,7 @@ public class InstallReceiverTest extends BaseTestCase {
                     return false;
                 }
 
-                return "some value".equals(event.getEventData().opt("google_play_referrer").getString());
+                return "some value".equals(event.getEventData(new ConversionData(null, null, null)).opt("google_play_referrer").getString());
             }
         }));
     }

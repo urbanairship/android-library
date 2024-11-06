@@ -3,7 +3,6 @@ package com.urbanairship.preferencecenter.ui
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.VisibleForTesting
-import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -27,10 +26,8 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.ConditionStateMonitor
 import com.urbanairship.preferencecenter.PreferenceCenter
-import com.urbanairship.preferencecenter.data.CommonDisplay
 import com.urbanairship.preferencecenter.data.Condition
 import com.urbanairship.preferencecenter.data.Item
-import com.urbanairship.preferencecenter.data.Item.ContactManagement.RegistrationOptions
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfigParceler
 import com.urbanairship.preferencecenter.data.Section
@@ -56,10 +53,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
@@ -184,6 +183,15 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         }
 
     /**
+     * Helper to do basic formatting and validation of email address.
+     */
+    private fun formatAndValidateEmail(email: String?): Boolean {
+        val formattedEmail = (email ?: "").trim().lowercase()
+        val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
+        return emailRegex.matches(formattedEmail)
+    }
+
+    /**
      * Flow that maps an [Action] to one or more side [Effect]s that do not impact viewmodel state.
      */
     private suspend fun effects(action: Action): Flow<Effect> =
@@ -194,9 +202,20 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             }
 
             // Contact Management
-
             is Action.RequestAddChannel -> flowOf(
                 Effect.ShowContactManagementAddDialog(action.item)
+            )
+            is Action.ValidateEmailChannel -> flowOf(
+                if (formatAndValidateEmail(action.address)) {
+                    Effect.DismissContactManagementAddDialog.also {
+                        handle(
+                            Action.RegisterChannel.Email(action.item, action.address)
+                        )
+                    }
+                } else {
+                    val message = action.item.platform.errorMessages.invalidMessage
+                    Effect.ShowContactManagementAddDialogError(message)
+                }
             )
             is Action.ValidateSmsChannel -> flowOf(
                 if (contact.validateSms(action.address, action.senderId)) {
@@ -280,6 +299,8 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                         val isPending = !channel.isOptedIn
                         if (isPending) {
                             schedulePendingResendVisibilityChanges(channel)
+                        } else {
+                            cancelPendingResendVisibilityChanges(channel)
                         }
                         ContactChannelState(
                             showResendButton = false, showPendingButton = isPending
@@ -289,6 +310,8 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                         val isPending = !channel.isOptedIn
                         if (isPending) {
                             schedulePendingResendVisibilityChanges(channel, onlyHide = true)
+                        } else {
+                            cancelPendingResendVisibilityChanges(channel)
                         }
                         channelState
                     }
@@ -430,33 +453,40 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         }
     }
 
-    private var showResendButtonJob: Job? = null
-    private var hidePendingLabelJob: Job? = null
+    private var showResendButtonJobs: MutableMap<ContactChannel, Job> = mutableMapOf()
+    private var hidePendingLabelJobs: MutableMap<ContactChannel, Job> = mutableMapOf()
+
+    fun cancelPendingResendVisibilityChanges(channel: ContactChannel) {
+        cancelPendingVisibilityChanges(channel)
+        cancelResendVisibilityChanges(channel)
+    }
+
+    fun cancelPendingVisibilityChanges(channel: ContactChannel) {
+        hidePendingLabelJobs[channel]?.cancel()
+        hidePendingLabelJobs.remove(channel)
+    }
+
+    fun cancelResendVisibilityChanges(channel: ContactChannel) {
+        showResendButtonJobs[channel]?.cancel()
+        showResendButtonJobs.remove(channel)
+    }
 
     fun schedulePendingResendVisibilityChanges(channel: ContactChannel, onlyHide: Boolean = false) {
         if (!onlyHide) {
-            showResendButtonJob?.cancel()
-            showResendButtonJob = viewModelScope.launch(dispatcher) {
+            cancelResendVisibilityChanges(channel)
+            showResendButtonJobs[channel] = viewModelScope.launch(dispatcher) {
                 delay(defaultResendLabelHideDelay)
-                handle(
-                    Action.UpdateContactChannel(
-                        channel, ContactChannelState(
-                            showResendButton = true, showPendingButton = true
-                        )
-                    )
-                )
+                handle(Action.UpdateContactChannel(
+                    channel, ContactChannelState(showResendButton = true, showPendingButton = true)
+                ))
             }
         }
 
-        hidePendingLabelJob?.cancel()
-        hidePendingLabelJob = viewModelScope.launch(dispatcher) {
+        cancelPendingVisibilityChanges(channel)
+        hidePendingLabelJobs[channel] = viewModelScope.launch(dispatcher) {
             delay(defaultPendingLabelHideDelay)
             handle(Action.UpdateContactChannel(
-                channel,
-                ContactChannelState(
-                    showPendingButton = false,
-                    showResendButton = false
-                )
+                channel, ContactChannelState(showPendingButton = false, showResendButton = false)
             ))
         }
     }
@@ -481,28 +511,33 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 val fetchContactChannels = config.hasContactManagement
 
                 combine(
-                    if (fetchChannelSubscriptions) getChannelSubscriptions() else flowOf(emptySet()),
-                    if (fetchContactSubscriptions) getContactSubscriptions() else flowOf(emptyMap()),
+                    if (fetchChannelSubscriptions) getChannelSubscriptions() else flowOf(Result.success(emptySet())),
+                    if (fetchContactSubscriptions) getContactSubscriptions() else flowOf(Result.success(emptyMap())),
                     if (fetchContactChannels) getAssociatedChannels() else flowOf(emptySet())
                 ) { channelSubs, contactSubs, contactChannels ->
                     enrichedConfig.copy(
-                        channelSubscriptions = channelSubs,
-                        contactSubscriptions = if (mergeChannelDataToContact) mergeSubscriptions(channelSubs, contactSubs) else contactSubs,
+                        channelSubscriptions = getChannelSubscriptionsAsSet(channelSubs),
+                        contactSubscriptions = if (mergeChannelDataToContact) mergeSubscriptions(getChannelSubscriptionsAsSet(channelSubs), getContactSubscriptionsAsMap(contactSubs)) else getContactSubscriptionsAsMap(contactSubs),
                         contactChannels = contactChannels.toSet()
                     )
                 }
             }
+            .distinctUntilChanged()
 
     private fun getConfig(preferenceCenterId: String): Flow<PreferenceCenterConfig> = flow {
         emit(preferenceCenter.getConfig(preferenceCenterId) ?: throw IllegalStateException("Null preference center for id: $preferenceCenterId"))
     }
 
-    private fun getChannelSubscriptions(): Flow<Set<String>> = flow {
-        emit(channel.fetchSubscriptionLists().getOrThrow())
+    private fun getChannelSubscriptions(): Flow<Result<Set<String>>> = channel.subscriptions
+
+    private fun getChannelSubscriptionsAsSet(subscriptionsResult: Result<Set<String>>): Set<String> {
+        return subscriptionsResult.getOrNull()?.let { it } ?: emptySet()
     }
 
-    private fun getContactSubscriptions(): Flow<Map<String, Set<Scope>>> = flow {
-        emit(contact.fetchSubscriptionLists().getOrThrow())
+    private fun getContactSubscriptions(): Flow<Result<Map<String, Set<Scope>>>> = contact.subscriptions
+
+    private fun getContactSubscriptionsAsMap(subscriptionsResult: Result<Map<String, Set<Scope>>>): Map<String, Set<Scope>> {
+        return subscriptionsResult.getOrNull()?.let { it } ?: emptyMap()
     }
 
     private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = contact.channelContacts.mapNotNull {
@@ -613,6 +648,11 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             val item: Item.ContactManagement,
             val address: String,
             val senderId: String
+        ) : Action()
+
+        data class ValidateEmailChannel(
+            val item: Item.ContactManagement,
+            val address: String,
         ) : Action()
 
         data class UpdateContactChannel(

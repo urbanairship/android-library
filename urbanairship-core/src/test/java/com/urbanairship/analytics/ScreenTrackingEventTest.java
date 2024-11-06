@@ -27,7 +27,7 @@ public class ScreenTrackingEventTest extends BaseTestCase {
                 ":\"0.001\",\"previous_screen\":\"previous_screen\",\"entered_time\":\"0.000\"}");
 
         // Test isValid returns true for valid region event with expected data
-        Assert.assertEquals(expected.getMap(), event.getEventData());
+        Assert.assertEquals(expected.getMap(), event.getEventData(new ConversionData(null, null, null)));
     }
 
     /**

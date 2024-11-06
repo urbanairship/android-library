@@ -9,6 +9,7 @@ import com.urbanairship.iam.content.Fullscreen
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.content.Modal
 import com.urbanairship.json.JsonValue
+import kotlin.time.Duration.Companion.minutes
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -170,6 +171,6 @@ public class DefaultInAppDisplayImpressionRuleProviderTest {
                 )
             )
         )
-        assertEquals(InAppDisplayImpressionRule.Interval(30), rule)
+        assertEquals(InAppDisplayImpressionRule.Interval(30.minutes), rule)
     }
 }

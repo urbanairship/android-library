@@ -60,6 +60,7 @@ dependencies {
 
     // Jetpack
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.activityktx)
     implementation(libs.google.material)
     implementation(libs.androidx.preference)
     implementation(libs.androidx.lifecycle.viewmodel)

@@ -135,7 +135,7 @@ public class PushArrivedEvent extends Event {
     @NonNull
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public final JsonMap getEventData() {
+    public final JsonMap getEventData(@NonNull ConversionData conversionData) {
 
         JsonMap.Builder builder = JsonMap.newBuilder()
                                          .put(PUSH_ID_KEY, !UAStringUtil.isEmpty(message.getSendId()) ? message.getSendId() : DEFAULT_SEND_ID)

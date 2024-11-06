@@ -2,7 +2,11 @@
 
 package com.urbanairship.analytics
 
+import androidx.annotation.RestrictTo
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.extend
+import com.urbanairship.json.jsonMapOf
 
 /**
  * Airship event data.
@@ -56,4 +60,21 @@ public class AirshipEventData(
         result = 31 * result + timeMs.hashCode()
         return result
     }
+
+    override fun toString(): String {
+        return "AirshipEventData(id='$id', sessionId='$sessionId', body=$body, type=$type, timeMs=$timeMs)"
+    }
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public val fullEventPayload: JsonValue = jsonMapOf(
+        Event.TYPE_KEY to type.reportingName,
+        Event.EVENT_ID_KEY to id,
+        Event.TIME_KEY to Event.millisecondsToSecondsString(timeMs),
+        Event.DATA_KEY to body.optMap().extend(
+            Event.SESSION_ID_KEY to sessionId
+        )
+    ).toJsonValue()
 }

@@ -20,10 +20,12 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
+import static com.urbanairship.sample.MainActivity.TOP_LEVEL_DESTINATIONS;
 
 /**
  * Settings fragment.
@@ -48,7 +50,8 @@ public class SettingsFragment extends Fragment {
         }
 
         Toolbar toolbar = view.findViewById(R.id.toolbar);
-        NavigationUI.setupWithNavController(toolbar, Navigation.findNavController(view));
+        NavigationUI.setupWithNavController(toolbar, Navigation.findNavController(view),
+                new AppBarConfiguration.Builder(TOP_LEVEL_DESTINATIONS).build());
     }
 
     /**

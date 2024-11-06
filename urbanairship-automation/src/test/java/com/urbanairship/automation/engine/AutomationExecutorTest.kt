@@ -15,6 +15,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -109,7 +111,7 @@ public class AutomationExecutorTest {
     }
 
     @Test
-    public fun testIsReadyPrecheckCurrent(): TestResult = runTest {
+    public fun testIsValid(): TestResult = runTest {
         val schedule = AutomationSchedule(
             identifier = "some id",
             triggers = listOf(),
@@ -119,12 +121,12 @@ public class AutomationExecutorTest {
 
         coEvery { remoteDataAccess.isCurrent(eq(schedule)) } returns true
 
-        assertEquals(executor.isReadyPrecheck(schedule), ScheduleReadyResult.READY)
+        assertTrue(executor.isValid(schedule))
         coVerify { remoteDataAccess.isCurrent(eq(schedule)) }
     }
 
     @Test
-    public fun testIsReadyPrecheckNotCurrent(): TestResult = runTest {
+    public fun testNotValid(): TestResult = runTest {
         val schedule = AutomationSchedule(
             identifier = "some id",
             triggers = listOf(),
@@ -134,7 +136,7 @@ public class AutomationExecutorTest {
 
         coEvery { remoteDataAccess.isCurrent(any()) } returns false
 
-        assertEquals(executor.isReadyPrecheck(schedule), ScheduleReadyResult.INVALIDATE)
+        assertFalse(executor.isValid(schedule))
         coVerify { remoteDataAccess.isCurrent(eq(schedule)) }
     }
 

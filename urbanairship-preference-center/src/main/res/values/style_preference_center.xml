@@ -2,7 +2,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base style -->
-    <style name="UrbanAirship.PreferenceCenter" parent="Theme.MaterialComponents.DayNight">
+    <style name="UrbanAirship.PreferenceCenter" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/ua_preference_center_background</item>
         <item name="colorOnPrimary">@color/ua_preference_center_ui_text_color</item>
         <item name="colorPrimaryVariant">@color/ua_preference_center_background</item>
@@ -14,7 +14,12 @@
         <item name="android:colorBackground">@color/ua_preference_center_background</item>
         <item name="android:textColorPrimary">@color/ua_preference_center_ui_text_color</item>
         <item name="toolbarStyle">@style/UrbanAirship.PreferenceCenter.Toolbar</item>
-        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/ua_preference_center_status_bar</item>
+
+        <!-- Status bar color. On API 35+, this color will be ignored and the status bar will be transparent. -->
+        <item name="android:statusBarColor">?android:colorBackground</item>
+
+        <!-- Nav bar color. On API 35+, this color will be ignored and the nav bar will be transparent. -->
+        <item name="android:navigationBarColor">?android:colorBackground</item>
     </style>
 
     <style name="UrbanAirship.PreferenceCenter.Base">
@@ -29,7 +34,10 @@
     <style name="UrbanAirship.PreferenceCenter.Fragment" parent="@style/UrbanAirship.PreferenceCenter.Base"/>
 
     <!-- Toolbar -->
-    <style name="UrbanAirship.PreferenceCenter.Toolbar" parent="@style/Widget.MaterialComponents.Toolbar.Surface" />
+    <style name="UrbanAirship.PreferenceCenter.Toolbar" parent="@style/Widget.Material3.Toolbar.Surface">
+        <item name="title">@string/ua_preference_center_label</item>
+        <item name="navigationIcon">@drawable/ua_ic_preference_center_arrow_back</item>
+    </style>
 
     <!-- Preference Center list view -->
     <style name="UrbanAirship.PreferenceCenter.List">
@@ -54,7 +62,7 @@
     <!-- Preference Center error view text -->
     <style name="UrbanAirship.PreferenceCenter.ErrorText">
         <item name="android:textAlignment">center</item>
-        <item name="android:textAppearance">?textAppearanceBody1</item>
+        <item name="android:textAppearance">?textAppearanceBodyLarge</item>
         <item name="android:text">@string/ua_preference_center_empty</item>
         <item name="android:gravity">center</item>
         <item name="android:paddingTop">16dp</item>
@@ -64,7 +72,7 @@
     </style>
 
     <!-- Preference Center error view retry button -->
-    <style name="UrbanAirship.PreferenceCenter.ErrorButton" parent="Widget.MaterialComponents.Button">
+    <style name="UrbanAirship.PreferenceCenter.ErrorButton" parent="Widget.Material3.Button">
         <item name="android:text">@string/ua_preference_center_error_retry</item>
         <item name="android:textAppearance">?textAppearanceButton</item>
     </style>
@@ -75,7 +83,7 @@
     </style>
 
     <!-- Preference Center loading progress indicator -->
-    <style name="UrbanAirship.PreferenceCenter.ListLoadingIndicator" parent="Widget.MaterialComponents.CircularProgressIndicator">
+    <style name="UrbanAirship.PreferenceCenter.ListLoadingIndicator" parent="Widget.Material3.CircularProgressIndicator">
         <item name="android:layout_gravity">center</item>
         <item name="android:indeterminate">true</item>
         <item name="indicatorColor">?android:colorAccent</item>
@@ -101,7 +109,7 @@
     <style name="UrbanAirship.PreferenceCenter.Item.HeaderTitle" parent="">
         <item name="android:maxLines">2</item>
         <item name="android:ellipsize">end</item>
-        <item name="android:textAppearance">?textAppearanceHeadline6</item>
+        <item name="android:textAppearance">?textAppearanceTitleMedium</item>
         <item name="android:visibility">gone</item>
     </style>
 
@@ -109,7 +117,7 @@
     <style name="UrbanAirship.PreferenceCenter.Item.HeaderDescription" parent="">
         <item name="android:maxLines">6</item>
         <item name="android:ellipsize">end</item>
-        <item name="android:textAppearance">?android:attr/textAppearanceListItem</item>
+        <item name="android:textAppearance">?textAppearanceListItem</item>
     </style>
 
     <!-- Preference Center list section header item -->
@@ -127,19 +135,19 @@
     <style name="UrbanAirship.PreferenceCenter.Item.SectionTitle" parent="">
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">end</item>
-        <item name="android:textAppearance">?android:attr/textAppearanceListItem</item>
+        <item name="android:textAppearance">?textAppearanceListItem</item>
         <item name="android:textColor">?android:attr/colorAccent</item>
     </style>
 
     <!-- Preference Center section header description -->
     <style name="UrbanAirship.PreferenceCenter.Item.SectionDescription" parent="">
         <item name="android:maxLines">10</item>
-        <item name="android:textAppearance">?android:attr/textAppearanceListItemSecondary</item>
+        <item name="android:textAppearance">?textAppearanceListItemSecondary</item>
         <item name="android:textColor">?android:attr/textColorSecondary</item>
     </style>
 
     <!-- Preference Center list section break item -->
-    <style name="UrbanAirship.PreferenceCenter.Item.SectionBreak" parent="Widget.MaterialComponents.Chip.Choice">
+    <style name="UrbanAirship.PreferenceCenter.Item.SectionBreak" parent="Widget.Material3.Chip.Suggestion">
         <item name="android:clickable">false</item>
         <item name="android:checkable">false</item>
         <item name="android:textAppearance">@style/UrbanAirship.TextAppearance.PreferenceCenter.SectionBreak</item>
@@ -154,11 +162,11 @@
         <item name="chipBackgroundColor">@color/ua_preference_center_section_break_label_background</item>
         <item name="chipMinHeight">28dp</item>
         <item name="chipMinTouchTargetSize">28dp</item>
-        <item name="chipCornerRadius">4dp</item>
+        <item name="shapeAppearance">?shapeAppearanceCornerLarge</item>
     </style>
 
     <!-- Preference Center list section break text appearance -->
-    <style name="UrbanAirship.TextAppearance.PreferenceCenter.SectionBreak" parent="TextAppearance.MaterialComponents.Body2">
+    <style name="UrbanAirship.TextAppearance.PreferenceCenter.SectionBreak" parent="TextAppearance.Material3.BodyMedium">
         <item name="android:textStyle">bold</item>
     </style>
 
@@ -205,7 +213,7 @@
     <style name="UrbanAirship.PreferenceCenter.Item.AlertTitle" parent="">
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">end</item>
-        <item name="android:textAppearance">?textAppearanceHeadline6</item>
+        <item name="android:textAppearance">?textAppearanceTitleMedium</item>
         <item name="android:textColor">?android:attr/textColorPrimary</item>
         <item name="android:paddingBottom">4dp</item>
     </style>
@@ -219,7 +227,7 @@
     </style>
 
     <!-- Preference Center alert item button -->
-    <style name="UrbanAirship.PreferenceCenter.Item.AlertButton" parent="@style/Widget.MaterialComponents.Button">
+    <style name="UrbanAirship.PreferenceCenter.Item.AlertButton" parent="@style/Widget.Material3.Button">
         <item name="android:textAppearance">?textAppearanceButton</item>
         <item name="backgroundTint">?colorAccent</item>
         <item name="android:textColor">@color/ua_preference_center_alert_button_text</item>
@@ -302,6 +310,8 @@
         <item name="android:textAppearance">?textAppearanceListItemSecondary</item>
         <item name="android:textColor">?android:textColorSecondary</item>
         <item name="android:paddingEnd">4dp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">middle</item>
     </style>
 
     <!-- Preference Center sms/email opt-in item container for pending and resend labels -->
@@ -333,7 +343,7 @@
     </style>
 
     <!-- Preference Center sms/email opt-in item button -->
-    <style name="UrbanAirship.PreferenceCenter.Item.OptInButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+    <style name="UrbanAirship.PreferenceCenter.Item.OptInButton" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:paddingStart">16dp</item>
         <item name="android:paddingEnd">16dp</item>
         <item name="android:textColor">?android:textColorPrimary</item>
@@ -344,7 +354,7 @@
     </style>
 
     <!-- Preference Center sms/email opt-in add/remove dialog -->
-    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="alertDialogStyle">@style/UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialogStyle</item>
         <item name="materialAlertDialogTitleTextStyle">@style/MaterialAlertDialog.MaterialComponents.Title.Text</item>
         <item name="buttonBarPositiveButtonStyle">@style/UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog.PositiveButton</item>
@@ -352,21 +362,21 @@
         <item name="buttonBarNegativeButtonStyle">@style/UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog.NegativeButton</item>
     </style>
 
-    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialogStyle" parent="MaterialAlertDialog.MaterialComponents">
+    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialogStyle" parent="MaterialAlertDialog.Material3">
     </style>
 
     <!-- Preference Center sms/email opt-in add/remove dialog positive button -->
-    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog.PositiveButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog.PositiveButton" parent="Widget.Material3.Button.TextButton.Dialog">
         <item name="android:textColor">@color/ua_preference_center_dialog_button_positive</item>
     </style>
 
     <!-- Preference Center sms/email opt-in add/remove dialog neutral button -->
-    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog.NeutralButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog.Flush">
+    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog.NeutralButton" parent="Widget.Material3.Button.TextButton.Dialog.Flush">
         <item name="android:textColor">?android:textColorSecondary</item>
     </style>
 
     <!-- Preference Center sms/email opt-in add/remove dialog negative button -->
-    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog.NegativeButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+    <style name="UrbanAirship.ThemeOverlay.PreferenceCenter.OptInDialog.NegativeButton" parent="Widget.Material3.Button.TextButton.Dialog">
         <item name="android:textColor">@color/ua_preference_center_dialog_button_negative</item>
     </style>
 
@@ -378,7 +388,7 @@
     </style>
 
     <!-- Preference Center sms/email opt-in prompt address text input -->
-    <style name="UrbanAirship.PreferenceCenter.OptInDialog.TextInputLayout" parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+    <style name="UrbanAirship.PreferenceCenter.OptInDialog.TextInputLayout" parent="@style/Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="boxStrokeColor">@color/ua_preference_center_dialog_input_outline</item>
         <item name="hintTextColor">?android:textColorSecondary</item>
         <item name="shapeAppearance">?shapeAppearanceMediumComponent</item>
@@ -388,7 +398,7 @@
     </style>
 
     <!-- Preference Center sms opt-in prompt country picker -->
-    <style name="UrbanAirship.PreferenceCenter.OptInDialog.DropDownLayout" parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+    <style name="UrbanAirship.PreferenceCenter.OptInDialog.DropDownLayout" parent="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
         <item name="boxStrokeColor">@color/ua_preference_center_dialog_input_outline</item>
         <item name="hintTextColor">?android:textColorSecondary</item>
         <item name="shapeAppearance">?shapeAppearanceMediumComponent</item>
@@ -398,7 +408,7 @@
 
     <!-- Preference Center SMS Opt-in prompt phone number box -->
     <style name="UrbanAirship.PreferenceCenter.OptInDialog.Footer" parent="">
-        <item name="android:textAppearance">?textAppearanceBody2</item>
+        <item name="android:textAppearance">?textAppearanceBodyMedium</item>
         <item name="android:textColor">?android:textColorSecondary</item>
         <item name="android:textColorLink">@color/ua_preference_center_accent</item>
         <item name="android:layout_marginBottom">8dp</item>
@@ -418,7 +428,7 @@
     </style>
 
     <!-- Preference Center subscription group container -->
-    <style name="UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChipGroup" parent="Widget.MaterialComponents.ChipGroup">
+    <style name="UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChipGroup" parent="Widget.Material3.ChipGroup">
         <item name="android:layout_marginBottom">8dp</item>
     </style>
 
@@ -436,22 +446,30 @@
     </style>
 
     <!-- Preference Center subscription group toggle chip -->
-    <style name="UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChip" parent="Widget.MaterialComponents.Chip.Filter">
+    <style name="UrbanAirship.PreferenceCenter.Item.Widget.SubscriptionTypeChip" parent="Widget.Material3.Chip.Filter">
         <item name="materialThemeOverlay">@style/UrbanAirship.ThemeOverlay.PreferenceCenter.Item.Widget.SubscriptionTypeChip</item>
         <item name="chipBackgroundColor">@android:color/transparent</item>
-        <item name="chipSurfaceColor">?colorSurface</item>
+        <item name="chipSurfaceColor">@color/ua_preference_center_subscription_type_chip_surface</item>
         <item name="chipMinHeight">@dimen/ua_preference_center_subscription_type_chip_min_height</item>
         <item name="chipStrokeColor">@color/ua_preference_center_subscription_type_chip_stroke</item>
         <item name="chipStrokeWidth">@dimen/ua_preference_center_subscription_type_chip_stroke_width</item>
         <item name="chipIcon">@drawable/ua_ic_preference_center_subscription_type_chip_check_circle</item>
+        <item name="chipIconSize">@dimen/ua_preference_center_subscription_type_chip_size</item>
         <item name="chipIconVisible">true</item>
         <item name="checkedIcon">@null</item>
+        <item name="chipSpacingVertical">0dp</item>
+        <item name="chipSpacingHorizontal">0dp</item>
+        <item name="chipStartPadding">4dp</item>
+        <item name="iconStartPadding">0dp</item>
+        <item name="iconEndPadding">-2dp</item>
         <item name="checkedIconVisible">false</item>
         <item name="android:textAppearance">@style/UrbanAirship.TextAppearance.PreferenceCenter.Item.Widget.SubscriptionTypeChip</item>
+        <item name="shapeAppearance">?shapeAppearanceCornerLarge</item>
+        <item name="android:layout_margin">@dimen/ua_preference_center_subscription_type_chip_margin</item>
     </style>
 
     <!-- Preference Center subscription group toggle chip text appearance -->
-    <style name="UrbanAirship.TextAppearance.PreferenceCenter.Item.Widget.SubscriptionTypeChip" parent="TextAppearance.MaterialComponents.Body2">
+    <style name="UrbanAirship.TextAppearance.PreferenceCenter.Item.Widget.SubscriptionTypeChip" parent="TextAppearance.Material3.BodyMedium">
         <item name="android:textStyle">bold</item>
     </style>
 </resources>

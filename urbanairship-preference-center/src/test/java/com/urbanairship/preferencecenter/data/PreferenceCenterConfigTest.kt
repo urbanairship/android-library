@@ -143,7 +143,8 @@ public class PreferenceCenterConfigTest {
                     },
                     "senders": [
                       {
-                        "country_code": "+44",
+                        "country_code": "UK",
+                        "country_calling_code": "+44",
                         "display_name": "United Kingdom",
                         "placeholder_text": "7010 111222",
                         "sender_id": "23450"

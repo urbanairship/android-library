@@ -4,7 +4,10 @@ import com.urbanairship.BaseTestCase;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
+import com.urbanairship.analytics.AirshipEventData;
 import com.urbanairship.analytics.CustomEvent;
+import com.urbanairship.analytics.Event;
+import com.urbanairship.analytics.EventType;
 import com.urbanairship.analytics.location.RegionEvent;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.http.RequestException;
@@ -12,6 +15,7 @@ import com.urbanairship.http.Response;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonValue;
 
 import org.junit.Before;
@@ -46,6 +50,15 @@ public class EventManagerTest extends BaseTestCase {
 
     private TestAirshipRuntimeConfig testAirshipRuntimeConfig;
 
+
+    private final AirshipEventData testEvent = new AirshipEventData(
+            "testEvent",
+            "session-testEvent",
+            JsonMap.EMPTY_MAP.toJsonValue(),
+            EventType.APP_FOREGROUND,
+            System.currentTimeMillis()
+    );
+
     @Before
     public void setUp() {
         mockDispatcher = mock(JobDispatcher.class);
@@ -66,10 +79,9 @@ public class EventManagerTest extends BaseTestCase {
      */
     @Test
     public void testAddEventAfterNextSendTime() throws JsonException {
-        CustomEvent customEvent = CustomEvent.newBuilder("event name").build();
-        EventEntity entity = EventEntity.create(customEvent, "session");
+        EventEntity entity = EventEntity.create(testEvent);
 
-        eventManager.addEvent(customEvent, "session");
+        eventManager.addEvent(testEvent, Event.NORMAL_PRIORITY);
         // Verify we add an event.
         verify(mockEventDao, new Times(1)).insert(entity);
 
@@ -93,8 +105,7 @@ public class EventManagerTest extends BaseTestCase {
         // Set the minBatchInterval to 20 seconds
         dataStore.put(MIN_BATCH_INTERVAL_KEY, 20000);
 
-        CustomEvent customEvent = CustomEvent.newBuilder("event name").build();
-        eventManager.addEvent(customEvent, "session");
+        eventManager.addEvent(testEvent, Event.NORMAL_PRIORITY);
 
         // Check it schedules an upload with a time greater than 10 seconds
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {
@@ -226,13 +237,8 @@ public class EventManagerTest extends BaseTestCase {
         // Set last send time to year 3005 so next send time is way in the future
         dataStore.put(EventManager.LAST_SEND_KEY, 32661446400000L);
 
-        RegionEvent regionEvent = RegionEvent.newBuilder()
-                                             .setRegionId("id")
-                                             .setSource("source")
-                                             .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_ENTER)
-                                             .build();
+        eventManager.addEvent(testEvent, Event.HIGH_PRIORITY);
 
-        eventManager.addEvent(regionEvent, "session");
 
         // Check it schedules an upload
         verify(mockDispatcher).dispatch(Mockito.argThat(new ArgumentMatcher<JobInfo>() {

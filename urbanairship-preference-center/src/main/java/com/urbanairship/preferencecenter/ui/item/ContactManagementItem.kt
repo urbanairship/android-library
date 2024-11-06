@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.LayoutRes
 import androidx.core.view.isVisible
@@ -91,6 +90,22 @@ internal data class ContactManagementItem(
             titleView.setTextOrHide(item.display.name)
             descriptionView.setTextOrHide(item.display.description)
 
+            bindContactChannels(item)
+
+            val btn = item.addPrompt.button
+            with (addButton) {
+                text = btn.text
+                btn.contentDescription?.let { contentDescription = it }
+
+                setOnClickListener {
+                    if (adapterPosition != RecyclerView.NO_POSITION) {
+                        onAddClick(adapterPosition)
+                    }
+                }
+            }
+        }
+
+        internal fun bindContactChannels(item: ContactManagementItem) {
             val channels = contactChannelsProvider.get()
                 .filter { it.key.channelType == item.platform.channelType }
 
@@ -105,18 +120,6 @@ internal data class ContactManagementItem(
                     makeListItem(itemView.context, item.item, channel, state)
                 }
                 widget.addView(listView)
-            }
-
-            val btn = item.addPrompt.button
-            with (addButton) {
-                text = btn.text
-                btn.contentDescription?.let { contentDescription = it }
-
-                setOnClickListener {
-                    if (adapterPosition != RecyclerView.NO_POSITION) {
-                        onAddClick(adapterPosition)
-                    }
-                }
             }
         }
 

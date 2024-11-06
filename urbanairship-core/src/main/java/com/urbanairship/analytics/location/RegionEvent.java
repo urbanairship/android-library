@@ -3,6 +3,7 @@
 package com.urbanairship.analytics.location;
 
 import com.urbanairship.UALog;
+import com.urbanairship.analytics.ConversionData;
 import com.urbanairship.analytics.Event;
 import com.urbanairship.analytics.EventType;
 import com.urbanairship.json.JsonMap;
@@ -207,7 +208,17 @@ public class RegionEvent extends Event implements JsonSerializable {
     @NonNull
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public final JsonMap getEventData() {
+    public final JsonMap getEventData(@NonNull ConversionData conversionData) {
+        return createEventData();
+    }
+
+    @NonNull
+    @Override
+    public JsonValue toJsonValue() {
+        return createEventData().toJsonValue();
+    }
+
+    private JsonMap createEventData() {
         JsonMap.Builder data = JsonMap.newBuilder()
                                       .put(REGION_ID, regionId)
                                       .put(SOURCE, source)
@@ -243,13 +254,6 @@ public class RegionEvent extends Event implements JsonSerializable {
 
         return data.build();
     }
-
-    @NonNull
-    @Override
-    public JsonValue toJsonValue() {
-        return getEventData().toJsonValue();
-    }
-
     /**
      * Validates region event character count.
      *

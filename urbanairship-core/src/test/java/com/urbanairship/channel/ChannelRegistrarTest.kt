@@ -4,16 +4,17 @@ import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import app.cash.turbine.test
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestClock
 import com.urbanairship.http.RequestResult
+import java.util.UUID
+import app.cash.turbine.test
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import java.util.UUID
+import io.mockk.slot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -23,6 +24,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -46,8 +48,16 @@ public class ChannelRegistrarTest {
 
     private val emptyPayload = ChannelRegistrationPayload.Builder().build()
 
+    private var createOption: ChannelGenerationMethod = ChannelGenerationMethod.Automatic
+
     private val registrar = ChannelRegistrar(
-        preferenceDataStore, mockClient, testActivityMonitor, testClock
+        preferenceDataStore, mockClient, testActivityMonitor,
+        channelCreateOption = object : AirshipChannelCreateOption {
+            override fun get(): ChannelGenerationMethod {
+                return createOption
+            }
+        },
+        clock = testClock
     )
 
     @Before
@@ -63,6 +73,50 @@ public class ChannelRegistrarTest {
     @Test
     public fun testCreateChannel(): TestResult = runTest {
         assertNull(registrar.channelId)
+        coEvery {
+            mockClient.createChannel(emptyPayload)
+        } returns RequestResult(200, Channel("some id", "some://location"), null, null)
+
+        assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
+
+        assertEquals("some id", registrar.channelId)
+        registrar.channelIdFlow.test {
+            assertEquals("some id", this.awaitItem())
+        }
+    }
+
+    @Test
+    public fun testRestoreChannel(): TestResult = runTest {
+        assertNull(registrar.channelId)
+
+        val restoreChannelId = UUID.randomUUID().toString()
+        createOption = ChannelGenerationMethod.Restore(restoreChannelId)
+
+        // Update
+        coEvery {
+            mockClient.updateChannel(any(), any())
+        } answers {
+            assertEquals(restoreChannelId, firstArg())
+            RequestResult(200, Channel("some id", "some://location"), null, null)
+        }
+
+        assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
+
+        assertEquals(restoreChannelId, registrar.channelId)
+        registrar.channelIdFlow.test {
+            assertEquals(restoreChannelId, this.awaitItem())
+        }
+
+        coVerify(exactly = 0) { mockClient.createChannel(any()) }
+        coVerify(exactly = 1) { mockClient.updateChannel(any(), any()) }
+    }
+
+    @Test
+    public fun testRestoreFallbackToRegularOnInvalidChannelId(): TestResult = runTest {
+        assertNull(registrar.channelId)
+
+        createOption = ChannelGenerationMethod.Restore("invalid")
+
         coEvery {
             mockClient.createChannel(emptyPayload)
         } returns RequestResult(200, Channel("some id", "some://location"), null, null)
@@ -208,6 +262,44 @@ public class ChannelRegistrarTest {
 
         coVerify(exactly = 1) { mockClient.updateChannel(any(), any()) }
         coVerify(exactly = 1) { mockClient.createChannel(any()) }
+    }
+
+    @Test
+    public fun testFullPayloadUploadAfter24Hours(): TestResult = runTest {
+        // Create channel first
+        val payload = ChannelRegistrationPayload.Builder()
+            .setContactId(UUID.randomUUID().toString())
+            .setAppVersion("test")
+            .build()
+
+        registrar.addChannelRegistrationPayloadExtender(
+            AirshipChannel.Extender.Suspending {
+                it.setContactId(payload.contactId)
+                it.setAppVersion(payload.appVersion)
+            }
+        )
+
+        testClock.currentTimeMillis = 1
+
+        coEvery {
+            mockClient.createChannel(any())
+        } returns RequestResult(200, Channel("some id", "some://location"), null, null)
+        assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
+
+        val capturedPayload = slot<ChannelRegistrationPayload>()
+        // Update
+        coEvery {
+            mockClient.updateChannel("some id", capture(capturedPayload))
+        } returns RequestResult(200, Channel("some id", "some://location"), null, null)
+        assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
+
+        assertFalse(capturedPayload.isCaptured)
+
+        testActivityMonitor.foreground()
+        testClock.currentTimeMillis += 24 * 60 * 60 * 1000 + 1
+
+        assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
+        assertEquals(payload, capturedPayload.captured)
     }
 
     public fun testUpdateMinimizedPayload(): TestResult = runTest {

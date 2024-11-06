@@ -99,7 +99,7 @@ class ScreenTrackingEvent extends Event {
     @NonNull
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public final JsonMap getEventData() {
+    public final JsonMap getEventData(@NonNull ConversionData conversionData) {
         return JsonMap.newBuilder()
                       .put(SCREEN_KEY, screen)
                       .put(START_TIME_KEY, Event.millisecondsToSecondsString(startTime))

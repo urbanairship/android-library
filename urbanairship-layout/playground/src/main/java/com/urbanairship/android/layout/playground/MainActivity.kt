@@ -130,6 +130,7 @@ class MainActivity : AppCompatActivity() {
             val payload = LayoutInfo(jsonMap)
             Thomas.prepareDisplay(
                 payload = payload,
+                priority = 0,
                 extras = emptyJsonMap(),
                 activityMonitor = GlobalActivityMonitor.shared(applicationContext),
                 listener = thomasListener,

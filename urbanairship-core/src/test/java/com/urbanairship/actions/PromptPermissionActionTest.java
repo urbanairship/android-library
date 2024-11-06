@@ -9,6 +9,7 @@ import android.os.Looper;
 import com.urbanairship.BaseTestCase;
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionPromptFallback;
 import com.urbanairship.permission.PermissionRequestResult;
 import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
@@ -82,7 +83,7 @@ public class PromptPermissionActionTest extends BaseTestCase {
             action.perform(actionArguments);
 
             verify(mockPermissionManager).checkPermissionStatus(eq(permission), any());
-            verify(mockPermissionManager).requestPermission(eq(permission), eq(false), any());
+            verify(mockPermissionManager).requestPermission(eq(permission), eq(false), eq(PermissionPromptFallback.None.INSTANCE), any());
         }
     }
 
@@ -102,7 +103,7 @@ public class PromptPermissionActionTest extends BaseTestCase {
         ActionArguments actionArguments = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, value);
         action.perform(actionArguments);
 
-        verify(mockPermissionManager).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), eq(true), any());
+        verify(mockPermissionManager).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), eq(true), eq(PermissionPromptFallback.None.INSTANCE), any());
     }
 
     @Test
@@ -114,10 +115,10 @@ public class PromptPermissionActionTest extends BaseTestCase {
         }).when(mockPermissionManager).checkPermissionStatus(eq(Permission.DISPLAY_NOTIFICATIONS), any());
 
         doAnswer(invocation -> {
-            Consumer<PermissionRequestResult> consumer = invocation.getArgument(2);
+            Consumer<PermissionRequestResult> consumer = invocation.getArgument(3);
             consumer.accept(PermissionRequestResult.granted());
             return null;
-        }).when(mockPermissionManager).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), eq(false), any());
+        }).when(mockPermissionManager).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), eq(false), eq(PermissionPromptFallback.None.INSTANCE), any());
 
         Handler handler = new Handler(Looper.getMainLooper());
         TestReceiver resultReceiver = new TestReceiver(handler);

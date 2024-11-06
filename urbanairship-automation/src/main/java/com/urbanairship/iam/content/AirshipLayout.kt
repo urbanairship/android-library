@@ -9,7 +9,7 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 
 /**
- * Display content for a [com.urbanairship.automation.rewrite.inappmessage.InAppMessage#TYPE_AIRSHIP_LAYOUT] in-app message.
+ * Display content for Scenes and Surveys.
  */
 public class AirshipLayout private constructor(
     public val layoutInfo: LayoutInfo,
@@ -20,7 +20,7 @@ public class AirshipLayout private constructor(
         private const val LAYOUT_KEY = "layout"
 
         /**
-         * Parses HTML display JSON.
+         * Parses layout display JSON.
          *
          * @param value The json payload.
          * @return The parsed display content.

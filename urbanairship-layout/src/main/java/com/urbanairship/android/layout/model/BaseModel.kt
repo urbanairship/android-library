@@ -5,7 +5,9 @@ import android.content.Context
 import android.view.View
 import android.view.View.OnAttachStateChangeListener
 import androidx.annotation.VisibleForTesting
+import com.urbanairship.Provider
 import com.urbanairship.UALog
+import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
@@ -27,8 +29,10 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.TappableView
+import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.toJsonMap
+import com.urbanairship.util.PlatformUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -50,6 +54,7 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
     val enableBehaviors: List<EnableBehaviorType>? = null,
     protected val environment: ModelEnvironment,
     protected val properties: ModelProperties,
+    private val platformProvider: Provider<Int> = Provider { UAirship.shared().platformType }
 ) {
     internal interface Listener {
         fun setVisibility(visible: Boolean)
@@ -167,7 +172,21 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
     protected fun runActions(
         actions: Map<String, JsonValue>,
         state: LayoutData = layoutState.reportingContext()
-    ) = environment.actionsRunner.run(actions, state)
+    ) {
+        val platform = PlatformUtils.asString(platformProvider.get())
+        val mergedActions = actions.toMutableMap()
+
+        mergedActions
+            .remove(KEY_PLATFORM_OVERRIDE)
+            ?.map
+            ?.get(platform)
+            ?.map
+            ?.let { overrides ->
+                overrides.forEach { mergedActions[it.key] = it.value }
+            }
+
+        environment.actionsRunner.run(mergedActions, state)
+    }
 
     protected fun broadcast(event: LayoutEvent) =
         modelScope.launch {
@@ -244,5 +263,9 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
                 }
             }
         }
+    }
+
+    private companion object {
+        private const val KEY_PLATFORM_OVERRIDE = "platform_action_overrides"
     }
 }

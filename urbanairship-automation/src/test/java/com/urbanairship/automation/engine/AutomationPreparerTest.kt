@@ -140,27 +140,6 @@ public class AutomationPreparerTest {
     }
 
     @Test
-    public fun testFrequencyLimitOverLimit(): TestResult = runTest {
-        val constraints = listOf("constraint")
-
-
-        val frequencyChecker: FrequencyChecker = mockk() {
-            every { isOverLimit() } returns true
-        }
-        coEvery { frequencyLimitManager.getFrequencyChecker(constraints) } returns Result.success(frequencyChecker)
-
-        val schedule = makeSchedule(constraints = constraints)
-
-        coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
-        coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
-
-        assertEquals(SchedulePrepareResult.Skip, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
-
-        verify { frequencyChecker.isOverLimit() }
-        coVerify { frequencyLimitManager.getFrequencyChecker(constraints) }
-    }
-
-    @Test
     public fun testAudienceMismatchSkip(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(

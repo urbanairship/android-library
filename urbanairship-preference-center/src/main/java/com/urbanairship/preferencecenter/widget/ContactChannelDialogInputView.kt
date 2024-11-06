@@ -34,6 +34,30 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
     private val countryPickerInputView: TextInputLayout
     private val countryPickerTextView: AutoCompleteTextView
 
+    var onValidationChanged: ((Boolean) -> Unit)? = null
+    var onSubmit: (() -> Unit)? = null
+
+    private val adapter: ArrayAdapter<String> by lazy {
+        ArrayAdapter(context, android.R.layout.simple_dropdown_item_1line)
+    }
+
+    private var platform: Item.ContactManagement.Platform? = null
+    private var selectedSender: SmsSenderInfo? = null
+
+    private var isValid = false
+
+    private val validator: (input: String?) -> Boolean = { input ->
+        when (platform) {
+            is  Item.ContactManagement.Platform.Email -> {
+                !input.isNullOrBlank()
+            }
+            is Item.ContactManagement.Platform.Sms  -> {
+                !input.isNullOrBlank()
+            }
+            else -> false
+        }
+    }
+
     init {
         inflate(context, R.layout.ua_contact_channel_dialog_input, this)
         textInputView = findViewById(R.id.text_input)
@@ -46,7 +70,8 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
 
             override fun afterTextChanged(s: Editable?) {
-                onValidationChanged?.invoke(validator(s?.toString()))
+                isValid = validator(s?.toString())
+                onValidationChanged?.invoke(isValid)
             }
         })
 
@@ -56,7 +81,9 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
 
             setOnEditorActionListener { _, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    onSubmit?.invoke()
+                    if (isValid) {
+                        onSubmit?.invoke()
+                    }
                     true
                 } else {
                     false
@@ -65,36 +92,14 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
 
             setOnKeyListener { _, keyCode, event ->
                 if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN) {
-                    onSubmit?.invoke()
+                    if (isValid) {
+                        onSubmit?.invoke()
+                    }
                     true
                 } else {
                     false
                 }
             }
-        }
-    }
-
-    var onValidationChanged: ((Boolean) -> Unit)? = null
-    var onSubmit: (() -> Unit)? = null
-
-    private val adapter: ArrayAdapter<String> by lazy {
-        ArrayAdapter(context, android.R.layout.simple_dropdown_item_1line)
-    }
-
-    private var platform: Item.ContactManagement.Platform? = null
-    private var selectedSender: SmsSenderInfo? = null
-
-    private val validator: (input: String?) -> Boolean = { input ->
-        when (platform) {
-            is  Item.ContactManagement.Platform.Email -> {
-                val formatted = formatEmail(input)
-                !input.isNullOrBlank() && emailRegex.matches(formatted)
-            }
-            is Item.ContactManagement.Platform.Sms  -> {
-                val formatted = formatPhone(selectedSender?.dialingCode, input)
-                !input.isNullOrBlank() && phoneRegex.matches(formatted)
-            }
-            else -> false
         }
     }
 
@@ -162,7 +167,7 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
         senders.first().apply {
             selectedSender = this
             // Set the default value with no filter, because we want to show all options in the dropdown.
-            countryPickerTextView.setText(formatCountryPickerItem(displayName, dialingCode), false)
+            countryPickerTextView.setText(displayName, false)
             setAddressPlaceholder(placeholderText)
         }
 
@@ -192,9 +197,6 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
     }
 
     private companion object {
-        private val emailRegex = """[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,64}""".toRegex()
-        private val phoneRegex = """^[1-9]\d{1,14}$""".toRegex()
-
         private fun formatEmail(email: String?): String {
             return (email ?: "").trim()
         }

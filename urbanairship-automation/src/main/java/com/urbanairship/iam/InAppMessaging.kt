@@ -23,6 +23,13 @@ public interface InAppMessagingInterface {
     public var displayDelegate: InAppMessageDisplayDelegate?
 
     /**
+     * Message extender
+     *
+     * The extender is called before the message is displayed and allows the message to be modified.
+     */
+    public var messageContentExtender: InAppMessageContentExtender?
+
+    /**
      * Sets a factory block for a custom display adapter.
      * If the factory block returns a nil adapter, the default adapter will be used.
      * @param type: The type
@@ -53,6 +60,10 @@ internal class InAppMessaging(
     override var displayDelegate: InAppMessageDisplayDelegate?
         get() { return executor.displayDelegate }
         set(value) { executor.displayDelegate = value }
+
+    override var messageContentExtender: InAppMessageContentExtender?
+        get() { return preparer.messageContentExtender }
+        set(value) { preparer.messageContentExtender = value }
 
     override fun setAdapterFactoryBlock(
         type: CustomDisplayAdapterType,

@@ -20,6 +20,7 @@ import com.urbanairship.base.Supplier;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.permission.Permission;
+import com.urbanairship.permission.PermissionPromptFallback;
 import com.urbanairship.permission.PermissionRequestResult;
 import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
@@ -154,23 +155,12 @@ public class PromptPermissionAction extends Action {
         PermissionsManager permissionsManager = Objects.requireNonNull(permissionsManagerSupplier.get());
 
         permissionsManager.checkPermissionStatus(args.permission, before -> {
-            permissionsManager.requestPermission(args.permission, args.enableAirshipUsage, requestResult -> {
-                if (shouldFallbackToAppSettings(args, requestResult)) {
-                    navigatePermissionSettings(args.permission);
-                    GlobalActivityMonitor activityMonitor = GlobalActivityMonitor.shared(UAirship.getApplicationContext());
-                    activityMonitor.addApplicationListener(new SimpleApplicationListener() {
-                        @Override
-                        public void onForeground(long time) {
-                            permissionsManager.checkPermissionStatus(args.permission, after -> {
-                                sendResult(args.permission, before, after, resultReceiver);
-                                activityMonitor.removeApplicationListener(this);
-                            });
-                        }
-                    });
-                } else {
-                    sendResult(args.permission, before, requestResult.getPermissionStatus(), resultReceiver);
-                }
-            });
+            permissionsManager.requestPermission(
+                    args.permission,
+                    args.enableAirshipUsage,
+                    args.fallbackSystemSettings ? PermissionPromptFallback.SystemSettings.INSTANCE : PermissionPromptFallback.None.INSTANCE,
+                    requestResult -> sendResult(args.permission, before, requestResult.getPermissionStatus(), resultReceiver)
+            );
         });
     }
 
@@ -191,77 +181,6 @@ public class PromptPermissionAction extends Action {
     @Override
     public boolean shouldRunOnMainThread() {
         return true;
-    }
-
-    boolean shouldFallbackToAppSettings(@NonNull Args args, @NonNull PermissionRequestResult result) {
-        return args.fallbackSystemSettings &&
-                result.getPermissionStatus() == PermissionStatus.DENIED &&
-                result.isSilentlyDenied();
-    }
-
-    @MainThread
-    private static void navigatePermissionSettings(@NonNull Permission permission) {
-        if (permission == Permission.DISPLAY_NOTIFICATIONS) {
-            navigateToNotificationSettings();
-        } else {
-            navigateToAppSettings();
-        }
-    }
-
-    @MainThread
-    private static void navigateToNotificationSettings() {
-        Context context = UAirship.getApplicationContext();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                    .putExtra(Settings.EXTRA_APP_PACKAGE, UAirship.getPackageName())
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            try {
-                context.startActivity(intent);
-                return;
-            } catch (ActivityNotFoundException e) {
-                UALog.d(e, "Failed to launch notification settings.");
-            }
-        }
-
-        Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS")
-                .putExtra("app_package", UAirship.getPackageName())
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .putExtra("app_uid", UAirship.getAppInfo().uid);
-
-        try {
-            context.startActivity(intent);
-            return;
-        } catch (ActivityNotFoundException e) {
-            UALog.d(e, "Failed to launch notification settings.");
-        }
-
-        navigateToAppSettings();
-    }
-
-    private static void navigateToAppSettings() {
-        Context context = UAirship.getApplicationContext();
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                .addCategory(Intent.CATEGORY_DEFAULT)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .setData(Uri.parse("package:" + UAirship.getPackageName()));
-
-        try {
-            context.startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-            UALog.e(e, "Unable to launch settings details activity.");
-        }
-
-        intent = new Intent(Settings.ACTION_APPLICATION_SETTINGS)
-                .addCategory(Intent.CATEGORY_DEFAULT)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                .setData(Uri.parse("package:" + UAirship.getPackageName()));
-
-        try {
-            context.startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-            UALog.e(e, "Unable to launch settings activity.");
-        }
     }
 
     protected static class Args {

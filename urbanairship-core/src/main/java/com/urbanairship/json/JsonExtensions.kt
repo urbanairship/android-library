@@ -12,6 +12,8 @@ public fun jsonMapOf(vararg fields: Pair<String, *>): JsonMap =
         }
     }.build()
 
+
+
 public inline fun <T, R> R.tryParse(logError: Boolean = false, parser: (R) -> T): T? where R : JsonSerializable {
     return try {
         parser(this)
@@ -53,6 +55,16 @@ public inline fun <reified T> JsonMap.requireField(key: String): T {
         JsonValue::class -> field.toJsonValue() as T
         else -> throw JsonException("Invalid type '${T::class.java.simpleName}' for field '$key'")
     }
+}
+
+@Throws(JsonException::class)
+public fun JsonMap.extend(vararg fields: Pair<String, *>): JsonMap {
+    return JsonMap.newBuilder().putAll(this)
+        .apply {
+            for ((k, v) in fields) {
+                put(k, JsonValue.wrap(v))
+            }
+        }.build()
 }
 
 /**
