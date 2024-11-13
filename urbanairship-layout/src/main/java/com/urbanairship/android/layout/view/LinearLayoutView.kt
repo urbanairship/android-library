@@ -39,8 +39,8 @@ internal class LinearLayoutView(
     init {
         clipChildren = false
         LayoutUtils.applyBorderAndBackground(this, model)
-        orientation = if (model.direction == Direction.VERTICAL) VERTICAL else HORIZONTAL
-        gravity = if (model.direction == Direction.VERTICAL) CENTER_HORIZONTAL else CENTER_VERTICAL
+        orientation = if (model.viewInfo.direction == Direction.VERTICAL) VERTICAL else HORIZONTAL
+        gravity = if (model.viewInfo.direction == Direction.VERTICAL) CENTER_HORIZONTAL else CENTER_VERTICAL
         addItems(model.items)
 
         model.listener = object : BaseModel.Listener {

@@ -11,20 +11,19 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
-import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.StateAction
-import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasFormBehaviors
 import com.urbanairship.android.layout.property.hasPagerBehaviors
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.debouncedClicks
+import com.urbanairship.android.layout.util.resolveOptional
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.json.JsonValue
@@ -35,23 +34,20 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 
-internal typealias AnyModel = BaseModel<*, *>
+internal typealias AnyModel = BaseModel<*, *, *>
 
 internal data class ModelProperties(
     val pagerPageId: String?
 )
 
-internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
-    val viewType: ViewType,
-    val backgroundColor: Color? = null,
-    val border: Border? = null,
-    val visibility: VisibilityInfo? = null,
-    val eventHandlers: List<EventHandler>? = null,
-    val enableBehaviors: List<EnableBehaviorType>? = null,
+internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.info.View, L : BaseModel.Listener>(
+    val viewInfo: I,
     protected val environment: ModelEnvironment,
     protected val properties: ModelProperties,
 ) {
+
     internal interface Listener {
+
         fun setVisibility(visible: Boolean)
         fun setEnabled(enabled: Boolean)
     }
@@ -60,7 +56,11 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
 
     val viewId: Int = View.generateViewId()
 
-    fun createView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?): T {
+    fun createView(
+        context: Context,
+        viewEnvironment: ViewEnvironment,
+        itemProperties: ItemProperties?
+    ): T {
         val view = onCreateView(context, viewEnvironment, itemProperties)
         onViewCreated(view)
 
@@ -79,15 +79,15 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
             }
         })
 
-        if (enableBehaviors != null) {
-            if (enableBehaviors.hasPagerBehaviors) {
+        if (viewInfo.enableBehaviors != null) {
+            if (viewInfo.enableBehaviors.hasPagerBehaviors) {
                 checkNotNull(layoutState.pager) { "Pager state is required for pager behaviors" }
                 modelScope.launch {
                     layoutState.pager.changes.collect { handlePagerBehaviors(it) }
                 }
             }
 
-            if (enableBehaviors.hasFormBehaviors) {
+            if (viewInfo.enableBehaviors.hasFormBehaviors) {
                 checkNotNull(layoutState.form) { "Form state is required for form behaviors" }
                 modelScope.launch {
                     layoutState.form.changes.collect { handleFormBehaviors(it) }
@@ -107,7 +107,7 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
      * This method is a no-op for models that are not form inputs or form input controllers.
      */
     protected fun onFormInputDisplayed(block: suspend (isDisplayed: Boolean) -> Unit) {
-        if (!viewType.isFormInput) return
+        if (!viewInfo.type.isFormInput) return
 
         modelScope.launch {
             var isDisplayed = false
@@ -126,25 +126,25 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
 
     private fun setupViewListeners(view: T) {
         // Apply tap handler for any models that don't implement their own click handling.
-        if (eventHandlers.hasTapHandler() && view !is TappableView && view !is CheckableView<*>) {
+        if (viewInfo.eventHandlers.hasTapHandler() && view !is TappableView && view !is CheckableView<*>) {
             viewScope.launch {
-                view.debouncedClicks()
-                    .collect { handleViewEvent(EventHandler.Type.TAP) }
+                view.debouncedClicks().collect { handleViewEvent(EventHandler.Type.TAP) }
             }
         }
 
-        // Listen to layout state changes in order to determine visibility
-        if (visibility != null) {
-            viewScope.launch {
-                layoutState.layout?.changes?.collect {
-                    val isVisible = checkVisibility(it)
-                    listener?.setVisibility(isVisible)
-                }
+        viewScope.launch {
+            layoutState.layout?.changes?.collect {
+                val isVisible = checkVisibility(it)
+                listener?.setVisibility(isVisible)
             }
         }
     }
 
-    protected abstract fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?): T
+    protected abstract fun onCreateView(
+        context: Context,
+        viewEnvironment: ViewEnvironment,
+        itemProperties: ItemProperties?
+    ): T
 
     protected open fun onViewCreated(view: T) = Unit
 
@@ -165,31 +165,33 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
         environment.reporter.report(event, state)
 
     protected fun runActions(
-        actions: Map<String, JsonValue>,
-        state: LayoutData = layoutState.reportingContext()
-    ) = environment.actionsRunner.run(actions, state)
-
-    protected fun broadcast(event: LayoutEvent) =
-        modelScope.launch {
-            environment.eventHandler.broadcast(event)
+        actions: Map<String, JsonValue>?, state: LayoutData = layoutState.reportingContext()
+    ) {
+        if (!actions.isNullOrEmpty()) {
+            environment.actionsRunner.run(actions, state)
         }
+    }
+
+    protected fun broadcast(event: LayoutEvent) = modelScope.launch {
+        environment.eventHandler.broadcast(event)
+    }
 
     protected fun updateAttributes(attributes: Map<AttributeName, AttributeValue>) =
         environment.attributeHandler.update(attributes)
 
     private fun checkVisibility(state: State.Layout): Boolean {
-        val matcher = visibility?.invertWhenStateMatcher ?: return true
+        val matcher = viewInfo.visibility?.invertWhenStateMatcher ?: return true
         val match = matcher.apply(state.state.toJsonMap())
 
         return if (match) {
-                !visibility.default
-            } else {
-                visibility.default
-            }
+            viewInfo.visibility?.default == false
+        } else {
+            viewInfo.visibility?.default == true
+        }
     }
 
     private fun handleFormBehaviors(state: State.Form) {
-        val behaviors = enableBehaviors ?: return
+        val behaviors = viewInfo.enableBehaviors ?: return
         val hasFormValidationBehavior = behaviors.contains(EnableBehaviorType.FORM_VALIDATION)
         val hasFormSubmitBehavior = behaviors.contains(EnableBehaviorType.FORM_SUBMISSION)
         val isValid = !hasFormValidationBehavior || state.isValid
@@ -205,23 +207,29 @@ internal abstract class BaseModel<T : View, L : BaseModel.Listener>(
     }
 
     private fun handlePagerBehaviors(state: State.Pager) {
-        val behaviors = enableBehaviors ?: return
+        val behaviors = viewInfo.enableBehaviors ?: return
         val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
         val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
 
-        val isEnabled = (hasPagerNextBehavior && state.hasNext) ||
-                (hasPagerPrevBehavior && state.hasPrevious)
+        val isEnabled =
+            (hasPagerNextBehavior && state.hasNext) || (hasPagerPrevBehavior && state.hasPrevious)
 
         listener?.setEnabled(isEnabled)
     }
 
     fun handleViewEvent(type: EventHandler.Type, value: Any? = null) {
-        for (handler in eventHandlers.orEmpty()) {
+        for (handler in viewInfo.eventHandlers.orEmpty()) {
             if (handler.type == type) {
                 for (action in handler.actions) {
                     when (action) {
                         is StateAction.SetFormValue -> layoutState.layout?.let { state ->
-                           UALog.v("StateAction: SetFormValue ${action.key} = ${JsonValue.wrapOpt(value)}")
+                            UALog.v(
+                                "StateAction: SetFormValue ${action.key} = ${
+                                    JsonValue.wrapOpt(
+                                        value
+                                    )
+                                }"
+                            )
                             state.update {
                                 it.copy(state = it.state + (action.key to JsonValue.wrapOpt(value)))
                             }

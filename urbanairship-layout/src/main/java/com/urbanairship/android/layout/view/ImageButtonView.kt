@@ -40,7 +40,7 @@ internal class ImageButtonView(
     init {
         LayoutUtils.applyBorderAndBackground(this, model)
 
-        when (val image = model.image) {
+        when (val image = model.viewInfo.image) {
             is Image.Url -> {
                 var url = image.url
                 viewEnvironment.imageCache()[url]?.let { cachedImage ->
@@ -57,7 +57,7 @@ internal class ImageButtonView(
                         button.scaleType = image.mediaFit?.scaleType ?: FIT_CENTER
                     }
 
-                    applyImageRippleEffect(button, model.tapEffect, model.border?.radius)
+                    applyImageRippleEffect(button, model.viewInfo.tapEffect, model.viewInfo.border?.radius)
 
                     addView(button)
 
@@ -100,7 +100,7 @@ internal class ImageButtonView(
                 }
 
                 // Add a small unbounded ripple effect to the icon
-                applyIconRippleEffect(button, model.tapEffect)
+                applyIconRippleEffect(button, model.viewInfo.tapEffect)
 
                 addView(button)
             }

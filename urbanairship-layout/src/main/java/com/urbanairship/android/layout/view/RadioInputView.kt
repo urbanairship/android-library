@@ -34,7 +34,7 @@ internal class RadioInputView(
             }
         }
 
-        context.resolveContentDescription(model.contentDescription, model.localizedContentDescription)?.ifNotEmpty {
+        context.resolveContentDescription(model.viewInfo.contentDescription, model.viewInfo.localizedContentDescription)?.ifNotEmpty {
             contentDescription = it
         }
 

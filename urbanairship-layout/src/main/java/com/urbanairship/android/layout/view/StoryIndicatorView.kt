@@ -27,7 +27,7 @@ internal class StoryIndicatorView(
     private var lastProgress: Int = 0
 
     init {
-        when (val style = model.style) {
+        when (val style = model.viewInfo.style) {
             is StoryIndicatorStyle.LinearProgress -> {
                 orientation = if (style.direction == Direction.VERTICAL) VERTICAL else HORIZONTAL
                 gravity = Gravity.CENTER
@@ -75,7 +75,7 @@ internal class StoryIndicatorView(
     }
 
     fun setCount(count: Int, durations: List<Int?>) {
-        when (val style = model.style) {
+        when (val style = model.viewInfo.style) {
             is StoryIndicatorStyle.LinearProgress -> {
                 val halfSpacing = ResourceUtils.dpToPx(context, style.spacing / 2).toInt()
 
@@ -139,13 +139,13 @@ internal class StoryIndicatorView(
         for (i in 0 until count) {
             (progressIndicators[i] as? LinearProgressIndicator)?.let { indicator ->
                 if (i == pageIndex) {
-                    if (model.source == StoryIndicatorSource.CURRENT_PAGE) {
+                    if (model.viewInfo.source == StoryIndicatorSource.CURRENT_PAGE) {
                         indicator.visibility = View.VISIBLE
                     }
                     indicator.trackThickness = storyHeight
                     indicator.setProgressCompat(progress, animated)
                 } else {
-                    if (model.source == StoryIndicatorSource.CURRENT_PAGE) {
+                    if (model.viewInfo.source == StoryIndicatorSource.CURRENT_PAGE) {
                         indicator.visibility = View.GONE
                     }
                     if (i > pageIndex) {

@@ -45,13 +45,13 @@ internal class ScoreView(
     init {
         LayoutUtils.applyBorderAndBackground(this, model)
         val constraints = ConstraintSetBuilder.newBuilder(context)
-        val style = model.style
+        val style = model.viewInfo.style
         when (style.type) {
             ScoreType.NUMBER_RANGE -> configureNumberRange(style as NumberRange, constraints)
         }
         constraints.build().applyTo(this)
 
-        model.contentDescription.ifNotEmpty { contentDescription = it }
+        model.viewInfo.contentDescription.ifNotEmpty { contentDescription = it }
 
         model.listener = object : ScoreModel.Listener {
             override fun onSetSelectedScore(value: Int?) {

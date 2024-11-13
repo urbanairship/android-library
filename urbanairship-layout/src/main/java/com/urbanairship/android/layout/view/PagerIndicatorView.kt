@@ -60,10 +60,10 @@ internal class PagerIndicatorView(
      * @param count The number of dots to display.
      */
     fun setCount(count: Int) {
-        val bindings = model.bindings
+        val bindings = model.viewInfo.bindings
         val checked = bindings.selected
         val unchecked = bindings.unselected
-        val spacing = ResourceUtils.dpToPx(context, model.indicatorSpacing).toInt()
+        val spacing = ResourceUtils.dpToPx(context, model.viewInfo.indicatorSpacing).toInt()
         val halfSpacing = (spacing / 2f).toInt()
         for (i in 0 until count) {
             val view: ImageView =

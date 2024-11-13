@@ -92,7 +92,7 @@ internal class MediaView(
         id = model.viewId
         LayoutUtils.applyBorderAndBackground(this, model)
 
-        when (model.mediaType) {
+        when (model.viewInfo.mediaType) {
             MediaType.IMAGE -> configureImageView(model)
             MediaType.VIDEO,
             MediaType.YOUTUBE -> {
@@ -108,9 +108,9 @@ internal class MediaView(
             // Use javascript to pause/resume the videos instead of webView.onPause()/onResume()
             // because the WebView triggers an unwanted visibilitychange event.
             override fun onPause() {
-                if (model.mediaType == MediaType.VIDEO) {
+                if (model.viewInfo.mediaType == MediaType.VIDEO) {
                     webView?.evaluateJavascript("videoElement.pause();", null)
-                } else if (model.mediaType == MediaType.YOUTUBE) {
+                } else if (model.viewInfo.mediaType == MediaType.YOUTUBE) {
                     webView?.evaluateJavascript("player.pauseVideo();", null)
                 }
             }
@@ -118,10 +118,10 @@ internal class MediaView(
             // Use javascript to pause/resume the videos instead of webView.onPause()/onResume()
             // because the WebView triggers an unwanted visibilitychange event.
             override fun onResume() {
-                if (model.video?.autoplay == true) {
-                    if (model.mediaType == MediaType.VIDEO) {
+                if (model.viewInfo.video?.autoplay == true) {
+                    if (model.viewInfo.mediaType == MediaType.VIDEO) {
                         webView?.evaluateJavascript("videoElement.play();", null)
-                    } else if (model.mediaType == MediaType.YOUTUBE) {
+                    } else if (model.viewInfo.mediaType == MediaType.YOUTUBE) {
                         webView?.evaluateJavascript("player.playVideo();", null)
                     }
                 }
@@ -152,7 +152,7 @@ internal class MediaView(
     }
 
     private fun configureImageView(model: MediaModel) {
-        var url = model.url
+        var url = model.viewInfo.url
         viewEnvironment.imageCache()[url]?.let { cachedImage ->
             url = cachedImage
         }
@@ -174,19 +174,19 @@ internal class MediaView(
                 layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
                 adjustViewBounds = true
 
-                if (model.mediaFit == MediaFit.FIT_CROP) {
+                if (model.viewInfo.mediaFit == MediaFit.FIT_CROP) {
                     // Use parent size and a matrix to crop the image.
                     setParentLayoutParams(parentLayoutParams)
-                    setImagePosition(model.position)
+                    setImagePosition(model.viewInfo.position)
                 } else {
                     // Use ImageView scaleType to fit the image.
-                    scaleType = model.mediaFit.scaleType
+                    scaleType = model.viewInfo.mediaFit.scaleType
                 }
 
                 importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
-                context.resolveContentDescription(model.contentDescription, model.localizedContentDescription)?.ifNotEmpty {
+                context.resolveContentDescription(model.viewInfo.contentDescription, model.viewInfo.localizedContentDescription)?.ifNotEmpty {
                     contentDescription = it
-                    if (!model.accessibilityHidden) {
+                    if (model.viewInfo.accessibilityHidden != true) {
                         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
                     }
                 }
@@ -261,7 +261,7 @@ internal class MediaView(
         wv.webChromeClient = viewEnvironment.webChromeClientFactory().create()
         wv.addJavascriptInterface(wv.getJavascriptInterface(), "VideoListenerInterface")
 
-        val frameLayout = when (model.mediaType) {
+        val frameLayout = when (model.viewInfo.mediaType) {
             // Adjust the aspect ratio of the WebView if the media is video or youtube.
             MediaType.VIDEO -> FixedAspectRatioFrameLayout(context).apply {
                 layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
@@ -276,7 +276,7 @@ internal class MediaView(
                     if (isWrapWidth || isWrapHeight) {
                         // If either dimension is wrap_content, the aspect ratio will be adjusted
                         // based on the video's aspect ratio.
-                        model.video?.aspectRatio?.let {
+                        model.viewInfo.video?.aspectRatio?.let {
                             aspectRatio = it.toFloat()
                         }
                     } else {
@@ -290,7 +290,7 @@ internal class MediaView(
                 layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
                     gravity = Gravity.CENTER
                 }
-                model.video?.aspectRatio?.let {
+                model.viewInfo.video?.aspectRatio?.let {
                     aspectRatio = it.toFloat()
                 }
             }
@@ -318,7 +318,7 @@ internal class MediaView(
         frameLayout.addView(progressBar, progressBarLayoutParams)
 
         wv.settings.apply {
-            if (model.mediaType == MediaType.VIDEO) {
+            if (model.viewInfo.mediaType == MediaType.VIDEO) {
                 mediaPlaybackRequiresUserGesture = true
             }
 
@@ -339,9 +339,9 @@ internal class MediaView(
         val webViewWeakReference = WeakReference(wv)
         val load = Runnable {
             webViewWeakReference.get()?.let { weakWebView ->
-                when (model.mediaType) {
+                when (model.viewInfo.mediaType) {
                     MediaType.VIDEO -> {
-                        val video = model.video ?: Video.defaultVideo()
+                        val video = model.viewInfo.video ?: Video.defaultVideo()
                         weakWebView.loadData(
                             String.format(
                                 VIDEO_HTML_FORMAT,
@@ -349,7 +349,7 @@ internal class MediaView(
                                 if (video.autoplay) "autoplay" else "",
                                 if (video.muted) "muted" else "",
                                 if (video.loop) "loop" else "",
-                                model.url,
+                                model.viewInfo.url,
                                 model.videoStyle,
                                 if (video.autoplay) VIDEO_AUTO_PLAYING_JS_CODE else ""
                             ),
@@ -358,13 +358,13 @@ internal class MediaView(
                         )
                     }
                     MediaType.IMAGE -> weakWebView.loadData(
-                        String.format(IMAGE_HTML_FORMAT, model.url),
+                        String.format(IMAGE_HTML_FORMAT, model.viewInfo.url),
                         "text/html",
                         "UTF-8"
                     )
                     MediaType.YOUTUBE -> {
-                        val video = model.video ?: Video.defaultVideo()
-                        val videoId = YOUTUBE_ID_RE.find(model.url)?.groupValues?.get(1)
+                        val video = model.viewInfo.video ?: Video.defaultVideo()
+                        val videoId = YOUTUBE_ID_RE.find(model.viewInfo.url)?.groupValues?.get(1)
                         videoId?.let {
                             weakWebView.loadData(
                                 String.format(YOUTUBE_HTML_FORMAT,
@@ -385,7 +385,7 @@ internal class MediaView(
                                 "text/html",
                                 "UTF-8"
                             )
-                        } ?: model.url.let {
+                        } ?: model.viewInfo.url.let {
                             weakWebView.loadUrl(it)
                         }
                     }
@@ -394,9 +394,9 @@ internal class MediaView(
         }
 
         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
-        context.resolveContentDescription(model.contentDescription, model.localizedContentDescription)?.ifNotEmpty {
+        context.resolveContentDescription(model.viewInfo.contentDescription, model.viewInfo.localizedContentDescription)?.ifNotEmpty {
             wv.contentDescription = it
-            if (!model.accessibilityHidden) {
+            if (model.viewInfo.accessibilityHidden != true) {
                 wv.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
             }
         }
@@ -414,18 +414,18 @@ internal class MediaView(
     }
 
     private val MediaModel.videoStyle: String
-        get() = when (mediaFit) {
+        get() = when (viewInfo.mediaFit) {
             MediaFit.CENTER -> "object-fit: none;"
             MediaFit.CENTER_INSIDE -> "object-fit: contain;"
             MediaFit.CENTER_CROP -> "object-fit: cover;"
             MediaFit.FIT_CROP -> {
                 val isRtl = View.LAYOUT_DIRECTION_RTL == layoutDirection
-                val horizontal = when (position.horizontal) {
+                val horizontal = when (viewInfo.position.horizontal) {
                     HorizontalPosition.START -> if (isRtl) "right" else "left"
                     HorizontalPosition.END -> if (isRtl) "left" else "right"
                     HorizontalPosition.CENTER -> "center"
                 }
-                val vertical = when (position.vertical) {
+                val vertical = when (viewInfo.position.vertical) {
                     VerticalPosition.TOP -> "top"
                     VerticalPosition.BOTTOM -> "bottom"
                     VerticalPosition.CENTER -> "center"

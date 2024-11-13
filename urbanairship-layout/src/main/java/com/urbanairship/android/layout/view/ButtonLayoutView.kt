@@ -34,7 +34,7 @@ internal class ButtonLayoutView(
 ) : FrameLayout(context), BaseView, TappableView {
 
     private val isButtonForAccessibility: Boolean
-    get() = when (model.accessibilityRole) {
+    get() = when (model.viewInfo.accessibilityRole) {
         ButtonLayoutInfo.AccessibilityRole.Button -> true
         ButtonLayoutInfo.AccessibilityRole.Container -> false
         null -> true /// defaults to button
@@ -86,7 +86,7 @@ internal class ButtonLayoutView(
         }
 
         if (event.action == MotionEvent.ACTION_UP && !event.isWithinClickableDescendantOf(view)) {
-            when (model.tapEffect) {
+            when (model.viewInfo.tapEffect) {
                 TapEffect.Default -> triggerDefaultAnimation()
                 TapEffect.None -> Unit
             }

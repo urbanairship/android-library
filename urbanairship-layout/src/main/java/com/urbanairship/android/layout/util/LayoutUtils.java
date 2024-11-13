@@ -85,8 +85,8 @@ public final class LayoutUtils {
 
     private LayoutUtils() {}
 
-    public static void applyBorderAndBackground(@NonNull View view, @NonNull BaseModel<?, ?> model) {
-        applyBorderAndBackground(view, model.getBorder(), model.getBackgroundColor());
+    public static void applyBorderAndBackground(@NonNull View view, @NonNull BaseModel<?, ?, ?> model) {
+        applyBorderAndBackground(view, model.getViewInfo().getBorder(), model.getViewInfo().getBackgroundColor());
     }
 
     public static void applyBorderAndBackground(
@@ -149,9 +149,9 @@ public final class LayoutUtils {
     public static void applyButtonLayoutModel(@NonNull FrameLayout button, @NonNull ButtonLayoutModel model) {
         LayoutUtils.applyBorderAndBackground(button, model);
 
-        TapEffect tapEffect = model.getTapEffect();
+        TapEffect tapEffect = model.getViewInfo().getTapEffect();
         if (tapEffect instanceof TapEffect.Default) {
-            Border border = model.getBorder();
+            Border border = model.getViewInfo().getBorder();
             Integer borderRadius = border != null ? border.getRadius() : null;
             applyRippleEffect(button, borderRadius);
         } else if (tapEffect instanceof TapEffect.None) {
@@ -220,26 +220,26 @@ public final class LayoutUtils {
         applyLabelModel(button, model.getLabel());
 
         Context context = button.getContext();
-        TextAppearance textAppearance = model.getLabel().getTextAppearance();
+        TextAppearance textAppearance = model.getLabel().getViewInfo().getTextAppearance();
 
         int textColor = textAppearance.getColor().resolve(context);
-        int backgroundColor = model.getBackgroundColor() == null
+        int backgroundColor = model.getViewInfo().getBackgroundColor() == null
                 ? Color.TRANSPARENT
-                : model.getBackgroundColor().resolve(button.getContext());
-        int pressedColor = model.getTapEffect() instanceof TapEffect.None
+                : model.getViewInfo().getBackgroundColor().resolve(button.getContext());
+        int pressedColor = model.getViewInfo().getTapEffect() instanceof TapEffect.None
                 ? Color.TRANSPARENT
                 : ColorUtils.setAlphaComponent(textColor, Math.round(Color.alpha(textColor) * PRESSED_ALPHA_PERCENT));
         int disabledColor = generateDisabledColor(backgroundColor);
-        int strokeWidth = model.getBorder() == null || model.getBorder().getStrokeWidth() == null
+        int strokeWidth = model.getViewInfo().getBorder() == null || model.getViewInfo().getBorder().getStrokeWidth() == null
                 ? DEFAULT_STROKE_WIDTH_DPS
-                : model.getBorder().getStrokeWidth();
-        int strokeColor = model.getBorder() == null || model.getBorder().getStrokeColor() == null
+                : model.getViewInfo().getBorder().getStrokeWidth();
+        int strokeColor = model.getViewInfo().getBorder() == null || model.getViewInfo().getBorder().getStrokeColor() == null
                 ? backgroundColor
-                : model.getBorder().getStrokeColor().resolve(context);
+                : model.getViewInfo().getBorder().getStrokeColor().resolve(context);
         int disabledStrokeColor = generateDisabledColor(strokeColor);
-        int borderRadius = model.getBorder() == null || model.getBorder().getRadius() == null
+        int borderRadius = model.getViewInfo().getBorder() == null || model.getViewInfo().getBorder().getRadius() == null
                 ? DEFAULT_BORDER_RADIUS
-                : model.getBorder().getRadius();
+                : model.getViewInfo().getBorder().getRadius();
 
         button.setBackgroundTintList(new ColorStateListBuilder()
                 .add(disabledColor, -android.R.attr.state_enabled)
@@ -260,8 +260,8 @@ public final class LayoutUtils {
     }
 
     public static void applyLabelModel(@NonNull TextView textView, @NonNull LabelModel label) {
-        TextAppearance appearance = label.getTextAppearance();
-        String text = label.getText();
+        TextAppearance appearance = label.getViewInfo().getTextAppearance();
+        String text = label.getViewInfo().getText();
 
         applyTextAppearance(textView, appearance);
 
@@ -286,7 +286,7 @@ public final class LayoutUtils {
         }
 
         Context context = textView.getContext();
-        MarkdownOptions markdown = label.getMarkdownOptions();
+        MarkdownOptions markdown = label.getViewInfo().getMarkdownOptions();
         boolean isMarkdownEnabled = MarkdownOptionsKt.isEnabled(markdown);
 
         if (isMarkdownEnabled) {
@@ -302,23 +302,23 @@ public final class LayoutUtils {
 
     public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
         applyBorderAndBackground(editText, textInput);
-        applyTextAppearance(editText, textInput.getTextAppearance());
+        applyTextAppearance(editText, textInput.getViewInfo().getTextAppearance());
         int padding = (int) dpToPx(editText.getContext(), 8);
         editText.setPadding(padding, padding, padding, padding);
-        editText.setInputType(textInput.getInputType().getTypeMask());
-        editText.setSingleLine(textInput.getInputType() != FormInputType.TEXT_MULTILINE);
+        editText.setInputType(textInput.getViewInfo().getInputType().getTypeMask());
+        editText.setSingleLine(textInput.getViewInfo().getInputType() != FormInputType.TEXT_MULTILINE);
         editText.setGravity(editText.getGravity() | Gravity.TOP);
 
-        if (!UAStringUtil.isEmpty(textInput.getHintText())) {
-            editText.setHint(textInput.getHintText());
-            Color hintColor = textInput.getTextAppearance().getHintColor();
+        if (!UAStringUtil.isEmpty(textInput.getViewInfo().getHintText())) {
+            editText.setHint(textInput.getViewInfo().getHintText());
+            Color hintColor = textInput.getViewInfo().getTextAppearance().getHintColor();
             if (hintColor != null) {
                 editText.setHintTextColor(hintColor.resolve(editText.getContext()));
             }
         }
 
-        if (!UAStringUtil.isEmpty(textInput.getContentDescription())) {
-            editText.setContentDescription(textInput.getContentDescription());
+        if (!UAStringUtil.isEmpty(textInput.getViewInfo().getContentDescription())) {
+            editText.setContentDescription(textInput.getViewInfo().getContentDescription());
         }
     }
 

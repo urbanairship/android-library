@@ -11,6 +11,7 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import com.urbanairship.android.layout.info.CheckableInfo
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.property.CheckboxStyle
 import com.urbanairship.android.layout.property.SwitchStyle
@@ -21,7 +22,7 @@ import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.view.BaseView
 
-internal abstract class CheckableView<M : CheckableModel<*>>(
+internal abstract class CheckableView<M : CheckableModel<*, *>>(
     context: Context,
     protected val model: M
 ) : FrameLayout(context), BaseView {
@@ -31,14 +32,14 @@ internal abstract class CheckableView<M : CheckableModel<*>>(
     lateinit var checkableView: CheckableViewAdapter<*>
 
     init {
-        when (model.toggleType) {
-            ToggleType.SWITCH -> configureSwitch(model.style as SwitchStyle)
-            ToggleType.CHECKBOX -> configureCheckbox(model.style as CheckboxStyle)
+        when (model.viewInfo.style.type) {
+            ToggleType.SWITCH -> configureSwitch(model.viewInfo.style as SwitchStyle)
+            ToggleType.CHECKBOX -> configureCheckbox(model.viewInfo.style as CheckboxStyle)
         }
 
         LayoutUtils.applyBorderAndBackground(this, model)
 
-        context.resolveContentDescription(model.contentDescription, model.localizedContentDescription)?.ifNotEmpty {
+        context.resolveContentDescription(model.viewInfo.contentDescription, model.viewInfo.localizedContentDescription)?.ifNotEmpty {
             contentDescription = it
         }
 
@@ -50,7 +51,7 @@ internal abstract class CheckableView<M : CheckableModel<*>>(
                 super.onInitializeAccessibilityNodeInfo(host, info)
 
                 // Determine className based on toggle type
-                when (model.toggleType) {
+                when (model.viewInfo.style.type) {
                     ToggleType.CHECKBOX -> info.className = CheckBox::class.java.name
                     ToggleType.SWITCH -> info.className = SwitchCompat::class.java.name
                 }
@@ -66,12 +67,12 @@ internal abstract class CheckableView<M : CheckableModel<*>>(
 
 
     private val minWidth: Int
-        get() = when (model.toggleType) {
+        get() = when (model.viewInfo.style.type) {
             ToggleType.CHECKBOX -> CHECKBOX_MIN_DIMENSION
             ToggleType.SWITCH -> SWITCH_MIN_WIDTH
         }
     private val minHeight: Int
-        get() = when (model.toggleType) {
+        get() = when (model.viewInfo.style.type) {
             ToggleType.CHECKBOX -> CHECKBOX_MIN_DIMENSION
             ToggleType.SWITCH -> SWITCH_MIN_HEIGHT
         }

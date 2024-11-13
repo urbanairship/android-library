@@ -48,7 +48,7 @@ internal sealed class State {
     // TODO(stories): We may want to split that out into a separate
     //   state flow to avoid a ton of extra updates to pager state?
     //   Or, we could sprinkle some distinctUntilChanged() calls around and circle back.
-    data class Pager(
+    internal data class Pager(
         val identifier: String,
         val pageIndex: Int = 0,
         val lastPageIndex: Int = 0,
@@ -108,7 +108,7 @@ internal sealed class State {
             PagerData(identifier, pageIndex, pageIds.getOrElse(pageIndex) { "NULL!" }, pageIds.size, completed)
     }
 
-    data class Form(
+    internal data class Form(
         val identifier: String,
         val formType: FormType,
         val formResponseType: String?,
@@ -173,7 +173,7 @@ internal sealed class State {
         }
     }
 
-    data class Checkbox(
+    internal data class Checkbox(
         val identifier: String,
         val minSelection: Int,
         val maxSelection: Int,
@@ -181,14 +181,14 @@ internal sealed class State {
         val isEnabled: Boolean = true,
     ) : State()
 
-    data class Radio(
+    internal data class Radio(
         val identifier: String,
         val selectedItem: JsonValue? = null,
         val attributeValue: AttributeValue? = null,
         val isEnabled: Boolean = true,
     ) : State()
 
-    data class Layout(
+    internal data class Layout(
         val state: Map<String, JsonValue?> = emptyMap()
     ) : State()
 }

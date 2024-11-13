@@ -8,66 +8,24 @@ import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.RadioInputControllerInfo
-import com.urbanairship.android.layout.info.VisibilityInfo
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
-import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
-import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasFormInputHandler
-import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
 import kotlinx.coroutines.launch
 
 /** Controller for radio inputs. */
 internal class RadioInputController(
+    viewInfo: RadioInputControllerInfo,
     val view: AnyModel,
-    val identifier: String,
-    val isRequired: Boolean = false,
-    private val attributeName: AttributeName? = null,
-    val contentDescription: String? = null,
-    backgroundColor: Color? = null,
-    border: Border? = null,
-    visibility: VisibilityInfo? = null,
-    eventHandlers: List<EventHandler>? = null,
-    enableBehaviors: List<EnableBehaviorType>? = null,
     private val formState: SharedState<State.Form>,
     private val radioState: SharedState<State.Radio>,
     environment: ModelEnvironment,
     properties: ModelProperties
-) : BaseModel<View, BaseModel.Listener>(
-    viewType = ViewType.RADIO_INPUT_CONTROLLER,
-    backgroundColor = backgroundColor,
-    border = border,
-    visibility = visibility,
-    eventHandlers = eventHandlers,
-    enableBehaviors = enableBehaviors,
+) : BaseModel<View, RadioInputControllerInfo, BaseModel.Listener>(
+    viewInfo = viewInfo,
     environment = environment,
     properties = properties
 ) {
-    constructor(
-        info: RadioInputControllerInfo,
-        view: AnyModel,
-        formState: SharedState<State.Form>,
-        radioState: SharedState<State.Radio>,
-        env: ModelEnvironment,
-        props: ModelProperties
-    ) : this(
-        view = view,
-        identifier = info.identifier,
-        isRequired = info.isRequired,
-        attributeName = info.attributeName,
-        contentDescription = info.contentDescription,
-        backgroundColor = info.backgroundColor,
-        border = info.border,
-        visibility = info.visibility,
-        eventHandlers = info.eventHandlers,
-        enableBehaviors = info.enableBehaviors,
-        formState = formState,
-        radioState = radioState,
-        environment = env,
-        properties = props
-    )
 
     init {
         // Listen to radio input state updates and push them into form state.
@@ -78,14 +36,14 @@ internal class RadioInputController(
                         FormData.RadioInputController(
                             identifier = radio.identifier,
                             value = radio.selectedItem,
-                            isValid = radio.selectedItem != null || !isRequired,
-                            attributeName = attributeName,
+                            isValid = radio.selectedItem != null || !viewInfo.isRequired,
+                            attributeName = viewInfo.attributeName,
                             attributeValue = radio.attributeValue
                         )
                     )
                 }
 
-                if (eventHandlers.hasFormInputHandler()) {
+                if (viewInfo.eventHandlers.hasFormInputHandler()) {
                     handleViewEvent(EventHandler.Type.FORM_INPUT, radio.selectedItem)
                 }
             }
@@ -98,6 +56,9 @@ internal class RadioInputController(
         }
     }
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
-        view.createView(context, viewEnvironment, itemProperties)
+    override fun onCreateView(
+        context: Context,
+        viewEnvironment: ViewEnvironment,
+        itemProperties: ItemProperties?
+    ) = view.createView(context, viewEnvironment, itemProperties)
 }

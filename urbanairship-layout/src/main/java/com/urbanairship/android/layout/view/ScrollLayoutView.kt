@@ -29,7 +29,7 @@ internal class ScrollLayoutView(
         LayoutUtils.applyBorderAndBackground(this, model)
 
         val contentView = model.view.createView(context, viewEnvironment, null).apply {
-            layoutParams = if (model.direction == Direction.VERTICAL) {
+            layoutParams = if (model.viewInfo.direction == Direction.VERTICAL) {
                 LayoutParams(MATCH_PARENT, WRAP_CONTENT)
             } else {
                 LayoutParams(WRAP_CONTENT, MATCH_PARENT)

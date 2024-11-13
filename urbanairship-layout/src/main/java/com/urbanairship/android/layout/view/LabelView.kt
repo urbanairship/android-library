@@ -22,15 +22,15 @@ internal class LabelView(
         LayoutUtils.applyLabelModel(this, model)
         LayoutUtils.applyBorderAndBackground(this, model)
 
-        context.resolveContentDescription(model.contentDescription, model.localizedContentDescription)?.ifNotEmpty {
+        context.resolveContentDescription(model.viewInfo.contentDescription, model.viewInfo.localizedContentDescription)?.ifNotEmpty {
             contentDescription = it
         }
 
-        if (model.accessibilityHidden) {
+        if (model.viewInfo.accessibilityHidden == true) {
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
 
-        ViewCompat.setAccessibilityHeading(this, model.accessibilityRole?.type == LabelInfo.AccessibilityRoleType.HEADING)
+        ViewCompat.setAccessibilityHeading(this, model.viewInfo.accessibilityRole?.type == LabelInfo.AccessibilityRoleType.HEADING)
 
         isClickable = false
 

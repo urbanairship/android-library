@@ -325,27 +325,27 @@ internal class ThomasModelFactory : ModelFactory {
     ): AnyModel = when (val info = node.info.info) {
         is ViewGroupInfo<*> -> when (info) {
             is ContainerLayoutInfo -> ContainerLayoutModel(
-                info = info,
+                viewInfo = info,
                 items = children.map { (model, itemInfo) ->
                     (itemInfo as? ContainerLayoutItemInfo)?.let {
                         ContainerLayoutModel.Item(it, model)
                     } ?: throw ModelFactoryException("ContainerLayoutItemInfo expected")
                 },
-                env = environment,
-                props = properties
+                environment = environment,
+                properties = properties
             )
             is LinearLayoutInfo -> LinearLayoutModel(
-                info = info,
+                viewInfo = info,
                 items = children.map { (model, itemInfo) ->
                     (itemInfo as? LinearLayoutItemInfo)?.let {
                         LinearLayoutModel.Item(it, model)
                     } ?: throw ModelFactoryException("LinearLayoutItemInfo expected")
                 },
-                env = environment,
-                props = properties
+                environment = environment,
+                properties = properties
             )
             is PagerInfo -> PagerModel(
-                info = info,
+                viewInfo = info,
                 items = children.map { (model, itemInfo) ->
                     (itemInfo as? PagerItemInfo)?.let {
                         PagerModel.Item(
@@ -359,152 +359,166 @@ internal class ThomasModelFactory : ModelFactory {
                 },
                 pagerState = environment.layoutState.pager
                     ?: throw ModelFactoryException("Required pager state was null for PagerController!"),
-                env = environment,
-                props = properties
+                environment = environment,
+                properties = properties
             )
             is ScrollLayoutInfo -> ScrollLayoutModel(
-                info = info,
+                viewInfo = info,
                 view = children.first().first,
-                env = environment,
-                props = properties
+                environment = environment,
+                properties = properties
             )
             is ButtonLayoutInfo -> ButtonLayoutModel(
-                info = info,
+                viewInfo = info,
+                view = children.first().first,
                 formState = environment.layoutState.form,
                 pagerState = environment.layoutState.pager,
-                env = environment,
-                view = children.first().first,
-                props = properties
+                environment = environment,
+                properties = properties
             )
             is FormControllerInfo -> FormController(
-                info = info,
+                viewInfo = info,
                 view = children.first().first,
                 formState = environment.layoutState.form
                     ?: throw ModelFactoryException("Required form state was null for FormController!"),
                 parentFormState = environment.layoutState.parentForm,
                 // pagerState can be null, depending on the layout.
                 pagerState = environment.layoutState.pager,
-                env = environment,
-                props = properties
+                environment = environment,
+                properties = properties
             )
             is NpsFormControllerInfo -> NpsFormController(
-                info = info,
+                viewInfo = info,
                 view = children.first().first,
                 formState = environment.layoutState.form
                     ?: throw ModelFactoryException("Required form state was null for NpsFormController!"),
                 parentFormState = environment.layoutState.parentForm,
                 // pagerState can be null, depending on the layout.
                 pagerState = environment.layoutState.pager,
-                env = environment,
-                props = properties
+                environment = environment,
+                properties = properties
             )
             is PagerControllerInfo -> PagerController(
-                info = info,
+                viewInfo = info,
                 view = children.first().first,
                 pagerState = environment.layoutState.pager
                     ?: throw ModelFactoryException("Required pager state was null for PagerController!"),
-                env = environment,
-                props = properties
+                environment = environment,
+                properties = properties
             )
             is CheckboxControllerInfo -> CheckboxController(
-                info = info, view = children.first().first,
+                viewInfo = info,
+                view = children.first().first,
                 formState = environment.layoutState.form
                     ?: throw ModelFactoryException("Required form state was null for CheckboxController!"),
                 checkboxState = environment.layoutState.checkbox
                     ?: throw ModelFactoryException("Required checkbox state was null for CheckboxController!"),
-                env = environment,
-                props = properties
+                environment = environment,
+                properties = properties
             )
             is RadioInputControllerInfo -> RadioInputController(
-                info = info,
+                viewInfo = info,
                 view = children.first().first,
                 formState = environment.layoutState.form
                     ?: throw ModelFactoryException("Required form state was null for RadioInputController!"),
                 radioState = environment.layoutState.radio
                     ?: throw ModelFactoryException("Required radio state was null for RadioInputController!"),
-                env = environment,
-                props = properties
+                environment = environment,
+                properties = properties
             )
             is StateControllerInfo -> StateController(
-                info = info,
+                viewInfo = info,
                 view = children.first().first,
-                env = environment,
-                props = properties
+                environment = environment,
+                properties = properties
             )
 
             else -> throw ModelFactoryException("Unsupported view type: ${info::class.java.name}")
         }
-        is EmptyInfo -> EmptyModel(info = info, env = environment, props = properties)
-        is WebViewInfo -> WebViewModel(info = info, env = environment, props = properties)
+        is EmptyInfo -> EmptyModel(
+            viewInfo = info,
+            environment = environment,
+            properties = properties
+        )
+        is WebViewInfo -> WebViewModel(
+            viewInfo = info,
+            environment = environment,
+            properties = properties
+        )
         is MediaInfo -> MediaModel(
-            info = info,
+            viewInfo = info,
             pagerState = environment.layoutState.pager,
-            env = environment,
-            props = properties)
-        is LabelInfo -> LabelModel(info = info, env = environment, props = properties)
+            environment = environment,
+            properties = properties
+        )
+        is LabelInfo -> LabelModel(
+            viewInfo = info,
+            environment = environment,
+            properties = properties
+        )
         is LabelButtonInfo -> LabelButtonModel(
-            info = info,
+            viewInfo = info,
             label = LabelModel(info.label, environment, properties),
             formState = environment.layoutState.form,
             pagerState = environment.layoutState.pager,
-            env = environment,
-            props = properties
+            environment = environment,
+            properties = properties
         )
         is ImageButtonInfo -> ImageButtonModel(
-            info = info,
+            viewInfo = info,
             formState = environment.layoutState.form,
             pagerState = environment.layoutState.pager,
-            env = environment,
-            props = properties
+            environment = environment,
+            properties = properties
         )
         is PagerIndicatorInfo -> PagerIndicatorModel(
-            info = info,
-            env = environment,
-            props = properties
+            viewInfo = info,
+            environment = environment,
+            properties = properties
         )
         is StoryIndicatorInfo -> StoryIndicatorModel(
-            info = info,
-            env = environment,
-            props = properties
+            viewInfo = info,
+            environment = environment,
+            properties = properties
         )
         is CheckboxInfo -> CheckboxModel(
-            info = info,
+            viewInfo = info,
             checkboxState = environment.layoutState.checkbox
                 ?: throw ModelFactoryException("Required checkbox state was null for CheckboxModel!"),
             formState = environment.layoutState.form
                 ?: throw ModelFactoryException("Required form state was null for CheckboxModel!"),
-            env = environment,
-            props = properties
+            environment = environment,
+            properties = properties
         )
         is ToggleInfo -> ToggleModel(
-            info = info,
+            viewInfo = info,
             formState = environment.layoutState.form
                 ?: throw ModelFactoryException("Required form state was null for ToggleModel!"),
-            env = environment,
-            props = properties
+            environment = environment,
+            properties = properties
         )
         is RadioInputInfo -> RadioInputModel(
-            info = info,
+            viewInfo = info,
             radioState = environment.layoutState.radio
                 ?: throw ModelFactoryException("Required radio state was null for RadioInputModel!"),
             formState = environment.layoutState.form
                 ?: throw ModelFactoryException("Required form state was null for RadioInputModel!"),
-            env = environment,
-            props = properties
+            environment = environment,
+            properties = properties
         )
         is TextInputInfo -> TextInputModel(
-            info = info,
+            viewInfo = info,
             formState = environment.layoutState.form
                 ?: throw ModelFactoryException("Required form state was null for TextInputModel!"),
-            env = environment,
-            props = properties
+            environment = environment,
+            properties = properties
         )
         is ScoreInfo -> ScoreModel(
-            info = info,
+            viewInfo = info,
             formState = environment.layoutState.form
                 ?: throw ModelFactoryException("Required form state was null for ScoreModel!"),
-            env = environment,
-            props = properties
+            environment = environment,
+            properties = properties
         )
 
         else -> throw ModelFactoryException("Unsupported view type: ${info::class.java.name}")

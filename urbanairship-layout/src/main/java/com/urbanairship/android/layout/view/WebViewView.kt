@@ -142,7 +142,7 @@ internal class WebViewView(
                 }
 
                 override fun onRetry(webView: WebView) {
-                    webView.loadUrl(model.url)
+                    webView.loadUrl(model.viewInfo.url)
                 }
 
                 override fun onClose(webView: WebView): Boolean {
@@ -160,14 +160,14 @@ internal class WebViewView(
 
         addView(frameLayout)
 
-        if (!UAirship.shared().urlAllowList.isAllowed(model.url, UrlAllowList.SCOPE_OPEN_URL)) {
-            UALog.e("URL not allowed. Unable to load: %s", model.url)
+        if (!UAirship.shared().urlAllowList.isAllowed(model.viewInfo.url, UrlAllowList.SCOPE_OPEN_URL)) {
+            UALog.e("URL not allowed. Unable to load: %s", model.viewInfo.url)
             return
         }
 
         // Load the URL (if we didn't restore with saved state)
         if (savedState == null) {
-            wv.loadUrl(model.url)
+            wv.loadUrl(model.viewInfo.url)
         }
     }
 

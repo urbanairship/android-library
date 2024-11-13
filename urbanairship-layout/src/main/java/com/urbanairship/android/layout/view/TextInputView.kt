@@ -46,7 +46,7 @@ internal class TextInputView(
 
         LayoutUtils.applyTextInputModel(this, model)
 
-        model.contentDescription.ifNotEmpty { contentDescription = it }
+        model.viewInfo.contentDescription.ifNotEmpty { contentDescription = it }
 
         model.listener = object : TextInputModel.Listener {
             override fun restoreValue(value: String) {

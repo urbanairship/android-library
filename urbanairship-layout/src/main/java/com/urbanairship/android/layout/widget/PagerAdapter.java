@@ -25,7 +25,7 @@ import java.util.List;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> {
     @NonNull
-    private final List<BaseModel<?, ?>> items = new ArrayList<>();
+    private final List<BaseModel<?, ?, ?>> items = new ArrayList<>();
 
     @NonNull
     private final PagerModel pagerModel;
@@ -45,7 +45,7 @@ public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull PagerAdapter.ViewHolder holder, int position) {
-        BaseModel<?, ?> model = getItemAtPosition(position);
+        BaseModel<?, ?, ?> model = getItemAtPosition(position);
         holder.container.setId(pagerModel.getPageViewId(position));
         holder.bind(model, viewEnvironment);
     }
@@ -63,14 +63,14 @@ public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> 
 
     @Override
     public int getItemViewType(int position) {
-        return items.get(position).getViewType().ordinal();
+        return items.get(position).getViewInfo().getType().ordinal();
     }
 
-    public BaseModel<?, ?> getItemAtPosition(int position) {
+    public BaseModel<?, ?, ?> getItemAtPosition(int position) {
         return items.get(position);
     }
 
-    public void setItems(@NonNull List<BaseModel<?, ?>> items) {
+    public void setItems(@NonNull List<BaseModel<?, ?, ?>> items) {
         if (!this.items.equals(items)) {
             this.items.clear();
             this.items.addAll(items);
@@ -90,7 +90,7 @@ public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> 
             this.container = container;
         }
 
-        public void bind(@NonNull BaseModel<?, ?> item, @NonNull ViewEnvironment viewEnvironment) {
+        public void bind(@NonNull BaseModel<?, ?, ?> item, @NonNull ViewEnvironment viewEnvironment) {
             View view = item.createView(itemView.getContext(), viewEnvironment, null);
             container.addView(view, MATCH_PARENT, MATCH_PARENT);
 

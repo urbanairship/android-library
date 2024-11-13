@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.info.ToggleInfo
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.model.ToggleModel
 import com.urbanairship.android.layout.property.CheckboxStyle

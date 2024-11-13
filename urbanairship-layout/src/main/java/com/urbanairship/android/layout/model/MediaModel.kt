@@ -7,92 +7,51 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.info.LocalizedContentDescription
 import com.urbanairship.android.layout.info.MediaInfo
-import com.urbanairship.android.layout.info.VisibilityInfo
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
-import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
-import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
-import com.urbanairship.android.layout.property.Position
-import com.urbanairship.android.layout.property.Video
-import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.view.MediaView
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 internal class MediaModel(
-    val url: String,
-    val mediaType: MediaType,
-    val mediaFit: MediaFit,
-    val position: Position,
-    val contentDescription: String? = null,
-    val localizedContentDescription: LocalizedContentDescription? = null,
-    val accessibilityHidden: Boolean = false,
-    val video: Video?,
+    viewInfo: MediaInfo,
     val pagerState: SharedState<State.Pager>?,
-    backgroundColor: Color? = null,
-    border: Border? = null,
-    visibility: VisibilityInfo? = null,
-    eventHandlers: List<EventHandler>? = null,
-    enableBehaviors: List<EnableBehaviorType>? = null,
     environment: ModelEnvironment,
     properties: ModelProperties
-) : BaseModel<MediaView, MediaModel.Listener>(
-    viewType = ViewType.MEDIA,
-    backgroundColor = backgroundColor,
-    border = border,
-    visibility = visibility,
-    eventHandlers = eventHandlers,
-    enableBehaviors = enableBehaviors,
+) : BaseModel<MediaView, MediaInfo, MediaModel.Listener>(
+    viewInfo = viewInfo,
     environment = environment,
     properties = properties
 ) {
-    constructor(info: MediaInfo, pagerState: SharedState<State.Pager>?, env: ModelEnvironment, props: ModelProperties) : this(
-        url = info.url,
-        mediaType = info.mediaType,
-        mediaFit = info.mediaFit,
-        position = info.position,
-        contentDescription = info.contentDescription,
-        localizedContentDescription = info.localizedContentDescription,
-        accessibilityHidden = info.accessibilityHidden ?: false,
-        video = info.video,
-        backgroundColor = info.backgroundColor,
-        border = info.border,
-        visibility = info.visibility,
-        eventHandlers = info.eventHandlers,
-        enableBehaviors = info.enableBehaviors,
-        pagerState = pagerState,
-        environment = env,
-        properties = props
-    )
 
     val mediaViewId: Int = View.generateViewId()
 
     interface Listener : BaseModel.Listener {
+
         fun onPause()
         fun onResume()
     }
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?) =
-        MediaView(context, this, viewEnvironment, itemProperties).apply {
-            id = viewId
-        }
+    override fun onCreateView(
+        context: Context,
+        viewEnvironment: ViewEnvironment,
+        itemProperties: ItemProperties?
+    ) = MediaView(context, this, viewEnvironment, itemProperties).apply {
+        id = viewId
+    }
 
     override fun onViewAttached(view: MediaView) {
-        if (eventHandlers.hasTapHandler()) {
+        if (viewInfo.eventHandlers.hasTapHandler()) {
             viewScope.launch {
                 view.taps().collect { handleViewEvent(EventHandler.Type.TAP) }
             }
         }
 
         modelScope.launch {
-            if (mediaType == MediaType.VIDEO || mediaType == MediaType.YOUTUBE) {
-                pagerState?.changes
-                    ?.distinctUntilChanged { old, new -> old.isStoryPaused == new.isStoryPaused }
+            if (viewInfo.mediaType == MediaType.VIDEO || viewInfo.mediaType == MediaType.YOUTUBE) {
+                pagerState?.changes?.distinctUntilChanged { old, new -> old.isStoryPaused == new.isStoryPaused }
                     ?.collect {
                         if (it.isStoryPaused) {
                             listener?.onPause()
