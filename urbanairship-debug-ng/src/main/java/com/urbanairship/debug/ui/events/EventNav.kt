@@ -12,10 +12,17 @@ import com.urbanairship.debug.ui.TopLevelScreens
 
 internal fun NavGraphBuilder.eventNav(navController: NavController) {
     navigation(
-        route = TopLevelScreens.Events.route,
-        startDestination = EventScreens.Root.route,
+        route = TopLevelScreens.Analytics.route,
+        startDestination = AnalyticsScreens.Root.route,
     ) {
-        composable(EventScreens.Root.route) {
+        composable(AnalyticsScreens.Root.route) {
+            AnalyticsScreens(
+                onNavigateUp = { navController.popBackStack() },
+                onNavigate = { route -> navController.navigate(route) }
+            )
+        }
+
+        composable(AnalyticsScreens.Events.route) {
             EventScreen(
                 onNavigateUp = { navController.popBackStack() },
                 onNavigate = { route -> navController.navigate(route) }
@@ -23,7 +30,7 @@ internal fun NavGraphBuilder.eventNav(navController: NavController) {
         }
 
         composable(
-            route = "${EventScreens.Details.route}/{type}/{id}",
+            route = "${AnalyticsScreens.Details.route}/{type}/{id}",
             arguments = listOf(
                 navArgument("type") { type = NavType.StringType },
                 navArgument("id") { type = NavType.StringType }
@@ -36,7 +43,7 @@ internal fun NavGraphBuilder.eventNav(navController: NavController) {
             )
         }
 
-        composable(route = EventScreens.AddCustom.route) {
+        composable(route = AnalyticsScreens.AddCustom.route) {
             AddCustomEventScreen(
                 onNavigateUp = { navController.popBackStack() },
                 onNavigate = { route -> navController.navigate(route) },
@@ -49,7 +56,7 @@ internal fun NavGraphBuilder.eventNav(navController: NavController) {
             )
         }
 
-        composable(route = EventScreens.CreatePropertyAttribute.route) {
+        composable(route = AnalyticsScreens.CreatePropertyAttribute.route) {
             AddEventPropertyScreen(onNavigateUp = {
                 navController
                     .previousBackStackEntry
@@ -58,6 +65,12 @@ internal fun NavGraphBuilder.eventNav(navController: NavController) {
 
                 navController.popBackStack()
             })
+        }
+
+        composable(AnalyticsScreens.AssociatedIdentifiers.route) {
+            AnalyticsIdentifiersScreen(
+                onNavigateUp = { navController.popBackStack() }
+            )
         }
     }
 }

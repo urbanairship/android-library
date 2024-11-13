@@ -15,6 +15,7 @@ import com.urbanairship.debug.ui.deviceinfo.deviceInfoNav
 import com.urbanairship.debug.ui.events.eventNav
 import com.urbanairship.debug.ui.featureflag.featureFlagNav
 import com.urbanairship.debug.ui.preferencecenter.preferenceCenterNav
+import com.urbanairship.debug.ui.privacymanager.privacyNav
 import com.urbanairship.debug.ui.push.pushNav
 
 @Composable
@@ -37,6 +38,7 @@ internal fun DebugNavHost(
         }
 
         deviceInfoNav(navController = navController)
+        privacyNav(navController = navController)
         appInfoNav(navController = navController)
         preferenceCenterNav(navController = navController)
         automationNav(navController = navController)

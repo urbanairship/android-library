@@ -27,10 +27,6 @@ internal enum class DeviceInfoScreens(
     ),
 
     // Sub-nav screens
-    EditNamedUser(
-        titleRes = R.string.ua_debug_named_user_title,
-        section = DeviceInfoSection.USER_SETTINGS,
-    ),
     EditAttributes(
         titleRes = R.string.ua_debug_attributes_title,
         section = DeviceInfoSection.USER_SETTINGS,

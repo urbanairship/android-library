@@ -37,11 +37,11 @@ internal fun EventScreen(
         viewModel(factory = EventViewModelFactory(ServiceLocator.shared(LocalContext.current).getEventRepository()))
 
     DebugScreen(
-        title = stringResource(id = EventScreens.Root.titleRes),
+        title = stringResource(id = AnalyticsScreens.Root.titleRes),
         navigation = TopBarNavigation.Back(onNavigateUp),
         actionButton = {
             FloatingActionButton(
-                onClick = { onNavigate(EventScreens.AddCustom.route) },
+                onClick = { onNavigate(AnalyticsScreens.AddCustom.route) },
                 shape = CircleShape
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add custom event")
@@ -78,7 +78,7 @@ internal fun EventScreenContent(
                 val item = items[index]
                 ListItem(
                     modifier = modifier.clickable {
-                        onNavigate("${EventScreens.Details.route}/${item.type}/${item.id}")
+                        onNavigate("${AnalyticsScreens.Details.route}/${item.type}/${item.id}")
                     },
                     headlineContent = {
                         Text(text = item.eventId, fontWeight = FontWeight.Medium)

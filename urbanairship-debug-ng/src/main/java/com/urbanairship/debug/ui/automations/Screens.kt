@@ -16,6 +16,8 @@ internal enum class AutomationScreens(
         titleRes = R.string.ua_debug_automations_title,
         isRoot = true
     ),
+    Automations(titleRes = R.string.ua_debug_automations_title),
+    Experiments(titleRes = R.string.ua_debug_experiments_title),
     Details(titleRes = 0);
 
 

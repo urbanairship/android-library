@@ -8,8 +8,13 @@
     <string name="ua_debug_device_info_title">Device info</string>
     <string name="ua_debug_device_info_desc">View device info and settings</string>
 
+    <string name="ua_debug_privacy_title">Privacy Manager</string>
+    <string name="ua_debug_privacy_desc">View current privacy settings</string>
+
+    <string name="ua_debug_analytics_title">Analytics</string>
     <string name="ua_debug_events_title">Events</string>
     <string name="ua_debug_events_desc">Search and filter a list of recent events</string>
+    <string name="ua_debug_analytics_identifiers_title">Analytic Identifiers</string>
 
     <string name="ua_debug_channel_title">Channel</string>
     <string name="ua_debug_channel_desc">View channel info and tags</string>
@@ -21,6 +26,7 @@
 
     <string name="ua_debug_automations_title">In-App Automation</string>
     <string name="ua_debug_automations_desc">View scheduled messages</string>
+    <string name="ua_debug_experiments_title">Experiments</string>
 
     <string name="ua_debug_feature_flags_title">Feature Flags</string>
     <string name="ua_debug_feature_flags_desc">View feature flags</string>

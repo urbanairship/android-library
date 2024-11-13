@@ -1,28 +1,53 @@
 package com.urbanairship.debug.ui.deviceinfo
 
 import android.content.res.Configuration
+import android.os.Build
+import android.os.LocaleList
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.UAirship
+import com.urbanairship.debug.ui.TopLevelScreens
+import com.urbanairship.debug.ui.channel.ChannelInfoScreens
 import com.urbanairship.debug.ui.components.DebugCategoryHeader
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.DebugSettingItem
 import com.urbanairship.debug.ui.components.DebugSwitchItem
+import com.urbanairship.debug.ui.components.RowItem
+import com.urbanairship.debug.ui.components.Section
 import com.urbanairship.debug.ui.components.TopBarNavigation
+import com.urbanairship.debug.ui.contact.ContactScreens
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
+import java.util.Locale
 import java.util.UUID
 
 @Composable
 internal fun DeviceInfoScreen(
+    viewModel: DeviceInfoViewModel = viewModel<DefaultDeviceInfoViewModel>(),
     onNavigateUp: () -> Unit = {},
     onNavigate: (String) -> Unit = {},
 ) {
@@ -32,6 +57,7 @@ internal fun DeviceInfoScreen(
         navigation = TopBarNavigation.Back(onNavigateUp)
     ) {
         DeviceInfoScreenContent(
+            viewModel = viewModel,
             onNavigateUp = onNavigateUp,
             onNavigate = onNavigate,
         )
@@ -42,267 +68,172 @@ internal fun DeviceInfoScreen(
 @Composable
 internal fun DeviceInfoScreenContent(
     modifier: Modifier = Modifier.fillMaxSize(),
+    viewModel: DeviceInfoViewModel,
     onNavigateUp: () -> Unit,
     onNavigate: (String) -> Unit,
 ) {
     val lazyListState = rememberLazyListState()
-
-    // TODO: these all need to be moved into a view model and wired up to the SDK properly,
-    //  so that they will update when the SDK state changes.
-    val namedUser = "fred"
-    val displayInterval = "0 Seconds"
-    val channelId = remember { UUID.randomUUID().toString() }
-    val userId = "LAJSMimsoML_asoIMOVjA"
-    val pushOptInStatus = true
-    val notificationOptInStatus = true
-    val pushProvider = "FCM"
-    val pushToken = "eOBjFpelTtSS3sz0ZaP-Bp:APA91bHUDgmCfeiDA5dWWbzrmWd9fjedwD-QxSy69cRSKqu2GvGWerlCgLvsTuUwargqtxz_n1rYqQWX3GOHjLtZomHG64hTYyOD5RRf8W9MnQ4l6b07xHQGd3IRkCB91bigGFXQ8GcFpDkX"
-    val sdkVersion = UAirship.getVersion()
-    val locale = "en_US"
-    val deviceManufacturer = "Google"
-    val deviceModel = "Pixel 8"
 
     LazyColumn(
         state = lazyListState,
         modifier = modifier
     ) {
         item {
-            DebugCategoryHeader("SDK Features")
+            DeviceInfoSection(viewModel)
         }
 
         item {
-            DebugSwitchItem(
-                title = "Push",
-                checked = true,
-                onCheckedChange = {
-                    // TODO
+            Spacer(Modifier.height(24.dp))
+            PushContent(viewModel, onNavigate)
+        }
+
+        item {
+            Spacer(Modifier.height(24.dp))
+            UserSettingsContent(viewModel, onNavigate)
+        }
+    }
+}
+
+@Composable
+private fun PushContent(
+    viewModel: DeviceInfoViewModel,
+    onNavigate: (String) -> Unit
+) {
+    val isPushEnabled = viewModel.isPushEnabled.collectAsState(false).value
+    val isOptedIn = viewModel.pushOptInt.collectAsState(false).value
+    val pushToken = viewModel.pushToken.collectAsState(null).value
+    val pushProvider = viewModel.pushProvider.collectAsState(null).value
+    val context = LocalContext.current
+
+    Section(title = "Push") {
+        Column {
+            RowItem(title = "Notification Enabled", accessory = {
+                Switch(isPushEnabled, onCheckedChange = {
+                    viewModel.togglePushEnabled()
+                })
+            })
+
+            RowItem(title = "Opt-In Status", details = if (isOptedIn) "Opted-In" else "Opted-Out")
+
+            Row(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .clickable { viewModel.copyPushToken(context) },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Device Token", fontWeight = FontWeight.Medium)
+                pushToken?.let {
+                    Text(
+                        modifier = Modifier.padding(start = 8.dp),
+                        text = it,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Light)
                 }
+
+            }
+
+            HorizontalDivider()
+
+            RowItem(title = "Push Provider", details = pushProvider?.uppercase())
+
+            RowItem(
+                modifier = Modifier.clickable { onNavigate(TopLevelScreens.Pushes.route) },
+                title = "Received Pushes",
+                accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
             )
         }
+    }
+}
 
-        item {
-            DebugSwitchItem(
-                title = "MessageCenter",
-                checked = true,
-                onCheckedChange = {
-                    // TODO
-                }
-            )
-        }
+@Composable
+private fun UserSettingsContent(
+    viewModel: DeviceInfoViewModel,
+    onNavigate: (String) -> Unit
+) {
+    val userId = viewModel.namedUser.collectAsState(null).value
+    val channelTags = viewModel.channelTags.collectAsState(emptySet()).value
 
-        item {
-            DebugSwitchItem(
-                title = "In-App Automation",
-                checked = false,
-                onCheckedChange = {
-                    // TODO
-                }
-            )
-        }
-
-        item {
-            DebugSwitchItem(
-                title = "Analytics",
-                checked = false,
-                onCheckedChange = {
-                    // TODO
-                }
-            )
-        }
-
-        item {
-            DebugSwitchItem(
-                title = "Contacts",
-                checked = false,
-                onCheckedChange = {
-                    // TODO
-                }
-            )
-        }
-
-        item {
-            DebugSwitchItem(
-                title = "Tags & Attributes",
-                checked = false,
-                onCheckedChange = {
-                    // TODO
-                }
-            )
-        }
-
-        item {
-            HorizontalDivider(modifier = Modifier.padding(top = 8.dp, bottom = 8.dp, start = 16.dp))
-        }
-
-        item {
-            DebugCategoryHeader("User Settings")
-        }
-
-        item {
-            DebugSwitchItem(
-                title = "Notifications Enabled",
-                checked = true,
-                onCheckedChange = {
-                    // TODO
-                }
-            )
-        }
-
-        item {
+    Section(title = "User Settings") {
+        Column {
             DebugSettingItem(
                 title = "Named User",
-                currentValue = namedUser,
-                onClick = { /*TODO*/ }
+                currentValue = userId,
+                icon = Icons.Default.ChevronRight,
+                onClick = { onNavigate(ContactScreens.NamedUser.route) }
             )
-        }
 
-        item {
             DebugSettingItem(
                 title = "Attributes",
                 description = "Manage Channel & Contact attributes",
-                onClick = { /*TODO*/ }
+                icon = Icons.Default.ChevronRight,
+                onClick = { onNavigate(DeviceInfoScreens.EditAttributes.route) }
             )
-        }
-
-        item {
-            val tags = listOf("foo", "bar", "baz")
 
             DebugSettingItem(
                 title = "Tags",
-                currentValue = tags.joinToString(),
-                onClick = { onNavigate(DeviceInfoScreens.EditTags.route) }
+                description = channelTags.sorted().joinToString(","),
+                icon = Icons.Default.ChevronRight,
+                onClick = { onNavigate(ChannelInfoScreens.Tags.route) }
             )
-        }
 
-        item {
             DebugSettingItem(
                 title = "Tag Groups",
-                onClick = { /*TODO*/ }
+                description = "Manage Channel & Contact tag groups",
+                icon = Icons.Default.ChevronRight,
+                onClick = { onNavigate(DeviceInfoScreens.EditTagGroups.route) }
             )
         }
+    }
+}
 
-        item {
-            HorizontalDivider(modifier = Modifier.padding(top = 8.dp, bottom = 8.dp, start = 16.dp))
-        }
+@Composable
+private fun DeviceInfoSection(
+    viewModel: DeviceInfoViewModel
+) {
+    val channelId = viewModel.channelId.collectAsState(null).value
+    val userId = viewModel.contactId.collectAsState(null).value
+    val context = LocalContext.current
+    val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+        LocaleList.getDefault().get(0)
+    } else{
+        Locale.getDefault()
+    }
 
-        item {
-            DebugCategoryHeader("Analytics Settings")
-        }
+    Section(title = "Info") {
+        DebugSettingItem(
+            title = "Channel ID",
+            description = channelId,
+            onClick = { viewModel.copyChannelId(context) }
+        )
 
-        item {
-            DebugSwitchItem(
-                title = "Track Advertising ID",
-                checked = true,
-                onCheckedChange = {
-                    // TODO
-                }
-            )
-        }
+        HorizontalDivider()
 
+        DebugSettingItem(
+            title = "User ID",
+            description = userId,
+            onClick = { viewModel.copyUserId(context) }
+        )
 
-        item {
-            DebugSettingItem(
-                title = "Associated Identifiers",
-                onClick = { /*TODO*/ }
-            )
-        }
+        HorizontalDivider()
 
-        item {
-            HorizontalDivider(modifier = Modifier.padding(top = 8.dp, bottom = 8.dp, start = 16.dp))
-        }
+        RowItem(
+            title = "Airship SDK Version",
+            details = UAirship.getVersion())
 
-        item {
-            DebugCategoryHeader("In-App Automation Settings")
-        }
+        RowItem(
+            title = "Current Locale",
+            details = locale.toString()
+        )
 
-        item {
-            DebugSettingItem(
-                title = "Display Interval",
-                currentValue = displayInterval,
-                onClick = { /*TODO*/ }
-            )
-        }
+        RowItem(
+            title = "Manufacturer",
+            details = Build.MANUFACTURER
+        )
 
-        item {
-            HorizontalDivider(modifier = Modifier.padding(top = 8.dp, bottom = 8.dp, start = 16.dp))
-        }
-
-        item {
-            DebugCategoryHeader("Device Info")
-
-        }
-
-        item {
-            DebugSettingItem(
-                title = "Channel ID",
-                currentValue = channelId,
-                onClick = { /*TODO*/ }
-            )
-        }
-
-        item {
-            DebugSettingItem(
-                title = "User ID",
-                currentValue = userId,
-                onClick = { /*TODO*/ }
-            )
-        }
-
-        item {
-            DebugSettingItem(
-                title = "Push Opt-in Status",
-                currentValue = if (pushOptInStatus) "Opted In" else "Opted Out",
-            )
-        }
-
-        item {
-            DebugSettingItem(
-                title = "Notification Opt-in Status",
-                currentValue = if (notificationOptInStatus) "Opted In" else "Opted Out",
-            )
-        }
-
-        item {
-            DebugSettingItem(
-                title = "Push Provider",
-                currentValue = pushProvider,
-            )
-        }
-
-        item {
-            DebugSettingItem(
-                title = "Push Token",
-                currentValue = pushToken,
-            )
-        }
-
-        item {
-            DebugSettingItem(
-                title = "Airship SDK Version",
-                currentValue = sdkVersion,
-            )
-        }
-
-        item {
-            DebugSettingItem(
-                title = "Current Locale",
-                currentValue = locale,
-            )
-        }
-
-        item {
-            DebugSettingItem(
-                title = "Manufacturer",
-                currentValue = deviceManufacturer,
-            )
-        }
-
-        item {
-            DebugSettingItem(
-                title = "Model",
-                currentValue = deviceModel,
-            )
-        }
+        RowItem(
+            title = "Model",
+            details = Build.MODEL
+        )
     }
 }
 

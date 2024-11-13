@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.map
 internal fun AutomationDetailsScreen(
     name: String,
     id: String,
+    source: DisplaySource = DisplaySource.AUTOMATIONS,
     viewModel: AutomationViewModel = viewModel<DefaultAutomationViewModel>(),
     onNavigateUp: () -> Unit = {}
 ) {
@@ -38,6 +39,7 @@ internal fun AutomationDetailsScreen(
     ) {
         AutomationDetailsScreenContent(
             viewModel = viewModel,
+            source = source,
             id = id
         )
     }
@@ -46,16 +48,23 @@ internal fun AutomationDetailsScreen(
 @Composable
 internal fun AutomationDetailsScreenContent(
     modifier: Modifier = Modifier.fillMaxSize(),
+    source: DisplaySource,
     viewModel: AutomationViewModel,
     id: String
 ) {
-    val item by viewModel.automations
+    val dataSource = when(source) {
+        DisplaySource.AUTOMATIONS -> viewModel.automations
+        DisplaySource.EXPERIMENTS -> viewModel.experiments
+    }
+
+    val item by dataSource
         .map { list ->
             list.first {
                 it.id == id
             }
         }
         .collectAsState(initial = null)
+
     item?.let {
         Column(
             modifier = modifier.verticalScroll(rememberScrollState())

@@ -21,6 +21,7 @@ import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 @Composable
 internal fun AutomationScreen(
     viewModel: AutomationViewModel = viewModel<DefaultAutomationViewModel>(),
+    displaySource: DisplaySource = DisplaySource.AUTOMATIONS,
     onNavigateUp: () -> Unit = {},
     onNavigate: (String) -> Unit = {},
 ) {
@@ -30,6 +31,7 @@ internal fun AutomationScreen(
     ) {
         AutomationScreenContent(
             viewModel = viewModel,
+            displaySource = displaySource,
             onNavigate = onNavigate
         )
     }
@@ -40,9 +42,13 @@ internal fun AutomationScreen(
 internal fun AutomationScreenContent(
     modifier: Modifier = Modifier.fillMaxSize(),
     viewModel: AutomationViewModel,
+    displaySource: DisplaySource,
     onNavigate: (String) -> Unit = {}
 ) {
-    val items by viewModel.automations.collectAsState(initial = listOf())
+    val items = when(displaySource) {
+        DisplaySource.AUTOMATIONS -> viewModel.automations.collectAsState(initial = listOf()).value
+        DisplaySource.EXPERIMENTS -> viewModel.experiments.collectAsState(initial = listOf()).value
+    }
 
     LazyColumn(modifier = modifier) {
         items(
@@ -54,7 +60,7 @@ internal fun AutomationScreenContent(
 
                 ListItem(
                     modifier = modifier.clickable {
-                        onNavigate("${AutomationScreens.Details.route}/${item.name}/${item.id}")
+                        onNavigate("${AutomationScreens.Details.route}/${displaySource.route}/${item.name}/${item.id}")
                     },
                     headlineContent = {
                         Text(text = item.name, fontWeight = FontWeight.Medium)
