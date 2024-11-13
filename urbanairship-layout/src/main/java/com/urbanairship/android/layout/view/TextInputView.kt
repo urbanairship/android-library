@@ -10,7 +10,10 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.TextInputModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
@@ -46,7 +49,7 @@ internal class TextInputView(
 
         LayoutUtils.applyTextInputModel(this, model)
 
-        model.viewInfo.contentDescription.ifNotEmpty { contentDescription = it }
+        model.contentDescription(context).ifNotEmpty { contentDescription = it }
 
         model.listener = object : TextInputModel.Listener {
             override fun restoreValue(value: String) {
@@ -59,6 +62,10 @@ internal class TextInputView(
 
             override fun setEnabled(enabled: Boolean) {
                 this@TextInputView.isEnabled = enabled
+            }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@TextInputView, old, new)
             }
         }
 

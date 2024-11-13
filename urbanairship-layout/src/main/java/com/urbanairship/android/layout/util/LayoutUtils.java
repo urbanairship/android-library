@@ -16,7 +16,6 @@ import android.graphics.drawable.shapes.RoundRectShape;
 import android.os.Build;
 import android.text.Html;
 import android.text.Spanned;
-import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -24,16 +23,14 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.shape.CornerFamily;
 import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.Fonts;
 import com.urbanairship.android.layout.R;
-import com.urbanairship.android.layout.model.BaseModel;
+import com.urbanairship.android.layout.model.Background;
 import com.urbanairship.android.layout.model.ButtonLayoutModel;
-import com.urbanairship.android.layout.model.LabelButtonModel;
 import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.property.Border;
@@ -72,10 +69,10 @@ import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class LayoutUtils {
 
-    private static final float HOVERED_ALPHA_PERCENT = 0.1f;
-    private static final float PRESSED_ALPHA_PERCENT = 0.2f;
-    private static final int DEFAULT_STROKE_WIDTH_DPS = 2;
-    private static final int DEFAULT_BORDER_RADIUS = 0;
+    public static final float HOVERED_ALPHA_PERCENT = 0.1f;
+    public static final float PRESSED_ALPHA_PERCENT = 0.2f;
+    public static final int DEFAULT_STROKE_WIDTH_DPS = 2;
+    public static final int DEFAULT_BORDER_RADIUS = 0;
 
     private static final float MATERIAL_ALPHA_LOW = 0.32f;
     private static final float MATERIAL_ALPHA_DISABLED = 0.38f;
@@ -85,12 +82,28 @@ public final class LayoutUtils {
 
     private LayoutUtils() {}
 
-    public static void applyBorderAndBackground(@NonNull View view, @NonNull BaseModel<?, ?, ?> model) {
-        applyBorderAndBackground(view, model.getViewInfo().getBorder(), model.getViewInfo().getBackgroundColor());
+
+    public static void updateBackground(
+            @NonNull View view,
+            @Nullable Drawable baseBackground,
+            @Nullable Background oldBackground,
+            @NonNull Background newBackground
+    ) {
+        if (oldBackground != null && oldBackground.getBorder() != null && oldBackground.getBorder().getStrokeWidth() != null) {
+            float padding = dpToPx(view.getContext(), oldBackground.getBorder().getStrokeWidth());
+            removePadding(view, (int) padding);
+        }
+
+        applyBorderAndBackground(view, baseBackground, newBackground.getBorder(), newBackground.getColor());
+    }
+
+    public static void updateBackground(@NonNull View view, @Nullable Background oldBackground, @NonNull Background newBackground) {
+       updateBackground(view, null, oldBackground, newBackground);
     }
 
     public static void applyBorderAndBackground(
             @NonNull View view,
+            @Nullable Drawable baseBackground,
             @Nullable Border border,
             @Nullable Color backgroundColor
     ) {
@@ -128,27 +141,25 @@ public final class LayoutUtils {
                     .add(fillColor)
                     .build());
 
-            mergeBackground(view, shapeDrawable);
+            applyBackgrounds(view, baseBackground, shapeDrawable);
 
             if (borderPadding > -1) {
                 addPadding(view, borderPadding);
             }
         } else if (backgroundColor != null) {
-            mergeBackground(view, new ColorDrawable(backgroundColor.resolve(context)));
+            applyBackgrounds(view, baseBackground, new ColorDrawable(backgroundColor.resolve(context)));
         }
     }
 
-    private static void mergeBackground(@NonNull View view, @NonNull Drawable drawable) {
+    private static void applyBackgrounds(@NonNull View view, @Nullable Drawable base, @NonNull Drawable drawable) {
         Drawable background = drawable;
-        if (view.getBackground() != null) {
-            background = new LayerDrawable(new Drawable[] { view.getBackground(), drawable });
+        if (base != null) {
+            background = new LayerDrawable(new Drawable[] { base, drawable });
         }
         view.setBackground(background);
     }
 
     public static void applyButtonLayoutModel(@NonNull FrameLayout button, @NonNull ButtonLayoutModel model) {
-        LayoutUtils.applyBorderAndBackground(button, model);
-
         TapEffect tapEffect = model.getViewInfo().getTapEffect();
         if (tapEffect instanceof TapEffect.Default) {
             Border border = model.getViewInfo().getBorder();
@@ -216,52 +227,9 @@ public final class LayoutUtils {
         view.setImageTintList(compatStateList);
     }
 
-    public static void applyLabelButtonModel(@NonNull MaterialButton button, @NonNull LabelButtonModel model) {
-        applyLabelModel(button, model.getLabel());
 
-        Context context = button.getContext();
-        TextAppearance textAppearance = model.getLabel().getViewInfo().getTextAppearance();
-
-        int textColor = textAppearance.getColor().resolve(context);
-        int backgroundColor = model.getViewInfo().getBackgroundColor() == null
-                ? Color.TRANSPARENT
-                : model.getViewInfo().getBackgroundColor().resolve(button.getContext());
-        int pressedColor = model.getViewInfo().getTapEffect() instanceof TapEffect.None
-                ? Color.TRANSPARENT
-                : ColorUtils.setAlphaComponent(textColor, Math.round(Color.alpha(textColor) * PRESSED_ALPHA_PERCENT));
-        int disabledColor = generateDisabledColor(backgroundColor);
-        int strokeWidth = model.getViewInfo().getBorder() == null || model.getViewInfo().getBorder().getStrokeWidth() == null
-                ? DEFAULT_STROKE_WIDTH_DPS
-                : model.getViewInfo().getBorder().getStrokeWidth();
-        int strokeColor = model.getViewInfo().getBorder() == null || model.getViewInfo().getBorder().getStrokeColor() == null
-                ? backgroundColor
-                : model.getViewInfo().getBorder().getStrokeColor().resolve(context);
-        int disabledStrokeColor = generateDisabledColor(strokeColor);
-        int borderRadius = model.getViewInfo().getBorder() == null || model.getViewInfo().getBorder().getRadius() == null
-                ? DEFAULT_BORDER_RADIUS
-                : model.getViewInfo().getBorder().getRadius();
-
-        button.setBackgroundTintList(new ColorStateListBuilder()
-                .add(disabledColor, -android.R.attr.state_enabled)
-                .add(backgroundColor)
-                .build());
-        button.setRippleColor(ColorStateList.valueOf(pressedColor));
-        int strokeWidthPixels = (int) dpToPx(context, strokeWidth);
-        button.setStrokeWidth(strokeWidthPixels);
-        button.setStrokeColor(new ColorStateListBuilder()
-                .add(disabledStrokeColor, -android.R.attr.state_enabled)
-                .add(strokeColor)
-                .build());
-
-        button.setEllipsize(TextUtils.TruncateAt.END);
-        button.setIncludeFontPadding(false);
-        button.setCornerRadius((int) dpToPx(context, borderRadius));
-        button.setSingleLine(false);
-    }
-
-    public static void applyLabelModel(@NonNull TextView textView, @NonNull LabelModel label) {
+    public static void applyLabelModel(@NonNull TextView textView, @NonNull LabelModel label, @NonNull String text) {
         TextAppearance appearance = label.getViewInfo().getTextAppearance();
-        String text = label.getViewInfo().getText();
 
         applyTextAppearance(textView, appearance);
 
@@ -300,8 +268,8 @@ public final class LayoutUtils {
         }
     }
 
+
     public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
-        applyBorderAndBackground(editText, textInput);
         applyTextAppearance(editText, textInput.getViewInfo().getTextAppearance());
         int padding = (int) dpToPx(editText.getContext(), 8);
         editText.setPadding(padding, padding, padding, padding);
@@ -315,10 +283,6 @@ public final class LayoutUtils {
             if (hintColor != null) {
                 editText.setHintTextColor(hintColor.resolve(editText.getContext()));
             }
-        }
-
-        if (!UAStringUtil.isEmpty(textInput.getViewInfo().getContentDescription())) {
-            editText.setContentDescription(textInput.getViewInfo().getContentDescription());
         }
     }
 
@@ -451,6 +415,10 @@ public final class LayoutUtils {
 
     public static void addPadding(@NonNull View view, int padding) {
         addPadding(view, padding, padding, padding, padding);
+    }
+
+    public static void removePadding(@NonNull View view, int padding) {
+        addPadding(view, -padding, -padding, -padding, -padding);
     }
 
     public static void addPadding(@NonNull View view, int left, int top, int right, int bottom) {

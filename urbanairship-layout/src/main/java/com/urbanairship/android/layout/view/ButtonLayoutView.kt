@@ -13,8 +13,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ButtonLayoutInfo
+import com.urbanairship.android.layout.model.Background
+import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ButtonLayoutModel
 import com.urbanairship.android.layout.model.ButtonModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.debouncedClicks
@@ -63,6 +67,7 @@ internal class ButtonLayoutView(
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }
 
+        val baseBackground = this.background
         model.listener = object : ButtonModel.Listener {
             override fun setVisibility(visible: Boolean) {
                 this@ButtonLayoutView.isVisible = visible
@@ -72,6 +77,9 @@ internal class ButtonLayoutView(
             }
             override fun dismissSoftKeyboard() {
                 LayoutUtils.dismissSoftKeyboard(this@ButtonLayoutView)
+            }
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@ButtonLayoutView, baseBackground, old, new)
             }
         }
     }

@@ -55,7 +55,7 @@ internal class ModalView(
             clipToPadding = false
             outlineProvider = ViewOutlineProvider.BOUNDS
 
-            LayoutUtils.applyBorderAndBackground(this, placement.border, placement.backgroundColor)
+            LayoutUtils.applyBorderAndBackground(this,null, placement.border, placement.backgroundColor)
 
             placement.shadow?.androidShadow?.let { shadow ->
                 applyShadow(this, shadow.color.resolve(context), shadow.elevation)

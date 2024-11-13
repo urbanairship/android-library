@@ -37,11 +37,7 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
             ToggleType.CHECKBOX -> configureCheckbox(model.viewInfo.style as CheckboxStyle)
         }
 
-        LayoutUtils.applyBorderAndBackground(this, model)
-
-        context.resolveContentDescription(model.viewInfo.contentDescription, model.viewInfo.localizedContentDescription)?.ifNotEmpty {
-            contentDescription = it
-        }
+        model.contentDescription(context)?.ifNotEmpty { contentDescription = it }
 
         ViewCompat.setAccessibilityDelegate(this, object : AccessibilityDelegateCompat() {
             override fun onInitializeAccessibilityNodeInfo(
@@ -115,7 +111,6 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
     private fun configureCheckbox(style: CheckboxStyle) {
         val checkboxView = createCheckboxView(style)
         checkboxView.id = model.checkableViewId
-        LayoutUtils.applyBorderAndBackground(checkboxView, model)
         checkableView = CheckableViewAdapter.Checkbox(checkboxView)
         addView(checkboxView, MATCH_PARENT, MATCH_PARENT)
     }

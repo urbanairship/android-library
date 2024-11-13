@@ -11,9 +11,8 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.info.Accessible
 import com.urbanairship.android.layout.property.AttributeValue
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.StateAction
@@ -23,6 +22,7 @@ import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.debouncedClicks
+import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.util.resolveOptional
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.TappableView
@@ -48,6 +48,8 @@ internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.
 
     internal interface Listener {
 
+        fun onStateUpdated(state: State.Layout) {}
+        fun setBackground(old: Background?, new: Background)
         fun setVisibility(visible: Boolean)
         fun setEnabled(enabled: Boolean)
     }
@@ -56,14 +58,15 @@ internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.
 
     val viewId: Int = View.generateViewId()
 
+    private var background: Background? = null
+
     fun createView(
-        context: Context,
-        viewEnvironment: ViewEnvironment,
-        itemProperties: ItemProperties?
+        context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?
     ): T {
         val view = onCreateView(context, viewEnvironment, itemProperties)
         onViewCreated(view)
 
+        updateBackground()
         view.addOnAttachStateChangeListener(object : OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(v: View) {
                 setupViewListeners(view)
@@ -134,17 +137,26 @@ internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.
 
         viewScope.launch {
             layoutState.layout?.changes?.collect {
-                val isVisible = checkVisibility(it)
-                listener?.setVisibility(isVisible)
+                updateBackground(it)
+                updateVisibility(it)
+                listener?.onStateUpdated(it)
             }
         }
     }
 
     protected abstract fun onCreateView(
-        context: Context,
-        viewEnvironment: ViewEnvironment,
-        itemProperties: ItemProperties?
+        context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?
     ): T
+
+    open fun contentDescription(context: Context): String? {
+        if (viewInfo is Accessible) {
+            return context.resolveContentDescription(
+                viewInfo.contentDescription, viewInfo.localizedContentDescription
+            )
+        }
+
+        return null
+    }
 
     protected open fun onViewCreated(view: T) = Unit
 
@@ -179,15 +191,39 @@ internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.
     protected fun updateAttributes(attributes: Map<AttributeName, AttributeValue>) =
         environment.attributeHandler.update(attributes)
 
-    private fun checkVisibility(state: State.Layout): Boolean {
-        val matcher = viewInfo.visibility?.invertWhenStateMatcher ?: return true
+    private fun updateBackground(state: State.Layout? = null) {
+        val background = if (state != null) {
+            Background(
+                color = state.resolveOptional(
+                    overrides = viewInfo.commonViewOverrides?.backgroundColor,
+                    default = viewInfo.backgroundColor
+                ), border = state.resolveOptional(
+                    overrides = viewInfo.commonViewOverrides?.border, default = viewInfo.border
+                )
+            )
+        } else {
+            Background(color = viewInfo.backgroundColor, border = viewInfo.border)
+        }
+
+        if (background != this.background) {
+            listener?.setBackground(this.background, background)
+            this.background = background
+        }
+    }
+
+    private fun updateVisibility(state: State.Layout) {
+        val visibility = viewInfo.visibility ?: return
+
+        val matcher = visibility.invertWhenStateMatcher
         val match = matcher.apply(state.state.toJsonMap())
 
-        return if (match) {
-            viewInfo.visibility?.default == false
+        val isVisible = if (match) {
+            !visibility.default
         } else {
-            viewInfo.visibility?.default == true
+            visibility.default
         }
+
+        listener?.setVisibility(isVisible)
     }
 
     private fun handleFormBehaviors(state: State.Form) {

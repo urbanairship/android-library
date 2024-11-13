@@ -13,8 +13,11 @@ import androidx.core.view.isVisible
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.ImageButtonModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.TapEffect
@@ -38,7 +41,6 @@ internal class ImageButtonView(
     private val button: CropImageButton by lazy { makeImageButton(model) }
 
     init {
-        LayoutUtils.applyBorderAndBackground(this, model)
 
         when (val image = model.viewInfo.image) {
             is Image.Url -> {
@@ -106,6 +108,7 @@ internal class ImageButtonView(
             }
         }
 
+        val baseBackground = this.background
         model.listener = object : ButtonModel.Listener {
             override fun setEnabled(enabled: Boolean) {
                 // Enable or disable the button view directly
@@ -119,6 +122,10 @@ internal class ImageButtonView(
 
             override fun dismissSoftKeyboard() =
                 LayoutUtils.dismissSoftKeyboard(this@ImageButtonView)
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@ImageButtonView, baseBackground, old, new)
+            }
         }
     }
 

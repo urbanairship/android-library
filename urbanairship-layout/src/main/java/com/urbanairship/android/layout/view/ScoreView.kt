@@ -10,7 +10,10 @@ import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONS
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ScoreModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.ScoreStyle.NumberRange
 import com.urbanairship.android.layout.property.ScoreType
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
@@ -43,7 +46,6 @@ internal class ScoreView(
     private var isEnabled = true
 
     init {
-        LayoutUtils.applyBorderAndBackground(this, model)
         val constraints = ConstraintSetBuilder.newBuilder(context)
         val style = model.viewInfo.style
         when (style.type) {
@@ -51,7 +53,7 @@ internal class ScoreView(
         }
         constraints.build().applyTo(this)
 
-        model.viewInfo.contentDescription.ifNotEmpty { contentDescription = it }
+        model.contentDescription(context).ifNotEmpty { contentDescription = it }
 
         model.listener = object : ScoreModel.Listener {
             override fun onSetSelectedScore(value: Int?) {
@@ -64,6 +66,10 @@ internal class ScoreView(
 
             override fun setVisibility(visible: Boolean) {
                 this@ScoreView.isVisible = visible
+            }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@ScoreView, old, new)
             }
         }
     }

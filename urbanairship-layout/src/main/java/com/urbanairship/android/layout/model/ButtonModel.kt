@@ -38,12 +38,6 @@ internal abstract class ButtonModel<T, I: Button>(
     properties = properties
 ) where T : View, T : TappableView {
 
-    open fun contentDescription(context: Context): String? {
-        return context.resolveContentDescription(
-            viewInfo.contentDescription, viewInfo.localizedContentDescription
-        )
-    }
-
     open fun reportingDescription(context: Context): String {
         return contentDescription(context) ?: viewInfo.identifier
     }

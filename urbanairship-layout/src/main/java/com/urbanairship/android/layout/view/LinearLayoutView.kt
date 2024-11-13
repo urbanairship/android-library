@@ -14,9 +14,12 @@ import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LinearLayoutItemInfo
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.LinearLayoutModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.Size.DimensionType.ABSOLUTE
 import com.urbanairship.android.layout.property.Size.DimensionType.AUTO
@@ -38,7 +41,6 @@ internal class LinearLayoutView(
 
     init {
         clipChildren = false
-        LayoutUtils.applyBorderAndBackground(this, model)
         orientation = if (model.viewInfo.direction == Direction.VERTICAL) VERTICAL else HORIZONTAL
         gravity = if (model.viewInfo.direction == Direction.VERTICAL) CENTER_HORIZONTAL else CENTER_VERTICAL
         addItems(model.items)
@@ -49,6 +51,9 @@ internal class LinearLayoutView(
             }
             override fun setEnabled(enabled: Boolean) {
                 isEnabled = enabled
+            }
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@LinearLayoutView, old, new)
             }
         }
 

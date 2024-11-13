@@ -126,7 +126,7 @@ internal class ThomasBannerView(
         val containerView = model.createView(context, environment, null)
         frame.addView(containerView)
         addView(frame)
-        LayoutUtils.applyBorderAndBackground(frame, placement.border, placement.backgroundColor)
+        LayoutUtils.applyBorderAndBackground(frame, null, placement.border, placement.backgroundColor)
 
         val viewId = frame.id
         ConstraintSetBuilder.newBuilder(context)

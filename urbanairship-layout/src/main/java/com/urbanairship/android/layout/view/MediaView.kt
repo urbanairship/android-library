@@ -22,8 +22,11 @@ import androidx.core.view.isVisible
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.MediaModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
@@ -90,7 +93,6 @@ internal class MediaView(
 
     init {
         id = model.viewId
-        LayoutUtils.applyBorderAndBackground(this, model)
 
         when (model.viewInfo.mediaType) {
             MediaType.IMAGE -> configureImageView(model)
@@ -130,8 +132,13 @@ internal class MediaView(
             override fun setVisibility(visible: Boolean) {
                 this@MediaView.isVisible = visible
             }
+
             override fun setEnabled(enabled: Boolean) {
                 this@MediaView.isEnabled = enabled
+            }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@MediaView, old, new)
             }
         }
     }
@@ -184,7 +191,7 @@ internal class MediaView(
                 }
 
                 importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
-                context.resolveContentDescription(model.viewInfo.contentDescription, model.viewInfo.localizedContentDescription)?.ifNotEmpty {
+                model.contentDescription(context).ifNotEmpty {
                     contentDescription = it
                     if (model.viewInfo.accessibilityHidden != true) {
                         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
@@ -394,7 +401,8 @@ internal class MediaView(
         }
 
         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
-        context.resolveContentDescription(model.viewInfo.contentDescription, model.viewInfo.localizedContentDescription)?.ifNotEmpty {
+
+        model.contentDescription(context).ifNotEmpty {
             wv.contentDescription = it
             if (model.viewInfo.accessibilityHidden != true) {
                 wv.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES

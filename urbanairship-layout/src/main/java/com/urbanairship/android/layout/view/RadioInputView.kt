@@ -9,10 +9,14 @@ import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.model.RadioInputModel
+import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.CheckboxStyle
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.SwitchStyle
+import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.widget.CheckableView
@@ -24,17 +28,23 @@ internal class RadioInputView(
 ) : CheckableView<RadioInputModel>(context, model) {
 
     init {
+        val baseBackground = this.background
         model.listener = object : CheckableModel.Listener {
             override fun setChecked(checked: Boolean) = setCheckedInternal(checked)
             override fun setEnabled(enabled: Boolean) {
                 this@RadioInputView.isEnabled = enabled
             }
+
             override fun setVisibility(visible: Boolean) {
                 this@RadioInputView.isVisible = visible
             }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@RadioInputView, baseBackground, old, new)
+            }
         }
 
-        context.resolveContentDescription(model.viewInfo.contentDescription, model.viewInfo.localizedContentDescription)?.ifNotEmpty {
+        model.contentDescription(context)?.ifNotEmpty {
             contentDescription = it
         }
 

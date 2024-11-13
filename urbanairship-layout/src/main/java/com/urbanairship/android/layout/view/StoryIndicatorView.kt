@@ -8,9 +8,12 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.model.Background
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator.INDICATOR_DIRECTION_START_TO_END
 import com.urbanairship.android.layout.model.StoryIndicatorModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
@@ -33,8 +36,6 @@ internal class StoryIndicatorView(
                 gravity = Gravity.CENTER
             }
         }
-
-        LayoutUtils.applyBorderAndBackground(this, model)
 
         // Set accessibility properties on the parent view if announcePage is true
         if (model.announcePage) {
@@ -70,6 +71,10 @@ internal class StoryIndicatorView(
 
             override fun setEnabled(enabled: Boolean) {
                 this@StoryIndicatorView.isEnabled = enabled
+            }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@StoryIndicatorView, old, new)
             }
         }
     }

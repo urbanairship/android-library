@@ -17,7 +17,10 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.gestures.PagerGestureDetector
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.info.AccessibilityAction
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.PagerModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.findTargetDescendant
 import com.urbanairship.android.layout.widget.PagerRecyclerView
@@ -103,11 +106,14 @@ internal class PagerView(
         override fun setEnabled(enabled: Boolean) {
             this@PagerView.isEnabled = enabled
         }
+
+        override fun setBackground(old: Background?, new: Background) {
+            LayoutUtils.updateBackground(this@PagerView, old, new)
+        }
     }
 
     init {
         addView(view, MATCH_PARENT, MATCH_PARENT)
-        LayoutUtils.applyBorderAndBackground(this, model)
         model.listener = modelListener
 
         view.setPagerScrollListener { position, isInternalScroll ->

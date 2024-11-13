@@ -22,8 +22,11 @@ import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.UrlAllowList
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.WebViewModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.widget.TappableView
@@ -74,7 +77,6 @@ internal class WebViewView(
         viewEnvironment.activityMonitor().addActivityListener(filteredActivityListener)
 
         setChromeClient(viewEnvironment.webChromeClientFactory().create())
-        LayoutUtils.applyBorderAndBackground(this, model)
         loadWebView(model)
 
         model.listener = object : BaseModel.Listener {
@@ -84,6 +86,10 @@ internal class WebViewView(
 
             override fun setEnabled(enabled: Boolean) {
                 this@WebViewView.isEnabled = enabled
+            }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@WebViewView, old, new)
             }
         }
     }

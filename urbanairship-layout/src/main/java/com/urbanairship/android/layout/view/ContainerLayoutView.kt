@@ -16,9 +16,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel.Item
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
@@ -37,7 +40,6 @@ internal class ContainerLayoutView(
         clipChildren = true
         val constraintBuilder = ConstraintSetBuilder.newBuilder(context)
         addItems(model.items, constraintBuilder)
-        LayoutUtils.applyBorderAndBackground(this, model)
         constraintBuilder.build().applyTo(this)
         ViewCompat.setOnApplyWindowInsetsListener(this, WindowInsetsListener(constraintBuilder))
 
@@ -53,6 +55,10 @@ internal class ContainerLayoutView(
 
             override fun setEnabled(enabled: Boolean) {
                 this@ContainerLayoutView.isEnabled = enabled
+            }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@ContainerLayoutView, old, new)
             }
         }
     }

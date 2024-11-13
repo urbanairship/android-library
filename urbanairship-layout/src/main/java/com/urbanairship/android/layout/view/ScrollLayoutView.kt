@@ -11,8 +11,11 @@ import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ScrollLayoutModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.util.LayoutUtils
 
@@ -25,8 +28,6 @@ internal class ScrollLayoutView(
     init {
         isFillViewport = false
         clipToOutline = true
-
-        LayoutUtils.applyBorderAndBackground(this, model)
 
         val contentView = model.view.createView(context, viewEnvironment, null).apply {
             layoutParams = if (model.viewInfo.direction == Direction.VERTICAL) {
@@ -43,6 +44,10 @@ internal class ScrollLayoutView(
             }
             override fun setEnabled(enabled: Boolean) {
                 this@ScrollLayoutView.isEnabled = enabled
+            }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@ScrollLayoutView, old, new)
             }
         }
 

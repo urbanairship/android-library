@@ -9,9 +9,11 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Checkable
 import android.widget.ImageView
 import android.widget.LinearLayout
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.PagerIndicatorModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.widget.ShapeView
@@ -25,9 +27,7 @@ internal class PagerIndicatorView(
         orientation = HORIZONTAL
         gravity = Gravity.CENTER
 
-        LayoutUtils.applyBorderAndBackground(this, model)
-
-        if (model.announcePage == true) {
+        if (model.announcePage) {
             isFocusable = true
             isFocusableInTouchMode = true
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
@@ -50,6 +50,10 @@ internal class PagerIndicatorView(
 
             override fun setEnabled(enabled: Boolean) {
                 this@PagerIndicatorView.isEnabled = enabled
+            }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@PagerIndicatorView, old, new)
             }
         }
     }
