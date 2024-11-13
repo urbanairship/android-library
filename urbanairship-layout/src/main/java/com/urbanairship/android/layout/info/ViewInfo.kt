@@ -64,6 +64,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
+import com.urbanairship.json.optionalList
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 
@@ -139,23 +140,57 @@ internal interface View {
     val visibility: VisibilityInfo?
     val eventHandlers: List<EventHandler>?
     val enableBehaviors: List<EnableBehaviorType>?
+    val commonViewOverrides: CommonViewOverrides?
+}
+
+internal data class ViewPropertyOverride<T>(
+    val whenStateMatcher: JsonPredicate?,
+    val value: T?
+) {
+    constructor(
+        json: JsonValue, valueParser: (JsonValue) -> T
+    ): this(
+        whenStateMatcher = json.requireMap().get("when_state_matches")?.let { JsonPredicate.parse(it) },
+        value = json.requireMap().get("value")?.let(valueParser)
+    )
+}
+
+
+internal class CommonViewOverrides(json: JsonMap) {
+    val backgroundColor = json.optionalList("background_color")?.map {
+        ViewPropertyOverride(it) { json -> Color.fromJson(json.requireMap()) }
+    }
+
+    val border = json.optionalList("border")?.map {
+        ViewPropertyOverride(it) { json -> Border.fromJson(json.requireMap()) }
+    }
 }
 
 internal class BaseViewInfo(json: JsonMap) : View {
     override val type = ViewType.from(json.requireField<String>("type"))
-    override val backgroundColor =
-        json.optionalField<JsonMap>("background_color")?.let { Color.fromJson(it) }
-    override val border =
-        json.optionalField<JsonMap>("border")?.let { Border.fromJson(it) }
-    override val visibility = json.optionalField<JsonMap>("visibility")?.let { VisibilityInfo(it) }
-    override val eventHandlers: List<EventHandler>? =
-        json.optionalField<JsonList>("event_handlers")?.let { list ->
-            list.map { EventHandler(it.requireMap()) }
-        }
-    override val enableBehaviors =
-        json.optionalField<JsonList>("enabled")?.let { list ->
-            list.map { EnableBehaviorType.from(it.requireString()) }
-        }
+
+    override val backgroundColor = json.optionalMap("background_color")?.let {
+        Color.fromJson(it)
+    }
+    override val border = json.optionalMap("border")?.let {
+        Border.fromJson(it)
+    }
+
+    override val visibility = json.optionalMap("visibility")?.let {
+        VisibilityInfo(it)
+    }
+
+    override val eventHandlers =  json.optionalList("event_handlers")?.let { list ->
+        list.map { EventHandler(it.requireMap()) }
+    }
+
+    override val enableBehaviors = json.optionalList("enabled")?.let { list ->
+        list.map { EnableBehaviorType.from(it.requireString()) }
+    }
+
+    override val commonViewOverrides = json.optionalMap("view_overrides")?.let {
+        CommonViewOverrides(it)
+    }
 }
 
 private fun view(json: JsonMap): View = BaseViewInfo(json)
@@ -170,7 +205,7 @@ private fun accessible(json: JsonMap): Accessible = object : Accessible {
     override val contentDescription: String? = json.optionalField("content_description")
 
     override val localizedContentDescription: LocalizedContentDescription? =
-        json.optionalField<JsonMap>("localized_content_description")?.let { LocalizedContentDescription(it) }
+        json.optionalMap("localized_content_description")?.let { LocalizedContentDescription(it) }
 
     override val accessibilityHidden: Boolean? =
         json.optionalField<Boolean>("accessibility_hidden")
@@ -230,7 +265,7 @@ internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(),
     override val submitBehavior: FormBehaviorType? =
         json.optionalField<String>("submit")?.let { FormBehaviorType.from(it) }
     override val formEnabled: List<EnableBehaviorType>? =
-        json.optionalField<JsonList>("form_enabled")?.map { EnableBehaviorType.from(it.optString()) }
+        json.optionalList("form_enabled")?.map { EnableBehaviorType.from(it.optString()) }
 }
 
 internal interface Button : View, Accessible, Identifiable {
@@ -244,17 +279,17 @@ internal open class ButtonInfo(
     json: JsonMap
 ) : ViewInfo(), Button, View by view(json), Accessible by accessible(json), Identifiable by identifiable(json) {
     override val clickBehaviors: List<ButtonClickBehaviorType> =
-        json.optionalField<JsonList>("button_click")
+        json.optionalList("button_click")
             ?.let { ButtonClickBehaviorType.fromList(it) } ?: emptyList()
 
     override val actions: Map<String, JsonValue>? =
-        json.optionalField<JsonMap>("actions")?.map
+        json.optionalMap("actions")?.map
 
     override val reportingMetadata: JsonValue? =
         json.optionalField<JsonValue>("reporting_metadata")
 
     override val tapEffect: TapEffect =
-        json.optionalField<JsonMap>("tap_effect").let { TapEffect.fromJson(it) }
+        json.optionalMap("tap_effect").let { TapEffect.fromJson(it) }
 }
 
 /** ButtonLayout is a bit special because it's both a ViewGroup and a Button. */
@@ -263,11 +298,11 @@ internal class ButtonLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), 
 
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 
-    override val localizedContentDescription: LocalizedContentDescription? = json.optionalField<JsonMap>("localized_content_description")?.let { LocalizedContentDescription(it) }
+    override val localizedContentDescription: LocalizedContentDescription? = json.optionalMap("localized_content_description")?.let { LocalizedContentDescription(it) }
     override val accessibilityHidden: Boolean? = json.optionalField("accessibility_hidden")
     override val contentDescription: String? = json.optionalField("content_description")
 
-    var accessibilityRole: AccessibilityRole? = json.optionalField<JsonMap>("accessibility_role")?.let { AccessibilityRole.fromJson(it) }
+    var accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole.fromJson(it) }
 
     internal enum class AccessibilityRoleType {
         BUTTON,
@@ -331,7 +366,7 @@ internal class LinearLayoutItemInfo(
     val json: JsonMap
 ) : ItemInfo(viewInfoFromJson(json.requireField("view"))) {
     val size = Size.fromJson(json.requireField("size"))
-    val margin = json.optionalField<JsonMap>("margin")?.let { Margin.fromJson(it) }
+    val margin = json.optionalMap("margin")?.let { Margin.fromJson(it) }
 }
 
 internal class ContainerLayoutInfo(
@@ -347,7 +382,7 @@ internal class ContainerLayoutItemInfo(
 ) : ItemInfo(viewInfoFromJson(json.requireField("view"))), SafeAreaAware by safeAreaAware(json) {
     val position: Position = Position.fromJson(json.requireField("position"))
     val size = Size.fromJson(json.requireField("size"))
-    val margin: Margin? = json.optionalField<JsonMap>("margin")?.let { Margin.fromJson(it) }
+    val margin: Margin? = json.optionalMap("margin")?.let { Margin.fromJson(it) }
 }
 
 internal class ScrollLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), View by view(json) {
@@ -365,9 +400,9 @@ internal class MediaInfo(
     val url: String = json.requireField("url")
     val mediaType: MediaType = MediaType.from(json.requireField("media_type"))
     val mediaFit: MediaFit = MediaFit.from(json.requireField("media_fit"))
-    val position: Position = json.optionalField<JsonMap>("position")
+    val position: Position = json.optionalMap("position")
         ?.let { Position.fromJson(it) } ?: Position.CENTER
-    val video: Video? = json.optionalField<JsonMap>("video")?.let { Video.fromJson(it) }
+    val video: Video? = json.optionalMap("video")?.let { Video.fromJson(it) }
 }
 
 internal class LabelInfo(
@@ -377,7 +412,8 @@ internal class LabelInfo(
     val textAppearance: TextAppearance =
         TextAppearance.fromJson(json.requireField("text_appearance"))
     val markdownOptions: MarkdownOptions? = json.optionalMap("markdown")?.let { MarkdownOptions(it) }
-    var accessibilityRole: AccessibilityRole? = json.optionalField<JsonMap>("accessibility_role")?.let { AccessibilityRole.fromJson(it) }
+    var accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole.fromJson(it) }
+    val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
 
     internal enum class AccessibilityRoleType {
         HEADING;
@@ -409,6 +445,12 @@ internal class LabelInfo(
                     null -> null
                 }
             }
+        }
+    }
+
+    internal class ViewOverrides(json: JsonMap) {
+        val text = json.optionalList("text")?.map {
+            ViewPropertyOverride(it, valueParser = { value -> value.optString() })
         }
     }
 }
@@ -464,7 +506,7 @@ internal class WebViewInfo(json: JsonMap) : ViewInfo(), View by view(json) {
 internal class PagerInfo(json: JsonMap) : ViewGroupInfo<PagerItemInfo>(), View by view(json) {
     val items = json.requireField<JsonList>("items").map { PagerItemInfo(it.requireMap()) }
     val isSwipeDisabled = json.optionalField("disable_swipe") ?: false
-    val gestures = json.optionalField<JsonList>("gestures")?.let { PagerGesture.fromList(it) }
+    val gestures = json.optionalList("gestures")?.let { PagerGesture.fromList(it) }
 
     override val children: List<PagerItemInfo> = items
 }
@@ -522,9 +564,9 @@ internal class AccessibilityAction(json: JsonMap) : Accessible by accessible(jso
 
     val type: AccessibilityActionType? = AccessibilityActionType.from(json.optionalField<String>("type"))
     val reportingMetadata: JsonMap? = json.optionalField("reporting_metadata")
-    val actions: Map<String, JsonValue>? = json.optionalField<JsonList>("actions")
+    val actions: Map<String, JsonValue>? = json.optionalList("actions")
         ?.let { parseActionsList(it) }
-    val behaviors: List<ButtonClickBehaviorType>? = json.optionalField<JsonList>("behaviors")
+    val behaviors: List<ButtonClickBehaviorType>? = json.optionalList("behaviors")
         ?.let { ButtonClickBehaviorType.fromList(it) }
 
     override val identifier: String
@@ -566,10 +608,10 @@ internal class PagerItemInfo(
     json: JsonMap
 ) : ItemInfo(viewInfoFromJson(json.requireField("view"))), Identifiable by identifiable(json) {
     val displayActions: Map<String, JsonValue>? =
-        json.optionalField<JsonMap>("display_actions")?.map
-    val automatedActions = json.optionalField<JsonList>("automated_actions")
+        json.optionalMap("display_actions")?.map
+    val automatedActions = json.optionalList("automated_actions")
         ?.let { AutomatedAction.fromList(it) }
-    val accessibilityActions = json.optionalField<JsonList>("accessibility_actions")
+    val accessibilityActions = json.optionalList("accessibility_actions")
         ?.let { AccessibilityAction.fromList(it) }
 }
 
@@ -578,7 +620,7 @@ internal class PagerIndicatorInfo(
 ) : ViewInfo(), View by view(json) {
     val bindings: Bindings = Bindings(json.requireField("bindings"))
     val indicatorSpacing: Int = json.optionalField<Int>("spacing") ?: 4
-    val automatedAccessibilityActions = json.optionalField<JsonList>("automated_accessibility_actions")
+    val automatedAccessibilityActions = json.optionalList("automated_accessibility_actions")
         ?.let { AutomatedAccessibilityAction.fromList(it) }
 
     internal class Bindings(json: JsonMap) {
@@ -590,7 +632,7 @@ internal class PagerIndicatorInfo(
         val shapes: List<Shape> =
             json.requireField<JsonList>("shapes").map { Shape.fromJson(it.requireMap()) }
         val icon: Image.Icon? =
-            json.optionalField<JsonMap>("icon")?.let { Image.Icon.fromJson(it) }
+            json.optionalMap("icon")?.let { Image.Icon.fromJson(it) }
     }
 }
 
@@ -599,7 +641,7 @@ internal class StoryIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json
         .requireField<String>("type")
         .let { StoryIndicatorSource.from(it) }
     val style = StoryIndicatorStyle.from(json.requireField("style"))
-    val automatedAccessibilityActions = json.optionalField<JsonList>("automated_accessibility_actions")
+    val automatedAccessibilityActions = json.optionalList("automated_accessibility_actions")
         ?.let { AutomatedAccessibilityAction.fromList(it) }
 }
 
