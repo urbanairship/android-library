@@ -63,6 +63,8 @@ internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.
     fun createView(
         context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?
     ): T {
+        background = null
+
         val view = onCreateView(context, viewEnvironment, itemProperties)
         onViewCreated(view)
 
@@ -179,7 +181,7 @@ internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.
     protected fun runActions(
         actions: Map<String, JsonValue>?, state: LayoutData = layoutState.reportingContext()
     ) {
-        if (!actions.isNullOrEmpty()) {
+        if (actions != null) {
             environment.actionsRunner.run(actions, state)
         }
     }
@@ -253,39 +255,43 @@ internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.
         listener?.setEnabled(isEnabled)
     }
 
+    fun runStateActions(actions: List<StateAction>?, formValue: Any? = null) {
+        actions?.forEach { action ->
+            when (action) {
+                is StateAction.SetFormValue -> layoutState.layout?.let { state ->
+                    UALog.v(
+                        "StateAction: SetFormValue ${action.key} = ${
+                            JsonValue.wrapOpt(
+                                formValue
+                            )
+                        }"
+                    )
+                    state.update {
+                        it.copy(state = it.state + (action.key to JsonValue.wrapOpt(formValue)))
+                    }
+                } ?: UALog.w("StateAction: SetFormValue skipped. Missing State Controller!")
+
+                is StateAction.SetState -> layoutState.layout?.let { state ->
+                    UALog.v("StateAction: SetState ${action.key} = ${action.value}")
+                    state.update {
+                        it.copy(state = it.state + (action.key to action.value))
+                    }
+                } ?: UALog.w("StateAction: SetState skipped. Missing State Controller!")
+
+                StateAction.ClearState -> layoutState.layout?.let { state ->
+                    UALog.v("StateAction: ClearState")
+                    state.update {
+                        it.copy(state = emptyMap())
+                    }
+                } ?: UALog.w("StateAction: ClearState skipped. Missing State Controller!")
+            }
+        }
+    }
+
     fun handleViewEvent(type: EventHandler.Type, value: Any? = null) {
         for (handler in viewInfo.eventHandlers.orEmpty()) {
             if (handler.type == type) {
-                for (action in handler.actions) {
-                    when (action) {
-                        is StateAction.SetFormValue -> layoutState.layout?.let { state ->
-                            UALog.v(
-                                "StateAction: SetFormValue ${action.key} = ${
-                                    JsonValue.wrapOpt(
-                                        value
-                                    )
-                                }"
-                            )
-                            state.update {
-                                it.copy(state = it.state + (action.key to JsonValue.wrapOpt(value)))
-                            }
-                        } ?: UALog.w("StateAction: SetFormValue skipped. Missing State Controller!")
-
-                        is StateAction.SetState -> layoutState.layout?.let { state ->
-                            UALog.v("StateAction: SetState ${action.key} = ${action.value}")
-                            state.update {
-                                it.copy(state = it.state + (action.key to action.value))
-                            }
-                        } ?: UALog.w("StateAction: SetState skipped. Missing State Controller!")
-
-                        StateAction.ClearState -> layoutState.layout?.let { state ->
-                            UALog.v("StateAction: ClearState")
-                            state.update {
-                                it.copy(state = emptyMap())
-                            }
-                        } ?: UALog.w("StateAction: ClearState skipped. Missing State Controller!")
-                    }
-                }
+                runStateActions(handler.actions, value)
             }
         }
     }

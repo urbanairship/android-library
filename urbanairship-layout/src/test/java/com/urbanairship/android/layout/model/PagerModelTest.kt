@@ -1,21 +1,20 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import android.content.Context
-import android.view.accessibility.AccessibilityManager
 import androidx.test.core.app.ApplicationProvider
-import app.cash.turbine.test
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.AccessibilityAction
+import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.util.PagerScrollEvent
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
+import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -66,7 +65,7 @@ public class PagerModelTest {
     public fun setup() {
         pagerModel = spyk(PagerModel(
             items = ITEMS,
-            isSwipeDisabled = false,
+            viewInfo = mockk<PagerInfo>(relaxed = true),
             pagerState = pagerState,
             environment = mockEnv,
             properties = ModelProperties(pagerPageId = null)

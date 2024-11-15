@@ -177,7 +177,8 @@ public abstract class Image {
             CLOSE("close", R.drawable.ua_layout_ic_close),
             CHECKMARK("checkmark", R.drawable.ua_layout_ic_check),
             ARROW_FORWARD("forward_arrow", R.drawable.ua_layout_ic_arrow_forward),
-            ARROW_BACK("back_arrow", R.drawable.ua_layout_ic_arrow_back);
+            ARROW_BACK("back_arrow", R.drawable.ua_layout_ic_arrow_back),
+            ERROR_CIRCLE("exclamationmark_circle_fill", R.drawable.ua_layout_ic_error_circle_filled);
 
             @NonNull
             private final String value;

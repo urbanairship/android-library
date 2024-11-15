@@ -22,6 +22,7 @@ import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.ScoreStyle
 import com.urbanairship.android.layout.property.Size
+import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
 import com.urbanairship.android.layout.property.TapEffect
@@ -229,14 +230,35 @@ internal class SafeAreaAwareInfo(override val ignoreSafeArea: Boolean) : SafeAre
 private fun safeAreaAware(json: JsonMap): SafeAreaAware =
     SafeAreaAwareInfo(ignoreSafeArea = json.optionalField("ignore_safe_area") ?: false)
 
-internal interface Validatable {
-    val isRequired: Boolean
+internal data class ValidationAction(val actions: List<StateAction>?) {
+    constructor(json: JsonValue): this(
+        actions = json.requireMap().optionalList("state_actions")?.map {
+            StateAction.fromJson(it.requireMap())
+        }
+    )
 }
 
-internal data class ValidatableInfo(override val isRequired: Boolean) : Validatable
+internal interface Validatable {
+    val isRequired: Boolean
+    val onError: ValidationAction?
+    val onValid: ValidationAction?
+    val onEdit: ValidationAction?
+}
+
+internal data class ValidatableInfo(
+    override val isRequired: Boolean,
+    override val onError: ValidationAction?,
+    override val onValid: ValidationAction?,
+    override val onEdit: ValidationAction?
+) : Validatable
 
 private fun validatable(json: JsonMap) =
-    ValidatableInfo(isRequired = json.optionalField("required") ?: false)
+    ValidatableInfo(
+        isRequired = json.optionalField("required") ?: false,
+        onError = json.get("on_error")?.let { ValidationAction(it) },
+        onValid = json.get("on_valid")?.let { ValidationAction(it) },
+        onEdit = json.get("on_edit")?.let { ValidationAction(it) },
+    )
 
 // ------ Base Component Interfaces ------
 
@@ -489,6 +511,49 @@ internal class TextInputInfo(
     val textAppearance: TextInputTextAppearance =
         TextInputTextAppearance.fromJson(json.requireField("text_appearance"))
     val attributeName: AttributeName? = attributeNameFromJson(json)
+    val iconEnd: IconEnd? = json.optionalField<JsonMap>("icon_end")?.let {
+        IconEnd.fromJson(it)
+    }
+    val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
+
+    internal class ViewOverrides(json: JsonMap) {
+        val iconEnd = json.optionalList("icon_end")?.map { iconEnd ->
+            ViewPropertyOverride(iconEnd) { value -> IconEnd.fromJson(value.optMap()) }
+        }
+    }
+
+    sealed class IconEnd(
+        val type: Type,
+    ) {
+        data class Floating(val icon: Image.Icon): IconEnd(Type.FLOATING)
+
+        internal enum class Type(val value: String) {
+            FLOATING("floating");
+
+            internal companion object {
+
+                @Throws(JsonException::class)
+                fun fromJson(value: String): Type = entries.firstOrNull {
+                    it.value.equals(value, ignoreCase = true)
+                }?: throw JsonException("Invalid IconEnd type: $value")
+            }
+        }
+
+        internal companion object {
+            @Throws(JsonException::class)
+            fun fromJson(json: JsonMap): IconEnd {
+                val type = json.requireField<String>("type").let { Type.fromJson(it) }
+
+                return when (type) {
+                    Type.FLOATING -> {
+                        val icon = Image.Icon.fromJson(json.requireField("icon"))
+                        Floating(icon)
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 internal class ScoreInfo(

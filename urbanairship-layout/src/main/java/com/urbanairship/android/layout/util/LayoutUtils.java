@@ -268,7 +268,6 @@ public final class LayoutUtils {
         }
     }
 
-
     public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
         applyTextAppearance(editText, textInput.getViewInfo().getTextAppearance());
         int padding = (int) dpToPx(editText.getContext(), 8);

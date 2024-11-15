@@ -525,7 +525,7 @@ view:
                                 type: hex
                             stroke_width: 1
                           identifier: 7c7f0793-188f-4f60-aec2-0b35d9a4d005
-                          input_type: text
+                          input_type: text_multiline
                           required: false
                           text_appearance:
                             alignment: start

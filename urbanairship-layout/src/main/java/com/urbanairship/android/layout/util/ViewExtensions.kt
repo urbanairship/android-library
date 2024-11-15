@@ -13,12 +13,14 @@ import android.text.TextWatcher
 import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.util.Patterns
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MASK
 import android.view.MotionEvent.ACTION_UP
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -26,23 +28,33 @@ import androidx.core.text.TextUtilsCompat
 import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.core.text.toSpannable
 import androidx.core.view.descendants
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.android.layout.view.ScoreView
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.CheckableViewAdapter
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class)
-internal fun EditText.textChanges(debounceMillis: Long = 100L): Flow<String> =
+internal fun EditText.textChanges(debounceDuration: Duration = .1.seconds): Flow<String> =
     callbackFlow {
         checkMainThread()
 
@@ -61,7 +73,61 @@ internal fun EditText.textChanges(debounceMillis: Long = 100L): Flow<String> =
     }
         .onStart { emit(text.toString()) }
         .distinctUntilChanged()
-        .debounce(debounceMillis)
+        .debounce(debounceDuration)
+        .conflate()
+
+internal fun EditText.onEditing(idleDelay: Duration = 1.seconds): Flow<Boolean> =
+    callbackFlow {
+        checkMainThread()
+
+        onFocusChangeListener = View.OnFocusChangeListener { _, isFocused ->
+            trySend(isFocused)
+        }
+
+        var textEditTimeoutJob: Job? = null
+        val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+                trySend(true)
+                textEditTimeoutJob?.cancel()
+                textEditTimeoutJob = scope.launch {
+                    delay(idleDelay)
+                    if (isActive) {
+                        trySend(false)
+                    }
+                }
+            }
+
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) = Unit
+
+            override fun afterTextChanged(s: Editable) = Unit
+        }
+
+        addTextChangedListener(textWatcher)
+
+        setOnEditorActionListener { _, actionId, keyEvent ->
+            val isDoneAction =
+                actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE
+            val isDoneKey =
+                keyEvent?.action == KeyEvent.ACTION_DOWN && keyEvent?.keyCode == KeyEvent.KEYCODE_ENTER
+            if (isDoneKey || isDoneAction) {
+                trySend(false)
+                textEditTimeoutJob?.cancel()
+                true
+            } else {
+                false
+            }
+        }
+
+        awaitClose {
+            onFocusChangeListener = null
+            setOnEditorActionListener(null)
+            removeTextChangedListener(textWatcher)
+        }
+    }
+        .onStart { emit(false) }
+        .distinctUntilChanged()
         .conflate()
 
 @OptIn(FlowPreview::class)
