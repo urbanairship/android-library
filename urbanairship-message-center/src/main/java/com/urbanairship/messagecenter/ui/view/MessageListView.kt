@@ -7,11 +7,9 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.findViewTreeViewModelStoreOwner
-import androidx.lifecycle.get
+import androidx.annotation.StringRes
+import androidx.core.view.isVisible
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.urbanairship.Predicate
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
@@ -20,23 +18,10 @@ import com.urbanairship.messagecenter.animator.animateFadeOut
 import com.urbanairship.messagecenter.animator.slideInBottomAnimator
 import com.urbanairship.messagecenter.animator.slideOutBottomAnimator
 import com.urbanairship.messagecenter.ui.widget.EditableRecyclerView
+import com.urbanairship.messagecenter.ui.widget.MessageRecyclerAdapter
 import com.urbanairship.messagecenter.ui.widget.MessageRecyclerView
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 
-/**
- * `View` that displays a list of messages.
- *
- * Compared to [MessageCenterView], which wraps both the message list and message view, this view is
- * a lower level component that can be used for customizing how the message list is displayed within
- * an app's UI.
- */
+/** `View` that displays a list of messages. */
 public class MessageListView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -44,19 +29,14 @@ public class MessageListView @JvmOverloads constructor(
     defStyleRes: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr, defStyleRes) {
 
-    /** Optional `Predicate` to filter messages. */
-    public var predicate: Predicate<Message>? = null
-        set(value) {
-            field = value
-            viewModel?.setPredicate(value)
-        }
-
     /** Listener interface for responding to `MessageListView` events. */
     public interface Listener {
         /** Called when the list enters or exits editing mode. */
         public fun onEditModeChanged(isEditing: Boolean)
         /** Called when a message is clicked. */
         public fun onShowMessage(message: Message)
+        /** Called when the user has triggered an action in the UI. */
+        public fun onAction(action: MessageListAction)
     }
 
     /** `MessageListView` listener. */
@@ -67,12 +47,6 @@ public class MessageListView @JvmOverloads constructor(
         set(value) = views.setEditing(value)
         get() = views.list.isEditing
 
-    private val job = SupervisorJob()
-    private val scope = CoroutineScope(Dispatchers.Default + job)
-
-    private var observeViewModelJob: Job? = null
-
-    private var viewModel: MessageListViewModel? = null
     private val views: Views by lazy { Views(this) }
 
     init {
@@ -80,7 +54,7 @@ public class MessageListView @JvmOverloads constructor(
 
         with(views) {
             errorRetryButton.setOnClickListener {
-                viewModel?.refresh()
+                listener?.onAction(MessageListAction.Refresh())
             }
 
             listEditSelectAll.setOnClickListener {
@@ -92,16 +66,16 @@ public class MessageListView @JvmOverloads constructor(
             }
 
             listEditDelete.setOnClickListener {
-                viewModel?.deleteMessages(list.selectedItems)
+                listener?.onAction(MessageListAction.DeleteMessages(list.selectedItems))
                 isEditing = false
             }
 
             listEditMarkRead.setOnClickListener {
-                viewModel?.markMessagesRead(list.selectedItems)
+                listener?.onAction(MessageListAction.MarkMessagesRead(list.selectedItems))
                 isEditing = false
             }
 
-            list.listener = object : EditableRecyclerView.Listener<Message> {
+            list.listener = object : EditableRecyclerView.Listener<Message, MessageRecyclerAdapter.AccessibilityAction> {
                 override fun onEditModeChanged(isEditing: Boolean) {
                     listener?.onEditModeChanged(isEditing)
                     views.updateEditing(isEditing)
@@ -109,13 +83,21 @@ public class MessageListView @JvmOverloads constructor(
 
                 override fun onItemClicked(item: Message) {
                     listener?.onShowMessage(item) ?: run {
-                        // TODO: should this fall back to opening via MessageCenter.shared()?
-                        UALog.w { "No listener set for onShowMessage!" }
+                        UALog.e { "No listener set for onShowMessage!" }
                     }
                 }
 
                 override fun onSelectionChanged(selectedItems: List<Message>, isAllSelected: Boolean) {
                     updateSelectionCount(selectedItems.size, isAllSelected)
+                }
+
+                override fun onAction(action: MessageRecyclerAdapter.AccessibilityAction, item: Message) {
+                    when(action) {
+                        MessageRecyclerAdapter.AccessibilityAction.MARK_READ -> MessageListAction.MarkMessagesRead(listOf(item))
+                        MessageRecyclerAdapter.AccessibilityAction.DELETE -> MessageListAction.DeleteMessages(listOf(item))
+                    }.let {
+                        listener?.onAction(it)
+                    }
                 }
             }
 
@@ -125,29 +107,6 @@ public class MessageListView @JvmOverloads constructor(
         }
     }
 
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-
-        if (viewModel == null) {
-            viewModel = ViewModelProvider(
-                owner = requireNotNull(findViewTreeViewModelStoreOwner()) {
-                    "MessageListView must be hosted in a view that has a ViewModelStoreOwner!"
-                }, factory = MessageListViewModel.factory(predicate)
-            ).get<MessageListViewModel>().also {
-                viewModel = it
-                observeViewModel(it)
-            }
-        }
-    }
-
-    override fun onDetachedFromWindow() {
-        super.onDetachedFromWindow()
-
-        job.cancelChildren()
-
-        viewModel = null
-    }
-
     /** Triggers a network request to refresh the message list. */
     @JvmOverloads
     public fun refresh(animateSwipeRefresh: Boolean = false, onRefreshed: (() -> Unit)? = null) {
@@ -155,13 +114,13 @@ public class MessageListView @JvmOverloads constructor(
             views.listRefresh.isRefreshing = true
         }
 
-        viewModel?.refresh {
+        listener?.onAction(MessageListAction.Refresh {
             if (animateSwipeRefresh) {
                 views.listRefresh.isRefreshing = false
             }
 
             onRefreshed?.invoke()
-        }
+        })
     }
 
     /**
@@ -171,46 +130,28 @@ public class MessageListView @JvmOverloads constructor(
      * useful if this `RecyclerView` is being displayed in a two-pane master-detail layout.
      */
     public fun setHighlightedMessage(message: Message) {
-        views.list.setHighlightedMessage(message)
-    }
-
-    /**
-     * Sets the currently highlighted [Message], by ID.
-     *
-     * This represents the selected message that is currently being displayed and may be
-     * useful if this `RecyclerView` is being displayed in a two-pane master-detail layout.
-     */
-    public fun setHighlightedMessage(messageId: String) {
-        val state = viewModel?.states?.value ?: return
-        val message = when(state) {
-            is MessageListViewState.Content -> state.messages.firstOrNull { it.id == messageId }
-            else -> { null }
-        } ?: return
-
-        views.list.setHighlightedMessage(message)
+        views.list.setHighlightedMessageId(message.id)
     }
 
     /** Clears the currently highlighted item. */
     public fun clearHighlightedMessage() {
-        views.list.setHighlightedMessage(null)
+        views.list.setHighlightedMessageId(null)
     }
 
-    private fun observeViewModel(viewModel: MessageListViewModel) {
-        observeViewModelJob?.cancel()
+    /** Renders the given [state] to the view. */
+    public fun render(state: MessageListState) {
+        when (state) {
+            is MessageListState.Loading -> views.showLoading()
+            is MessageListState.Error -> views.showError()
+            is MessageListState.Content -> {
+                views.list.submitList(state.messages)
+                views.listRefresh.isRefreshing = state.isRefreshing
 
-        observeViewModelJob = viewModel.states
-            .onEach { state ->
-                when (state) {
-                    is MessageListViewState.Loading -> views.showLoading()
-                    is MessageListViewState.Error -> views.showError()
-                    is MessageListViewState.Content -> views.list.submitList(state.messages).also {
-                        UALog.d { "Submitted ${state.messages.size} messages & showing content!" }
-                        views.showContent()
-                    }
-                }
+                views.list.setHighlightedMessageId(state.highlightedMessageId)
+
+                views.showContent(isListEmpty = state.messages.isEmpty())
             }
-            .flowOn(Dispatchers.Main)
-            .launchIn(scope)
+        }
     }
 
     private data class Views(
@@ -228,14 +169,17 @@ public class MessageListView @JvmOverloads constructor(
         val error: ViewGroup = view.findViewById(R.id.error),
         val errorMessage: TextView = error.findViewById(R.id.error_text),
         val errorRetryButton: Button = error.findViewById(R.id.error_button),
+        val empty: View = view.findViewById(R.id.list_empty)
     ) {
         private val context = view.context
 
-        fun showContent() {
+        fun showContent(isListEmpty: Boolean) {
             error.visibility = View.GONE
             loading.visibility = View.GONE
 
+            empty.isVisible = isListEmpty
             listContainer.visibility = View.VISIBLE
+            listRefresh.isRefreshing = false
         }
 
         fun showError() {
@@ -246,10 +190,14 @@ public class MessageListView @JvmOverloads constructor(
         }
 
         fun showLoading() {
-            listContainer.visibility = View.GONE
-            error.visibility = View.GONE
+            if (listContainer.isVisible) {
+                listRefresh.isRefreshing = true
+            } else {
+                loading.visibility = View.VISIBLE
 
-            loading.visibility = View.VISIBLE
+                listContainer.visibility = View.GONE
+                error.visibility = View.GONE
+            }
         }
 
         fun setEditing(isEditing: Boolean) {
@@ -273,14 +221,21 @@ public class MessageListView @JvmOverloads constructor(
             } else {
                 context.getString(com.urbanairship.R.string.ua_select_all)
             }
-
-            if (count > 0) {
-                listEditMarkRead.text = context.getString(com.urbanairship.R.string.ua_mark_read) + " ($count)"
-                listEditDelete.text = context.getString(com.urbanairship.R.string.ua_delete) + " ($count)"
-            } else {
-                listEditMarkRead.text = context.getString(com.urbanairship.R.string.ua_mark_read)
-                listEditDelete.text = context.getString(com.urbanairship.R.string.ua_delete)
-            }
+            listEditMarkRead.text = getItemLabelString(com.urbanairship.R.string.ua_mark_read, count)
+            listEditDelete.text = getItemLabelString(com.urbanairship.R.string.ua_delete, count)
         }
+
+        private fun getItemLabelString(@StringRes titleResId: Int, count: Int = 0): String =
+            if (count == 0) {
+                // No count, just load the title: "Mark as read", "Delete", etc.
+                context.getString(titleResId)
+            } else {
+                // We have a count. Format the title with the count: "Mark as read (3)", "Delete (5)", etc.
+                context.getString(
+                    R.string.ua_edit_toolbar_item_title_with_count,
+                    context.getString(titleResId),
+                    count
+                )
+            }
     }
 }

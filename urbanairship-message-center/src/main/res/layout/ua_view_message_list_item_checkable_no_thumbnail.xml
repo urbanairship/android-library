@@ -1,26 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/UrbanAirship.MessageCenter.Item.NoThumbnail"
     android:layout_width="@dimen/message_item_checkable_no_thumbnail_size"
     android:layout_height="match_parent"
-    android:layout_marginEnd="8dp"
-    android:gravity="center"
-    tools:parentTag="android.widget.FrameLayout">
+    android:gravity="center">
 
     <FrameLayout
         android:id="@+id/unread_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <!-- The message list item blocks descendant focus,
+            so we don't need a content description for this ImageView. -->
         <ImageView
             android:id="@+id/unread_indicator"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:padding="4dp"
-            android:layout_gravity="top|center_horizontal"
+            style="@style/UrbanAirship.MessageCenter.Item.NoThumbnail.UnreadIndicator"
+            android:layout_width="@dimen/message_item_checkable_no_thumbnail_size"
+            android:layout_height="@dimen/message_item_checkable_no_thumbnail_size"
             android:visibility="gone"
             tools:visibility="visible"
-            android:src="@drawable/message_item_unread_indicator" />
+            android:importantForAccessibility="no"
+            android:contentDescription="@null"/>
     </FrameLayout>
 
     <com.google.android.material.checkbox.MaterialCheckBox

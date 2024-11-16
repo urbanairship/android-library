@@ -58,11 +58,6 @@ public class SampleAutopilot extends Autopilot {
         LiveUpdateManager.shared().register("sports-async", new SampleAsyncLiveUpdate());
         LiveUpdateManager.shared().register("medals-widget", new SampleAppWidgetLiveUpdate());
 
-        // TODO(m3-inbox): Not sure we need to do this any more... we're not using multi-nav-hosts
-        //   any more, and we could potentially use the new MessageCenterView instead of separate
-        //   fragments for the inbox and message views. Starting a new task makes it so
-        //   that the bottom nav bar flickers when the message center is opened, so we'll need to at
-        //   least fix that if we keep the separate fragments.
         MessageCenter.shared().setOnShowMessageCenterListener(messageId -> {
             // Use an implicit navigation deep link for now as explicit deep links are broken
             // with multi navigation host fragments

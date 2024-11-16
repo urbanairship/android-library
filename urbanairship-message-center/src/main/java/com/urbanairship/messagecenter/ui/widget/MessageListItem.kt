@@ -6,12 +6,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.AttrRes
 import androidx.annotation.DrawableRes
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.res.ResourcesCompat
+import androidx.annotation.StringRes
+import androidx.annotation.StyleRes
 import androidx.core.content.withStyledAttributes
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityViewCommand.CommandArguments
@@ -23,11 +24,12 @@ import com.urbanairship.images.ImageLoader
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
-import com.urbanairship.messagecenter.ui.view.MessageCenterView
+import com.urbanairship.messagecenter.ui.MessageCenterFragment
 import com.urbanairship.messagecenter.ui.view.MessageListView
 import com.urbanairship.messagecenter.util.setTextOrHide
 import com.urbanairship.util.AccessibilityUtils
 import java.text.DateFormat
+import com.urbanairship.R as coreR
 
 /**
  * A `View` representing a message in the Message Center message list.
@@ -37,14 +39,16 @@ import java.text.DateFormat
 public class MessageListItem @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    @AttrRes defStyleAttr: Int = 0
-) : ConstraintLayout(
+    @AttrRes defStyleAttr: Int = 0,
+    @StyleRes defStyleRes: Int = R.style.UrbanAirship_MessageCenter_Item
+) : FrameLayout(
     context,
     attrs,
-    defStyleAttr
+    defStyleAttr,
+    defStyleRes
 ) {
     private var showThumbnails: Boolean = false
-    private var placeholderRes: Int = R.drawable.message_item_thumbnail_placeholder
+    private var placeholderRes: Int = R.drawable.ua_message_item_thumbnail_placeholder
 
     private var boundMessage: Message? = null
 
@@ -55,45 +59,44 @@ public class MessageListItem @JvmOverloads constructor(
 
     private val accessibilityActionIds = mutableListOf<Int>()
 
+    /** Listener interface for accessibility actions set on `MessageListItem`. */
+    public interface AccessibilityActionListener {
+        /** Called when the "Mark as Read" action is triggered. */
+        public fun onMarkRead(message: Message)
+        /** Called when the "Delete" action is triggered. */
+        public fun onDelete(message: Message)
+    }
+
+    /** Listener for accessibility actions set on this `MessageListItem`. */
+    public var accessibilityActionListener: AccessibilityActionListener? = null
+
     init {
         inflate(context, R.layout.ua_view_message_list_item_content, this)
 
-        // TODO(m3-inbox): fix this... it's not reading from the theme/style, probably because
-        //      I'm missing something silly...
-        context.withStyledAttributes(attrs, R.styleable.MessageCenter) {
-            background = getDrawable(R.styleable.MessageCenter_messageCenterItemBackground)
-                ?: context.getDrawable(R.drawable.message_list_item_background)
-
-            setShowThumbnails(getBoolean(
-                R.styleable.MessageCenter_messageCenterItemIconEnabled,
-                true
+        context.withStyledAttributes(
+            set = attrs,
+            attrs = R.styleable.UrbanAirship_MessageCenter,
+            defStyleAttr = 0,
+            defStyleRes = R.style.UrbanAirship_MessageCenter
+        ) {
+            setIconsEnabled(getBoolean(
+                R.styleable.UrbanAirship_MessageCenter_messageCenterIconsEnabled,
+                false
             ))
 
-            setThumbnailPlaceholder(getResourceId(
-                R.styleable.MessageCenter_messageCenterItemIconPlaceholder,
-                R.drawable.message_item_thumbnail_placeholder
+            setPlaceholderIcon(getResourceId(
+                R.styleable.UrbanAirship_MessageCenter_messageCenterPlaceholderIcon,
+                R.drawable.ua_message_item_thumbnail_placeholder
             ))
-
-            // TODO(m3-inbox): more styling
-
         }
+    }
 
-        background = context.getDrawable(R.drawable.message_list_item_background)
-
-        // TODO(m3-inbox): should probably load this from the theme
-        with(resources) {
-            // Set padding from dimens
-            val top = getDimensionPixelSize(R.dimen.message_list_item_padding_top)
-            val bottom = getDimensionPixelSize(R.dimen.message_list_item_padding_bottom)
-
-            val (left, right) = if (layoutDirection == View.LAYOUT_DIRECTION_RTL) {
-                getDimensionPixelSize(R.dimen.message_list_item_padding_end) to getDimensionPixelSize(R.dimen.message_list_item_padding_start)
-            } else {
-                getDimensionPixelSize(R.dimen.message_list_item_padding_start) to getDimensionPixelSize(R.dimen.message_list_item_padding_end)
-            }
-
-            setPadding(left, top, right, bottom)
+    override fun onCreateDrawableState(extraSpace: Int): IntArray {
+        val state = super.onCreateDrawableState(extraSpace + 1)
+        if (isHighlighted) {
+            mergeDrawableStates(state, STATE_HIGHLIGHTED)
         }
+        return state
     }
 
     private val views = Views(this)
@@ -106,23 +109,6 @@ public class MessageListItem @JvmOverloads constructor(
         unreadContainer = views.unreadContainer,
         checkable = views.checkable
     )
-
-    /**
-     * Updates the view's highlighted state.
-     *
-     * This represents the selected message that is currently being displayed (if this
-     * `RecyclerView` is being displayed in [MessageCenterView] in a two-pane master-detail layout).
-     *
-     * @param highlighted `true` to highlight the view, `false` to remove the highlight.
-     */
-    public fun updateHighlighted(highlighted: Boolean) {
-        isHighlighted = highlighted
-
-        // TODO(m3-inbox): update to properly set up selectors for the background state-list drawable
-        val color = if (highlighted) R.color.ua_message_center_status_bar else android.R.color.transparent
-        setBackgroundColor(ResourcesCompat.getColor(resources, color, context.theme))
-        refreshDrawableState()
-    }
 
     //
     // List Item Binding / Content Updates
@@ -137,6 +123,7 @@ public class MessageListItem @JvmOverloads constructor(
         updateReadState(item.isRead)
 
         updateContentDescription(isSelected = views.checkable.isChecked)
+        updateAccessibilityActions()
     }
 
     /** Sets the title, optional subtitle, and sent date. */
@@ -151,7 +138,7 @@ public class MessageListItem @JvmOverloads constructor(
      * not null/blank (with a placeholder during loading and on error).
      */
     private fun setThumbnail(url: String?) {
-        if (views.thumbnail != null) {
+        if (this.showThumbnails && views.thumbnail != null) {
             if (url.isNullOrBlank().not()) {
                 // Load image
                 imageLoader.load(context, views.thumbnail, ImageRequestOptions.newBuilder(url)
@@ -165,6 +152,19 @@ public class MessageListItem @JvmOverloads constructor(
 
             views.unreadContainer.isVisible = true
         }
+    }
+
+    /**
+     * Updates the view's highlighted state.
+     *
+     * This represents the selected message that is currently being displayed (if this
+     * `RecyclerView` is being displayed in [MessageCenterFragment] in a two-pane layout).
+     *
+     * @param highlighted `true` to highlight the view, `false` to remove the highlight.
+     */
+    internal fun updateHighlighted(highlighted: Boolean) {
+        isHighlighted = highlighted
+        refreshDrawableState()
     }
 
     /** Updates this view's read state. */
@@ -185,12 +185,19 @@ public class MessageListItem @JvmOverloads constructor(
             R.style.UrbanAirship_MessageCenter_TextAppearance_MessageSubtitle_Unread
         })
 
+        // Change the text appearance of the sent date, based on read state
+        TextViewCompat.setTextAppearance(views.tertiaryText, if (isRead) {
+            R.style.UrbanAirship_MessageCenter_TextAppearance_MessageSentDate_Read
+        } else {
+            R.style.UrbanAirship_MessageCenter_TextAppearance_MessageSentDate_Unread
+        })
+
         // Show/hide unread indicator
         views.unreadIndicator.isGone = isRead
 
         // Update content description and a11y actions
         updateContentDescription(isRead = isRead)
-        updateAccessibilityActions(isEditing = isEditing, isActivated = isSelected)
+        updateAccessibilityActions(isRead = isRead)
     }
 
     /** Updates this view's editing state, with an optional animation. */
@@ -206,6 +213,7 @@ public class MessageListItem @JvmOverloads constructor(
         }
 
         updateContentDescription(isEditing = isEditing)
+        updateAccessibilityActions(isEditing = isEditing)
     }
 
     /** Updates this view's selected state. */
@@ -214,6 +222,7 @@ public class MessageListItem @JvmOverloads constructor(
 
         views.checkable.isChecked = isSelected
         updateContentDescription(isSelected = isSelected)
+        updateAccessibilityActions(isSelected = isSelected)
     }
 
     /** Updates the view's content description. */
@@ -246,26 +255,42 @@ public class MessageListItem @JvmOverloads constructor(
     }
 
     /** Updates the view's accessibility actions. */
-    private fun updateAccessibilityActions(isEditing: Boolean, isActivated: Boolean) {
+    private fun updateAccessibilityActions(
+        isEditing: Boolean = this.isEditing,
+        isSelected: Boolean = this.isActivated,
+        isRead: Boolean = this.isRead
+    ) {
         // Clear any previously set actions to avoid duplicates.
         for (actionId in accessibilityActionIds) {
             ViewCompat.removeAccessibilityAction(this, actionId)
         }
 
+        val message = boundMessage ?: return
+
         // Update click action to read "Tap to read message" instead of "Tap to activate".
         AccessibilityUtils.setClickActionLabel(this, R.string.ua_mc_action_click)
 
+        addAccessibilityAction(coreR.string.ua_delete) {
+            accessibilityActionListener?.onDelete(message)
+        }
+
+        if (!isRead) {
+            addAccessibilityAction(R.string.ua_description_mark_read) {
+                accessibilityActionListener?.onMarkRead(message)
+            }
+        }
+
+        // When the list is loaded in MessageCenterActivity / MessageCenterFragment, we don't
+        // expose edit mode if the list is in touch exploration mode, so we shouldn't get here
+        // in normal operation. In order to make sure custom integrations are accessible, we'll
+        // still update the click action to "select" or "unselect" when in edit mode here.
         if (isEditing) {
             // Add custom actions to support item selection on the item view.
             // This replaces checkbox/icon clicks when in screen reader mode.
-            val actionLabel = context.getString(
-                if (isActivated) R.string.ua_mc_action_unselect else R.string.ua_mc_action_select
+            AccessibilityUtils.setClickActionLabel(this,
+                if (isSelected) R.string.ua_mc_action_unselect
+                else R.string.ua_mc_action_select
             )
-            val id = ViewCompat.addAccessibilityAction(this, actionLabel) { _: View?, _: CommandArguments? ->
-                performClick()
-                true
-            }
-            accessibilityActionIds.add(id)
         }
     }
 
@@ -277,7 +302,7 @@ public class MessageListItem @JvmOverloads constructor(
      * Sets whether or not the item should display thumbnails, and inflates the appropriate layout into the
      * checkable thumbnail container view.
      */
-    public fun setShowThumbnails(showThumbnails: Boolean) {
+    public fun setIconsEnabled(showThumbnails: Boolean) {
         this.showThumbnails = showThumbnails
 
         val layout = if (showThumbnails) {
@@ -292,8 +317,21 @@ public class MessageListItem @JvmOverloads constructor(
     /**
      * Sets the placeholder drawable resource to use for thumbnails.
      */
-    public fun setThumbnailPlaceholder(@DrawableRes placeholderRes: Int) {
+    public fun setPlaceholderIcon(@DrawableRes placeholderRes: Int) {
         this.placeholderRes = placeholderRes
+    }
+
+    //
+    // Helpers
+    //
+
+    /** Helper to add an accessibility action to this `View`. */
+    private fun View.addAccessibilityAction(@StringRes labelRes: Int, block: () -> Unit) {
+        val label = context.getString(labelRes)
+        ViewCompat.addAccessibilityAction(this, label) { _: View?, _: CommandArguments? ->
+            block.invoke()
+            true
+        }.let(accessibilityActionIds::add)
     }
 
     private data class Views(
@@ -313,6 +351,6 @@ public class MessageListItem @JvmOverloads constructor(
         private val dateFormatter = DateFormat.getDateInstance(DateFormat.LONG)
 
         @JvmStatic
-        private val STATE_HIGHLIGHTED: IntArray = intArrayOf(com.urbanairship.R.attr.ua_state_highlighted)
+        private val STATE_HIGHLIGHTED: IntArray = intArrayOf(coreR.attr.ua_state_highlighted)
     }
 }

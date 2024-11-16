@@ -42,13 +42,15 @@ public class MainActivity extends AppCompatActivity {
         add(R.id.settingsFragment);
     }};
 
+    public static final AppBarConfiguration APP_BAR_CONFIGURATION =
+            new AppBarConfiguration.Builder(TOP_LEVEL_DESTINATIONS).build();
+
     private final InboxListener inboxListener = this::showMessageCenterIndicator;
 
     private Snackbar messageCenterSnackbar;
     private long messageCenterLastSentDate;
     private BottomNavigationView navigationView = null;
     private NavController navController = null;
-    private AppBarConfiguration appBarConfiguration = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,7 +61,6 @@ public class MainActivity extends AppCompatActivity {
                 (NavHostFragment) requireNonNull(getSupportFragmentManager().findFragmentById(R.id.nav_host_container));
 
         navController = navHostFragment.getNavController();
-        appBarConfiguration = new AppBarConfiguration.Builder(TOP_LEVEL_DESTINATIONS).build();
         navigationView = findViewById(R.id.navigation);
 
         NavigationUI.setupWithNavController(navigationView, navController);
@@ -111,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        return NavigationUI.navigateUp(navController, appBarConfiguration);
+        return NavigationUI.navigateUp(navController, APP_BAR_CONFIGURATION);
     }
 
     /**

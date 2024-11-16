@@ -2,10 +2,10 @@
 <resources>
     <color name="ua_message_center_background">#FFFFFF</color>
     <color name="ua_message_center_surface">#FFFFFF</color>
+    <color name="ua_message_center_surface_variant">#e5edff</color>
+    <color name="ua_message_center_surface_container">#f2f2f3</color>
     <color name="ua_message_center_accent">#004BFF</color>
-    <color name="ua_message_center_status_bar">#BCBDC2</color>
+    <color name="ua_message_center_secondary_variant">#BCBDC2</color>
     <color name="ua_message_center_ui_text_color">#000000</color>
-    <color name="ua_message_center_divider_color">#FFDADCE0</color>
-    <color name="ua_message_center_alert_button_text">#FFFFFF</color>
     <color name="ua_message_center_error">#E6193B</color>
 </resources>

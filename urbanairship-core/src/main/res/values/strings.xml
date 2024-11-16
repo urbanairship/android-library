@@ -39,7 +39,7 @@
     <!-- Message Center -->
     <string name="ua_message_center_title">Message Center</string>
     <string name="ua_empty_message_list">No messages</string>
-    <string name="ua_message_not_selected">No messages selected</string>
+    <string name="ua_message_not_selected">No message selected</string>
     <string name="ua_mc_failed_to_load">Unable to load message. Please try again later.</string>
     <string name="ua_retry_button">Retry</string>
     <string name="ua_ok">OK</string>
@@ -51,8 +51,6 @@
     <string name="ua_delete">Delete</string>
     <string name="ua_mc_no_longer_available">The selected message is no longer available.</string>
     <string name="ua_content_error">Content Error</string>
-    <!-- TODO: translate! -->
-    <string name="ua_edit">Edit</string>
 
     <!-- Label describing the number of selected items -->
     <plurals name="ua_selected_count">
@@ -63,6 +61,7 @@
     <!-- General -->
     <string name="ua_refresh">Refresh</string>
     <string name="ua_open">Open</string>
+    <string name="ua_back">Back</string> <!-- TODO: localize me! -->
 
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Rate</string>

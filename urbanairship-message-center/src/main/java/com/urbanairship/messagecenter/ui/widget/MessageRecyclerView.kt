@@ -6,12 +6,15 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityManager
 import androidx.core.content.withStyledAttributes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.widget.EditableRecyclerView.Payload
+import com.urbanairship.messagecenter.ui.widget.MessageRecyclerAdapter.AccessibilityAction.DELETE
+import com.urbanairship.messagecenter.ui.widget.MessageRecyclerAdapter.AccessibilityAction.MARK_READ
 import com.google.android.material.divider.MaterialDividerItemDecoration
 
 /** Base Message Center `RecyclerView` that displays a list of messages. */
@@ -19,11 +22,17 @@ internal class MessageRecyclerView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
-) : EditableRecyclerView<Message, MessageRecyclerAdapter.ViewHolder>(
+    defStyleRes: Int = R.style.UrbanAirship_MessageCenter_List
+) : EditableRecyclerView<Message, MessageRecyclerAdapter.ViewHolder, MessageRecyclerAdapter.AccessibilityAction>(
     context,
     attrs,
     defStyleAttr
 ) {
+
+    private val accessibilityManager: AccessibilityManager by lazy {
+        context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+    }
+
     private val adapterListener = object : EditableListAdapter.Listener<Message> {
         override fun onItemClicked(item: Message) {
             if (isEditing) {
@@ -48,42 +57,62 @@ internal class MessageRecyclerView @JvmOverloads constructor(
         }
     }
 
+    private val accessibilityListener =
+        MessageRecyclerAdapter.AccessibilityActionListener { action, message ->
+            listener?.onAction(action, message)
+        }
+
     private val adapter = MessageRecyclerAdapter(
         listener = adapterListener,
-        isEditingProvider = { isEditing }
+        accessibilityActionListener = accessibilityListener,
+        isEditingProvider = { isEditing },
+        isTouchExplorationEnabledProvider = { accessibilityManager.isTouchExplorationEnabled }
     )
 
     init {
-        context.withStyledAttributes(attrs, R.styleable.MessageCenter) {
+        context.withStyledAttributes(
+            set = attrs,
+            attrs = R.styleable.UrbanAirship_MessageCenter,
+            defStyleAttr = 0,
+            defStyleRes = R.style.UrbanAirship_MessageCenter
+        ) {
             applyDividerStyles()
-
-            // TODO(m3-inbox): more styling?
         }
+
+        addItemDecoration(VerticalSpacingItemDecoration(
+            resources.getDimensionPixelSize(R.dimen.message_list_item_spacing_top),
+            resources.getDimensionPixelSize(R.dimen.message_list_item_spacing_middle),
+            resources.getDimensionPixelSize(R.dimen.message_list_item_spacing_bottom)
+        ))
 
         setAdapter(adapter)
         layoutManager = LinearLayoutManager(context)
+
+        // Rebind list items when touch exploration state changes
+        accessibilityManager.addTouchExplorationStateChangeListener {
+            adapter.notifyDataSetChanged()
+        }
     }
 
     public fun submitList(messages: List<Message>): Unit = adapter.submitList(messages)
 
-    public fun setHighlightedMessage(message: Message?) {
-        adapter.setHighlighted(message)
+    public fun setHighlightedMessageId(messageId: String?) {
+        adapter.setHighlightedItemId(messageId)
     }
 
     private fun TypedArray.applyDividerStyles() {
-        //TODO(m3-inbox): Fix this! it's not actually loading values from the theme attrs...
-        val showDividers = getBoolean(R.styleable.MessageCenter_messageCenterDividersEnabled, false)
+        val showDividers = getBoolean(R.styleable.UrbanAirship_MessageCenter_messageCenterItemDividersEnabled, false)
 
         if (showDividers) {
             val dividerDecoration = MaterialDividerItemDecoration(context, VERTICAL).apply {
                 dividerInsetStart = getDimensionPixelSize(
-                    R.styleable.MessageCenter_messageCenterDividerInsetStart,
-                    context.resources.getDimensionPixelSize(R.dimen.divider_inset_start)
+                    R.styleable.UrbanAirship_MessageCenter_messageCenterItemDividerInsetStart,
+                    context.resources.getDimensionPixelSize(R.dimen.message_item_divider_inset_start)
                 )
 
                 dividerInsetEnd = getDimensionPixelSize(
-                    R.styleable.MessageCenter_messageCenterDividerInsetEnd,
-                    context.resources.getDimensionPixelSize(R.dimen.divider_inset_end)
+                    R.styleable.UrbanAirship_MessageCenter_messageCenterItemDividerInsetEnd,
+                    context.resources.getDimensionPixelSize(R.dimen.message_item_divider_inset_end)
                 )
             }
             addItemDecoration(dividerDecoration)
@@ -94,58 +123,94 @@ internal class MessageRecyclerView @JvmOverloads constructor(
 /** `Adapter` for displaying messages in [MessageRecyclerView]. */
 internal class MessageRecyclerAdapter(
     listener: Listener<Message>,
+    private val accessibilityActionListener: AccessibilityActionListener,
     isEditingProvider: () -> Boolean,
-) : EditableListAdapter<Message, MessageRecyclerAdapter.ViewHolder>(listener, isEditingProvider, DIFF_CALLBACK) {
+    isTouchExplorationEnabledProvider: () -> Boolean
+) : EditableListAdapter<Message, MessageRecyclerAdapter.ViewHolder>(
+    listener = listener,
+    isEditing = isEditingProvider,
+    isTouchExplorationEnabledProvider = isTouchExplorationEnabledProvider,
+    diffCallback = DIFF_CALLBACK
+) {
 
     init {
         setHasStableIds(true)
     }
 
-    private var highlightedItem: Message? = null
+    private val positionMap = mutableMapOf<String, Int>()
+
+    private var highlightedItemId: String? = null
 
     override fun getItemId(position: Int): Long = getItem(position).id.hashCode().toLong()
+
+    override fun submitList(list: List<Message>?) {
+        super.submitList(list)
+
+        // Cache adapter positions for each message.
+        positionMap.clear()
+        list?.forEachIndexed { index, message ->
+            positionMap[message.id] = index
+        }
+    }
+
+    /** Accessibility actions for messages. */
+    enum class AccessibilityAction {
+        MARK_READ,
+        DELETE
+    }
+
+    /** Listener interface for accessibility actions. */
+    fun interface AccessibilityActionListener {
+        fun onAccessibilityAction(action: AccessibilityAction, message: Message)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder = ViewHolder(
         parent,
         isSelected = ::isSelected,
         isEditing = isEditing::invoke,
+        isTouchExplorationEnabled = isTouchExplorationEnabledProvider::invoke,
         isHighlighted = ::isHighlighted,
         onItemClicked = ::onItemClicked,
         onItemLongClicked = ::onItemLongClicked,
+        onAccessibilityAction = accessibilityActionListener::onAccessibilityAction
     )
 
     /**
-     * Sets the currently highlighted [item].
+     * Sets the currently highlighted [itemId].
      *
      * This represents the selected message that is currently being displayed (if this
      * `RecyclerView` is being displayed in `MessageCenterView` in a two-pane master-detail layout).
      */
-    override fun setHighlighted(item: Message?) {
+    override fun setHighlightedItemId(itemId: String?) {
         // If the item is already highlighted, do nothing
-        if (highlightedItem?.id == item?.id) return
+        if (highlightedItemId == itemId) return
 
-        highlightedItem = item
+        highlightedItemId = itemId
 
         // Clear previous highlighted item
         notifyItemRangeChanged(0, currentList.size, Payload.UpdateHighlighted(false))
 
         // Highlight current item
-        notifyItemChanged(currentList.indexOf(item), Payload.UpdateHighlighted(true))
+        val position = positionMap[itemId] ?: -1
+
+        if (position != -1) {
+            notifyItemChanged(position, Payload.UpdateHighlighted(true))
+        }
     }
 
     /** Returns the currently highlighted item, or `null`, if no item is highlighted. */
-    override fun getHighlighted(): Message? = highlightedItem
+    override fun getHighlightedItemId(): String? = highlightedItemId
 
     /** Clears the currently highlighted item. */
-    override fun clearHighlighted() {
-        highlightedItem = null
+    override fun clearHighlightedItemId() {
+        highlightedItemId = null
 
         notifyItemRangeChanged(0, currentList.size, Payload.UpdateHighlighted(false))
     }
 
-    /** Returns `true` if the given [Message] is highlighted. */
-    override fun isHighlighted(item: Message): Boolean =
-        highlightedItem?.id == item.id
+    /** Returns `true` if the given Message ID is highlighted. */
+    override fun isHighlighted(itemId: String): Boolean =
+        highlightedItemId == itemId
 
     /** `ViewHolder` for message items displayed in [MessageRecyclerView]. */
     public class ViewHolder(
@@ -153,9 +218,11 @@ internal class MessageRecyclerAdapter(
         view: View = LayoutInflater.from(parent.context).inflate(R.layout.ua_view_message_list_item, parent, false),
         private val isSelected: (Message) -> Boolean,
         private val isEditing: () -> Boolean,
-        private val isHighlighted: (Message) -> Boolean,
+        private val isTouchExplorationEnabled: () -> Boolean,
+        private val isHighlighted: (String) -> Boolean,
         private val onItemClicked: (Message) -> Unit,
         private val onItemLongClicked: (Message) -> Boolean,
+        private val onAccessibilityAction: (AccessibilityAction, Message) -> Unit
     ) : EditableViewHolder<Message, MessageListItem>(itemView = view as MessageListItem) {
 
         /** Binds the [item] to the view. */
@@ -164,10 +231,18 @@ internal class MessageRecyclerAdapter(
                 bind(item)
                 updateEditing(isEditing(), animate = false)
                 updateSelected(isSelected(item))
-                updateHighlighted(isHighlighted(item))
+                updateHighlighted(isHighlighted(item.id))
 
                 setOnClickListener { onItemClicked(item) }
-                setOnLongClickListener { onItemLongClicked(item) }
+
+                if (!isTouchExplorationEnabled()) {
+                    setOnLongClickListener { onItemLongClicked(item) }
+                }
+
+                accessibilityActionListener = object : MessageListItem.AccessibilityActionListener {
+                    override fun onMarkRead(message: Message) = onAccessibilityAction(MARK_READ, message)
+                    override fun onDelete(message: Message) = onAccessibilityAction(DELETE, message)
+                }
             }
         }
 

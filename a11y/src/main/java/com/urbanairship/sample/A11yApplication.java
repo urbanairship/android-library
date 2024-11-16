@@ -6,7 +6,7 @@ import android.app.Application;
 import android.os.StrictMode;
 import android.webkit.WebView;
 
-public class SampleApplication extends Application {
+public class A11yApplication extends Application {
 
     @Override
     public void onCreate() {

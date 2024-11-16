@@ -1,5 +1,6 @@
 package com.urbanairship.messagecenter.ui.view
 
+import android.os.Parcel
 import android.os.Parcelable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -22,7 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 
 /** `ViewModel` for [MessageView]. */
-public class MessageViewViewModel(
+public class MessageViewModel(
     private val inbox: Inbox = MessageCenter.shared().inbox,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -40,14 +41,23 @@ public class MessageViewViewModel(
      */
     private val _states: MutableStateFlow<MessageViewState> = MutableStateFlow(restoredState ?: MessageViewState.Empty)
 
+    /**
+     * A `Flow` of MessageView [States][MessageViewState] (data consumed by the view in order to display the message).
+     */
+    public val states: StateFlow<MessageViewState> = _states.asStateFlow()
+
     /** The currently loaded message ID, if we have one. */
     private val currentMessageId: String?
         get() = (_states.value as? MessageViewState.Content)?.message?.id
 
     /**
-     * A `Flow` of MessageView [States][MessageViewState] (data consumed by the view in order to display the message).
+     * The currently loaded [Message], if we have one.
+     *
+     * This is a convenience property for accessing the message from the current state, and will
+     * be `null` unless the current state is [MessageViewState.Content].
      */
-    public val states: StateFlow<MessageViewState> = _states.asStateFlow()
+    public val currentMessage: Message?
+        get() = (_states.value as? MessageViewState.Content)?.message
 
     init {
         viewModelScope.launch {
@@ -64,7 +74,7 @@ public class MessageViewViewModel(
     public fun loadMessage(messageId: String) {
         UALog.v { "Loading message: $messageId" }
 
-        if (messageId == currentMessageId) {
+        if (messageId == currentMessage?.id) {
             return
         }
 
@@ -82,22 +92,22 @@ public class MessageViewViewModel(
         _states.value = MessageViewState.Empty
     }
 
-    /** Marks the given list of [messages] as read. */
-    public fun markMessagesRead(messages: List<Message>) {
-        UALog.d { "Marking ${messages.size} messages read" }
-        inbox.markMessagesRead(messages.map { it.id }.toSet())
-    }
-
     /** Marks the given [messages] as read. */
     public fun markMessagesRead(vararg messages: Message) {
         UALog.d { "Marking ${messages.size} messages read" }
         inbox.markMessagesRead(messages.map { it.id }.toSet())
     }
 
+    /** Deletes the given list of [messages]. */
+    public fun deleteMessages(vararg messages: Message) {
+        UALog.d { "Deleting  ${messages.size} messages" }
+        inbox.deleteMessages(messages.map { it.id }.toSet())
+    }
+
     internal fun subscribeForMessageUpdates(): SubscriptionCancellation {
         val listener = object : InboxListener {
             override fun onInboxUpdated() {
-                val messageId = currentMessageId ?: return
+                val messageId = currentMessage?.id ?: return
 
                 viewModelScope.launch {
                     _states.value = getOrFetchMessage(messageId)
@@ -134,11 +144,11 @@ public class MessageViewViewModel(
     }
 
     public companion object {
-        /** Factory for creating [MessageViewViewModel]. */
+        /** Factory for creating [MessageViewModel]. */
         @JvmStatic
         public fun factory(): ViewModelProvider.Factory = viewModelFactory {
             initializer {
-                MessageViewViewModel(
+                MessageViewModel(
                     inbox = MessageCenter.shared().inbox,
                     savedStateHandle = createSavedStateHandle(),
                 )
@@ -172,6 +182,12 @@ public sealed class MessageViewState {
 
     /** Empty state (no messages available). */
     public data object Empty : MessageViewState()
+}
+
+/** [MessageView] UI actions. */
+public sealed class MessageViewAction {
+    /** The user clicked on the "retry" button in the error view. */
+    public data object ErrorRetryClicked : MessageViewAction()
 }
 
 internal interface SubscriptionCancellation {

@@ -17,8 +17,6 @@
 
         <item name="colorSurface">?android:colorBackground</item>
 
-        <item name="messageCenterStyle">@style/AppTheme.MessageCenter</item>
-
         <item name="colorSecondaryVariant">#c40021</item>
         <item name="colorPrimaryVariant">#000000</item>
 
@@ -28,7 +26,9 @@
         <item name="toolbarStyle">@style/AppTheme.Toolbar</item>
     </style>
 
-    <style name="AppTheme.Toolbar" parent="@style/Widget.Material3.Toolbar.Surface" />
+    <style name="AppTheme.Toolbar" parent="@style/Widget.Material3.Toolbar.Surface">
+        <item name="liftOnScroll">false</item>
+    </style>
 
     <style name="AppTheme.BottomNav" parent="@style/Widget.Material3.BottomNavigationView">
         <item name="backgroundTint">@color/lightBlue</item>
@@ -41,21 +41,19 @@
         <item name="android:color">?colorSecondary</item>
     </style>
 
+    <!-- Custom Preference Center style -->
+    <!-- Uses AppTheme colors and overrides the colorAccent. -->
     <style name="UrbanAirship.PreferenceCenter" parent="AppTheme">
         <item name="colorAccent">?colorSecondary</item>
     </style>
 
-    <style name="AppTheme.MessageCenter" parent="MessageCenter">
-<!--        <item name="messageCenterItemTitleTextAppearance">@style/AppTheme.MessageCenter.TitleTextAppearance</item>-->
-<!--        <item name="messageCenterItemDateTextAppearance">@style/AppTheme.MessageCenter.DateTextAppearance</item>-->
-        <item name="messageCenterItemIconEnabled">true</item>
-        <item name="messageCenterDividersEnabled">true</item>
+    <!-- Custom Message Center style -->
+    <!-- Uses AppTheme colors and overrides default styling to show thumbnails and a custom title. -->
+    <style name="UrbanAirship.MessageCenter" parent="AppTheme">
+        <!-- Set custom toolbar title "Inbox" -->
+        <item name="messageCenterToolbarTitle">@string/inbox</item>
+
+        <!-- Show message thumbnails in the message list -->
+        <item name="messageCenterIconsEnabled">true</item>
     </style>
-
-    <!-- Custom message title text style -->
-    <style name="AppTheme.MessageCenter.TitleTextAppearance" parent="TextAppearance.MaterialComponents.Subtitle1" />
-
-    <!-- Custom message date text style -->
-    <style name="AppTheme.MessageCenter.DateTextAppearance" parent="TextAppearance.MaterialComponents.Body2" />
-
 </resources>

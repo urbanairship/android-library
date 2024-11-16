@@ -29,8 +29,10 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     // AndroidX
+    implementation(libs.androidx.activityktx)
     implementation(libs.androidx.corektx)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.fragment.fragmentktx)
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.androidx.slidingpanelayout)
     implementation(libs.androidx.recyclerview)

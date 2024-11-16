@@ -1,31 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/item_root"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/message_item_root"
+    style="@style/UrbanAirship.MessageCenter.Item.Content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="?listPreferredItemHeight"
-    android:clickable="true"
-    android:focusable="true"
-    android:descendantFocusability="blocksDescendants"
-    android:background="?selectableItemBackground"
-    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+    android:descendantFocusability="blocksDescendants">
 
     <FrameLayout
         android:id="@+id/checkable_thumbnail_container"
-        android:inflatedId="@+id/checkable_thumbnail_container"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/message_item_thumbnail_size"
-        android:layout_marginStart="12dp"
-        android:gravity="center"
+        android:layout_height="wrap_content"
+        android:gravity="start"
         app:layout_constraintEnd_toStartOf="@id/flow"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0">
 
-        <include layout="@layout/ua_view_message_list_item_checkable_thumbnail"/>
+        <!-- Checkable thumnail or no-thumbnail layout will be inflated here. -->
 
     </FrameLayout>
 
@@ -34,49 +28,36 @@
         android:orientation="vertical"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginEnd="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/checkable_thumbnail_container"
         app:layout_constraintTop_toTopOf="parent"
         app:constraint_referenced_ids="primaryText,secondaryText,tertiaryText"
         app:flow_verticalStyle="packed"
-        app:flow_verticalGap="2dp" />
+        app:flow_verticalGap="@dimen/message_item_text_vertical_gap" />
 
     <TextView
         android:id="@+id/primaryText"
-        style="?textAppearanceTitleMedium"
-        android:textFontWeight="700"
+        style="@style/UrbanAirship.MessageCenter.Item.MessageTitle"
+        android:textAppearance="@style/UrbanAirship.MessageCenter.TextAppearance.MessageTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="8dp"
-        android:ellipsize="end"
-        android:maxLines="3"
-        android:textAlignment="viewStart"
         tools:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. " />
 
     <TextView
         android:id="@+id/secondaryText"
-        style="?textAppearanceBodyMedium"
+        style="@style/UrbanAirship.MessageCenter.Item.MessageSubtitle"
+        android:textAppearance="@style/UrbanAirship.MessageCenter.TextAppearance.MessageSubtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="8dp"
-        android:ellipsize="end"
-        android:maxLines="2"
         android:visibility="gone"
-        android:textColor="?android:textColorPrimary"
         tools:text="Integer vitae venenatis felis, eu fermentum dolor. Mauris laoreet a urna a blandit. Nulla porta enim ex, eget viverra magna vehicula eu." />
 
     <TextView
         android:id="@+id/tertiaryText"
-        style="?textAppearanceBodySmall"
+        style="@style/UrbanAirship.MessageCenter.Item.MessageDate"
+        android:textAppearance="@style/UrbanAirship.MessageCenter.TextAppearance.MessageSentDate"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="8dp"
-        android:textColor="?android:textColorSecondary"
-        android:paddingBottom="8dp"
         tools:text="September, 21, 2024" />
-</merge>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -10,6 +10,7 @@ import android.net.Uri;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Autopilot;
 import com.urbanairship.UAirship;
+import com.urbanairship.automation.InAppAutomation;
 import com.urbanairship.messagecenter.MessageCenter;
 
 import androidx.annotation.NonNull;
@@ -22,7 +23,7 @@ import static androidx.core.app.NotificationManagerCompat.IMPORTANCE_HIGH;
 /**
  * Autopilot that enables user notifications on first run.
  */
-public class SampleAutopilot extends Autopilot {
+public class A11yAutopilot extends Autopilot {
 
     private static final String NO_BACKUP_PREFERENCES = "com.urbanairship.sample.no_backup";
 

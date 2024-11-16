@@ -4,14 +4,22 @@
 
     <application>
 
-        <activity
-            android:name="com.urbanairship.messagecenter.ui.MessageActivity"
-            android:exported="false" />
-
+        <!-- Message Center Activity - Hosts a MessageCenterListFragment and a MessageCenterMessageFragment in a SlidingPaneLayout. -->
+        <!-- Supports RTL layout if 'android:supportsRtl="true"' is set on the main application tag. -->
         <activity
             android:name="com.urbanairship.messagecenter.ui.MessageCenterActivity"
+            android:theme="@style/UrbanAirship.MessageCenter.Activity"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|keyboardHidden"
             android:exported="false"
             android:label="@string/ua_message_center_title" />
 
+        <!-- Message Center Message Activity - Hosts a MessageCenterMessageFragment to display a single message. -->
+        <!-- Supports RTL layout if 'android:supportsRtl="true"' is set on the main application tag. -->
+        <activity
+            android:name="com.urbanairship.messagecenter.ui.MessageActivity"
+            android:theme="@style/UrbanAirship.MessageCenter.Activity"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
     </application>
 </manifest>

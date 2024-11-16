@@ -13,24 +13,26 @@ import com.urbanairship.messagecenter.ui.widget.EditableRecyclerView.Payload
 import kotlinx.parcelize.Parcelize
 
 /** Base class for a `RecyclerView` that supports editing. */
-internal abstract class EditableRecyclerView<T : Parcelable, VH : EditableViewHolder<T, *>> @JvmOverloads constructor(
+internal abstract class EditableRecyclerView<T : Parcelable, VH : EditableViewHolder<T, *>, A> @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : RecyclerView(context, attrs, defStyleAttr) {
 
     /** Listener interface for `EditableRecyclerView`. */
-    interface Listener<T> {
+    interface Listener<T, A> {
         /** Called when the edit mode is changed. */
         public fun onEditModeChanged(isEditing: Boolean)
         /** Called when the selection is changed. */
         public fun onSelectionChanged(selectedItems: List<T>, isAllSelected: Boolean)
         /** Called when an item is clicked. */
         public fun onItemClicked(item: T)
+        /** Called when an item action is triggered. */
+        public fun onAction(action: A, item: T)
     }
 
     /** Listener for `EditableRecyclerView` events. */
-    var listener: Listener<T>? = null
+    var listener: Listener<T, A>? = null
 
     /** Flag that controls whether the list is in editing mode. */
     var isEditing: Boolean = false
@@ -73,7 +75,7 @@ internal abstract class EditableRecyclerView<T : Parcelable, VH : EditableViewHo
             superState = super.onSaveInstanceState(),
             isEditing = isEditing,
             selectedItems = editableAdapter?.getSelected() ?: emptyList(),
-            highlightedItem = editableAdapter?.getHighlighted()
+            highlightedItemId = editableAdapter?.getHighlightedItemId()
         )
     }
 
@@ -86,10 +88,7 @@ internal abstract class EditableRecyclerView<T : Parcelable, VH : EditableViewHo
                 it as? T
             })
 
-            @Suppress("UNCHECKED_CAST")
-            (state.highlightedItem as? T)?.let {
-                editableAdapter?.setHighlighted(it)
-            }
+            editableAdapter?.setHighlightedItemId(state.highlightedItemId)
 
             state.superState
         } else {
@@ -141,7 +140,7 @@ internal abstract class EditableRecyclerView<T : Parcelable, VH : EditableViewHo
         val superState: Parcelable?,
         val isEditing: Boolean,
         val selectedItems: List<T>,
-        val highlightedItem: T?
+        val highlightedItemId: String?
     ) : Parcelable
 }
 
@@ -154,6 +153,7 @@ internal abstract class EditableRecyclerView<T : Parcelable, VH : EditableViewHo
 internal abstract class EditableListAdapter<T, VH : EditableViewHolder<T, *>>(
     protected val listener: Listener<T>,
     protected val isEditing: () -> Boolean,
+    protected val isTouchExplorationEnabledProvider: () -> Boolean,
     diffCallback: DiffUtil.ItemCallback<T>
 ) : ListAdapter<T, VH>(diffCallback) {
 
@@ -257,21 +257,21 @@ internal abstract class EditableListAdapter<T, VH : EditableViewHolder<T, *>>(
     }
 
     /**
-     * Sets the currently highlighted [item].
+     * Sets the currently highlighted item ID.
      *
      * This represents the selected message that is currently being displayed (if this
      * `RecyclerView` is being displayed in `MessageCenterView` in a two-pane master-detail layout).
      */
-    abstract fun setHighlighted(item: T?)
+    abstract fun setHighlightedItemId(itemId: String?)
 
-    /** Returns the currently highlighted item, or `null`, if no item is highlighted. */
-    abstract fun getHighlighted(): T?
+    /** Returns the currently highlighted item ID, or `null`, if no item is highlighted. */
+    abstract fun getHighlightedItemId(): String?
 
     /** Clears the currently highlighted item. */
-    abstract fun clearHighlighted()
+    abstract fun clearHighlightedItemId()
 
-    /** Returns `true` if the given [item] is highlighted. */
-    abstract fun isHighlighted(item: T): Boolean
+    /** Returns `true` if the given [itemId] is highlighted. */
+    abstract fun isHighlighted(itemId: String): Boolean
 
     /**
      * Called to create a new `ViewHolder` for the given [viewType].

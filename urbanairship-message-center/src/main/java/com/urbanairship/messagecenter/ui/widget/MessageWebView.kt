@@ -17,6 +17,7 @@ import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.webkit.AirshipWebView
 import com.urbanairship.webkit.AirshipWebViewClient
+import com.urbanairship.webkit.NestedScrollAirshipWebView
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
@@ -28,7 +29,7 @@ internal class MessageWebView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyle: Int = 0,
     defResStyle: Int = 0
-): AirshipWebView(context, attrs, defStyle, defResStyle) {
+): NestedScrollAirshipWebView(context, attrs, defStyle, defResStyle) {
 
     /**
      * Loads the web view with the [Message].
