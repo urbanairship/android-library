@@ -175,6 +175,29 @@ public class AutomationStoreTest {
     }
 
     @Test
+    public fun testUpsertAndGetTooManySchedules(): TestResult = runTest {
+        // Create a ton of schedules (the SQL lite variable limit is 999)
+        val schedulesById = mutableMapOf<String, AutomationScheduleData>()
+        for (i in 0 until 2000) {
+            val schedule = makeSchedule(i.toString())
+            schedulesById[schedule.schedule.identifier] = schedule
+        }
+
+        val schedules = schedulesById.values.toList()
+        val scheduleIds = schedulesById.keys.toList()
+
+        // Initial insert
+        store.upsertSchedules(scheduleIds) { id, _ -> requireNotNull(schedulesById[id]) }
+
+        // Upsert the schedules again
+        store.upsertSchedules(scheduleIds) { id, _ -> requireNotNull(schedulesById[id]) }
+
+        // Verify the inserted schedules
+        val result = store.getSchedules(scheduleIds)
+        assertEquals(schedules.toSet(), result.toSet())
+    }
+
+    @Test
     public fun testGetSchedulesByGroup(): TestResult = runTest {
         val original = listOf(
             makeSchedule("foo", "groupA"),

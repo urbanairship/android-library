@@ -25,6 +25,7 @@ import com.urbanairship.UALog
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.db.SuspendingBatchedQueryHelper.collectBatched
 import com.urbanairship.db.SuspendingBatchedQueryHelper.runBatched
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonTypeConverters
@@ -145,8 +146,9 @@ internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterfa
         return dao.getSchedules(group)?.mapNotNull { it.toScheduleData() } ?: listOf()
     }
 
+    @Transaction
     override suspend fun getSchedules(ids: List<String>): List<AutomationScheduleData> {
-        return dao.getSchedules(ids)?.mapNotNull { it.toScheduleData() } ?: listOf()
+        return dao.getSchedules(ids).mapNotNull { it.toScheduleData() }
     }
 
     override suspend fun updateSchedule(
@@ -207,9 +209,8 @@ internal interface AutomationDao {
         ids: List<String>, closure: (String, AutomationScheduleData?) -> AutomationScheduleData
     ): List<AutomationScheduleData> {
         val current = getSchedules(ids)
-            ?.mapNotNull { it.toScheduleData() }
-            ?.associateBy { it.schedule.identifier }
-            ?: mapOf()
+            .mapNotNull { it.toScheduleData() }
+            .associateBy { it.schedule.identifier }
 
         val result = mutableListOf<AutomationScheduleData>()
 
@@ -235,8 +236,16 @@ internal interface AutomationDao {
     @Query("SELECT * FROM schedules WHERE (`group` = :group)")
     suspend fun getSchedules(group: String): List<ScheduleEntity>?
 
+    @Transaction
+    suspend fun getSchedules(ids: List<String>): List<ScheduleEntity> =
+        collectBatched(ids) { batch -> getSchedulesBatchInternal(batch) }
+
+    /**
+     * This query is only for internal use, with batched queries
+     * to avoid the max query params limit of 999.
+     */
     @Query("SELECT * FROM schedules WHERE (scheduleId IN (:ids))")
-    suspend fun getSchedules(ids: List<String>): List<ScheduleEntity>?
+    suspend fun getSchedulesBatchInternal(ids: List<String>): List<ScheduleEntity>?
 
     @Transaction
     suspend fun updateSchedule(
