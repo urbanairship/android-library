@@ -5,27 +5,32 @@ package com.urbanairship.android.layout.util;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.RippleDrawable;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.RoundRectShape;
+import android.os.Build;
 import android.text.Html;
 import android.text.Spanned;
-import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.shape.CornerFamily;
 import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.Fonts;
 import com.urbanairship.android.layout.R;
-import com.urbanairship.android.layout.model.BaseModel;
-import com.urbanairship.android.layout.model.LabelButtonModel;
+import com.urbanairship.android.layout.model.Background;
+import com.urbanairship.android.layout.model.ButtonLayoutModel;
 import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.property.Border;
@@ -34,11 +39,13 @@ import com.urbanairship.android.layout.property.FormInputType;
 import com.urbanairship.android.layout.property.MarkdownOptions;
 import com.urbanairship.android.layout.property.MarkdownOptionsKt;
 import com.urbanairship.android.layout.property.SwitchStyle;
+import com.urbanairship.android.layout.property.TapEffect;
 import com.urbanairship.android.layout.property.TextAppearance;
 import com.urbanairship.android.layout.property.TextStyle;
 import com.urbanairship.android.layout.widget.Clippable;
 import com.urbanairship.util.UAStringUtil;
 
+import java.util.Arrays;
 import java.util.List;
 
 import androidx.annotation.ColorInt;
@@ -46,6 +53,7 @@ import androidx.annotation.Dimension;
 import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.SwitchCompat;
@@ -61,11 +69,11 @@ import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class LayoutUtils {
 
-    private static final float PRESSED_ALPHA_PERCENT = 0.2f;
-    private static final int DEFAULT_STROKE_WIDTH_DPS = 2;
-    private static final int DEFAULT_BORDER_RADIUS = 0;
+    public static final float HOVERED_ALPHA_PERCENT = 0.1f;
+    public static final float PRESSED_ALPHA_PERCENT = 0.2f;
+    public static final int DEFAULT_STROKE_WIDTH_DPS = 2;
+    public static final int DEFAULT_BORDER_RADIUS = 0;
 
-    private static final float MATERIAL_ALPHA_FULL = 1.0f;
     private static final float MATERIAL_ALPHA_LOW = 0.32f;
     private static final float MATERIAL_ALPHA_DISABLED = 0.38f;
 
@@ -74,12 +82,28 @@ public final class LayoutUtils {
 
     private LayoutUtils() {}
 
-    public static void applyBorderAndBackground(@NonNull View view, @NonNull BaseModel<?, ?> model) {
-        applyBorderAndBackground(view, model.getBorder(), model.getBackgroundColor());
+
+    public static void updateBackground(
+            @NonNull View view,
+            @Nullable Drawable baseBackground,
+            @Nullable Background oldBackground,
+            @NonNull Background newBackground
+    ) {
+        if (oldBackground != null && oldBackground.getBorder() != null && oldBackground.getBorder().getStrokeWidth() != null) {
+            float padding = dpToPx(view.getContext(), oldBackground.getBorder().getStrokeWidth());
+            removePadding(view, (int) padding);
+        }
+
+        applyBorderAndBackground(view, baseBackground, newBackground.getBorder(), newBackground.getColor());
+    }
+
+    public static void updateBackground(@NonNull View view, @Nullable Background oldBackground, @NonNull Background newBackground) {
+       updateBackground(view, null, oldBackground, newBackground);
     }
 
     public static void applyBorderAndBackground(
             @NonNull View view,
+            @Nullable Drawable baseBackground,
             @Nullable Border border,
             @Nullable Color backgroundColor
     ) {
@@ -117,68 +141,95 @@ public final class LayoutUtils {
                     .add(fillColor)
                     .build());
 
-            mergeBackground(view, shapeDrawable);
+            applyBackgrounds(view, baseBackground, shapeDrawable);
 
             if (borderPadding > -1) {
                 addPadding(view, borderPadding);
             }
         } else if (backgroundColor != null) {
-            mergeBackground(view, new ColorDrawable(backgroundColor.resolve(context)));
+            applyBackgrounds(view, baseBackground, new ColorDrawable(backgroundColor.resolve(context)));
         }
     }
 
-    private static void mergeBackground(@NonNull View view, @NonNull Drawable drawable) {
+    private static void applyBackgrounds(@NonNull View view, @Nullable Drawable base, @NonNull Drawable drawable) {
         Drawable background = drawable;
-        if (view.getBackground() != null) {
-            background = new LayerDrawable(new Drawable[] { view.getBackground(), drawable });
+        if (base != null) {
+            background = new LayerDrawable(new Drawable[] { base, drawable });
         }
         view.setBackground(background);
     }
 
-    public static void applyButtonModel(@NonNull MaterialButton button, @NonNull LabelButtonModel model) {
-        applyLabelModel(button, model.getLabel());
-
-        Context context = button.getContext();
-        TextAppearance textAppearance = model.getLabel().getTextAppearance();
-
-        int textColor = textAppearance.getColor().resolve(context);
-        int backgroundColor = model.getBackgroundColor() == null
-                ? Color.TRANSPARENT
-                : model.getBackgroundColor().resolve(button.getContext());
-        int pressedColor = ColorUtils.setAlphaComponent(textColor, Math.round(Color.alpha(textColor) * PRESSED_ALPHA_PERCENT));
-        int disabledColor = generateDisabledColor(backgroundColor);
-        int strokeWidth = model.getBorder() == null || model.getBorder().getStrokeWidth() == null
-                ? DEFAULT_STROKE_WIDTH_DPS
-                : model.getBorder().getStrokeWidth();
-        int strokeColor = model.getBorder() == null || model.getBorder().getStrokeColor() == null
-                ? backgroundColor
-                : model.getBorder().getStrokeColor().resolve(context);
-        int disabledStrokeColor = generateDisabledColor(strokeColor);
-        int borderRadius = model.getBorder() == null || model.getBorder().getRadius() == null
-                ? DEFAULT_BORDER_RADIUS
-                : model.getBorder().getRadius();
-
-        button.setBackgroundTintList(new ColorStateListBuilder()
-                .add(disabledColor, -android.R.attr.state_enabled)
-                .add(backgroundColor)
-                .build());
-        button.setRippleColor(ColorStateList.valueOf(pressedColor));
-        int strokeWidthPixels = (int) dpToPx(context, strokeWidth);
-        button.setStrokeWidth(strokeWidthPixels);
-        button.setStrokeColor(new ColorStateListBuilder()
-                .add(disabledStrokeColor, -android.R.attr.state_enabled)
-                .add(strokeColor)
-                .build());
-
-        button.setEllipsize(TextUtils.TruncateAt.END);
-        button.setIncludeFontPadding(false);
-        button.setCornerRadius((int) dpToPx(context, borderRadius));
-        button.setSingleLine(false);
+    public static void applyButtonLayoutModel(@NonNull FrameLayout button, @NonNull ButtonLayoutModel model) {
+        TapEffect tapEffect = model.getViewInfo().getTapEffect();
+        if (tapEffect instanceof TapEffect.Default) {
+            Border border = model.getViewInfo().getBorder();
+            Integer borderRadius = border != null ? border.getRadius() : null;
+            applyRippleEffect(button, borderRadius);
+        } else if (tapEffect instanceof TapEffect.None) {
+            button.setForeground(null);
+        }
     }
 
-    public static void applyLabelModel(@NonNull TextView textView, @NonNull LabelModel label) {
-        TextAppearance appearance = label.getTextAppearance();
-        String text = label.getText();
+    private static RippleDrawable generateRippleDrawable(@NonNull Context context, @Nullable Integer borderRadius) {
+        float radius = ResourceUtils.dpToPx(context, borderRadius != null ? borderRadius : 0);
+        float[] outerRadii = new float[8];
+        Arrays.fill(outerRadii, radius);
+        ShapeDrawable mask = new ShapeDrawable(new RoundRectShape(outerRadii, null, null));
+        ColorStateList colors = MaterialColors.getColorStateList(context,
+                com.google.android.material.R.attr.colorControlHighlight,
+                ColorStateList.valueOf(Color.TRANSPARENT)
+        );
+
+        return new RippleDrawable(colors, null, mask);
+    }
+
+    private static void applyRippleEffect(@NonNull FrameLayout frameLayout, @Nullable Integer borderRadius) {
+        RippleDrawable ripple = generateRippleDrawable(frameLayout.getContext(), borderRadius);
+        frameLayout.setForeground(ripple);
+    }
+
+    /** Applies a ripple effect and tint list to handle various interactions with an ImageButton button. */
+    public static void applyImageButtonRippleAndTint(@NonNull ImageButton view, @Nullable Integer borderRadius) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            applyImageButtonRippleAndTintApi23(view, borderRadius);
+        } else {
+            applyImageButtonRippleAndTintCompat(view, borderRadius);
+        }
+    }
+
+    /** Applies a ripple effect to the view's foreground and sets a disabled color for API 23 and above. */
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private static void applyImageButtonRippleAndTintApi23(@NonNull ImageButton view, @Nullable Integer borderRadius) {
+        // Sets the view's foreground to a ripple drawable
+        view.setForeground(generateRippleDrawable(view.getContext(), borderRadius));
+
+        // Discard source pixels that don't overlap the destination pixels
+        view.setImageTintMode(PorterDuff.Mode.SRC_ATOP);
+
+        // Using transparent as the normal color means no tint unless the image is disabled
+        int normalColor = Color.TRANSPARENT;
+        ColorStateList compatStateList = new ColorStateListBuilder()
+                .add(generateDisabledColor(normalColor), -android.R.attr.state_enabled)
+                .add(normalColor)
+                .build();
+
+        view.setImageTintList(compatStateList);
+    }
+
+    /** Applies a compat tap effect that is similar to a ripple, and disabled/hover colors for API 22 and below. */
+    private static void applyImageButtonRippleAndTintCompat(@NonNull ImageButton view, @Nullable Integer borderRadius) {
+        // Discard source pixels that don't overlap the destination pixels
+        view.setImageTintMode(PorterDuff.Mode.SRC_ATOP);
+
+        // Using transparent as the color means no tint unless the image is pressed or disabled
+        ColorStateList compatStateList = pressedColorStateList(Color.TRANSPARENT);
+
+        view.setImageTintList(compatStateList);
+    }
+
+
+    public static void applyLabelModel(@NonNull TextView textView, @NonNull LabelModel label, @NonNull String text) {
+        TextAppearance appearance = label.getViewInfo().getTextAppearance();
 
         applyTextAppearance(textView, appearance);
 
@@ -203,7 +254,7 @@ public final class LayoutUtils {
         }
 
         Context context = textView.getContext();
-        MarkdownOptions markdown = label.getMarkdownOptions();
+        MarkdownOptions markdown = label.getViewInfo().getMarkdownOptions();
         boolean isMarkdownEnabled = MarkdownOptionsKt.isEnabled(markdown);
 
         if (isMarkdownEnabled) {
@@ -218,24 +269,19 @@ public final class LayoutUtils {
     }
 
     public static void applyTextInputModel(@NonNull AppCompatEditText editText, @NonNull TextInputModel textInput) {
-        applyBorderAndBackground(editText, textInput);
-        applyTextAppearance(editText, textInput.getTextAppearance());
+        applyTextAppearance(editText, textInput.getViewInfo().getTextAppearance());
         int padding = (int) dpToPx(editText.getContext(), 8);
         editText.setPadding(padding, padding, padding, padding);
-        editText.setInputType(textInput.getInputType().getTypeMask());
-        editText.setSingleLine(textInput.getInputType() != FormInputType.TEXT_MULTILINE);
+        editText.setInputType(textInput.getViewInfo().getInputType().getTypeMask());
+        editText.setSingleLine(textInput.getViewInfo().getInputType() != FormInputType.TEXT_MULTILINE);
         editText.setGravity(editText.getGravity() | Gravity.TOP);
 
-        if (!UAStringUtil.isEmpty(textInput.getHintText())) {
-            editText.setHint(textInput.getHintText());
-            Color hintColor = textInput.getTextAppearance().getHintColor();
+        if (!UAStringUtil.isEmpty(textInput.getViewInfo().getHintText())) {
+            editText.setHint(textInput.getViewInfo().getHintText());
+            Color hintColor = textInput.getViewInfo().getTextAppearance().getHintColor();
             if (hintColor != null) {
                 editText.setHintTextColor(hintColor.resolve(editText.getContext()));
             }
-        }
-
-        if (!UAStringUtil.isEmpty(textInput.getContentDescription())) {
-            editText.setContentDescription(textInput.getContentDescription());
         }
     }
 
@@ -337,6 +383,15 @@ public final class LayoutUtils {
                 .build();
     }
 
+    public static ColorStateList pressedColorStateList(@ColorInt int normalColor) {
+        return new ColorStateListBuilder()
+                .add(generatePressedColor(normalColor, Color.BLACK), android.R.attr.state_pressed)
+                .add(generateHoveredColor(normalColor, Color.BLACK), android.R.attr.state_hovered)
+                .add(generateDisabledColor(normalColor), -android.R.attr.state_enabled)
+                .add(normalColor)
+                .build();
+    }
+
     public static void dismissSoftKeyboard(@NonNull View view) {
         InputMethodManager imm = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) {
@@ -361,6 +416,10 @@ public final class LayoutUtils {
         addPadding(view, padding, padding, padding, padding);
     }
 
+    public static void removePadding(@NonNull View view, int padding) {
+        addPadding(view, -padding, -padding, -padding, -padding);
+    }
+
     public static void addPadding(@NonNull View view, int left, int top, int right, int bottom) {
         view.setPadding(
                 view.getPaddingLeft() + left,
@@ -381,6 +440,11 @@ public final class LayoutUtils {
     }
 
     @ColorInt
+    public static int generateHoveredColor(@ColorInt int baseColor) {
+        return generateHoveredColor(baseColor, Color.WHITE);
+    }
+
+    @ColorInt
     public static int generatePressedColor(@ColorInt int background, @ColorInt int foreground) {
         return overlayColors(background, foreground, PRESSED_ALPHA_PERCENT);
     }
@@ -388,6 +452,11 @@ public final class LayoutUtils {
     @ColorInt
     public static int generateDisabledColor(@ColorInt int background, @ColorInt int foreground) {
         return overlayColors(background, foreground, MATERIAL_ALPHA_DISABLED);
+    }
+
+    @ColorInt
+    public static int generateHoveredColor(@ColorInt int background, @ColorInt int foreground) {
+        return overlayColors(background, foreground, HOVERED_ALPHA_PERCENT);
     }
 
     @ColorInt

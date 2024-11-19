@@ -4,10 +4,16 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
+import com.urbanairship.android.layout.info.ToggleInfo
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.model.ToggleModel
+import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.CheckboxStyle
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.SwitchStyle
+import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.ShapeButton
 
@@ -20,13 +26,17 @@ internal class ToggleView(
 ) : CheckableView<ToggleModel>(context, model) {
 
     init {
+        val baseBackground = this.background
         model.listener = object : CheckableModel.Listener {
             override fun setChecked(checked: Boolean) = Unit
             override fun setEnabled(enabled: Boolean) {
                 this@ToggleView.isEnabled = enabled
             }
             override fun setVisibility(visible: Boolean) {
-                this@ToggleView.isGone = visible
+                this@ToggleView.isVisible = visible
+            }
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@ToggleView, baseBackground, old, new)
             }
         }
     }

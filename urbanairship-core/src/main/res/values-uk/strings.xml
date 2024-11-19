@@ -83,4 +83,15 @@
     <string name="ua_min_priority_channel_name">Сповіщення з мінімальним пріоритетом</string>
     <string name="ua_min_priority_channel_description">Повідомлення з мінімальним пріоритетом</string>
     <string name="ua_min_priority_channel_id">Мінімальний ідентифікатор каналу</string>
+    <!-- General -->
+    <string name="ua_dismiss">Відхилити</string>
+    <string name="ua_escape">Вихід</string>
+    <string name="ua_next">Наступний</string>
+    <string name="ua_previous">Попередній</string>
+    <string name="ua_submit">Підтвердити</string>
+    <string name="ua_loading">Завантаження</string>
+    <string name="ua_pager_progress">Сторінка %1$s з %2$s</string>
+    <string name="ua_play">Грати</string>
+    <string name="ua_pause">Пауза</string>
+    <string name="ua_stop">Стоп</string>
 </resources>

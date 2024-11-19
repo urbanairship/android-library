@@ -29,6 +29,9 @@ import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 
+import junit.framework.Assert;
+import junit.framework.TestCase;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -155,6 +158,38 @@ public class PushManagerTest extends BaseTestCase {
         pushManager.performPushRegistration(true);
         assertEquals("token", pushManager.getPushToken());
         verify(mockAirshipChannel).updateRegistration();
+    }
+
+    /**
+     * Test push provider unavailable exceptions keep the token.
+     */
+    @Test
+    public void testPushProviderUnavailableException() throws PushProvider.RegistrationException {
+        pushManager.init();
+        when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
+        pushManager.performPushRegistration(true);
+        assertEquals("token", pushManager.getPushToken());
+
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenThrow(new PushProvider.PushProviderUnavailableException("test"));
+        pushManager.performPushRegistration(true);
+        assertEquals("token", pushManager.getPushToken());
+    }
+
+    /**
+     * Test registration exceptions clear the token.
+     */
+    @Test
+    public void tesRegistrationException() throws PushProvider.RegistrationException {
+        pushManager.init();
+        when(mockPushProvider.isAvailable(any(Context.class))).thenReturn(true);
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenReturn("token");
+        pushManager.performPushRegistration(true);
+        assertEquals("token", pushManager.getPushToken());
+
+        when(mockPushProvider.getRegistrationToken(any(Context.class))).thenThrow(new PushProvider.RegistrationException("test", true));
+        pushManager.performPushRegistration(true);
+        assertNull(pushManager.getPushToken());
     }
 
     /**
@@ -721,6 +756,35 @@ public class PushManagerTest extends BaseTestCase {
                 new PushNotificationStatus(true, true, true, false),
                 pushManager.getPushNotificationStatus()
         );
+    }
+
+    public void testPushStatusChangedListenerEnableNotifications() {
+        PushNotificationStatusListener listener = mock(PushNotificationStatusListener.class);
+
+        pushManager.setUserNotificationsEnabled(false);
+        pushManager.addNotificationStatusListener(listener);
+
+        TestConsumer<Boolean> consumer = new TestConsumer<>();
+
+        doAnswer(invocation -> {
+            Consumer<PermissionRequestResult> callback = invocation.getArgument(3);
+            callback.accept(PermissionRequestResult.granted());
+            return null;
+        }).when(mockPermissionManager).requestPermission(
+                eq(Permission.DISPLAY_NOTIFICATIONS),
+                eq(false),
+                eq(PermissionPromptFallback.None.INSTANCE),
+                any()
+        );
+
+        pushManager.enableUserNotifications(consumer);
+
+        assertTrue(consumer.lastResult);
+        assertTrue(pushManager.getUserNotificationsEnabled());
+
+        pushManager.enableUserNotifications(TestCase::assertTrue);
+
+        verify(listener, times(1)).onChange(any());
     }
 
     @Test

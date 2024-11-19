@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -219,6 +220,7 @@ public class AirshipEmbeddedView private constructor(
         displayRequestsJob = viewScope.launch {
             try {
                 manager.displayRequests(embeddedViewId = id, comparator = comparator, scope = viewScope)
+                    .map { it.next }
                     .collect(::onUpdate)
             } catch (e: CancellationException) {
                 UALog.v { "Stopped collecting display requests for $logTag" }

@@ -41,7 +41,7 @@ internal constructor(
         set(value) {
             synchronized(this) {
                 dataStore.put(PAUSED_STORE_KEY, value)
-                engine.setEnginePaused(value)
+                engine.setExecutionPaused(value)
             }
         }
 

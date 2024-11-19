@@ -15,6 +15,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
+import com.urbanairship.json.requireMap
 import com.urbanairship.util.DateUtils
 import java.text.ParseException
 
@@ -161,7 +162,12 @@ internal data class FeatureFlagInfo(
     /**
      * Evaluation options.
      */
-    val evaluationOptions: EvaluationOptions?  = null
+    val evaluationOptions: EvaluationOptions?  = null,
+
+    /**
+     * Control options
+     */
+    val controlOptions: ControlOptions? = null
 
 ) {
     internal companion object {
@@ -175,6 +181,7 @@ internal data class FeatureFlagInfo(
         private const val KEY_TIME_CRITERIA = "time_criteria"
         private const val KEY_NAME = "name"
         private const val KEY_EVALUATION_OPTIONS = "evaluation_options"
+        private const val KEY_CONTROL_OPTIONS = "control"
         private const val KEY_URL = "url"
         private const val KEY_TYPE = "type"
         private const val KEY_DEFERRED = "deferred"
@@ -222,7 +229,8 @@ internal data class FeatureFlagInfo(
                     audience = audience,
                     timeCriteria = payload.opt(KEY_TIME_CRITERIA).map?.let { TimeCriteria.fromJson(it) },
                     payload = parsedPayload,
-                    evaluationOptions = payload.opt(KEY_EVALUATION_OPTIONS).map?.let { EvaluationOptions.fromJson(it) }
+                    evaluationOptions = payload.opt(KEY_EVALUATION_OPTIONS).map?.let { EvaluationOptions.fromJson(it) },
+                    controlOptions = payload.get(KEY_CONTROL_OPTIONS)?.let(ControlOptions::fromJson)
                 )
             } catch (ex: JsonException) {
                 UALog.e { "failed to parse FeatureFlagInfo from json $json" }
@@ -264,5 +272,87 @@ internal data class EvaluationOptions(
         return jsonMapOf(
             KEY_STALE_DATA_FLAG to disallowStaleValues, KEY_TTL to ttl?.toLong()
         ).toJsonValue()
+    }
+}
+
+internal data class ControlOptions (
+    val audience: AudienceSelector?,
+    val reportingMetadata: JsonMap,
+    val controlType: Type
+): JsonSerializable {
+
+    companion object {
+        private const val AUDIENCE = "audience_selector"
+        private const val REPORTING_METADATA = "reporting_metadata"
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): ControlOptions {
+            val content = value.requireMap()
+
+            return ControlOptions(
+                audience = content.get(AUDIENCE)?.let(AudienceSelector::fromJson),
+                reportingMetadata = content.requireMap(REPORTING_METADATA),
+                controlType = Type.fromJson(value)
+            )
+        }
+    }
+
+    override fun toJsonValue(): JsonValue {
+        return JsonMap.newBuilder()
+            .putAll(controlType.toJsonValue().optMap())
+            .putOpt(AUDIENCE, audience)
+            .put(REPORTING_METADATA, reportingMetadata)
+            .build()
+            .toJsonValue()
+    }
+
+    sealed class Type(private val type: OptionType): JsonSerializable {
+        data object Flag: Type(OptionType.FLAG)
+        data class Variables(val variables: JsonMap?): Type(OptionType.VARIABLES)
+
+        companion object {
+            private const val TYPE = "type"
+            private const val VARIABLES = "variables"
+
+            @Throws(JsonException::class)
+            fun fromJson(value: JsonValue): Type {
+                val content = value.requireMap()
+
+                return when (OptionType.fromJson(content.require(TYPE))) {
+                    OptionType.FLAG -> Flag
+                    OptionType.VARIABLES -> Variables(content.get(VARIABLES)?.requireMap())
+                }
+            }
+        }
+
+        override fun toJsonValue(): JsonValue {
+            return when(this) {
+                Flag -> jsonMapOf(TYPE to type).toJsonValue()
+                is Variables -> jsonMapOf(
+                    TYPE to type,
+                    VARIABLES to variables
+                ).toJsonValue()
+            }
+        }
+    }
+
+    enum class OptionType(val jsonValue: String): JsonSerializable {
+        FLAG("flag"),
+        VARIABLES("variables");
+
+        companion object {
+            @Throws(JsonException::class)
+            fun fromJson(value: JsonValue): OptionType {
+                val content = value.requireString()
+
+                return try {
+                    entries.first { it.jsonValue == content }
+                } catch (ex: NoSuchElementException) {
+                    throw JsonException("invalid control option", ex)
+                }
+            }
+        }
+
+        override fun toJsonValue(): JsonValue = JsonValue.wrap(jsonValue)
     }
 }

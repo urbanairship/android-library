@@ -19,6 +19,7 @@ internal class FeatureFlagInteractionEvent private constructor(
             "flag_name" to flag.name,
             "eligible" to flag.isEligible,
             "reporting_metadata" to requireNotNull(flag.reportingInfo?.reportingMetadata),
+            "superseded_reporting_metadata" to flag.reportingInfo?.supersededReportingMetadata,
             "device" to flag.reportingInfo?.let {
                 jsonMapOf(
                     "channel_id" to it.channelId,

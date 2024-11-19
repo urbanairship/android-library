@@ -3,9 +3,13 @@
 package com.urbanairship.featureflag
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonValue
+import com.urbanairship.json.ValueMatcher
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,6 +37,41 @@ public class FeatureFlagInfoTest {
         assertNotNull(testFlag.audience)
         assertNotNull(testFlag.timeCriteria)
         assert(testFlag.payload is FeatureFlagPayload.StaticPayload)
+
+        assert(testFlag.controlOptions?.controlType == ControlOptions.Type.Flag)
+        assert(testFlag.controlOptions?.reportingMetadata == jsonMapOf("reporting" to "superseded"))
+        assertNotNull(testFlag.controlOptions?.audience)
+    }
+
+    @Test
+    public fun testDecodeControlOptions() {
+        val json = """
+            {
+              "audience_selector":{
+                 "app_version":{
+                    "value":{
+                       "version_matches":"1.6.0+"
+                    }
+                 }
+             },
+             "reporting_metadata": {
+               "reporting": "superseded"
+             },
+             "type": "variables",
+             "variables": {
+               "variable": "variables_override"
+             }
+           }
+        """.trimIndent()
+
+        val decoded = ControlOptions.fromJson(JsonValue.parseString(json))
+
+        assertNotNull(decoded.audience)
+        assertEquals(jsonMapOf("reporting" to "superseded"), decoded.reportingMetadata)
+        assertEquals(
+            ControlOptions.Type.Variables(jsonMapOf("variable" to "variables_override")),
+            decoded.controlType
+        )
     }
 
     private fun generateFeatureFlagPayload(): JsonMap {
@@ -132,6 +171,17 @@ public class FeatureFlagInfoTest {
                                 )
                             )
                         )
+                    ),
+                    "control" to jsonMapOf(
+                        "audience_selector" to jsonMapOf(
+                            "app_version" to jsonMapOf(
+                                "value" to jsonMapOf("version_matches" to "1")
+                            ),
+                        ),
+                        "reporting_metadata" to jsonMapOf(
+                            "reporting" to "superseded"
+                        ),
+                        "type" to "flag"
                     )
                 ))
             )

@@ -16,6 +16,7 @@ import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
 import java.util.UUID
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
 import io.mockk.Ordering
 import io.mockk.coEvery
 import io.mockk.coJustRun
@@ -400,13 +401,13 @@ public class AutomationRemoteDataSubscriberTest {
     @Test
     public fun testConstraints(): TestResult = runTest {
         val appConstraints = listOf(
-            FrequencyConstraint("foo", 100, 10u),
-            FrequencyConstraint("bar", 100, 10u)
+            FrequencyConstraint("foo", 100.seconds, 10),
+            FrequencyConstraint("bar", 100.seconds, 10)
         )
 
         val contactConstraints = listOf(
-            FrequencyConstraint("foo", 1, 1u),
-            FrequencyConstraint("baz", 1, 1u)
+            FrequencyConstraint("foo", 1.seconds, 1),
+            FrequencyConstraint("baz", 1.seconds, 1)
         )
 
         val data = InAppRemoteData(

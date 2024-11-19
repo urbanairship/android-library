@@ -63,7 +63,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
      */
     public val delay: AutomationDelay? = null,
     /**
-     * The interval in ms.
+     * The interval in seconds.
      */
     public val interval: ULong? = null,
     /**

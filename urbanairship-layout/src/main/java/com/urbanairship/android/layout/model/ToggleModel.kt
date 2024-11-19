@@ -7,18 +7,10 @@ import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ToggleInfo
-import com.urbanairship.android.layout.info.VisibilityInfo
-import com.urbanairship.android.layout.property.AttributeValue
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
-import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.EventHandler.Type
-import com.urbanairship.android.layout.property.ToggleStyle
-import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.property.hasTapHandler
-import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.util.checkedChanges
 import com.urbanairship.android.layout.view.ToggleView
@@ -31,67 +23,30 @@ import kotlinx.coroutines.launch
  * Toggle input for use within a `FormController` or `NpsFormController`.
  */
 internal class ToggleModel(
-    val identifier: String,
-    toggleStyle: ToggleStyle,
-    private val isRequired: Boolean = false,
-    private val attributeName: AttributeName? = null,
-    private val attributeValue: AttributeValue? = null,
-    contentDescription: String? = null,
-    backgroundColor: Color? = null,
-    border: Border? = null,
-    visibility: VisibilityInfo? = null,
-    eventHandlers: List<EventHandler>? = null,
-    enableBehaviors: List<EnableBehaviorType>? = null,
+    viewInfo: ToggleInfo,
     private val formState: SharedState<State.Form>,
     environment: ModelEnvironment,
     properties: ModelProperties
-) : CheckableModel<ToggleView>(
-    viewType = ViewType.TOGGLE,
-    style = toggleStyle,
-    toggleType = toggleStyle.type,
-    contentDescription = contentDescription,
-    backgroundColor = backgroundColor,
-    border = border,
-    visibility = visibility,
-    eventHandlers = eventHandlers,
-    enableBehaviors = enableBehaviors,
+) : CheckableModel<ToggleView, ToggleInfo>(
+    viewInfo = viewInfo,
     environment = environment,
     properties = properties
 ) {
 
-    constructor(
-        info: ToggleInfo,
-        formState: SharedState<State.Form>,
-        env: ModelEnvironment,
-        props: ModelProperties
-    ) : this(
-        identifier = info.identifier,
-        toggleStyle = info.style,
-        isRequired = info.isRequired,
-        attributeName = info.attributeName,
-        attributeValue = info.attributeValue,
-        contentDescription = info.contentDescription,
-        backgroundColor = info.backgroundColor,
-        border = info.border,
-        visibility = info.visibility,
-        eventHandlers = info.eventHandlers,
-        enableBehaviors = info.enableBehaviors,
-        formState = formState,
-        environment = env,
-        properties = props
-    )
-
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
-        ToggleView(context, this).apply {
-            id = viewId
-        }
+    override fun onCreateView(
+        context: Context,
+        viewEnvironment: ViewEnvironment,
+        itemProperties: ItemProperties?
+    ) = ToggleView(context, this).apply {
+        id = viewId
+    }
 
     override fun onViewCreated(view: ToggleView) {
         super.onViewCreated(view)
 
         onFormInputDisplayed { isDisplayed ->
             formState.update { state ->
-                state.copyWithDisplayState(identifier, isDisplayed)
+                state.copyWithDisplayState(viewInfo.identifier, isDisplayed)
             }
         }
     }
@@ -99,8 +54,8 @@ internal class ToggleModel(
     override fun onViewAttached(view: ToggleView) {
         // Share the checkedChanges flow from the view. Since we're starting eagerly, we use a replay
         // of 1 so that we can still collect the initial change and update the form state.
-        val checkedChanges = view.checkedChanges()
-            .shareIn(viewScope, SharingStarted.Eagerly, replay = 1)
+        val checkedChanges =
+            view.checkedChanges().shareIn(viewScope, SharingStarted.Eagerly, replay = 1)
 
         // Update form state on every checked change.
         viewScope.launch {
@@ -108,16 +63,16 @@ internal class ToggleModel(
                 formState.update { state ->
                     state.copyWithFormInput(
                         FormData.Toggle(
-                            identifier = identifier,
+                            identifier = viewInfo.identifier,
                             value = isChecked,
-                            isValid = isChecked || !isRequired,
-                            attributeName = attributeName,
-                            attributeValue = attributeValue
+                            isValid = isChecked || !viewInfo.isRequired,
+                            attributeName = viewInfo.attributeName,
+                            attributeValue = viewInfo.attributeValue
                         )
                     )
                 }
 
-                if (eventHandlers.hasFormInputHandler()) {
+                if (viewInfo.eventHandlers.hasFormInputHandler()) {
                     handleViewEvent(EventHandler.Type.FORM_INPUT, isChecked)
                 }
             }
@@ -125,10 +80,9 @@ internal class ToggleModel(
 
         // Handle taps if enabled for this view.
         // We drop the first update to ignore the change caused by restoring toggle state.
-        if (eventHandlers.hasTapHandler()) {
+        if (viewInfo.eventHandlers.hasTapHandler()) {
             viewScope.launch {
-                checkedChanges.drop(1)
-                    .collect { handleViewEvent(Type.TAP) }
+                checkedChanges.drop(1).collect { handleViewEvent(Type.TAP) }
             }
         }
 

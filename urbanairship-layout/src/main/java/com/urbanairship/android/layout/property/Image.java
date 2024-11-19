@@ -68,21 +68,56 @@ public abstract class Image {
 
     public static final class Url extends Image {
         @NonNull private final String url;
+        @Nullable private final MediaFit mediaFit;
+        @Nullable private final Position position;
 
-        public Url(@NonNull String url) {
+        public Url(
+                @NonNull String url,
+                @Nullable MediaFit mediaFit,
+                @Nullable Position position
+        ) {
             super(Type.URL);
             this.url = url;
+            this.mediaFit = mediaFit;
+            this.position = position;
         }
 
         @NonNull
         public static Url fromJson(@NonNull JsonMap json) {
             String url = json.opt("url").optString();
-            return new Url(url);
+
+            String mediaFitString = json.opt("media_fit").getString();
+            MediaFit mediaFit;
+            try {
+                mediaFit = mediaFitString != null ? MediaFit.from(mediaFitString) : null;
+            } catch (JsonException e) {
+                mediaFit = null;
+            }
+
+            JsonMap positionJson = json.opt("position").getMap();
+            Position position;
+            try {
+                position = positionJson != null ? Position.fromJson(positionJson) : null;
+            } catch (JsonException e) {
+                position = null;
+            }
+
+            return new Url(url, mediaFit, position);
         }
 
         @NonNull
         public String getUrl() {
             return url;
+        }
+
+        @Nullable
+        public MediaFit getMediaFit() {
+            return mediaFit;
+        }
+
+        @Nullable
+        public Position getPosition() {
+            return position;
         }
     }
 
@@ -118,10 +153,6 @@ public abstract class Image {
             return drawable.resId;
         }
 
-        public Drawable getDrawable(@NonNull Context context) {
-            return getDrawable(context, true);
-        }
-
         @Nullable
         public Drawable getDrawable(@NonNull Context context, boolean enabledState) {
             Drawable d = ContextCompat.getDrawable(context, getDrawableRes());
@@ -146,7 +177,8 @@ public abstract class Image {
             CLOSE("close", R.drawable.ua_layout_ic_close),
             CHECKMARK("checkmark", R.drawable.ua_layout_ic_check),
             ARROW_FORWARD("forward_arrow", R.drawable.ua_layout_ic_arrow_forward),
-            ARROW_BACK("back_arrow", R.drawable.ua_layout_ic_arrow_back);
+            ARROW_BACK("back_arrow", R.drawable.ua_layout_ic_arrow_back),
+            ERROR_CIRCLE("exclamationmark_circle_fill", R.drawable.ua_layout_ic_error_circle_filled);
 
             @NonNull
             private final String value;
