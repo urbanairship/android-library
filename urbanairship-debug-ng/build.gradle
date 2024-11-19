@@ -15,7 +15,6 @@ android {
     namespace 'com.urbanairship.debug2'
 
     buildFeatures{
-        dataBinding = true
         compose = true
     }
 
