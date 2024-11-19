@@ -82,4 +82,15 @@
     <string name="ua_min_priority_channel_name">Notificări cu prioritate minimă</string>
     <string name="ua_min_priority_channel_description">Mesaje cu prioritate minimă</string>
     <string name="ua_min_priority_channel_id">ID minim de canal</string>
+    <!-- General -->
+    <string name="ua_dismiss">Renunță</string>
+    <string name="ua_escape">Ieșire</string>
+    <string name="ua_next">Următorul</string>
+    <string name="ua_previous">Anterior</string>
+    <string name="ua_submit">Trimite</string>
+    <string name="ua_loading">Se încarcă</string>
+    <string name="ua_pager_progress">Pagina %1$s din %2$s</string>
+    <string name="ua_play">Redă</string>
+    <string name="ua_pause">Pauză</string>
+    <string name="ua_stop">Oprește</string>
 </resources>

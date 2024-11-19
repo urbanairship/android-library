@@ -204,6 +204,7 @@ view:
       image:
         type: icon
         icon: close
+        scale: 0.4
         color:
           default:
             hex: "#FF00FF"

@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">Minimum prioriteit Kennisgewings</string>
     <string name="ua_min_priority_channel_description">Minimum prioriteit Boodskappe</string>
     <string name="ua_min_priority_channel_id">Minimum kanaal-ID</string>
+    <!-- General -->
+    <string name="ua_dismiss">Ontslaan</string>
+    <string name="ua_escape">Ontsnap</string>
+    <string name="ua_next">Volgende</string>
+    <string name="ua_previous">Vorige</string>
+    <string name="ua_submit">Indien</string>
+    <string name="ua_loading">Laai tans</string>
+    <string name="ua_pager_progress">Bladsy %1$s van %2$s</string>
+    <string name="ua_play">Speel</string>
+    <string name="ua_pause">Pouseer</string>
+    <string name="ua_stop">Stop</string>
 </resources>

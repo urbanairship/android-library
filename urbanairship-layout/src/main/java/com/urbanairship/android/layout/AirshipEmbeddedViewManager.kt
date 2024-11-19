@@ -72,5 +72,9 @@ public interface AirshipEmbeddedViewManager {
         embeddedViewId: String,
         comparator: Comparator<AirshipEmbeddedInfo>? = null,
         scope: CoroutineScope
-    ): Flow<EmbeddedDisplayRequest?>
+    ): Flow<EmbeddedDisplayRequestResult>
 }
+
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class EmbeddedDisplayRequestResult(public val next: EmbeddedDisplayRequest?, public val list: List<EmbeddedDisplayRequest>)

@@ -2,6 +2,10 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!--- MESSAGE CENTER -->
 
+    <!-- Base style for Message Center and Message Activities -->
+    <style name="UrbanAirship.MessageCenter.Activity" parent="Theme.AppCompat.DayNight">
+    </style>
+
     <!-- Item Container -->
     <style name="Widget.UrbanAirship.MessageCenter.Item.Container" parent="Base.Widget.UrbanAirship.MessageCenter.Item.Container" />
 

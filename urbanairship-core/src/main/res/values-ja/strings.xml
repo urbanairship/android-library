@@ -80,4 +80,15 @@
     <string name="ua_min_priority_channel_name">最小優先度の通知</string>
     <string name="ua_min_priority_channel_description">最小優先度メッセージ</string>
     <string name="ua_min_priority_channel_id">最小チャネル ID</string>
+    <!-- General -->
+    <string name="ua_dismiss">閉じる</string>
+    <string name="ua_escape">終了</string>
+    <string name="ua_next">次へ</string>
+    <string name="ua_previous">前へ</string>
+    <string name="ua_submit">送信</string>
+    <string name="ua_loading">読み込み中</string>
+    <string name="ua_pager_progress">%2$sページ中%1$sページ</string>
+    <string name="ua_play">再生</string>
+    <string name="ua_pause">一時停止</string>
+    <string name="ua_stop">停止</string>
 </resources>

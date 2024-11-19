@@ -8,7 +8,7 @@
     <color name="ua_preference_center_divider_color">#85FFFFFF</color>
     <color name="ua_preference_center_section_break_label_background">#63656B</color>
     <color name="ua_preference_center_section_break_label_text">#FFFFFF</color>
-    <color name="ua_preference_center_subscription_type_chip_surface">#333333</color>
+    <color name="ua_preference_center_subscription_type_chip_surface">#1F1F1F</color>
     <color name="ua_preference_center_subscription_type_chip_checked_background">#1C5AFA</color>
     <color name="ua_preference_center_subscription_type_chip_unchecked_background">#CC000000</color>
     <color name="ua_preference_center_subscription_type_chip_stroke">@color/ua_preference_center_divider_color</color>

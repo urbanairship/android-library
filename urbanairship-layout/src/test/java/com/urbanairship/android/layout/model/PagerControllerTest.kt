@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.info.PagerControllerInfo
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import io.mockk.every
 import io.mockk.mockk
@@ -64,7 +65,9 @@ public class PagerControllerTest {
 
         pagerController = PagerController(
             view = mockView,
-            identifier = PAGER_ID,
+            viewInfo = mockk<PagerControllerInfo>(relaxed = true) {
+                every { this@mockk.identifier } returns PAGER_ID
+            },
             pagerState = pagerState,
             environment = mockEnv,
             properties = ModelProperties(pagerPageId = null)
@@ -97,9 +100,10 @@ public class PagerControllerTest {
     public fun testCreateView() {
         val context: Context = mockk(relaxed = true)
         val viewEnv: ViewEnvironment = mockk(relaxed = true)
-        pagerController.createView(context, viewEnv)
+        val itemProperties = ItemProperties(size = null)
+        pagerController.createView(context, viewEnv, itemProperties)
 
-        verify { mockView.createView(eq(context), eq(viewEnv)) }
+        verify { mockView.createView(eq(context), eq(viewEnv), itemProperties) }
     }
 
     private companion object {

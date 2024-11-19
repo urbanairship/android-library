@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">Vähimmäisprioriteettiilmoitukset</string>
     <string name="ua_min_priority_channel_description">Vähimmäisprioriteettiviestit</string>
     <string name="ua_min_priority_channel_id">Vähimmäiskanavatunnus</string>
+    <!-- General -->
+    <string name="ua_dismiss">Hylkää</string>
+    <string name="ua_escape">Poistu</string>
+    <string name="ua_next">Seuraava</string>
+    <string name="ua_previous">Edellinen</string>
+    <string name="ua_submit">Lähetä</string>
+    <string name="ua_loading">Lataa</string>
+    <string name="ua_pager_progress">Sivu %1$s / %2$s</string>
+    <string name="ua_play">Toista</string>
+    <string name="ua_pause">Tauko</string>
+    <string name="ua_stop">Pysäytä</string>
 </resources>

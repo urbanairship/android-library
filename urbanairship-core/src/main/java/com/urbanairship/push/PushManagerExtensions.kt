@@ -29,5 +29,7 @@ public suspend fun PushManager.enableUserNotifications(promptFallback: Permissio
         permission = Permission.DISPLAY_NOTIFICATIONS,
         fallback = promptFallback
     )
+    updateStatusObserver()
+
     return result.permissionStatus == PermissionStatus.GRANTED
 }

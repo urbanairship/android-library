@@ -68,9 +68,7 @@ public class AirshipEmbeddedViewState(
 
     /** Dismiss all pending embedded content for the current embedded view ID. */
     public suspend fun dismissAll(): Unit = coroutineScope {
-        currentLayout?.let { layout ->
-            EmbeddedViewManager.dismissAll(layout.embeddedViewId)
-        }
+        EmbeddedViewManager.dismissAll(embeddedId)
     }
 
     internal val placementSize: ConstrainedSize? by derivedStateOf {
@@ -109,20 +107,21 @@ internal fun rememberAirshipEmbeddedViewState(
     val state = remember { AirshipEmbeddedViewState(embeddedId) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(key1 = embeddedId) {
+    LaunchedEffect(embeddedId, comparator) {
         // Collect display requests and update the current layout state.
         withContext(Dispatchers.Default) {
             embeddedViewManager.displayRequests(embeddedId, comparator, scope)
                 .map { request ->
-                    if (request == null) {
+                    val next = request.next
+                    if (next == null) {
                         // Nothing to display.
                         UALog.v { "No display request available for id: \"$embeddedId\"" }
                         null
                     } else {
                         // Inflate the embedded layout.
                         UALog.v { "Display request available for id: \"$embeddedId\"" }
-                        val displayArgs = request.displayArgsProvider.invoke()
-                        EmbeddedLayout(context, embeddedId, request.viewInstanceId, displayArgs, embeddedViewManager)
+                        val displayArgs = next.displayArgsProvider.invoke()
+                        EmbeddedLayout(context, embeddedId, next.viewInstanceId, displayArgs, embeddedViewManager)
                     }
                 }
                 .collect { state.currentLayout = it }
@@ -137,8 +136,8 @@ internal fun rememberAirshipEmbeddedViewState(
 //
 
 internal fun ConstrainedSize.toEmbeddedSize(
-    parentWidthProvider: (() -> Int)?,
-    parentHeightProvider: (() -> Int)?
+    parentWidthProvider: (() -> Int)? = null,
+    parentHeightProvider: (() -> Int)? = null
 ): EmbeddedSize =
     EmbeddedSize(
         width = width.toEmbeddedDimension(parentWidthProvider),

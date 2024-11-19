@@ -1,8 +1,8 @@
 [versions]
 
 # Gradle plugins
-androidGradlePlugin = '8.2.2'
-googleServicesPlugin = '4.4.1'
+androidGradlePlugin = '8.7.1'
+googleServicesPlugin = '4.4.2'
 spotlessPlugin = '6.25.0'
 nexusPublishPlugin = '1.1.0'
 gradle-versions =  '0.41.0'
@@ -15,7 +15,7 @@ ktlint = '1.1.1'
 # Kotlin
 kotlin = '1.9.21'
 kotlinx-coroutines = '1.7.3'
-kotlinx-serialization = '1.6.3' # Only used in Sample app
+kotlinx-serialization = '1.6.3'
 
 # Compose
 compose-bom = '2024.06.00'
@@ -147,6 +147,7 @@ androidx-fragment-testing = { module = "androidx.fragment:fragment-testing", ver
 androidx-lifecycle-common-java8 = { module = "androidx.lifecycle:lifecycle-common-java8", version.ref="androidx-lifecycle" }
 androidx-lifecycle-livedataktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref="androidx-lifecycle" }
 androidx-lifecycle-runtimektx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref="androidx-lifecycle" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref="androidx-lifecycle" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref="androidx-lifecycle" }
 androidx-lifecycle-viewmodelktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref="androidx-lifecycle" }
 androidx-navigation-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "androidx-navigation" }

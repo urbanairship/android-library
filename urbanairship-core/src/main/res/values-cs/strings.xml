@@ -83,4 +83,15 @@
     <string name="ua_min_priority_channel_name">Upozornění s minimální prioritou</string>
     <string name="ua_min_priority_channel_description">Zprávy s minimální prioritou</string>
     <string name="ua_min_priority_channel_id">Minimální ID kanálu</string>
+    <!-- General -->
+    <string name="ua_dismiss">Odvrhnout</string>
+    <string name="ua_escape">Uniknout</string>
+    <string name="ua_next">Další</string>
+    <string name="ua_previous">Předchozí</string>
+    <string name="ua_submit">Odeslat</string>
+    <string name="ua_loading">Načítání</string>
+    <string name="ua_pager_progress">Strana %1$s z %2$s</string>
+    <string name="ua_play">Přehrát</string>
+    <string name="ua_pause">Pauza</string>
+    <string name="ua_stop">Stop</string>
 </resources>

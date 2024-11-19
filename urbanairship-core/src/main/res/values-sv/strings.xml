@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">Aviseringar med minsta prioritet</string>
     <string name="ua_min_priority_channel_description">Meddelanden med minsta prioritet</string>
     <string name="ua_min_priority_channel_id">Minsta kanal-ID</string>
+    <!-- General -->
+    <string name="ua_dismiss">Avfärda</string>
+    <string name="ua_escape">Avbryt</string>
+    <string name="ua_next">Nästa</string>
+    <string name="ua_previous">Föregående</string>
+    <string name="ua_submit">Skicka</string>
+    <string name="ua_loading">Laddar</string>
+    <string name="ua_pager_progress">Sida %1$s av %2$s</string>
+    <string name="ua_play">Spela</string>
+    <string name="ua_pause">Paus</string>
+    <string name="ua_stop">Stopp</string>
 </resources>

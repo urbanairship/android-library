@@ -135,6 +135,14 @@ internal class MediaView @JvmOverloads constructor(
             settings.domStorageEnabled = true
             settings.databaseEnabled = true
         }
+        settings.apply {
+            // Disallow all file and content access, which could pose a security risk if enabled.
+            allowFileAccess = false
+            allowFileAccessFromFileURLs = false
+            allowUniversalAccessFromFileURLs = false
+            allowContentAccess = false
+        }
+
         val webViewWeakReference = WeakReference(webView)
         val load = Runnable {
             val local = webViewWeakReference.get() ?: return@Runnable

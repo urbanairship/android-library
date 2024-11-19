@@ -23,7 +23,8 @@
                 style="@style/UrbanAirship.InAppFullscreen.Heading.HeaderBodyMedia"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentTop="true" />
+                android:layout_alignParentTop="true"
+                android:accessibilityHeading="true" />
 
             <TextView
                 android:id="@+id/body"

@@ -82,4 +82,15 @@
     <string name="ua_min_priority_channel_name">Notifiche di priorità minima</string>
     <string name="ua_min_priority_channel_description">Messaggi con priorità minima</string>
     <string name="ua_min_priority_channel_id">ID canale minimo</string>
+    <!-- General -->
+    <string name="ua_dismiss">Ignorare</string>
+    <string name="ua_escape">Esci</string>
+    <string name="ua_next">Successivo</string>
+    <string name="ua_previous">Precedente</string>
+    <string name="ua_submit">Invia</string>
+    <string name="ua_loading">Caricamento</string>
+    <string name="ua_pager_progress">Pagina %1$s di %2$s</string>
+    <string name="ua_play">Riproduci</string>
+    <string name="ua_pause">Pausa</string>
+    <string name="ua_stop">Stop</string>
 </resources>

@@ -1,7 +1,6 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.property
 
-import com.urbanairship.android.layout.model.SafeAreaAware
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 

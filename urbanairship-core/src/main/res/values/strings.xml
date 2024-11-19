@@ -94,4 +94,15 @@
     <string name="ua_min_priority_channel_description">Minimum priority Messages</string>
     <string name="ua_min_priority_channel_id">Minimum Channel ID</string>
 
+    <!-- General -->
+    <string name="ua_dismiss">Dismiss</string>
+    <string name="ua_escape">Escape</string>
+    <string name="ua_next">Next</string>
+    <string name="ua_previous">Previous</string>
+    <string name="ua_submit">Submit</string>
+    <string name="ua_loading">Loading</string>
+    <string name="ua_pager_progress">Page %1$s of %2$s</string>
+    <string name="ua_play">Play</string>
+    <string name="ua_pause">Pause</string>
+    <string name="ua_stop">Stop</string>
 </resources>

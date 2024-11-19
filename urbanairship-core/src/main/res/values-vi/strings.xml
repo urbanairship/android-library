@@ -80,4 +80,15 @@
     <string name="ua_min_priority_channel_name">Thông báo ưu tiên tối thiểu</string>
     <string name="ua_min_priority_channel_description">Tin nhắn ưu tiên tối thiểu</string>
     <string name="ua_min_priority_channel_id">ID kênh tối thiểu</string>
+    <!-- General -->
+    <string name="ua_dismiss">Bỏ qua</string>
+    <string name="ua_escape">Thoát</string>
+    <string name="ua_next">Kế tiếp</string>
+    <string name="ua_previous">Trước</string>
+    <string name="ua_submit">Gửi</string>
+    <string name="ua_loading">Đang tải</string>
+    <string name="ua_pager_progress">Trang %1$s của %2$s</string>
+    <string name="ua_play">Phát</string>
+    <string name="ua_pause">Tạm dừng</string>
+    <string name="ua_stop">Dừng</string>
 </resources>
