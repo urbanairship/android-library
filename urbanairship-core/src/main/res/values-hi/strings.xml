@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">न्यूनतम प्राथमिकता सूचनाएं</string>
     <string name="ua_min_priority_channel_description">न्यूनतम प्राथमिकता वाले संदेश</string>
     <string name="ua_min_priority_channel_id">न्यूनतम चैनल आईडी</string>
+    <!-- General -->
+    <string name="ua_dismiss">बरखास्त करें</string>
+    <string name="ua_escape">बचें</string>
+    <string name="ua_next">अगला</string>
+    <string name="ua_previous">पिछला</string>
+    <string name="ua_submit">प्रस्तुत करें</string>
+    <string name="ua_loading">लोड हो रहा है</string>
+    <string name="ua_pager_progress">पृष्ठ %1$s का %2$s</string>
+    <string name="ua_play">चलाएं</string>
+    <string name="ua_pause">विराम</string>
+    <string name="ua_stop">रोकें</string>
 </resources>

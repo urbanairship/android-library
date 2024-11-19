@@ -21,6 +21,8 @@ public class Color {
     public static final int TRANSPARENT = android.graphics.Color.TRANSPARENT;
     @ColorInt
     public static final int WHITE = android.graphics.Color.WHITE;
+    @ColorInt
+    public static final int BLACK = android.graphics.Color.BLACK;
 
     private final int defaultColor;
     @NonNull

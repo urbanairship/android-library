@@ -3,13 +3,17 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Checkable
 import android.widget.ImageView
 import android.widget.LinearLayout
-import androidx.core.view.isGone
+import androidx.core.view.isVisible
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.PagerIndicatorModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.widget.ShapeView
@@ -23,7 +27,11 @@ internal class PagerIndicatorView(
         orientation = HORIZONTAL
         gravity = Gravity.CENTER
 
-        LayoutUtils.applyBorderAndBackground(this, model)
+        if (model.announcePage) {
+            isFocusable = true
+            isFocusableInTouchMode = true
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+        }
 
         model.listener = object : PagerIndicatorModel.Listener {
             private var isInitialized = false
@@ -37,11 +45,15 @@ internal class PagerIndicatorView(
             }
 
             override fun setVisibility(visible: Boolean) {
-                this@PagerIndicatorView.isGone = visible
+                this@PagerIndicatorView.isVisible = visible
             }
 
             override fun setEnabled(enabled: Boolean) {
                 this@PagerIndicatorView.isEnabled = enabled
+            }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@PagerIndicatorView, old, new)
             }
         }
     }
@@ -52,10 +64,10 @@ internal class PagerIndicatorView(
      * @param count The number of dots to display.
      */
     fun setCount(count: Int) {
-        val bindings = model.bindings
+        val bindings = model.viewInfo.bindings
         val checked = bindings.selected
         val unchecked = bindings.unselected
-        val spacing = ResourceUtils.dpToPx(context, model.indicatorSpacing).toInt()
+        val spacing = ResourceUtils.dpToPx(context, model.viewInfo.indicatorSpacing).toInt()
         val halfSpacing = (spacing / 2f).toInt()
         for (i in 0 until count) {
             val view: ImageView =
@@ -63,6 +75,9 @@ internal class PagerIndicatorView(
                     .apply {
                         id = model.getIndicatorViewId(i)
                         adjustViewBounds = true
+                        isFocusable = false
+                        isFocusableInTouchMode = false
+                        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                     }
 
             val lp = LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
@@ -81,6 +96,11 @@ internal class PagerIndicatorView(
     fun setPosition(position: Int) {
         for (i in 0 until childCount) {
             (getChildAt(i) as Checkable).isChecked = i == position
+        }
+        if (model.announcePage == true) {
+            val announcement = "Page ${position + 1} of ${childCount}"
+            this.contentDescription = announcement
+            this.announceForAccessibility(announcement)
         }
     }
 }

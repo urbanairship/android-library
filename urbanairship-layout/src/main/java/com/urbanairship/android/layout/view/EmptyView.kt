@@ -4,8 +4,12 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import android.view.View
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.EmptyModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.util.LayoutUtils
 
 /**
@@ -21,15 +25,17 @@ internal class EmptyView(
 ) : View(context), BaseView {
 
     init {
-        LayoutUtils.applyBorderAndBackground(this, model)
-
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
-                this@EmptyView.isGone = visible
+                this@EmptyView.isVisible = visible
             }
 
             override fun setEnabled(enabled: Boolean) {
                 this@EmptyView.isEnabled = enabled
+            }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@EmptyView, old, new)
             }
         }
     }

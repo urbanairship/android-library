@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.reporting
 
+import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.reporting.FormData.Score
 import com.urbanairship.android.layout.reporting.FormData.TextInput
 import com.urbanairship.json.JsonException
@@ -81,7 +82,10 @@ public class FormDataTest {
             )
 
         private val textInputData: TextInput =
-            TextInput(identifier = "text input", value = "text input value", isValid = true)
+            TextInput(textInput = FormInputType.TEXT, identifier = "text input", value = "text input value", isValid = true)
+
+        private val emailInputData: TextInput =
+            TextInput(textInput = FormInputType.EMAIL, identifier = "email input", value = "text@value", isValid = true)
 
         private val toggleData: FormData.Toggle =
             FormData.Toggle(identifier = "toggle input", value = true, isValid = true)
@@ -104,7 +108,7 @@ public class FormDataTest {
                 identifier = "child form",
                 responseType = "child form response type",
                 children = setOf(
-                    TextInput(identifier = "child text", value = "child text input", isValid = true)
+                    TextInput(textInput = FormInputType.TEXT, identifier = "child text", value = "child text input", isValid = true)
                 )
             )
 
@@ -115,7 +119,8 @@ public class FormDataTest {
             toggleData,
             scoreData,
             npsFormData,
-            formData
+            formData,
+            emailInputData
         )
 
         private val form: FormData.Form = FormData.Form(
@@ -158,6 +163,10 @@ public class FormDataTest {
                  "text input":{
                     "type":"text_input",
                     "value":"text input value"
+                 },
+                 "email input":{
+                    "type":"email_input",
+                    "value":"text@value"
                  },
                  "single choice":{
                     "type":"single_choice",

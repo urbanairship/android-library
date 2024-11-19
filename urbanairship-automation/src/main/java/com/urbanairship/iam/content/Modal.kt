@@ -188,6 +188,7 @@ public class Modal @VisibleForTesting internal constructor(
         TEMPLATE_KEY to template,
         BACKGROUND_COLOR_KEY to backgroundColor,
         DISMISS_BUTTON_COLOR_KEY to dismissButtonColor,
+        BORDER_RADIUS_KEY to borderRadius,
         ALLOW_FULLSCREEN_DISPLAY_KEY to allowFullscreenDisplay
     ).toJsonValue()
 
@@ -203,6 +204,7 @@ public class Modal @VisibleForTesting internal constructor(
         if (footer != other.footer) return false
         if (buttons != other.buttons) return false
         if (buttonLayoutType != other.buttonLayoutType) return false
+        if (borderRadius != other.borderRadius) return false
         if (template != other.template) return false
         if (backgroundColor != other.backgroundColor) return false
         if (dismissButtonColor != other.dismissButtonColor) return false
@@ -219,12 +221,13 @@ public class Modal @VisibleForTesting internal constructor(
         result = 31 * result + template.hashCode()
         result = 31 * result + backgroundColor.hashCode()
         result = 31 * result + dismissButtonColor.hashCode()
+        result = 31 * result + borderRadius.hashCode()
         result = 31 * result + allowFullscreenDisplay.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "Modal(heading=$heading, body=$body, media=$media, footer=$footer, buttons=$buttons, buttonLayoutType=$buttonLayoutType, template=$template, backgroundColor=$backgroundColor, dismissButtonColor=$dismissButtonColor, allowFullscreenDisplay=$allowFullscreenDisplay)"
+        return "Modal(heading=$heading, body=$body, media=$media, footer=$footer, buttons=$buttons, buttonLayoutType=$buttonLayoutType, template=$template, backgroundColor=$backgroundColor, dismissButtonColor=$dismissButtonColor, borderRadius=$borderRadius, allowFullscreenDisplay=$allowFullscreenDisplay)"
     }
 
 }

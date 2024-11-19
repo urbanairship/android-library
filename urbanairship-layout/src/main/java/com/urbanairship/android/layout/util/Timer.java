@@ -89,7 +89,14 @@ public abstract class Timer {
      * @return The progress in percentage.
      */
     public int getProgress() {
+        if (duration == 0) {
+            return 0;  // Return 0 progress if the duration is zero to prevent divide by zero
+        }
         return (int) (getRunTime() * 100 / duration);
+    }
+
+    public boolean isStarted() {
+        return isStarted;
     }
 
     /**

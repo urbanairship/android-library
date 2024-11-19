@@ -17,6 +17,7 @@ import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
 import java.util.Locale
+import java.util.UUID
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -956,6 +957,109 @@ public class FeatureFlagManagerTest {
     }
 
     @Test
+    public fun testControlFlag(): TestResult = runTest {
+        val mismatched = featureFlagInfo(
+            name = "mismatched",
+            controlOptions = ControlOptions(
+                audience = audienceMissedSelector,
+                reportingMetadata = jsonMapOf("never" to "override"),
+                controlType = ControlOptions.Type.Flag
+            )
+        )
+
+        val matched = featureFlagInfo(
+            name = "matched",
+            controlOptions = ControlOptions(
+                audience = audienceMatchSelector,
+                reportingMetadata = jsonMapOf("must" to "override"),
+                controlType = ControlOptions.Type.Flag
+            )
+        )
+
+        coEvery { remoteDataAccess.fetchFlagRemoteInfo(any()) } answers {
+            val flag = if ("matched" == firstArg()) {
+                matched
+            } else {
+                mismatched
+            }
+
+            generateRemoteData(listOf(flag))
+        }
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        assertEquals(FeatureFlag.createFlag(
+            name = "mismatched",
+            isEligible = true,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "flag")),
+        ), featureFlags.flag("mismatched").getOrThrow())
+
+        assertEquals(FeatureFlag.createFlag(
+            name = "matched",
+            isEligible = false,
+            reportingInfo = generateReportingInfo(
+                reportingMetadata = jsonMapOf("must" to "override"),
+                supersededMetadata = listOf(jsonMapOf("reporting" to "flag"))
+            )
+        ), featureFlags.flag("matched").getOrThrow())
+    }
+
+    @Test
+    public fun testControlVariables(): TestResult = runTest {
+        val mismatched = featureFlagInfo(
+            name = "mismatched",
+            controlOptions = ControlOptions(
+                audience = audienceMissedSelector,
+                reportingMetadata = jsonMapOf("never" to "override"),
+                controlType = ControlOptions.Type.Variables(
+                    jsonMapOf("override" to "variables")
+                )
+            )
+        )
+
+        val matched = featureFlagInfo(
+            name = "matched",
+            controlOptions = ControlOptions(
+                audience = audienceMatchSelector,
+                reportingMetadata = jsonMapOf("must" to "override"),
+                controlType = ControlOptions.Type.Variables(
+                    jsonMapOf("override" to "variables")
+                )
+            )
+        )
+
+        coEvery { remoteDataAccess.fetchFlagRemoteInfo(any()) } answers {
+            val flag = if ("matched" == firstArg()) {
+                matched
+            } else {
+                mismatched
+            }
+
+            generateRemoteData(listOf(flag))
+        }
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        assertEquals(FeatureFlag.createFlag(
+            name = "mismatched",
+            isEligible = true,
+            reportingInfo = generateReportingInfo(jsonMapOf("reporting" to "flag")),
+            variables = null
+        ), featureFlags.flag("mismatched").getOrThrow())
+
+        assertEquals(FeatureFlag.createFlag(
+            name = "matched",
+            isEligible = true,
+            variables = jsonMapOf("override" to "variables"),
+            reportingInfo = generateReportingInfo(
+                reportingMetadata = jsonMapOf("must" to "override"),
+                supersededMetadata = listOf(jsonMapOf("reporting" to "flag"))
+            )
+        ), featureFlags.flag("matched").getOrThrow())
+    }
+
+
+    @Test
     public fun testTrackInteraction(): TestResult = runTest {
         every { featureFlagAnalytics.trackInteraction(any()) } just runs
 
@@ -975,10 +1079,14 @@ public class FeatureFlagManagerTest {
         verify(exactly = 0) { featureFlagAnalytics.trackInteraction(flag) }
     }
 
-    private suspend fun generateReportingInfo(reportingMetadata: JsonMap? = null): FeatureFlag.ReportingInfo {
+    private suspend fun generateReportingInfo(
+        reportingMetadata: JsonMap? = null,
+        supersededMetadata: List<JsonMap>? = null
+        ): FeatureFlag.ReportingInfo {
         return FeatureFlag.ReportingInfo(
             reportingMetadata = reportingMetadata
                 ?: jsonMapOf("flag_id" to "27f26d85-0550-4df5-85f0-7022fa7a5925"),
+            supersededReportingMetadata = supersededMetadata,
             contactId = infoProvider.getStableContactInfo().contactId,
             channelId = infoProvider.getChannelId()
         )
@@ -992,6 +1100,21 @@ public class FeatureFlagManagerTest {
                 lastModified = null,
                 source = RemoteDataSource.APP,
             )
+        )
+    }
+
+    private fun featureFlagInfo(
+        name: String,
+        controlOptions: ControlOptions? = null
+    ): FeatureFlagInfo {
+        return FeatureFlagInfo(
+            id = UUID.randomUUID().toString(),
+            created = 0,
+            lastUpdated = 0,
+            name = name,
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.StaticPayload(),
+            controlOptions = controlOptions
         )
     }
 }

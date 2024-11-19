@@ -3,9 +3,8 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import android.view.View
-import com.urbanairship.Provider
+import android.view.accessibility.AccessibilityManager
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
@@ -14,17 +13,12 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.gestures.PagerGestureEvent.Hold
+import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.info.PagerInfo
-import com.urbanairship.android.layout.info.VisibilityInfo
 import com.urbanairship.android.layout.property.AutomatedAction
-import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
-import com.urbanairship.android.layout.property.Color
-import com.urbanairship.android.layout.property.EnableBehaviorType
-import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.GestureLocation
 import com.urbanairship.android.layout.property.PagerGesture
-import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.earliestNavigationAction
 import com.urbanairship.android.layout.property.firstPagerNextOrNull
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
@@ -38,6 +32,8 @@ import com.urbanairship.android.layout.util.pagerGestures
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
+import java.lang.Integer.max
+import java.lang.Integer.min
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -45,61 +41,27 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.lang.Integer.max
-import java.lang.Integer.min
 
 internal class PagerModel(
+    viewInfo: PagerInfo,
     val items: List<Item>,
-    val isSwipeDisabled: Boolean = false,
-    private val gestures: List<PagerGesture>? = null,
-    backgroundColor: Color? = null,
-    border: Border? = null,
-    visibility: VisibilityInfo? = null,
-    eventHandlers: List<EventHandler>? = null,
-    enableBehaviors: List<EnableBehaviorType>? = null,
     private val pagerState: SharedState<State.Pager>,
     environment: ModelEnvironment,
-    properties: ModelProperties,
-    platformProvider: Provider<Int> = Provider { UAirship.shared().platformType }
-) : BaseModel<PagerView, PagerModel.Listener>(
-    viewType = ViewType.PAGER,
-    backgroundColor = backgroundColor,
-    border = border,
-    visibility = visibility,
-    eventHandlers = eventHandlers,
-    enableBehaviors = enableBehaviors,
-    environment = environment,
-    properties = properties,
-    platformProvider = platformProvider
+    properties: ModelProperties
+) : BaseModel<PagerView, PagerInfo, PagerModel.Listener>(
+    viewInfo = viewInfo, environment = environment, properties = properties
 ) {
-    constructor(
-        info: PagerInfo,
-        items: List<Item>,
-        pagerState: SharedState<State.Pager>,
-        env: ModelEnvironment,
-        props: ModelProperties
-    ) : this(
-        items = items,
-        isSwipeDisabled = info.isSwipeDisabled,
-        gestures = info.gestures,
-        backgroundColor = info.backgroundColor,
-        border = info.border,
-        visibility = info.visibility,
-        eventHandlers = info.eventHandlers,
-        enableBehaviors = info.enableBehaviors,
-        pagerState = pagerState,
-        environment = env,
-        properties = props
-    )
 
     class Item(
         val view: AnyModel,
         val identifier: String,
         val displayActions: Map<String, JsonValue>?,
-        val automatedActions: List<AutomatedAction>?
+        val automatedActions: List<AutomatedAction>?,
+        val accessibilityActions: List<AccessibilityAction>?
     )
 
     interface Listener : BaseModel.Listener {
+
         fun scrollTo(position: Int)
     }
 
@@ -115,6 +77,9 @@ internal class PagerModel(
     private var navigationActionTimer: Timer? = null
     private val automatedActionsTimers: MutableList<Timer> = ArrayList()
 
+    private var accessibilityListener: AccessibilityManager.TouchExplorationStateChangeListener? =
+        null
+
     init {
         // Update pager state with our page identifiers
         pagerState.update { state ->
@@ -126,14 +91,12 @@ internal class PagerModel(
         // and run any actions for the current page.
         modelScope.launch {
 
-            pagerState.changes
-                .filter {
+            pagerState.changes.filter {
                     // If current and last are both 0, we're initializing the pager.
                     // Otherwise, we only want to act on changes to the pageIndex.
 
                     (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex) && it.progress == 0
-                }
-                .collect {
+                }.collect {
                     // Clear any automated actions scheduled for the previous page.
                     clearAutomatedActions(it.lastPageIndex)
 
@@ -141,7 +104,7 @@ internal class PagerModel(
                     items[it.pageIndex].run {
                         handlePageActions(displayActions, automatedActions)
                         // Pause the story if the video is not ready
-                        if (!it.isMediaPaused) {
+                        if (!it.isMediaPaused && !it.isTouchExplorationEnabled) {
                             resumeStory()
                         } else {
                             pauseStory()
@@ -151,10 +114,13 @@ internal class PagerModel(
         }
     }
 
-    override fun onCreateView(context: Context, viewEnvironment: ViewEnvironment) =
-        PagerView(context, this, viewEnvironment).apply {
-            id = viewId
-        }
+    override fun onCreateView(
+        context: Context,
+        viewEnvironment: ViewEnvironment,
+        itemProperties: ItemProperties?
+    ) = PagerView(context, this, viewEnvironment).apply {
+        id = viewId
+    }
 
     override fun onViewAttached(view: PagerView) {
         // Collect page index changes from state and tell the view to scroll to the current page.
@@ -183,8 +149,7 @@ internal class PagerModel(
         }
 
         // If we have gestures defined, collect events from the view and handle them.
-        if (gestures != null) {
-            UALog.v { "${gestures.size} gestures defined." }
+        if (viewInfo.gestures != null) {
             viewScope.launch {
                 view.pagerGestures().collect {
                     handleGesture(it)
@@ -193,15 +158,46 @@ internal class PagerModel(
         } else {
             UALog.v { "No gestures defined." }
         }
+
+        // Set up accessibility actions and manage touch exploration state
+        val accessibilityManager =
+            view.context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+        accessibilityManager?.let { am ->
+            accessibilityListener =
+                AccessibilityManager.TouchExplorationStateChangeListener { enabled ->
+                    updateTouchExplorationState(enabled)
+                }.also {
+                    am.addTouchExplorationStateChangeListener(it)
+                }
+            updateTouchExplorationState(am.isTouchExplorationEnabled)
+        }
+
+        viewScope.launch {
+            pagerState.changes
+                .map { it to items[it.pageIndex] }
+                .distinctUntilChanged()
+                .collect { (state, currentItem) ->
+                    view.setAccessibilityActions(currentItem.accessibilityActions) { action ->
+                        handleAccessibilityAction(action, state)
+                    }
+                }
+        }
     }
 
     override fun onViewDetached(view: PagerView) {
         clearAutomatedActions()
+
+        val accessibilityManager =
+            view.context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+        accessibilityManager?.let { am ->
+            accessibilityListener?.let {
+                am.removeTouchExplorationStateChangeListener(it)
+            }
+        }
     }
 
     /** Returns a stable viewId for the pager item view at the given adapter `position`.  */
-    fun getPageViewId(position: Int): Int =
-        pageViewIds.getOrPut(position) { View.generateViewId() }
+    fun getPageViewId(position: Int): Int = pageViewIds.getOrPut(position) { View.generateViewId() }
 
     private fun reportPageSwipe(pagerState: State.Pager) {
         val pagerContext = pagerState.reportingContext()
@@ -234,8 +230,17 @@ internal class PagerModel(
                 action.identifier,
                 action.reportingMetadata,
                 pagerContext
-            ), layoutState.reportingContext(pagerContext = pagerContext)
+            ),
+            layoutState.reportingContext(pagerContext = pagerContext)
         )
+    }
+
+    private fun handleAccessibilityAction(action: AccessibilityAction, pagerState: State.Pager) {
+        action.behaviors?.let { evaluateClickBehaviors(it) }
+
+        runActions(action.actions)
+
+        // TODO: Report the accessibility action
     }
 
     private suspend fun handlePageActions(
@@ -243,9 +248,7 @@ internal class PagerModel(
         automatedActions: List<AutomatedAction>?
     ) {
         // Run any display actions for the current page.
-        displayActions?.let { actions ->
-            runActions(actions)
-        }
+        runActions(displayActions)
 
         // Run any automated for the current page.
         automatedActions?.let { actions ->
@@ -311,19 +314,16 @@ internal class PagerModel(
         UALog.v { "handleGesture: $event" }
 
         val triggeredGestures = when (event) {
-            is PagerGestureEvent.Tap -> gestures.orEmpty()
+            is PagerGestureEvent.Tap -> viewInfo.gestures.orEmpty()
                 .filterIsInstance<PagerGesture.Tap>()
                 .filter { it.location == event.location || it.location == GestureLocation.ANY }
                 .map { it to it.behavior }
 
-            is PagerGestureEvent.Swipe -> gestures.orEmpty()
-                .filterIsInstance<PagerGesture.Swipe>()
-                .filter { it.direction == event.direction }
+            is PagerGestureEvent.Swipe -> viewInfo.gestures.orEmpty()
+                .filterIsInstance<PagerGesture.Swipe>().filter { it.direction == event.direction }
                 .map { it to it.behavior }
 
-            is Hold -> gestures.orEmpty()
-                .filterIsInstance<PagerGesture.Hold>()
-                .map {
+            is Hold -> viewInfo.gestures.orEmpty().filterIsInstance<PagerGesture.Hold>().map {
                     it to when (event.action) {
                         Hold.Action.PRESS -> it.pressBehavior
                         Hold.Action.RELEASE -> it.releaseBehavior
@@ -368,10 +368,10 @@ internal class PagerModel(
         val hasNext = pagerState.value.hasNext
 
         when {
-            !hasNext && fallback == PagerNextFallback.FIRST ->
-                pagerState.update { state ->
-                    state.copyWithPageIndexAndResetProgress(0)
-                }
+            !hasNext && fallback == PagerNextFallback.FIRST -> pagerState.update { state ->
+                state.copyWithPageIndexAndResetProgress(0)
+            }
+
             !hasNext && fallback == PagerNextFallback.DISMISS -> handleDismiss()
             else -> pagerState.update { state ->
                 state.copyWithPageIndex(min(state.pageIndex + 1, state.pageIds.size - 1))
@@ -407,7 +407,7 @@ internal class PagerModel(
     }
 
     private fun resumeStory() {
-        if (automatedActionsTimers.isNotEmpty()) {
+        if (navigationActionTimer?.isStarted != true || automatedActionsTimers.isNotEmpty()) {
             UALog.v { "resume story" }
         }
 
@@ -440,6 +440,17 @@ internal class PagerModel(
         }
 
         automatedActionsTimers.clear()
+    }
+
+    private fun updateTouchExplorationState(enabled: Boolean) {
+        pagerState.update {
+            it.copyWithTouchExplorationState(enabled)
+        }
+        if (enabled) {
+            pauseStory()
+        } else {
+            resumeStory()
+        }
     }
 }
 

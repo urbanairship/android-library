@@ -83,4 +83,15 @@
     <string name="ua_min_priority_channel_name">最低優先級通知</string>
     <string name="ua_min_priority_channel_description">最低優先級消息</string>
     <string name="ua_min_priority_channel_id">最小頻道 ID</string>
+    <!-- General -->
+    <string name="ua_dismiss">解除</string>
+    <string name="ua_escape">逃避</string>
+    <string name="ua_next">下一步</string>
+    <string name="ua_previous">上一步</string>
+    <string name="ua_submit">提交</string>
+    <string name="ua_loading">載入中</string>
+    <string name="ua_pager_progress">第 %1$s 頁，共 %2$s 頁</string>
+    <string name="ua_play">播放</string>
+    <string name="ua_pause">暫停</string>
+    <string name="ua_stop">停止</string>
 </resources>

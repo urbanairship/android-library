@@ -36,6 +36,30 @@ public object SuspendingBatchedQueryHelper {
     }
 
     /**
+     * Collects a list of `items` resulting from running batched queries.
+     *
+     * Note that the batch lists are backed by the full items list, so non-structural changes in the
+     * batches are reflected in the items list, and vice-versa.
+     *
+     * @param items The list of items to be split into batches.
+     * @param callback The callback that will receive batched sub-lists and return the result of the query.
+     * @param <T> The list type to split into batches.
+     * @param <R> The result type of the batched query.
+     */
+    public suspend fun <T, R> collectBatched(
+        items: List<T>,
+        callback: suspend (List<T>) -> List<R>?
+    ): List<R> {
+        val result = mutableListOf<R>()
+
+        runBatched(MAX_STATEMENT_PARAMETERS, items) { batch ->
+            callback(batch)?.let(result::addAll)
+        }
+
+        return result.toList()
+    }
+
+    /**
      * Splits up the given `items` into batches of the given size and invokes the `callback` for each batch.
      *
      * Note that the batch lists are backed by the full items list, so non-structural changes in the batches

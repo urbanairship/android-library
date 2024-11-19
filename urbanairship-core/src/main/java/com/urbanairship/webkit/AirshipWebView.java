@@ -118,7 +118,12 @@ public class AirshipWebView extends WebView {
             }
         }
 
-        settings.setAllowFileAccess(true);
+        // Disallow all file and content access, which could pose a security risk if enabled.
+        settings.setAllowFileAccess(false);
+        settings.setAllowFileAccessFromFileURLs(false);
+        settings.setAllowUniversalAccessFromFileURLs(false);
+        settings.setAllowContentAccess(false);
+
         settings.setJavaScriptEnabled(true);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
 

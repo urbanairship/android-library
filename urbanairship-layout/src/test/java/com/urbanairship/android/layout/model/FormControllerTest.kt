@@ -15,7 +15,10 @@ import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.inputData
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.info.FormControllerInfo
 import com.urbanairship.android.layout.property.FormBehaviorType
+import com.urbanairship.android.layout.property.FormInputType
+import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.FormData
@@ -160,6 +163,7 @@ public class FormControllerTest {
             parentFormState.update {
                 it.copyWithFormInput(
                     FormData.TextInput(
+                        textInput = FormInputType.TEXT,
                         identifier = TEXT_INPUT_ID,
                         value = TEXT_INPUT_VALUE,
                         isValid = true,
@@ -228,6 +232,7 @@ public class FormControllerTest {
         childFormState.update { form ->
             form.copyWithFormInput(
                 FormData.TextInput(
+                    textInput = FormInputType.TEXT,
                     identifier = TEXT_INPUT_ID,
                     value = TEXT_INPUT_VALUE,
                     isValid = true
@@ -309,13 +314,16 @@ public class FormControllerTest {
         properties: ModelProperties = DEFAULT_PROPERTIES
     ) {
         formController = FormController(
+            viewInfo = mockk<FormControllerInfo>(relaxed = true) {
+                every { this@mockk.type } returns ViewType.FORM_CONTROLLER
+                every { this@mockk.identifier } returns PARENT_FORM_ID
+                every { this@mockk.responseType } returns "form"
+                every { this@mockk.submitBehavior } returns FormBehaviorType.SUBMIT_EVENT
+            },
             view = mockView,
             formState = parentFormState,
             parentFormState = null,
             pagerState = pagerState,
-            identifier = PARENT_FORM_ID,
-            responseType = "form",
-            submitBehavior = FormBehaviorType.SUBMIT_EVENT,
             environment = mockEnv,
             properties = properties
         )
@@ -327,13 +335,16 @@ public class FormControllerTest {
         properties: ModelProperties = DEFAULT_PROPERTIES
     ) {
         formController = FormController(
+            viewInfo = mockk<FormControllerInfo>(relaxed = true) {
+                every { this@mockk.type } returns ViewType.FORM_CONTROLLER
+                every { this@mockk.identifier } returns CHILD_FORM_ID
+                every { this@mockk.responseType } returns "form"
+                every { this@mockk.submitBehavior } returns null
+            },
             view = mockView,
             formState = childFormState,
             parentFormState = parentFormState,
             pagerState = pagerState,
-            identifier = CHILD_FORM_ID,
-            responseType = "form",
-            submitBehavior = null,
             environment = mockEnv,
             properties = properties
         )

@@ -80,4 +80,15 @@
     <string name="ua_min_priority_channel_name">การแจ้งเตือนลำดับความสำคัญขั้นต่ำ</string>
     <string name="ua_min_priority_channel_description">ข้อความลำดับความสำคัญขั้นต่ำ</string>
     <string name="ua_min_priority_channel_id">รหัสช่องขั้นต่ำ</string>
+    <!-- General -->
+    <string name="ua_dismiss">ปิด</string>
+    <string name="ua_escape">หนีออก</string>
+    <string name="ua_next">ถัดไป</string>
+    <string name="ua_previous">ก่อนหน้า</string>
+    <string name="ua_submit">ส่ง</string>
+    <string name="ua_loading">กำลังโหลด</string>
+    <string name="ua_pager_progress">หน้า %1$s ของ %2$s</string>
+    <string name="ua_play">เล่น</string>
+    <string name="ua_pause">หยุดชั่วคราว</string>
+    <string name="ua_stop">หยุด</string>
 </resources>

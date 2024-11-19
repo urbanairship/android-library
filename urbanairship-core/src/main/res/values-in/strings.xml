@@ -80,4 +80,15 @@
     <string name="ua_min_priority_channel_name">Pemberitahuan prioritas minimal</string>
     <string name="ua_min_priority_channel_description">Pesan prioritas mininimal</string>
     <string name="ua_min_priority_channel_id">ID Saluran Minimal</string>
+    <!-- General -->
+    <string name="ua_dismiss">Buang</string>
+    <string name="ua_escape">Lepas</string>
+    <string name="ua_next">Seterusnya</string>
+    <string name="ua_previous">Sebelumnya</string>
+    <string name="ua_submit">Serah</string>
+    <string name="ua_loading">Memuat</string>
+    <string name="ua_pager_progress">Halaman %1$s daripada %2$s</string>
+    <string name="ua_play">Main</string>
+    <string name="ua_pause">Jeda</string>
+    <string name="ua_stop">Berhenti</string>
 </resources>

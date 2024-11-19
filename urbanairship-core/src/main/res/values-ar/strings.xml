@@ -85,4 +85,15 @@
     <string name="ua_min_priority_channel_name">الحد الأدنى من الإخطارات ذات الأولوية</string>
     <string name="ua_min_priority_channel_description">الحد الأدنى من الرسائل ذات الأولوية</string>
     <string name="ua_min_priority_channel_id">معرف القناة الأدنى</string>
+    <!-- General -->
+    <string name="ua_dismiss">أجل</string>
+    <string name="ua_escape">إفلات</string>
+    <string name="ua_next">التالي</string>
+    <string name="ua_previous">السابق</string>
+    <string name="ua_submit">إرسال</string>
+    <string name="ua_loading">جاري التحميل</string>
+    <string name="ua_pager_progress">الصفحة %1$s من %2$s</string>
+    <string name="ua_play">تشغيل</string>
+    <string name="ua_pause">إيقاف مؤقت</string>
+    <string name="ua_stop">إيقاف</string>
 </resources>

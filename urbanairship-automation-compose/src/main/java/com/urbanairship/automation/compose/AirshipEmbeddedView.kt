@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -163,7 +162,7 @@ private fun EmbeddedViewContent(
             ){ layout ->
                 EmbeddedViewWrapper(
                     embeddedId = state.embeddedId,
-                    layout = layout,
+                    embeddedLayout = layout,
                     embeddedSize = state.placementSize
                         ?.toEmbeddedSize(parentWidthProvider, parentHeightProvider),
                     placeholder = placeholder,
@@ -174,64 +173,71 @@ private fun EmbeddedViewContent(
     }
 }
 
-/** Shows the embedded view if content is available, otherwise shows the placeholder. */
+/** Shows the [embeddedLayout] if not null, otherwise shows the [placeholder]. */
 @Composable
-private fun EmbeddedViewWrapper(
+internal fun EmbeddedViewWrapper(
     embeddedId: String,
-    layout: EmbeddedLayout?,
+    embeddedLayout: EmbeddedLayout?,
     modifier: Modifier = Modifier,
     embeddedSize: EmbeddedSize?,
     placeholder: (@Composable () -> Unit)?
 ) {
-    if (layout != null) {
-        // Only nullable because we're safe-casting the placement type farther down.
-        // Placement should never be null here, in practice.
-        val (width, height) = embeddedSize ?: return
+    val layout = embeddedLayout ?: run {
+        // Show the placeholder if we have one
+        placeholder?.invoke()
 
-        // Remember the view, updating it if the layout instance ID changes.
-        val view = remember(layout.viewInstanceId) {
-            mutableStateOf(
-                layout.makeView(width.fill, height.fill)?.apply {
-                    layoutParams = LayoutParams(width.spec, height.spec).apply {
+        // Bail out if we don't have a layout
+        return
+    }
+
+    // Only nullable because we're safe-casting the placement type farther down.
+    // Placement should never be null here, in practice.
+    val (width, height) = embeddedSize ?: run {
+        UALog.w("Embedded size is null for embedded ID \"$embeddedId\"!")
+        return
+    }
+
+    // Remember the view, updating it if the layout instance ID changes.
+    val view = remember(embeddedId, layout.viewInstanceId) {
+        embeddedLayout.makeView(width.fill, height.fill)!!.apply {
+            layoutParams = LayoutParams(width.spec, height.spec).apply {
+                gravity = Gravity.CENTER
+            }
+        }
+    }
+
+    AndroidView(
+        factory = { viewContext ->
+            FrameLayout(viewContext).apply {
+                layoutParams = LayoutParams(width.spec, height.spec)
+            }.also {
+                UALog.v { "Create embedded layout for id: \"$embeddedId\", instance: \"${embeddedLayout.viewInstanceId}\"" }
+            }
+        },
+        update = { frame ->
+            view.apply {
+                // Update the layout params to pass along size changes to the
+                // child embedded view.
+                updateLayoutParams {
+                    LayoutParams(width.spec, height.spec).apply {
                         gravity = Gravity.CENTER
                     }
                 }
-            )
-        }
 
-        AndroidView(
-            factory = { viewContext ->
-                FrameLayout(viewContext).apply {
-                    layoutParams = LayoutParams(width.spec, height.spec)
-                }.also {
-                    UALog.v { "Create embedded layout for id: \"$embeddedId\"" }
+                // If the frame has children, remove them before adding the new view.
+                if (frame.childCount > 0) {
+                    frame.removeAllViews()
                 }
-            },
-            update = { frame ->
-                view.value?.apply {
-                    // Update the layout params to pass along size changes to the
-                    // child embedded view.
-                    updateLayoutParams {
-                        LayoutParams(width.spec, height.spec).apply {
-                            gravity = Gravity.CENTER
-                        }
-                    }
-                    // If the frame is empty, add the view.
-                    // The frame will be empty on the first update after the view is
-                    // created, and when the frame is reset and then updated again.
-                    if (frame.childCount == 0) {
-                        frame.addView(this)
-                    }
-                    UALog.v { "Update embedded layout for id: \"$embeddedId\"" }
-                }
-             },
-            onReset = { frame ->
-                frame.removeAllViews()
-                UALog.v { "Reset embedded layout for id: \"$embeddedId\"" }
-            },
-            modifier = modifier
-        )
-    } else if (placeholder != null) {
-        placeholder()
-    }
+
+                frame.addView(this)
+
+                UALog.v { "Update embedded layout for id: \"$embeddedId\", instance: \"${embeddedLayout.viewInstanceId}\"}" }
+            }
+         },
+        onReset = { frame ->
+            frame.removeAllViews()
+            UALog.v { "Reset embedded layout for id: \"$embeddedId\", instance: \"${embeddedLayout.viewInstanceId}\"" }
+        },
+        modifier = modifier
+    )
 }

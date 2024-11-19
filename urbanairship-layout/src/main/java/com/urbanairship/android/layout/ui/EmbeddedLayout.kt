@@ -127,6 +127,7 @@ public class EmbeddedLayout(
             override fun onDestroy(owner: LifecycleOwner) {
                 // Clean up the view model store when the activity is destroyed.
                 onDisplayFinished()
+                activity.lifecycle.removeObserver(this)
             }
         })
 
@@ -224,15 +225,13 @@ public class EmbeddedLayout(
 
     @MainThread
     private fun onDisplayFinished() {
-        UALog.v("Embedded content finished displaying! $embeddedViewId")
+        UALog.v("Embedded content finished displaying! $embeddedViewId, $viewInstanceId")
         layoutScope.cancel()
         EmbeddedViewModelStore.clear()
     }
 
     private fun observeLayoutEvents(events: Flow<LayoutEvent>) = layoutScope.launch {
-        events
-            .filterIsInstance<LayoutEvent.Finish>()
-            .take(1)
+        events.filterIsInstance<LayoutEvent.Finish>()
             .collect { dismiss() }
     }
 

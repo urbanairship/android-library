@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">Ειδοποιήσεις ελάχιστης προτεραιότητας</string>
     <string name="ua_min_priority_channel_description">Μηνύματα ελάχιστης προτεραιότητας</string>
     <string name="ua_min_priority_channel_id">Ελάχιστο αναγνωριστικό καναλιού</string>
+    <!-- General -->
+    <string name="ua_dismiss">Απόρριψη</string>
+    <string name="ua_escape">Διαφυγή</string>
+    <string name="ua_next">Επόμενο</string>
+    <string name="ua_previous">Προηγούμενο</string>
+    <string name="ua_submit">Υποβολή</string>
+    <string name="ua_loading">Φόρτωση</string>
+    <string name="ua_pager_progress">Σελίδα %1$s από %2$s</string>
+    <string name="ua_play">Αναπαραγωγή</string>
+    <string name="ua_pause">Παύση</string>
+    <string name="ua_stop">Στοπ</string>
 </resources>

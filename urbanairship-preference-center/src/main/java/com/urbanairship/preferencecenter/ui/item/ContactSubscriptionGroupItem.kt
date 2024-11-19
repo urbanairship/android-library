@@ -85,6 +85,15 @@ internal data class ContactSubscriptionGroupItem(val item: Item.ContactSubscript
                         }
                     }
 
+                    setOnFocusChangeListener { _, focused ->
+                        if (focused) {
+                            this.setChipStrokeWidthResource(R.dimen.ua_preference_center_subscription_type_chip_stroke_focused_width)
+                        } else {
+                            this.setChipStrokeWidthResource(R.dimen.ua_preference_center_subscription_type_chip_stroke_width)
+                        }
+                    }
+
+                    titleView.labelFor = this.id
                     chipGroup.addView(this, WRAP_CONTENT, WRAP_CONTENT)
                 }
             }

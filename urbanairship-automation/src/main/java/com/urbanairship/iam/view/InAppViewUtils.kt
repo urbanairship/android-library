@@ -159,7 +159,8 @@ internal object InAppViewUtils {
         } else {
             textView.text = textInfo.text
         }
-        var typefaceFlags = textView.typeface.style
+
+        var typefaceFlags = textView.typeface?.style ?: Typeface.NORMAL
         var paintFlags = textView.paintFlags or Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG
         for (style in textInfo.style ?: emptyList()) {
             when (style) {

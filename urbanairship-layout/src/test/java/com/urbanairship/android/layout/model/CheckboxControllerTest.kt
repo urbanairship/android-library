@@ -1,13 +1,14 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import app.cash.turbine.test
 import com.urbanairship.android.layout.environment.FormType
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.json.JsonValue
+import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -125,20 +126,25 @@ public class CheckboxControllerTest {
         minSelection: Int = if (isRequired) 1 else 0,
         maxSelection: Int = Int.MAX_VALUE
     ) {
-        checkboxState = spyk(SharedState(
-            State.Checkbox(
-                identifier = IDENTIFIER,
-                minSelection = minSelection,
-                maxSelection = maxSelection
+        checkboxState = spyk(
+            SharedState(
+                State.Checkbox(
+                    identifier = IDENTIFIER,
+                    minSelection = minSelection,
+                    maxSelection = maxSelection
+                )
             )
-        ))
+        )
+
 
         controller = CheckboxController(
+            viewInfo = mockk<CheckboxControllerInfo>(relaxed = true) {
+                every { this@mockk.identifier } returns IDENTIFIER
+                every { this@mockk.isRequired } returns isRequired
+                every { this@mockk.minSelection } returns minSelection
+                every { this@mockk.maxSelection } returns maxSelection
+            },
             view = mockView,
-            identifier = IDENTIFIER,
-            isRequired = isRequired,
-            minSelection = minSelection,
-            maxSelection = maxSelection,
             formState = formState,
             checkboxState = checkboxState,
             environment = mockEnv,
