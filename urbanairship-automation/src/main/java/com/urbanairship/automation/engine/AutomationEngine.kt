@@ -101,6 +101,7 @@ internal class AutomationEngine(
 
     override fun setEnginePaused(paused: Boolean) {
         isPaused.update { paused }
+        triggerProcessor.setPaused(paused)
     }
 
     override fun setExecutionPaused(paused: Boolean) {
