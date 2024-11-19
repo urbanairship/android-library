@@ -18,6 +18,7 @@ public enum ViewType {
     LABEL("label"),
     LABEL_BUTTON("label_button"),
     IMAGE_BUTTON("image_button"),
+    BUTTON_LAYOUT("button_layout"),
     PAGER_CONTROLLER("pager_controller"),
     PAGER("pager"),
     PAGER_INDICATOR("pager_indicator"),

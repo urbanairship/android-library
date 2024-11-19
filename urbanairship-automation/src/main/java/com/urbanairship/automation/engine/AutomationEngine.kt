@@ -15,6 +15,8 @@ import com.urbanairship.automation.updateOrCreate
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -99,6 +101,7 @@ internal class AutomationEngine(
 
     override fun setEnginePaused(paused: Boolean) {
         isPaused.update { paused }
+        triggerProcessor.setPaused(paused)
     }
 
     override fun setExecutionPaused(paused: Boolean) {
@@ -350,7 +353,7 @@ internal class AutomationEngine(
                     it.executionInterrupted(now, retry = behavior == InterruptedBehavior.RETRY)
                 }
                 if (updated?.scheduleState == AutomationScheduleState.PAUSED) {
-                    handleInterval(updated.schedule.interval?.toLong() ?: 0L, data.schedule.identifier)
+                    handleInterval((updated.schedule.interval?.toLong() ?: 0L).seconds, data.schedule.identifier)
                 }
             } else {
                 updated = updateState(data.schedule.identifier) { it.prepareInterrupted(now) }
@@ -365,8 +368,8 @@ internal class AutomationEngine(
         schedules
             .filter { it.scheduleState == AutomationScheduleState.PAUSED }
             .forEach { data ->
-                val interval = data.schedule.interval?.toLong() ?: 0
-                val remaining = interval - clock.currentTimeMillis()
+                val interval = (data.schedule.interval?.toLong() ?: 0).seconds
+                val remaining = interval - (clock.currentTimeMillis() - data.scheduleStateChangeDate).milliseconds
                 handleInterval(remaining, data.schedule.identifier)
             }
 
@@ -622,7 +625,7 @@ internal class AutomationEngine(
                     updateState(scheduleID) { it.finishedExecuting(clock.currentTimeMillis()) }
                 if (update?.scheduleState == AutomationScheduleState.PAUSED) {
                     val interval = update.schedule.interval?.toLong() ?: 0L
-                    handleInterval(interval, scheduleID)
+                    handleInterval(interval.seconds, scheduleID)
                 }
                 return true
             }
@@ -654,9 +657,10 @@ internal class AutomationEngine(
         return result
     }
 
-    private fun handleInterval(interval: Long, scheduleID: String) {
+    private fun handleInterval(interval: Duration, scheduleID: String) {
+        UALog.v { "handleInterval(interval: $interval, scheduleID: $scheduleID)" }
         scope.launch {
-            sleeper.sleep(interval.seconds)
+            sleeper.sleep(interval)
             updateState(scheduleID) {
                 it.idle(clock.currentTimeMillis())
             }

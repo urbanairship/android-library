@@ -201,11 +201,40 @@ public class FeatureFlagManager internal constructor(
 
             /// If we have an error, flag is eligible, or the last flag return
             if (result.isFailure || result.getOrNull()?.isEligible == true || isLast) {
-                return result
+                return evaluatedControl(result, info, deviceInfoProvider)
             }
         }
 
         return Result.success(FeatureFlag.createMissingFlag(name))
+    }
+
+    private suspend fun evaluatedControl(
+        flag: Result<FeatureFlag>,
+        info: FeatureFlagInfo,
+        deviceInfoProvider: DeviceInfoProvider
+    ): Result<FeatureFlag> {
+
+        val control = info.controlOptions ?: return flag
+        val original = flag.getOrNull() ?: return flag
+        if (!original.isEligible) {
+            return flag
+        }
+
+        if (!audienceEvaluator.evaluateOptional(control.audience, info.created, deviceInfoProvider)) {
+            return flag
+        }
+
+        val updated = when (val type = control.controlType) {
+            ControlOptions.Type.Flag -> original.copyWith(isEligible = false)
+            is ControlOptions.Type.Variables -> original.copyWith(variables = type.variables)
+        }
+
+        updated.reportingInfo?.let { info ->
+            info.addSuperseded(info.reportingMetadata)
+            info.reportingMetadata = control.reportingMetadata
+        }
+
+        return Result.success(updated)
     }
 
     private suspend fun resolveStatic(

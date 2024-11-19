@@ -17,12 +17,16 @@ import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
 import android.widget.ProgressBar
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.UrlAllowList
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.WebViewModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.widget.TappableView
@@ -73,16 +77,19 @@ internal class WebViewView(
         viewEnvironment.activityMonitor().addActivityListener(filteredActivityListener)
 
         setChromeClient(viewEnvironment.webChromeClientFactory().create())
-        LayoutUtils.applyBorderAndBackground(this, model)
         loadWebView(model)
 
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
-                this@WebViewView.isGone = visible
+                this@WebViewView.isVisible = visible
             }
 
             override fun setEnabled(enabled: Boolean) {
                 this@WebViewView.isEnabled = enabled
+            }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@WebViewView, old, new)
             }
         }
     }
@@ -125,6 +132,12 @@ internal class WebViewView(
                 domStorageEnabled = true
                 databaseEnabled = true
             }
+
+            // Disallow all file and content access, which could pose a security risk if enabled.
+            allowFileAccess = false
+            allowFileAccessFromFileURLs = false
+            allowUniversalAccessFromFileURLs = false
+            allowContentAccess = false
         }
 
         val client = viewEnvironment.webViewClientFactory().create().apply {
@@ -135,7 +148,7 @@ internal class WebViewView(
                 }
 
                 override fun onRetry(webView: WebView) {
-                    webView.loadUrl(model.url)
+                    webView.loadUrl(model.viewInfo.url)
                 }
 
                 override fun onClose(webView: WebView): Boolean {
@@ -153,14 +166,14 @@ internal class WebViewView(
 
         addView(frameLayout)
 
-        if (!UAirship.shared().urlAllowList.isAllowed(model.url, UrlAllowList.SCOPE_OPEN_URL)) {
-            UALog.e("URL not allowed. Unable to load: %s", model.url)
+        if (!UAirship.shared().urlAllowList.isAllowed(model.viewInfo.url, UrlAllowList.SCOPE_OPEN_URL)) {
+            UALog.e("URL not allowed. Unable to load: %s", model.viewInfo.url)
             return
         }
 
         // Load the URL (if we didn't restore with saved state)
         if (savedState == null) {
-            wv.loadUrl(model.url)
+            wv.loadUrl(model.viewInfo.url)
         }
     }
 

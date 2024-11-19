@@ -18,21 +18,29 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.core.view.doOnAttach
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.model.Background
+import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.MediaModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
-import com.urbanairship.android.layout.property.Position
+import com.urbanairship.android.layout.property.Size
+import com.urbanairship.android.layout.property.Size.Dimension
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
+import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.widget.CropImageView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.android.layout.widget.TouchAwareWebView
@@ -40,12 +48,12 @@ import com.urbanairship.app.FilteredActivityListener
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
-import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import org.intellij.lang.annotations.Language
+import java.lang.ref.WeakReference
 
 /**
  * Media view.
@@ -55,7 +63,8 @@ import org.intellij.lang.annotations.Language
 internal class MediaView(
     context: Context,
     model: MediaModel,
-    private val viewEnvironment: ViewEnvironment
+    private val viewEnvironment: ViewEnvironment,
+    private val itemProperties: ItemProperties?
 ) : FrameLayout(context, null), BaseView, TappableView {
 
     private val activityListener = object : SimpleActivityListener() {
@@ -79,16 +88,13 @@ internal class MediaView(
         FilteredActivityListener(activityListener, viewEnvironment.hostingActivityPredicate())
 
     private var visibilityChangeListener: BaseView.VisibilityChangeListener? = null
-
     private var webView: TouchAwareWebView? = null
     private var imageView: ImageView? = null
 
     init {
         id = model.viewId
 
-        LayoutUtils.applyBorderAndBackground(this, model)
-
-        when (model.mediaType) {
+        when (model.viewInfo.mediaType) {
             MediaType.IMAGE -> configureImageView(model)
             MediaType.VIDEO,
             MediaType.YOUTUBE -> {
@@ -104,9 +110,9 @@ internal class MediaView(
             // Use javascript to pause/resume the videos instead of webView.onPause()/onResume()
             // because the WebView triggers an unwanted visibilitychange event.
             override fun onPause() {
-                if (model.mediaType == MediaType.VIDEO) {
+                if (model.viewInfo.mediaType == MediaType.VIDEO) {
                     webView?.evaluateJavascript("videoElement.pause();", null)
-                } else if (model.mediaType == MediaType.YOUTUBE) {
+                } else if (model.viewInfo.mediaType == MediaType.YOUTUBE) {
                     webView?.evaluateJavascript("player.pauseVideo();", null)
                 }
             }
@@ -114,20 +120,25 @@ internal class MediaView(
             // Use javascript to pause/resume the videos instead of webView.onPause()/onResume()
             // because the WebView triggers an unwanted visibilitychange event.
             override fun onResume() {
-                if (model.video?.autoplay == true) {
-                    if (model.mediaType == MediaType.VIDEO) {
+                if (model.viewInfo.video?.autoplay == true) {
+                    if (model.viewInfo.mediaType == MediaType.VIDEO) {
                         webView?.evaluateJavascript("videoElement.play();", null)
-                    } else if (model.mediaType == MediaType.YOUTUBE) {
+                    } else if (model.viewInfo.mediaType == MediaType.YOUTUBE) {
                         webView?.evaluateJavascript("player.playVideo();", null)
                     }
                 }
             }
 
             override fun setVisibility(visible: Boolean) {
-                this@MediaView.isGone = visible
+                this@MediaView.isVisible = visible
             }
+
             override fun setEnabled(enabled: Boolean) {
                 this@MediaView.isEnabled = enabled
+            }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@MediaView, old, new)
             }
         }
     }
@@ -148,7 +159,7 @@ internal class MediaView(
     }
 
     private fun configureImageView(model: MediaModel) {
-        var url = model.url
+        var url = model.viewInfo.url
         viewEnvironment.imageCache()[url]?.let { cachedImage ->
             url = cachedImage
         }
@@ -161,62 +172,80 @@ internal class MediaView(
             return
         }
 
-        val parentLayoutParams = layoutParams
 
-        val iv = CropImageView(context).apply {
-            id = model.mediaViewId
-            layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
-            adjustViewBounds = true
+        doOnAttach {
+            val parentLayoutParams = layoutParams
 
-            if (model.mediaFit == MediaFit.FIT_CROP) {
-                // Use parent size and a matrix to crop the image.
-                setParentLayoutParams(parentLayoutParams)
-                setImagePosition(model.position)
-            } else {
-                // Use ImageView scaleType to fit the image.
-                scaleType = model.mediaFit.scaleType
+            val iv = CropImageView(context).apply {
+                id = model.mediaViewId
+                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                adjustViewBounds = true
+
+                if (model.viewInfo.mediaFit == MediaFit.FIT_CROP) {
+                    // Use parent size and a matrix to crop the image.
+                    setParentLayoutParams(parentLayoutParams)
+                    setImagePosition(model.viewInfo.position)
+                } else {
+                    // Use ImageView scaleType to fit the image.
+                    scaleType = model.viewInfo.mediaFit.scaleType
+                }
+
+                importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+                model.contentDescription(context).ifNotEmpty {
+                    contentDescription = it
+                    if (model.viewInfo.accessibilityHidden != true) {
+                        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+                    }
+                }
             }
+            imageView = iv
+            addView(iv)
 
-            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
-            model.contentDescription.ifNotEmpty {
-                contentDescription = it
-                importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
-            }
-        }
-        imageView = iv
-        addView(iv)
+            var isLoaded = false
 
-        var isLoaded = false
+            fun loadImage(url: String) {
+                val fallbackWidth = calculateFallbackSize(
+                    dimension = itemProperties?.size?.width,
+                    maxSize = ResourceUtils.getDisplayWidthPixels(context)
+                )
 
-        fun loadImage(url: String) {
-            // Falling back to the screen dimensions keeps the image as large as possible,
-            // while still allowing for sampling to occur.
-            val fallbackWidth = ResourceUtils.getDisplayWidthPixels(context)
-            val fallbackHeight = ResourceUtils.getDisplayHeightPixels(context)
-            val options = ImageRequestOptions.newBuilder(url)
-                .setFallbackDimensions(fallbackWidth, fallbackHeight)
-                .setImageLoadedCallback { success ->
-                    if (success) {
-                        isLoaded = true
-                    } else {
-                        // Listen for visibility changes and load images for default GONE views
-                        // once they are made visible (and have a measured size).
-                        visibilityChangeListener = object : BaseView.VisibilityChangeListener {
-                            override fun onVisibilityChanged(visibility: Int) {
-                                if (visibility == View.VISIBLE && !isLoaded) {
-                                    loadImage(url)
+                val fallbackHeight = calculateFallbackSize(
+                    dimension = itemProperties?.size?.height,
+                    maxSize = ResourceUtils.getDisplayHeightPixels(context)
+                )
+
+                val options = ImageRequestOptions.newBuilder(url)
+                    .setFallbackDimensions(fallbackWidth, fallbackHeight)
+                    .setImageLoadedCallback { success ->
+                        if (success) {
+                            isLoaded = true
+                        } else {
+                            // Listen for visibility changes and load images for default GONE views
+                            // once they are made visible (and have a measured size).
+                            visibilityChangeListener = object : BaseView.VisibilityChangeListener {
+                                override fun onVisibilityChanged(visibility: Int) {
+                                    if (visibility == View.VISIBLE && !isLoaded) {
+                                        loadImage(url)
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                .build()
+                    .build()
 
-            UAirship.shared().imageLoader.load(context, iv, options)
-        }
+                UAirship.shared().imageLoader.load(context, iv, options)
+            }
 
-        doOnAttach {
             loadImage(url)
+        }
+    }
+
+    private fun calculateFallbackSize(dimension: Dimension?, maxSize: Int): Int {
+        return when (dimension?.type) {
+            Size.DimensionType.AUTO ->  0
+            Size.DimensionType.PERCENT -> (dimension.float * maxSize).toInt()
+            Size.DimensionType.ABSOLUTE -> dpToPx(context, dimension.int).toInt()
+            null -> maxSize
         }
     }
 
@@ -239,7 +268,7 @@ internal class MediaView(
         wv.webChromeClient = viewEnvironment.webChromeClientFactory().create()
         wv.addJavascriptInterface(wv.getJavascriptInterface(), "VideoListenerInterface")
 
-        val frameLayout = when (model.mediaType) {
+        val frameLayout = when (model.viewInfo.mediaType) {
             // Adjust the aspect ratio of the WebView if the media is video or youtube.
             MediaType.VIDEO -> FixedAspectRatioFrameLayout(context).apply {
                 layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
@@ -254,7 +283,7 @@ internal class MediaView(
                     if (isWrapWidth || isWrapHeight) {
                         // If either dimension is wrap_content, the aspect ratio will be adjusted
                         // based on the video's aspect ratio.
-                        model.video?.aspectRatio?.let {
+                        model.viewInfo.video?.aspectRatio?.let {
                             aspectRatio = it.toFloat()
                         }
                     } else {
@@ -268,7 +297,7 @@ internal class MediaView(
                 layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
                     gravity = Gravity.CENTER
                 }
-                model.video?.aspectRatio?.let {
+                model.viewInfo.video?.aspectRatio?.let {
                     aspectRatio = it.toFloat()
                 }
             }
@@ -296,7 +325,7 @@ internal class MediaView(
         frameLayout.addView(progressBar, progressBarLayoutParams)
 
         wv.settings.apply {
-            if (model.mediaType == MediaType.VIDEO) {
+            if (model.viewInfo.mediaType == MediaType.VIDEO) {
                 mediaPlaybackRequiresUserGesture = true
             }
 
@@ -306,14 +335,20 @@ internal class MediaView(
                 domStorageEnabled = true
                 databaseEnabled = true
             }
+
+            // Disallow all file and content access, which could pose a security risk if enabled.
+            allowFileAccess = false
+            allowFileAccessFromFileURLs = false
+            allowUniversalAccessFromFileURLs = false
+            allowContentAccess = false
         }
 
         val webViewWeakReference = WeakReference(wv)
         val load = Runnable {
             webViewWeakReference.get()?.let { weakWebView ->
-                when (model.mediaType) {
+                when (model.viewInfo.mediaType) {
                     MediaType.VIDEO -> {
-                        val video = model.video ?: Video.defaultVideo()
+                        val video = model.viewInfo.video ?: Video.defaultVideo()
                         weakWebView.loadData(
                             String.format(
                                 VIDEO_HTML_FORMAT,
@@ -321,7 +356,7 @@ internal class MediaView(
                                 if (video.autoplay) "autoplay" else "",
                                 if (video.muted) "muted" else "",
                                 if (video.loop) "loop" else "",
-                                model.url,
+                                model.viewInfo.url,
                                 model.videoStyle,
                                 if (video.autoplay) VIDEO_AUTO_PLAYING_JS_CODE else ""
                             ),
@@ -330,13 +365,13 @@ internal class MediaView(
                         )
                     }
                     MediaType.IMAGE -> weakWebView.loadData(
-                        String.format(IMAGE_HTML_FORMAT, model.url),
+                        String.format(IMAGE_HTML_FORMAT, model.viewInfo.url),
                         "text/html",
                         "UTF-8"
                     )
                     MediaType.YOUTUBE -> {
-                        val video = model.video ?: Video.defaultVideo()
-                        val videoId = YOUTUBE_ID_RE.find(model.url)?.groupValues?.get(1)
+                        val video = model.viewInfo.video ?: Video.defaultVideo()
+                        val videoId = YOUTUBE_ID_RE.find(model.viewInfo.url)?.groupValues?.get(1)
                         videoId?.let {
                             weakWebView.loadData(
                                 String.format(YOUTUBE_HTML_FORMAT,
@@ -357,7 +392,7 @@ internal class MediaView(
                                 "text/html",
                                 "UTF-8"
                             )
-                        } ?: model.url.let {
+                        } ?: model.viewInfo.url.let {
                             weakWebView.loadUrl(it)
                         }
                     }
@@ -365,7 +400,14 @@ internal class MediaView(
             }
         }
 
-        model.contentDescription.ifNotEmpty { wv.contentDescription = it }
+        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+
+        model.contentDescription(context).ifNotEmpty {
+            wv.contentDescription = it
+            if (model.viewInfo.accessibilityHidden != true) {
+                wv.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+            }
+        }
 
         wv.visibility = INVISIBLE
         wv.webViewClient = object : MediaWebViewClient(load) {
@@ -380,18 +422,18 @@ internal class MediaView(
     }
 
     private val MediaModel.videoStyle: String
-        get() = when (mediaFit) {
+        get() = when (viewInfo.mediaFit) {
             MediaFit.CENTER -> "object-fit: none;"
             MediaFit.CENTER_INSIDE -> "object-fit: contain;"
             MediaFit.CENTER_CROP -> "object-fit: cover;"
             MediaFit.FIT_CROP -> {
                 val isRtl = View.LAYOUT_DIRECTION_RTL == layoutDirection
-                val horizontal = when (position.horizontal) {
+                val horizontal = when (viewInfo.position.horizontal) {
                     HorizontalPosition.START -> if (isRtl) "right" else "left"
                     HorizontalPosition.END -> if (isRtl) "left" else "right"
                     HorizontalPosition.CENTER -> "center"
                 }
-                val vertical = when (position.vertical) {
+                val vertical = when (viewInfo.position.vertical) {
                     VerticalPosition.TOP -> "top"
                     VerticalPosition.BOTTOM -> "bottom"
                     VerticalPosition.CENTER -> "center"

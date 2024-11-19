@@ -11,10 +11,15 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LinearLayoutItemInfo
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
+import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.LinearLayoutModel
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.Size.DimensionType.ABSOLUTE
 import com.urbanairship.android.layout.property.Size.DimensionType.AUTO
@@ -36,17 +41,19 @@ internal class LinearLayoutView(
 
     init {
         clipChildren = false
-        LayoutUtils.applyBorderAndBackground(this, model)
-        orientation = if (model.direction == Direction.VERTICAL) VERTICAL else HORIZONTAL
-        gravity = if (model.direction == Direction.VERTICAL) CENTER_HORIZONTAL else CENTER_VERTICAL
+        orientation = if (model.viewInfo.direction == Direction.VERTICAL) VERTICAL else HORIZONTAL
+        gravity = if (model.viewInfo.direction == Direction.VERTICAL) CENTER_HORIZONTAL else CENTER_VERTICAL
         addItems(model.items)
 
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
-                isGone = visible
+                isVisible = visible
             }
             override fun setEnabled(enabled: Boolean) {
                 isEnabled = enabled
+            }
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@LinearLayoutView, old, new)
             }
         }
 
@@ -70,7 +77,7 @@ internal class LinearLayoutView(
         for (i in items.indices) {
             val (itemInfo, itemModel) = items[i]
             val lp = generateItemLayoutParams(itemInfo)
-            val itemView = itemModel.createView(context, viewEnvironment).apply {
+            val itemView = itemModel.createView(context, viewEnvironment, ItemProperties(itemInfo.size)).apply {
                 layoutParams = lp
             }
             // Add view after any existing children, without requesting a layout pass on the child.

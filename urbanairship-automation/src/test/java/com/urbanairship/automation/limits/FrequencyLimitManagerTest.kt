@@ -1,20 +1,19 @@
 package com.urbanairship.automation.limits
 
-import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.automation.limits.storage.FrequencyLimitDatabase
+import kotlin.time.Duration.Companion.seconds
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Test
@@ -23,30 +22,33 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class FrequencyLimitManagerTest {
+    private val unconfinedTestDispatcher = UnconfinedTestDispatcher()
     private val clock = TestClock().apply { currentTimeMillis = 0 }
     private val db = FrequencyLimitDatabase.createInMemoryDatabase(ApplicationProvider.getApplicationContext())
     private val store = db.dao
 
+    private val manager = FrequencyLimitManager(dao = store, clock = clock, dispatcher = unconfinedTestDispatcher)
+
     @After
-    public fun after() {
+    public fun tearDown() {
+        runBlocking {
+            manager.writePendingInQueue()
+        }
         db.close()
     }
 
     @Test
     public fun testGetCheckerNoLimits(): TestResult = runTest {
-        val manager = FrequencyLimitManager(dao = store, clock = clock, dispatcher = UnconfinedTestDispatcher(testScheduler))
         val checker = manager.getFrequencyChecker(listOf()).getOrThrow()
         assertNull(checker)
     }
 
     @Test
     public fun testSingleChecker(): TestResult = runTest {
-        val manager = FrequencyLimitManager(dao = store, clock = clock, dispatcher = UnconfinedTestDispatcher(testScheduler))
-
         val constraint = FrequencyConstraint(
             identifier = "foo",
-            range = 10,
-            count = 2U
+            range = 10.seconds,
+            count = 2
         )
 
         manager.setConstraints(listOf(constraint))
@@ -60,7 +62,7 @@ public class FrequencyLimitManagerTest {
         assertFalse(checker.isOverLimit())
         assertTrue(checker.checkAndIncrement())
 
-        clock.currentTimeMillis += 1
+        clock.currentTimeMillis += 1000
         assertFalse(checker.isOverLimit())
         assertTrue(checker.checkAndIncrement())
 
@@ -69,7 +71,7 @@ public class FrequencyLimitManagerTest {
         assertFalse(checker.checkAndIncrement())
 
         // After the range has passed we should no longer be over the limit
-        clock.currentTimeMillis = 11
+        clock.currentTimeMillis = 11000
         assertFalse(checker.isOverLimit())
 
         // One more increment should push us back over the limit
@@ -79,17 +81,15 @@ public class FrequencyLimitManagerTest {
         manager.writePendingInQueue()
         val occurrences = store.getOccurrences("foo")?.map { it.timeStamp } ?: listOf()
         assertEquals(3, occurrences.size)
-        assertTrue(setOf(0L, 1L, 11L).all { occurrences.contains(it) })
+        assertTrue(setOf(0L, 1000, 11000).all { occurrences.contains(it) })
     }
 
     @Test
     public fun testMultipleCheckers(): TestResult = runTest {
-        val manager = FrequencyLimitManager(dao = store, clock = clock, dispatcher = UnconfinedTestDispatcher(testScheduler))
-
         val constraint = FrequencyConstraint(
             identifier = "foo",
-            range = 10,
-            count = 2U
+            range = 10.seconds,
+            count = 2
         )
 
         manager.setConstraints(listOf(constraint))
@@ -104,7 +104,7 @@ public class FrequencyLimitManagerTest {
         assertFalse(checker2.isOverLimit())
         assertTrue(checker1.checkAndIncrement())
 
-        clock.currentTimeMillis += 1
+        clock.currentTimeMillis += 1000
         assertTrue(checker2.checkAndIncrement())
 
         // We should now be over the limit
@@ -112,7 +112,7 @@ public class FrequencyLimitManagerTest {
         assertTrue(checker2.isOverLimit())
 
         // After the range has passed we should no longer be over the limit
-        clock.currentTimeMillis = 11
+        clock.currentTimeMillis = 11000
         assertFalse(checker1.isOverLimit())
         assertFalse(checker2.isOverLimit())
 
@@ -125,15 +125,13 @@ public class FrequencyLimitManagerTest {
         manager.writePendingInQueue()
         val occurrences = store.getOccurrences("foo")?.map { it.timeStamp }?.toSet() ?: emptySet()
         assertEquals(3, occurrences.size)
-        assertTrue(setOf(0L, 1, 11).all { occurrences.contains(it) })
+        assertTrue(setOf(0L, 1000, 11000).all { occurrences.contains(it) })
     }
 
     @Test
     public fun testMultipleConstraints(): TestResult = runTest {
-        val manager = FrequencyLimitManager(dao = store, clock = clock, dispatcher = UnconfinedTestDispatcher(testScheduler))
-
-        val constraint1 = FrequencyConstraint("foo", 10, 2U)
-        val constraint2 = FrequencyConstraint("bar", 2, 1U)
+        val constraint1 = FrequencyConstraint("foo", 10.seconds, 2)
+        val constraint2 = FrequencyConstraint("bar", 2.seconds, 1)
 
         manager.setConstraints(listOf(constraint1, constraint2))
 
@@ -142,51 +140,47 @@ public class FrequencyLimitManagerTest {
         assertFalse(checker.isOverLimit())
         assertTrue(checker.checkAndIncrement())
 
-        clock.currentTimeMillis = 1
+        clock.currentTimeMillis = 1000
 
         // We should now be violating constraint 2
         assertTrue(checker.isOverLimit())
         assertFalse(checker.checkAndIncrement())
 
-        clock.currentTimeMillis = 3
+        clock.currentTimeMillis = 3000
         // We should no longer be violating constraint 2
         assertFalse(checker.isOverLimit())
         assertTrue(checker.checkAndIncrement())
 
         // We should now be violating constraint 1
-        clock.currentTimeMillis = 9
+        clock.currentTimeMillis = 9000
         assertTrue(checker.isOverLimit())
         assertFalse(checker.checkAndIncrement())
 
         // We should now be violating neither constraint
-        clock.currentTimeMillis = 11
+        clock.currentTimeMillis = 11000
         assertFalse(checker.isOverLimit())
 
         // One more increment should hit the limit
         assertTrue(checker.checkAndIncrement())
         assertTrue(checker.isOverLimit())
-
-        manager.writePendingInQueue()
     }
 
     @Test
     public fun testConstraintRemovedMidCheck(): TestResult = runTest {
-        val manager = FrequencyLimitManager(dao = store, clock = clock, dispatcher = UnconfinedTestDispatcher(testScheduler))
-
-        val constraint1 = FrequencyConstraint("foo", 10, 2U)
-        val constraint2 = FrequencyConstraint("bar", 20, 2U)
+        val constraint1 = FrequencyConstraint("foo", 10.seconds, 2)
+        val constraint2 = FrequencyConstraint("bar", 20.seconds, 2)
 
         manager.setConstraints(listOf(constraint1, constraint2))
 
         val checker = requireNotNull(manager.getFrequencyChecker(listOf("foo", "bar")).getOrThrow())
-        manager.setConstraints(listOf(FrequencyConstraint("bar", 10, 10U)))
+        manager.setConstraints(listOf(FrequencyConstraint("bar", 10.seconds, 10)))
 
         assertTrue(checker.checkAndIncrement())
 
-        clock.currentTimeMillis = 1
+        clock.currentTimeMillis = 1000
         assertTrue(checker.checkAndIncrement())
 
-        clock.currentTimeMillis = 1
+        clock.currentTimeMillis = 1000
         assertTrue(checker.checkAndIncrement())
 
         manager.writePendingInQueue()
@@ -194,33 +188,27 @@ public class FrequencyLimitManagerTest {
 
         // Foo should not exist
         assertNull(store.getConstraint("foo"))
-
-
     }
 
     @Test
     public fun testUpdateConstraintRangeClearsOccurrences(): TestResult = runTest {
-        val manager = FrequencyLimitManager(dao = store, clock = clock, dispatcher = UnconfinedTestDispatcher(testScheduler))
-
-        manager.setConstraints(listOf(FrequencyConstraint("foo", 10, 2U)))
+        manager.setConstraints(listOf(FrequencyConstraint("foo", 10.seconds, 2)))
 
         val checker = requireNotNull(manager.getFrequencyChecker(listOf("foo")).getOrThrow())
         checker.checkAndIncrement()
 
-        manager.setConstraints(listOf(FrequencyConstraint("foo", 20, 2U)))
+        manager.setConstraints(listOf(FrequencyConstraint("foo", 20.seconds, 2)))
         assertEquals(0, store.getOccurrences("foo")?.size)
     }
 
     @Test
     public fun testUpdateConstraintCountDoesNotClearCount(): TestResult = runTest {
-        val manager = FrequencyLimitManager(dao = store, clock = clock, dispatcher = UnconfinedTestDispatcher(testScheduler))
-
-        manager.setConstraints(listOf(FrequencyConstraint("foo", 10, 2U)))
+        manager.setConstraints(listOf(FrequencyConstraint("foo", 10.seconds, 2)))
 
         val checker = requireNotNull(manager.getFrequencyChecker(listOf("foo")).getOrThrow())
         assertTrue(checker.checkAndIncrement())
 
-        manager.setConstraints(listOf(FrequencyConstraint("foo", 10, 3U)))
+        manager.setConstraints(listOf(FrequencyConstraint("foo", 10.seconds, 3)))
 
         assertEquals(1, store.getOccurrences("foo")?.size)
     }

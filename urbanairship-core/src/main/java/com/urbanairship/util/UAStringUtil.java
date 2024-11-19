@@ -198,6 +198,15 @@ public abstract class UAStringUtil {
         return value;
     }
 
+    /**
+     * Retrieves a string resource dynamically by its name.
+     * If the resource is not found, it returns the provided default value.
+     *
+     * @param context The context to access resources.
+     * @param name The name of the string resource.
+     * @param defaultValue The default value if the string resource is not found.
+     * @return The localized string or the default value if not found.
+     */
     @NonNull
     public static String namedStringResource(@NonNull Context context, @NonNull String name, @NonNull String defaultValue) {
         int resourceId = context.getResources().getIdentifier(name, "string", context.getApplicationInfo().packageName);

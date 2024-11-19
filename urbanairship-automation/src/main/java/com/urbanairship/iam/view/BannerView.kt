@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewStub
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -140,6 +141,9 @@ internal open class BannerView(
                 bannerView, displayContent.borderRadius, displayContent.placement.toBorderRadius()
             )
         }
+        bannerView.postDelayed({
+            bannerView.performAccessibilityAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
+        }, 300)
 
         // Banner actions
         if (displayContent.actions?.isNotEmpty == true) {

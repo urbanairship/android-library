@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">Minimum öncelikli Bildirimler</string>
     <string name="ua_min_priority_channel_description">Minimum öncelikli Mesajlar</string>
     <string name="ua_min_priority_channel_id">Minimum Kanal Kimliği</string>
+    <!-- General -->
+    <string name="ua_dismiss">Vazgeç</string>
+    <string name="ua_escape">Kaçış</string>
+    <string name="ua_next">Sonraki</string>
+    <string name="ua_previous">Önceki</string>
+    <string name="ua_submit">Gönder</string>
+    <string name="ua_loading">Yükleniyor</string>
+    <string name="ua_pager_progress">Sayfa %1$s / %2$s</string>
+    <string name="ua_play">Oynat</string>
+    <string name="ua_pause">Duraklat</string>
+    <string name="ua_stop">Durdur</string>
 </resources>

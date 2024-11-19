@@ -32,6 +32,16 @@ public interface PushProvider {
     @NonNull
     String HMS_DELIVERY_TYPE = "hms";
 
+    class PushProviderUnavailableException extends RegistrationException {
+        public PushProviderUnavailableException(@NonNull String message, @Nullable Throwable cause) {
+            super(message, true, cause);
+        }
+
+        public PushProviderUnavailableException(@NonNull String message) {
+            super(message, true);
+        }
+    }
+
     /**
      * Registration exceptions
      */

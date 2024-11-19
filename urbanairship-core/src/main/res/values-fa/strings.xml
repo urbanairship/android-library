@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">اعلان های حداقل اولویت</string>
     <string name="ua_min_priority_channel_description">پیام های حداقل اولویت</string>
     <string name="ua_min_priority_channel_id">شناسه کانال حداقل ها</string>
+    <!-- General -->
+    <string name="ua_dismiss">رد کردن</string>
+    <string name="ua_escape">خروج</string>
+    <string name="ua_next">بعدی</string>
+    <string name="ua_previous">قبلی</string>
+    <string name="ua_submit">ارسال</string>
+    <string name="ua_loading">در حال بارگذاری</string>
+    <string name="ua_pager_progress">صفحه %1$s از %2$s</string>
+    <string name="ua_play">پخش</string>
+    <string name="ua_pause">توقف موقت</string>
+    <string name="ua_stop">توقف</string>
 </resources>

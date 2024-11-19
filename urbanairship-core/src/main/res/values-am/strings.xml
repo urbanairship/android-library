@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">አነስተኛ ቅድሚያ የሚሰጡዋቸው ማስታወቂያዎች</string>
     <string name="ua_min_priority_channel_description">አነስተኛ ቅድሚያ የሚሰጡዋቸው መልዕክቶች</string>
     <string name="ua_min_priority_channel_id">አነስተኛ የቻናል መታወቂያ</string>
+    <!-- General -->
+    <string name="ua_dismiss">መዝለል</string>
+    <string name="ua_escape">መውጫ</string>
+    <string name="ua_next">ቀጣይ</string>
+    <string name="ua_previous">前</string>
+    <string name="ua_submit">ለመግለጽ</string>
+    <string name="ua_loading">በር loading</string>
+    <string name="ua_pager_progress">ገጽ %1$s እኩል %2$s</string>
+    <string name="ua_play">ለመጫወት</string>
+    <string name="ua_pause">ለተቆም</string>
+    <string name="ua_stop">ለማስቆም</string>
 </resources>

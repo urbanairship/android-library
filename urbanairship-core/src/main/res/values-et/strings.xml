@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">Minimaalse prioriteediga teatised</string>
     <string name="ua_min_priority_channel_description">Minimaalse prioriteediga sõnumid</string>
     <string name="ua_min_priority_channel_id">Minimaalne kanali ID</string>
+    <!-- General -->
+    <string name="ua_dismiss">Lükake kõrvale</string>
+    <string name="ua_escape">Väljapääs</string>
+    <string name="ua_next">Järgmine</string>
+    <string name="ua_previous">Eelmine</string>
+    <string name="ua_submit">Esita</string>
+    <string name="ua_loading">Laadimine</string>
+    <string name="ua_pager_progress">Lehekülg %1$s/%2$s</string>
+    <string name="ua_play">Esita</string>
+    <string name="ua_pause">Paus</string>
+    <string name="ua_stop">Peata</string>
 </resources>

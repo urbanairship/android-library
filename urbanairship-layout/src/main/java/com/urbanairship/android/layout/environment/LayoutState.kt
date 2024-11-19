@@ -18,24 +18,6 @@ internal class LayoutState(
     val radio: SharedState<State.Radio>?,
     val layout: SharedState<State.Layout>?,
 ) {
-    fun override(
-        pagerState: SharedState<State.Pager>?,
-        formState: SharedState<State.Form>?,
-        parentForm: SharedState<State.Form>?,
-        checkboxState: SharedState<State.Checkbox>?,
-        radioState: SharedState<State.Radio>?,
-        layoutState: SharedState<State.Layout>?,
-    ): LayoutState {
-        return LayoutState(
-            pager = pagerState ?: this.pager,
-            form = formState ?: this.form,
-            parentForm = parentForm ?: this.parentForm,
-            checkbox = checkboxState ?: this.checkbox,
-            radio = radioState ?: this.radio,
-            layout = layoutState ?: this.layout,
-        )
-    }
-
     fun reportingContext(
         formContext: FormInfo? = null,
         pagerContext: PagerData? = null,
@@ -66,7 +48,7 @@ internal sealed class State {
     // TODO(stories): We may want to split that out into a separate
     //   state flow to avoid a ton of extra updates to pager state?
     //   Or, we could sprinkle some distinctUntilChanged() calls around and circle back.
-    data class Pager(
+    internal data class Pager(
         val identifier: String,
         val pageIndex: Int = 0,
         val lastPageIndex: Int = 0,
@@ -75,7 +57,8 @@ internal sealed class State {
         val durations: List<Int?> = emptyList(),
         val progress: Int = 0,
         val isMediaPaused: Boolean = false,
-        val isStoryPaused: Boolean = false
+        val isStoryPaused: Boolean = false,
+        val isTouchExplorationEnabled: Boolean = false
     ) : State() {
         val hasNext
             get() = pageIndex < pageIds.size - 1
@@ -118,11 +101,14 @@ internal sealed class State {
         fun copyWithStoryPaused(isStoryPaused: Boolean) =
             copy(isStoryPaused = isStoryPaused)
 
+        fun copyWithTouchExplorationState(isTouchExplorationEnabled: Boolean) =
+            copy(isTouchExplorationEnabled = isTouchExplorationEnabled)
+
         fun reportingContext(): PagerData =
             PagerData(identifier, pageIndex, pageIds.getOrElse(pageIndex) { "NULL!" }, pageIds.size, completed)
     }
 
-    data class Form(
+    internal data class Form(
         val identifier: String,
         val formType: FormType,
         val formResponseType: String?,
@@ -187,7 +173,7 @@ internal sealed class State {
         }
     }
 
-    data class Checkbox(
+    internal data class Checkbox(
         val identifier: String,
         val minSelection: Int,
         val maxSelection: Int,
@@ -195,14 +181,14 @@ internal sealed class State {
         val isEnabled: Boolean = true,
     ) : State()
 
-    data class Radio(
+    internal data class Radio(
         val identifier: String,
         val selectedItem: JsonValue? = null,
         val attributeValue: AttributeValue? = null,
         val isEnabled: Boolean = true,
     ) : State()
 
-    data class Layout(
+    internal data class Layout(
         val state: Map<String, JsonValue?> = emptyMap()
     ) : State()
 }

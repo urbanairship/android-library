@@ -83,4 +83,15 @@
     <string name="ua_min_priority_channel_name">התרעות בעדיפות מינימלית</string>
     <string name="ua_min_priority_channel_description">הודעות בעדיפות מינימלית</string>
     <string name="ua_min_priority_channel_id">מזהה ערוץ מינימלי</string>
+    <!-- General -->
+    <string name="ua_dismiss">לבטל</string>
+    <string name="ua_escape">להימלט</string>
+    <string name="ua_next">הבא</string>
+    <string name="ua_previous">הקודם</string>
+    <string name="ua_submit">להגיש</string>
+    <string name="ua_loading">טוען</string>
+    <string name="ua_pager_progress">עמוד %1$s מתוך %2$s</string>
+    <string name="ua_play">לנגן</string>
+    <string name="ua_pause">עצור</string>
+    <string name="ua_stop">עצור</string>
 </resources>

@@ -39,6 +39,7 @@ import static android.content.res.Configuration.SCREENLAYOUT_SIZE_NORMAL;
 import static android.content.res.Configuration.SCREENLAYOUT_SIZE_SMALL;
 import static android.content.res.Configuration.SCREENLAYOUT_SIZE_XLARGE;
 import static androidx.annotation.Dimension.DP;
+import static androidx.annotation.Dimension.SP;
 
 public final class ResourceUtils {
     private ResourceUtils() {}
@@ -79,6 +80,12 @@ public final class ResourceUtils {
     public static float dpToPx(@NonNull Context context, @Dimension(unit = DP) int dp) {
         Resources r = context.getResources();
         return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics());
+    }
+
+    @Dimension
+    public static float spToPx(@NonNull Context context, @Dimension(unit = SP) int sp) {
+        Resources r = context.getResources();
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, r.getDisplayMetrics());
     }
 
     public static boolean isUiModeNight(@NonNull Context context) {

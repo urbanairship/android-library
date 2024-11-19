@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">Minimale prioriteit Meldingen</string>
     <string name="ua_min_priority_channel_description">Minimale prioriteit Berichten</string>
     <string name="ua_min_priority_channel_id">Minimale kanaal-ID</string>
+    <!-- General -->
+    <string name="ua_dismiss">Negeren</string>
+    <string name="ua_escape">Ontsnappen</string>
+    <string name="ua_next">Volgende</string>
+    <string name="ua_previous">Vorige</string>
+    <string name="ua_submit">Inzenden</string>
+    <string name="ua_loading">Laden</string>
+    <string name="ua_pager_progress">Pagina %1$s van %2$s</string>
+    <string name="ua_play">Spelen</string>
+    <string name="ua_pause">Pauze</string>
+    <string name="ua_stop">Stoppen</string>
 </resources>
