@@ -11,6 +11,7 @@ import java.util.UUID
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
+import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -34,6 +35,42 @@ public class FeatureFlagAnalyticsTest {
             analytics.addEvent(withArg {
                 // The event has a different time stamp so we are just comparing the data
                 assert(it.getEventData(ConversionData()) == FeatureFlagInteractionEvent(flag).data)
+            })
+        }
+    }
+
+    @Test
+    public fun testTrackInteractionSupersede(): TestResult = runTest {
+        coEvery { analytics.addEvent(any()) } returns true
+
+        val flag = FeatureFlag.createFlag(
+            name = "supersede-flag",
+            isEligible = true,
+            reportingInfo = FeatureFlag.ReportingInfo(
+                reportingMetadata = jsonMapOf("original" to "reporting-metadata"),
+                supersededReportingMetadata = listOf(jsonMapOf("superseded" to "metadata")),
+                channelId = "channel-id",
+                contactId = "contact-id"
+            )
+        )
+
+        featureFlagAnalytics.trackInteraction(flag)
+
+        verify {
+            analytics.addEvent(withArg {
+                assertEquals(
+                    jsonMapOf(
+                        "flag_name" to "supersede-flag",
+                        "eligible" to true,
+                        "reporting_metadata" to jsonMapOf("original" to "reporting-metadata"),
+                        "superseded_reporting_metadata" to listOf(jsonMapOf("superseded" to "metadata")),
+                        "device" to jsonMapOf(
+                            "channel_id" to "channel-id",
+                            "contact_id" to "contact-id",
+                        )
+                    ),
+                    it.getEventData(ConversionData())
+                )
             })
         }
     }

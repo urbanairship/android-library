@@ -603,6 +603,7 @@ public class PushManager extends AirshipComponent {
         preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true);
         permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS, false, promptFallback, (result) -> {
             consumer.accept(result.getPermissionStatus() == PermissionStatus.GRANTED);
+            updateStatusObserver();
         });
     }
 
@@ -1172,15 +1173,16 @@ public class PushManager extends AirshipComponent {
         String token;
         try {
             token = provider.getRegistrationToken(context);
-        } catch (PushProvider.RegistrationException e) {
+        } catch (PushProvider.PushProviderUnavailableException e) {
+            UALog.d("Push registration failed, provider unavailable. Error: %s. Will retry.", e.getMessage(), e);
+            return JobResult.RETRY;
+        }  catch (PushProvider.RegistrationException e) {
+            UALog.d("Push registration failed. Error: %S, Recoverable %s.", e.isRecoverable(), e.getMessage(), e);
+            clearPushToken();
+
             if (e.isRecoverable()) {
-                UALog.d("Push registration failed with error: %s. Will retry.", e.getMessage());
-                UALog.v(e);
-                clearPushToken();
                 return JobResult.RETRY;
             } else {
-                UALog.e(e, "PushManager - Push registration failed.");
-                clearPushToken();
                 return JobResult.SUCCESS;
             }
         }
@@ -1248,7 +1250,7 @@ public class PushManager extends AirshipComponent {
         );
     }
 
-    private void updateStatusObserver() {
+    void updateStatusObserver() {
         this.statusObserver.update(getPushNotificationStatus());
     }
 }

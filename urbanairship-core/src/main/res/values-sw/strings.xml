@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">Arifa za kipaumbele</string>
     <string name="ua_min_priority_channel_description">Kima cha chini cha Ujumbe wa Kipaumbele</string>
     <string name="ua_min_priority_channel_id">Kitambulisho cha Chini cha Kituo</string>
+    <!-- General -->
+    <string name="ua_dismiss">Kataa</string>
+    <string name="ua_escape">Toroka</string>
+    <string name="ua_next">Ifuatayo</string>
+    <string name="ua_previous">Iliyopita</string>
+    <string name="ua_submit">Wasilisha</string>
+    <string name="ua_loading">Inapakia</string>
+    <string name="ua_pager_progress">Ukurasa wa %1$s kati ya %2$s</string>
+    <string name="ua_play">Cheza</string>
+    <string name="ua_pause">Sitisha</string>
+    <string name="ua_stop">Simamisha</string>
 </resources>

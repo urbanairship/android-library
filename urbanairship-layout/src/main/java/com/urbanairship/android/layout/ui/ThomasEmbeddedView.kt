@@ -81,9 +81,9 @@ internal class ThomasEmbeddedView(
         }.let { frame ->
             this@ThomasEmbeddedView.frame = frame
 
-            LayoutUtils.applyBorderAndBackground(container, placement.border, placement.backgroundColor)
+            LayoutUtils.applyBorderAndBackground(container, null, placement.border, placement.backgroundColor)
 
-            container.addView(model.createView(context, environment))
+            container.addView(model.createView(context, environment, null))
             frame.addView(container)
 
             addView(frame)

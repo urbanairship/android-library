@@ -1,6 +1,10 @@
 package com.urbanairship.android.layout.reporting
 
+import android.view.textservice.TextInfo
+import androidx.annotation.RestrictTo
+import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.property.AttributeValue
+import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -22,6 +26,7 @@ public sealed class FormData<T>(
         MULTIPLE_CHOICE("multiple_choice"),
         SINGLE_CHOICE("single_choice"),
         TEXT("text_input"),
+        EMAIL("email_input"),
         SCORE("score");
 
         override fun toJsonValue(): JsonValue = JsonValue.wrap(value)
@@ -64,13 +69,22 @@ public sealed class FormData<T>(
         Type.SINGLE_CHOICE,
     )
 
-    public data class TextInput(
+    public data class EmailInput(
         override val identifier: String,
         override val value: String?,
         override val isValid: Boolean,
         override val attributeName: AttributeName? = null,
         override val attributeValue: AttributeValue? = null,
-    ) : FormData<String>(Type.TEXT)
+    ) : FormData<String>(Type.EMAIL)
+
+    public data class TextInput(
+        val textInput: FormInputType,
+        override val identifier: String,
+        override val value: String?,
+        override val isValid: Boolean,
+        override val attributeName: AttributeName? = null,
+        override val attributeValue: AttributeValue? = null,
+    ) : FormData<String>(if (textInput == FormInputType.EMAIL) Type.EMAIL else Type.TEXT)
 
     public data class Score(
         override val identifier: String,

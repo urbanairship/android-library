@@ -1,16 +1,17 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import app.cash.turbine.test
 import com.urbanairship.android.layout.environment.FormType
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.inputData
+import com.urbanairship.android.layout.info.RadioInputControllerInfo
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.json.JsonValue
+import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -136,9 +137,12 @@ public class RadioInputControllerTest {
     ) {
         controller = RadioInputController(
             view = mockView,
-            identifier = IDENTIFIER,
-            isRequired = isRequired,
-            attributeName = attributeName,
+            viewInfo = mockk<RadioInputControllerInfo>(relaxed = true) {
+                every { this@mockk.identifier } returns IDENTIFIER
+                every { this@mockk.isRequired } returns isRequired
+                every { this@mockk.attributeName } returns attributeName
+
+            },
             formState = formState,
             radioState = radioState,
             environment = mockEnv,

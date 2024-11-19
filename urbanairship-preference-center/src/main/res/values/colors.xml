@@ -5,12 +5,12 @@
     <color name="ua_preference_center_accent">#004BFF</color>
     <color name="ua_preference_center_status_bar">#BCBDC2</color>
     <color name="ua_preference_center_ui_text_color">#000000</color>
-    <color name="ua_preference_center_divider_color">#FFDADCE0</color>
+    <color name="ua_preference_center_divider_color">#8D8C8D</color>
     <color name="ua_preference_center_section_break_label_background">#63656B</color>
     <color name="ua_preference_center_section_break_label_text">#FFFFFF</color>
     <color name="ua_preference_center_subscription_type_chip_surface">#F3F3F3</color>
     <color name="ua_preference_center_subscription_type_chip_checked_background">#1C5AFA</color>
-    <color name="ua_preference_center_subscription_type_chip_unchecked_background">#80FFFFFF</color>
+    <color name="ua_preference_center_subscription_type_chip_unchecked_background">#FFFFFF</color>
     <color name="ua_preference_center_subscription_type_chip_stroke">@color/ua_preference_center_divider_color</color>
     <color name="ua_preference_center_subscription_type_chip_check_mark">#FFFFFF</color>
     <color name="ua_preference_center_alert_button_text">#FFFFFF</color>

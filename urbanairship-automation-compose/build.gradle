@@ -36,7 +36,6 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.runtime)
     implementation(libs.compose.ui)
-    implementation(libs.compose.ui.graphics)
     implementation(libs.compose.animation)
 
     // Compose Preview Support
@@ -46,8 +45,7 @@ dependencies {
     // AndroidX
     implementation(libs.androidx.corektx)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.lifecycle.runtimektx)
-    implementation(libs.androidx.lifecycle.viewmodelktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     // Instrumentation Tests
     androidTestImplementation(platform(libs.compose.bom))

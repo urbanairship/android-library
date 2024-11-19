@@ -1,0 +1,636 @@
+---
+presentation:
+  dismiss_on_touch_outside: true
+  default_placement:
+    position:
+      horizontal: center
+      vertical: center
+    shade_color:
+      default:
+        alpha: 0.5
+        hex: "#000000"
+        type: hex
+    size:
+      height: 100%
+      width: 100%
+  type: modal
+version: 1
+view:
+  type: pager_controller
+  identifier: "pager-controller-id"
+  view:
+    type: container
+    background_color:
+      default:
+        hex: "#ffffff"
+        alpha: 1
+      selectors:
+        - color:
+            hex: "#ffffff"
+            alpha: 1
+          dark_mode: false
+        - color:
+            hex: "#000000"
+            alpha: 1
+          dark_mode: true
+    items:
+      - position:
+          vertical: center
+          horizontal: center
+        size:
+          height: 100%
+          width: 100%
+        border:
+          radius: 25
+        margin:
+          top: 36
+        view:
+          type: pager
+          items:
+            - identifier: "page-1"
+              view:
+                type: container
+                items:
+                  - position:
+                      vertical: center
+                      horizontal: center
+                    size:
+                      height: 100%
+                      width: 100%
+                    view:
+                      type: scroll_layout
+                      direction: vertical
+                      view:
+                        type: linear_layout
+                        direction: vertical
+                        items:
+                          - margin:
+                              top: 8
+                              start: 16
+                              end: 16
+                            size:
+                              width: auto
+                              height: auto
+                            view:
+                              type: label
+                              text: "Wide Image Button (100% x auto)\n**enabled: false**"
+                              text_appearance:
+                                font_size: 14
+                                color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                          - margin:
+                              top: 8
+                              bottom: 8
+                              start: 24
+                              end: 24
+                            size:
+                              width: 100%
+                              height: auto
+                            view:
+                              type: image_button
+                              identifier: "pg_1_full_size_image_button"
+                              enabled:
+                                - pager_previous
+                              tap_effect:
+                                type: default
+                              button_click: []
+                              actions:
+                                toast_action: Wide image tapped!
+                              image:
+                                type: url
+                                media_fit: center_inside
+                                position:
+                                  horizontal: center
+                                  vertical: center
+                                url: https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Adelie_penguins_in_the_South_Shetland_Islands.jpg/1024px-Adelie_penguins_in_the_South_Shetland_Islands.jpg
+
+                          - margin:
+                              top: 8
+                            size:
+                              width: auto
+                              height: auto
+                            view:
+                              type: label
+                              text: "Crop Center (150 x 150)"
+                              text_appearance:
+                                font_size: 14
+                                color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                          - margin:
+                              top: 8
+                              bottom: 8
+                              start: 8
+                              end: 8
+                            size:
+                              width: 150
+                              height: 150
+                            view:
+                              type: image_button
+                              identifier: "pg_1_crop_center_image_button"
+                              border:
+                                stroke_color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                                stroke_width: 1
+                                stroke_radius: 5
+                              tap_effect:
+                                type: default
+                              actions:
+                                toast_action: center|center tapped!
+                              image:
+                                type: url
+                                media_fit: fit_crop
+                                position:
+                                  horizontal: center
+                                  vertical: center
+                                url: https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Adelie_penguins_in_the_South_Shetland_Islands.jpg/1024px-Adelie_penguins_in_the_South_Shetland_Islands.jpg
+
+                          - margin:
+                              top: 8
+                            size:
+                              width: auto
+                              height: auto
+                            view:
+                              type: label
+                              text: "Crop Top Start (150 x 150)"
+                              text_appearance:
+                                font_size: 14
+                                color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                          - margin:
+                              top: 8
+                              bottom: 8
+                              start: 8
+                              end: 8
+                            size:
+                              width: 150
+                              height: 150
+                            view:
+                              type: image_button
+                              identifier: "pg_1_crop_top_start_image_button"
+                              image:
+                                type: url
+                                url: https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Adelie_penguins_in_the_South_Shetland_Islands.jpg/1024px-Adelie_penguins_in_the_South_Shetland_Islands.jpg
+                                media_fit: fit_crop
+                                position:
+                                  horizontal: start
+                                  vertical: top
+                              tap_effect:
+                                type: default
+                              button_click: []
+                              actions:
+                                toast_action: top|start tapped!
+                              border:
+                                stroke_color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                                stroke_width: 1
+
+                          - margin:
+                              top: 8
+                            size:
+                              width: auto
+                              height: auto
+                            view:
+                              type: label
+                              text: "Crop Bottom End (150 x 150)"
+                              text_appearance:
+                                font_size: 14
+                                color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                          - margin:
+                              top: 8
+                              bottom: 16
+                              start: 8
+                              end: 8
+                            size:
+                              width: 150
+                              height: 150
+                            view:
+                              type: image_button
+                              identifier: "pg_1_crop_bottom_end_image_button"
+                              actions:
+                                toast_action: bottom|end tapped!
+                              image:
+                                type: url
+                                url: https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Adelie_penguins_in_the_South_Shetland_Islands.jpg/1024px-Adelie_penguins_in_the_South_Shetland_Islands.jpg
+                                media_fit: fit_crop
+                                position:
+                                  horizontal: end
+                                  vertical: bottom
+                              border:
+                                stroke_color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                                stroke_width: 1
+
+            - identifier: "page-2"
+              view:
+                type: container
+                items:
+                  - position:
+                      vertical: center
+                      horizontal: center
+                    size:
+                      height: 100%
+                      width: 100%
+                    view:
+                      type: scroll_layout
+                      direction: vertical
+                      view:
+                        type: linear_layout
+                        direction: vertical
+                        items:
+                          - margin:
+                              top: 8
+                            size:
+                              width: auto
+                              height: auto
+                            view:
+                              type: label
+                              text: "Tall Image (100% x auto)\n**tap_effect: none**"
+                              text_appearance:
+                                font_size: 14
+                                color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                          - margin:
+                              top: 8
+                              bottom: 8
+                              start: 64
+                              end: 64
+                            size:
+                              width: 100%
+                              height: auto
+                            view:
+                              type: image_button
+                              identifier: "pg_2_full_size_image_button"
+                              tap_effect:
+                                type: none
+                              button_click: []
+                              actions:
+                                toast_action: Tall image tapped!
+                              image:
+                                type: url
+                                media_fit: center_inside
+                                media_type: image
+                                url: https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Multnomah_Falls_and_Bridge.jpg/768px-Multnomah_Falls_and_Bridge.jpg
+
+                          - margin:
+                              top: 8
+                            size:
+                              width: auto
+                              height: auto
+                            view:
+                              type: label
+                              text: "Crop Center (150 x 150)"
+                              text_appearance:
+                                font_size: 14
+                                color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                          - margin:
+                              top: 8
+                              bottom: 8
+                              start: 8
+                              end: 8
+                            size:
+                              width: 150
+                              height: 150
+                            view:
+                              type: image_button
+                              identifier: "pg_2_crop_center_image_button"
+                              tap_effect:
+                                type: default
+                              button_click: []
+                              actions:
+                                toast_action: center|center tapped!
+                              image:
+                                type: url
+                                media_fit: fit_crop
+                                position:
+                                  horizontal: center
+                                  vertical: center
+                                url: https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Multnomah_Falls_and_Bridge.jpg/768px-Multnomah_Falls_and_Bridge.jpg
+                              border:
+                                stroke_color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                                stroke_width: 1
+
+                          - margin:
+                              top: 8
+                            size:
+                              width: auto
+                              height: auto
+                            view:
+                              type: label
+                              text: "Crop Top Start (150 x 150)"
+                              text_appearance:
+                                font_size: 14
+                                color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                          - margin:
+                              top: 8
+                              bottom: 8
+                              start: 8
+                              end: 8
+                            size:
+                              width: 150
+                              height: 150
+                            view:
+                              type: image_button
+                              identifier: "pg_2_crop_top_start_image_button"
+                              tap_effect:
+                                type: default
+                              button_click: []
+                              actions:
+                                toast_action: top|start tapped!
+                              image:
+                                type: url
+                                media_fit: fit_crop
+                                position:
+                                  horizontal: start
+                                  vertical: top
+                                url: https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Multnomah_Falls_and_Bridge.jpg/768px-Multnomah_Falls_and_Bridge.jpg
+                              border:
+                                stroke_color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                                stroke_width: 1
+
+
+                          - margin:
+                              top: 8
+                            size:
+                              width: auto
+                              height: auto
+                            view:
+                              type: label
+                              text: "Crop Bottom End (150 x 150)"
+                              text_appearance:
+                                font_size: 14
+                                color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                          - margin:
+                              top: 8
+                              bottom: 16
+                              start: 8
+                              end: 8
+                            size:
+                              width: 150
+                              height: 150
+                            view:
+                              type: image_button
+                              identifier: "pg_2_crop_bottom_end_image_button"
+                              tap_effect:
+                                type: default
+                              button_click: []
+                              actions:
+                                toast_action: bottom|end tapped!
+                              image:
+                                type: url
+                                position:
+                                  horizontal: end
+                                  vertical: bottom
+                                url: https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Multnomah_Falls_and_Bridge.jpg/768px-Multnomah_Falls_and_Bridge.jpg
+                                media_fit: fit_crop
+                              border:
+                                stroke_color:
+                                  default:
+                                    hex: "#000000"
+                                    alpha: 1
+                                  selectors:
+                                    - color:
+                                        hex: "#ffffff"
+                                        alpha: 1
+                                      dark_mode: true
+                                    - color:
+                                        hex: "#000000"
+                                        alpha: 1
+                                      dark_mode: false
+                                stroke_width: 1
+
+      - size:
+          height: 16
+          width: auto
+        position:
+          vertical: top
+          horizontal: center
+        margin:
+          top: 12
+        view:
+          type: pager_indicator
+          carousel_identifier: CAROUSEL_ID
+          border:
+            radius: 8
+          spacing: 4
+          bindings:
+            selected:
+              shapes:
+                - type: ellipse
+                  aspect_ratio: 1
+                  scale: 0.75
+                  color:
+                    default:
+                      hex: "#000000"
+                      alpha: 1
+                    selectors:
+                      - color:
+                          hex: "#ffffff"
+                          alpha: 1
+                        dark_mode: true
+                      - color:
+                          hex: "#000000"
+                          alpha: 1
+                        dark_mode: false
+            unselected:
+              shapes:
+                - type: ellipse
+                  aspect_ratio: 1
+                  scale: 0.75
+                  border:
+                    stroke_width: 1
+                    stroke_color:
+                      default:
+                        hex: "#333333"
+                        alpha: 1
+                  color:
+                    default:
+                      hex: "#ffffff"
+                      alpha: 1
+                    selectors:
+                      - color:
+                          hex: "#ffffff"
+                          alpha: 1
+                        dark_mode: false
+                      - color:
+                          hex: "#000000"
+                          alpha: 1
+                        dark_mode: true
+      - position:
+          vertical: top
+          horizontal: end
+        size:
+          width: 36
+          height: 36
+        margin:
+          top: 0
+          end: 0
+        view:
+          type: image_button
+          identifier: x_button
+          button_click: [ dismiss ]
+          image:
+            type: icon
+            icon: close
+            scale: 0.5
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
+              selectors:
+                - color:
+                    hex: "#ffffff"
+                    alpha: 1
+                  dark_mode: true
+                - color:
+                    hex: "#000000"
+                    alpha: 1
+                  dark_mode: false

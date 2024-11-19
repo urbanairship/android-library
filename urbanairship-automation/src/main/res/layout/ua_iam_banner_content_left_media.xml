@@ -23,6 +23,7 @@
         android:layout_alignWithParentIfMissing="true"
         android:layout_toEndOf="@+id/media"
         android:layout_toRightOf="@+id/media"
+        android:accessibilityHeading="true"
         tools:text="Banner Heading" />
 
     <TextView

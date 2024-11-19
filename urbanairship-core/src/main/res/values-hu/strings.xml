@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">Minimális prioritású értesítések</string>
     <string name="ua_min_priority_channel_description">Minimális prioritású üzenetek</string>
     <string name="ua_min_priority_channel_id">Minimális csatornaazonosító</string>
+    <!-- General -->
+    <string name="ua_dismiss">Elutasítás</string>
+    <string name="ua_escape">Kilépés</string>
+    <string name="ua_next">Következő</string>
+    <string name="ua_previous">Előző</string>
+    <string name="ua_submit">Beküldés</string>
+    <string name="ua_loading">Betöltés</string>
+    <string name="ua_pager_progress">%1$s. oldal a %2$s-ból</string>
+    <string name="ua_play">Lejátszás</string>
+    <string name="ua_pause">Szünet</string>
+    <string name="ua_stop">Leállítás</string>
 </resources>

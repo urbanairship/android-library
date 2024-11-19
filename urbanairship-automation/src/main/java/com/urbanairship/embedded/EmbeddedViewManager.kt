@@ -6,6 +6,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.AirshipEmbeddedViewManager
 import com.urbanairship.android.layout.EmbeddedDisplayRequest
+import com.urbanairship.android.layout.EmbeddedDisplayRequestResult
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.json.JsonMap
@@ -20,7 +21,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 
 /** @hide */
@@ -28,8 +28,8 @@ import kotlinx.coroutines.flow.shareIn
 public object EmbeddedViewManager : AirshipEmbeddedViewManager {
 
     private val pending: MutableMap<String, List<EmbeddedDisplayRequest>> = mutableMapOf()
-
     private val viewsFlow = MutableStateFlow<Map<String, List<EmbeddedDisplayRequest>>>(emptyMap())
+
     private val lastViewed: MutableMap<String, String> = mutableMapOf()
     private val lastViewedLock =  ReentrantLock()
 
@@ -95,7 +95,7 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
         embeddedViewId: String,
         comparator: Comparator<AirshipEmbeddedInfo>?,
         scope: CoroutineScope,
-    ): Flow<EmbeddedDisplayRequest?> {
+    ): Flow<EmbeddedDisplayRequestResult> {
 
         // This assumes displayRequests will be subscribed only when its actually
         // visible/attached to window. The first thing that subscribes will cause any
@@ -119,22 +119,23 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
                        // Map the list back to just the request, with the sort order applied
                        ?.map { it.second }
                 } else {
-                    list[embeddedViewId]?.sortedBy { it.priority }
+                    list[embeddedViewId]
                 }
 
                 sorted.orEmpty()
             }
             .map { list ->
                 if (comparator != null) {
-                    list.firstOrNull()
+                    EmbeddedDisplayRequestResult(next = list.firstOrNull(), list = list)
                 } else {
-                    lastViewedLock.withLock {
+                    val current = lastViewedLock.withLock {
                         lastViewed[embeddedViewId]?.let { lastId ->
                             list.find { it.viewInstanceId == lastId }
-                        } ?: list.firstOrNull()?.also {
+                        } ?: list.minByOrNull { it.priority }?.also {
                             lastViewed[embeddedViewId] = it.viewInstanceId
                         }
                     }
+                    EmbeddedDisplayRequestResult(next = current, list =  list)
                 }
             }
             .distinctUntilChanged()

@@ -7,13 +7,15 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
 import android.widget.ProgressBar
-import androidx.core.view.isGone
+import androidx.core.view.isVisible
+import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.StoryIndicatorModel
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.util.UAStringUtil.namedStringResource
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator.INDICATOR_DIRECTION_START_TO_END
 
@@ -26,19 +28,30 @@ internal class StoryIndicatorView(
     private var lastProgress: Int = 0
 
     init {
-        when (val style = model.style) {
+        when (val style = model.viewInfo.style) {
             is StoryIndicatorStyle.LinearProgress -> {
                 orientation = if (style.direction == Direction.VERTICAL) VERTICAL else HORIZONTAL
                 gravity = Gravity.CENTER
             }
         }
 
-        LayoutUtils.applyBorderAndBackground(this, model)
+        // Set accessibility properties on the parent view if announcePage is true
+        if (model.announcePage) {
+            isFocusable = true
+            isFocusableInTouchMode = true
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+        }
 
         model.listener = object : StoryIndicatorModel.Listener {
             private var isInitialized = false
 
-            override fun onUpdate(size: Int, pageIndex: Int, progress: Int, durations: List<Int?>) {
+            override fun onUpdate(
+                size: Int,
+                pageIndex: Int,
+                progress: Int,
+                durations: List<Int?>,
+                announcePage: Boolean
+            ) {
                 if (!isInitialized) {
                     isInitialized = true
                     setCount(size, durations)
@@ -46,21 +59,25 @@ internal class StoryIndicatorView(
 
                 val animated = progress > lastProgress
                 lastProgress = progress
-                setProgress(size, pageIndex, progress, animated)
+                setProgress(size, pageIndex, progress, animated, announcePage)
             }
 
             override fun setVisibility(visible: Boolean) {
-                this@StoryIndicatorView.isGone = visible
+                this@StoryIndicatorView.isVisible = visible
             }
 
             override fun setEnabled(enabled: Boolean) {
                 this@StoryIndicatorView.isEnabled = enabled
             }
+
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@StoryIndicatorView, old, new)
+            }
         }
     }
 
     fun setCount(count: Int, durations: List<Int?>) {
-        when (val style = model.style) {
+        when (val style = model.viewInfo.style) {
             is StoryIndicatorStyle.LinearProgress -> {
                 val halfSpacing = ResourceUtils.dpToPx(context, style.spacing / 2).toInt()
 
@@ -72,6 +89,11 @@ internal class StoryIndicatorView(
                         trackColor = style.trackColor.resolve(context)
                         indicatorDirection = INDICATOR_DIRECTION_START_TO_END
                         isIndeterminate = false
+
+                        // Ensure individual indicators are not focusable for accessibility
+                        isFocusable = false
+                        isFocusableInTouchMode = false
+                        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                     }
 
                     val lp = LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
@@ -105,32 +127,53 @@ internal class StoryIndicatorView(
         }
     }
 
-    fun setProgress(count: Int, pageIndex: Int, progress: Int, animated: Boolean) {
+    fun setProgress(
+        count: Int,
+        pageIndex: Int,
+        progress: Int,
+        animated: Boolean,
+        announcePage: Boolean
+    ) {
         if (progressIndicators.isEmpty() || progressIndicators.size <= pageIndex) {
             return
         }
         val storyHeight = this.height
         for (i in 0 until count) {
-            (progressIndicators[i] as? LinearProgressIndicator)?.let {
+            (progressIndicators[i] as? LinearProgressIndicator)?.let { indicator ->
                 if (i == pageIndex) {
-                    if (model.source == StoryIndicatorSource.CURRENT_PAGE) {
-                        it.visibility = View.VISIBLE
+                    if (model.viewInfo.source == StoryIndicatorSource.CURRENT_PAGE) {
+                        indicator.visibility = View.VISIBLE
                     }
-                    it.trackThickness = (storyHeight * 0.8).toInt()
-                    it.setProgressCompat(progress, animated)
+                    indicator.trackThickness = storyHeight
+                    indicator.setProgressCompat(progress, animated)
                 } else {
-                    if (model.source == StoryIndicatorSource.CURRENT_PAGE) {
-                        it.visibility = View.GONE
+                    if (model.viewInfo.source == StoryIndicatorSource.CURRENT_PAGE) {
+                        indicator.visibility = View.GONE
                     }
                     if (i > pageIndex) {
-                        it.trackThickness = (storyHeight * 0.3).toInt()
-                        it.setProgressCompat(0, false)
+                        indicator.trackThickness = (storyHeight * 0.5).toInt()
+                        indicator.setProgressCompat(0, false)
                     } else {
-                        it.trackThickness = (storyHeight * 0.3).toInt()
-                        it.setProgressCompat(100, false)
+                        indicator.trackThickness = (storyHeight * 0.5).toInt()
+                        indicator.setProgressCompat(100, false)
                     }
                 }
             }
+        }
+
+        // Announce the page change at the parent view level
+        if (announcePage) {
+            val resourceName = "ua_pager_progress"
+            val defaultAnnouncement = "Page ${pageIndex + 1} of $count"
+
+            val announcement = namedStringResource(
+                context,
+                resourceName,
+                defaultAnnouncement
+            ).format(pageIndex + 1, count)
+
+            contentDescription = announcement
+            announceForAccessibility(announcement)
         }
     }
 }

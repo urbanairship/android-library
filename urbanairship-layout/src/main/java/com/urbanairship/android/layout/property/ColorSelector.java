@@ -47,7 +47,7 @@ public class ColorSelector {
             JsonMap selectorJson = json.get(i).optMap();
             ColorSelector selector = ColorSelector.fromJson(selectorJson);
             // Ignore any non-android selectors.
-            if (selector.platform == Platform.ANDROID) {
+            if (selector.platform == Platform.ANDROID || selector.platform == null) {
                 selectors.add(selector);
             }
         }

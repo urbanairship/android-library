@@ -81,4 +81,15 @@
     <string name="ua_min_priority_channel_name">Известия с минимален приоритет</string>
     <string name="ua_min_priority_channel_description">Съобщения с минимален приоритет</string>
     <string name="ua_min_priority_channel_id">Идентификатор на минималния канал</string>
+    <!-- General -->
+    <string name="ua_dismiss">Отхвърли</string>
+    <string name="ua_escape">Излизане</string>
+    <string name="ua_next">Следващ</string>
+    <string name="ua_previous">Предишен</string>
+    <string name="ua_submit">Изпрати</string>
+    <string name="ua_loading">Зареждане</string>
+    <string name="ua_pager_progress">Страница %1$s от %2$s</string>
+    <string name="ua_play">Пусни</string>
+    <string name="ua_pause">Пауза</string>
+    <string name="ua_stop">Спри</string>
 </resources>

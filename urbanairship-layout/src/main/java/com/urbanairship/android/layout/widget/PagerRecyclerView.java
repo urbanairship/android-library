@@ -53,7 +53,7 @@ public class PagerRecyclerView extends RecyclerView {
         snapHelper = new SnapHelper();
         snapHelper.attachToRecyclerView(this);
 
-        if (model.getPages().size() <= 1 || model.isSwipeDisabled()) {
+        if (model.getPages().size() <= 1 || model.getViewInfo().isSwipeDisabled()) {
             layoutManager = new SwipeDisabledLinearLayoutManager(
                     getContext(),
                     LinearLayoutManager.HORIZONTAL);

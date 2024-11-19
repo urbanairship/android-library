@@ -48,4 +48,18 @@ public class Border {
     public Color getStrokeColor() {
         return strokeColor;
     }
+
+    @Dimension(unit = Dimension.DP)
+    @Nullable
+    public Integer getInnerRadius() {
+        if (strokeWidth == null || strokeWidth <= 0) {
+            return null;
+        }
+
+        if (radius == null || radius <= strokeWidth) {
+            return null;
+        }
+
+        return radius - strokeWidth;
+    }
 }

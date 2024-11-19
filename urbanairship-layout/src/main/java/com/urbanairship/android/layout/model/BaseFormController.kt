@@ -8,13 +8,8 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.event.ReportingEvent
-import com.urbanairship.android.layout.info.VisibilityInfo
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.info.FormInfo
 import com.urbanairship.android.layout.property.EnableBehaviorType
-import com.urbanairship.android.layout.property.EventHandler
-import com.urbanairship.android.layout.property.FormBehaviorType
-import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.property.hasFormBehaviors
 import com.urbanairship.android.layout.property.hasPagerBehaviors
 import com.urbanairship.android.layout.reporting.FormData
@@ -31,36 +26,23 @@ import kotlinx.coroutines.launch
  * @see FormController
  * @see NpsFormController
  */
-internal abstract class BaseFormController<T : View>(
-    viewType: ViewType,
-    val identifier: String,
-    val responseType: String?,
-    submitBehavior: FormBehaviorType?,
-    private val formEnabled: List<EnableBehaviorType>?,
-    backgroundColor: Color? = null,
-    border: Border? = null,
-    visibility: VisibilityInfo?,
-    eventHandlers: List<EventHandler>?,
-    enableBehaviors: List<EnableBehaviorType>?,
+internal abstract class BaseFormController<T : View, I : FormInfo>(
+    viewInfo: I,
     private val formState: SharedState<State.Form>,
     private val parentFormState: SharedState<State.Form>?,
     private val pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
     properties: ModelProperties
-) : BaseModel<T, BaseModel.Listener>(
-    viewType = viewType,
-    backgroundColor = backgroundColor,
-    border = border,
-    visibility = visibility,
-    eventHandlers = eventHandlers,
-    enableBehaviors = enableBehaviors,
+) : BaseModel<T, I, BaseModel.Listener>(
+    viewInfo = viewInfo,
     environment = environment,
     properties = properties
 ) {
+
     abstract val view: AnyModel
     abstract fun buildFormData(state: State.Form): FormData.BaseForm
 
-    private val isChildForm = submitBehavior == null
+    private val isChildForm = viewInfo.submitBehavior == null
 
     init {
         if (isChildForm) {
@@ -69,7 +51,7 @@ internal abstract class BaseFormController<T : View>(
             initParentForm()
         }
 
-        formEnabled?.let { behaviors ->
+        viewInfo.formEnabled?.let { behaviors ->
             if (behaviors.hasPagerBehaviors) {
                 checkNotNull(pagerState) {
                     "Pager state is required for Forms with pager enable behaviors!"
@@ -122,31 +104,26 @@ internal abstract class BaseFormController<T : View>(
         // Update the parent form with the child form's display state, whenever it changes.
         onFormInputDisplayed { isDisplayed ->
             parentFormState.update { state ->
-                state.copyWithDisplayState(identifier, isDisplayed)
+                state.copyWithDisplayState(viewInfo.identifier, isDisplayed)
             }
         }
     }
 
     private fun initParentForm() {
         modelScope.launch {
-            environment.layoutEvents
-                .filterIsInstance<LayoutEvent.SubmitForm>()
+            environment.layoutEvents.filterIsInstance<LayoutEvent.SubmitForm>()
                 // We want to combine the submit event with the latest form state, but don't want
                 // to receive updates from the form state changes flow, so we're using a map here
                 // instead of a combine.
                 .map {
-                    @OptIn(DelicateLayoutApi::class)
-                    it to formState.value
-                }
-                .distinctUntilChanged()
-                .collect { (event, form) ->
+                    @OptIn(DelicateLayoutApi::class) it to formState.value
+                }.distinctUntilChanged().collect { (event, form) ->
                     if (!form.isSubmitted) {
                         formState.update { state ->
                             val submitted = state.copy(isSubmitted = true)
                             val result = submitted.formResult()
                             report(
-                                event = result,
-                                state = layoutState.reportingContext(
+                                event = result, state = layoutState.reportingContext(
                                     formContext = form.reportingContext(),
                                     buttonId = event.buttonIdentifier
                                 )
@@ -186,7 +163,7 @@ internal abstract class BaseFormController<T : View>(
 
     @OptIn(DelicateLayoutApi::class)
     private fun handleFormUpdate(state: State.Form) {
-        val behaviors = formEnabled ?: return
+        val behaviors = viewInfo.formEnabled ?: return
 
         val isParentEnabled = parentFormState?.value?.isEnabled ?: true
         val hasFormValidationBehavior = behaviors.contains(EnableBehaviorType.FORM_VALIDATION)
@@ -194,14 +171,10 @@ internal abstract class BaseFormController<T : View>(
         val isValid = !hasFormValidationBehavior || state.isValid
 
         val isEnabled = isParentEnabled && when {
-            hasFormSubmitBehavior && hasFormValidationBehavior ->
-                !state.isSubmitted && isValid
-            hasFormSubmitBehavior ->
-                !state.isSubmitted
-            hasFormValidationBehavior ->
-                isValid
-            else ->
-                state.isEnabled
+            hasFormSubmitBehavior && hasFormValidationBehavior -> !state.isSubmitted && isValid
+            hasFormSubmitBehavior -> !state.isSubmitted
+            hasFormValidationBehavior -> isValid
+            else -> state.isEnabled
         }
 
         formState.update {
@@ -210,17 +183,15 @@ internal abstract class BaseFormController<T : View>(
     }
 
     private fun handlePagerScroll(state: State.Pager) {
-        val behaviors = formEnabled ?: return
+        val behaviors = viewInfo.formEnabled ?: return
 
-        @OptIn(DelicateLayoutApi::class)
-        val isParentEnabled = parentFormState?.value?.isEnabled ?: true
+        @OptIn(DelicateLayoutApi::class) val isParentEnabled =
+            parentFormState?.value?.isEnabled ?: true
         val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
         val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
 
-        val isEnabled = isParentEnabled &&
-            (hasPagerNextBehavior && hasPagerPrevBehavior && (state.hasNext || state.hasPrevious)) ||
-                    (hasPagerNextBehavior && state.hasNext) ||
-                    (hasPagerPrevBehavior && state.hasPrevious)
+        val isEnabled =
+            isParentEnabled && (hasPagerNextBehavior && hasPagerPrevBehavior && (state.hasNext || state.hasPrevious)) || (hasPagerNextBehavior && state.hasNext) || (hasPagerPrevBehavior && state.hasPrevious)
 
         formState.update {
             it.copy(isEnabled = isEnabled)

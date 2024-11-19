@@ -188,7 +188,7 @@ public class PrivacyManagerTest {
         )
 
         privacyManager.enable(PrivacyManager.Feature.ALL)
-        Assert.assertEquals(PrivacyManager.Feature.ALL, privacyManager!!.enabledFeatures)
+        Assert.assertEquals(PrivacyManager.Feature.ALL, privacyManager.enabledFeatures)
     }
 
     @Test
