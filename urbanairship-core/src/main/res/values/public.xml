@@ -34,6 +34,8 @@
     <public name="ua_mc_failed_to_load" type="string" />
     <public name="ua_retry_button" type="string" />
     <public name="ua_ok" type="string" />
+    <public name="ua_back" type="string" />
+    <public name="ua_refresh" type="string" />
     <public name="ua_delete" type="string" />
     <public name="ua_mark_read" type="string" />
     <public name="ua_select_all" type="string" />

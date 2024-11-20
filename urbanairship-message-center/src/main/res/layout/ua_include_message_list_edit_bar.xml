@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/UrbanAirship.MessageCenter.List.EditModeToolbar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/edit_bar_top_divider"
+        style="@style/UrbanAirship.MessageCenter.List.EditModeToolbar.Divider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/edit_items_flow"/>
+
+    <androidx.constraintlayout.helper.widget.Flow
+        android:id="@+id/edit_items_flow"
+        style="@style/UrbanAirship.MessageCenter.List.EditModeToolbar.ItemsFlow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:constraint_referenced_ids="select_all_button,mark_read_button,delete_button"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/edit_bar_top_divider" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/select_all_button"
+        style="@style/UrbanAirship.MessageCenter.List.EditModeToolbar.Item.SelectAll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/mark_read_button"
+        style="@style/UrbanAirship.MessageCenter.List.EditModeToolbar.Item.MarkRead"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/delete_button"
+        style="@style/UrbanAirship.MessageCenter.List.EditModeToolbar.Item.Delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

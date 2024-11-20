@@ -128,23 +128,5 @@ public class ButtonModelTest {
             environment = mockEnv,
             properties = ModelProperties(null),
         )
-
-//        return LabelButtonModel(
-//            identifier = "test_button_id",
-//            label = LabelModel(
-//                text = "test",
-//                markdownOptions = null,
-//                textAppearance = TextAppearance(Color(Color.WHITE, emptyList()), 14, TextAlignment.START, emptyList(), emptyList()),
-//                environment = mockEnv,
-//                properties = ModelProperties(null)
-//            ),
-//            actions = actions,
-//            clickBehaviors = listOf(ButtonClickBehaviorType.DISMISS),
-//            environment = mockEnv,
-//            formState = null,
-//            pagerState = null,
-//            properties = ModelProperties(null),
-//            platformProvider = { UAirship.ANDROID_PLATFORM }
-//        )
     }
 }

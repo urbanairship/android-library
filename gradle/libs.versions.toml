@@ -1,11 +1,12 @@
 [versions]
 
 # Gradle plugins
-androidGradlePlugin = '8.7.1'
+androidGradlePlugin = '8.7.2'
 googleServicesPlugin = '4.4.2'
 spotlessPlugin = '6.25.0'
 nexusPublishPlugin = '1.1.0'
 gradle-versions =  '0.41.0'
+binary-compatibility-validator = '0.15.0-Beta.2'
 
 # Spotless plugins
 ktlint = '1.1.1'
@@ -35,6 +36,7 @@ androidx-customview = '1.1.0'
 androidx-fragment = '1.8.2'
 androidx-lifecycle = '2.8.4'
 androidx-navigation = '2.7.7'
+androidx-slidingpanelayout = '1.2.0'
 
 # Using the RC to test the new features from I/O 2024 (Scaffold, TitleBar, LazyColumn, etc.)
 androidx-glance = '1.1.0-rc01' # Only used in Sample app
@@ -59,7 +61,7 @@ androidx-webkit = '1.10.0'
 androidx-work = '2.9.0'
 
 # Material
-google-material = '1.11.0'
+google-material = '1.12.0'
 
 # Google Play Services
 playservices-adsidentifier = '18.0.1'
@@ -84,7 +86,7 @@ google-truth = '1.1.3'
 junit = '4.13.2'
 mockito = '4.6.1'
 mockito-kotlin = '4.0.0'
-robolectric = '4.11.1'
+robolectric = '4.14-beta-1'
 turbine = '0.10.0'
 mockk = '1.13.5'
 
@@ -101,6 +103,7 @@ kotlinx-serialization = { id = 'org.jetbrains.kotlin.plugin.serialization', vers
 google-services = { id = 'com.google.gms.google-services', version.ref = "googleServicesPlugin" }
 spotless = { id = 'com.diffplug.spotless', version.ref = "spotlessPlugin" }
 benmanes-versions = { id = 'com.github.ben-manes.versions', version.ref = "gradle-versions" }
+binary-compatibility-validator = { id = 'org.jetbrains.kotlinx.binary-compatibility-validator', version.ref = "binary-compatibility-validator" }
 
 [libraries]
 
@@ -163,6 +166,7 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "androidx-room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "androidx-room" }
 androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "androidx-room" }
+androidx-slidingpanelayout = { module = "androidx.slidingpanelayout:slidingpanelayout", version.ref = "androidx-slidingpanelayout" }
 androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "androidx-startup" }
 androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "androidx-swiperefreshlayout" }
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidx-test-core" }

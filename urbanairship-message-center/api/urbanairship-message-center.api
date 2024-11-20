@@ -1,0 +1,258 @@
+public final class com/urbanairship/messagecenter/BuildConfig {
+	public static final field AIRSHIP_VERSION Ljava/lang/String;
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field SDK_VERSION Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public class com/urbanairship/messagecenter/DefaultMultiChoiceModeListener : android/widget/AbsListView$MultiChoiceModeListener {
+	public fun <init> (Lcom/urbanairship/messagecenter/MessageListFragment;)V
+	public fun <init> (Lcom/urbanairship/messagecenter/MessageListFragment;Lcom/urbanairship/messagecenter/MessageCenterFragment$OnActionModeListener;)V
+	public fun onActionItemClicked (Landroid/view/ActionMode;Landroid/view/MenuItem;)Z
+	public fun onCreateActionMode (Landroid/view/ActionMode;Landroid/view/Menu;)Z
+	public fun onDestroyActionMode (Landroid/view/ActionMode;)V
+	public fun onItemCheckedStateChanged (Landroid/view/ActionMode;IJZ)V
+	public fun onPrepareActionMode (Landroid/view/ActionMode;Landroid/view/Menu;)Z
+}
+
+public class com/urbanairship/messagecenter/Inbox {
+	public fun <init> (Landroid/content/Context;Lcom/urbanairship/PreferenceDataStore;Lcom/urbanairship/channel/AirshipChannel;Lcom/urbanairship/AirshipConfigOptions;Lcom/urbanairship/PrivacyManager;)V
+	public fun addListener (Lcom/urbanairship/messagecenter/InboxListener;)V
+	public fun deleteMessages (Ljava/util/Set;)V
+	public fun fetchMessages ()V
+	public fun fetchMessages (Landroid/os/Looper;Lcom/urbanairship/messagecenter/Inbox$FetchMessagesCallback;)Lcom/urbanairship/Cancelable;
+	public fun fetchMessages (Lcom/urbanairship/messagecenter/Inbox$FetchMessagesCallback;)Lcom/urbanairship/Cancelable;
+	public fun getCount ()I
+	public fun getMessage (Ljava/lang/String;)Lcom/urbanairship/messagecenter/Message;
+	public fun getMessageByUrl (Ljava/lang/String;)Lcom/urbanairship/messagecenter/Message;
+	public fun getMessageIds ()Ljava/util/Set;
+	public fun getMessages ()Ljava/util/List;
+	public fun getMessages (Lcom/urbanairship/Predicate;)Ljava/util/List;
+	public fun getReadCount ()I
+	public fun getReadMessages ()Ljava/util/List;
+	public fun getReadMessages (Lcom/urbanairship/Predicate;)Ljava/util/List;
+	public fun getUnreadCount ()I
+	public fun getUnreadMessages ()Ljava/util/List;
+	public fun getUnreadMessages (Lcom/urbanairship/Predicate;)Ljava/util/List;
+	public fun getUser ()Lcom/urbanairship/messagecenter/User;
+	public fun markMessagesRead (Ljava/util/Set;)V
+	public fun markMessagesUnread (Ljava/util/Set;)V
+	public fun removeListener (Lcom/urbanairship/messagecenter/InboxListener;)V
+}
+
+public abstract interface class com/urbanairship/messagecenter/Inbox$FetchMessagesCallback {
+	public abstract fun onFinished (Z)V
+}
+
+public class com/urbanairship/messagecenter/InboxApiClient {
+}
+
+public abstract interface class com/urbanairship/messagecenter/InboxListener {
+	public abstract fun onInboxUpdated ()V
+}
+
+public class com/urbanairship/messagecenter/Message : java/lang/Comparable {
+	protected fun <init> ()V
+	public fun compareTo (Lcom/urbanairship/messagecenter/Message;)I
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun delete ()V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getExpirationDate ()Ljava/util/Date;
+	public fun getExpirationDateMS ()Ljava/lang/Long;
+	public fun getExtras ()Landroid/os/Bundle;
+	public fun getExtrasMap ()Ljava/util/Map;
+	public fun getListIconUrl ()Ljava/lang/String;
+	public fun getMessageBodyUrl ()Ljava/lang/String;
+	public fun getMessageId ()Ljava/lang/String;
+	public fun getMessageReadUrl ()Ljava/lang/String;
+	public fun getMessageUrl ()Ljava/lang/String;
+	public fun getRawMessageJson ()Lcom/urbanairship/json/JsonValue;
+	public fun getSentDate ()Ljava/util/Date;
+	public fun getSentDateMS ()J
+	public fun getTitle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun isDeleted ()Z
+	public fun isExpired ()Z
+	public fun isRead ()Z
+	public fun markRead ()V
+	public fun markUnread ()V
+}
+
+public class com/urbanairship/messagecenter/MessageActivity : com/urbanairship/activity/ThemedActivity {
+	public fun <init> ()V
+	protected fun onCreate (Landroid/os/Bundle;)V
+	protected fun onNewIntent (Landroid/content/Intent;)V
+	public fun onOptionsItemSelected (Landroid/view/MenuItem;)Z
+	protected fun onSaveInstanceState (Landroid/os/Bundle;)V
+	protected fun onStart ()V
+	protected fun onStop ()V
+}
+
+public class com/urbanairship/messagecenter/MessageCenter : com/urbanairship/AirshipComponent {
+	public static final field MESSAGE_DATA_SCHEME Ljava/lang/String;
+	public static final field VIEW_MESSAGE_CENTER_INTENT_ACTION Ljava/lang/String;
+	public static final field VIEW_MESSAGE_INTENT_ACTION Ljava/lang/String;
+	public fun getInbox ()Lcom/urbanairship/messagecenter/Inbox;
+	public fun getPredicate ()Lcom/urbanairship/Predicate;
+	public fun getUser ()Lcom/urbanairship/messagecenter/User;
+	public fun onAirshipDeepLink (Landroid/net/Uri;)Z
+	public static fun parseMessageId (Landroid/content/Intent;)Ljava/lang/String;
+	public fun setOnShowMessageCenterListener (Lcom/urbanairship/messagecenter/MessageCenter$OnShowMessageCenterListener;)V
+	public fun setPredicate (Lcom/urbanairship/Predicate;)V
+	public static fun shared ()Lcom/urbanairship/messagecenter/MessageCenter;
+	public fun showMessageCenter ()V
+	public fun showMessageCenter (Ljava/lang/String;)V
+}
+
+public abstract interface class com/urbanairship/messagecenter/MessageCenter$OnShowMessageCenterListener {
+	public abstract fun onShowMessageCenter (Ljava/lang/String;)Z
+}
+
+public class com/urbanairship/messagecenter/MessageCenterActivity : com/urbanairship/activity/ThemedActivity {
+	public fun <init> ()V
+	protected fun onCreate (Landroid/os/Bundle;)V
+	protected fun onNewIntent (Landroid/content/Intent;)V
+	public fun onOptionsItemSelected (Landroid/view/MenuItem;)Z
+}
+
+public class com/urbanairship/messagecenter/MessageCenterFragment : androidx/fragment/app/Fragment {
+	protected field actionModeListener Lcom/urbanairship/messagecenter/MessageCenterFragment$OnActionModeListener;
+	public fun <init> ()V
+	protected fun configureMessageListFragment (Lcom/urbanairship/messagecenter/MessageListFragment;)V
+	public static fun newInstance (Ljava/lang/String;)Lcom/urbanairship/messagecenter/MessageCenterFragment;
+	public fun onCreate (Landroid/os/Bundle;)V
+	public fun onCreateView (Landroid/view/LayoutInflater;Landroid/view/ViewGroup;Landroid/os/Bundle;)Landroid/view/View;
+	public fun onDestroyView ()V
+	public fun onPause ()V
+	public fun onResume ()V
+	public fun onSaveInstanceState (Landroid/os/Bundle;)V
+	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
+	public fun setActionModeListener (Lcom/urbanairship/messagecenter/MessageCenterFragment$OnActionModeListener;)V
+	public fun setMessageID (Ljava/lang/String;)V
+	public fun setPredicate (Lcom/urbanairship/Predicate;)V
+	protected fun showMessage (Ljava/lang/String;)V
+	protected fun showMessageExternally (Landroid/content/Context;Ljava/lang/String;)V
+}
+
+public class com/urbanairship/messagecenter/MessageCenterFragment$NoMessageSelectedFragment : androidx/fragment/app/Fragment {
+	public fun <init> ()V
+	public fun onCreateView (Landroid/view/LayoutInflater;Landroid/view/ViewGroup;Landroid/os/Bundle;)Landroid/view/View;
+}
+
+public abstract interface class com/urbanairship/messagecenter/MessageCenterFragment$OnActionModeListener {
+	public abstract fun onActionModeCreated (Landroid/view/ActionMode;Landroid/view/Menu;)V
+	public abstract fun onActionModeDestroyed (Landroid/view/ActionMode;)V
+}
+
+public final class com/urbanairship/messagecenter/MessageDao_Impl : com/urbanairship/messagecenter/MessageDao {
+	public fun <init> (Landroidx/room/RoomDatabase;)V
+	public static fun getRequiredConverters ()Ljava/util/List;
+}
+
+public final class com/urbanairship/messagecenter/MessageDatabase_Impl : com/urbanairship/messagecenter/MessageDatabase {
+	public fun <init> ()V
+	public fun clearAllTables ()V
+	public fun getAutoMigrations (Ljava/util/Map;)Ljava/util/List;
+	public fun getDao ()Lcom/urbanairship/messagecenter/MessageDao;
+	public fun getRequiredAutoMigrationSpecs ()Ljava/util/Set;
+}
+
+public class com/urbanairship/messagecenter/MessageFragment : androidx/fragment/app/Fragment {
+	protected static final field ERROR_DISPLAYING_MESSAGE I
+	protected static final field ERROR_FETCHING_MESSAGES I
+	protected static final field ERROR_MESSAGE_UNAVAILABLE I
+	public static final field MESSAGE_ID Ljava/lang/String;
+	public fun <init> ()V
+	public fun getMessageId ()Ljava/lang/String;
+	public static fun newInstance (Ljava/lang/String;)Lcom/urbanairship/messagecenter/MessageFragment;
+	public fun onCreateView (Landroid/view/LayoutInflater;Landroid/view/ViewGroup;Landroid/os/Bundle;)Landroid/view/View;
+	public fun onDestroyView ()V
+	public fun onPause ()V
+	public fun onResume ()V
+	public fun onStart ()V
+	public fun onStop ()V
+	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
+	protected fun retry ()V
+	protected fun showErrorPage (I)V
+	protected fun showMessage ()V
+	protected fun showProgress ()V
+}
+
+public class com/urbanairship/messagecenter/MessageItemView : android/widget/FrameLayout {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;II)V
+	protected fun onCreateDrawableState (I)[I
+	public fun setActivated (Z)V
+}
+
+public class com/urbanairship/messagecenter/MessageListFragment : androidx/fragment/app/Fragment {
+	public fun <init> ()V
+	protected fun createMessageViewAdapter (Landroid/content/Context;)Lcom/urbanairship/messagecenter/MessageViewAdapter;
+	public fun getAbsListView ()Landroid/widget/AbsListView;
+	public fun getAbsListViewAsync (Lcom/urbanairship/messagecenter/MessageListFragment$OnListViewReadyCallback;)V
+	public fun getAdapter ()Lcom/urbanairship/messagecenter/MessageViewAdapter;
+	public fun getMessage (I)Lcom/urbanairship/messagecenter/Message;
+	public fun onCreate (Landroid/os/Bundle;)V
+	public fun onCreateView (Landroid/view/LayoutInflater;Landroid/view/ViewGroup;Landroid/os/Bundle;)Landroid/view/View;
+	public fun onDestroy ()V
+	public fun onDestroyView ()V
+	public fun onPause ()V
+	public fun onResume ()V
+	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
+}
+
+public abstract interface class com/urbanairship/messagecenter/MessageListFragment$OnListViewReadyCallback {
+	public abstract fun onListViewReady (Landroid/widget/AbsListView;)V
+}
+
+public abstract class com/urbanairship/messagecenter/MessageViewAdapter : android/widget/BaseAdapter {
+	public fun <init> (Landroid/content/Context;I)V
+	protected abstract fun bindView (Landroid/view/View;Lcom/urbanairship/messagecenter/Message;I)V
+	protected fun getContext ()Landroid/content/Context;
+	public fun getCount ()I
+	public fun getItem (I)Ljava/lang/Object;
+	public fun getItemId (I)J
+	public fun getView (ILandroid/view/View;Landroid/view/ViewGroup;)Landroid/view/View;
+	public fun hasStableIds ()Z
+	public fun set (Ljava/util/Collection;)V
+}
+
+public class com/urbanairship/messagecenter/User {
+	public fun addListener (Lcom/urbanairship/messagecenter/User$Listener;)V
+	public fun getId ()Ljava/lang/String;
+	public fun getPassword ()Ljava/lang/String;
+	public static fun isCreated ()Z
+	public fun isUserCreated ()Z
+	public fun removeListener (Lcom/urbanairship/messagecenter/User$Listener;)V
+}
+
+public abstract interface class com/urbanairship/messagecenter/User$Listener {
+	public abstract fun onUserUpdated (Z)V
+}
+
+public class com/urbanairship/messagecenter/actions/MessageCenterAction : com/urbanairship/actions/Action {
+	public static final field DEFAULT_REGISTRY_NAME Ljava/lang/String;
+	public static final field DEFAULT_REGISTRY_SHORT_NAME Ljava/lang/String;
+	public static final field MESSAGE_ID_PLACEHOLDER Ljava/lang/String;
+	public fun <init> ()V
+	public fun acceptsArguments (Lcom/urbanairship/actions/ActionArguments;)Z
+	public fun perform (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
+	public fun shouldRunOnMainThread ()Z
+}
+
+public class com/urbanairship/messagecenter/webkit/MessageWebView : com/urbanairship/webkit/AirshipWebView {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;II)V
+	public fun loadMessage (Lcom/urbanairship/messagecenter/Message;)V
+}
+
+public class com/urbanairship/messagecenter/webkit/MessageWebViewClient : com/urbanairship/webkit/AirshipWebViewClient {
+	public fun <init> ()V
+}
+

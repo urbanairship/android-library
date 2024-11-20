@@ -8,11 +8,10 @@
     <include layout="@layout/include_appbar" />
 
     <androidx.fragment.app.FragmentContainerView
-    android:id="@+id/fragment_container_view"
-    android:name="com.urbanairship.preferencecenter.ui.PreferenceCenterFragment"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    android:tag="preference_center_tag" />
+        android:id="@+id/fragment_container_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:tag="preference_center_tag" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
