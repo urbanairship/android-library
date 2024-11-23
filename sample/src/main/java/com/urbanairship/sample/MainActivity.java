@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
+import com.urbanairship.PendingResult;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.messagecenter.InboxListener;
 import com.urbanairship.messagecenter.Message;
@@ -45,13 +46,15 @@ public class MainActivity extends AppCompatActivity {
         add(R.id.debugFragment);
     }};
 
+    public static final AppBarConfiguration APP_BAR_CONFIGURATION =
+            new AppBarConfiguration.Builder(TOP_LEVEL_DESTINATIONS).build();
+
     private final InboxListener inboxListener = this::showMessageCenterIndicator;
 
     private Snackbar messageCenterSnackbar;
     private long messageCenterLastSentDate;
     private BottomNavigationView navigationView = null;
     private NavController navController = null;
-    private AppBarConfiguration appBarConfiguration = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -64,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
                 (NavHostFragment) requireNonNull(getSupportFragmentManager().findFragmentById(R.id.nav_host_container));
 
         navController = navHostFragment.getNavController();
-        appBarConfiguration = new AppBarConfiguration.Builder(TOP_LEVEL_DESTINATIONS).build();
         navigationView = findViewById(R.id.navigation);
 
         NavigationUI.setupWithNavController(navigationView, navController);
@@ -116,38 +118,40 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        return NavigationUI.navigateUp(navController, appBarConfiguration);
+        return NavigationUI.navigateUp(navController, APP_BAR_CONFIGURATION);
     }
 
     /**
      * Shows a Message Center indicator.
      */
     private void showMessageCenterIndicator() {
-        List<Message> unreadMessage = MessageCenter.shared().getInbox().getUnreadMessages();
+        PendingResult<List<Message>> pendingResult = MessageCenter.shared().getInbox().getUnreadMessagesPendingResult();
 
-        // Skip showing the indicator if we have no unread messages or no new messages since the last display
-        if (unreadMessage.isEmpty() || messageCenterLastSentDate >= unreadMessage.get(0).getSentDateMS()) {
-            return;
-        }
+        pendingResult.addResultCallback(messages -> {
+            // Skip showing the indicator if we have no unread messages or no new messages since the last display
+            if (messages == null || messages.isEmpty() || messageCenterLastSentDate >= messages.get(0).getSentDate().getTime()) {
+                return;
+            }
 
-        // Track the message sent date to track if we have a new message
-        messageCenterLastSentDate = unreadMessage.get(0).getSentDateMS();
+            // Track the message sent date to track if we have a new message
+            messageCenterLastSentDate = messages.get(0).getSentDate().getTime();
 
-        // Skip showing the indicator if its already displaying
-        if (messageCenterSnackbar != null && messageCenterSnackbar.isShownOrQueued()) {
-            return;
-        }
+            // Skip showing the indicator if its already displaying
+            if (messageCenterSnackbar != null && messageCenterSnackbar.isShownOrQueued()) {
+                return;
+            }
 
-        String text = getResources().getQuantityString(R.plurals.mc_indicator_text, unreadMessage.size(), unreadMessage.size());
+            String text = getResources().getQuantityString(R.plurals.mc_indicator_text, messages.size(), messages.size());
 
-        //noinspection ResourceType - For the duration field of the snackbar when defining a custom duration
-        messageCenterSnackbar = Snackbar.make(findViewById(R.id.nav_host_container), text, Snackbar.LENGTH_LONG)
-                                        .setActionTextColor(ContextCompat.getColor(this, R.color.accent))
-                                        .setAction(R.string.view, v -> {
-                                            messageCenterSnackbar.dismiss();
-                                            navigationView.setSelectedItemId(R.id.inbox);
-                                        });
+            //noinspection ResourceType - For the duration field of the snackbar when defining a custom duration
+            messageCenterSnackbar = Snackbar.make(findViewById(R.id.nav_host_container), text, Snackbar.LENGTH_LONG)
+                                            .setActionTextColor(ContextCompat.getColor(this, R.color.accent))
+                                            .setAction(R.string.view, v -> {
+                                                messageCenterSnackbar.dismiss();
+                                                navigationView.setSelectedItemId(R.id.inbox);
+                                            });
 
-        messageCenterSnackbar.show();
+            messageCenterSnackbar.show();
+        });
     }
 }

@@ -46,7 +46,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public interface Listener {
+    public fun interface Listener {
 
         /**
          * Called when the set of enabled features changes.

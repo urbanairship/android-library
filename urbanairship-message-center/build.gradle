@@ -1,23 +1,59 @@
 plugins {
-    id 'airship-module'
+    id("airship-module")
+    id("kotlin-android")
+    id("kotlin-kapt")
+    id("kotlin-parcelize")
+    alias(libs.plugins.binary.compatibility.validator)
 }
 
 description = "Airship Android SDK Message Center module"
 
+airshipModule {
+    published = true
+}
+
+android {
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+        freeCompilerArgs = ["-Xexplicit-api=strict"]
+    }
+
+    namespace 'com.urbanairship.messagecenter'
+}
+
 dependencies {
     api project(':urbanairship-core')
+
+    // Kotlin
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+
+    // AndroidX
+    implementation(libs.androidx.activityktx)
+    implementation(libs.androidx.corektx)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.fragment.fragmentktx)
     implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.androidx.slidingpanelayout)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.lifecycle.viewmodelktx)
+    implementation(libs.androidx.lifecycle.runtimektx)
     implementation(libs.androidx.room.runtime)
-    annotationProcessor(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
+
+    // Material
+    implementation(libs.google.material)
 
     // Tests
     testImplementation project(':urbanairship-test')
     testImplementation(libs.junit)
     testImplementation(libs.androidx.test.core)
-    testImplementation(libs.mockito.core)
     testImplementation(libs.robolectric.core)
     testImplementation(libs.androidx.test.ext.junit)
-    testImplementation(libs.mockito.inline)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
 
     // Instrumentation Test
     androidTestImplementation(libs.androidx.test.core)
@@ -27,6 +63,9 @@ dependencies {
     androidTestImplementation(libs.androidx.room.testing)
 }
 
-android {
-    namespace 'com.urbanairship.messagecenter'
+apiValidation {
+    nonPublicMarkers.add("androidx.annotation.RestrictTo")
+
+    // Exclude the apiCheck task from check / build
+    validationDisabled = true
 }

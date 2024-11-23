@@ -1,8 +1,9 @@
 package com.urbanairship.json
 
+import android.os.Bundle
+import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.util.DateUtils
-import java.text.ParseException
 
 @Throws(JsonException::class)
 public fun jsonMapOf(vararg fields: Pair<String, *>): JsonMap =
@@ -98,10 +99,14 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
  * @throws JsonException if the value is not a valid date string.
  */
 @Throws(JsonException::class)
-public fun JsonMap.isoDateAsMilliseconds(key: String): Long? {
+public fun JsonMap.isoDateAsMilliseconds(key: String, defaultValue: Long? = null): Long? {
     return try {
-        optionalField<String>(key)?.let {
-            DateUtils.parseIso8601(it)
+        optionalField<String>(key)?.let { isoDate ->
+            defaultValue?.let {
+                DateUtils.parseIso8601(isoDate, defaultValue)
+            } ?: run {
+                DateUtils.parseIso8601(isoDate)
+            }
         }
     } catch (e: Exception) {
         throw JsonException("Unable to parse value as date: ${get(key)}", e)
@@ -149,6 +154,12 @@ public fun JsonMap.optionalList(key: String): JsonList? {
     return optionalField<JsonList>(key)
 }
 
+/** Convenience method to create an empty [JsonMap]. */
+public fun emptyJsonMap(): JsonMap = JsonMap.EMPTY_MAP
+
+/** Convenience method to create an empty [JsonList]. */
+public fun emptyJsonList(): JsonList = JsonList.EMPTY_LIST
+
 /**
  * Gets the field with the given [key] from the [JsonMap] and convert it using [builder] function,
  * or `null` if not defined.
@@ -161,9 +172,3 @@ internal inline fun <reified T> JsonMap.optionalFieldConverted(key: String, buil
     }
     return result
 }
-
-/** Convenience method to create an empty [JsonMap]. */
-public fun emptyJsonMap(): JsonMap = JsonMap.EMPTY_MAP
-
-/** Convenience method to create an empty [JsonList]. */
-public fun emptyJsonList(): JsonList = JsonList.EMPTY_LIST

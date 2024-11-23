@@ -27,7 +27,6 @@ import com.urbanairship.util.TaskSleeper
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -44,9 +43,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -64,7 +61,6 @@ import org.robolectric.RobolectricTestRunner
 public class ContactTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private val unconfinedDispatcher = UnconfinedTestDispatcher()
     private val config = TestAirshipRuntimeConfig()
 
     private val mockChannel = mockk<AirshipChannel>(relaxUnitFun = true) {
@@ -124,10 +120,10 @@ public class ContactTest {
                 overrideUpdates = mockAudienceOverridesProvider.contactUpdates(mockContactManager.stableContactIdUpdates),
                 clock = testClock,
                 taskSleeper = TaskSleeper.default,
-                dispatcher = Dispatchers.IO
+                dispatcher = testDispatcher
             ),
             contactChannelsProvider = mockChannelsContactProvider,
-            subscriptionListDispatcher = unconfinedDispatcher
+            subscriptionListDispatcher = testDispatcher
         )
     }
 

@@ -24,8 +24,8 @@ import kotlinx.coroutines.flow.map
  */
 internal interface AutomationRemoteDataAccessInterface {
     val updatesFlow: Flow<InAppRemoteData>
-    suspend fun isCurrent(schedule: AutomationSchedule): Boolean
-    suspend fun requiredUpdate(schedule: AutomationSchedule): Boolean
+    fun isCurrent(schedule: AutomationSchedule): Boolean
+    fun requiredUpdate(schedule: AutomationSchedule): Boolean
     suspend fun waitForFullRefresh(schedule: AutomationSchedule)
     suspend fun bestEffortRefresh(schedule: AutomationSchedule): Boolean
     suspend fun notifyOutdated(schedule: AutomationSchedule)
@@ -46,7 +46,7 @@ internal class AutomationRemoteDataAccess(
         .payloadFlow(REMOTE_DATA_TYPES)
         .map(InAppRemoteData.Companion::fromPayloads)
 
-    override suspend fun isCurrent(schedule: AutomationSchedule): Boolean {
+    override fun isCurrent(schedule: AutomationSchedule): Boolean {
         if (!isRemote(schedule)) {
             return true
         }
@@ -56,7 +56,7 @@ internal class AutomationRemoteDataAccess(
         return remoteData.isCurrent(remoteDataInfo)
     }
 
-    override suspend fun requiredUpdate(schedule: AutomationSchedule): Boolean {
+    override fun requiredUpdate(schedule: AutomationSchedule): Boolean {
         if (!isRemote(schedule)) {
             return false
         }
