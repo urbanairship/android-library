@@ -1,6 +1,7 @@
 package com.urbanairship.http
 
 import android.net.Uri
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.ConnectionUtils
@@ -62,7 +63,10 @@ internal class DefaultHttpClient : HttpClient {
             val responseBody: String? = try {
                 conn.inputStream.readFully()
             } catch (ex: IOException) {
-                conn.errorStream.readFully()
+                conn.errorStream?.readFully() ?: run {
+                    UALog.e("Error stream was null for response code: ${conn.responseCode}")
+                    ""
+                }
             }
 
             val responseHeaders = mapHeaders(conn.headerFields)
