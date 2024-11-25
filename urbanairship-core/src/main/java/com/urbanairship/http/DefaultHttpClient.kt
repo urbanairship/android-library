@@ -65,7 +65,7 @@ internal class DefaultHttpClient : HttpClient {
             } catch (ex: IOException) {
                 conn.errorStream?.readFully() ?: run {
                     UALog.e("Error stream was null for response code: ${conn.responseCode}")
-                    ""
+                    null
                 }
             }
 
