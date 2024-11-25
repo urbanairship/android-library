@@ -3,6 +3,7 @@
 package com.urbanairship.android.layout.ui
 
 import android.content.Context
+import android.view.ContextThemeWrapper
 import android.view.View
 import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
@@ -15,6 +16,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.AirshipEmbeddedViewManager
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.ModelFactoryException
+import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment
@@ -172,8 +174,11 @@ public class EmbeddedLayout(
                 viewInfo = payload.view,
                 modelEnvironment = modelEnvironment
             )
+            // Create the embedded view using our theme, to prevent app custom themes from affecting
+            // the embedded view.
+            val themedContext = ContextThemeWrapper(context, R.style.UrbanAirship_Layout)
             val embeddedView = ThomasEmbeddedView(
-                context = context,
+                context = themedContext,
                 model = model,
                 presentation = presentation,
                 environment = viewEnvironment,
