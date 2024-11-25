@@ -17,11 +17,9 @@ import androidx.glance.GlanceTheme
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
-import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
-import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.components.Scaffold
 import androidx.glance.appwidget.components.TitleBar
 import androidx.glance.appwidget.lazy.LazyColumn
@@ -51,7 +49,7 @@ import kotlinx.serialization.json.Json
 /**
  * A sample app widget that displays medal counts for a list of countries.
  */
-class SampleAppWidget : GlanceAppWidget() {
+internal class SampleAppWidget : GlanceAppWidget() {
 
     /** Widget state */
     object StateDefinition : GlanceStateDefinition<Preferences> {

@@ -11,7 +11,7 @@ import com.urbanairship.sample.R
 /**
  * Preference Center fragment that supports navigation and maintains its own toolbar.
  */
-class PrefCenterFragment : Fragment(R.layout.fragment_pref_center) {
+internal class PrefCenterFragment : Fragment(R.layout.fragment_pref_center) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

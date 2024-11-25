@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/debug"
+    app:startDestination="@+id/debugFragment">
+
+    <fragment
+        android:id="@+id/debugFragment"
+        android:name="com.urbanairship.debug.DebugFragment"
+        android:label="@string/debug">
+    </fragment>
+
+    <deepLink
+        android:id="@+id/settingsDeepLink"
+        app:uri="vnd.urbanairship.sample://deepLink/debug" />
+</navigation>

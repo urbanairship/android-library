@@ -7,6 +7,7 @@ import android.content.Context;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.modules.Module;
+import com.urbanairship.remotedata.RemoteData;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -20,7 +21,10 @@ import androidx.annotation.RestrictTo;
 public interface DebugModuleFactory extends AirshipVersionInfo {
 
     @NonNull
-    Module build(@NonNull Context context,
-                 @NonNull PreferenceDataStore dataStore);
+    Module build(
+            @NonNull Context context,
+            @NonNull PreferenceDataStore dataStore,
+            @NonNull RemoteData remoteData
+    );
 
 }

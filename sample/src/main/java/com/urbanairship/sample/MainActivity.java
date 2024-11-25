@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
         add(R.id.inbox);
         add(R.id.prefCenter);
         add(R.id.settings);
-        add(com.urbanairship.debug.R.id.debugFragment);
+        add(R.id.debugFragment);
     }};
 
     public static final AppBarConfiguration APP_BAR_CONFIGURATION =
