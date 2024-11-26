@@ -107,7 +107,14 @@ internal class FlagDeferredResolver(
                 val backOff = result.retryAfter ?: DEFAULT_BACKOFF_MS
                 if (!allowRetry || backOff > IMMEDIATE_BACKOFF_RETRY_MS) {
                     backOffIntervals[requestId] = clock.currentTimeMillis() + backOff
-                    return Result.failure(FeatureFlagEvaluationException.ConnectionError())
+                    return Result.failure(FeatureFlagEvaluationException.ConnectionError(
+                        statusCode = result.statusCode,
+                        errorDescription = if (!allowRetry) {
+                            "Retries are not allowed"
+                        } else {
+                            "Unable to immediately retry. Try again in $backOff ms."
+                        }
+                    ))
                 }
 
                 if (backOff > 0) {
