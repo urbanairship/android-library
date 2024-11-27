@@ -10,8 +10,15 @@ import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -20,18 +27,28 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class DeferredResolverTest {
+    public val testDispatcher: TestDispatcher = StandardTestDispatcher()
+
     public lateinit var resolver: DeferredResolver
     internal val requestSession = TestRequestSession()
 
     @Before
     public fun setup() {
+        Dispatchers.setMain(testDispatcher)
+
         val config: AirshipRuntimeConfig = mockk()
         every { config.requestSession } returns requestSession
         every { config.platform } returns UAirship.ANDROID_PLATFORM
 
         resolver = DeferredResolver(config, AudienceOverridesProvider())
+    }
+
+    @After
+    public fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test

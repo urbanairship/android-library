@@ -73,33 +73,40 @@ public class DeferredResolver internal constructor(
             return DeferredResult.TimedOut()
         }
 
-        when (response.status) {
+        when (val statusCode = response.status) {
             200 -> {
-                val value = response.value ?: return DeferredResult.RetriableError()
-                if (value.isNull) {
-                    return DeferredResult.RetriableError()
+                val value = response.value
+                // Check for null value or null JsonValue
+                if (value == null || value.isNull) {
+                    return DeferredResult.RetriableError(statusCode = statusCode)
                 }
                 return try {
                     DeferredResult.Success(resultParser(value))
                 } catch (ex: Exception) {
-                    UALog.e(ex) { "Failed ot parse deferred" }
-                    DeferredResult.RetriableError()
+                    UALog.e(ex) { "Failed to parse deferred!" }
+                    DeferredResult.RetriableError(statusCode = statusCode)
                 }
             }
             404 -> return DeferredResult.NotFound()
             409 -> return DeferredResult.OutOfDate()
             429 -> {
                 response.locationHeader?.let { locationMap.put(uri, it) }
-                return DeferredResult.RetriableError<T>(response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0))
+                return DeferredResult.RetriableError(
+                    retryAfter = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0),
+                    statusCode = statusCode
+                )
             }
             307 -> {
                 val redirect = response.locationHeader
-                    ?: return DeferredResult.RetriableError<T>(response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0))
+                    ?: return DeferredResult.RetriableError(
+                        retryAfter = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0),
+                        statusCode = statusCode
+                    )
                 locationMap[uri] = redirect
 
                 val retryDelay = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, -1)
                 if (retryDelay > 0) {
-                    return DeferredResult.RetriableError<T>(retryDelay)
+                    return DeferredResult.RetriableError(retryDelay, statusCode = statusCode)
                 }
 
                 if (allowRetry) {
@@ -115,9 +122,9 @@ public class DeferredResolver internal constructor(
                     )
                 }
 
-                return DeferredResult.RetriableError<T>()
+                return DeferredResult.RetriableError(statusCode = statusCode)
             }
-            else -> return DeferredResult.RetriableError<T>()
+            else -> return DeferredResult.RetriableError(statusCode = statusCode)
         }
     }
 }
