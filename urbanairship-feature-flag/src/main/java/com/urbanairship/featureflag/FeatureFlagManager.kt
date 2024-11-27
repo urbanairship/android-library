@@ -91,7 +91,9 @@ public class FeatureFlagManager internal constructor(
 
     private suspend fun flag(name: String, allowRefresh: Boolean): Result<FeatureFlag> {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS)) {
-            return Result.failure(IllegalStateException("Feature flags are disabled"))
+            val msg = "Failed to fetch feature flag: '$name'! Feature flags are disabled."
+            UALog.e(msg)
+            return Result.failure(IllegalStateException(msg))
         }
 
         val remoteDataInfo = remoteData.fetchFlagRemoteInfo(name)
@@ -100,7 +102,7 @@ public class FeatureFlagManager internal constructor(
             return result
         }
 
-        return when (result.exceptionOrNull()) {
+        return when (val e = result.exceptionOrNull()) {
             is FeatureFlagEvaluationException.OutOfDate -> {
                 remoteData.notifyOutOfDate(remoteDataInfo.remoteDataInfo)
 
@@ -108,7 +110,9 @@ public class FeatureFlagManager internal constructor(
                     remoteData.waitForRemoteDataRefresh()
                     flag(name = name, allowRefresh = false)
                 } else {
-                    Result.failure(FeatureFlagException.FailedToFetch())
+                    val msg = "Failed to fetch feature flag: '$name'! Remote data is outdated."
+                    UALog.e(e, msg)
+                    Result.failure(FeatureFlagException.FailedToFetch(msg).apply { initCause(e) })
                 }
             }
 
@@ -117,11 +121,25 @@ public class FeatureFlagManager internal constructor(
                     remoteData.waitForRemoteDataRefresh()
                     flag(name = name, allowRefresh = false)
                 } else {
-                    Result.failure(FeatureFlagException.FailedToFetch())
+                    val msg = "Failed to fetch feature flag: '$name'! Stale data is not allowed."
+                    UALog.e(e, msg)
+                    Result.failure(FeatureFlagException.FailedToFetch(msg).apply { initCause(e) })
                 }
             }
 
-            else -> Result.failure(FeatureFlagException.FailedToFetch())
+            is FeatureFlagEvaluationException.ConnectionError -> {
+                val msg = "Failed to fetch feature flag: '$name'! Network error" +
+                        "${e.statusCode?.let { " ($it)" }}." +
+                        "${e.errorDescription?.let { " $it" }}"
+                UALog.e(e, msg)
+                Result.failure(FeatureFlagException.FailedToFetch(msg).apply { initCause(e) })
+            }
+
+            else -> {
+                val msg = "Failed to fetch feature flag: '$name'!"
+                UALog.e(msg)
+                Result.failure(FeatureFlagException.FailedToFetch(msg))
+            }
         }
     }
 
@@ -199,7 +217,7 @@ public class FeatureFlagManager internal constructor(
                 }
             }
 
-            /// If we have an error, flag is eligible, or the last flag return
+            // If we have an error, flag is eligible, or the last flag return
             if (result.isFailure || result.getOrNull()?.isEligible == true || isLast) {
                 return evaluatedControl(result, info, deviceInfoProvider)
             }

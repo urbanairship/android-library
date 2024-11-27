@@ -2,12 +2,20 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.4.2 November 26, 2024
+Patch release that fixes an issue with Embedded Views being impacted by certain App theme customizations, avoids a potential NPE related to network failures, and adds more useful logging around Feature Flag evaluation.
+
+### Changes
+- Prevent App-level theme customizations from impacting Embedded Views
+- Avoid a potential NPE related to network failures, when no error body is present
+- Improved logging around Feature Flag evaluation
+
 ## Version 18.4.1 November 15, 2024
 Patch release that fixes an issue with pausing and resuming In-App Automations and avoids a potential crash in the Automation database.
 
 ### Changes
-* Fixed an issue with `AutomationEngine.setEnginePaused(...)` that could prevent message displays when paused an then un-paused
-* Fixed a potential crash in Automation DB if 1000+ rows are present in the schedules table
+- Fixed an issue with `AutomationEngine.setEnginePaused(...)` that could prevent message displays when paused an then un-paused
+- Fixed a potential crash in Automation DB if 1000+ rows are present in the schedules table
 
 ## Version 18.4.0 November 1, 2024
 Minor release with several enhancements to Scenes and In-App Automations.
