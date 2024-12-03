@@ -3,7 +3,6 @@ package com.urbanairship.preferencecenter.ui
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.VisibleForTesting
-import androidx.lifecycle.AbstractSavedStateViewModelFactory
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -27,10 +26,8 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.ConditionStateMonitor
 import com.urbanairship.preferencecenter.PreferenceCenter
-import com.urbanairship.preferencecenter.data.CommonDisplay
 import com.urbanairship.preferencecenter.data.Condition
 import com.urbanairship.preferencecenter.data.Item
-import com.urbanairship.preferencecenter.data.Item.ContactManagement.RegistrationOptions
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfigParceler
 import com.urbanairship.preferencecenter.data.Section
@@ -46,6 +43,7 @@ import com.urbanairship.preferencecenter.ui.item.SectionBreakItem
 import com.urbanairship.preferencecenter.ui.item.SectionItem
 import com.urbanairship.preferencecenter.util.scanConcat
 import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
+import com.urbanairship.util.airshipIsValidEmail
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -185,15 +183,6 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         }
 
     /**
-     * Helper to do basic formatting and validation of email address.
-     */
-    private fun formatAndValidateEmail(email: String?): Boolean {
-        val formattedEmail = (email ?: "").trim().lowercase()
-        val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
-        return emailRegex.matches(formattedEmail)
-    }
-
-    /**
      * Flow that maps an [Action] to one or more side [Effect]s that do not impact viewmodel state.
      */
     private suspend fun effects(action: Action): Flow<Effect> =
@@ -208,7 +197,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 Effect.ShowContactManagementAddDialog(action.item)
             )
             is Action.ValidateEmailChannel -> flowOf(
-                if (formatAndValidateEmail(action.address)) {
+                if (action.address.airshipIsValidEmail()) {
                     Effect.DismissContactManagementAddDialog.also {
                         handle(
                             Action.RegisterChannel.Email(action.item, action.address)
