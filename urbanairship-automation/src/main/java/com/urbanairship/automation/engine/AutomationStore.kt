@@ -31,9 +31,9 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonTypeConverters
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.SerialQueue
+import org.jetbrains.annotations.VisibleForTesting
 import java.io.File
 import java.util.UUID
-import org.jetbrains.annotations.VisibleForTesting
 
 internal interface AutomationStoreInterface: ScheduleStoreInterface, TriggerStoreInterface {}
 
@@ -280,6 +280,9 @@ internal interface AutomationDao {
     @Query("DELETE FROM schedules WHERE `group` = :group")
     suspend fun deleteSchedules(group: String)
 
+    @Query("SELECT scheduleId FROM automation_trigger_data")
+    suspend fun getTriggersScheduleIds(): List<String>?
+
     @Transaction
     suspend fun upsertTriggers(triggers: List<TriggerEntity>) {
         runBatched(triggers) { upsertTriggersInternal(it) }
@@ -301,7 +304,6 @@ internal interface AutomationDao {
     suspend fun deleteTrigger(scheduleId: String, triggerId: String)
 
     @Transaction
-    @Query("DELETE FROM automation_trigger_data WHERE scheduleId IN (:scheduleIds)")
     suspend fun deleteTriggers(scheduleIds: List<String>) {
         runBatched(scheduleIds) { deleteTriggersInternal(it) }
     }
@@ -313,13 +315,31 @@ internal interface AutomationDao {
     @Query("DELETE FROM automation_trigger_data WHERE scheduleId IN (:scheduleIds)")
     suspend fun deleteTriggersInternal(scheduleIds: List<String>)
 
+    /**
+     * Deletes all triggers for schedules not in the provided list.
+     *
+     * In order to avoid the max query params limit of 999, this method will
+     * fetch all existing schedule IDs, remove the provided schedule IDs, and
+     * then batch-delete the remaining schedule IDs.
+     */
     @Transaction
-    @Query("DELETE FROM automation_trigger_data WHERE NOT (scheduleId  IN (:scheduleIds))")
-    suspend fun deleteTriggersExcluding(scheduleIds: List<String>)
+    suspend fun deleteTriggersExcluding(scheduleIds: List<String>) {
+        val allScheduleIds = getTriggersScheduleIds() ?: return
+        val idsToDelete = allScheduleIds - scheduleIds.toSet()
+        runBatched(idsToDelete) { deleteTriggersInternal(it) }
+    }
 
     @Transaction
+    suspend fun deleteTriggers(scheduleIds: String, triggerIds: Set<String>) {
+        runBatched(triggerIds) { deleteTriggersInternal(scheduleIds, it) }
+    }
+
+    /**
+     * This query is only for internal use, with batched queries
+     * to avoid the max query params limit of 999.
+     */
     @Query("DELETE FROM automation_trigger_data WHERE scheduleId = :scheduleIds AND triggerId IN (:triggerIds) ")
-    suspend fun deleteTriggers(scheduleIds: String, triggerIds: Set<String>)
+    suspend fun deleteTriggersInternal(scheduleIds: String, triggerIds: Set<String>)
 }
 
 @Entity(tableName = "schedules")

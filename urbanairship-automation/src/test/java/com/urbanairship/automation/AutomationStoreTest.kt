@@ -8,6 +8,7 @@ import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.TriggeringInfo
+import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.InAppMessage
@@ -15,8 +16,8 @@ import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import java.util.UUID
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.test.TestResult
@@ -24,15 +25,31 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.UUID
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.Before
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class AutomationStoreTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val store = AutomationStore.createInMemoryDatabase(context)
 
+    private val testDispatcher = StandardTestDispatcher()
+
+    @Before
+    public fun setup() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
     @After
     public fun tearDown() {
         store.close()
+        Dispatchers.resetMain()
     }
 
     @Test
@@ -195,6 +212,51 @@ public class AutomationStoreTest {
         // Verify the inserted schedules
         val result = store.getSchedules(scheduleIds)
         assertEquals(schedules.toSet(), result.toSet())
+    }
+
+    @Test
+    public fun testUpsertAndDeleteTooManyTriggers(): TestResult = runTest {
+        // Create a ton of triggers (the SQL lite variable limit is 999)
+        val schedulesById = mutableMapOf<String, AutomationScheduleData>()
+        val triggersById = mutableMapOf<String, TriggerData>()
+        for (i in 0 until 2000) {
+            val schedule = makeSchedule(i.toString())
+            val trigger = TriggerData(
+                scheduleId = schedule.schedule.identifier,
+                triggerId = i.toString()
+            )
+            schedulesById[schedule.schedule.identifier] = schedule
+            triggersById[trigger.triggerId] = trigger
+        }
+
+        val scheduleIds = schedulesById.keys.toList()
+        val triggers = triggersById.values.toList()
+        val triggerIds = triggersById.keys.toSet()
+
+        // Initial insert
+        store.upsertSchedules(scheduleIds) { id, _ -> requireNotNull(schedulesById[id]) }
+        store.upsertTriggers(triggers)
+        assertNotNull(store.getTrigger("1999", "1999"))
+
+        // Upsert the triggers again
+        store.upsertTriggers(triggers)
+        assertNotNull(store.getTrigger("1999", "1999"))
+
+        // Delete trigger to make sure it doesn't crash with more than 999 parameters
+        store.deleteTriggersExcluding(scheduleIds)
+        assertNotNull(store.getTrigger("1999", "1999"))
+
+        // Delete triggers to make sure it doesn't crash with more than 999 parameters
+        store.deleteTriggers(scheduleIds)
+        assertNull(store.getTrigger("1999", "1999"))
+
+        // Upsert the triggers again
+        store.upsertTriggers(triggers)
+        assertNotNull(store.getTrigger("1999", "1999"))
+
+        // Delete triggers to make sure it doesn't crash with more than 999 parameters
+        store.deleteTriggers(scheduleIds[1999], triggerIds)
+        assertNull(store.getTrigger("1999", "1999"))
     }
 
     @Test
