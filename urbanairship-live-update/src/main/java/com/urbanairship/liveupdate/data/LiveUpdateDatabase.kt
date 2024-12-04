@@ -9,7 +9,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.db.RetryingSQLiteOpenHelper
 import java.io.File
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asExecutor
@@ -27,9 +29,12 @@ internal abstract class LiveUpdateDatabase : RoomDatabase() {
         fun createDatabase(context: Context, config: AirshipRuntimeConfig): LiveUpdateDatabase {
             val name = config.configOptions.appKey + "_live_updates"
             val path = File(ContextCompat.getNoBackupFilesDir(context), name).absolutePath
+            val retryingOpenHelperFactory = RetryingSQLiteOpenHelper.Factory(FrameworkSQLiteOpenHelperFactory(), true)
+
             return Room.databaseBuilder(context, LiveUpdateDatabase::class.java, path)
-                    .fallbackToDestructiveMigration()
-                    .build()
+                .openHelperFactory(retryingOpenHelperFactory)
+                .fallbackToDestructiveMigration()
+                .build()
         }
 
         @VisibleForTesting
