@@ -78,21 +78,21 @@ internal class TextInputView(
                     default = model.viewInfo.iconEnd
                 )
 
-                val errorDrawable = when (resolved) {
+                val endDrawable = when (resolved) {
                     is TextInputInfo.IconEnd.Floating ->
                         resolved.icon.getDrawable(context, isEnabled)
                     else -> null
                 }
 
-                errorDrawable?.let {
-                    val size =  spToPx(context, model.viewInfo.textAppearance.fontSize).toInt()
+                endDrawable?.let {
+                    val size = spToPx(context, model.viewInfo.textAppearance.fontSize).toInt()
                     it.setBounds(0, 0, size, size)
+                }
 
-                    if (isLayoutRtl) {
-                        setCompoundDrawables(it, null, null, null)
-                    } else {
-                        setCompoundDrawables(null, null, it, null)
-                    }
+                if (isLayoutRtl) {
+                    setCompoundDrawables(endDrawable, null, null, null)
+                } else {
+                    setCompoundDrawables(null, null, endDrawable, null)
                 }
             }
         }
