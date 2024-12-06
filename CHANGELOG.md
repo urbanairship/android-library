@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.5.0 December 5, 2024
+Minor release that includes various improvements to scenes, data management and some minor bug fixes.
+
+### Changes
+- Added support to mark a label as a heading in Scenes.
+- Improved live update database handling to mitigate rare filesystem crashes.
+- Improved automation store to avoid query limits.
+
 ## Version 18.4.2 November 26, 2024
 Patch release that fixes an issue with Embedded Views being impacted by certain App theme customizations, avoids a potential NPE related to network failures, and adds more useful logging around Feature Flag evaluation.
 

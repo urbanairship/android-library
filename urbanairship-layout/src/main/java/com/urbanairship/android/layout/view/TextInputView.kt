@@ -2,33 +2,24 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.drawable.ScaleDrawable
-import android.text.TextUtils
 import android.text.method.ScrollingMovementMethod
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
-import android.widget.TextView
 import androidx.appcompat.widget.AppCompatEditText
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.isVisible
-import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.TextInputModel
 import com.urbanairship.android.layout.util.LayoutUtils
-import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
 import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.util.isLayoutRtl
 import com.urbanairship.android.layout.util.resolveOptional
-import com.urbanairship.android.layout.widget.ShapeDrawableWrapper
 import com.urbanairship.android.layout.widget.TappableView
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
@@ -87,21 +78,21 @@ internal class TextInputView(
                     default = model.viewInfo.iconEnd
                 )
 
-                val errorDrawable = when (resolved) {
+                val endDrawable = when (resolved) {
                     is TextInputInfo.IconEnd.Floating ->
                         resolved.icon.getDrawable(context, isEnabled)
                     else -> null
                 }
 
-                errorDrawable?.let {
-                    val size =  spToPx(context, model.viewInfo.textAppearance.fontSize).toInt()
+                endDrawable?.let {
+                    val size = spToPx(context, model.viewInfo.textAppearance.fontSize).toInt()
                     it.setBounds(0, 0, size, size)
+                }
 
-                    if (isLayoutRtl) {
-                        setCompoundDrawables(it, null, null, null)
-                    } else {
-                        setCompoundDrawables(null, null, it, null)
-                    }
+                if (isLayoutRtl) {
+                    setCompoundDrawables(endDrawable, null, null, null)
+                } else {
+                    setCompoundDrawables(null, null, endDrawable, null)
                 }
             }
         }

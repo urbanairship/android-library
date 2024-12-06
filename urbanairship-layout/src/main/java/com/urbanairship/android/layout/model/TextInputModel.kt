@@ -2,7 +2,6 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
-import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
@@ -17,10 +16,10 @@ import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.util.onEditing
 import com.urbanairship.android.layout.util.textChanges
 import com.urbanairship.android.layout.view.TextInputView
+import com.urbanairship.util.airshipIsValidEmail
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -89,9 +88,7 @@ internal class TextInputModel(
 
         return when (viewInfo.inputType) {
             FormInputType.EMAIL -> {
-                val formattedEmail = (text).trim().lowercase()
-                val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
-                return emailRegex.matches(formattedEmail)
+                return text.airshipIsValidEmail()
             }
             FormInputType.NUMBER -> true
             FormInputType.TEXT -> true
