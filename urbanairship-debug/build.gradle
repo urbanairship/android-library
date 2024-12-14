@@ -1,30 +1,31 @@
 plugins {
     id 'airship-module'
     id 'kotlin-android'
-    id 'kotlin-kapt'
+
+    alias(libs.plugins.ksp)
 }
 
-description = "Airship Android Debug Library"
+description = "Airship Android Debug Tools"
 
 airshipModule {
     published = false
 }
 
 android {
+    namespace 'com.urbanairship.debug'
+
     buildFeatures{
-        dataBinding = true
+        compose = true
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8
+        freeCompilerArgs = ["-Xexplicit-api=strict"]
     }
-
-    namespace 'com.urbanairship.debug'
 }
 
 dependencies {
@@ -37,33 +38,47 @@ dependencies {
     implementation project(':urbanairship-feature-flag')
 
     // Kotlin
-    implementation(libs.kotlin.stdlib)
-    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
-    // Room
-    implementation(libs.androidx.room.runtime)
-    kapt(libs.androidx.room.compiler)
+    // Compose
+    implementation(platform(libs.compose.bom))
+    implementation(libs.compose.material3)
+    implementation(libs.compose.materialicons.extended)
+    implementation(libs.compose.googlefonts)
 
-    // Navigation
-    implementation(libs.androidx.navigation.fragmentktx)
-    implementation(libs.androidx.navigation.ui)
+    // Compose Preview Support
+    implementation(libs.compose.ui.tooling.preview)
+    implementation libs.androidx.lifecycle.runtime.compose
+    debugImplementation(libs.compose.ui.tooling)
 
-    // Constraint layout
-    implementation(libs.androidx.constraintlayout)
-
-    // Lifecycle
-    implementation(libs.androidx.lifecycle.common.java8)
+    // AndroidX
+    implementation(libs.androidx.corektx)
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtimektx)
     implementation(libs.androidx.lifecycle.viewmodelktx)
-    implementation(libs.androidx.lifecycle.livedataktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
-    // Paging
-    implementation(libs.androidx.paging.runtimektx)
+    // Instrumentation Tests
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
 
-    // Support libraries
-    implementation(libs.androidx.appcompat)
-    implementation(libs.google.material)
-    implementation(libs.androidx.vectordrawable)
-    implementation(libs.androidx.preferencektx)
+    // Tests
+    testImplementation(libs.androidx.test.ext.junit)
+
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.runner)
+    testImplementation(libs.androidx.test.rules)
+
+    testImplementation(libs.robolectric.core)
+    testImplementation(libs.mockk)
+    testImplementation(libs.androidx.room.testing)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
 }

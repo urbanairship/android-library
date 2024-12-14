@@ -19,6 +19,3 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
-
--keepnames class com.urbanairship.iam.InAppMessage
--keepnames class com.urbanairship.automation.Trigger

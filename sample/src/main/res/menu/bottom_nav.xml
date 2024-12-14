@@ -20,9 +20,4 @@
         android:id="@+id/settings"
         android:icon="@drawable/ic_settings"
         android:title="@string/settings" />
-
-    <item
-        android:id="@+id/debug"
-        android:icon="@drawable/ic_debug"
-        android:title="@string/debug" />
 </menu>

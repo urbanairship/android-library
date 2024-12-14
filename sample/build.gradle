@@ -102,7 +102,7 @@ dependencies {
     implementation project(':urbanairship-feature-flag')
 
     // Airship Debug: Normally this is a debug only dependency but we embed the view in sample app
-    implementation project(':urbanairship-debug-ng')
+    implementation project(':urbanairship-debug')
 
     implementation libs.glide
 

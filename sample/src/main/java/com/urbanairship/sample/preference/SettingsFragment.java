@@ -2,22 +2,17 @@
 
 package com.urbanairship.sample.preference;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.urbanairship.debug.DebugActivity;
+import com.urbanairship.UALog;
 import com.urbanairship.sample.R;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -76,8 +71,7 @@ public class SettingsFragment extends Fragment {
                     Navigation.findNavController(view).navigate(R.id.tagsFragment);
                     return true;
                 case DEBUG_KEY:
-                    requireActivity().startActivity(new Intent(requireContext(), DebugActivity.class)
-                            .putExtra("includeBackButton", true));
+                    Navigation.findNavController(view).navigate(R.id.debug);
                     return true;
             }
 

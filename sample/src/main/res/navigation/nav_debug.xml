@@ -8,6 +8,12 @@
         android:id="@+id/debugFragment"
         android:name="com.urbanairship.debug.DebugFragment"
         android:label="@string/debug">
+
+        <!-- Ignore bottom padding, since the bottom nav bar in the Sample is already handling it. -->
+        <argument
+            android:name="ignoreBottomPadding"
+            app:argType="boolean"
+            android:defaultValue="true" />
     </fragment>
 
     <deepLink

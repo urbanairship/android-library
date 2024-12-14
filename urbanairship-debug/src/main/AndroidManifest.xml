@@ -5,8 +5,8 @@
 
         <activity
             android:name="com.urbanairship.debug.DebugActivity"
-            android:label="@string/ua_debug_short_title"
-            android:theme="@style/AirshipDebug"
+            android:label="@string/ua_debug_label"
+            android:theme="@style/Theme.Material3.DayNight.NoActionBar"
             android:taskAffinity="com.urbanairship.debug.${applicationId}"
             android:exported="true">
 
