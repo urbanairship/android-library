@@ -6,11 +6,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.urbanairship.debug.ui.TopLevelScreens
+import com.urbanairship.debug.ui.DebugScreen
 
 internal fun NavGraphBuilder.pushNav(navController: NavController) {
     navigation(
-        route = TopLevelScreens.Pushes.route,
+        route = DebugScreen.Pushes.route,
         startDestination = PushScreens.Root.route,
     ) {
         composable(PushScreens.Root.route) {

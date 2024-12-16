@@ -4,8 +4,8 @@ package com.urbanairship.debug.ui.privacymanager
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.urbanairship.debug.ui.Screen
-import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.R
+import com.urbanairship.debug.ui.DebugScreen
 
 internal enum class PrivacyScreens(
     override val titleRes: Int,
@@ -21,5 +21,5 @@ internal enum class PrivacyScreens(
 
     override val isTopLevel: Boolean = false
 
-    val route: String = TopLevelScreens.PrivacyManager.route + "/$name"
+    val route: String = DebugScreen.PrivacyManager.route + "/$name"
 }

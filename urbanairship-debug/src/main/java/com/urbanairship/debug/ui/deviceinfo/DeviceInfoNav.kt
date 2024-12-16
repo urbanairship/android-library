@@ -4,13 +4,13 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.urbanairship.debug.ui.TopLevelScreens
+import com.urbanairship.debug.ui.DebugScreen
 import com.urbanairship.debug.ui.channel.ChannelInfoScreens
 import com.urbanairship.debug.ui.contact.ContactScreens
 
 internal fun NavGraphBuilder.deviceInfoNav(navController: NavController) {
     navigation(
-        route = TopLevelScreens.DeviceInfo.route,
+        route = DebugScreen.DeviceInfo.route,
         startDestination = DeviceInfoScreens.rootScreen.route,
     ) {
 

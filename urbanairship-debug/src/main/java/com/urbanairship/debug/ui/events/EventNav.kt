@@ -8,11 +8,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.urbanairship.debug.ui.TopLevelScreens
+import com.urbanairship.debug.ui.DebugScreen
 
 internal fun NavGraphBuilder.eventNav(navController: NavController) {
     navigation(
-        route = TopLevelScreens.Analytics.route,
+        route = DebugScreen.Analytics.route,
         startDestination = AnalyticsScreens.Root.route,
     ) {
         composable(AnalyticsScreens.Root.route) {

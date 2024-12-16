@@ -10,7 +10,7 @@ import com.urbanairship.UAirship
 import com.urbanairship.channel.SubscriptionListEditor
 import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListEditor
-import com.urbanairship.debug.ui.TopLevelScreens
+import com.urbanairship.debug.ui.DebugScreen
 import com.urbanairship.debug.ui.channel.AttributeEditScreen
 import com.urbanairship.debug.ui.channel.ChannelInfoScreens
 import com.urbanairship.debug.ui.channel.SubscriptionListProvider
@@ -19,7 +19,7 @@ import com.urbanairship.debug.ui.channel.TagGroupsScreen
 
 internal fun NavGraphBuilder.contactsNav(navController: NavController) {
     navigation(
-        route = TopLevelScreens.Contacts.route,
+        route = DebugScreen.Contacts.route,
         startDestination = ContactScreens.Root.route
     ) {
         composable(route = ContactScreens.Root.route) {

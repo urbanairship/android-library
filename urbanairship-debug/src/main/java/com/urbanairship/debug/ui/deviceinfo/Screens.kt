@@ -1,8 +1,8 @@
 package com.urbanairship.debug.ui.deviceinfo
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.R
+import com.urbanairship.debug.ui.DebugScreen
 import com.urbanairship.debug.ui.Screen as BaseScreen
 
 internal enum class DeviceInfoSection {
@@ -46,7 +46,7 @@ internal enum class DeviceInfoScreens(
 
     override val isTopLevel: Boolean = false
 
-    val route: String = TopLevelScreens.DeviceInfo.route + "/$name"
+    val route: String = DebugScreen.DeviceInfo.route + "/$name"
 
     internal companion object {
         val rootScreen: DeviceInfoScreens = DeviceInfoScreens.entries.first { it.isRoot }

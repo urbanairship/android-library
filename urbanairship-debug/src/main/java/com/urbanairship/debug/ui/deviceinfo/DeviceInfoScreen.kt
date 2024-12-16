@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.UAirship
-import com.urbanairship.debug.ui.TopLevelScreens
+import com.urbanairship.debug.ui.DebugScreen
 import com.urbanairship.debug.ui.channel.ChannelInfoScreens
 import com.urbanairship.debug.ui.components.DebugCategoryHeader
 import com.urbanairship.debug.ui.components.DebugScreen
@@ -139,7 +139,7 @@ private fun PushContent(
             RowItem(title = "Push Provider", details = pushProvider?.uppercase())
 
             RowItem(
-                modifier = Modifier.clickable { onNavigate(TopLevelScreens.Pushes.route) },
+                modifier = Modifier.clickable { onNavigate(DebugScreen.Pushes.route) },
                 title = "Received Pushes",
                 accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
             )

@@ -4,8 +4,8 @@ package com.urbanairship.debug.ui.channel
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.urbanairship.debug.ui.Screen
-import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.R
+import com.urbanairship.debug.ui.DebugScreen
 
 internal enum class ChannelInfoScreens(
     override val titleRes: Int,
@@ -25,5 +25,5 @@ internal enum class ChannelInfoScreens(
 
     override val isTopLevel: Boolean = false
 
-    val route: String = TopLevelScreens.Channel.route + "/$name"
+    val route: String = DebugScreen.Channel.route + "/$name"
 }

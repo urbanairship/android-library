@@ -6,11 +6,11 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.urbanairship.debug.ui.TopLevelScreens
+import com.urbanairship.debug.ui.DebugScreen
 
 internal fun NavGraphBuilder.privacyNav(navController: NavController) {
     navigation(
-        route = TopLevelScreens.PrivacyManager.route,
+        route = DebugScreen.PrivacyManager.route,
         startDestination = PrivacyScreens.Root.route,
     ) {
         composable(PrivacyScreens.Root.route) {

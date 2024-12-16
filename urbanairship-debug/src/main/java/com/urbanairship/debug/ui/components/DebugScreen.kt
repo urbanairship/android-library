@@ -1,5 +1,6 @@
 package com.urbanairship.debug.ui.components
 
+import androidx.annotation.RestrictTo
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -15,11 +16,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.urbanairship.debug.LocalIgnoreBottomPadding
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public val LocalIgnoreBottomPadding: ProvidableCompositionLocal<Boolean> = compositionLocalOf { false }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -14,6 +14,12 @@
             android:name="ignoreBottomPadding"
             app:argType="boolean"
             android:defaultValue="true" />
+
+        <!-- Show the navigation icon on the debug home screen. -->
+        <argument
+            android:name="showNavIconOnDebugHomeScreen"
+            app:argType="boolean"
+            android:defaultValue="true" />
     </fragment>
 
     <deepLink

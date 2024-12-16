@@ -8,11 +8,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.urbanairship.UAirship
 import com.urbanairship.channel.SubscriptionListEditor
-import com.urbanairship.debug.ui.TopLevelScreens
+import com.urbanairship.debug.ui.DebugScreen
 
 internal fun NavGraphBuilder.channelNav(navController: NavController) {
     navigation(
-        route = TopLevelScreens.Channel.route,
+        route = DebugScreen.Channel.route,
         startDestination = ChannelInfoScreens.Root.route
     ) {
         composable(route = ChannelInfoScreens.Root.route) {

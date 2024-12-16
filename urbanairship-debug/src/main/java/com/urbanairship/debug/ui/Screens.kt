@@ -1,5 +1,6 @@
 package com.urbanairship.debug.ui
 
+import androidx.annotation.RestrictTo
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.EventNote
 import androidx.compose.material.icons.automirrored.rounded.Login
@@ -21,7 +22,8 @@ internal interface Screen {
     val isTopLevel: Boolean
 }
 
-internal enum class TopLevelScreens(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+internal enum class DebugScreen(
     override val titleRes: Int,
     override val descRes: Int? = null,
     override val icon: ImageVector? = null,
@@ -100,10 +102,10 @@ internal enum class TopLevelScreens(
     val route: String = this.name
 
     internal companion object {
-        val rootScreen: TopLevelScreens = entries.first { it.isRoot }
-        val topLevelScreens: List<TopLevelScreens> = entries.filter { it.isTopLevel }
+        val rootScreen: DebugScreen = entries.first { it.isRoot }
+        val topLevelScreens: List<DebugScreen> = entries.filter { it.isTopLevel }
 
         private val screensByRoute by lazy { entries.associateBy { it.route } }
-        fun forRoute(route: String?): TopLevelScreens? = route?.let { screensByRoute[route] }
+        fun forRoute(route: String?): DebugScreen? = route?.let { screensByRoute[route] }
     }
 }

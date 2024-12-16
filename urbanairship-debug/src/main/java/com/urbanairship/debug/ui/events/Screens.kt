@@ -4,8 +4,8 @@ package com.urbanairship.debug.ui.events
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.urbanairship.debug.ui.Screen
-import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.R
+import com.urbanairship.debug.ui.DebugScreen
 
 internal enum class AnalyticsScreens(
     override val titleRes: Int,
@@ -26,5 +26,5 @@ internal enum class AnalyticsScreens(
 
     override val isTopLevel: Boolean = false
 
-    val route: String = TopLevelScreens.Analytics.route + "/$name"
+    val route: String = DebugScreen.Analytics.route + "/$name"
 }

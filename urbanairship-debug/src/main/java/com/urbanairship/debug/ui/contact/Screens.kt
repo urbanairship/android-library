@@ -3,9 +3,9 @@
 package com.urbanairship.debug.ui.contact
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.urbanairship.debug.ui.Screen
-import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.R
+import com.urbanairship.debug.ui.Screen
+import com.urbanairship.debug.ui.DebugScreen
 
 internal enum class ContactScreens(
     override val titleRes: Int,
@@ -26,7 +26,7 @@ internal enum class ContactScreens(
 
     override val isTopLevel: Boolean = false
 
-    val route: String = TopLevelScreens.Contacts.route + "/$name"
+    val route: String = DebugScreen.Contacts.route + "/$name"
 }
 
 internal enum class ContactChannelScreens(

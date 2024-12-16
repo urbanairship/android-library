@@ -1,8 +1,8 @@
 package com.urbanairship.debug.ui.automations
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.R
+import com.urbanairship.debug.ui.DebugScreen
 import com.urbanairship.debug.ui.Screen as BaseScreen
 
 internal enum class AutomationScreens(
@@ -23,5 +23,5 @@ internal enum class AutomationScreens(
 
     override val isTopLevel: Boolean = false
 
-    val route: String = TopLevelScreens.Automations.route + "/$name"
+    val route: String = DebugScreen.Automations.route + "/$name"
 }

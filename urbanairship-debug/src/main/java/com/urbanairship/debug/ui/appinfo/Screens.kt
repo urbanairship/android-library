@@ -1,8 +1,8 @@
 package com.urbanairship.debug.ui.appinfo
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.R
+import com.urbanairship.debug.ui.DebugScreen
 import com.urbanairship.debug.ui.Screen as BaseScreen
 
 internal enum class AppInfoScreen(
@@ -19,5 +19,5 @@ internal enum class AppInfoScreen(
 
     override val isTopLevel: Boolean = false
 
-    val route: String = TopLevelScreens.DeviceInfo.route + "/$name"
+    val route: String = DebugScreen.DeviceInfo.route + "/$name"
 }

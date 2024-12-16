@@ -1,9 +1,9 @@
 package com.urbanairship.debug.ui.push
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.urbanairship.debug.ui.Screen
-import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.R
+import com.urbanairship.debug.ui.Screen
+import com.urbanairship.debug.ui.DebugScreen
 
 internal enum class PushScreens(
     override val titleRes: Int,
@@ -20,5 +20,5 @@ internal enum class PushScreens(
 
     override val isTopLevel: Boolean = false
 
-    val route: String = TopLevelScreens.Pushes.route + "/$name"
+    val route: String = DebugScreen.Pushes.route + "/$name"
 }

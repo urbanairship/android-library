@@ -4,8 +4,8 @@ package com.urbanairship.debug.ui.featureflag
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.urbanairship.debug.ui.Screen
-import com.urbanairship.debug.ui.TopLevelScreens
 import com.urbanairship.debug.R
+import com.urbanairship.debug.ui.DebugScreen
 
 internal enum class FeatureFlagScreens(
     override val titleRes: Int,
@@ -22,5 +22,5 @@ internal enum class FeatureFlagScreens(
 
     override val isTopLevel: Boolean = false
 
-    val route: String = TopLevelScreens.FeatureFlags.route + "/$name"
+    val route: String = DebugScreen.FeatureFlags.route + "/$name"
 }
