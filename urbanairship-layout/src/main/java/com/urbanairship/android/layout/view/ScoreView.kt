@@ -4,23 +4,23 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import android.util.SparseIntArray
 import android.view.View
+import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Checkable
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
-import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ScoreModel
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.property.ScoreStyle
 import com.urbanairship.android.layout.property.ScoreStyle.NumberRange
-import com.urbanairship.android.layout.property.ScoreType
+import com.urbanairship.android.layout.property.ScoreStyle.WrappingNumberRange
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.widget.ShapeButton
 import com.urbanairship.android.layout.widget.TappableView
+import WrappingViewGroup
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -34,7 +34,6 @@ internal class ScoreView(
 ) : ConstraintLayout(context), BaseView, TappableView {
 
     private val clicksChannel = Channel<Unit>(Channel.UNLIMITED)
-
     fun interface OnScoreSelectedListener {
         fun onScoreSelected(score: Int)
     }
@@ -46,12 +45,12 @@ internal class ScoreView(
     private var isEnabled = true
 
     init {
-        val constraints = ConstraintSetBuilder.newBuilder(context)
+        clipChildren = false
         val style = model.viewInfo.style
-        when (style.type) {
-            ScoreType.NUMBER_RANGE -> configureNumberRange(style as NumberRange, constraints)
+        when (style) {
+            is NumberRange -> configureNumberRange(style)
+            is WrappingNumberRange -> configureWrappingNumberRange(style)
         }
-        constraints.build().applyTo(this)
 
         model.contentDescription(context).ifNotEmpty { contentDescription = it }
 
@@ -74,65 +73,122 @@ internal class ScoreView(
         }
     }
 
-    private fun configureNumberRange(style: NumberRange, constraints: ConstraintSetBuilder) {
+    /** Configures the view to display the number range style. */
+    private fun configureNumberRange(style: NumberRange) {
+        val constraints = ConstraintSetBuilder.newBuilder(context)
         val bindings = style.bindings
         val start = style.start
         val end = style.end
-        val viewIds = IntArray(end - start + 1)
-        for (i in start..end) {
-            val button: ShapeButton = object : ShapeButton(
-                context,
-                bindings.selected.shapes,
-                bindings.unselected.shapes,
-                i.toString(),
-                bindings.selected.textAppearance,
-                bindings.unselected.textAppearance
-            ) {
-                // No-op. Checked state is updated by the click listener.
-                override fun toggle() = Unit
-            }
-
+        val viewIds = (start..end).map { i ->
             val viewId = View.generateViewId()
-            button.id = viewId
-            viewIds[i - start] = viewId
+            val button = createShapeButton(i, bindings, viewId, constraints, 16, 16)
             scoreToViewIds.append(i, viewId)
-            button.setOnClickListener { v: View -> onScoreClick(v, i) }
-            constraints.squareAspectRatio(viewId)
-            constraints.minHeight(viewId, 16)
             addView(button, LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT))
-        }
-        constraints.setHorizontalChainStyle(viewIds, ConstraintSet.CHAIN_PACKED)
+            viewId
+        }.toIntArray()
+
+        constraints
+            .setHorizontalChainStyle(viewIds, androidx.constraintlayout.helper.widget.Flow.CHAIN_PACKED)
             .createHorizontalChainInParent(viewIds, 0, style.spacing)
+            .build()
+            .applyTo(this)
+    }
+
+    /** Configures the view to display the wrapping number range style. */
+    private fun configureWrappingNumberRange(style: WrappingNumberRange) {
+        val constraints = ConstraintSetBuilder.newBuilder(context)
+        val bindings = style.bindings
+        val start = style.start
+        val end = style.end
+
+        val wrappingViewGroupId = View.generateViewId()
+        val wrappingViewGroup = WrappingViewGroup(context).apply {
+            id = wrappingViewGroupId
+            layoutParams = LayoutParams(MATCH_CONSTRAINT, WRAP_CONTENT)
+            itemSpacing = LayoutUtils.dpToPx(context, style.spacing)
+            lineSpacing = LayoutUtils.dpToPx(context, style.wrapping.lineSpacing)
+            maxItemsPerLine = style.wrapping.maxItemsPerLine
+        }
+
+        (start..end).forEach { i ->
+            val viewId = View.generateViewId()
+            val button = createShapeButton(i, bindings, viewId, constraints, 42, 42)
+            scoreToViewIds.append(i, viewId)
+
+            wrappingViewGroup.addView(button, LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT))
+        }
+
+        addView(wrappingViewGroup)
+        constraints.build().applyTo(this)
+    }
+
+    private fun createShapeButton(
+        score: Int,
+        bindings: ScoreStyle.Bindings,
+        viewId: Int,
+        constraints: ConstraintSetBuilder,
+        minHeight: Int,
+        minWidth: Int
+    ): ShapeButton {
+        val button = ShapeButton(
+            context,
+            bindings.selected.shapes,
+            bindings.unselected.shapes,
+            score.toString(),
+            bindings.selected.textAppearance,
+            bindings.unselected.textAppearance
+        ).apply {
+            id = viewId
+            setOnClickListener { onScoreClick(this, score) }
+            layoutParams = ConstraintLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                ConstraintLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                minimumWidth = LayoutUtils.dpToPx(context, minWidth)
+                minimumHeight = LayoutUtils.dpToPx(context, minHeight)
+            }
+        }
+
+        // Apply constraints to the button
+        constraints.apply {
+            squareAspectRatio(viewId)
+            minWidth(viewId, minWidth)
+            minHeight(viewId, minHeight)
+        }
+
+        return button
+    }
+
+    private fun updateCheckedState(view: View, selectedId: Int? = null) {
+        if (view is Checkable) {
+            view.isChecked = selectedId != null && view.id == selectedId
+        }
+
+        /// Only applies to wrapping style
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                updateCheckedState(view.getChildAt(i), selectedId)
+            }
+        }
     }
 
     fun setSelectedScore(score: Int?) {
         selectedScore = score
+
+        // Check the selected view if there is one
         if (score != null) {
-            // Check the selected view
             val viewId = scoreToViewIds[score, -1]
-            if (viewId > -1) {
-                val view = findViewById<View>(viewId)
-                (view as? Checkable)?.isChecked = true
-            }
+            updateCheckedState(this, viewId)
         } else {
-            // Uncheck all items
-            for (i in 0 until childCount) {
-                val child = getChildAt(i)
-                (child as? Checkable)?.isChecked = false
-            }
+            /// No id is supplied uncheck all
+            updateCheckedState(this);
         }
     }
 
     private fun onScoreClick(view: View, score: Int) {
         if (!isEnabled || score == selectedScore) return
         selectedScore = score
-
-        // Uncheck other items in the view
-        for (i in 0 until childCount) {
-            val child = getChildAt(i)
-            (child as? Checkable)?.isChecked = view.id == child.id
-        }
-
+        setSelectedScore(score)
         // Notify our listener
         scoreSelectedListener?.onScoreSelected(score)
         // Emit click for tap handling
@@ -141,7 +197,6 @@ internal class ScoreView(
 
     private fun updateEnabledState(enabled: Boolean) {
         isEnabled = enabled
-
         for (i in 0 until childCount) {
             getChildAt(i).isEnabled = enabled
         }

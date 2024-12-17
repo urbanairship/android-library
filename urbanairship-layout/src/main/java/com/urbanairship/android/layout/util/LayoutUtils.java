@@ -16,6 +16,7 @@ import android.graphics.drawable.shapes.RoundRectShape;
 import android.os.Build;
 import android.text.Html;
 import android.text.Spanned;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -470,4 +471,11 @@ public final class LayoutUtils {
         return ColorUtils.compositeColors(overlay, backgroundColor);
     }
 
+    public static int dpToPx(@NonNull Context context, int dp) {
+        return (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                dp,
+                context.getResources().getDisplayMetrics()
+        );
+    }
 }
