@@ -52,6 +52,19 @@ public class PermissionsManagerTest {
         }
     }
 
+    /** Broken delegate that calls the callbacks twice */
+    private val brokenDelegate: PermissionDelegate = mockk {
+        every { checkPermissionStatus(any(), any()) } answers {
+            secondArg<Consumer<PermissionStatus>>().accept(mockDelegateStatus.permissionStatus)
+            secondArg<Consumer<PermissionStatus>>().accept(mockDelegateStatus.permissionStatus)
+        }
+
+        every { requestPermission(any(), any()) } answers {
+            secondArg<Consumer<PermissionRequestResult>>().accept(mockDelegateStatus)
+            secondArg<Consumer<PermissionRequestResult>>().accept(mockDelegateStatus)
+        }
+    }
+
     private val mockStatusListener: OnPermissionStatusChangedListener = mockk(relaxed = true)
 
     @Before
@@ -472,5 +485,27 @@ public class PermissionsManagerTest {
             permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
             assertEquals(PermissionStatus.NOT_DETERMINED, awaitItem())
         }
+    }
+
+    /**
+     * Test that the permissions manager can handle a broken
+     * delegate that calls the callbacks multiple times
+     */
+    @Test
+    public fun testBrokenPermissionDelegate(): TestResult = runTest {
+        mockDelegateStatus = PermissionRequestResult.granted()
+        permissionsManager.setPermissionDelegate(Permission.LOCATION, brokenDelegate)
+
+        // Check permission
+        assertEquals(
+            PermissionStatus.GRANTED,
+            permissionsManager.suspendingCheckPermissionStatus(Permission.LOCATION)
+        )
+
+        // Request permission
+        assertEquals(
+            PermissionRequestResult.granted(),
+            permissionsManager.suspendingRequestPermission(Permission.LOCATION)
+        )
     }
 }

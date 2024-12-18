@@ -13,6 +13,7 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.app.SimpleActivityListener
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CoroutineDispatcher
@@ -20,16 +21,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
 /**
@@ -228,6 +233,17 @@ public class PermissionsManager internal constructor(
         return pendingResult
     }
 
+    /**
+     * Requests a permission. If a delegate is not set to handle the permission [PermissionStatus.NOT_DETERMINED] will
+     * be returned.
+     *
+     * @param permission The permission.
+     * @param enableAirshipUsageOnGrant If granted, any Airship features that need the permission will
+     * be enabled, e.g., enabling [com.urbanairship.PrivacyManager.Feature.PUSH] and
+     * [com.urbanairship.push.PushManager.setUserNotificationsEnabled] if the push permission
+     * is granted.
+     * @return a [PermissionRequestResult].
+     */
     public suspend fun suspendingRequestPermission(
         permission: Permission,
         enableAirshipUsageOnGrant: Boolean = false,
@@ -293,6 +309,12 @@ public class PermissionsManager internal constructor(
         }
     }
 
+    /**
+     * Checks the current permission status.
+     *
+     * @param permission The permission.
+     * @return A [PermissionStatus].
+     */
     public suspend fun suspendingCheckPermissionStatus(
         permission: Permission,
     ): PermissionStatus {
@@ -346,9 +368,12 @@ public class PermissionsManager internal constructor(
 private fun PermissionDelegate.requestPermissionFlow(context: Context, scope: CoroutineScope): Flow<PermissionRequestResult> {
     val stateFlow = MutableStateFlow<PermissionRequestResult?>(null)
     scope.launch {
+        var isResumed = AtomicBoolean(false)
         stateFlow.value = suspendCoroutine { continuation ->
             requestPermission(context) { requestResult ->
-                continuation.resume(requestResult)
+                if (isActive && isResumed.compareAndSet(false, true)) {
+                    continuation.resume(requestResult)
+                }
             }
         }
     }
@@ -358,9 +383,12 @@ private fun PermissionDelegate.requestPermissionFlow(context: Context, scope: Co
 private fun PermissionDelegate.checkPermissionFlow(context: Context, scope: CoroutineScope): Flow<PermissionStatus> {
     val stateFlow = MutableStateFlow<PermissionStatus?>(null)
     scope.launch {
-        stateFlow.value = suspendCoroutine { continuation ->
+        var isResumed = AtomicBoolean(false)
+        stateFlow.value = suspendCancellableCoroutine { continuation ->
             checkPermissionStatus(context) { permissionStatus ->
-                continuation.resume(permissionStatus)
+                if (isActive && isResumed.compareAndSet(false, true)) {
+                    continuation.resume(permissionStatus)
+                }
             }
         }
     }
