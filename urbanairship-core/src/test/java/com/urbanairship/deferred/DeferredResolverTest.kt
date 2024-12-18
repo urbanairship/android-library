@@ -106,6 +106,19 @@ public class DeferredResolverTest {
     }
 
     @Test
+    public fun testOutdatedSameUrl(): TestResult = runTest {
+        requestSession.addResponse(
+            statusCode = 409
+        )
+        requestSession.addResponse(
+            statusCode = 200
+        )
+
+        assertTrue(resolver.resolve(makeRequest()) { throw Exception() } is DeferredResult.OutOfDate)
+        assertTrue(resolver.resolve(makeRequest()) { throw Exception() } is DeferredResult.OutOfDate)
+    }
+
+    @Test
     public fun testTooManyRequests(): TestResult = runTest {
         requestSession.addResponse(
             statusCode = 429,

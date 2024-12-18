@@ -9,6 +9,7 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
+import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -64,14 +65,18 @@ public class AirshipCache @JvmOverloads constructor(
         }
     }
 
-    public suspend fun store(value: JsonSerializable, key: String, ttl: ULong) {
+    public suspend fun delete(key: String) {
+        store.deleteItemWithKey(key)
+    }
+
+    public suspend fun store(value: JsonSerializable, key: String, ttl: Duration) {
         store.updateEntry(
             CacheEntity(
                 key = key,
                 appVersion = appVersion,
                 sdkVersion = sdkVersion,
                 data = value.toJsonValue(),
-                expireOn = clock.currentTimeMillis() + ttl.toLong()
+                expireOn = clock.currentTimeMillis() + ttl.inWholeMilliseconds
             )
         )
     }

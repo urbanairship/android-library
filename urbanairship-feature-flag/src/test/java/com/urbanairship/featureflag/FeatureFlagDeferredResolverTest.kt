@@ -18,6 +18,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
 import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -87,7 +88,7 @@ public class FeatureFlagDeferredResolverTest {
         val info = makeFeatureFlagInfo(flagName, FeatureFlagPayload.DeferredPayload(request.uri))
         val cacheKey = calculateItemId(info, request)
 
-        cache.store(expected, cacheKey, 2U)
+        cache.store(expected, cacheKey, 2.milliseconds)
 
         val actual = subject.resolve(request, info)
 
@@ -131,7 +132,7 @@ public class FeatureFlagDeferredResolverTest {
         assertEquals(expected, actual.getOrNull())
 
         val cacheKey = calculateItemId(info, request)
-        coVerify { cache.store(expected, cacheKey, 60000U) }
+        coVerify { cache.store(expected, cacheKey, 60000.milliseconds) }
     }
 
     @Test
@@ -164,7 +165,7 @@ public class FeatureFlagDeferredResolverTest {
         subject.resolve(request, info)
 
         val cacheKey = calculateItemId(info, request)
-        coVerify { cache.store(any(), cacheKey, 60000U) }
+        coVerify { cache.store(any(), cacheKey, 60000.milliseconds) }
 
         val otherInfo = makeFeatureFlagInfo(
             "another-flag",
@@ -173,7 +174,7 @@ public class FeatureFlagDeferredResolverTest {
         )
 
         subject.resolve(request, otherInfo)
-        coVerify { cache.store(any(), calculateItemId(otherInfo, request), 70000U) }
+        coVerify { cache.store(any(), calculateItemId(otherInfo, request), 70000.milliseconds) }
     }
 
     @Test
@@ -257,7 +258,7 @@ public class FeatureFlagDeferredResolverTest {
         assertEquals(expected, actual.getOrNull())
 
         val cacheKey = calculateItemId(info, request)
-        coVerify { cache.store(expected, cacheKey, 60000U) }
+        coVerify { cache.store(expected, cacheKey, 60000.milliseconds) }
     }
 
     @Test

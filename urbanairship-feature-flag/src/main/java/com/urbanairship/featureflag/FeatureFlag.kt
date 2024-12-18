@@ -173,8 +173,8 @@ public class FeatureFlag private constructor(
             fun fromJson(json: JsonValue): ReportingInfo {
                 return ReportingInfo(
                     reportingMetadata = json.requireMap().requireField(KEY_REPORTING_METADATA),
-                    channelId = json.requireMap().requireField(KEY_CHANNEL_ID),
-                    contactId = json.requireMap().requireField(KEY_CONTACT_ID)
+                    channelId = json.requireMap().optionalField(KEY_CHANNEL_ID),
+                    contactId = json.requireMap().optionalField(KEY_CONTACT_ID)
                 )
             }
         }

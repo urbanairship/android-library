@@ -278,7 +278,7 @@ public class AdditionalAudienceCheckerResolverTest {
         cache.store(
             value = AdditionalAudienceCheckApiClient.Result(isMatched = true, cacheTtl = 10.milliseconds),
             key = cacheKey,
-            ttl = 10U
+            ttl = 10.milliseconds
         )
 
         mockDeviceInfo(channelID, contactId, namedUserId)

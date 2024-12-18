@@ -76,7 +76,7 @@ internal class AdditionalAudienceCheckerResolver internal constructor(
         val result = response.value
 
         return if (response.isSuccessful && result != null) {
-            cache.store(result, cacheKey, result.cacheTtl.inWholeMilliseconds.toULong())
+            cache.store(result, cacheKey, result.cacheTtl)
             Result.success(result.isMatched)
         } else if (response.isServerError) {
             Result.failure(RequestException("Server error"))

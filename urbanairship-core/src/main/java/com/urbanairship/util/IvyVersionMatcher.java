@@ -35,12 +35,11 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
     private static final String START_PATTERN = String.format(Locale.US, "([\\%s\\%s\\%s])", START_INCLUSIVE, START_EXCLUSIVE, START_INFINITE);
     private static final String END_PATTERN = String.format(Locale.US, "([\\%s\\%s\\%s])", END_INCLUSIVE, END_EXCLUSIVE, END_INFINITE);
 
-    private static final String VERSION_NUMBER_PATTERN = "([0-9]+)(\\.[0-9]+)?(\\.[0-9]+)";
-    // Ignored capture group, because we don't care about the qualifiers for version matching.
-    private static final String VERSION_QUALIFIER_PATTERN = "(?:-[a-zA-Z0-9]+)";
+    private static final String VERSION_REGEX = "([0-9]+)(\\.([0-9]+)((\\.([0-9]+))?(.*)))?";
+    private static final Pattern VERSION_PATTERN = Pattern.compile(VERSION_REGEX);
+
     // Matches an optional version number, and optional (ignored) qualifier.
-    private static final String VERSION_PATTERN = String.format("%s?%s?", VERSION_NUMBER_PATTERN, VERSION_QUALIFIER_PATTERN);
-    private static final String VERSION_RANGE_PATTERN = String.format(Locale.US, "^(%s(%s)?)%s((%s)?%s)", START_PATTERN, VERSION_PATTERN, RANGE_SEPARATOR, VERSION_PATTERN, END_PATTERN);
+    private static final String VERSION_RANGE_PATTERN = String.format(Locale.US, "^%s(.*)?%s(.*)?%s$", START_PATTERN, RANGE_SEPARATOR, END_PATTERN);
     private static final String SUB_VERSION_PATTERN = "^(.*)\\+$";
     private static final String EXACT_VERSION_PATTERN = "^" + VERSION_PATTERN + "$";
 
@@ -67,12 +66,13 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
     public static IvyVersionMatcher newMatcher(@NonNull String constraint) {
         constraint = constraint.replaceAll(WHITESPACE, "");
 
-        Predicate<String> predicate = parseExactVersionConstraint(constraint);
+
+        Predicate<String> predicate = parseSubVersionConstraint(constraint);
         if (predicate != null) {
             return new IvyVersionMatcher(predicate, constraint);
         }
 
-        predicate = parseSubVersionConstraint(constraint);
+         predicate = parseExactVersionConstraint(constraint);
         if (predicate != null) {
             return new IvyVersionMatcher(predicate, constraint);
         }
@@ -144,32 +144,25 @@ public class IvyVersionMatcher implements Predicate<String>, JsonSerializable {
     @Nullable
     private static Predicate<String> parseVersionRangeConstraint(@NonNull String constraint) {
         Matcher matcher = VERSION_RANGE.matcher(constraint);
-        if (!matcher.matches()) {
+        if (!matcher.matches() || matcher.groupCount() != 4) {
             return null;
         }
 
-        final String endToken;
-        final Version endVersion;
-        final String startToken;
-        final Version startVersion;
+        final String startToken = matcher.group(1);
+        final String startVersionString = normalizeVersion(matcher.group(2));
+        final String endVersionString = normalizeVersion(matcher.group(3));
+        final String endToken = matcher.group(4);
 
-        String end = matcher.groupCount() >= 7 ? matcher.group(7) : null;
-        if (!UAStringUtil.isEmpty(end)) {
-            endToken = end.substring(end.length() - 1);
-            endVersion = end.length() > 1 ? new Version(end.substring(0, end.length() - 1)) : null;
-        } else {
-            endToken = null;
-            endVersion = null;
+        // The VERSION_RANGE does not actually validate the versions to avoid a mass amount of groups
+        if (!UAStringUtil.isEmpty(startVersionString) && !VERSION_PATTERN.matcher(startVersionString).matches()) {
+            return null;
+        }
+        if (!UAStringUtil.isEmpty(endVersionString) && !VERSION_PATTERN.matcher(endVersionString).matches()) {
+            return null;
         }
 
-        final String start = matcher.groupCount() >= 1 ? matcher.group(1) : null;
-        if (!UAStringUtil.isEmpty(start)) {
-            startToken = start.substring(0, 1);
-            startVersion = start.length() > 1 ? new Version(start.substring(1)) : null;
-        } else {
-            startToken = null;
-            startVersion = null;
-        }
+        final Version startVersion = UAStringUtil.isEmpty(startVersionString) ? null : new Version(startVersionString);
+        final Version endVersion = UAStringUtil.isEmpty(endVersionString) ? null : new Version(endVersionString);
 
         if (END_INFINITE.equals(endToken) && endVersion != null) {
             return null;
