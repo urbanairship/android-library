@@ -21,7 +21,7 @@ internal class FeatureFlagRemoteDataAccess(
             return remoteData.status(RemoteDataSource.APP)
         }
 
-    suspend fun waitForRemoteDataRefresh() {
+    suspend fun bestEffortRefresh() {
         remoteData.waitForRefresh(RemoteDataSource.APP, MAX_TIMEOUT_MILLIS)
     }
 

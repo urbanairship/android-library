@@ -25,6 +25,8 @@ import kotlinx.coroutines.launch
 
 /**
  * Airship Feature Flags manager.
+ * @property resultCache Flag result cache that can be used by [flag] to return a previous result if the
+ * flag is not found or fails to resolve.
  */
 @OpenForTesting
 public class FeatureFlagManager internal constructor(
@@ -37,7 +39,8 @@ public class FeatureFlagManager internal constructor(
     },
     private val deferredResolver: FlagDeferredResolver,
     private val featureFlagAnalytics: FeatureFlagAnalytics,
-    private val privacyManager: PrivacyManager
+    private val privacyManager: PrivacyManager,
+    public val resultCache: FeatureFlagResultCache
 ) : AirshipComponent(context, dataStore) {
 
     public companion object {
@@ -69,12 +72,15 @@ public class FeatureFlagManager internal constructor(
      * must be enabled or this method will return null.
      *
      * @param name The flag name
+     * @param useResultCache If the result cache should be used or not when the flag fails to resolve
+     * or is not found.
      * @return an instance of `PendingResult<FeatureFlag>`.
      */
-    public fun flagAsPendingResult(name: String): PendingResult<FeatureFlag> {
+    @JvmOverloads
+    public fun flagAsPendingResult(name: String, useResultCache: Boolean = true): PendingResult<FeatureFlag> {
         val result = PendingResult<FeatureFlag>()
         pendingResultScope.launch {
-            result.result = flag(name).getOrNull()
+            result.result = flag(name, useResultCache).getOrNull()
         }
         return result
     }
@@ -83,86 +89,122 @@ public class FeatureFlagManager internal constructor(
      * Gets and evaluates a feature flag. The [PrivacyManager.Feature.FEATURE_FLAGS]
      * must be enabled or this method will return an error.
      * @param name The flag name
+     * @param useResultCache If the result cache should be used or not when the flag fails to resolve
+     * or is not found.
      * @return an instance of `Result<FeatureFlag>`.
      */
-    public suspend fun flag(name: String): Result<FeatureFlag> {
-        return flag(name = name, allowRefresh = true)
-    }
-
-    private suspend fun flag(name: String, allowRefresh: Boolean): Result<FeatureFlag> {
+    public suspend fun flag(name: String, useResultCache: Boolean = true): Result<FeatureFlag> {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS)) {
-            val msg = "Failed to fetch feature flag: '$name'! Feature flags are disabled."
-            UALog.e(msg)
-            return Result.failure(IllegalStateException(msg))
+            return Result.failure(IllegalStateException("Failed to fetch feature flag: '$name'! Feature flags are disabled."))
         }
 
-        val remoteDataInfo = remoteData.fetchFlagRemoteInfo(name)
+        val result = resolveFlag(name)
+        if (useResultCache && (result.isFailure || result.getOrNull()?.exists == false)) {
+            val fromCache = resultCache.flag(name)
+            return if (fromCache != null) {
+                Result.success(fromCache)
+            } else {
+                result
+            }
+        }
+
+        return result
+    }
+
+    private suspend fun resolveFlag(name: String): Result<FeatureFlag> {
+        val flagInfoResult = remoteDataFeatureFlagInfo(name)
+        val remoteDataInfo = flagInfoResult.getOrNull()
+        if (flagInfoResult.isFailure || remoteDataInfo == null) {
+            return Result.failure(mapError(name, flagInfoResult.exceptionOrNull()))
+        }
+
+        // Attempt to evaluate
         val result = evaluate(name, remoteDataInfo)
         if (result.isSuccess) {
             return result
         }
 
         return when (val e = result.exceptionOrNull()) {
+            // If the flag is out of date, invalidate and try again
             is FeatureFlagEvaluationException.OutOfDate -> {
+                // Notify out of date
                 remoteData.notifyOutOfDate(remoteDataInfo.remoteDataInfo)
 
-                if (allowRefresh) {
-                    remoteData.waitForRemoteDataRefresh()
-                    flag(name = name, allowRefresh = false)
-                } else {
-                    val msg = "Failed to fetch feature flag: '$name'! Remote data is outdated."
-                    UALog.e(e, msg)
-                    Result.failure(FeatureFlagException.FailedToFetch(msg).apply { initCause(e) })
+                // Best effort refresh again
+                remoteData.bestEffortRefresh()
+
+                // If we are not up-to-date, then skip
+                if (remoteData.status != RemoteData.Status.UP_TO_DATE) {
+                    return Result.failure(mapError(name, e))
                 }
-            }
 
-            is FeatureFlagEvaluationException.StaleNotAllowed -> {
-                if (allowRefresh) {
-                    remoteData.waitForRemoteDataRefresh()
-                    flag(name = name, allowRefresh = false)
-                } else {
-                    val msg = "Failed to fetch feature flag: '$name'! Stale data is not allowed."
-                    UALog.e(e, msg)
-                    Result.failure(FeatureFlagException.FailedToFetch(msg).apply { initCause(e) })
-                }
+                val secondAttempt = evaluate(name, remoteDataInfo)
+                return secondAttempt.exceptionOrNull()?.let {
+                    Result.failure(mapError(name, it))
+                } ?: secondAttempt
             }
-
-            is FeatureFlagEvaluationException.ConnectionError -> {
-                val msg = "Failed to fetch feature flag: '$name'! Network error" +
-                        "${e.statusCode?.let { " ($it)" }}." +
-                        "${e.errorDescription?.let { " $it" }}"
-                UALog.e(e, msg)
-                Result.failure(FeatureFlagException.FailedToFetch(msg).apply { initCause(e) })
-            }
-
             else -> {
-                val msg = "Failed to fetch feature flag: '$name'!"
-                UALog.e(msg)
-                Result.failure(FeatureFlagException.FailedToFetch(msg))
+                Result.failure(mapError(name, e))
             }
         }
     }
 
-    private fun remoteDataStatus(status: RemoteData.Status, remoteData: RemoteDataFeatureFlagInfo): Result<Unit> {
-        return when (status) {
-            RemoteData.Status.STALE -> {
-                if (remoteData.flagInfoList.isEmpty()) {
-                    return Result.failure(FeatureFlagEvaluationException.OutOfDate())
-                }
+    private suspend fun remoteDataFeatureFlagInfo(name: String): Result<RemoteDataFeatureFlagInfo> {
+        return when (remoteData.status) {
+            RemoteData.Status.UP_TO_DATE -> {
+                Result.success(remoteData.fetchFlagRemoteInfo(name))
+            }
 
-                val disallowStale = remoteData
-                    .flagInfoList
-                    .firstOrNull { it.evaluationOptions?.disallowStaleValues == true } != null
+            RemoteData.Status.STALE, RemoteData.Status.OUT_OF_DATE -> {
+                val remoteDataInfo = remoteData.fetchFlagRemoteInfo(name)
+                val disallowStale = remoteDataInfo.flagInfoList.firstOrNull {
+                    it.evaluationOptions?.disallowStaleValues == true
+                } != null
 
-                if (disallowStale) {
-                    Result.failure(FeatureFlagEvaluationException.StaleNotAllowed())
+                return if (remoteDataInfo.flagInfoList.isEmpty() || disallowStale) {
+                    remoteData.bestEffortRefresh()
+
+                    when (remoteData.status) {
+                        RemoteData.Status.UP_TO_DATE ->
+                            Result.success(remoteData.fetchFlagRemoteInfo(name))
+                        RemoteData.Status.STALE ->
+                            Result.failure(FeatureFlagEvaluationException.StaleNotAllowed())
+                        RemoteData.Status.OUT_OF_DATE ->
+                            Result.failure(FeatureFlagEvaluationException.OutOfDate())
+                    }
                 } else {
-                    Result.success(Unit)
+                    Result.success(remoteDataInfo)
                 }
             }
-            RemoteData.Status.OUT_OF_DATE -> Result.failure(FeatureFlagEvaluationException.OutOfDate())
-            RemoteData.Status.UP_TO_DATE -> Result.success(Unit)
-            else -> Result.success(Unit)
+        }
+    }
+
+    private fun mapError(flagName: String, e: Throwable?): FeatureFlagException {
+        return when (e) {
+            is FeatureFlagEvaluationException.OutOfDate -> {
+                val msg = "Failed to fetch feature flag: '$flagName'! Remote data is outdated."
+                FeatureFlagException.FailedToFetch(msg).apply { initCause(e) }
+            }
+
+            is FeatureFlagEvaluationException.StaleNotAllowed -> {
+                val msg = "Failed to fetch feature flag: '$flagName'! Stale data is not allowed."
+                FeatureFlagException.FailedToFetch(msg).apply { initCause(e) }
+            }
+
+            is FeatureFlagEvaluationException.ConnectionError -> {
+                val msg =
+                    "Failed to fetch feature flag: '$flagName'! Network error" + "${e.statusCode?.let { " ($it)" }}." + "${e.errorDescription?.let { " $it" }}"
+                FeatureFlagException.FailedToFetch(msg).apply { initCause(e) }
+            }
+
+            else -> {
+                val msg = "Failed to fetch feature flag: '$flagName'!"
+                FeatureFlagException.FailedToFetch(msg).apply {
+                    if (e != null) {
+                        initCause(e)
+                    }
+                }
+            }
         }
     }
 
@@ -179,13 +221,6 @@ public class FeatureFlagManager internal constructor(
     }
 
     private suspend fun evaluate(name: String, remoteDataInfo: RemoteDataFeatureFlagInfo): Result<FeatureFlag> {
-        remoteDataStatus(remoteData.status, remoteDataInfo).let {
-            val error = it.exceptionOrNull()
-            if (error != null) {
-                return Result.failure(error)
-            }
-        }
-
         val flags = remoteDataInfo.flagInfoList
 
         val deviceInfoProvider = infoProviderFactory()
@@ -247,9 +282,9 @@ public class FeatureFlagManager internal constructor(
             is ControlOptions.Type.Variables -> original.copyWith(variables = type.variables)
         }
 
-        updated.reportingInfo?.let { info ->
-            info.addSuperseded(info.reportingMetadata)
-            info.reportingMetadata = control.reportingMetadata
+        updated.reportingInfo?.apply {
+            addSuperseded(this.reportingMetadata)
+            reportingMetadata = control.reportingMetadata
         }
 
         return Result.success(updated)

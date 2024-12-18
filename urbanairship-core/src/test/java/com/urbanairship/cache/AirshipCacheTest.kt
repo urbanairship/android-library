@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
+import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -51,7 +52,7 @@ public class AirshipCacheTest {
         var stored = cache.getCached(storeKey) { it }
         assertNull(stored)
 
-        cache.store(content, storeKey, 1u)
+        cache.store(content, storeKey, 1.milliseconds)
         stored = cache.getCached(storeKey) { it }
 
         assertEquals(content, stored)
@@ -66,11 +67,11 @@ public class AirshipCacheTest {
             "key-4" to JsonValue.wrap(4),
         )
 
-        var ttl: ULong = 1u
+        var ttl: Long = 1
 
-        storedItems.forEach { key, json ->
-            runBlocking { cache.store(json, key, ttl) }
-            ttl += 1u
+        storedItems.forEach { (key, json) ->
+            runBlocking { cache.store(json, key, ttl.milliseconds) }
+            ttl += 1
         }
 
         val savedItems = {
@@ -92,10 +93,10 @@ public class AirshipCacheTest {
         cache.deleteExpired(appVersion = "1.1.1")
         assertEquals(0, savedItems())
 
-        ttl = 1u
-        storedItems.forEach { key, json ->
-            runBlocking { cache.store(json, key, ttl) }
-            ttl += 1u
+        ttl = 1
+        storedItems.forEach { (key, json) ->
+            runBlocking { cache.store(json, key, ttl.milliseconds) }
+            ttl += 1
         }
 
         cache.deleteExpired(sdkVersion = "1.1.1")
@@ -105,7 +106,7 @@ public class AirshipCacheTest {
     @Test
     public fun getCachedDoesntReturnExpired(): TestResult = runTest {
         val key = "key"
-        cache.store(JsonValue.wrap(2), key, 1u)
+        cache.store(JsonValue.wrap(2), key, 1.milliseconds)
 
         assertNotNull(cache.getCached(key) { it })
         every { clock.currentTimeMillis() } returns 2

@@ -2,9 +2,6 @@ package com.urbanairship.deferred
 
 import android.net.Uri
 import androidx.annotation.RestrictTo
-import androidx.annotation.VisibleForTesting
-import com.urbanairship.AirshipDispatchers
-import com.urbanairship.PendingResult
 import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.audience.AudienceOverrides
@@ -13,11 +10,9 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.RequestResult
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * @hide
@@ -27,16 +22,24 @@ import kotlinx.coroutines.launch
 public class DeferredResolver internal constructor(
     private val audienceOverridesProvider: AudienceOverridesProvider,
     private val apiClient: DeferredApiClient,
-    private val locationMap: ConcurrentHashMap<Uri, Uri> = ConcurrentHashMap()
 ) {
+
+    private val lock = ReentrantLock()
+    private val locationMap: MutableMap<Uri, Uri> = mutableMapOf()
+    private val outdatedUrls: MutableSet<Uri> = mutableSetOf()
+
     internal constructor(config: AirshipRuntimeConfig, audienceOverridesProvider: AudienceOverridesProvider) : this(
         audienceOverridesProvider = audienceOverridesProvider,
         apiClient = DeferredApiClient(config, config.requestSession.toSuspendingRequestSession())
     )
 
     public suspend fun <T> resolve(request: DeferredRequest, parser: (JsonValue) -> T): DeferredResult<T> {
+        if (isUrlOutDated(request.uri)) {
+            return DeferredResult.OutOfDate()
+        }
+
         return doResolve(
-            uri = locationMap[request.uri] ?: request.uri,
+            uri = resolveUrlMapping(request.uri),
             channelId = request.channelId,
             contactId = request.contactId,
             stateOverrides = StateOverrides(request),
@@ -88,9 +91,14 @@ public class DeferredResolver internal constructor(
                 }
             }
             404 -> return DeferredResult.NotFound()
-            409 -> return DeferredResult.OutOfDate()
+            409 -> {
+                addOutdatedUrl(uri)
+                return DeferredResult.OutOfDate()
+            }
             429 -> {
-                response.locationHeader?.let { locationMap.put(uri, it) }
+                response.locationHeader?.let {
+                    addUrlMapping(uri, it)
+                }
                 return DeferredResult.RetriableError(
                     retryAfter = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0),
                     statusCode = statusCode
@@ -102,7 +110,7 @@ public class DeferredResolver internal constructor(
                         retryAfter = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0),
                         statusCode = statusCode
                     )
-                locationMap[uri] = redirect
+                addUrlMapping(uri, redirect)
 
                 val retryDelay = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, -1)
                 if (retryDelay > 0) {
@@ -125,6 +133,30 @@ public class DeferredResolver internal constructor(
                 return DeferredResult.RetriableError(statusCode = statusCode)
             }
             else -> return DeferredResult.RetriableError(statusCode = statusCode)
+        }
+    }
+
+    private fun isUrlOutDated(url: Uri): Boolean {
+        return lock.withLock {
+            outdatedUrls.contains(url)
+        }
+    }
+
+    private fun addOutdatedUrl(url: Uri) {
+        lock.withLock {
+            outdatedUrls.add(url)
+        }
+    }
+
+    private fun addUrlMapping(from: Uri, to: Uri) {
+        lock.withLock {
+            locationMap[from] = to
+        }
+    }
+
+    private fun resolveUrlMapping(url: Uri): Uri {
+        return lock.withLock {
+            locationMap[url] ?: url
         }
     }
 }

@@ -38,7 +38,8 @@ public class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
             remoteData = FeatureFlagRemoteDataAccess(remoteData),
             deferredResolver = FlagDeferredResolver(cache, resolver),
             featureFlagAnalytics = FeatureFlagAnalytics(analytics),
-            privacyManager = privacyManager
+            privacyManager = privacyManager,
+            resultCache = FeatureFlagResultCache(cache)
         )
         return Module.singleComponent(manager, 0)
     }

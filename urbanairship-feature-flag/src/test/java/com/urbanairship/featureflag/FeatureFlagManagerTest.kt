@@ -28,6 +28,7 @@ import io.mockk.verify
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -63,7 +64,12 @@ public class FeatureFlagManagerTest {
         coEvery { this@mockk.evaluate(audienceMatchSelector, any(), any()) } returns true
     }
 
-    private val remoteDataAccess: FeatureFlagRemoteDataAccess = mockk()
+    private val remoteDataAccess: FeatureFlagRemoteDataAccess = mockk {
+        coEvery { bestEffortRefresh() } just runs
+    }
+    private val resultCache: FeatureFlagResultCache = mockk {
+        coEvery { flag(any()) } returns null
+    }
 
     private val featureFlags = FeatureFlagManager(
         context = context,
@@ -73,7 +79,8 @@ public class FeatureFlagManagerTest {
         infoProviderFactory = { infoProvider },
         deferredResolver = deferredResolver,
         featureFlagAnalytics = featureFlagAnalytics,
-        privacyManager = privacyManager
+        privacyManager = privacyManager,
+        resultCache = resultCache
     )
 
     @Test
@@ -747,7 +754,6 @@ public class FeatureFlagManagerTest {
         val payload = generateRemoteData(listOf(flagInfo))
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
-        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
 
         every { remoteDataAccess.status } returns RemoteData.Status.STALE
 
@@ -759,7 +765,7 @@ public class FeatureFlagManagerTest {
         assertTrue(result.isSuccess)
 
         coVerify(exactly = 0) {
-            remoteDataAccess.waitForRemoteDataRefresh()
+            remoteDataAccess.bestEffortRefresh()
             remoteDataAccess.notifyOutOfDate(payload.remoteDataInfo)
         }
     }
@@ -779,7 +785,7 @@ public class FeatureFlagManagerTest {
         val payload = generateRemoteData(listOf(flagInfo))
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
-        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
+        coEvery { remoteDataAccess.bestEffortRefresh() } just runs
 
         every { remoteDataAccess.status } returns RemoteData.Status.STALE
 
@@ -791,7 +797,7 @@ public class FeatureFlagManagerTest {
         assertTrue(result.isFailure)
 
         coVerify {
-            remoteDataAccess.waitForRemoteDataRefresh()
+            remoteDataAccess.bestEffortRefresh()
         }
     }
 
@@ -832,7 +838,7 @@ public class FeatureFlagManagerTest {
 
         val payload = generateRemoteData(flags)
 
-        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
+        coEvery { remoteDataAccess.bestEffortRefresh() } just runs
 
         every { remoteDataAccess.status } returns RemoteData.Status.STALE
 
@@ -844,7 +850,7 @@ public class FeatureFlagManagerTest {
         assertTrue(result.isFailure)
 
         coVerify {
-            remoteDataAccess.waitForRemoteDataRefresh()
+            remoteDataAccess.bestEffortRefresh()
         }
     }
 
@@ -853,7 +859,7 @@ public class FeatureFlagManagerTest {
         val payload = generateRemoteData(listOf())
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
-        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
+        coEvery { remoteDataAccess.bestEffortRefresh() } just runs
 
         every { remoteDataAccess.status } returns RemoteData.Status.OUT_OF_DATE
         coEvery {
@@ -865,8 +871,7 @@ public class FeatureFlagManagerTest {
         assertTrue(result.isFailure)
 
         coVerify {
-            remoteDataAccess.waitForRemoteDataRefresh()
-            remoteDataAccess.notifyOutOfDate(payload.remoteDataInfo)
+            remoteDataAccess.bestEffortRefresh()
         }
     }
 
@@ -875,7 +880,7 @@ public class FeatureFlagManagerTest {
         val payload = generateRemoteData(listOf())
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
-        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
+        coEvery { remoteDataAccess.bestEffortRefresh() } just runs
 
         every { remoteDataAccess.status } returnsMany  listOf(RemoteData.Status.OUT_OF_DATE, RemoteData.Status.UP_TO_DATE)
 
@@ -888,17 +893,16 @@ public class FeatureFlagManagerTest {
         assertTrue(result.isSuccess)
 
         coVerify {
-            remoteDataAccess.waitForRemoteDataRefresh()
-            remoteDataAccess.notifyOutOfDate(payload.remoteDataInfo)
+            remoteDataAccess.bestEffortRefresh()
         }
     }
 
     @Test
-    public fun testFlagOutOfDateRemoteDataSuccessRefreshToStale(): TestResult = runTest {
+    public fun testOutOfDateNoFlagsBestEffortRefreshes(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
-        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
+        coEvery { remoteDataAccess.bestEffortRefresh() } just runs
 
         every { remoteDataAccess.status } returnsMany listOf(RemoteData.Status.OUT_OF_DATE, RemoteData.Status.STALE)
 
@@ -910,17 +914,16 @@ public class FeatureFlagManagerTest {
         assertTrue(result.isFailure)
 
         coVerify {
-            remoteDataAccess.waitForRemoteDataRefresh()
-            remoteDataAccess.notifyOutOfDate(payload.remoteDataInfo)
+            remoteDataAccess.bestEffortRefresh()
         }
     }
 
     @Test
-    public fun testStaleDataNoFlag(): TestResult = runTest {
+    public fun testStaleDataNoFlagBestEffortRefreshes(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
-        coEvery { remoteDataAccess.waitForRemoteDataRefresh() } just runs
+        coEvery { remoteDataAccess.bestEffortRefresh() } just runs
 
         every { remoteDataAccess.status } returns RemoteData.Status.STALE
 
@@ -932,8 +935,7 @@ public class FeatureFlagManagerTest {
         assertTrue(result.isFailure)
 
         coVerify {
-            remoteDataAccess.waitForRemoteDataRefresh()
-            remoteDataAccess.notifyOutOfDate(payload.remoteDataInfo)
+            remoteDataAccess.bestEffortRefresh()
         }
     }
 
@@ -1028,6 +1030,7 @@ public class FeatureFlagManagerTest {
             )
         )
 
+        coEvery { remoteDataAccess.bestEffortRefresh() } just runs
         coEvery { remoteDataAccess.fetchFlagRemoteInfo(any()) } answers {
             val flag = if ("matched" == firstArg()) {
                 matched
@@ -1058,7 +1061,6 @@ public class FeatureFlagManagerTest {
         ), featureFlags.flag("matched").getOrThrow())
     }
 
-
     @Test
     public fun testTrackInteraction(): TestResult = runTest {
         every { featureFlagAnalytics.trackInteraction(any()) } just runs
@@ -1077,6 +1079,48 @@ public class FeatureFlagManagerTest {
         featureFlags.trackInteraction(flag)
 
         verify(exactly = 0) { featureFlagAnalytics.trackInteraction(flag) }
+    }
+
+    @Test
+    public fun testErrorWithResultCache(): TestResult = runTest {
+        val payload = generateRemoteData(listOf())
+
+        every { remoteDataAccess.status } returns RemoteData.Status.STALE
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("some-flag")
+        } returns payload
+
+        assertTrue(featureFlags.flag("some-flag").isFailure)
+
+        val cachedResult = FeatureFlag.createFlag("some-flag", false, generateReportingInfo())
+        coEvery { resultCache.flag("some-flag") } returns cachedResult
+
+        assertTrue(featureFlags.flag("some-flag").isSuccess)
+        assertEquals(cachedResult, featureFlags.flag("some-flag").getOrThrow())
+
+        assertTrue(featureFlags.flag("some-flag", useResultCache = false).isFailure)
+    }
+
+    @Test
+    public fun testDoesNotExistWithResultCache(): TestResult = runTest {
+        val payload = generateRemoteData(listOf())
+
+        every { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("some-flag")
+        } returns payload
+
+        assertTrue(featureFlags.flag("some-flag").isSuccess)
+        assertFalse(featureFlags.flag("some-flag").getOrThrow().exists)
+
+        val cachedResult = FeatureFlag.createFlag("some-flag", false, generateReportingInfo())
+        coEvery { resultCache.flag("some-flag") } returns cachedResult
+
+        assertTrue(featureFlags.flag("some-flag").isSuccess)
+        assertTrue(featureFlags.flag("some-flag").getOrThrow().exists)
+
+        assertTrue(featureFlags.flag("some-flag", useResultCache = false).isSuccess)
+        assertFalse(featureFlags.flag("some-flag", useResultCache = false).getOrThrow().exists)
     }
 
     private suspend fun generateReportingInfo(

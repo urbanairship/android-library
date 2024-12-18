@@ -17,6 +17,7 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
 import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -74,7 +75,7 @@ internal class FlagDeferredResolver(
         if (result.isSuccess && flag != null) {
             val ttl = flagInfo.evaluationOptions?.ttl?.let { max(MIN_CACHE_TIME_MS, it) }
                 ?: MIN_CACHE_TIME_MS
-            cache.store(flag, requestId, ttl)
+            cache.store(flag, requestId, ttl.toLong().milliseconds)
         }
 
         return result
