@@ -26,9 +26,42 @@ public class IvyVersionMatcherTest extends BaseTestCase {
         IvyVersionMatcher.newMatcher("1.a");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidVersion() {
+    @Test
+    public void testValidVersions() {
+        IvyVersionMatcher.newMatcher("[1.22.6.189,)");
+        IvyVersionMatcher.newMatcher("[1.22.6.189,2.2.3.4]");
+        IvyVersionMatcher.newMatcher("[1.22.6.189, 2.2.3.4]");
+        IvyVersionMatcher.newMatcher("[1.22.6.189-junk, 2.2.3.4-junk]");
         IvyVersionMatcher.newMatcher("1.2.3.4");
+        IvyVersionMatcher.newMatcher("1.2.3.4.+");
+        IvyVersionMatcher.newMatcher("1.2.3-junk");
+    }
+
+    @Test
+    public void testRangeLongVersion() {
+        IvyVersionMatcher matcher = IvyVersionMatcher.newMatcher("[1.22.6.189,)");
+        // Should only match the first 3 values
+        assertTrue(matcher.apply("1.22.6"));
+        assertTrue(matcher.apply("1.22.6.189"));
+        assertTrue(matcher.apply("1.22.6.188"));
+        assertTrue(matcher.apply("1.22.7"));
+        assertFalse(matcher.apply("1.22.5"));
+    }
+
+    @Test
+    public void testRangeWithWhiteSpace() {
+        IvyVersionMatcher matcher = IvyVersionMatcher.newMatcher("[ 1.2 , 2.0 ]");
+
+        assertTrue(matcher.apply("1.2"));
+        assertTrue(matcher.apply("1.2.0"));
+        assertTrue(matcher.apply("1.2.1"));
+        assertTrue(matcher.apply("2.0"));
+        assertTrue(matcher.apply("2.0.0"));
+
+        assertFalse(matcher.apply("1.1"));
+        assertFalse(matcher.apply("1.1.0"));
+        assertFalse(matcher.apply("2.0.1"));
+        assertFalse(matcher.apply("2.1"));
     }
 
     @Test(expected = IllegalArgumentException.class)
