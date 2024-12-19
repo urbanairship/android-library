@@ -2,6 +2,18 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.6.0 December 19, 2024
+Minor release that updates how Feature Flags are resolved, improves Scene rendering on Android 15,
+and fixes potential exceptions related to PermissionsManager and PermissionDelegates.
+ 
+### Changes
+- Added `resultCache` to `FeatureFlagManager`. This cache is managed by the app and can be optionally used when resolving a flag as a fallback if the flag fails to resolve or if
+  the flag rule set does not exist.
+- FeatureFlag resolution will now resolve a rule set even if the listing is out of date.
+- Improved Scene rendering on Android 15, for scenes that do not ignore safe areas.
+- Prevent potential "Already resumed" exceptions that could be caused by a permission delegate calling the callback multiple times.
+- Improved constraint version matching
+
 ## Version 18.5.0 December 5, 2024
 Minor release that includes various improvements to scenes, data management and some minor bug fixes.
 
