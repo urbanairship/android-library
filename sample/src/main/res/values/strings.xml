@@ -42,5 +42,7 @@
     <string name="live_update_team_foxes">Foxes</string>
     <string name="live_update_team_tigers">Tigers</string>
     <string name="live_update_vs">VS</string>
+    <string name="new_tag">New Tag</string>
+    <string name="description_add_tag">add tag</string>
 
 </resources>

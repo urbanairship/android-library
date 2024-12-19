@@ -4,21 +4,19 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.webkit.WebView
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.Toast
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import androidx.core.content.res.ResourcesCompat
 import com.urbanairship.UALog
 import com.urbanairship.actions.Action
-import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.DefaultActionRunner
-import com.urbanairship.actions.PermissionResultReceiver
-import com.urbanairship.actions.PromptPermissionAction
 import com.urbanairship.actions.run
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.ThomasListenerInterface
@@ -35,8 +33,6 @@ import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.embedded.EmbeddedViewManager
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.emptyJsonMap
-import com.urbanairship.permission.Permission
-import com.urbanairship.permission.PermissionStatus
 
 class MainActivity : AppCompatActivity() {
 
@@ -64,6 +60,11 @@ class MainActivity : AppCompatActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(
+                scrim = ResourcesCompat.getColor(resources, R.color.primaryDarkColor, theme),
+            )
+        )
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(LayoutInflater.from(this))
@@ -87,6 +88,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initViews(binding: ActivityMainBinding) {
         val layoutFiles = ResourceUtils.listJsonAssets(this, SAMPLE_LAYOUTS_PATH)
+            .filterNot { it.startsWith("embedded") }
         adapter.addAll(layoutFiles)
 
         previousSelection?.let { selected ->
@@ -104,6 +106,17 @@ class MainActivity : AppCompatActivity() {
             v.isEnabled = false
             displayLayout(binding.layoutSpinnerText.text.toString())
             v.postDelayed({ v.isEnabled = true }, 150)
+        }
+
+        binding.showNext.setOnClickListener {
+            val nextPosition = adapter.getPosition(binding.layoutSpinnerText.text.toString()) + 1
+            if (nextPosition < adapter.count) {
+                val next = adapter.getItem(nextPosition) ?: return@setOnClickListener
+                binding.layoutSpinnerText.setText(next, false)
+                previousSelection = next
+
+                displayLayout(next)
+            }
         }
 
         binding.startEmbeddedActivity.setOnClickListener {

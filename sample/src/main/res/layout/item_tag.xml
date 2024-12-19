@@ -1,24 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <data>
-
-        <variable
-            name="tag"
-            type="String" />
-
-    </data>
-
-    <TextView
-        android:focusable="false"
-        android:id="@+id/tag_text"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:gravity="center_vertical"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:text="@{tag}"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
-</layout>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:focusable="false"
+    android:id="@+id/tag_text"
+    android:layout_width="match_parent"
+    android:layout_height="52dp"
+    android:gravity="center_vertical"
+    android:ellipsize="end"
+    android:maxLines="1"
+    tools:text="MyTag"
+    android:textAppearance="?android:attr/textAppearanceLarge" />

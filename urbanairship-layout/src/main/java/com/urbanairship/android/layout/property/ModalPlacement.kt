@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.property
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.model.SafeAreaAware
 import com.urbanairship.android.layout.model.SafeAreaAware.Companion.ignoreSafeAreaFromJson
 import com.urbanairship.json.JsonException
@@ -10,6 +11,8 @@ import com.urbanairship.json.optionalList
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ModalPlacement(
     public val size: ConstrainedSize,
     public val margin: Margin?,

@@ -8,10 +8,13 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS
 import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
 import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RestrictTo
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.WindowCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.urbanairship.UALog
@@ -47,6 +50,10 @@ public class ModalActivity : AppCompatActivity() {
         ViewModelProvider(this)[LayoutViewModel::class.java]
     }
 
+    // TODO(API35): Replace the hardcoded version with VANILLA_ICE_CREAM
+    //   once we've updated the SDK to target API 35.
+    private val isAtLeastApi35 = Build.VERSION.SDK_INT >= 35
+
     private lateinit var loader: DisplayArgsLoader
     private lateinit var externalListener: ThomasListenerInterface
     private lateinit var reporter: Reporter
@@ -81,18 +88,8 @@ public class ModalActivity : AppCompatActivity() {
 
             val placement = presentation.getResolvedPlacement(this)
             setOrientationLock(placement)
-            if (placement.shouldIgnoreSafeArea()) {
-                WindowCompat.setDecorFitsSystemWindows(window, false)
 
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
-                    window.addFlags(FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS or
-                          FLAG_LAYOUT_NO_LIMITS or FLAG_LAYOUT_IN_SCREEN
-                    )
-                }
-
-                window.statusBarColor = android.R.color.transparent
-                window.navigationBarColor = android.R.color.transparent
-            }
+            val shouldInsetLayout = handleIgnoreSafeAreas(placement.shouldIgnoreSafeArea())
 
             val modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
@@ -125,6 +122,22 @@ public class ModalActivity : AppCompatActivity() {
             }
 
             setContentView(view)
+
+            // Inset the layout if we're on Android 35+ and forced to ignore safe areas.
+            if (shouldInsetLayout) {
+                ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->
+                    val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+                    v.updatePadding(
+                        top = insets.top,
+                        bottom = insets.bottom,
+                        left = insets.left,
+                        right = insets.right
+                    )
+                    WindowInsetsCompat.CONSUMED
+                }
+
+                ViewCompat.requestApplyInsets(view)
+            }
 
             if (placement.shouldIgnoreSafeArea()) {
                 // Apply workaround for adjustResize not working with fullscreen activities,
@@ -168,6 +181,40 @@ public class ModalActivity : AppCompatActivity() {
 
     private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) =
         reporter.report(ReportingEvent.DismissFromOutside(displayTimer.time), state)
+
+    /**
+     * Handles safe areas if necessary, and returns a boolean indicating whether insets should be
+     * applied at the top level.
+     */
+    private fun handleIgnoreSafeAreas(shouldIgnoreSafeArea: Boolean): Boolean {
+        // If we're on API 35+, edge-to-edge mode is enabled by default. We'll handle this by
+        // considering all layouts on API 35+ as ignoring safe areas. For a layout that doesn't
+        // ignore safe areas, we'll return true so that insets can be applied to the layout at the
+        // top level.
+        if (isAtLeastApi35 || shouldIgnoreSafeArea) {
+            enableEdgeToEdge()
+
+            if (!isAtLeastApi35) {
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+                    window.addFlags(FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS or
+                            FLAG_LAYOUT_NO_LIMITS or FLAG_LAYOUT_IN_SCREEN
+                    )
+                }
+
+                transparentSystemBars()
+            }
+        }
+
+        return isAtLeastApi35 && !shouldIgnoreSafeArea
+    }
+
+    @Suppress("DEPRECATION")
+    private fun transparentSystemBars() {
+        // These are both deprecated and do nothing on API 35+,
+        // but we still want to set them for older API levels.
+        window.statusBarColor = android.R.color.transparent
+        window.navigationBarColor = android.R.color.transparent
+    }
 
     private fun setOrientationLock(placement: ModalPlacement) {
         try {
