@@ -77,7 +77,7 @@ view:
                         hex: "#000000"
                         alpha: 1
                   text_appearance:
-                    font_size: 14
+                    font_size: 42
                     styles:
                     - bold
                     color:
@@ -98,7 +98,7 @@ view:
                         hex: "#dedede"
                         alpha: 1
                   text_appearance:
-                    font_size: 14
+                    font_size: 42
                     color:
                       default:
                         hex: "#666666"

@@ -28,8 +28,8 @@ public class WrappingViewGroup @JvmOverloads constructor(
 
         for (i in 0 until childCount) {
             val child = getChildAt(i)
-            val childWidthSpec = MeasureSpec.makeMeasureSpec(minTappableWidth, MeasureSpec.AT_MOST)
-            val childHeightSpec = MeasureSpec.makeMeasureSpec(minTappableHeight, MeasureSpec.AT_MOST)
+            val childWidthSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+            val childHeightSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
             child.measure(childWidthSpec, childHeightSpec)
 
             if (lineChildCount < maxItemsPerLine &&
@@ -44,7 +44,6 @@ public class WrappingViewGroup @JvmOverloads constructor(
                 lineHeight = child.measuredHeight
                 lineChildCount = 1
             }
-
         }
 
         // Add the last line's height, but no additional line spacing

@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.SparseIntArray
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Checkable
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -18,6 +19,7 @@ import com.urbanairship.android.layout.property.ScoreStyle.WrappingNumberRange
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ifNotEmpty
+import com.urbanairship.android.layout.widget.ScoreItemView
 import com.urbanairship.android.layout.widget.ShapeButton
 import com.urbanairship.android.layout.widget.TappableView
 import WrappingViewGroup
@@ -96,31 +98,31 @@ internal class ScoreView(
 
     /** Configures the view to display the wrapping number range style. */
     private fun configureWrappingNumberRange(style: WrappingNumberRange) {
-        val constraints = ConstraintSetBuilder.newBuilder(context)
-        val bindings = style.bindings
-        val start = style.start
-        val end = style.end
-
         val wrappingViewGroupId = View.generateViewId()
         val wrappingViewGroup = WrappingViewGroup(context).apply {
             id = wrappingViewGroupId
-            layoutParams = LayoutParams(MATCH_CONSTRAINT, WRAP_CONTENT)
             itemSpacing = LayoutUtils.dpToPx(context, style.spacing)
             lineSpacing = LayoutUtils.dpToPx(context, style.wrapping.lineSpacing)
             maxItemsPerLine = style.wrapping.maxItemsPerLine
         }
 
-        (start..end).forEach { i ->
-            val viewId = View.generateViewId()
-            val button = createShapeButton(i, bindings, viewId, constraints, 42, 42)
-            scoreToViewIds.append(i, viewId)
+        (style.start..style.end).forEach { i ->
+            val button = ScoreItemView(
+                context = context,
+                label = i.toString(),
+                bindings = style.bindings,
+                padding = 0
+            ).apply {
+                setOnClickListener { onScoreClick(this, i) }
+            }
 
-            wrappingViewGroup.addView(button, LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT))
+            scoreToViewIds.append(i, button.id)
+            wrappingViewGroup.addView(button)
         }
 
         addView(wrappingViewGroup)
-        constraints.build().applyTo(this)
     }
+
 
     private fun createShapeButton(
         score: Int,
@@ -140,13 +142,6 @@ internal class ScoreView(
         ).apply {
             id = viewId
             setOnClickListener { onScoreClick(this, score) }
-            layoutParams = ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.WRAP_CONTENT,
-                ConstraintLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                minimumWidth = LayoutUtils.dpToPx(context, minWidth)
-                minimumHeight = LayoutUtils.dpToPx(context, minHeight)
-            }
         }
 
         // Apply constraints to the button
