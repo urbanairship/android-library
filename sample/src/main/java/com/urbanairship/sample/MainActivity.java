@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.EdgeToEdge;
 import androidx.activity.SystemBarStyle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     public static final Set<Integer> TOP_LEVEL_DESTINATIONS = new HashSet<Integer>() {{
         add(R.id.homeFragment);
         add(R.id.inbox);
-        add(R.id.prefCenter);
+        add(R.id.pref_center);
         add(R.id.settings);
         add(R.id.debugFragment);
     }};

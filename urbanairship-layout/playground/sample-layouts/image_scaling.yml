@@ -1,6 +1,7 @@
 ---
 presentation:
   default_placement:
+    ignore_safe_area: false
     position:
       horizontal: center
       vertical: center
@@ -17,13 +18,13 @@ version: 1
 view:
   type: scroll_layout
   direction: vertical
+  background_color:
+    default:
+      hex: "#ffffff"
+      alpha: 1
   view:
     type: linear_layout
     direction: vertical
-    background_color:
-      default:
-        hex: "#ffffff"
-        alpha: 1
     items:
     - size:
         height: auto

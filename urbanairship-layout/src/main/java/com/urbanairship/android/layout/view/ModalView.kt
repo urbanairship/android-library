@@ -2,12 +2,12 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
-import android.graphics.Color
 import android.graphics.Rect
 import android.os.Build
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
+import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import androidx.annotation.ColorInt
@@ -37,8 +37,8 @@ internal class ModalView(
         ViewConfiguration.get(context).scaledWindowTouchSlop
     }
 
-    private var modalFrame: ConstrainedFrameLayout? = null
-    private var containerView: View? = null
+    private val modalFrame: ViewGroup
+
     private var clickOutsideListener: OnClickListener? = null
 
     init {
@@ -48,7 +48,7 @@ internal class ModalView(
         val margin = placement.margin
         @ColorInt val shadeColor = placement.shadeColor?.resolve(context)
 
-        val frame = ConstrainedFrameLayout(context, size).apply {
+        modalFrame = ConstrainedFrameLayout(context, size).apply {
             id = View.generateViewId()
             layoutParams = LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT)
             clipChildren = false
@@ -62,9 +62,7 @@ internal class ModalView(
             }
         }
 
-        modalFrame = frame
-
-        val container = ClippableFrameLayout(context).apply {
+        val containerView = ClippableFrameLayout(context).apply {
             layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
                 margin?.let {
                     setMargins(
@@ -80,13 +78,13 @@ internal class ModalView(
             }
         }
 
-        container.addView(model.createView(context, viewEnvironment, null))
-        containerView = container
+        val contentView = model.createView(context, viewEnvironment, null)
+        containerView.addView(contentView)
 
-        frame.addView(container)
-        addView(frame)
+        modalFrame.addView(containerView)
+        addView(modalFrame)
 
-        val viewId = frame.id
+        val viewId = modalFrame.id
         val constraints = ConstraintSetBuilder.newBuilder(context)
             .constrainWithinParent(viewId)
             .size(size, placement.shouldIgnoreSafeArea(), viewId)
@@ -97,8 +95,8 @@ internal class ModalView(
         shadeColor?.let { setBackgroundColor(it) }
 
         if (viewEnvironment.isIgnoringSafeAreas) {
-            setOnApplyWindowInsetsListener(frame) { _: View, insets: WindowInsetsCompat ->
-                ViewCompat.dispatchApplyWindowInsets(container, insets)
+            setOnApplyWindowInsetsListener(modalFrame) { _: View, insets: WindowInsetsCompat ->
+                ViewCompat.dispatchApplyWindowInsets(containerView, insets)
             }
         }
     }
@@ -133,7 +131,7 @@ internal class ModalView(
     private fun isTouchOutside(event: MotionEvent): Boolean {
         // Get the bounds of the modal
         val r = Rect()
-        modalFrame?.getHitRect(r)
+        modalFrame.getHitRect(r)
         // Expand the bounds by the amount of slop needed to be considered an outside touch
         r.inset(-windowTouchSlop, -windowTouchSlop)
         return !r.contains(event.x.toInt(), event.y.toInt())

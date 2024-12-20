@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import com.urbanairship.sample.databinding.ItemTagBinding;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,9 +37,10 @@ public class TagAdapter extends ListAdapter<String, TagAdapter.ViewHolder> {
         viewHolder.bind(getItem(i));
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
 
-        private ItemTagBinding binding;
+        private final ItemTagBinding binding;
+        private String tag = null;
 
         ViewHolder(@NonNull ItemTagBinding binding) {
             super(binding.getRoot());
@@ -46,14 +48,14 @@ public class TagAdapter extends ListAdapter<String, TagAdapter.ViewHolder> {
         }
 
         private void bind(final String tag) {
-            binding.setTag(tag);
-            binding.executePendingBindings();
+            this.tag = tag;
+            binding.tagText.setText(tag);
         }
 
+        @Nullable
         public String getTag() {
-            return binding.getTag();
+            return tag;
         }
-
     }
 
     public static class TagFilterDiff extends DiffUtil.ItemCallback<String> {

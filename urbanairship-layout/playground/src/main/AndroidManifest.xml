@@ -17,7 +17,8 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.Playground.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -25,10 +26,14 @@
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true"/>
+            <meta-data
+                android:name="com.urbanairship.iam.banner.BANNER_CONTAINER_ID"
+                android:resource="@id/main_content"/>
         </activity>
 
         <activity android:name=".embedded.EmbeddedActivity"
-            android:exported="false">
+            android:exported="false"
+            android:theme="@style/Theme.Playground">
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true" />
@@ -36,11 +41,13 @@
 
         <activity
             android:name=".OtherAndroidActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.Playground"/>
 
         <activity
             android:name=".OtherAppCompatActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.Playground"/>
 
         <activity
             android:name="leakcanary.internal.activity.LeakActivity">
