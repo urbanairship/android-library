@@ -47,7 +47,7 @@ internal class DefaultPreferenceCenterViewModel(
 
     override val preferenceCenters: Flow<List<PrefCenter>> = remoteData.payloadFlow(PAYLOAD_TYPE)
         .map { payloads ->
-            payloads.map { payload ->
+            val preferenceCenters  = payloads.map { payload ->
                 val payloadForms = payload.data.opt(PAYLOAD_TYPE).optList()
                 UALog.v("Found ${payloadForms.size()} preference forms in RemoteData")
 
@@ -56,14 +56,21 @@ internal class DefaultPreferenceCenterViewModel(
                     try {
                         val form = it.optMap().opt("form").optMap()
                         val id = form.opt("id").requireString()
-                        val title = form.get("display")?.map?.get("name")?.string?.ifEmpty { null } ?: id
+                        val title =
+                            form.get("display")?.map?.get("name")?.string?.ifEmpty { null } ?: id
                         PrefCenter(id, title)
                     } catch (e: Exception) {
                         UALog.w("Failed to parse preference center config: ${e.message}")
                         null
                     }
                 }
-            }.flatten().sortedBy { it.id }
+            }.flatten()
+
+            // Need to deduplicate and sort by ID
+            preferenceCenters
+                .groupBy { it.id }
+                .entries.map { it.value.first() }
+                .sortedBy { it.id }
         }
 
     private companion object {
