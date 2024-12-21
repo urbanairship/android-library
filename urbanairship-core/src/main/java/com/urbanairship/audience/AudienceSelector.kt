@@ -505,20 +505,20 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
     public suspend fun evaluate(
         newEvaluationDate: Long,
         infoProvider: DeviceInfoProvider
-    ): Boolean {
+    ): AudienceResult {
 
-        if (!checkDeviceType(infoProvider)) { return false }
-        if (!checkTestDevice(infoProvider)) { return false }
-        if (!checkNotificationOptInStatus(infoProvider)) { return false }
-        if (!checkLocale(infoProvider)) { return false }
-        if (!checkTags(infoProvider)) { return false }
-        if (!checkAnalytics(infoProvider)) { return false }
-        if (!checkPermissions(infoProvider)) { return false }
-        if (!checkVersion(infoProvider)) { return false }
-        if (!checkNewUser(infoProvider, newEvaluationDate)) { return false }
-        if (!checkHash(infoProvider)) { return false }
+        if (!checkDeviceType(infoProvider)) { return AudienceResult.miss }
+        if (!checkTestDevice(infoProvider)) { return AudienceResult.miss }
+        if (!checkNotificationOptInStatus(infoProvider)) { return AudienceResult.miss }
+        if (!checkLocale(infoProvider)) { return AudienceResult.miss }
+        if (!checkTags(infoProvider)) { return AudienceResult.miss }
+        if (!checkAnalytics(infoProvider)) { return AudienceResult.miss }
+        if (!checkPermissions(infoProvider)) { return AudienceResult.miss }
+        if (!checkVersion(infoProvider)) { return AudienceResult.miss }
+        if (!checkNewUser(infoProvider, newEvaluationDate)) { return AudienceResult.miss }
+        if (!checkHash(infoProvider)) { return AudienceResult.miss }
 
-        return true
+        return AudienceResult.match
     }
 
     private fun checkDeviceType(infoProvider: DeviceInfoProvider): Boolean {

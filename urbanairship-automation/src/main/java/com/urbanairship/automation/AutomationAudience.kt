@@ -4,6 +4,7 @@ package com.urbanairship.automation
 
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.automation.AutomationAudience.MissBehavior
+import com.urbanairship.automation.engine.SchedulePrepareResult
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
@@ -13,7 +14,7 @@ import com.urbanairship.json.optionalField
 import java.util.Objects
 
 /**
- * Automation aduience selector.
+ * Automation audience selector.
  */
 public class AutomationAudience(
     /**
@@ -43,6 +44,14 @@ public class AutomationAudience(
                 val content = value.requireString().lowercase()
                 return entries.firstOrNull { it.json == content }
                     ?: throw JsonException("invalid miss behavior $content")
+            }
+        }
+
+        internal fun toPrepareResult(): SchedulePrepareResult {
+            return when(this) {
+                AutomationAudience.MissBehavior.CANCEL -> SchedulePrepareResult.Cancel
+                AutomationAudience.MissBehavior.SKIP -> SchedulePrepareResult.Skip
+                AutomationAudience.MissBehavior.PENALIZE -> SchedulePrepareResult.Penalize
             }
         }
     }

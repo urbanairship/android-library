@@ -10,6 +10,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.GlobalActivityMonitor
+import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.automation.action.ActionAutomationExecutor
 import com.urbanairship.automation.action.ActionAutomationPreparer
 import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolver
@@ -85,6 +86,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         val automationStore = SerialAccessAutomationStore(
             AutomationStore.createDatabase(context, runtimeConfig)
         )
+        val audienceEvaluator = AudienceEvaluator()
         val analyticsFactory = InAppMessageAnalyticsFactory(
             eventRecorder = eventRecorder,
             displayHistoryStore = MessageDisplayHistoryStore(automationStore),
@@ -132,6 +134,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                     cache = cache
                 ),
                 queueConfigSupplier = { runtimeConfig.remoteConfig.iaaConfig?.retryingQueue },
+                audienceEvaluator = audienceEvaluator
             ),
             scheduleConditionsChangedNotifier = scheduleConditionNotifier,
             eventsFeed = AutomationEventFeed(

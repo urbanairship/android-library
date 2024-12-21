@@ -286,6 +286,6 @@ public class AudienceSelectorTest {
     }
 
     private suspend fun checkAudience(audience: AudienceSelector, timestamp: Long = 0): Boolean {
-        return audience.evaluate(timestamp, infoProvider)
+        return audience.evaluate(timestamp, infoProvider).isMatch
     }
 }
