@@ -62,10 +62,10 @@ view:
                     - add_tags_action: "page_1_dismiss_action"
                   behaviors:
                     - dismiss
-#              automated_actions:
-#                - identifier: "auto_announce_page_1"
-#                  delay: 0.5
-#                  behaviors: ["pager_pause"]
+              automated_actions:
+                - identifier: "auto_announce_page_1"
+                  delay: 0.5
+                  behaviors: ["pager_pause"]
               view:
                 type: container
                 background_color:
@@ -207,10 +207,10 @@ view:
                     - add_tags_action: "page_2_dismiss_action"
                   behaviors:
                     - dismiss
-#              automated_actions:
-#                - identifier: "auto_announce_page_2"
-#                  delay: 0.5
-#                  behaviors: ["pager_pause"]
+              automated_actions:
+                - identifier: "auto_announce_page_2"
+                  delay: 0.5
+                  behaviors: ["pager_pause"]
               view:
                 type: container
                 background_color:
@@ -331,10 +331,10 @@ view:
                     - add_tags_action: "page_3_dismiss_action"
                   behaviors:
                     - dismiss
-#              automated_actions:
-#                - identifier: "auto_announce_page_3"
-#                  delay: 0.5
-#                  behaviors: ["pager_pause"]
+              automated_actions:
+                - identifier: "auto_announce_page_3"
+                  delay: 0.5
+                  behaviors: ["pager_pause"]
               view:
                 type: container
                 background_color:

@@ -24,6 +24,7 @@ import com.urbanairship.android.layout.property.firstPagerNextOrNull
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
 import com.urbanairship.android.layout.property.hasPagerNext
 import com.urbanairship.android.layout.property.hasPagerPause
+import com.urbanairship.android.layout.property.hasPagerPauseOrResumeAction
 import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasPagerResume
 import com.urbanairship.android.layout.util.DelicateLayoutApi
@@ -103,11 +104,23 @@ internal class PagerModel(
                     // Handle any actions defined for the current page.
                     items[it.pageIndex].run {
                         handlePageActions(displayActions, automatedActions)
-                        // Pause the story if the video is not ready
-                        if (!it.isMediaPaused && !it.isTouchExplorationEnabled) {
-                            resumeStory()
-                        } else {
+
+                        // Check if the current page has any automated pause/resume actions
+                        val hasPauseOrResumeAction = automatedActions?.hasPagerPauseOrResumeAction == true
+
+                        if (it.isTouchExplorationEnabled) {
+                            // Always pause for accessibility
                             pauseStory()
+                        } else if (it.isMediaPaused) {
+                            // Media not ready, pause until ready
+                            pauseStory()
+                        } else {
+                            // Resume if either:
+                            // - Media just became ready (wasMediaPaused)
+                            // - OR no automated pause/resume actions exist
+                            if (it.wasMediaPaused || !hasPauseOrResumeAction) {
+                                resumeStory()
+                            }
                         }
                     }
                 }
