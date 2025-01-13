@@ -97,6 +97,26 @@ public class CompoundAudienceSelectorTest {
 
     }
 
+    @Test
+    public fun testCombine() {
+        val deviceSelector = AudienceSelector
+            .newBuilder()
+            .setNewUser(true)
+            .build()
+
+        val compoundAudienceSelector = defaultAudience(false)
+        val combined = CompoundAudienceSelector.combine(compoundAudienceSelector, deviceSelector)
+
+        val expected = CompoundAudienceSelector.And(
+            listOf(
+                defaultAudience(true),
+                defaultAudience(false)
+            )
+        )
+
+        assertEquals(expected, combined)
+    }
+
     private fun defaultAudience(newUser: Boolean = true) = CompoundAudienceSelector.Atomic(
         AudienceSelector
             .newBuilder()

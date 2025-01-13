@@ -8,8 +8,8 @@ import com.urbanairship.analytics.Event
 import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.audience.AudienceResult
 import com.urbanairship.audience.AudienceSelector
-import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.audience.CompoundAudienceSelector
+import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.AutomationCompoundAudience
 import com.urbanairship.automation.AutomationSchedule
@@ -41,6 +41,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.spyk
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
@@ -78,6 +79,7 @@ public class AutomationPreparerTest {
     private val triggerContext = DeferredTriggerContext("some type", 10.0, JsonValue.NULL)
     private val audienceResolver: AdditionalAudienceCheckerResolver = mockk()
     private val analytics: Analytics = mockk()
+    private val audienceEvaluator: AudienceEvaluator = spyk()
 
     @Before
     public fun setup() {
@@ -103,7 +105,7 @@ public class AutomationPreparerTest {
             remoteDataAccess = remoteDataAccess,
             deviceInfoProviderFactory = { deviceInfoProvider },
             additionalAudienceResolver = audienceResolver,
-            audienceEvaluator = AudienceEvaluator()
+            audienceEvaluator = audienceEvaluator
         )
     }
 
@@ -172,6 +174,11 @@ public class AutomationPreparerTest {
         assertEquals(SchedulePrepareResult.Cancel, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
 
         coVerify { audienceSelector.evaluate(any(), any()) }
+        coVerify { audienceEvaluator
+            .evaluate(CompoundAudienceSelector.combine(
+                compoundAudienceSelector = schedule.compoundAudience?.selector,
+                deviceAudience = schedule.audience?.audienceSelector
+            ), schedule.created.toLong(), deviceInfoProvider) }
     }
 
     @Test

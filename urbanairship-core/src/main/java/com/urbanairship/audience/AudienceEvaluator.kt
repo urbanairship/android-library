@@ -3,7 +3,6 @@
 package com.urbanairship.audience
 
 import androidx.annotation.RestrictTo
-import java.util.Objects
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AudienceEvaluator {

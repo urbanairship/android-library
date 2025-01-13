@@ -96,10 +96,14 @@ internal class AutomationPreparer internal constructor(
                 return@run RetryingQueue.Result.Success(SchedulePrepareResult.Invalidate)
             }
 
-            // Compound Audience check
-            if (schedule.compoundAudience != null) {
+            val audience = CompoundAudienceSelector.combine(
+                compoundAudienceSelector = schedule.compoundAudience?.selector,
+                deviceAudience = schedule.audience?.audienceSelector
+            )
+
+            if (audience != null) {
                 val result = audienceEvaluator.evaluate(
-                    compoundAudience = schedule.compoundAudience.selector,
+                    compoundAudience = audience,
                     newEvaluationDate = schedule.created.toLong(),
                     infoProvider = deviceInfoProvider
                 )
@@ -107,26 +111,7 @@ internal class AutomationPreparer internal constructor(
                 if (!result.isMatch) {
                     UALog.v { "Local audience miss for schedule ${schedule.identifier}" }
                     return@run RetryingQueue.Result.Success(
-                        result = schedule.compoundAudience.missBehavior.toPrepareResult(),
-                        ignoreReturnOrder = true
-                    )
-                }
-            }
-
-            // Audience checks
-            if (schedule.audience != null) {
-                val result = audienceEvaluator.evaluate(
-                    compoundAudience = CompoundAudienceSelector.Atomic(
-                        schedule.audience.audienceSelector
-                    ),
-                    newEvaluationDate = schedule.created.toLong(),
-                    infoProvider = deviceInfoProvider
-                )
-
-                if (!result.isMatch) {
-                    UALog.v { "Local audience miss for schedule ${schedule.identifier}" }
-                    return@run RetryingQueue.Result.Success(
-                        result = schedule.audience.missBehavior?.toPrepareResult() ?: SchedulePrepareResult.Penalize,
+                        result = schedule.audienceMissBehaviorResult(),
                         ignoreReturnOrder = true
                     )
                 }
@@ -371,7 +356,7 @@ internal class AutomationPreparer internal constructor(
                     }
                 } else {
                     RetryingQueue.Result.Success(
-                        result = schedule.deferredMissedAudiencePrepareResult(),
+                        result = schedule.audienceMissBehaviorResult(),
                         ignoreReturnOrder = true
                     )
                 }
@@ -380,7 +365,7 @@ internal class AutomationPreparer internal constructor(
     }
 }
 
-private fun AutomationSchedule.deferredMissedAudiencePrepareResult(): SchedulePrepareResult {
+private fun AutomationSchedule.audienceMissBehaviorResult(): SchedulePrepareResult {
     val result = compoundAudience?.missBehavior
         ?: audience?.missBehavior
         ?: AutomationAudience.MissBehavior.PENALIZE

@@ -75,7 +75,7 @@ public sealed class CompoundAudienceSelector: JsonSerializable {
             deviceAudience: AudienceSelector?
         ): CompoundAudienceSelector? {
             if (compoundAudienceSelector != null && deviceAudience != null) {
-                return And(listOf(compoundAudienceSelector, Atomic(deviceAudience)))
+                return And(listOf(Atomic(deviceAudience), compoundAudienceSelector))
             } else if (compoundAudienceSelector != null) {
                 return compoundAudienceSelector
             } else if (deviceAudience != null) {
