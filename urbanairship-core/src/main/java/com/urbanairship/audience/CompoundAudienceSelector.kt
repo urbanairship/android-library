@@ -12,15 +12,31 @@ import com.urbanairship.json.requireList
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public sealed class CompoundAudienceSelector: JsonSerializable {
 
+    /**
+     * Atomic selector. Defines an actual audience selector.
+     * @audience The audience selector.
+     */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class Atomic(val audience: AudienceSelector): CompoundAudienceSelector()
 
+    /**
+     * NOT selector. Negates the result.
+     * @param selector The compound selector.
+     */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class Not(val selector: CompoundAudienceSelector): CompoundAudienceSelector()
 
+    /**
+     * AND selector. All selectors have to evaluate true to match.
+     * @param selectors The list of compound selectors to evaluate. If empty, evaluates to `true`.
+     */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class And(val selectors: List<CompoundAudienceSelector>): CompoundAudienceSelector()
 
+    /**
+     * OR selector. At least once selector has to evaluate true to match.
+     * @param selectors The list of compound selectors to evaluate. If empty, evaluates to `false`.
+     */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class Or(val selectors: List<CompoundAudienceSelector>): CompoundAudienceSelector()
 
@@ -116,16 +132,19 @@ public sealed class CompoundAudienceSelector: JsonSerializable {
             is Atomic -> audience.evaluate(newEvaluationDate, infoProvider)
             is Not -> selector.evaluate(newEvaluationDate, infoProvider).negate()
             is And -> {
+                if (selectors.isEmpty()) {
+                    return AudienceResult.match
+                }
+
                 val result = selectors.all { it.evaluate(newEvaluationDate, infoProvider) == AudienceResult.match }
                 return AudienceResult(result)
             }
             is Or -> {
-                val result = if (selectors.isEmpty()) {
-                    true
-                } else {
-                    selectors.any { it.evaluate(newEvaluationDate, infoProvider) == AudienceResult.match }
+                if (selectors.isEmpty()) {
+                    return AudienceResult.miss
                 }
 
+                val result = selectors.any { it.evaluate(newEvaluationDate, infoProvider) == AudienceResult.match }
                 return AudienceResult(result)
             }
         }

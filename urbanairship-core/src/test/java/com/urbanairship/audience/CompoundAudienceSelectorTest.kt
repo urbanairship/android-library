@@ -7,6 +7,8 @@ import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -69,7 +71,6 @@ public class CompoundAudienceSelectorTest {
             Pair(defaultAudience(), true),
             Pair(defaultAudience(false), false),
             Pair(CompoundAudienceSelector.Not(defaultAudience()), false),
-            Pair(CompoundAudienceSelector.And(listOf()), true),
             Pair(CompoundAudienceSelector.And(listOf(
                 defaultAudience(true),
                 defaultAudience(false)
@@ -78,7 +79,6 @@ public class CompoundAudienceSelectorTest {
                 defaultAudience(true),
                 defaultAudience(true)
             )), true),
-            Pair(CompoundAudienceSelector.Or(listOf()), true),
             Pair(CompoundAudienceSelector.Or(listOf(
                 defaultAudience(true),
                 defaultAudience(false)
@@ -94,7 +94,20 @@ public class CompoundAudienceSelectorTest {
         ).forEach { (audience, expected) ->
             assertEquals(audience.evaluate(0, infoProvider), AudienceResult(expected))
         }
+    }
 
+    @Test
+    public fun testEmptyOr(): TestResult = runTest {
+        val selector = CompoundAudienceSelector.Or(emptyList())
+        val result = selector.evaluate(0, infoProvider)
+        assertFalse(result.isMatch)
+    }
+
+    @Test
+    public fun testEmptyAnd(): TestResult = runTest {
+        val selector = CompoundAudienceSelector.And(emptyList())
+        val result = selector.evaluate(0, infoProvider)
+        assertTrue(result.isMatch)
     }
 
     @Test
