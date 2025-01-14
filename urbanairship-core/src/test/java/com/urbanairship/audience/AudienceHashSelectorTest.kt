@@ -3,6 +3,7 @@ package com.urbanairship.audience
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import kotlin.time.Duration.Companion.milliseconds
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
@@ -124,7 +125,7 @@ public class AudienceHashSelectorTest {
                 sticky = AudienceSticky(
                     id = "test-id",
                     reportingMetadata = JsonValue.wrap("test"),
-                    lastAccessTtl = 123L
+                    lastAccessTtl = 123.milliseconds
                 )
             )
         )

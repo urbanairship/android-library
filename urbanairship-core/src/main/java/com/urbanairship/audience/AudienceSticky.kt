@@ -7,6 +7,8 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 internal data class AudienceSticky(
     /**
@@ -21,9 +23,9 @@ internal data class AudienceSticky(
     val reportingMetadata: JsonValue?,
 
     /**
-     * How long to hold onto the result for since the last access in milliseconds.
+     * How long to hold onto the result for since the last access
      */
-    val lastAccessTtl: Long
+    val lastAccessTtl: Duration
 ) : JsonSerializable {
 
     companion object {
@@ -37,7 +39,7 @@ internal data class AudienceSticky(
             return AudienceSticky(
                 id = content.requireField(ID),
                 reportingMetadata = content.get(REPORTING_METADATA),
-                lastAccessTtl = content.requireField(LAST_ACCESS_TTL)
+                lastAccessTtl = content.requireField<Long>(LAST_ACCESS_TTL).milliseconds
             )
         }
     }
@@ -45,6 +47,6 @@ internal data class AudienceSticky(
     override fun toJsonValue(): JsonValue = jsonMapOf(
         ID to id,
         REPORTING_METADATA to reportingMetadata,
-        LAST_ACCESS_TTL to lastAccessTtl
+        LAST_ACCESS_TTL to lastAccessTtl.inWholeMilliseconds
     ).toJsonValue()
 }

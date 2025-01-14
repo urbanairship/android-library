@@ -3,29 +3,22 @@
 package com.urbanairship.audience
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.cache.AirshipCache
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class AudienceEvaluator {
+public class AudienceEvaluator(cache: AirshipCache) {
+
+    private val hashChecker = HashChecker(cache)
+
     public suspend fun evaluate(
         compoundAudience: CompoundAudienceSelector?,
         newEvaluationDate: Long,
         infoProvider: DeviceInfoProvider
-    ): AudienceResult {
-        return compoundAudience?.evaluate(newEvaluationDate, infoProvider)
-            ?: AudienceResult.match
+    ): AirshipDeviceAudienceResult {
 
-    }
-}
+        return compoundAudience?.evaluate(newEvaluationDate, infoProvider, hashChecker)
+            ?: AirshipDeviceAudienceResult.match
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class AudienceResult(
-    val isMatch: Boolean
-) {
-
-    internal fun negate(): AudienceResult = AudienceResult(!isMatch)
-
-    public companion object {
-        public val match: AudienceResult = AudienceResult(true)
-        public val miss: AudienceResult = AudienceResult(false)
     }
 }

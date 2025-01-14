@@ -9,7 +9,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
 import com.urbanairship.audience.AudienceEvaluator
-import com.urbanairship.audience.AudienceResult
+import com.urbanairship.audience.AirshipDeviceAudienceResult
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.audience.CompoundAudienceSelector
@@ -67,7 +67,7 @@ public class FeatureFlagManagerTest {
 
             var result = args[0] == null
 
-            val compound: CompoundAudienceSelector = firstArg() ?: return@answers AudienceResult(result)
+            val compound: CompoundAudienceSelector = firstArg() ?: return@answers AirshipDeviceAudienceResult(result)
 
             if (compound is CompoundAudienceSelector.Atomic) {
                 result = result || compound.audience == audienceMatchSelector
@@ -80,7 +80,7 @@ public class FeatureFlagManagerTest {
                 }
             }
 
-            AudienceResult(result)
+            AirshipDeviceAudienceResult(result)
         }
     }
 

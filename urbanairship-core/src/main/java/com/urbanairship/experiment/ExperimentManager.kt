@@ -30,7 +30,7 @@ public class ExperimentManager @JvmOverloads internal constructor(
     dataStore: PreferenceDataStore,
     private val remoteData: RemoteData,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
-    private val audienceEvaluator: AudienceEvaluator = AudienceEvaluator(),
+    private val audienceEvaluator: AudienceEvaluator,
 ) : AirshipComponent(context, dataStore) {
 
     private val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())

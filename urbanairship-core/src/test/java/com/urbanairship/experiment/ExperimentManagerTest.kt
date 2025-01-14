@@ -5,8 +5,11 @@ package com.urbanairship.experiment
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestApplication
+import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.audience.DeviceInfoProvider
+import com.urbanairship.cache.AirshipCache
 import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.experiment.ExperimentManager.Companion.PAYLOAD_TYPE
 import com.urbanairship.json.JsonList
@@ -64,7 +67,12 @@ public class ExperimentManagerTest {
             context = context,
             dataStore = dataStore,
             remoteData = remoteData,
-            clock = clock
+            clock = clock,
+            audienceEvaluator = AudienceEvaluator(AirshipCache(
+                context = context,
+                runtimeConfig = TestAirshipRuntimeConfig(),
+                isPersistent = false)
+            )
         )
     }
 

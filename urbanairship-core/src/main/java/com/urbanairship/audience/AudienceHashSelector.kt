@@ -2,6 +2,7 @@
 
 package com.urbanairship.audience
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
@@ -10,13 +11,15 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.util.Objects
 
-internal class AudienceHashSelector(
-    val hash: AudienceHash,
-    val bucket: BucketSubset,
-    val sticky: AudienceSticky? = null
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class AudienceHashSelector internal constructor(
+    internal val hash: AudienceHash,
+    internal val bucket: BucketSubset,
+    internal val sticky: AudienceSticky? = null
 ) : JsonSerializable {
 
-    companion object {
+    internal companion object {
         private const val KEY_HASH = "audience_hash"
         private const val KEY_BUCKET_SUBSET = "audience_subset"
         private const val KEY_STICKY = "sticky"

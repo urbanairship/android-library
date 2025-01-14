@@ -5,8 +5,6 @@ package com.urbanairship.audience
 import androidx.annotation.RestrictTo
 import androidx.core.os.LocaleListCompat
 import androidx.core.util.ObjectsCompat
-import com.urbanairship.AirshipDispatchers
-import com.urbanairship.PendingResult
 import com.urbanairship.UALog
 import com.urbanairship.actions.FetchDeviceInfoAction
 import com.urbanairship.json.JsonException
@@ -20,9 +18,6 @@ import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.util.UAStringUtil
 import com.urbanairship.util.VersionUtils
 import java.util.Arrays
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 /**
  * Audience selector.
@@ -504,21 +499,26 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
 
     public suspend fun evaluate(
         newEvaluationDate: Long,
-        infoProvider: DeviceInfoProvider
-    ): AudienceResult {
+        infoProvider: DeviceInfoProvider,
+        hashChecker: HashChecker,
+    ): AirshipDeviceAudienceResult {
 
-        if (!checkDeviceType(infoProvider)) { return AudienceResult.miss }
-        if (!checkTestDevice(infoProvider)) { return AudienceResult.miss }
-        if (!checkNotificationOptInStatus(infoProvider)) { return AudienceResult.miss }
-        if (!checkLocale(infoProvider)) { return AudienceResult.miss }
-        if (!checkTags(infoProvider)) { return AudienceResult.miss }
-        if (!checkAnalytics(infoProvider)) { return AudienceResult.miss }
-        if (!checkPermissions(infoProvider)) { return AudienceResult.miss }
-        if (!checkVersion(infoProvider)) { return AudienceResult.miss }
-        if (!checkNewUser(infoProvider, newEvaluationDate)) { return AudienceResult.miss }
-        if (!checkHash(infoProvider)) { return AudienceResult.miss }
+        if (!checkDeviceType(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkTestDevice(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkNotificationOptInStatus(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkLocale(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkTags(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkAnalytics(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkPermissions(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkVersion(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkNewUser(infoProvider, newEvaluationDate)) { return AirshipDeviceAudienceResult.miss }
 
-        return AudienceResult.match
+        val result = hashChecker.evaluate(hashSelector, infoProvider)
+        if (!result.isMatch) {
+            UALog.v { "Hash condition not met for audience: $this" }
+        }
+
+        return result
     }
 
     private fun checkDeviceType(infoProvider: DeviceInfoProvider): Boolean {
@@ -606,7 +606,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         val permissions = infoProvider.getPermissionStatuses()
 
         if (locationOptIn != null) {
-            val locationPermission = permissions[Permission.LOCATION] ?: return false
+            val locationPermission = permissions[Permission.LOCATION] ?: PermissionStatus.NOT_DETERMINED
             val current = PermissionStatus.GRANTED == locationPermission
             if (current != locationOptIn) {
                 return false

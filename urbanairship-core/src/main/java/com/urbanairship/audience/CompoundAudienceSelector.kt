@@ -126,26 +126,43 @@ public sealed class CompoundAudienceSelector: JsonSerializable {
 
     public suspend fun evaluate(
         newEvaluationDate: Long,
-        infoProvider: DeviceInfoProvider
-    ): AudienceResult {
+        infoProvider: DeviceInfoProvider,
+        hashChecker: HashChecker
+    ): AirshipDeviceAudienceResult {
         return when(this) {
-            is Atomic -> audience.evaluate(newEvaluationDate, infoProvider)
-            is Not -> selector.evaluate(newEvaluationDate, infoProvider).negate()
+            is Atomic -> audience.evaluate(newEvaluationDate, infoProvider, hashChecker)
+            is Not -> selector.evaluate(newEvaluationDate, infoProvider, hashChecker).negate()
             is And -> {
                 if (selectors.isEmpty()) {
-                    return AudienceResult.match
+                    return AirshipDeviceAudienceResult.match
                 }
 
-                val result = selectors.all { it.evaluate(newEvaluationDate, infoProvider) == AudienceResult.match }
-                return AudienceResult(result)
+                val results = mutableListOf<AirshipDeviceAudienceResult>()
+                for (selector in selectors) {
+                    val partialResult = selector.evaluate(newEvaluationDate, infoProvider, hashChecker)
+                    results.add(partialResult)
+                    if (!partialResult.isMatch) {
+                        break
+                    }
+                }
+
+                return AirshipDeviceAudienceResult.reduced(results)
             }
             is Or -> {
                 if (selectors.isEmpty()) {
-                    return AudienceResult.miss
+                    return AirshipDeviceAudienceResult.miss
                 }
 
-                val result = selectors.any { it.evaluate(newEvaluationDate, infoProvider) == AudienceResult.match }
-                return AudienceResult(result)
+                val results = mutableListOf<AirshipDeviceAudienceResult>()
+                for (selector in selectors) {
+                    val partialResult = selector.evaluate(newEvaluationDate, infoProvider, hashChecker)
+                    results.add(partialResult)
+                    if (partialResult.isMatch) {
+                        break
+                    }
+                }
+
+                return AirshipDeviceAudienceResult.reduced(results)
             }
         }
     }

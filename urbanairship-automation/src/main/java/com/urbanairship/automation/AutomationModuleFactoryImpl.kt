@@ -74,7 +74,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
         metrics: ApplicationMetrics,
-        cache: AirshipCache
+        cache: AirshipCache,
+        audienceEvaluator: AudienceEvaluator
     ): Module {
         val assetManager = AssetCacheManager(context)
         val eventRecorder = InAppEventRecorder(analytics, meteredUsage)
@@ -86,7 +87,6 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         val automationStore = SerialAccessAutomationStore(
             AutomationStore.createDatabase(context, runtimeConfig)
         )
-        val audienceEvaluator = AudienceEvaluator()
         val analyticsFactory = InAppMessageAnalyticsFactory(
             eventRecorder = eventRecorder,
             displayHistoryStore = MessageDisplayHistoryStore(automationStore),

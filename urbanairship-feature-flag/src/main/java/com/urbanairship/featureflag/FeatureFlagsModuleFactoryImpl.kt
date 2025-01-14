@@ -33,7 +33,7 @@ public class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
         val manager = FeatureFlagManager(
             context = context.applicationContext,
             dataStore = dataStore,
-            audienceEvaluator = AudienceEvaluator(),
+            audienceEvaluator = AudienceEvaluator(cache),
             remoteData = FeatureFlagRemoteDataAccess(remoteData),
             deferredResolver = FlagDeferredResolver(cache, resolver),
             featureFlagAnalytics = FeatureFlagAnalytics(analytics),

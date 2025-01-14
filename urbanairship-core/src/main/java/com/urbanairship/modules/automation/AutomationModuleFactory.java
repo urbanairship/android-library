@@ -10,6 +10,7 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.analytics.AirshipEventFeed;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.audience.AudienceEvaluator;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.cache.AirshipCache;
@@ -50,7 +51,8 @@ public interface AutomationModuleFactory extends AirshipVersionInfo {
             @NonNull DeferredResolver deferredResolver,
             @NonNull AirshipEventFeed eventFeed,
             @NonNull ApplicationMetrics metrics,
-            @NonNull AirshipCache cache
+            @NonNull AirshipCache cache,
+            @NonNull AudienceEvaluator audienceEvaluator
             );
 
     }

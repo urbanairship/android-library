@@ -19,6 +19,7 @@ import com.urbanairship.actions.DeepLinkListener;
 import com.urbanairship.analytics.AirshipEventFeed;
 import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
+import com.urbanairship.audience.AudienceEvaluator;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.audience.DeviceInfoProvider;
 import com.urbanairship.audience.DeviceInfoProviderImpl;
@@ -758,10 +759,11 @@ public class UAirship {
         components.add(this.remoteConfigManager);
 
         AirshipCache cache = new AirshipCache(application, runtimeConfig);
+        AudienceEvaluator audienceEvaluator = new AudienceEvaluator(cache);
 
         // Experiments
         this.experimentManager = new ExperimentManager(application, preferenceDataStore,
-                remoteData, Clock.DEFAULT_CLOCK);
+                remoteData, Clock.DEFAULT_CLOCK, audienceEvaluator);
         components.add(this.experimentManager);
 
         // Debug
@@ -780,7 +782,7 @@ public class UAirship {
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
                 privacyManager, channel, pushManager, analytics, remoteData, this.experimentManager,
-                meteredUsageManager, deferredResolver, eventFeed, applicationMetrics, cache);
+                meteredUsageManager, deferredResolver, eventFeed, applicationMetrics, cache, audienceEvaluator);
         processModule(automationModule);
 
         // Ad Id

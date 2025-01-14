@@ -2,7 +2,11 @@
 
 package com.urbanairship.audience
 
+import androidx.core.os.persistableBundleOf
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.TestAirshipRuntimeConfig
+import com.urbanairship.cache.AirshipCache
 import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
@@ -19,6 +23,9 @@ import org.junit.runner.RunWith
 public class CompoundAudienceSelectorTest {
 
     private val infoProvider: DeviceInfoProvider = mockk(relaxed = true)
+    private val hashChecker = HashChecker(
+        cache = mockk(relaxed = true)
+    )
 
     @Before
     public fun setUp() {
@@ -92,21 +99,21 @@ public class CompoundAudienceSelectorTest {
                 defaultAudience(false)
             )), false),
         ).forEach { (audience, expected) ->
-            assertEquals(audience.evaluate(0, infoProvider), AudienceResult(expected))
+            assertEquals(audience.evaluate(0, infoProvider, hashChecker), AirshipDeviceAudienceResult(expected))
         }
     }
 
     @Test
     public fun testEmptyOr(): TestResult = runTest {
         val selector = CompoundAudienceSelector.Or(emptyList())
-        val result = selector.evaluate(0, infoProvider)
+        val result = selector.evaluate(0, infoProvider, hashChecker)
         assertFalse(result.isMatch)
     }
 
     @Test
     public fun testEmptyAnd(): TestResult = runTest {
         val selector = CompoundAudienceSelector.And(emptyList())
-        val result = selector.evaluate(0, infoProvider)
+        val result = selector.evaluate(0, infoProvider, hashChecker)
         assertTrue(result.isMatch)
     }
 
