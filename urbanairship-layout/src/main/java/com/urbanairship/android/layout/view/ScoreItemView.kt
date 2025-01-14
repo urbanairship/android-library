@@ -63,9 +63,14 @@ internal class ScoreItemView(
         val appearance = if (isChecked) selectedTextAppearance else unselectedTextAppearance
 
         post {
-            val textHeight = paint.fontMetrics.let { it.descent - it.ascent }.toInt() + paddingTop + paddingBottom
+            // Just use the raw font height without padding
+            val textHeight = paint.fontMetrics.let { it.descent - it.ascent }.toInt()
 
-            minimumHeight = maxOf(LayoutUtils.dpToPx(context, 44), LayoutUtils.dpToPx(context, textHeight))
+            // Convert minimum touch target to pixels
+            val minimumTouchTarget = LayoutUtils.dpToPx(context, 44)
+
+            // Use the larger of the text height or minimum touch target
+            minimumHeight = maxOf(minimumTouchTarget, textHeight)
             minimumWidth = minimumHeight
 
             requestLayout()
