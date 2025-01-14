@@ -9,6 +9,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.urbanairship.UALog
 import com.urbanairship.analytics.data.BatchedQueryHelper
+import com.urbanairship.db.SuspendingBatchedQueryHelper.runBatched
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
 import kotlinx.coroutines.flow.Flow
@@ -162,7 +163,7 @@ internal abstract class MessageDao {
 
     suspend fun markMessagesRead(messageIds: Set<String>) {
         try {
-            markMessagesReadInternal(messageIds)
+            runBatched(messageIds) { markMessagesReadInternal(messageIds) }
         } catch (e: Exception) {
             UALog.e(e) { "Failed to mark messages as read!" }
         }
@@ -170,7 +171,7 @@ internal abstract class MessageDao {
 
     suspend fun markMessagesUnread(messageIds: Set<String>) {
         try {
-            markMessagesUnreadInternal(messageIds)
+            runBatched(messageIds) { markMessagesUnreadInternal(messageIds) }
         } catch (e: Exception) {
             UALog.e(e) { "Failed to mark messages as unread!" }
         }
@@ -178,7 +179,7 @@ internal abstract class MessageDao {
 
     suspend fun markMessagesDeleted(messageIds: Set<String>) {
         try {
-            markMessagesDeletedInternal(messageIds)
+            runBatched(messageIds) { markMessagesDeletedInternal(messageIds) }
         } catch (e: Exception) {
             UALog.e(e) { "Failed to mark messages as deleted!" }
         }
@@ -186,7 +187,7 @@ internal abstract class MessageDao {
 
     suspend fun markMessagesReadOrigin(messageIds: Set<String>) {
         try {
-            markMessagesReadOriginInternal(messageIds)
+            runBatched(messageIds) { markMessagesReadOriginInternal(messageIds) }
         } catch (e: Exception) {
             UALog.e(e) { "Failed to mark messages as read (origin)!" }
         }

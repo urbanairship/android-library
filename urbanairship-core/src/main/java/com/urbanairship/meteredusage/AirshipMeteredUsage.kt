@@ -139,7 +139,13 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
 
         UALog.v { "Uploading success" }
 
-        store.deleteAll(events.map { it.eventId }.toList())
+        runBlocking {
+            try {
+                store.deleteAll(events.map { it.eventId }.toList())
+            } catch (e: Exception) {
+                UALog.e(e) { "Failed to delete events" }
+            }
+        }
 
         return JobResult.SUCCESS
     }

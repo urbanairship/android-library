@@ -6,6 +6,8 @@ import androidx.annotation.RestrictTo
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
+import com.urbanairship.db.SuspendingBatchedQueryHelper.runBatched
 
 /**
  * Data Access Object for the event table.
@@ -26,8 +28,13 @@ internal interface EventsDao {
     @Query("DELETE FROM events WHERE eventId = :eventId")
     fun delete(eventId: String)
 
-    @Query("delete from events where eventId in (:eventIds)")
-    fun deleteAll(eventIds: List<String>)
+    @Transaction
+    suspend fun deleteAll(eventIds: List<String>) {
+        runBatched(eventIds) { deleteAllBatchInternal(eventIds) }
+    }
+
+    @Query("DELETE FROM events WHERE eventId IN (:eventIds)")
+    fun deleteAllBatchInternal(eventIds: List<String>)
 
     @Query("DELETE FROM events")
     fun deleteAll()

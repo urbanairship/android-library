@@ -9,6 +9,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.urbanairship.db.SuspendingBatchedQueryHelper.runBatched
 
 @Dao
 internal interface FrequencyLimitDao {
@@ -35,11 +36,19 @@ internal interface FrequencyLimitDao {
     @Transaction
     suspend fun delete(entity: ConstraintEntity)
 
-    @Query("DELETE FROM constraints WHERE (constraintId IN (:constraintIds))")
     @Transaction
-    suspend fun delete(constraintIds: Collection<String>)
+    suspend fun delete(constraintIds: List<String>) {
+        runBatched(constraintIds) { deleteConstraintsBatchedInternal(constraintIds) }
+    }
+
+    @Query("DELETE FROM constraints WHERE (constraintId IN (:constraintIds))")
+    fun deleteConstraintsBatchedInternal(constraintIds: Collection<String>)
+
+    @Transaction
+    suspend fun deleteOccurrences(constraintIds: List<String>) {
+        runBatched(constraintIds) { deleteOccurrencesBatchedInternal(constraintIds) }
+    }
 
     @Query("DELETE FROM occurrences WHERE (parentConstraintId IN (:constraintIds))")
-    @Transaction
-    suspend fun deleteOccurrences(constraintIds: Collection<String>)
+    suspend fun deleteOccurrencesBatchedInternal(constraintIds: Collection<String>)
 }
