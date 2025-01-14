@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView.Adapter.StateRestorationPolicy;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PagerRecyclerView extends RecyclerView {
     private final PagerModel model;

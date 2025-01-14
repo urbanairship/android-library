@@ -18,6 +18,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ExecutionWindow(
     internal val includes: List<Rule>? = null,
@@ -92,6 +93,7 @@ public class ExecutionWindow(
 
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public sealed class ExecutionWindowResult {
     public data object Now: ExecutionWindowResult()
@@ -117,6 +119,7 @@ public sealed class ExecutionWindowResult {
     }
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public sealed class Rule(
     internal val type: Type,
@@ -476,6 +479,7 @@ public sealed class Rule(
         val end: Int get() = endHour * 60 * 60 + endMinute * 60
     }
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public sealed class TimeZone(internal val type: Type): JsonSerializable {
 

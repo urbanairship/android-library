@@ -92,20 +92,22 @@ turbine = '0.10.0'
 mockk = '1.13.5'
 
 # Doc Dependencies
-doclava = '1.0.6'
-dokka = '1.9.20'
+dokka = '2.0.0'
 
 [plugins]
 
 android-application = { id = 'com.android.application', version.ref = "androidGradlePlugin" }
 android-library = { id = 'com.android.library', version.ref = "androidGradlePlugin" }
 ksp = { id = 'com.google.devtools.ksp', version.ref = "kspPlugin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+room = { id = 'androidx.room', version.ref = "androidx-room"}
 kotlin-allopen = { id = 'org.jetbrains.kotlin.plugin.allopen', version.ref = "kotlin" }
 kotlinx-serialization = { id = 'org.jetbrains.kotlin.plugin.serialization', version.ref = "kotlin" }
 google-services = { id = 'com.google.gms.google-services', version.ref = "googleServicesPlugin" }
 spotless = { id = 'com.diffplug.spotless', version.ref = "spotlessPlugin" }
 benmanes-versions = { id = 'com.github.ben-manes.versions', version.ref = "gradle-versions" }
 binary-compatibility-validator = { id = 'org.jetbrains.kotlinx.binary-compatibility-validator', version.ref = "binary-compatibility-validator" }
+dokka = { id = 'org.jetbrains.dokka', version.ref = "dokka" }
 
 [libraries]
 
@@ -227,3 +229,7 @@ mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
+
+# Dokka
+
+dokka-android = { module = "org.jetbrains.dokka:android-documentation-plugin", version.ref = "dokka" }

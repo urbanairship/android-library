@@ -24,6 +24,7 @@ import kotlinx.coroutines.ExecutorsKt;
 
 /**
  * Message database
+ * @hide
  */
 @Database(
     version = 7,

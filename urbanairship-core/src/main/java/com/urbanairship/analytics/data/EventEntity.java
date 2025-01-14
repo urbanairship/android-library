@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonValue;
 import java.nio.charset.StandardCharsets;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.util.ObjectsCompat;
 import androidx.room.Entity;
@@ -33,10 +34,11 @@ public class EventEntity {
     public String eventId;
     public String time;
     public JsonValue data;
+    @Nullable
     public String sessionId;
     public int eventSize;
 
-    EventEntity(String type, String eventId, String time, JsonValue data, String sessionId, int eventSize) {
+    EventEntity(String type, String eventId, String time, JsonValue data, @Nullable String sessionId, int eventSize) {
         this.type = type;
         this.eventId = eventId;
         this.time = time;

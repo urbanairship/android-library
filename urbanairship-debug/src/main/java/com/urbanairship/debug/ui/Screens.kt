@@ -22,6 +22,7 @@ internal interface Screen {
     val isTopLevel: Boolean
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal enum class DebugScreen(
     override val titleRes: Int,

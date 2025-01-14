@@ -40,8 +40,11 @@ public class TaskSleeper(
         return duration.inWholeMilliseconds - (clock.currentTimeMillis() - start)
     }
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
+        /** @hide */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public val default: TaskSleeper = TaskSleeper(Clock.DEFAULT_CLOCK)
 
         private val MAX_DELAY_INTERVAL = 30.seconds.inWholeMilliseconds

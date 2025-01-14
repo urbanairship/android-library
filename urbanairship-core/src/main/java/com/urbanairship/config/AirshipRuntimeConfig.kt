@@ -171,6 +171,7 @@ public class AirshipRuntimeConfig internal constructor (
         configObserver.updateRemoteConfig(config)
     }
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private fun determineUrlFallback(configOptions: AirshipConfigOptions): Boolean {
@@ -187,6 +188,7 @@ public class AirshipRuntimeConfig internal constructor (
     }
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class RemoteConfigObserver(dataStore: PreferenceDataStore) {
     private val remoteConfigListeners: MutableList<AirshipRuntimeConfig.ConfigChangeListener> = CopyOnWriteArrayList()

@@ -18,6 +18,7 @@ import com.urbanairship.debug.ui.components.LocalIgnoreBottomPadding
 import com.urbanairship.debug.ui.home.DebugNavHost
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class DebugFragment : Fragment() {
 

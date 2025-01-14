@@ -43,6 +43,7 @@ public data class DeferredTriggerContext(
     val event: JsonValue
 ) : JsonSerializable {
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val KEY_TYPE = "type"

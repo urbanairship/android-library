@@ -35,9 +35,11 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
     public val missBehavior: MissBehavior
     public var tagSelector: DeviceTagSelector? = null
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val languageTags: List<String>
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val testDevices: List<String>
 
@@ -249,8 +251,11 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
          */
         PENALIZE("penalize");
 
+        /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public companion object {
+            /** @hide */
+            @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
             public fun parse(input: String): MissBehavior? {
                 return entries.firstOrNull { it.value == input }
             }

@@ -22,6 +22,8 @@ import kotlinx.coroutines.SupervisorJob
 
 /**
  * Airship Experiment Manager.
+ *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @OpenForTesting
@@ -35,6 +37,7 @@ public class ExperimentManager @JvmOverloads internal constructor(
 
     private val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         internal const val PAYLOAD_TYPE = "experiments"

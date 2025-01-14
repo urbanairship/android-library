@@ -872,6 +872,8 @@ public class PushMessage implements Parcelable, JsonSerializable {
      * Checks if the message is to update remote-data or not.
      *
      * @return <code>true</code> if the message contains the remote-data key, otherwise {@code false}.
+     *
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public boolean isRemoteDataUpdate() {

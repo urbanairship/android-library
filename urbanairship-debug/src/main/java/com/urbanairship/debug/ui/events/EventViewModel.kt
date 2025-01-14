@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class EventViewModel(private val repository: EventRepository) : ViewModel() {
     var events: MutableStateFlow<List<EventEntity>> = MutableStateFlow(emptyList())

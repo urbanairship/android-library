@@ -1,9 +1,9 @@
 plugins {
     id("airship-module")
     id("kotlin-android")
-    id("kotlin-kapt")
     id("kotlin-parcelize")
-    alias(libs.plugins.binary.compatibility.validator)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 description = "Airship Android SDK Message Center module"
@@ -13,12 +13,11 @@ airshipModule {
 }
 
 android {
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-        freeCompilerArgs = ["-Xexplicit-api=strict"]
-    }
-
     namespace 'com.urbanairship.messagecenter'
+
+    room {
+        schemaDirectory("$projectDir/schemas")
+    }
 }
 
 dependencies {
@@ -40,7 +39,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtimektx)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
 
     // Material
     implementation(libs.google.material)
@@ -61,11 +60,4 @@ dependencies {
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.room.testing)
-}
-
-apiValidation {
-    nonPublicMarkers.add("androidx.annotation.RestrictTo")
-
-    // Exclude the apiCheck task from check / build
-    validationDisabled = true
 }

@@ -9,6 +9,7 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
+/** @hide */
 @Entity(tableName = "preferences")
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PreferenceData {

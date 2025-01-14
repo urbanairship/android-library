@@ -14,6 +14,7 @@ import static java.lang.Long.rotateRight;
  *
  * Based on https://github.com/google/guava/blob/master/guava/src/com/google/common/hash/FarmHashFingerprint64.java
  *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class FarmHashFingerprint64 {

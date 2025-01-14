@@ -31,6 +31,7 @@ public class DeviceTagSelector
         internal val selectors: List<DeviceTagSelector> = emptyList()
     ) : JsonSerializable {
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         public fun and(@Size(min = 1) selectors: List<DeviceTagSelector>): DeviceTagSelector {

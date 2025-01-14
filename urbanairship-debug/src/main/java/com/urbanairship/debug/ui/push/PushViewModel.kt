@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class PushViewModel(repository: PushRepository) : ViewModel() {
     var pushes: MutableStateFlow<List<PushEntity>> = MutableStateFlow(emptyList())

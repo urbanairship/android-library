@@ -67,6 +67,7 @@ public data class MeteredUsageEventEntity(
     }
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public enum class MeteredUsageType(public val value: String) {
     IN_APP_EXPERIENCE_IMPRESSION("iax_impression");

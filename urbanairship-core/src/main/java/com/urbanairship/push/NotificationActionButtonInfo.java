@@ -26,6 +26,8 @@ public class NotificationActionButtonInfo {
      * @param isForeground {@code true} if the action should bring the app to the foreground, otherwise {@code false}.
      * @param remoteInput The remote input.
      * @param description The description.
+     *
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @VisibleForTesting

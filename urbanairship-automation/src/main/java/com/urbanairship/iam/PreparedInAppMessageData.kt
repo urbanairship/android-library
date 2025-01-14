@@ -8,6 +8,7 @@ import com.urbanairship.iam.adapter.DisplayAdapter
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.coordinator.DisplayCoordinator
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class PreparedInAppMessageData(
     val message: InAppMessage,

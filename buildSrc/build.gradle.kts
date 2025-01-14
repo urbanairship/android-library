@@ -18,17 +18,5 @@ gradlePlugin {
             id = "airship-publish"
             implementationClass = "AirshipPublishPlugin"
         }
-        register("airshipDokka") {
-            id = "airship-dokka"
-            implementationClass = "AirshipDokkaPlugin"
-        }
-        register("airshipDoclava") {
-            id = "airship-doclava"
-            implementationClass = "AirshipDoclavaPlugin"
-        }
-        register("airshipModule") {
-            id = "airship-module"
-            implementationClass = "AirshipModulePlugin"
-        }
     }
 }

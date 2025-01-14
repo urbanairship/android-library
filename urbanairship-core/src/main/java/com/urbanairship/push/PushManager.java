@@ -99,6 +99,8 @@ public class PushManager extends AirshipComponent {
      * <code>NotificationManager</code> by the library.
      * <p>
      * If a <code>Notification</code> was not created, the extra will not be included.
+     *
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
@@ -109,6 +111,8 @@ public class PushManager extends AirshipComponent {
      * <code>NotificationManager</code> by the library.
      * <p>
      * If a <code>Notification</code> was not created, the extra will not be included.
+     *
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @NonNull
@@ -959,6 +963,7 @@ public class PushManager extends AirshipComponent {
         return notificationListener;
     }
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     void onPushReceived(@NonNull PushMessage message, boolean notificationPosted) {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
@@ -977,6 +982,7 @@ public class PushManager extends AirshipComponent {
         }
     }
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     void onNotificationPosted(@NonNull PushMessage message, int notificationId, @Nullable String notificationTag) {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
@@ -1207,6 +1213,7 @@ public class PushManager extends AirshipComponent {
 
     }
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     List<InternalNotificationListener> getInternalNotificationListeners() {
         return internalNotificationListeners;

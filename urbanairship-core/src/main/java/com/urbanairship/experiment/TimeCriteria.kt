@@ -18,6 +18,7 @@ public data class TimeCriteria(
     private val end: Long?,
 ) : JsonSerializable {
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val KEY_START = "start_timestamp"

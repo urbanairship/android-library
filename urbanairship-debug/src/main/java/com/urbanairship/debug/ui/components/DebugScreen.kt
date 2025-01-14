@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public val LocalIgnoreBottomPadding: ProvidableCompositionLocal<Boolean> = compositionLocalOf { false }
 

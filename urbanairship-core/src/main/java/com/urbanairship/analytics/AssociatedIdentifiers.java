@@ -85,6 +85,7 @@ public class AssociatedIdentifiers implements JsonSerializable {
         return enabled != null && enabled.equalsIgnoreCase("true");
     }
 
+    /** @hide */
     @NonNull
     @Override
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

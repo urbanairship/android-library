@@ -1,11 +1,23 @@
 plugins {
     id 'airship-module'
-    id 'kotlin-android'
     id 'kotlin-allopen'
-    id 'kotlin-kapt'
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 description = "Airship Android SDK Automation module"
+
+airshipModule {
+    published = true
+}
+
+android {
+    namespace 'com.urbanairship.automation'
+
+    room {
+        schemaDirectory("$projectDir/schemas")
+    }
+}
 
 dependencies {
     api project(':urbanairship-core')
@@ -17,7 +29,7 @@ dependencies {
 
     // AndroidX
     implementation(libs.androidx.room.ktx)
-    kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.runtime)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
@@ -38,14 +50,6 @@ dependencies {
     testImplementation(libs.turbine)
 
     testImplementation(libs.androidx.room.testing)
-}
-
-android {
-    namespace 'com.urbanairship.automation'
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-        freeCompilerArgs = ["-Xexplicit-api=strict"]
-    }
 }
 
 allOpen {

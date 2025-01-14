@@ -80,6 +80,7 @@ public open class MessageCenterAction
 
     override fun shouldRunOnMainThread(): Boolean = true
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 

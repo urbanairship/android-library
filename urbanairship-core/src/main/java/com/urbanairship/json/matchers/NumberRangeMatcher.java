@@ -35,6 +35,8 @@ public class NumberRangeMatcher extends ValueMatcher {
      *
      * @param min The min value.
      * @param max The max value.
+     *
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public NumberRangeMatcher(@Nullable Double min, @Nullable Double max) {

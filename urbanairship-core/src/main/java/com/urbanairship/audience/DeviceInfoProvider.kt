@@ -18,6 +18,7 @@ import kotlinx.coroutines.sync.withLock
 
 /**
  * Device info provider.
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface DeviceInfoProvider {
@@ -36,13 +37,18 @@ public interface DeviceInfoProvider {
     public val installDateMilliseconds: Long
     public val locale: Locale
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
+        /** @hide */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @JvmStatic
         public fun newProvider(contactId: String? = null): DeviceInfoProvider {
             return DeviceInfoProviderImpl(contactId)
         }
 
+        /** @hide */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @JvmStatic
         public fun newCachingProvider(contactId: String? = null): DeviceInfoProvider {
             return CachingDeviceInfoProvider(DeviceInfoProviderImpl(contactId))

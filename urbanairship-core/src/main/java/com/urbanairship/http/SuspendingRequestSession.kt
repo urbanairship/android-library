@@ -18,6 +18,7 @@ import kotlinx.coroutines.withContext
 
 /**
  * A request session that will suspend and perform blocking operations on a thread pool.
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class SuspendingRequestSession(private val requestSession: RequestSession) {

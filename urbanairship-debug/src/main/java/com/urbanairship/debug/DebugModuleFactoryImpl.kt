@@ -11,7 +11,7 @@ import com.urbanairship.remotedata.RemoteData
 
 /**
  * Debug module factory implementation.
- * @suppress
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class DebugModuleFactoryImpl : DebugModuleFactory {

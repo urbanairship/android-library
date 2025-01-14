@@ -1,8 +1,7 @@
 plugins {
     id 'airship-module'
-    id 'kotlin-android'
-
     alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 description = "Airship Android Debug Tools"
@@ -14,17 +13,16 @@ airshipModule {
 android {
     namespace 'com.urbanairship.debug'
 
+    room {
+        schemaDirectory("$projectDir/schemas")
+    }
+
     buildFeatures{
         compose = true
     }
 
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-        freeCompilerArgs = ["-Xexplicit-api=strict"]
     }
 }
 

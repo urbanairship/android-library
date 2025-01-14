@@ -51,6 +51,7 @@ internal interface AutomationEngineInterface {
     suspend fun getSchedules(group: String): List<AutomationSchedule>
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class AutomationEngine(
     private val store: ScheduleStoreInterface,

@@ -578,11 +578,13 @@ public class AirshipChannel internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public sealed interface Extender {
 
+        /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun interface Suspending : Extender {
             public suspend fun extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder
         }
 
+        /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun interface Blocking : Extender {
             public fun extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder

@@ -72,6 +72,7 @@ public final class PreferenceDataStore {
 
     }
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static PreferenceDataStore loadDataStore(@NonNull Context context, @NonNull AirshipConfigOptions configOptions) {
         PreferenceDataDatabase db = PreferenceDataDatabase.createDatabase(context, configOptions);
@@ -82,6 +83,7 @@ public final class PreferenceDataStore {
         return dataStore;
     }
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @VisibleForTesting
     public static PreferenceDataStore inMemoryStore(@NonNull Context context) {

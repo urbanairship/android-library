@@ -9,12 +9,14 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireList
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public sealed class CompoundAudienceSelector: JsonSerializable {
 
     /**
      * Atomic selector. Defines an actual audience selector.
      * @audience The audience selector.
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class Atomic(val audience: AudienceSelector): CompoundAudienceSelector()
@@ -22,6 +24,7 @@ public sealed class CompoundAudienceSelector: JsonSerializable {
     /**
      * NOT selector. Negates the result.
      * @param selector The compound selector.
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class Not(val selector: CompoundAudienceSelector): CompoundAudienceSelector()
@@ -29,6 +32,7 @@ public sealed class CompoundAudienceSelector: JsonSerializable {
     /**
      * AND selector. All selectors have to evaluate true to match.
      * @param selectors The list of compound selectors to evaluate. If empty, evaluates to `true`.
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class And(val selectors: List<CompoundAudienceSelector>): CompoundAudienceSelector()
@@ -36,6 +40,7 @@ public sealed class CompoundAudienceSelector: JsonSerializable {
     /**
      * OR selector. At least once selector has to evaluate true to match.
      * @param selectors The list of compound selectors to evaluate. If empty, evaluates to `false`.
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class Or(val selectors: List<CompoundAudienceSelector>): CompoundAudienceSelector()

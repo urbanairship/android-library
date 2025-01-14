@@ -645,6 +645,7 @@ public class Inbox @VisibleForTesting internal constructor(
         }
     }
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     internal fun dispatchUpdateUserJob(forcefully: Boolean) {
         UALog.d("Updating user.")

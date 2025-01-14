@@ -20,6 +20,7 @@ public class EmbeddedPresentation(
     public val embeddedId: String
 ) : BasePresentation(PresentationType.EMBEDDED) {
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun getResolvedPlacement(context: Context): EmbeddedPlacement {
         if (placementSelectors.isNullOrEmpty()) {

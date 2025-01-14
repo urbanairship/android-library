@@ -21,6 +21,7 @@ public abstract class SubscriptionListEditor {
     private final List<SubscriptionListMutation> mutations = new ArrayList<>();
     private final Clock clock;
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected SubscriptionListEditor(Clock clock) {
         this.clock = clock;

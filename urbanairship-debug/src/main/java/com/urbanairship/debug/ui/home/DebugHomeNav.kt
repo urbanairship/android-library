@@ -23,6 +23,7 @@ import com.urbanairship.debug.ui.preferencecenter.preferenceCenterNav
 import com.urbanairship.debug.ui.privacymanager.privacyNav
 import com.urbanairship.debug.ui.push.pushNav
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Composable
 public fun DebugNavHost(

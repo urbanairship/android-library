@@ -31,9 +31,6 @@ public class HomeFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         HomeViewModel viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
         FragmentHomeBinding binding = FragmentHomeBinding.inflate(inflater, container, false);
-        binding.setLifecycleOwner(this);
-        binding.setViewModel(viewModel);
-
         bindThomasButtons(binding);
         bindIAAButtons(binding);
 

@@ -357,6 +357,7 @@ public final class LayoutUtils {
         return null;
     }
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void applySwitchStyle(@NonNull SwitchCompat view, @NonNull SwitchStyle style) {
         Context context = view.getContext();

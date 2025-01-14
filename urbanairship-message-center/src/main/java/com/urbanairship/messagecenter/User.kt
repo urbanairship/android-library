@@ -126,6 +126,7 @@ public class User internal constructor(
         return channel.id != null && registeredChannelId != channel.id
     }
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
@@ -135,8 +136,12 @@ public class User internal constructor(
         private const val USER_TOKEN_KEY = "${KEY_PREFIX}.USER_TOKEN"
         private const val USER_REGISTERED_CHANNEL_ID_KEY = "${KEY_PREFIX}.REGISTERED_CHANNEL_ID"
 
-        /** A flag indicating whether the user has been created. */
+        /**
+         * A flag indicating whether the user has been created.
+         * @hide
+         */
         @JvmStatic
+        @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public val isCreated: Boolean
             get() = MessageCenter.shared().user.isUserCreated
 

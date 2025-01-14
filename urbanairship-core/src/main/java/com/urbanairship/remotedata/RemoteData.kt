@@ -207,6 +207,7 @@ public class RemoteData @VisibleForTesting internal constructor(
         config.removeRemoteConfigListener(configListener)
     }
 
+    /** @hide */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
