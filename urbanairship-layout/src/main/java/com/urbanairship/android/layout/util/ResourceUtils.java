@@ -2,7 +2,15 @@
 
 package com.urbanairship.android.layout.util;
 
-import android.app.Activity;
+import static android.content.res.Configuration.ORIENTATION_LANDSCAPE;
+import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
+import static android.content.res.Configuration.SCREENLAYOUT_SIZE_LARGE;
+import static android.content.res.Configuration.SCREENLAYOUT_SIZE_NORMAL;
+import static android.content.res.Configuration.SCREENLAYOUT_SIZE_SMALL;
+import static android.content.res.Configuration.SCREENLAYOUT_SIZE_XLARGE;
+import static androidx.annotation.Dimension.DP;
+import static androidx.annotation.Dimension.SP;
+
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
@@ -14,6 +22,10 @@ import android.util.TypedValue;
 import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.view.WindowMetrics;
+
+import androidx.annotation.Dimension;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.urbanairship.android.layout.property.Orientation;
 import com.urbanairship.android.layout.property.WindowSize;
@@ -27,19 +39,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
-
-import androidx.annotation.Dimension;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import static android.content.res.Configuration.ORIENTATION_LANDSCAPE;
-import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
-import static android.content.res.Configuration.SCREENLAYOUT_SIZE_LARGE;
-import static android.content.res.Configuration.SCREENLAYOUT_SIZE_NORMAL;
-import static android.content.res.Configuration.SCREENLAYOUT_SIZE_SMALL;
-import static android.content.res.Configuration.SCREENLAYOUT_SIZE_XLARGE;
-import static androidx.annotation.Dimension.DP;
-import static androidx.annotation.Dimension.SP;
 
 public final class ResourceUtils {
     private ResourceUtils() {}
@@ -130,7 +129,7 @@ public final class ResourceUtils {
     }
 
     public static int getWindowWidthPixels(@NonNull Context context, boolean ignoreSafeArea) {
-        WindowManager windowManager = ((Activity) context).getWindowManager();
+        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowMetrics windowMetrics = windowManager.getCurrentWindowMetrics();
 
@@ -152,7 +151,7 @@ public final class ResourceUtils {
     }
 
     public static int getWindowHeightPixels(@NonNull Context context, boolean ignoreSafeArea) {
-        WindowManager windowManager = ((Activity) context).getWindowManager();
+        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowMetrics windowMetrics = windowManager.getCurrentWindowMetrics();
 
