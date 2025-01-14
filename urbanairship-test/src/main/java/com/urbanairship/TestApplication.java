@@ -65,7 +65,7 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.runtimeConfig = testRuntimeConfig;
         UAirship.sharedAirship.permissionsManager = new PermissionsManager(this);
         ChannelRegistrar channelRegistrar = new ChannelRegistrar(getApplicationContext(), preferenceDataStore, testRuntimeConfig);
-        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, privacyManager, UAirship.sharedAirship.localeManager, audienceOverridesProvider, channelRegistrar);
+        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, privacyManager, UAirship.sharedAirship.permissionsManager, UAirship.sharedAirship.localeManager, audienceOverridesProvider, channelRegistrar);
 
         UAirship.sharedAirship.analytics = new Analytics(
                 this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.channel, UAirship.sharedAirship.localeManager, UAirship.sharedAirship.permissionsManager,

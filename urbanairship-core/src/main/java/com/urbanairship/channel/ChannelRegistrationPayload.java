@@ -2,12 +2,6 @@
 
 package com.urbanairship.channel;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.StringDef;
-import androidx.core.util.ObjectsCompat;
-
 import com.urbanairship.UALog;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -18,8 +12,16 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.StringDef;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Model object encapsulating the data relevant to a creation or updates processed by ChannelApiClient.
@@ -65,6 +67,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     static final String ANDROID_EXTRAS_KEY = "android";
     static final String ANDROID_DELIVERY_TYPE = "delivery_type";
     static final String IS_ACTIVE = "is_activity";
+    static final String PERMISSIONS = "permissions";
 
     public final boolean optIn;
     public final boolean backgroundEnabled;
@@ -87,6 +90,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     public final String deliveryType;
     public final String contactId;
     public final boolean isActive;
+    public final Map<String, String> permissions;
 
     /**
      * Builds the ChannelRegistrationPayload
@@ -114,6 +118,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         private String deliveryType;
         private String contactId;
         private boolean isActive;
+        private Map<String, String> permissions;
 
         /**
          * Default ChannelRegistrationPayload.Builder constructor
@@ -147,6 +152,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             this.deliveryType = payload.deliveryType;
             this.contactId = payload.contactId;
             this.isActive = payload.isActive;
+            this.permissions = payload.permissions;
         }
 
         /**
@@ -369,6 +375,18 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         }
 
         /**
+         * Set permissions.
+         *
+         * @param permissions Permission name with status.
+         * @return The builder.
+         */
+        @NonNull
+        public Builder setPermissions(Map<String, String> permissions) {
+            this.permissions = permissions;
+            return this;
+        }
+
+        /**
          * Set the Accengage Device ID
          *
          * @param accengageDeviceId The Accengage Device ID
@@ -421,6 +439,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
         this.deliveryType = builder.deliveryType;
         this.contactId = builder.contactId;
         this.isActive = builder.isActive;
+        this.permissions = builder.permissions;
     }
 
     @NonNull
@@ -486,6 +505,10 @@ public class ChannelRegistrationPayload implements JsonSerializable {
             }
         }
 
+        if (permissions != null && permissions != last.permissions) {
+            builder.setPermissions(permissions);
+        }
+
         return builder.build();
     }
 
@@ -519,6 +542,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
     @NonNull
     @Override
     public JsonValue toJsonValue() {
+
         // Channel Payload
         JsonMap.Builder channel = JsonMap.newBuilder()
                                          .put(DEVICE_TYPE_KEY, deviceType)
@@ -557,6 +581,14 @@ public class ChannelRegistrationPayload implements JsonSerializable {
 
         if (setTags && tagChanges != null) {
             channel.put(TAG_CHANGES_KEY, JsonValue.wrapOpt(tagChanges).getMap());
+        }
+
+        if (permissions != null) {
+            JsonMap.Builder convertedPermissions = JsonMap.newBuilder();
+            for (String key : permissions.keySet()) {
+                convertedPermissions.put(key, JsonValue.wrap(permissions.get(key)));
+            }
+            channel.put(PERMISSIONS, convertedPermissions.build());
         }
 
         // Identity hints
@@ -604,7 +636,8 @@ public class ChannelRegistrationPayload implements JsonSerializable {
                 && ObjectsCompat.equals(carrier, payload.carrier)
                 && ObjectsCompat.equals(accengageDeviceId, payload.accengageDeviceId)
                 && ObjectsCompat.equals(deliveryType, payload.deliveryType)
-                && ObjectsCompat.equals(contactId, payload.contactId);
+                && ObjectsCompat.equals(contactId, payload.contactId)
+                && ObjectsCompat.equals(permissions, payload.permissions);
     }
 
     @Override
@@ -617,7 +650,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(optIn, backgroundEnabled, deviceType, pushAddress, setTags, tags, tagChanges, userId, timezone, language, country, locationSettings, appVersion, sdkVersion, deviceModel, apiVersion, carrier, accengageDeviceId, deliveryType, contactId);
+        return ObjectsCompat.hash(optIn, backgroundEnabled, deviceType, pushAddress, setTags, tags, tagChanges, userId, timezone, language, country, locationSettings, appVersion, sdkVersion, deviceModel, apiVersion, carrier, accengageDeviceId, deliveryType, contactId, permissions);
     }
 
     @NonNull
@@ -645,6 +678,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
                 ", deliveryType='" + deliveryType + '\'' +
                 ", contactId='" + contactId + '\'' +
                 ", isActive=" + isActive +
+                ", permissions=" + permissions +
                 '}';
     }
 
@@ -687,6 +721,15 @@ public class ChannelRegistrationPayload implements JsonSerializable {
 
         String deliveryType = channelJson.opt(ANDROID_EXTRAS_KEY).optMap().opt(ANDROID_DELIVERY_TYPE).getString();
 
+        Map<String, String> permissions = null;
+        if (channelJson.containsKey(PERMISSIONS)) {
+            permissions = new HashMap<>();
+
+            for (Map.Entry<String, JsonValue> entry : channelJson.opt(PERMISSIONS).optMap().getMap().entrySet()) {
+                permissions.put(entry.getKey(), entry.getValue().getString());
+            }
+        }
+
         return new Builder().setOptIn(channelJson.opt(OPT_IN_KEY).getBoolean(false))
                             .setBackgroundEnabled(channelJson.opt(BACKGROUND_ENABLED_KEY).getBoolean(false))
                             .setDeviceType(channelJson.opt(DEVICE_TYPE_KEY).getString())
@@ -707,6 +750,7 @@ public class ChannelRegistrationPayload implements JsonSerializable {
                             .setDeliveryType(deliveryType)
                             .setContactId(channelJson.opt(CONTACT_ID_KEY).getString())
                             .setIsActive(channelJson.opt(IS_ACTIVE).getBoolean(false))
+                            .setPermissions(permissions)
                             .build();
     }
 

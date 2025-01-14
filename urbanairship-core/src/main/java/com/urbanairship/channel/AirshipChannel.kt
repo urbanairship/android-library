@@ -29,6 +29,8 @@ import com.urbanairship.job.JobInfo.ConflictStrategy
 import com.urbanairship.job.JobResult
 import com.urbanairship.json.JsonValue
 import com.urbanairship.locale.LocaleManager
+import com.urbanairship.permission.PermissionStatus
+import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.Clock
 import com.urbanairship.util.Network
 import com.urbanairship.util.UAStringUtil
@@ -58,6 +60,7 @@ public class AirshipChannel internal constructor(
     dataStore: PreferenceDataStore,
     private val runtimeConfig: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
+    private val permissionsManager: PermissionsManager,
     private val localeManager: LocaleManager,
     private val channelManager: ChannelBatchUpdateManager,
     private val channelRegistrar: ChannelRegistrar,
@@ -78,6 +81,7 @@ public class AirshipChannel internal constructor(
         dataStore: PreferenceDataStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
+        permissionsManager: PermissionsManager,
         localeManager: LocaleManager,
         audienceOverridesProvider: AudienceOverridesProvider,
         channelRegistrar: ChannelRegistrar
@@ -86,6 +90,7 @@ public class AirshipChannel internal constructor(
         dataStore = dataStore,
         runtimeConfig = runtimeConfig,
         privacyManager = privacyManager,
+        permissionsManager = permissionsManager,
         localeManager = localeManager,
         channelManager = ChannelBatchUpdateManager(
             dataStore, runtimeConfig, audienceOverridesProvider
@@ -541,6 +546,27 @@ public class AirshipChannel internal constructor(
                 builder.setLanguage(locale.language)
             }
             builder.setSdkVersion(UAirship.getVersion())
+        }
+
+        if (privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
+            val permissions = buildMap<String, String> {
+                permissionsManager.configuredPermissions.forEach { permission ->
+                    try {
+                        permissionsManager
+                            .checkPermissionStatus(permission)
+                            .get()
+                            ?.let { status ->
+                                if (status != PermissionStatus.NOT_DETERMINED) {
+                                    put(permission.value, status.value)
+                                }
+                            }
+                    } catch (_: Exception) {}
+                }
+            }
+
+            if (permissions.isNotEmpty()) {
+                builder.setPermissions(permissions)
+            }
         }
 
         return builder
