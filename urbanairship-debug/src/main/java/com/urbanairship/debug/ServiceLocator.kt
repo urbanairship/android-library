@@ -4,17 +4,13 @@ package com.urbanairship.debug
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.urbanairship.debug.event.EventRepository
-import com.urbanairship.debug.event.persistence.EventDao
-import com.urbanairship.debug.event.persistence.EventDatabase
-import com.urbanairship.debug.push.PushRepository
-import com.urbanairship.debug.push.persistence.PushDao
-import com.urbanairship.debug.push.persistence.PushDatabase
+import com.urbanairship.debug.ui.events.EventDao
+import com.urbanairship.debug.ui.events.EventDatabase
+import com.urbanairship.debug.ui.events.EventRepository
+import com.urbanairship.debug.ui.push.PushDao
+import com.urbanairship.debug.ui.push.PushDatabase
+import com.urbanairship.debug.ui.push.PushRepository
 
-/**
- * Service locator. Eventually we will want to use a proper DI framework.
- * @hide
- */
 internal interface ServiceLocator {
 
     companion object {

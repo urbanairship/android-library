@@ -24,6 +24,8 @@ import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
 
 /**
  * Analytics database.
+ *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Database(entities = { EventEntity.class }, version = 3)

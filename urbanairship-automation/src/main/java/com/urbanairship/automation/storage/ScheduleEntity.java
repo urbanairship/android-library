@@ -7,6 +7,7 @@ import com.urbanairship.json.JsonValue;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.room.Entity;
@@ -24,7 +25,7 @@ public class ScheduleEntity {
     public int id;
 
     public String scheduleId;
-    public String group;
+    @Nullable public String group;
     public JsonMap metadata;
     public int limit;
     public int priority;
@@ -38,22 +39,23 @@ public class ScheduleEntity {
     public int count;
     public int executionState;
     public long executionStateChangeDate;
-    public String triggerContext;
+    @Nullable public String triggerContext;
     public int appState;
     public List<String> screens;
     public long seconds;
-    public String regionId;
-    public String audience;
+    @Nullable public String regionId;
+    @Nullable public String audience;
     public JsonValue campaigns;
     public JsonValue reportingContext;
 
     public List<String> frequencyConstraintIds;
 
-    public String messageType;
+    @Nullable public String messageType;
     public boolean bypassHoldoutGroups;
     public long newUserEvaluationDate;
     @Nullable public String productId;
 
+    @NonNull
     @Override
     public String toString() {
         return "ScheduleEntity{" +

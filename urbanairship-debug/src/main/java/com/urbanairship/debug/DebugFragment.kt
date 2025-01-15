@@ -1,85 +1,79 @@
-/* Copyright Airship and Contributors */
-
 package com.urbanairship.debug
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.Toolbar
-import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.Navigation
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.NavigationUI
-import com.urbanairship.debug.databinding.UaFragmentDebugBinding
-import com.urbanairship.debug.extensions.setupToolbarWithNavController
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.annotation.RestrictTo
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+import androidx.fragment.app.Fragment
+import androidx.navigation.NavController
+import androidx.navigation.Navigation.findNavController
+import androidx.navigation.compose.rememberNavController
+import com.urbanairship.debug.ui.components.LocalIgnoreBottomPadding
+import com.urbanairship.debug.ui.home.DebugNavHost
+import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 
-/**
- * Fragment that lists all the debug entries. Entries are defined in `xml/ua_debug_entries.xml`.
- */
-open class DebugFragment : androidx.fragment.app.Fragment() {
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class DebugFragment : Fragment() {
 
-    private val debugScreenEntryLiveData = MutableLiveData<List<DebugEntry>>()
+    private val ignoreBottomPadding: Boolean
+        get() = arguments?.getBoolean(ARG_IGNORE_BOTTOM_PADDING) == true
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val dataBinding = DataBindingUtil.inflate<UaFragmentDebugBinding>(inflater, R.layout.ua_fragment_debug, container, false)
+    private val showNavIconOnDebugHomeScreen: Boolean
+        get() = arguments?.getBoolean(ARG_SHOW_NAV_ICON_ON_DEBUG_HOME_SCREEN) == true
 
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            val entries = DebugEntry.parse(requireContext(), R.xml.ua_debug_entries)
-            withContext(Dispatchers.Main) {
-                debugScreenEntryLiveData.value = entries
-            }
-        }
-
-        val componentAdapter = DebugEntryAdapter {
-            if (isResumed) {
-                Navigation.findNavController(dataBinding.root).navigate(it.navigationId)
-            }
-        }
-
-        debugScreenEntryLiveData.observe(viewLifecycleOwner, Observer(componentAdapter::submitList))
-
-        dataBinding.apply {
-            lifecycleOwner = this@DebugFragment
-
-            screens.apply {
-                addItemDecoration(androidx.recyclerview.widget.DividerItemDecoration(context, androidx.recyclerview.widget.DividerItemDecoration.VERTICAL))
-                adapter = componentAdapter
-            }
-        }
-
-        return dataBinding.root
+    /** The NavController for the sample app's nav graph. */
+    private val sampleNavController: NavController by lazy {
+        findNavController(requireView())
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        val fallbackListener = AppBarConfiguration.OnNavigateUpListener {
-            activity?.finish()
-            true
-        }
-
-        // Add a back button if the fragment is opened from Goat settings
-        if (activity?.intent?.extras?.getBoolean("includeBackButton") == true) {
-
-            val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
-            val appBarConfiguration = AppBarConfiguration.Builder(emptySet())
-                .setFallbackOnNavigateUpListener(fallbackListener)
-                .build()
-            toolbar?.let {t ->
-                val navController = Navigation.findNavController(t)
-                NavigationUI.setupWithNavController(t, navController, appBarConfiguration)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                // Provide the ignoreBottomPadding value to the composition.
+                // This lets us control whether we apply or ignore bottom padding in the shared
+                // DebugScreen composable.
+                CompositionLocalProvider(LocalIgnoreBottomPadding provides ignoreBottomPadding) {
+                    AirshipDebugTheme {
+                        // Nav controller for the debug nav graph (using compose navigation).
+                        val debugNavController = rememberNavController()
+                        DebugNavHost(
+                            navController = debugNavController,
+                            showNavIconOnDebugHomeScreen = showNavIconOnDebugHomeScreen,
+                            onNavigateUpFromHomeScreen = { sampleNavController.navigateUp() }
+                        )
+                    }
+                }
             }
-        } else {
-            setupToolbarWithNavController(R.id.toolbar)
+        }
+    }
+
+    public companion object {
+        public const val ARG_IGNORE_BOTTOM_PADDING: String = "ignoreBottomPadding"
+        public const val ARG_SHOW_NAV_ICON_ON_DEBUG_HOME_SCREEN: String = "showNavIconOnDebugHomeScreen"
+
+        @JvmStatic
+        public fun newInstance(
+            ignoreBottomPadding: Boolean = false,
+            showNavIconOnDebugHomeScreen: Boolean = false
+        ): DebugFragment {
+            return DebugFragment().apply {
+                arguments = Bundle().apply {
+                    putBoolean(ARG_IGNORE_BOTTOM_PADDING, ignoreBottomPadding)
+                    putBoolean(ARG_SHOW_NAV_ICON_ON_DEBUG_HOME_SCREEN, showNavIconOnDebugHomeScreen)
+                }
+            }
         }
     }
 }

@@ -15,6 +15,8 @@ import androidx.room.Transaction;
 
 /**
  * Event data access object.
+ *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Dao

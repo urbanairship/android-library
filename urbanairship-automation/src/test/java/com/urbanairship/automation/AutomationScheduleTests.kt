@@ -3,6 +3,7 @@ package com.urbanairship.automation
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.audience.AudienceSelector
+import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.Custom
@@ -236,6 +237,107 @@ public class AutomationScheduleTests {
             startDate = 1703030400000U,
             endDate = 1703116800000U,
             audience = AutomationAudience(AudienceSelector.newBuilder().build()),
+            delay = AutomationDelay(),
+            interval = 3600U,
+            bypassHoldoutGroups = true,
+            editGracePeriodDays = 7U,
+            metadata = jsonMapOf().toJsonValue(),
+            frequencyConstraintIds = listOf("constraint1", "constraint2"),
+            messageType = "test_type",
+            additionalAudienceCheckOverrides = AdditionalAudienceCheckOverrides(
+                bypass = true,
+                context = JsonValue.wrap("json-context"),
+                url = "https://result.url"
+            )
+        )
+
+        verify(json, expected)
+    }
+
+    @Test
+    public fun testParseInAppMessageCompoundAudience() {
+        val json = """
+            {
+              "id": "test_schedule",
+              "triggers": [
+                {
+                  "type": "custom_event_count",
+                  "goal": 1,
+                  "id": "json-id"
+                }
+              ],
+              "group": "test_group",
+              "priority": 2,
+              "limit": 5,
+              "start": "2023-12-20T00:00:00Z",
+              "end": "2023-12-21T00:00:00Z",
+              "compound_audience": {
+                "selector": {
+                  "type": "atomic",
+                  "audience": {
+                    "new_user": true
+                  }
+                },
+                "miss_behavior": "skip"
+              },
+              "delay": {},
+              "interval": 3600,
+              "type": "in_app_message",
+              "message": {
+                "source": "app-defined",
+                "display": {
+                  "cool": "story"
+                },
+                "display_type": "custom",
+                "name": "woot"
+              },
+              "bypass_holdout_groups": true,
+              "edit_grace_period": 7,
+              "metadata": {},
+              "frequency_constraint_ids": [
+                "constraint1",
+                "constraint2"
+              ],
+              "message_type": "test_type",
+              "last_updated": "2023-12-20T12:30:00Z",
+              "created": "2023-12-20T12:00:00Z"
+            }
+        """.trimIndent()
+
+        val message = InAppMessage(
+            name = "woot",
+            displayContent = InAppMessageDisplayContent.CustomContent(
+                Custom(jsonMapOf("cool" to "story").toJsonValue())
+            ),
+            source =  InAppMessage.Source.APP_DEFINED
+        )
+
+        val expected = AutomationSchedule(
+            identifier = "test_schedule",
+            data = AutomationSchedule.ScheduleData.InAppMessageData(message),
+            triggers = listOf(
+                AutomationTrigger.Event(
+                    EventAutomationTrigger(
+                        id = "json-id",
+                        type = EventAutomationTriggerType.CUSTOM_EVENT_COUNT,
+                        goal = 1.0,
+                        predicate = null
+                    )
+                )
+            ),
+            created = 1703073600000U,
+            group = "test_group",
+            priority = 2,
+            limit = 5U,
+            startDate = 1703030400000U,
+            endDate = 1703116800000U,
+            audience = null,
+            compoundAudience = AutomationCompoundAudience(
+                selector = CompoundAudienceSelector.Atomic(
+                    AudienceSelector.newBuilder().setNewUser(true).build()
+                ),
+                missBehavior = AutomationAudience.MissBehavior.SKIP
+            ),
             delay = AutomationDelay(),
             interval = 3600U,
             bypassHoldoutGroups = true,

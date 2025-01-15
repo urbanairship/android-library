@@ -128,6 +128,7 @@ internal constructor(
 
     /**
      * Returns a list with all active live updates
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public suspend fun getAllActiveUpdates(): List<LiveUpdate> = registrar.getAllActiveUpdates()

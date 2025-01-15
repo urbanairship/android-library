@@ -1,9 +1,12 @@
 package com.urbanairship.audience
 
 import android.util.Base64
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestApplication
 import com.urbanairship.UAirship
+import com.urbanairship.cache.AirshipCache
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMatcher
 import com.urbanairship.json.JsonPredicate
@@ -29,6 +32,11 @@ import org.junit.runner.RunWith
 public class AudienceSelectorTest {
 
     private val infoProvider: DeviceInfoProvider = mockk()
+    private val hashChecker = HashChecker(AirshipCache(
+        context = ApplicationProvider.getApplicationContext(),
+        runtimeConfig = TestAirshipRuntimeConfig(),
+        isPersistent = false
+    ))
 
     @Test
     @Throws(JsonException::class)
@@ -286,6 +294,6 @@ public class AudienceSelectorTest {
     }
 
     private suspend fun checkAudience(audience: AudienceSelector, timestamp: Long = 0): Boolean {
-        return audience.evaluate(timestamp, infoProvider)
+        return audience.evaluate(timestamp, infoProvider, hashChecker).isMatch
     }
 }

@@ -88,13 +88,13 @@ jobs:
           draft: false
           prerelease: false
           
-      - name: Upload java doc assets
+      - name: Upload docs package
         uses: actions/upload-artifact@v3
         with:
           name: packaged-docs-${{ steps.get_version.outputs.VERSION }}
           retention-days: 1
           path: |
-            build/docs/${{ steps.get_version.outputs.VERSION }}.tar.gz
+#            build/docs/${{ steps.get_version.outputs.VERSION }}.tar.gz
             build/docs/${{ steps.get_version.outputs.VERSION }}-kdoc.tar.gz
           # The publish-docs workflow will build the docs if we
           # somehow fail to upload them in this step.

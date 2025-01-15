@@ -24,6 +24,7 @@ import com.urbanairship.android.layout.property.firstPagerNextOrNull
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
 import com.urbanairship.android.layout.property.hasPagerNext
 import com.urbanairship.android.layout.property.hasPagerPause
+import com.urbanairship.android.layout.property.hasPagerPauseOrResumeAction
 import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasPagerResume
 import com.urbanairship.android.layout.util.DelicateLayoutApi
@@ -103,11 +104,23 @@ internal class PagerModel(
                     // Handle any actions defined for the current page.
                     items[it.pageIndex].run {
                         handlePageActions(displayActions, automatedActions)
-                        // Pause the story if the video is not ready
-                        if (!it.isMediaPaused && !it.isTouchExplorationEnabled) {
-                            resumeStory()
-                        } else {
+
+                        // Check if the current page has any automated pause/resume actions
+                        val hasPauseOrResumeAction = automatedActions?.hasPagerPauseOrResumeAction == true
+
+                        if (it.isTouchExplorationEnabled) {
+                            // Always pause for accessibility
                             pauseStory()
+                        } else if (it.isMediaPaused) {
+                            // Media not ready, pause until ready
+                            pauseStory()
+                        } else {
+                            // Resume if either:
+                            // - Media just became ready (wasMediaPaused)
+                            // - OR no automated pause/resume actions exist
+                            if (it.wasMediaPaused || !hasPauseOrResumeAction) {
+                                resumeStory()
+                            }
                         }
                     }
                 }
@@ -125,9 +138,11 @@ internal class PagerModel(
     override fun onViewAttached(view: PagerView) {
         // Collect page index changes from state and tell the view to scroll to the current page.
         viewScope.launch {
-            pagerState.changes.map { it.pageIndex to it.lastPageIndex }
+            pagerState.changes
+                .map { it.pageIndex to it.lastPageIndex }
                 .filter { (pageIndex, lastPageIndex) -> pageIndex != lastPageIndex }
-                .distinctUntilChanged().collect { (pageIndex, _) ->
+                .distinctUntilChanged()
+                .collect { (pageIndex, _) ->
                     listener?.scrollTo(pageIndex)
                 }
         }
@@ -148,7 +163,6 @@ internal class PagerModel(
 
         // If we have gestures defined, collect events from the view and handle them.
         if (viewInfo.gestures != null) {
-            UALog.v { "${viewInfo.gestures.size} gestures defined." }
             viewScope.launch {
                 view.pagerGestures().collect {
                     handleGesture(it)
@@ -157,6 +171,7 @@ internal class PagerModel(
         } else {
             UALog.v { "No gestures defined." }
         }
+
         // Set up accessibility actions and manage touch exploration state
         val accessibilityManager =
             view.context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
@@ -171,12 +186,14 @@ internal class PagerModel(
         }
 
         viewScope.launch {
-            pagerState.changes.collect { state ->
-                val currentItem = items[state.pageIndex]
-                view.setAccessibilityActions(currentItem.accessibilityActions) { action ->
-                    handleAccessibilityAction(action, state)
+            pagerState.changes
+                .map { it to items[it.pageIndex] }
+                .distinctUntilChanged()
+                .collect { (state, currentItem) ->
+                    view.setAccessibilityActions(currentItem.accessibilityActions) { action ->
+                        handleAccessibilityAction(action, state)
+                    }
                 }
-            }
         }
     }
 
@@ -212,7 +229,9 @@ internal class PagerModel(
         val pagerContext = pagerState.reportingContext()
         report(
             ReportingEvent.PageGesture(
-                gesture.identifier, gesture.reportingMetadata, pagerContext
+                gesture.identifier,
+                gesture.reportingMetadata,
+                pagerContext
             ), layoutState.reportingContext(pagerContext = pagerContext)
         )
     }
@@ -221,25 +240,28 @@ internal class PagerModel(
         val pagerContext = pagerState.reportingContext()
         report(
             ReportingEvent.PageAction(
-                action.identifier, action.reportingMetadata, pagerContext
-            ), layoutState.reportingContext(pagerContext = pagerContext)
+                action.identifier,
+                action.reportingMetadata,
+                pagerContext
+            ),
+            layoutState.reportingContext(pagerContext = pagerContext)
         )
     }
 
     private fun handleAccessibilityAction(action: AccessibilityAction, pagerState: State.Pager) {
         action.behaviors?.let { evaluateClickBehaviors(it) }
-        action.actions?.let { runActions(it) }
+
+        runActions(action.actions)
 
         // TODO: Report the accessibility action
     }
 
     private suspend fun handlePageActions(
-        displayActions: Map<String, JsonValue>?, automatedActions: List<AutomatedAction>?
+        displayActions: Map<String, JsonValue>?,
+        automatedActions: List<AutomatedAction>?
     ) {
         // Run any display actions for the current page.
-        displayActions?.let { actions ->
-            runActions(actions)
-        }
+        runActions(displayActions)
 
         // Run any automated for the current page.
         automatedActions?.let { actions ->
@@ -355,7 +377,8 @@ internal class PagerModel(
     }
 
     private fun handlePagerNext(fallback: PagerNextFallback) {
-        @OptIn(DelicateLayoutApi::class) val hasNext = pagerState.value.hasNext
+        @OptIn(DelicateLayoutApi::class)
+        val hasNext = pagerState.value.hasNext
 
         when {
             !hasNext && fallback == PagerNextFallback.FIRST -> pagerState.update { state ->
@@ -423,7 +446,8 @@ internal class PagerModel(
                 if (pageIndex != null) {
                     "Cleared all automated actions! For page: '$pageIndex'"
                 } else {
-                    @OptIn(DelicateLayoutApi::class) "Cleared all automated actions! For pager: '${pagerState.value.identifier}'"
+                    @OptIn(DelicateLayoutApi::class)
+                    "Cleared all automated actions! For pager: '${pagerState.value.identifier}'"
                 }
             }
         }
@@ -443,7 +467,10 @@ internal class PagerModel(
     }
 }
 
-internal enum class PagerNextFallback { NONE, DISMISS, FIRST
+internal enum class PagerNextFallback {
+    NONE,
+    DISMISS,
+    FIRST
 }
 
 internal val List<ButtonClickBehaviorType>.pagerNextFallback: PagerNextFallback

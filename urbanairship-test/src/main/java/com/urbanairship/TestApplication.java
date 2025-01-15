@@ -11,6 +11,7 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.audience.AudienceOverridesProvider;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
+import com.urbanairship.channel.ChannelRegistrar;
 import com.urbanairship.contacts.Contact;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.locale.LocaleManager;
@@ -62,9 +63,9 @@ public class TestApplication extends Application implements TestLifecycleApplica
         UAirship.sharedAirship.preferenceDataStore = preferenceDataStore;
         UAirship.sharedAirship.localeManager = new LocaleManager(this, preferenceDataStore);
         UAirship.sharedAirship.runtimeConfig = testRuntimeConfig;
-
         UAirship.sharedAirship.permissionsManager = new PermissionsManager(this);
-        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, privacyManager, UAirship.sharedAirship.localeManager, audienceOverridesProvider);
+        ChannelRegistrar channelRegistrar = new ChannelRegistrar(getApplicationContext(), preferenceDataStore, testRuntimeConfig);
+        UAirship.sharedAirship.channel = new AirshipChannel(this, preferenceDataStore, UAirship.sharedAirship.runtimeConfig, privacyManager, UAirship.sharedAirship.permissionsManager, UAirship.sharedAirship.localeManager, audienceOverridesProvider, channelRegistrar);
 
         UAirship.sharedAirship.analytics = new Analytics(
                 this, preferenceDataStore, testRuntimeConfig, privacyManager, UAirship.sharedAirship.channel, UAirship.sharedAirship.localeManager, UAirship.sharedAirship.permissionsManager,

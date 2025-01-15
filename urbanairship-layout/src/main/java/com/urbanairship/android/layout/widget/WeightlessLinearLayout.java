@@ -32,6 +32,7 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
  * Variant of {@code LinearLayout} that replaces weight with max percentage sizes.
  * <p>
  * If any children specify max percents, any remaining space in the layout will be allocated evenly, up to the max size.
+ * @hide
  */
 @RestrictTo(LIBRARY_GROUP)
 public class WeightlessLinearLayout extends ViewGroup {

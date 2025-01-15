@@ -1,7 +1,6 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
-    id 'kotlin-kapt'
     alias(libs.plugins.kotlinx.serialization)
 }
 
@@ -21,7 +20,6 @@ android {
     }
 
     buildFeatures {
-        dataBinding = true
         viewBinding = true
         buildConfig = true
         compose = true
@@ -61,6 +59,7 @@ dependencies {
 
     // Jetpack
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.activityktx)
     implementation(libs.google.material)
     implementation(libs.androidx.preference)
     implementation(libs.androidx.lifecycle.viewmodel)

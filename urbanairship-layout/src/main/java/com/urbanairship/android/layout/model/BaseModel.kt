@@ -2,16 +2,18 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
-import android.view.View
 import android.view.View.OnAttachStateChangeListener
 import androidx.annotation.VisibleForTesting
+import com.urbanairship.Provider
 import com.urbanairship.UALog
+import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.Accessible
+import com.urbanairship.android.layout.info.View
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
@@ -28,11 +30,13 @@ import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.toJsonMap
+import com.urbanairship.util.PlatformUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
+import android.view.View as AndroidView
 
 internal typealias AnyModel = BaseModel<*, *, *>
 
@@ -40,10 +44,11 @@ internal data class ModelProperties(
     val pagerPageId: String?
 )
 
-internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.info.View, L : BaseModel.Listener>(
+internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Listener>(
     val viewInfo: I,
     protected val environment: ModelEnvironment,
     protected val properties: ModelProperties,
+    private val platformProvider: Provider<Int> = Provider { UAirship.shared().platformType }
 ) {
 
     internal interface Listener {
@@ -56,12 +61,14 @@ internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.
 
     internal open var listener: L? = null
 
-    val viewId: Int = View.generateViewId()
+    val viewId: Int = AndroidView.generateViewId()
 
     private var background: Background? = null
 
     fun createView(
-        context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?
+        context: Context,
+        viewEnvironment: ViewEnvironment,
+        itemProperties: ItemProperties?
     ): T {
         background = null
 
@@ -70,12 +77,12 @@ internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.
 
         updateBackground()
         view.addOnAttachStateChangeListener(object : OnAttachStateChangeListener {
-            override fun onViewAttachedToWindow(v: View) {
+            override fun onViewAttachedToWindow(v: AndroidView) {
                 setupViewListeners(view)
                 onViewAttached(view)
             }
 
-            override fun onViewDetachedFromWindow(v: View) {
+            override fun onViewDetachedFromWindow(v: AndroidView) {
                 onViewDetached(view)
 
                 // Stop child jobs for the view scope, but leave the scope itself running so that
@@ -179,11 +186,22 @@ internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.
         environment.reporter.report(event, state)
 
     protected fun runActions(
-        actions: Map<String, JsonValue>?, state: LayoutData = layoutState.reportingContext()
+        actions: Map<String, JsonValue>?,
+        state: LayoutData = layoutState.reportingContext()
     ) {
-        if (actions != null) {
-            environment.actionsRunner.run(actions, state)
-        }
+        val platform = PlatformUtils.asString(platformProvider.get())
+        val mergedActions = actions.orEmpty().toMutableMap()
+
+        mergedActions
+            .remove(KEY_PLATFORM_OVERRIDE)
+            ?.map
+            ?.get(platform)
+            ?.map
+            ?.let { overrides ->
+                overrides.forEach { mergedActions[it.key] = it.value }
+            }
+
+        environment.actionsRunner.run(mergedActions, state)
     }
 
     protected fun broadcast(event: LayoutEvent) = modelScope.launch {
@@ -255,44 +273,43 @@ internal abstract class BaseModel<T : View, I : com.urbanairship.android.layout.
         listener?.setEnabled(isEnabled)
     }
 
-    fun runStateActions(actions: List<StateAction>?, formValue: Any? = null) {
-        actions?.forEach { action ->
-            when (action) {
-                is StateAction.SetFormValue -> layoutState.layout?.let { state ->
-                    UALog.v(
-                        "StateAction: SetFormValue ${action.key} = ${
-                            JsonValue.wrapOpt(
-                                formValue
-                            )
-                        }"
-                    )
-                    state.update {
-                        it.copy(state = it.state + (action.key to JsonValue.wrapOpt(formValue)))
-                    }
-                } ?: UALog.w("StateAction: SetFormValue skipped. Missing State Controller!")
-
-                is StateAction.SetState -> layoutState.layout?.let { state ->
-                    UALog.v("StateAction: SetState ${action.key} = ${action.value}")
-                    state.update {
-                        it.copy(state = it.state + (action.key to action.value))
-                    }
-                } ?: UALog.w("StateAction: SetState skipped. Missing State Controller!")
-
-                StateAction.ClearState -> layoutState.layout?.let { state ->
-                    UALog.v("StateAction: ClearState")
-                    state.update {
-                        it.copy(state = emptyMap())
-                    }
-                } ?: UALog.w("StateAction: ClearState skipped. Missing State Controller!")
-            }
-        }
-    }
-
     fun handleViewEvent(type: EventHandler.Type, value: Any? = null) {
         for (handler in viewInfo.eventHandlers.orEmpty()) {
             if (handler.type == type) {
                 runStateActions(handler.actions, value)
             }
         }
+    }
+
+    fun runStateActions(
+        actions: List<StateAction>?,
+        formValue: Any? = null
+    ) = actions?.forEach { action ->
+        when (action) {
+            is StateAction.SetFormValue -> layoutState.layout?.let { state ->
+                UALog.v("StateAction: SetFormValue ${action.key} = ${JsonValue.wrapOpt(formValue)}")
+                state.update {
+                    it.copy(state = it.state + (action.key to JsonValue.wrapOpt(formValue)))
+                }
+            } ?: UALog.w("StateAction: SetFormValue skipped. Missing State Controller!")
+
+            is StateAction.SetState -> layoutState.layout?.let { state ->
+                UALog.v("StateAction: SetState ${action.key} = ${action.value}")
+                state.update {
+                    it.copy(state = it.state + (action.key to action.value))
+                }
+            } ?: UALog.w("StateAction: SetState skipped. Missing State Controller!")
+
+            StateAction.ClearState -> layoutState.layout?.let { state ->
+                UALog.v("StateAction: ClearState")
+                state.update {
+                    it.copy(state = emptyMap())
+                }
+            } ?: UALog.w("StateAction: ClearState skipped. Missing State Controller!")
+        }
+    }
+
+    private companion object {
+        private const val KEY_PLATFORM_OVERRIDE = "platform_action_overrides"
     }
 }

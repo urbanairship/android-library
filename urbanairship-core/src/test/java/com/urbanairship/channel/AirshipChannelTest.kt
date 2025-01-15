@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.telephony.TelephonyManager
 import androidx.test.core.app.ApplicationProvider
+import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
@@ -16,8 +17,13 @@ import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.locale.LocaleChangedListener
 import com.urbanairship.locale.LocaleManager
+import com.urbanairship.permission.Permission
+import com.urbanairship.permission.PermissionStatus
+import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import java.util.Locale
+import java.util.TimeZone
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -25,10 +31,9 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
-import java.util.Locale
-import java.util.TimeZone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -37,7 +42,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -75,8 +79,14 @@ public class AirshipChannelTest {
     }
 
     private val mockBatchUpdateManager = mockk<ChannelBatchUpdateManager>(relaxed = true)
-    private val mockSubscriptions = mockk<ChannelSubscriptions>()
     private val mockJobDispatcher = mockk<JobDispatcher>(relaxed = true)
+    private val mockSubscriptions = mockk<ChannelSubscriptions>(relaxed = false)
+    private val subscriptionsProviderFlow = MutableSharedFlow<Result<Set<String>>>(replay = 1)
+    private val mockSubscriptionsProvider = mockk<SubscriptionsProvider>(relaxed = false) {
+        coEvery {this@mockk.updates} returns subscriptionsProviderFlow
+    }
+    private val mockPermissionsManager: PermissionsManager = mockk()
+    private var configuredPermissions = mapOf<Permission, PermissionStatus>()
 
     private val testClock = TestClock()
     private val testActivityMonitor = TestActivityMonitor()
@@ -100,10 +110,12 @@ public class AirshipChannelTest {
         preferenceDataStore,
         testConfig,
         privacyManager,
+        mockPermissionsManager,
         mockLocaleManager,
-        mockSubscriptions,
         mockBatchUpdateManager,
         mockRegistrar,
+        mockk(relaxed = true),
+        mockSubscriptionsProvider,
         testActivityMonitor,
         mockJobDispatcher,
         testClock,
@@ -113,6 +125,15 @@ public class AirshipChannelTest {
     @Before
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
+
+        every { mockPermissionsManager.configuredPermissions } answers {
+            configuredPermissions.keys
+        }
+
+        coEvery { mockPermissionsManager.checkPermissionStatus(any()) } answers {
+            val status = configuredPermissions[firstArg()] ?: PermissionStatus.NOT_DETERMINED
+            PendingResult<PermissionStatus?>().also { it.result = status }
+        }
     }
 
     @After
@@ -316,18 +337,15 @@ public class AirshipChannelTest {
     @Test
     public fun testFetchSubscriptionLists(): TestResult = runTest {
         val result = Result.success(setOf("one", "two", "three"))
+
         coEvery {
             mockSubscriptions.fetchSubscriptionLists("some channel")
         } returns result
 
+        subscriptionsProviderFlow.tryEmit(Result.success(setOf("one", "two", "three")))
         channelIdFlow.tryEmit("some channel")
-        assertEquals(result, channel.fetchSubscriptionLists())
-    }
 
-    @Test
-    public fun testFetchSubscriptionListsFeatureDisabled(): TestResult = runTest {
-        privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
-        assertTrue(channel.fetchSubscriptionLists().isFailure)
+        assertEquals(result, channel.fetchSubscriptionLists())
     }
 
     @Test
@@ -335,6 +353,11 @@ public class AirshipChannelTest {
         every {
             mockLocaleManager.locale
         } returns Locale("shyriiwook", "KASHYYYK")
+
+        configuredPermissions = mapOf(
+            Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.DENIED,
+            Permission.LOCATION to PermissionStatus.GRANTED
+        )
 
         channel.tags = setOf("cool_tag")
 
@@ -351,6 +374,10 @@ public class AirshipChannelTest {
             .setCarrier(tm.networkOperatorName)
             .setSdkVersion(UAirship.getVersion())
             .setIsActive(false)
+            .setPermissions(mapOf(
+                "location" to "granted",
+                "display_notifications" to "denied"
+            ))
             .build()
 
         val payload = buildCraPayload()
@@ -429,6 +456,39 @@ public class AirshipChannelTest {
     }
 
     @Test
+    public fun testCraPayloadTagsDisabled(): TestResult = runTest {
+        every {
+            mockLocaleManager.locale
+        } returns Locale("shyriiwook", "KASHYYYK")
+
+        configuredPermissions = mapOf(
+            Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.DENIED,
+            Permission.LOCATION to PermissionStatus.GRANTED
+        )
+
+        privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
+        channel.tags = setOf("cool_tag")
+
+        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        val expectedPayload = ChannelRegistrationPayload.Builder()
+            .setLanguage("shyriiwook")
+            .setCountry("KASHYYYK")
+            .setDeviceType("android")
+            .setTags(true, emptySet())
+            .setTimezone(TimeZone.getDefault().id)
+            .setAppVersion(UAirship.getPackageInfo()!!.versionName)
+            .setDeviceModel(Build.MODEL)
+            .setApiVersion(Build.VERSION.SDK_INT)
+            .setCarrier(tm.networkOperatorName)
+            .setSdkVersion(UAirship.getVersion())
+            .setIsActive(false)
+            .build()
+
+        val payload = buildCraPayload()
+        assertEquals(expectedPayload, payload)
+    }
+
+    @Test
     public fun testCraPayloadActive(): TestResult = runTest {
         testActivityMonitor.foreground()
 
@@ -455,6 +515,58 @@ public class AirshipChannelTest {
 
         val payload = buildCraPayload()
         assertEquals(expectedPayload, payload)
+    }
+
+    @Test
+    public fun testCraPayloadMinify(): TestResult = runTest {
+        every {
+            mockLocaleManager.locale
+        } returns Locale("shyriiwook", "KASHYYYK")
+
+        configuredPermissions = mapOf(
+            Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.DENIED,
+            Permission.LOCATION to PermissionStatus.GRANTED
+        )
+
+        channel.tags = setOf("cool_tag")
+
+        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        val expectedPayload = ChannelRegistrationPayload.Builder()
+            .setLanguage("shyriiwook")
+            .setCountry("KASHYYYK")
+            .setDeviceType("android")
+            .setTags(true, setOf("cool_tag"))
+            .setTimezone(TimeZone.getDefault().id)
+            .setAppVersion(UAirship.getPackageInfo()!!.versionName)
+            .setDeviceModel(Build.MODEL)
+            .setApiVersion(Build.VERSION.SDK_INT)
+            .setCarrier(tm.networkOperatorName)
+            .setSdkVersion(UAirship.getVersion())
+            .setIsActive(false)
+            .setPermissions(mapOf(
+                "location" to "granted",
+                "display_notifications" to "denied"
+            ))
+            .build()
+
+        val payload = buildCraPayload()
+        assertEquals(expectedPayload, payload)
+
+        configuredPermissions = mapOf(
+            Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.GRANTED,
+            Permission.LOCATION to PermissionStatus.GRANTED
+        )
+
+        val minimized = buildCraPayload().minimizedPayload(payload)
+        val expectedMinimized = ChannelRegistrationPayload.Builder()
+            .setDeviceType("android")
+            .setPermissions(mapOf(
+                "location" to "granted",
+                "display_notifications" to "granted"
+            ))
+            .build()
+
+        assertEquals(expectedMinimized, minimized)
     }
 
     @Test

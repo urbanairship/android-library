@@ -9,6 +9,7 @@ import com.urbanairship.util.Clock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface ActiveTimerInterface {
     public val time: Long

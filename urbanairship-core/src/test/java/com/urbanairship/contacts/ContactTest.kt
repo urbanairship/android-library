@@ -23,15 +23,18 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.remoteconfig.ContactConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import com.urbanairship.util.TaskSleeper
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
+import app.cash.turbine.test
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
-import java.util.UUID
-import java.util.concurrent.TimeUnit
-import io.mockk.coVerify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -40,6 +43,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -59,26 +63,31 @@ public class ContactTest {
     private val testDispatcher = StandardTestDispatcher()
     private val config = TestAirshipRuntimeConfig()
 
-    private val mockChannel = mockk<AirshipChannel>(relaxed = true)
+    private val mockChannel = mockk<AirshipChannel>(relaxUnitFun = true) {
+        every { id } returns "test channel id"
+    }
     private val mockSubscriptionListApiClient = mockk<SubscriptionListApiClient>()
-    private val mockAudienceOverridesProvider = mockk<AudienceOverridesProvider>(relaxed = true)
+    private val mockAudienceOverridesProvider = mockk<AudienceOverridesProvider>(relaxUnitFun = true) {
+        every { updates } returns MutableStateFlow(0U)
+        coEvery { contactOverrides(any()) } returns AudienceOverrides.Contact()
+    }
 
     private val contactChannelFlow = MutableSharedFlow<Result<List<ContactChannel>>>()
-    private val mockChannelsContactProvider = mockk<ContactChannelsProvider>(relaxed = true) {
-        every { contactChannels } returns contactChannelFlow.asSharedFlow()
+    private val mockChannelsContactProvider = mockk<ContactChannelsProvider>(relaxUnitFun = true) {
+        every { updates } returns contactChannelFlow.asSharedFlow()
     }
 
     private val conflictEvents = Channel<ConflictEvent>(Channel.UNLIMITED)
     private val currentNamedUserIdUpdates = MutableStateFlow<String?>(null)
     private val contactIdUpdates = MutableStateFlow<ContactIdUpdate?>(null)
 
-    private val mockContactManager = mockk<ContactManager>(relaxed = true) {
+    private val mockContactManager = mockk<ContactManager>(relaxUnitFun = true) {
         every { this@mockk.contactIdUpdates } returns this@ContactTest.contactIdUpdates
         every { this@mockk.conflictEvents } returns this@ContactTest.conflictEvents
         every { this@mockk.currentNamedUserIdUpdates } returns this@ContactTest.currentNamedUserIdUpdates
     }
 
-    private val mockSmsValidator = mockk<SmsValidator>(relaxed = true)
+    private val mockSmsValidator = mockk<SmsValidator>(relaxUnitFun = true)
 
     private val testActivityMonitor = TestActivityMonitor()
     private val testClock = TestClock()
@@ -93,20 +102,28 @@ public class ContactTest {
 
     private val contact: Contact by lazy {
         Contact(
-            context,
-            preferenceDataStore,
-            config,
-            privacyManager,
-            mockChannel,
-            mockAudienceOverridesProvider,
-            testActivityMonitor,
-            testClock,
-            mockSubscriptionListApiClient,
-            mockContactManager,
-            mockSmsValidator,
-            mockPushManager,
-            mockChannelsContactProvider,
-            testDispatcher
+            context = context,
+            preferenceDataStore = preferenceDataStore,
+            config = config,
+            privacyManager = privacyManager,
+            airshipChannel = mockChannel,
+            audienceOverridesProvider = mockAudienceOverridesProvider,
+            activityMonitor = testActivityMonitor,
+            clock = testClock,
+            contactManager = mockContactManager,
+            smsValidator = mockSmsValidator,
+            pushManager = mockPushManager,
+            subscriptionsProvider = SubscriptionsProvider(
+                apiClient = mockSubscriptionListApiClient,
+                privacyManager = privacyManager,
+                stableContactIdUpdates = mockContactManager.stableContactIdUpdates,
+                overrideUpdates = mockAudienceOverridesProvider.contactUpdates(mockContactManager.stableContactIdUpdates),
+                clock = testClock,
+                taskSleeper = TaskSleeper.default,
+                dispatcher = testDispatcher
+            ),
+            contactChannelsProvider = mockChannelsContactProvider,
+            subscriptionListDispatcher = testDispatcher
         )
     }
 
@@ -570,6 +587,8 @@ public class ContactTest {
 
     @Test
     public fun testRegisterEmailContactsDisabled(): TestResult = runTest {
+        every { mockPushManager.addInternalPushListener(any()) } just runs
+
         privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
         val address = "some address"
@@ -815,39 +834,59 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptions(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", null, true, 0)
+        contactIdUpdates.tryEmit(ContactIdUpdate("stable contact id", null, true, 0))
         val networkResult = RequestResult(
-            status = 200, value = mapOf(
-                "foo" to setOf(Scope.APP, Scope.SMS), "bar" to setOf(Scope.EMAIL)
-            ), body = null, headers = emptyMap()
+            status = 200,
+            value = mapOf(
+                "foo" to setOf(Scope.APP, Scope.SMS),
+                "bar" to setOf(Scope.EMAIL)
+            ),
+            body = null,
+            headers = emptyMap()
         )
 
-        coEvery { mockSubscriptionListApiClient.getSubscriptionLists("stable contact id") } returns networkResult
+        coEvery { mockSubscriptionListApiClient.getSubscriptionLists(any()) } returns networkResult
 
-        val subscriptions = contact.fetchSubscriptionLists()
-        assertEquals(networkResult.value, subscriptions.getOrThrow())
+        contact.subscriptions.test {
+            assertEquals(networkResult.value, awaitItem().getOrThrow())
+            ensureAllEventsConsumed()
+        }
     }
 
     @Test
     public fun testFetchSubscriptionsCache(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", null, true, 0)
-
+        contactIdUpdates.tryEmit(ContactIdUpdate("stable contact id", null, true, 0))
         val networkResult = RequestResult(
-            status = 200, value = mapOf(
-                "foo" to setOf(Scope.APP, Scope.SMS), "bar" to setOf(Scope.EMAIL)
-            ), body = null, headers = emptyMap()
+            status = 200,
+            value = mapOf(
+                "foo" to setOf(Scope.APP, Scope.SMS),
+                "bar" to setOf(Scope.EMAIL)
+            ),
+            body = null,
+            headers = emptyMap()
         )
 
         coEvery { mockSubscriptionListApiClient.getSubscriptionLists("stable contact id") } returns networkResult
-        assertEquals(networkResult.value, contact.fetchSubscriptionLists().getOrThrow())
+
+        contact.subscriptions.test {
+            assertEquals(networkResult.value, awaitItem().getOrThrow())
+            ensureAllEventsConsumed()
+        }
 
         coEvery { mockSubscriptionListApiClient.getSubscriptionLists("stable contact id") } throws IllegalStateException()
-        assertEquals(networkResult.value, contact.fetchSubscriptionLists().getOrThrow())
+        // Advance time by half of the max cache age.
+        testClock.currentTimeMillis += 5.minutes.inWholeMilliseconds
+        advanceTimeBy(5.minutes)
+
+        contact.subscriptions.test {
+            assertEquals(networkResult.value, awaitItem().getOrThrow())
+            ensureAllEventsConsumed()
+        }
     }
 
     @Test
     public fun testFetchSubscriptionsError(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("stable contact id", null, true, 0)
+        contactIdUpdates.tryEmit(ContactIdUpdate("stable contact id", null, true, 0))
 
         val networkResult = RequestResult<Map<String, Set<Scope>>>(
             status = 404, value = null, body = null, headers = emptyMap()
@@ -878,8 +917,15 @@ public class ContactTest {
         )
         coEvery { mockSubscriptionListApiClient.getSubscriptionLists("second") } returns secondResult
 
-        assertEquals(firstResult.value, contact.fetchSubscriptionLists().getOrThrow())
-        assertEquals(secondResult.value, contact.fetchSubscriptionLists().getOrThrow())
+        contact.subscriptions.test {
+            contactIdUpdates.emit(ContactIdUpdate("first", null, true, 0))
+            assertEquals(firstResult.value, awaitItem().getOrThrow())
+
+            contactIdUpdates.emit(ContactIdUpdate("second", null, true, 1))
+            assertEquals(secondResult.value, awaitItem().getOrThrow())
+
+            ensureAllEventsConsumed()
+        }
     }
 
     @Test
@@ -903,15 +949,19 @@ public class ContactTest {
 
         coEvery { mockSubscriptionListApiClient.getSubscriptionLists("second") } returns secondResult
 
-        assertEquals(firstResult.value, contact.fetchSubscriptionLists().getOrThrow())
+        contact.subscriptions.test {
+            contactIdUpdates.emit(ContactIdUpdate("some id", null, true, 0))
 
-        // almost 10 minutes
-        testClock.currentTimeMillis += 10 * 60 * 1000 - 1
-        assertEquals(firstResult.value, contact.fetchSubscriptionLists().getOrThrow())
+            assertEquals(firstResult.value, awaitItem().getOrThrow())
 
-        // expire cache
-        testClock.currentTimeMillis += 1
-        assertEquals(secondResult.value, contact.fetchSubscriptionLists().getOrThrow())
+            // expire cache
+            testClock.currentTimeMillis += 10 * 60 * 1000
+
+            contactIdUpdates.emit(ContactIdUpdate("second", null, true, 1))
+            assertEquals(secondResult.value, awaitItem().getOrThrow())
+
+            ensureAllEventsConsumed()
+        }
     }
 
     @Test
@@ -941,8 +991,11 @@ public class ContactTest {
             )
         )
 
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", null, true, 0)
+        val contactUpdate = ContactIdUpdate("some id", null, true, 0)
+        val updateFlow = MutableStateFlow<ContactIdUpdate?>(null)
+        coEvery { mockContactManager.stableContactIdUpdate() } returns contactUpdate
         coEvery { mockAudienceOverridesProvider.contactOverrides("some id") } returns overrides
+        coEvery { mockContactManager.contactIdUpdates } returns updateFlow
 
         val networkResult = RequestResult(
             status = 200, value = mapOf(
@@ -951,14 +1004,20 @@ public class ContactTest {
             ), body = null, headers = emptyMap()
         )
 
-        coEvery { mockSubscriptionListApiClient.getSubscriptionLists("some id") } returns networkResult
+        coEvery { mockSubscriptionListApiClient.getSubscriptionLists("some id") } answers {
+            networkResult
+        }
 
         val expected = mapOf(
             "foo" to setOf(Scope.WEB, Scope.APP, Scope.SMS),
             "some list" to setOf(Scope.SMS)
         )
 
-        assertEquals(expected, contact.fetchSubscriptionLists().getOrThrow())
+        updateFlow.emit(contactUpdate)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val result = contact.fetchSubscriptionLists()
+        assertEquals(expected, result.getOrThrow())
     }
 
     @Test

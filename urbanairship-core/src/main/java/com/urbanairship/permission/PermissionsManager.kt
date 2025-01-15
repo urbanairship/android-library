@@ -151,7 +151,7 @@ public class PermissionsManager internal constructor(
      */
     public fun checkPermissionStatus(
         permission: Permission,
-        callback: Consumer<PermissionStatus>
+        callback: Consumer<PermissionStatus?>
     ) {
         checkPermissionStatus(permission).addResultCallback {
             callback.accept(it)

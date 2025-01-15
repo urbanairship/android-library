@@ -15,12 +15,15 @@ import io.mockk.verifyOrder
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -228,7 +231,7 @@ public class PermissionsManagerTest {
         val delegate: PermissionDelegate = mockk {
             every { requestPermission(any(), any()) } answers {
                 launch {
-                    secondArg<Consumer<PermissionRequestResult>>().accept(resultFlow.first { it != null })
+                    secondArg<Consumer<PermissionRequestResult?>>().accept(resultFlow.first { it != null })
                 }
             }
             every { checkPermissionStatus(any(), any()) } answers {
@@ -280,9 +283,10 @@ public class PermissionsManagerTest {
         mockDelegateStatus = PermissionRequestResult.denied(true)
         permissionsManager.setPermissionDelegate(Permission.LOCATION, mockDelegate)
 
-        val job = async(Dispatchers.Default) {
+        val job = async {
             permissionsManager.suspendingRequestPermission(Permission.LOCATION, fallback = PermissionPromptFallback.SystemSettings)
         }
+        advanceUntilIdle()
 
         settingsLaunched.first { it }
         mockDelegateStatus = PermissionRequestResult.granted()
@@ -318,10 +322,14 @@ public class PermissionsManagerTest {
         val job = async(Dispatchers.Default) {
             permissionsManager.suspendingRequestPermission(Permission.LOCATION, fallback = PermissionPromptFallback.SystemSettings)
         }
+        advanceUntilIdle()
 
         settingsLaunched.first { it }
         mockDelegateStatus = PermissionRequestResult.granted()
-        activityMonitor.resumeActivity(Activity())
+
+        MainScope().launch {
+            activityMonitor.resumeActivity(Activity())
+        }
         advanceUntilIdle()
 
         assertEquals(
@@ -349,13 +357,18 @@ public class PermissionsManagerTest {
         mockDelegateStatus = PermissionRequestResult.denied(true)
         permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
 
-        val job = async(Dispatchers.Default) {
+        val job = async {
             permissionsManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, fallback = PermissionPromptFallback.SystemSettings)
         }
+        advanceUntilIdle()
 
         settingsLaunched.first { it }
+
         mockDelegateStatus = PermissionRequestResult.granted()
-        activityMonitor.resumeActivity(Activity())
+
+        MainScope().launch {
+            activityMonitor.resumeActivity(Activity())
+        }
         advanceUntilIdle()
 
         assertEquals(

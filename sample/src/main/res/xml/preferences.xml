@@ -33,6 +33,7 @@
 
         <com.urbanairship.sample.preference.EnableAdvertisingIdPreference
             app:dependency="data_enabled"
+            app:key="track_advertising_id"
             app:persistent="false"
             app:iconSpaceReserved="false"
             app:title="@string/analytics_ad_id_preference_title" />

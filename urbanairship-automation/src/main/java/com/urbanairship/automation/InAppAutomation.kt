@@ -14,6 +14,7 @@ import com.urbanairship.iam.legacy.LegacyInAppMessagingInterface
 
 /**
  * Provides a control interface for creating, canceling and executing in-app automations.
+ * @hide
  */
 public class InAppAutomation
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

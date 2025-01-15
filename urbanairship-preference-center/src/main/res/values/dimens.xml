@@ -4,4 +4,6 @@
     <dimen name="ua_preference_center_subscription_type_chip_stroke_width">1dp</dimen>
     <dimen name="ua_preference_center_subscription_type_chip_stroke_focused_width">3dp</dimen>
     <dimen name="ua_preference_center_subscription_type_chip_min_height">32dp</dimen>
+    <dimen name="ua_preference_center_subscription_type_chip_margin">8dp</dimen>
+    <dimen name="ua_preference_center_subscription_type_chip_size">24dp</dimen>
 </resources>

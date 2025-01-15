@@ -22,6 +22,7 @@ public class TagGroupsEditor {
 
     private final List<TagGroupsMutation> mutations = new ArrayList<>();
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public TagGroupsEditor() {
 

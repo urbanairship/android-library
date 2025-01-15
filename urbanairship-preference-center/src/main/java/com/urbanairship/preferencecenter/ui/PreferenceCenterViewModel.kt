@@ -54,6 +54,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -502,13 +503,13 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 val fetchContactChannels = config.hasContactManagement
 
                 combine(
-                    if (fetchChannelSubscriptions) getChannelSubscriptions() else flowOf(emptySet()),
-                    if (fetchContactSubscriptions) getContactSubscriptions() else flowOf(emptyMap()),
+                    if (fetchChannelSubscriptions) getChannelSubscriptions() else flowOf(Result.success(emptySet())),
+                    if (fetchContactSubscriptions) getContactSubscriptions() else flowOf(Result.success(emptyMap())),
                     if (fetchContactChannels) getAssociatedChannels() else flowOf(emptySet())
                 ) { channelSubs, contactSubs, contactChannels ->
                     enrichedConfig.copy(
-                        channelSubscriptions = channelSubs,
-                        contactSubscriptions = if (mergeChannelDataToContact) mergeSubscriptions(channelSubs, contactSubs) else contactSubs,
+                        channelSubscriptions = getChannelSubscriptionsAsSet(channelSubs),
+                        contactSubscriptions = if (mergeChannelDataToContact) mergeSubscriptions(getChannelSubscriptionsAsSet(channelSubs), getContactSubscriptionsAsMap(contactSubs)) else getContactSubscriptionsAsMap(contactSubs),
                         contactChannels = contactChannels.toSet()
                     )
                 }
@@ -519,12 +520,16 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         emit(preferenceCenter.getConfig(preferenceCenterId) ?: throw IllegalStateException("Null preference center for id: $preferenceCenterId"))
     }
 
-    private fun getChannelSubscriptions(): Flow<Set<String>> = flow {
-        emit(channel.fetchSubscriptionLists().getOrThrow())
+    private fun getChannelSubscriptions(): Flow<Result<Set<String>>> = channel.subscriptions
+
+    private fun getChannelSubscriptionsAsSet(subscriptionsResult: Result<Set<String>>): Set<String> {
+        return subscriptionsResult.getOrNull()?.let { it } ?: emptySet()
     }
 
-    private fun getContactSubscriptions(): Flow<Map<String, Set<Scope>>> = flow {
-        emit(contact.fetchSubscriptionLists().getOrThrow())
+    private fun getContactSubscriptions(): Flow<Result<Map<String, Set<Scope>>>> = contact.subscriptions
+
+    private fun getContactSubscriptionsAsMap(subscriptionsResult: Result<Map<String, Set<Scope>>>): Map<String, Set<Scope>> {
+        return subscriptionsResult.getOrNull()?.let { it } ?: emptyMap()
     }
 
     private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = contact.channelContacts.mapNotNull {

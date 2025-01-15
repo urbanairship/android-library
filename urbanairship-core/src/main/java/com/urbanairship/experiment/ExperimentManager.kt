@@ -10,6 +10,8 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
+import com.urbanairship.audience.AudienceEvaluator
+import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
@@ -20,18 +22,22 @@ import kotlinx.coroutines.SupervisorJob
 
 /**
  * Airship Experiment Manager.
+ *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @OpenForTesting
-public class ExperimentManager internal constructor(
+public class ExperimentManager @JvmOverloads internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     private val remoteData: RemoteData,
-    private val clock: Clock = Clock.DEFAULT_CLOCK
+    private val clock: Clock = Clock.DEFAULT_CLOCK,
+    private val audienceEvaluator: AudienceEvaluator,
 ) : AirshipComponent(context, dataStore) {
 
     private val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         internal const val PAYLOAD_TYPE = "experiments"
@@ -114,7 +120,14 @@ public class ExperimentManager internal constructor(
         experiment: Experiment,
         infoProvider: DeviceInfoProvider
     ): Boolean {
-        return experiment.audience.evaluate(experiment.created, infoProvider)
+        return audienceEvaluator.evaluate(
+            compoundAudience = CompoundAudienceSelector.combine(
+                compoundAudienceSelector = experiment.compoundAudienceSelector?.selector,
+                deviceAudience = experiment.audience
+            ),
+            newEvaluationDate = experiment.created,
+            infoProvider = infoProvider)
+            .isMatch
     }
 
     private suspend fun getActiveExperiments(messageInfo: MessageInfo): List<Experiment> {

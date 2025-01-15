@@ -1,13 +1,12 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    android:versionCode="1"
-    android:versionName="1.0">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application>
 
         <activity
             android:name="com.urbanairship.debug.DebugActivity"
-            android:label="@string/ua_debug_short_title"
-            android:theme="@style/AirshipDebug"
+            android:label="@string/ua_debug_label"
+            android:theme="@style/Theme.Material3.DayNight.NoActionBar"
             android:taskAffinity="com.urbanairship.debug.${applicationId}"
             android:exported="true">
 
@@ -16,7 +15,5 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
     </application>
-
 </manifest>

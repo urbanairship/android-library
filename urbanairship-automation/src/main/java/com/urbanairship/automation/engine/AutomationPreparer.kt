@@ -3,6 +3,8 @@
 package com.urbanairship.automation.engine
 
 import com.urbanairship.UALog
+import com.urbanairship.audience.AudienceEvaluator
+import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.AutomationSchedule
@@ -44,6 +46,7 @@ internal class AutomationPreparer internal constructor(
     private val experiments: ExperimentManager,
     private val remoteDataAccess: AutomationRemoteDataAccess,
     private val additionalAudienceResolver: AdditionalAudienceCheckerResolver,
+    private val audienceEvaluator: AudienceEvaluator,
     queueConfigSupplier: Supplier<RetryingQueueConfig?>? = null,
     private val queues: Queues = Queues(queueConfigSupplier),
 ) {
@@ -93,17 +96,22 @@ internal class AutomationPreparer internal constructor(
                 return@run RetryingQueue.Result.Success(SchedulePrepareResult.Invalidate)
             }
 
-            // Audience checks
-            schedule.audience?.let {
-                val match = it.audienceSelector.evaluate(
+            val audience = CompoundAudienceSelector.combine(
+                compoundAudienceSelector = schedule.compoundAudience?.selector,
+                deviceAudience = schedule.audience?.audienceSelector
+            )
+
+            if (audience != null) {
+                val result = audienceEvaluator.evaluate(
+                    compoundAudience = audience,
                     newEvaluationDate = schedule.created.toLong(),
                     infoProvider = deviceInfoProvider
                 )
 
-                if (!match) {
+                if (!result.isMatch) {
                     UALog.v { "Local audience miss for schedule ${schedule.identifier}" }
                     return@run RetryingQueue.Result.Success(
-                        result = schedule.missedAudiencePrepareResult(),
+                        result = schedule.audienceMissBehaviorResult(),
                         ignoreReturnOrder = true
                     )
                 }
@@ -348,7 +356,7 @@ internal class AutomationPreparer internal constructor(
                     }
                 } else {
                     RetryingQueue.Result.Success(
-                        result = schedule.missedAudiencePrepareResult(),
+                        result = schedule.audienceMissBehaviorResult(),
                         ignoreReturnOrder = true
                     )
                 }
@@ -357,12 +365,12 @@ internal class AutomationPreparer internal constructor(
     }
 }
 
-private fun AutomationSchedule.missedAudiencePrepareResult(): SchedulePrepareResult {
-    return when(audience?.missBehavior ?: AutomationAudience.MissBehavior.PENALIZE) {
-        AutomationAudience.MissBehavior.CANCEL -> SchedulePrepareResult.Cancel
-        AutomationAudience.MissBehavior.SKIP -> SchedulePrepareResult.Skip
-        AutomationAudience.MissBehavior.PENALIZE -> SchedulePrepareResult.Penalize
-    }
+private fun AutomationSchedule.audienceMissBehaviorResult(): SchedulePrepareResult {
+    val result = compoundAudience?.missBehavior
+        ?: audience?.missBehavior
+        ?: AutomationAudience.MissBehavior.PENALIZE
+
+    return result.toPrepareResult()
 }
 
 private fun AutomationSchedule.evaluateExperiments(): Boolean {

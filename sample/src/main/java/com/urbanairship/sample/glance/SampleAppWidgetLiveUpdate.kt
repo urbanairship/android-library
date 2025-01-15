@@ -41,7 +41,7 @@ import com.urbanairship.sample.glance.SampleAppWidget.Companion.dataPrefKey
  * }
  * ```
  */
-class SampleAppWidgetLiveUpdate : SuspendLiveUpdateCustomHandler {
+internal class SampleAppWidgetLiveUpdate : SuspendLiveUpdateCustomHandler {
     override suspend fun onUpdate(
         context: Context, event: LiveUpdateEvent, update: LiveUpdate
     ): LiveUpdateResult<Nothing> {

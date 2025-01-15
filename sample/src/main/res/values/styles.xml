@@ -1,37 +1,59 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
     <color name="airshipBlue">#0023ca</color>
+    <color name="lightBlue">#1a39cf</color>
     <color name="accent">#ff0b48</color>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimaryVariant">#000000</item>
         <item name="colorPrimary">#000000</item>
-        <item name="colorSecondary">@color/accent</item>
-        <item name="colorSecondaryVariant">#c40021</item>
         <item name="colorOnPrimary">#ffffff</item>
+
+        <item name="colorSecondary">@color/airshipBlue</item>
         <item name="colorOnSecondary">#000000</item>
-        <item name="messageCenterStyle">@style/AppTheme.MessageCenter</item>
-        <item name="android:statusBarColor" tools:ignore="NewApi">@color/airshipBlue</item>
+
+        <item name="colorAccent">@color/accent</item>
+
+        <item name="colorSurface">?android:colorBackground</item>
+
+        <item name="colorSecondaryVariant">#c40021</item>
+        <item name="colorPrimaryVariant">#000000</item>
+
+        <item name="android:statusBarColor">@color/airshipBlue</item>
+        <item name="android:navigationBarColor">@color/airshipBlue</item>
+        <item name="bottomNavigationStyle">@style/AppTheme.BottomNav</item>
+        <item name="toolbarStyle">@style/AppTheme.Toolbar</item>
     </style>
 
-    <style name="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="windowActionModeOverlay">true</item>
+    <style name="AppTheme.Toolbar" parent="@style/Widget.Material3.Toolbar.Surface">
+        <item name="liftOnScroll">false</item>
     </style>
 
-    <style name="AppTheme.MessageCenter" parent="MessageCenter">
-        <item name="messageCenterItemTitleTextAppearance">@style/AppTheme.MessageCenter.TitleTextAppearance</item>
-        <item name="messageCenterItemDateTextAppearance">@style/AppTheme.MessageCenter.DateTextAppearance</item>
-        <item name="messageCenterItemIconEnabled">true</item>
+    <style name="AppTheme.BottomNav" parent="@style/Widget.Material3.BottomNavigationView">
+        <item name="backgroundTint">@color/lightBlue</item>
+        <item name="itemIconTint">?colorOnPrimary</item>
+        <item name="itemTextColor">?colorOnPrimary</item>
+        <item name="itemActiveIndicatorStyle">@style/AppTheme.BottomNav.Indicator</item>
     </style>
 
-    <!-- Custom message title text style -->
-    <style name="AppTheme.MessageCenter.TitleTextAppearance" parent="TextAppearance.MaterialComponents.Subtitle1" />
+    <style name="AppTheme.BottomNav.Indicator" parent="@style/Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">?colorSecondary</item>
+    </style>
 
-    <!-- Custom message date text style -->
-    <style name="AppTheme.MessageCenter.DateTextAppearance" parent="TextAppearance.MaterialComponents.Body2" />
+    <!-- Custom Preference Center style -->
+    <!-- Uses AppTheme colors and overrides the colorAccent. -->
+    <style name="UrbanAirship.PreferenceCenter" parent="AppTheme">
+        <item name="colorAccent">?colorSecondary</item>
+    </style>
 
+    <!-- Custom Message Center style -->
+    <!-- Uses AppTheme colors and overrides default styling to show thumbnails and a custom title. -->
+    <style name="UrbanAirship.MessageCenter" parent="AppTheme">
+        <!-- Set custom toolbar title "Inbox" -->
+        <item name="messageCenterToolbarTitle">@string/inbox</item>
+
+        <!-- Show message thumbnails in the message list -->
+        <item name="messageCenterIconsEnabled">true</item>
+    </style>
 </resources>

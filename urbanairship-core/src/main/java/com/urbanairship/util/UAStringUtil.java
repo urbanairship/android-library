@@ -222,6 +222,8 @@ public abstract class UAStringUtil {
      * @param secret The secret
      * @param values A list of values that will be concatenated by ":"
      * @return A signed token.
+     *
+     * @hide
      */
     @NonNull
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

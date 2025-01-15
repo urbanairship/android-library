@@ -8,8 +8,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
+import com.urbanairship.audience.AudienceEvaluator
+import com.urbanairship.audience.AirshipDeviceAudienceResult
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
+import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
@@ -60,8 +63,25 @@ public class FeatureFlagManagerTest {
     private val audienceMatchSelector = AudienceSelector.newBuilder().setNewUser(false).build()
 
     private val audienceEvaluator: AudienceEvaluator = mockk {
-        coEvery { this@mockk.evaluate(audienceMissedSelector, any(), any()) } returns false
-        coEvery { this@mockk.evaluate(audienceMatchSelector, any(), any()) } returns true
+        coEvery { this@mockk.evaluate(any(), any(), any()) } answers {
+
+            var result = args[0] == null
+
+            val compound: CompoundAudienceSelector = firstArg() ?: return@answers AirshipDeviceAudienceResult(result)
+
+            if (compound is CompoundAudienceSelector.Atomic) {
+                result = result || compound.audience == audienceMatchSelector
+            } else if (compound is CompoundAudienceSelector.And) {
+                result = result || compound.selectors.any {
+                    when(it) {
+                        is CompoundAudienceSelector.Atomic -> it.audience == audienceMatchSelector
+                        else -> false
+                    }
+                }
+            }
+
+            AirshipDeviceAudienceResult(result)
+        }
     }
 
     private val remoteDataAccess: FeatureFlagRemoteDataAccess = mockk {
@@ -149,6 +169,37 @@ public class FeatureFlagManagerTest {
     }
 
     @Test
+    public fun testStaticAudienceMatch(): TestResult = runTest {
+        val flagInfo = FeatureFlagInfo(
+            id = "some-id",
+            created = 0,
+            lastUpdated = 0,
+            name = "test-ff",
+            reportingContext = jsonMapOf("reporting" to "flag"),
+            payload = FeatureFlagPayload.StaticPayload(),
+            audience = audienceMatchSelector,
+            compoundAudienceSelector = FeatureFlagCompoundAudience(
+                selector = CompoundAudienceSelector.Atomic(audienceMissedSelector)
+            )
+        )
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(listOf(flagInfo))
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            isEligible = true,
+            reportingInfo = generateReportingInfo(flagInfo.reportingContext)
+        )
+
+        assertEquals(expected, flag)
+    }
+
+    @Test
     public fun testStaticVariantVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
@@ -162,18 +213,21 @@ public class FeatureFlagManagerTest {
                         VariablesVariant(
                             id = "1",
                             selector = audienceMissedSelector,
+                            compoundAudienceSelector = null,
                             reportingMetadata = jsonMapOf("reporting" to "variable 1"),
                             data = jsonMapOf("var" to 1)
                         ),
                         VariablesVariant(
                             id = "2",
                             selector = audienceMatchSelector,
+                            compoundAudienceSelector = null,
                             reportingMetadata = jsonMapOf("reporting" to "variable 2"),
                             data = jsonMapOf("var" to 2)
                         ),
                         VariablesVariant(
                             id = "3",
                             selector = audienceMatchSelector,
+                            compoundAudienceSelector = null,
                             reportingMetadata = jsonMapOf("reporting" to "variable 3"),
                             data = jsonMapOf("var" to 3)
                         )
@@ -214,18 +268,21 @@ public class FeatureFlagManagerTest {
                         VariablesVariant(
                             id = "1",
                             selector = audienceMissedSelector,
+                            compoundAudienceSelector = null,
                             reportingMetadata = jsonMapOf("reporting" to "variable 1"),
                             data = jsonMapOf("var" to 1)
                         ),
                         VariablesVariant(
                             id = "2",
                             selector = audienceMatchSelector,
+                            compoundAudienceSelector = null,
                             reportingMetadata = jsonMapOf("reporting" to "variable 2"),
                             data = jsonMapOf("var" to 2)
                         ),
                         VariablesVariant(
                             id = "3",
                             selector = audienceMatchSelector,
+                            compoundAudienceSelector = null,
                             reportingMetadata = jsonMapOf("reporting" to "variable 3"),
                             data = jsonMapOf("var" to 3)
                         )
@@ -373,18 +430,21 @@ public class FeatureFlagManagerTest {
                             VariablesVariant(
                                 id = "1",
                                 selector = audienceMissedSelector,
+                                compoundAudienceSelector = null,
                                 reportingMetadata = jsonMapOf("reporting" to "variable 1"),
                                 data = jsonMapOf("var" to 1)
                             ),
                             VariablesVariant(
                                 id = "2",
                                 selector = audienceMatchSelector,
+                                compoundAudienceSelector = null,
                                 reportingMetadata = jsonMapOf("reporting" to "variable 2"),
                                 data = jsonMapOf("var" to 2)
                             ),
                             VariablesVariant(
                                 id = "3",
                                 selector = audienceMissedSelector,
+                                compoundAudienceSelector = null,
                                 reportingMetadata = jsonMapOf("reporting" to "variable 3"),
                                 data = jsonMapOf("var" to 3)
                             )
@@ -616,6 +676,49 @@ public class FeatureFlagManagerTest {
             name = "test-ff",
             isEligible = true,
             reportingInfo = generateReportingInfo(flags[1].reportingContext)
+        )
+
+        assertEquals(expected, flag)
+    }
+
+    @Test
+    public fun testMultipleFlagsCompound(): TestResult = runTest {
+        val flags = listOf(
+            FeatureFlagInfo(
+                id = "some-id_1",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                reportingContext = jsonMapOf("reporting" to "flag1"),
+                audience = null,
+                compoundAudienceSelector = FeatureFlagCompoundAudience(
+                    selector = CompoundAudienceSelector.Atomic(audienceMatchSelector)
+                ),
+                payload = FeatureFlagPayload.StaticPayload()
+            ),
+            FeatureFlagInfo(
+                id = "some-id_2",
+                created = 0,
+                lastUpdated = 0,
+                name = "test-ff",
+                reportingContext = jsonMapOf("reporting" to "flag2"),
+                audience = audienceMatchSelector,
+                payload = FeatureFlagPayload.StaticPayload()
+            )
+        )
+
+
+        coEvery {
+            remoteDataAccess.fetchFlagRemoteInfo("test-ff")
+        } returns generateRemoteData(flags)
+
+        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+
+        val flag = featureFlags.flag("test-ff").getOrThrow()
+        val expected = FeatureFlag.createFlag(
+            name = "test-ff",
+            isEligible = true,
+            reportingInfo = generateReportingInfo(flags[0].reportingContext)
         )
 
         assertEquals(expected, flag)
@@ -963,7 +1066,7 @@ public class FeatureFlagManagerTest {
         val mismatched = featureFlagInfo(
             name = "mismatched",
             controlOptions = ControlOptions(
-                audience = audienceMissedSelector,
+                compoundAudience = FeatureFlagCompoundAudience(CompoundAudienceSelector.Atomic(audienceMissedSelector)),
                 reportingMetadata = jsonMapOf("never" to "override"),
                 controlType = ControlOptions.Type.Flag
             )
@@ -972,7 +1075,7 @@ public class FeatureFlagManagerTest {
         val matched = featureFlagInfo(
             name = "matched",
             controlOptions = ControlOptions(
-                audience = audienceMatchSelector,
+                compoundAudience = FeatureFlagCompoundAudience(CompoundAudienceSelector.Atomic(audienceMatchSelector)),
                 reportingMetadata = jsonMapOf("must" to "override"),
                 controlType = ControlOptions.Type.Flag
             )
@@ -1011,7 +1114,7 @@ public class FeatureFlagManagerTest {
         val mismatched = featureFlagInfo(
             name = "mismatched",
             controlOptions = ControlOptions(
-                audience = audienceMissedSelector,
+                compoundAudience = FeatureFlagCompoundAudience(CompoundAudienceSelector.Atomic(audienceMissedSelector)),
                 reportingMetadata = jsonMapOf("never" to "override"),
                 controlType = ControlOptions.Type.Variables(
                     jsonMapOf("override" to "variables")
@@ -1022,7 +1125,7 @@ public class FeatureFlagManagerTest {
         val matched = featureFlagInfo(
             name = "matched",
             controlOptions = ControlOptions(
-                audience = audienceMatchSelector,
+                compoundAudience = FeatureFlagCompoundAudience(CompoundAudienceSelector.Atomic(audienceMatchSelector)),
                 reportingMetadata = jsonMapOf("must" to "override"),
                 controlType = ControlOptions.Type.Variables(
                     jsonMapOf("override" to "variables")

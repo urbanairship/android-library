@@ -14,8 +14,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import com.urbanairship.UALog;
 import com.urbanairship.R;
+import com.urbanairship.UALog;
 import com.urbanairship.util.ManifestUtils;
 
 import java.util.Map;
@@ -32,8 +32,6 @@ import androidx.webkit.WebViewFeature;
 public class AirshipWebView extends WebView {
 
     private WebViewClient webViewClient;
-
-    private static final String CACHE_DIRECTORY = "urbanairship";
 
     private String currentClientAuthRequestUrl;
 
@@ -189,8 +187,8 @@ public class AirshipWebView extends WebView {
     }
 
     @Override
-    public void setWebViewClient(@Nullable WebViewClient webViewClient) {
-        if (webViewClient != null && !(webViewClient instanceof AirshipWebViewClient)) {
+    public void setWebViewClient(@NonNull WebViewClient webViewClient) {
+        if (!(webViewClient instanceof AirshipWebViewClient)) {
             UALog.w("The web view client should extend AirshipWebViewClient to support Airship url overrides and triggering actions from.");
         }
 
@@ -201,7 +199,6 @@ public class AirshipWebView extends WebView {
     /**
      * Called right before data or a URL is passed to the web view to be loaded.
      */
-    @SuppressLint("NewApi")
     protected void onPreLoad(@NonNull Runnable onReadyCallback) {
         if (getWebViewClientCompat() == null) {
             UALog.d("No web view client set, setting a default AirshipWebViewClient for landing page view.");

@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.util;
 
 import androidx.annotation.RestrictTo;
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class InitialSpacing {
     private final int left;

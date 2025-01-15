@@ -663,6 +663,7 @@ public class AutomationScheduleDataTest {
         startDate: ULong? = null,
         endDate: ULong? = null,
         audience: AutomationAudience? = null,
+        compoundAudience: AutomationCompoundAudience? = null,
         delay: AutomationDelay? = null,
         interval: ULong? = null,
         data: AutomationSchedule.ScheduleData = AutomationSchedule.ScheduleData.Actions(JsonValue.wrap("actions")),
@@ -683,7 +684,7 @@ public class AutomationScheduleDataTest {
     ): AutomationScheduleData {
         return AutomationScheduleData(
             schedule = AutomationSchedule(identifier, triggers, group, priority, limit, startDate,
-                endDate, audience, delay, interval, data, bypassHoldoutGroups, editGracePeriodDays,
+                endDate, audience, compoundAudience, delay, interval, data, bypassHoldoutGroups, editGracePeriodDays,
                 metadata, frequencyConstraintIDs, messageType, campaigns, reportingContext,
                 productId, minSDKVersion, created, queue),
             scheduleState = scheduleState,

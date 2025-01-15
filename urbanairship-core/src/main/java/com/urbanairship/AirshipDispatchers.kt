@@ -8,6 +8,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 
 /**
  * Coroutine dispatchers using the Airship thread pools.
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public object AirshipDispatchers {

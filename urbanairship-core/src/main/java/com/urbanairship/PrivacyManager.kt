@@ -46,7 +46,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public interface Listener {
+    public fun interface Listener {
 
         /**
          * Called when the set of enabled features changes.
@@ -468,6 +468,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
                 "none" to NONE
             )
 
+            /** @hide */
             @JvmStatic
             @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
             public fun fromJson(value: JsonValue): Feature? {
@@ -483,6 +484,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
                 }
             }
 
+            /** @hide */
             @JvmStatic
             @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
             public fun combined(vararg value: Feature): Feature {

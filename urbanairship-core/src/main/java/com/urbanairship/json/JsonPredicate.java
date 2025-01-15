@@ -7,6 +7,8 @@ import com.urbanairship.Predicate;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -94,7 +96,15 @@ public class JsonPredicate implements JsonSerializable, Predicate<JsonSerializab
         if (type != null) {
 
             builder.setPredicateType(type);
-            for (JsonValue child : map.opt(type).optList()) {
+
+            JsonValue subpredicatesList = map.opt(type);
+            JsonList subpredicates = subpredicatesList.optList();
+
+            if (NOT_PREDICATE_TYPE.equals(type) && subpredicatesList.isJsonMap()) {
+                subpredicates = new JsonList(Collections.singletonList(subpredicatesList.optMap().toJsonValue()));
+            }
+
+            for (JsonValue child : subpredicates) {
                 if (!child.isJsonMap()) {
                     continue;
                 }

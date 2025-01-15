@@ -36,6 +36,8 @@ public class LocaleManager {
      *
      * @param context The application context.
      * @param preferenceDataStore The Airship Preference Data Store.
+     *
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public LocaleManager(@NonNull Context context, @NonNull PreferenceDataStore preferenceDataStore) {

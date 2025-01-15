@@ -6,6 +6,7 @@ import android.net.Uri
 import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.audience.AudienceSelector
+import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.experiment.TimeCriteria
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
@@ -76,9 +77,31 @@ private enum class VariableType(val jsonValue: String) {
     VARIANTS("variant")
 }
 
+internal data class FeatureFlagCompoundAudience(
+    val selector: CompoundAudienceSelector
+): JsonSerializable {
+
+    companion object {
+        private val SELECTOR = "selector"
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): FeatureFlagCompoundAudience {
+            val content = value.requireMap()
+            return FeatureFlagCompoundAudience(
+                selector = CompoundAudienceSelector.fromJson(content.require(SELECTOR))
+            )
+        }
+    }
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        SELECTOR to selector
+    ).toJsonValue()
+}
+
 internal data class VariablesVariant(
     val id: String?,
     val selector: AudienceSelector?,
+    val compoundAudienceSelector: FeatureFlagCompoundAudience?,
     val reportingMetadata: JsonMap?,
     val data: JsonMap?
 ) : JsonSerializable {
@@ -87,6 +110,7 @@ internal data class VariablesVariant(
         private const val KEY_ID = "id"
         private const val KEY_REPORTING_METADATA = "reporting_metadata"
         private const val KEY_SELECTOR = "audience_selector"
+        private const val KEY_COMPOUND_AUDIENCE = "compound_audience"
         private const val KEY_DATA = "data"
 
         @Throws(JsonException::class)
@@ -94,6 +118,9 @@ internal data class VariablesVariant(
             return VariablesVariant(
                 id = json.requireField(KEY_ID),
                 selector = AudienceSelector.fromJson(json.opt(KEY_SELECTOR)),
+                compoundAudienceSelector = json
+                    .get(KEY_COMPOUND_AUDIENCE)
+                    ?.let(FeatureFlagCompoundAudience::fromJson),
                 reportingMetadata = json.requireField(KEY_REPORTING_METADATA),
                 data = json.optionalField(KEY_DATA)
             )
@@ -105,6 +132,7 @@ internal data class VariablesVariant(
         return jsonMapOf(
             KEY_ID to id,
             KEY_SELECTOR to selector,
+            KEY_COMPOUND_AUDIENCE to compoundAudienceSelector,
             KEY_REPORTING_METADATA to reportingMetadata,
             KEY_DATA to data
         ).toJsonValue()
@@ -150,6 +178,12 @@ internal data class FeatureFlagInfo(
     val audience: AudienceSelector? = null,
 
     /**
+     * Compound audience selector, if both `audienceSelector` and `compoundAudienceSelector` is defined they
+     * will both be evaluated to determine flag eligibility
+     */
+    val compoundAudienceSelector: FeatureFlagCompoundAudience? = null,
+
+    /**
      * Optional time span in which the flag should be active
      */
     val timeCriteria: TimeCriteria? = null,
@@ -178,6 +212,7 @@ internal data class FeatureFlagInfo(
 
         private const val KEY_REPORTING_METADATA = "reporting_metadata"
         private const val KEY_AUDIENCE_SELECTOR = "audience_selector"
+        private const val KEY_COMPOUND_AUDIENCE_SELECTOR = "compound_audience"
         private const val KEY_TIME_CRITERIA = "time_criteria"
         private const val KEY_NAME = "name"
         private const val KEY_EVALUATION_OPTIONS = "evaluation_options"
@@ -198,6 +233,10 @@ internal data class FeatureFlagInfo(
             try {
                 val payload = json.require(KEY_PAYLOAD).optMap()
                 val audience = payload.get(KEY_AUDIENCE_SELECTOR)?.let(AudienceSelector::fromJson)
+                val compoundAudience = payload
+                    .get(KEY_COMPOUND_AUDIENCE_SELECTOR)
+                    ?.let(FeatureFlagCompoundAudience::fromJson)
+
                 val payloadType =  payload.requireField<String>(KEY_TYPE).let { type ->
                     FeatureFlagPayloadType.entries.firstOrNull { it.jsonValue == type } ?: throw JsonException(
                         "Invalid feature flag payload type $type"
@@ -227,6 +266,7 @@ internal data class FeatureFlagInfo(
                     name = payload.requireField(KEY_NAME),
                     reportingContext = payload.require(KEY_REPORTING_METADATA).optMap(),
                     audience = audience,
+                    compoundAudienceSelector = compoundAudience,
                     timeCriteria = payload.opt(KEY_TIME_CRITERIA).map?.let { TimeCriteria.fromJson(it) },
                     payload = parsedPayload,
                     evaluationOptions = payload.opt(KEY_EVALUATION_OPTIONS).map?.let { EvaluationOptions.fromJson(it) },
@@ -276,13 +316,13 @@ internal data class EvaluationOptions(
 }
 
 internal data class ControlOptions (
-    val audience: AudienceSelector?,
+    val compoundAudience: FeatureFlagCompoundAudience?,
     val reportingMetadata: JsonMap,
     val controlType: Type
 ): JsonSerializable {
 
     companion object {
-        private const val AUDIENCE = "audience_selector"
+        private const val COMPOUND_AUDIENCE = "compound_audience"
         private const val REPORTING_METADATA = "reporting_metadata"
 
         @Throws(JsonException::class)
@@ -290,7 +330,9 @@ internal data class ControlOptions (
             val content = value.requireMap()
 
             return ControlOptions(
-                audience = content.get(AUDIENCE)?.let(AudienceSelector::fromJson),
+                compoundAudience = content
+                    .get(COMPOUND_AUDIENCE)
+                    ?.let(FeatureFlagCompoundAudience::fromJson),
                 reportingMetadata = content.requireMap(REPORTING_METADATA),
                 controlType = Type.fromJson(value)
             )
@@ -300,7 +342,7 @@ internal data class ControlOptions (
     override fun toJsonValue(): JsonValue {
         return JsonMap.newBuilder()
             .putAll(controlType.toJsonValue().optMap())
-            .putOpt(AUDIENCE, audience)
+            .putOpt(COMPOUND_AUDIENCE, compoundAudience)
             .put(REPORTING_METADATA, reportingMetadata)
             .build()
             .toJsonValue()
@@ -308,11 +350,11 @@ internal data class ControlOptions (
 
     sealed class Type(private val type: OptionType): JsonSerializable {
         data object Flag: Type(OptionType.FLAG)
-        data class Variables(val variables: JsonMap?): Type(OptionType.VARIABLES)
+        data class Variables(val data: JsonMap?): Type(OptionType.VARIABLES)
 
         companion object {
             private const val TYPE = "type"
-            private const val VARIABLES = "variables"
+            private const val DATA = "data"
 
             @Throws(JsonException::class)
             fun fromJson(value: JsonValue): Type {
@@ -320,7 +362,7 @@ internal data class ControlOptions (
 
                 return when (OptionType.fromJson(content.require(TYPE))) {
                     OptionType.FLAG -> Flag
-                    OptionType.VARIABLES -> Variables(content.get(VARIABLES)?.requireMap())
+                    OptionType.VARIABLES -> Variables(content.get(DATA)?.requireMap())
                 }
             }
         }
@@ -330,7 +372,7 @@ internal data class ControlOptions (
                 Flag -> jsonMapOf(TYPE to type).toJsonValue()
                 is Variables -> jsonMapOf(
                     TYPE to type,
-                    VARIABLES to variables
+                    DATA to data
                 ).toJsonValue()
             }
         }

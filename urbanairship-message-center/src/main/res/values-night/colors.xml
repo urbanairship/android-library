@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ua_message_center_background">#000000</color>
+    <color name="ua_message_center_surface">#121212</color>
+    <color name="ua_message_center_surface_variant">#021852</color>
+    <color name="ua_message_center_surface_container">#121212</color>
+    <color name="ua_message_center_accent">#1C5AFA</color>
+    <color name="ua_message_center_secondary_variant">#121212</color>
+    <color name="ua_message_center_ui_text_color">#FFFFFF</color>
+    <color name="ua_message_center_error">#E6193B</color>
+</resources>

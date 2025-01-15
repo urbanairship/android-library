@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("airship-module")
-    id("kotlin-android")
     id("kotlin-allopen")
     id("kotlin-parcelize")
 }
@@ -48,6 +47,7 @@ dependencies {
 
     // AndroidX
     implementation(libs.androidx.core)
+    implementation(libs.androidx.activityktx)
     implementation(libs.androidx.fragment.fragmentktx)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.runtimektx)

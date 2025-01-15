@@ -5,6 +5,10 @@ plugins {
 
 description = "Airship Android Automation Compose UI."
 
+airshipModule {
+    published = true
+}
+
 android {
     namespace 'com.urbanairship.automation.compose'
 
@@ -14,11 +18,6 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-        freeCompilerArgs = ["-Xexplicit-api=strict", "-Xjvm-default=all-compatibility"]
     }
 }
 

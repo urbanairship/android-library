@@ -29,6 +29,8 @@ import com.urbanairship.job.JobInfo.ConflictStrategy
 import com.urbanairship.job.JobResult
 import com.urbanairship.json.JsonValue
 import com.urbanairship.locale.LocaleManager
+import com.urbanairship.permission.PermissionStatus
+import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.Clock
 import com.urbanairship.util.Network
 import com.urbanairship.util.UAStringUtil
@@ -39,7 +41,10 @@ import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
@@ -55,10 +60,12 @@ public class AirshipChannel internal constructor(
     dataStore: PreferenceDataStore,
     private val runtimeConfig: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
+    private val permissionsManager: PermissionsManager,
     private val localeManager: LocaleManager,
-    private val channelSubscriptions: ChannelSubscriptions,
     private val channelManager: ChannelBatchUpdateManager,
     private val channelRegistrar: ChannelRegistrar,
+    private val audienceOverridesProvider: AudienceOverridesProvider,
+    private val subscriptionsProvider: SubscriptionsProvider,
     private val activityMonitor: ActivityMonitor = GlobalActivityMonitor.shared(context),
     private val jobDispatcher: JobDispatcher = JobDispatcher.shared(context),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
@@ -74,20 +81,30 @@ public class AirshipChannel internal constructor(
         dataStore: PreferenceDataStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
+        permissionsManager: PermissionsManager,
         localeManager: LocaleManager,
-        audienceOverridesProvider: AudienceOverridesProvider
+        audienceOverridesProvider: AudienceOverridesProvider,
+        channelRegistrar: ChannelRegistrar
     ) : this(
-        context, dataStore, runtimeConfig, privacyManager, localeManager,
-        ChannelSubscriptions(
-            runtimeConfig, audienceOverridesProvider
-        ),
-        ChannelBatchUpdateManager(
+        context = context,
+        dataStore = dataStore,
+        runtimeConfig = runtimeConfig,
+        privacyManager = privacyManager,
+        permissionsManager = permissionsManager,
+        localeManager = localeManager,
+        channelManager = ChannelBatchUpdateManager(
             dataStore, runtimeConfig, audienceOverridesProvider
         ),
-        ChannelRegistrar(
-            context, dataStore, runtimeConfig
-        )
+        channelRegistrar = channelRegistrar,
+        audienceOverridesProvider = audienceOverridesProvider,
+        subscriptionsProvider = SubscriptionsProvider(runtimeConfig,
+            privacyManager,
+            channelRegistrar.channelIdFlow.mapNotNull { it },
+            combine(channelRegistrar.channelIdFlow.mapNotNull { it }, audienceOverridesProvider.updates) { channelId, _ ->
+                audienceOverridesProvider.channelOverrides(channelId)
+            })
     )
+
 
     init {
         this.runtimeConfig.addConfigListener {
@@ -121,6 +138,9 @@ public class AirshipChannel internal constructor(
      * Channel Id flow. Can be used to listen for when the channel is created.
      */
     public var channelIdFlow: StateFlow<String?> = channelRegistrar.channelIdFlow
+
+    public val subscriptions: Flow<Result<Set<String>>> = subscriptionsProvider.updates
+
 
     init {
         channelRegistrar.channelId?.let {
@@ -422,20 +442,7 @@ public class AirshipChannel internal constructor(
      */
     @JvmSynthetic
     public suspend fun fetchSubscriptionLists(): Result<Set<String>> {
-        if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
-            return Result.failure(
-                IllegalStateException("Unable to fetch subscriptions when FEATURE_TAGS_AND_ATTRIBUTES are disabled")
-            )
-        }
-
-        if (!isRegistrationAllowed) {
-            return Result.failure(
-                IllegalStateException("Unable to fetch subscriptions when channel registration is disabled")
-            )
-        }
-
-        val channelId = channelIdFlow.mapNotNull { it }.first()
-        return channelSubscriptions.fetchSubscriptionLists(channelId)
+        return subscriptionsProvider.updates.first()
     }
 
     /**
@@ -541,6 +548,27 @@ public class AirshipChannel internal constructor(
             builder.setSdkVersion(UAirship.getVersion())
         }
 
+        if (privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
+            val permissions = buildMap<String, String> {
+                permissionsManager.configuredPermissions.forEach { permission ->
+                    try {
+                        permissionsManager
+                            .checkPermissionStatus(permission)
+                            .get()
+                            ?.let { status ->
+                                if (status != PermissionStatus.NOT_DETERMINED) {
+                                    put(permission.value, status.value)
+                                }
+                            }
+                    } catch (_: Exception) {}
+                }
+            }
+
+            if (permissions.isNotEmpty()) {
+                builder.setPermissions(permissions)
+            }
+        }
+
         return builder
     }
 
@@ -550,11 +578,13 @@ public class AirshipChannel internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public sealed interface Extender {
 
+        /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun interface Suspending : Extender {
             public suspend fun extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder
         }
 
+        /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun interface Blocking : Extender {
             public fun extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder

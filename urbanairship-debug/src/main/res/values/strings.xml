@@ -1,291 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="ua_custom_event_name">Custom Event</string>
-    <string name="ua_location_event_name">Location</string>
-    <string name="ua_region_event_name">Region</string>
-    <string name="ua_screen_event_name">Screen</string>
-    <string name="ua_in_app_resolution_event_name">In-App Resolution</string>
-    <string name="ua_in_app_display_event_name">In-App Display</string>
-    <string name="ua_app_background_event_name">App Background</string>
-    <string name="ua_app_foreground_event_name">App Foreground</string>
-    <string name="ua_push_arrived_event_name">Push Arrived</string>
-    <string name="ua_associate_identifiers_event_name">Associate Identifiers</string>
-    <string name="ua_install_attribution_event_name">Install Attribution</string>
-    <string name="ua_event_name">%s</string>
-    <string name="ua_active_filters">%d Active Filters</string>
-    <string name="ua_no_filters">Filters</string>
-    <string name="ua_event_details">Event Details</string>
-    <string name="ua_clear">Clear</string>
-    <string name="ua_event_storage_days_title">Days of Events to Store</string>
-    <string name="ua_event_storage_days_02">2 Days</string>
-    <string name="ua_event_storage_days_05">5 Days</string>
-    <string name="ua_event_storage_days_10">10 Days</string>
-    <string name="ua_event_storage_days_30">30 Days</string>
+<resources>
+    <string name="ua_debug_label">Airship Debug</string>
 
-    <string name="ua_debug_title">Airship Debug</string>
-    <string name="ua_debug_short_title">UA Debug</string>
+    //
+    // Top-level screens
+    //
+    <string name="ua_debug_device_info_title">Device info</string>
+    <string name="ua_debug_device_info_desc">View device info and settings</string>
 
-    <string name="ua_attributes_set">Set</string>
-    <string name="ua_attributes_remove">Remove</string>
-    <string name="ua_attributes_attribute_action">Attribute Action</string>
-    <string name="ua_attributes_attribute_type">Attribute Type</string>
-    <string name="ua_attributes_string">String</string>
-    <string name="ua_attributes_number">Number</string>
-    <string name="ua_attributes_date">Date</string>
-    <string name="ua_attributes_time">Time</string>
-    <string name="ua_attributes_key">Key</string>
-    <string name="ua_attributes_value">Value</string>
-    <string name="ua_attribute_set">Attribute set!</string>
-    <string name="ua_attribute_removed">Attribute removed!</string>
+    <string name="ua_debug_privacy_title">Privacy Manager</string>
+    <string name="ua_debug_privacy_desc">View current privacy settings</string>
 
-    <string name="ua_custom_event_property_value_false">false</string>
-    <string name="ua_custom_event_property_value_true">true</string>
-    <string name="ua_custom_event_property_type">Property Type</string>
-    <string name="ua_custom_event_property_name">Name</string>
-    <string name="ua_custom_event_property_value">Value</string>
-    <string name="ua_custom_event_property_string">String</string>
-    <string name="ua_custom_event_property_number">Number</string>
-    <string name="ua_custom_event_property_boolean">Boolean</string>
-    <string name="ua_custom_event_property_json">JSON</string>
-    <string name="ua_custom_event_property_save">Save</string>
-    <string name="ua_custom_event_property_cancel">Cancel</string>
-    <string name="ua_custom_event_error_missing_required">Required</string>
-    <string name="ua_custom_event_error_invalid_json">Invalid JSON</string>
-    <string name="ua_custom_event_error_invalid_interaction">Required for interaction</string>
+    <string name="ua_debug_analytics_title">Analytics</string>
+    <string name="ua_debug_events_title">Events</string>
+    <string name="ua_debug_events_desc">Search and filter a list of recent events</string>
+    <string name="ua_debug_analytics_identifiers_title">Analytic Identifiers</string>
 
-    <string name="ua_custom_event_field_name">Event Name</string>
-    <string name="ua_custom_event_field_value">Event Value</string>
-    <string name="ua_custom_event_field_interaction_id">Interaction Id</string>
-    <string name="ua_custom_event_field_interaction_type">Interaction Type</string>
-    <string name="ua_custom_event_field_transaction_id">Transaction Id</string>
-    <string name="ua_custom_event_field_properties">Properties</string>
+    <string name="ua_debug_channel_title">Channel</string>
+    <string name="ua_debug_channel_desc">View channel info and tags</string>
 
-    <string name="ua_custom_event_add_property">Add Property</string>
-    <string name="ua_custom_event_create">Create</string>
+    <string name="ua_debug_tags_list_title">Tags</string>
+    <string name="ua_debug_tag_groups_list_title">Tag Groups</string>
+    <string name="ua_debug_attributes_list_title">Attributes</string>
+    <string name="ua_debug_subscription_list_title">Subscription Lists</string>
 
-    <string name="ua_pref_center_view_title">Preference Centers</string>
-    <string name="ua_pref_center_view_description">View and launch preference centers</string>
-
-    <string name="ua_event_view_title">Events</string>
-    <string name="ua_event_view_description">Search and filter a list of recent events</string>
-
-    <string name="ua_custom_event_view_title">Create Event</string>
-    <string name="ua_custom_event_view_description">Create custom events</string>
-
-    <string name="ua_none">None</string>
-
-    <string name="ua_delete">Delete</string>
-    <string name="ua_ok">OK</string>
-
-    <string name="ua_opted_in">Opted-in</string>
-    <string name="ua_opted_out">Opted-out</string>
-
-    <string name="ua_user_settings_category">User Settings</string>
-
-
-    <string name="ua_data_collection_enabled_setting_title">Data Collection Enabled</string>
-    <string name="ua_data_collection_enabled_setting_summary">Required for location, push, analytics, named user, attributes, and tags.</string>
-    <string name="ua_named_user_settings_title">Named User</string>
-    <string name="ua_tags_settings_title">Tags</string>
-    <string name="ua_tag_groups_settings_title">Tag Groups</string>
-    <string name="ua_channel_attributes_settings_title">Channel Attributes</string>
-    <string name="ua_contact_attributes_settings_title">Contact Attributes</string>
-
-    <string name="ua_analytics_settings_category">Analytics Settings</string>
-    <string name="ua_analytics_enabled_settings_title">Analytics Enabled</string>
-    <string name="ua_track_advertising_id_settings_title">Track Advertising ID</string>
-
-    <string name="ua_push_settings_category">Push Settings</string>
-    <string name="ua_notifications_enabled_settings_title">Notifications Enabled</string>
-
-
-
-    <string name="ua_iaa_setting_category">In-App Automation Settings</string>
-    <string name="ua_iaa_enabled_settings_title">In-App Automation Enabled</string>
-    <string name="ua_iaa_display_interval_settings_title">In-App Automation Display Interval</string>
-
-    <string name="ua_location_settings_category">Location Settings</string>
-    <string name="ua_location_enabled_settings_title">Location Enabled</string>
-    <string name="ua_background_location_enabled_settings_title">Background Location Enabled</string>
-
-    <string name="ua_device_info_category">Device Info</string>
-    <string name="ua_channel_id_settings_title">Channel ID</string>
-    <string name="ua_user_id_settings_title">User ID</string>
-    <string name="ua_push_optin_status_settings_title">Push Opt-in Status</string>
-    <string name="ua_notificaiton_optin_status_settings_title">Notification Opt-in Status</string>
-    <string name="ua_push_token_settings_title">Push Token</string>
-    <string name="ua_push_provider_settings_title">Push Provider</string>
-    <string name="ua_current_locale_settings_title">Current Locale</string>
-    <string name="ua_airship_version_settings_title">Airship SDK Version</string>
-    <string name="ua_device_manufacturer_settings_title">Manufacturer</string>
-
-
-    <string name="ua_channel_id">Channel</string>
-
-    <string name="ua_duplicate_tag_warning">Tag already exists</string>
-    <string name="ua_button_preferences">Preferences</string>
-
-    <string name="ua_toast_clipboard">Copied to clipboard</string>
-
-    <string name="ua_toast_attributes_success_message">Attribute applied</string>
-    <string name="ua_toast_attributes_invalid_message">Please add valid attribute fields for your selected action</string>
-
-    <string name="ua_current_tags">Current Tags</string>
-    <string name="ua_tag_hint">Tag</string>
-    <string name="ua_tag_group_hint">Tag Group</string>
-    <string name="ua_add_tag">Add</string>
-    <string name="ua_remove_Tag">Remove</string>
-    <string name="ua_channel">Channel</string>
-    <string name="ua_named_user">Named User</string>
-    <string name="ua_contact">Contact</string>
-
-    <string name="ua_identifier">Identifier</string>
-
-    <string name="ua_associated_identifiers">Associated Identifiers</string>
-    <string name="ua_associated_key_hint">Name</string>
-    <string name="ua_associated_value_hint">Value</string>
-    <string name="ua_associated_identifiers_value_format">%1$s : %2$s</string>
-
-    <string name="ua_device_info_title">Device Info</string>
-    <string name="ua_device_info_view_description">View device info and settings</string>
-
-    <string name="ua_push_view_title">Received Pushes</string>
-    <string name="ua_push_view_description">List of received push messages</string>
-    <string name="ua_push_details">Push Details</string>
-    <string name="ua_push_empty_alert">No Alert</string>
-
-    <string name="ua_app_name">Sample</string>
-    <string name="ua_inbox">Inbox</string>
-    <string name="ua_home">Home</string>
-    <string name="ua_settings">Settings</string>
-    <string name="ua_debug">Debug</string>
-    <string name="ua_message">Message</string>
-
-    <string name="ua_iaa_display_interval_unit_time">Seconds</string>
-
-    <string name="ua_debug_iaa_description">View scheduled messages</string>
-    <string name="ua_debug_iaa">In-App Automation</string>
-    <string name="ua_debug_iaa_schedule_details">Schedule Details</string>
-    <string name="ua_debug_iaa_display_details">Display Details</string>
-    <string name="ua_debug_iaa_text_details">Text Details</string>
-    <string name="ua_debug_iaa_media_details">Media Details</string>
-    <string name="ua_debug_iaa_button_details">Button Details</string>
-    <string name="ua_debug_iaa_trigger_details">Trigger Details</string>
-    <string name="ua_debug_iaa_extras_details">Custom Keys Details</string>
-
-    <string name="ua_schedule_category">Schedule</string>
-    <string name="ua_iaa_debug_buttons_separated">Separated</string>
-    <string name="ua_iaa_debug_buttons_joined">Joined</string>
-    <string name="ua_iaa_debug_buttons_stacked">Stacked</string>
-    <string name="ua_iaa_debug_fullscreen_key">Allow Full Screen Display</string>
-    <string name="ua_iaa_debug_dismiss_button_color_key">Dismiss Button Color</string>
-    <string name="ua_iaa_debug_width_key">Width</string>
-    <string name="ua_iaa_debug_height_key">Height</string>
-    <string name="ua_iaa_debug_keep_aspect_ratio_key">Keep Aspect Ratio</string>
-    <string name="ua_iaa_debug_requires_connectivity_key">Requires Connectivity</string>
-    <string name="ua_iaa_debug_bg_color_key">Background Color</string>
-    <string name="ua_iaa_debug_border_radius_key">Border Radius</string>
-
-    <plurals name="ua_debug_days_quantity">
-        <item quantity="one">%s day</item>
-        <item quantity="other">%s days</item>
-    </plurals>
-
-    <plurals name="ua_debug_hours_quantity">
-        <item quantity="one">%s hour</item>
-        <item quantity="other">%s hours</item>
-    </plurals>
-
-    <plurals name="ua_debug_minutes_quantity">
-        <item quantity="one">%s minute</item>
-        <item quantity="other">%s minutes</item>
-    </plurals>
-
-    <plurals name="ua_debug_seconds_quantity">
-        <item quantity="one">%s second</item>
-        <item quantity="other">%s seconds</item>
-    </plurals>
-
-    <plurals name="ua_debug_extras_quantity">
-        <item quantity="one">%s custom key</item>
-        <item quantity="other">%s custom keys</item>
-    </plurals>
-
-    <string name="ua_debug_type">Type</string>
-    <string name="ua_debug_description">Description</string>
-    <string name="ua_debug_url">URL</string>
-    <string name="ua_debug_label">Label</string>
-    <string name="ua_debug_id">ID</string>
-    <string name="ua_debug_behavior">Behavior</string>
-    <string name="ua_debug_border_color">Border Color</string>
-    <string name="ua_debug_actions">Actions</string>
-    <string name="ua_debug_value">Value</string>
-    <string name="ua_debug_button">Button</string>
-    <string name="ua_debug_text">Text</string>
-    <string name="ua_debug_alignment">Alignment</string>
-    <string name="ua_debug_styles">Styles</string>
-    <string name="ua_debug_font_size">Font Size</string>
-    <string name="ua_debug_font_family">Font Family</string>
-    <string name="ua_debug_color">Color</string>
-    <string name="ua_debug_predicate">Predicate</string>
-    <string name="ua_debug_trigger_goal_format">Goal %f</string>
-    <string name="ua_debug_click_actions">Click Actions</string>
-
-    <string name="ua_iaa_debug_template_key">Template</string>
-    <string name="ua_iaa_debug_heading_key">Heading</string>
-    <string name="ua_iaa_debug_body_key">Body</string>
-    <string name="ua_iaa_debug_footer_key">Footer</string>
-
-    <string name="ua_iaa_debug_media_key">Media</string>
-    <string name="ua_iaa_debug_button_layout_key">Button Layout</string>
-    <string name="ua_iaa_debug_placement_key">Placement</string>
-    <string name="ua_iaa_debug_actions_key">Actions</string>
-    <string name="ua_iaa_debug_duration_key">Duration</string>
-    <string name="ua_iaa_debug_schedule_id_key">Schedule Identifier</string>
-    <string name="ua_iaa_debug_schedule_start_key">Schedule Start</string>
-    <string name="ua_iaa_debug_schedule_end_key">Schedule End</string>
-    <string name="ua_iaa_debug_priority_key">Schedule Priority</string>
-    <string name="ua_iaa_debug_limit_key">Schedule Limit</string>
-    <string name="ua_iaa_debug_edit_grace_period_key">Schedule Edit Grace Period</string>
-    <string name="ua_iaa_debug_interval_key">Schedule Interval</string>
-    <string name="ua_iaa_debug_message_name_key">Message Name</string>
-    <string name="ua_iaa_debug_message_display_type_key">Message Display Type</string>
-    <string name="ua_iaa_debug_message_extras_key">Custom Keys</string>
-    <string name="ua_iaa_debug_audience_key">Message Audience</string>
-    <string name="ua_triggers_details_view_title">Triggers Details</string>
-    <string name="ua_display_details_view_title">Display Details</string>
-    <string name="ua_audience_details_view_title">Audience Details</string>
-    <string name="ua_iaa_trigger_lifecycle_foreground">Life Cycle Foreground Trigger</string>
-    <string name="ua_iaa_trigger_lifecycle_background">Life Cycle Background Trigger</string>
-    <string name="ua_iaa_trigger_region_enter">Region Enter Trigger</string>
-    <string name="ua_iaa_trigger_region_exit">Region Exit Trigger</string>
-    <string name="ua_iaa_trigger_custom_event_count">Custom Event Count Trigger</string>
-    <string name="ua_iaa_trigger_custom_event_value">Custom Event Value Trigger</string>
-    <string name="ua_iaa_trigger_feature_flag_interacted_event_value">Feature Flag Interacted Event Trigger</string>
-    <string name="ua_iaa_trigger_screen_view">Screen View Trigger</string>
-    <string name="ua_iaa_trigger_lifecycle_app_init">Lifecycle App Init Trigger</string>
-    <string name="ua_iaa_trigger_active_session">Active Session Trigger</string>
-    <string name="ua_iaa_trigger_version">Version Trigger</string>
-    <string name="ua_iaa_trigger_unknown">Unknown Trigger</string>
-    <string name="ua_debug_audience_new_user">Require New User</string>
-    <string name="ua_debug_audience_notifications_optin">Notifications</string>
-    <string name="ua_debug_audience_location_optin">Location</string>
-    <string name="ua_debug_audience_language_tags">Language Tags</string>
-    <string name="ua_debug_audience_tag_selector">Tag Selector</string>
-    <string name="ua_debug_audience_version_predicate">Version Predicate</string>
-    <string name="ua_debug_audience_miss_behavior">Miss Behavior</string>
-    <string name="ua_debug_audience_test_devices">Test Devices</string>
-    <string name="ua_iaa_debug_schedule_actions">Schedule Actions</string>
-    <string name="ua_actions_schedules">Actions Schedules</string>
-    <string name="ua_iaa_debug_schedule_url_key">URL</string>
-    <string name="ua_deferred_message_schedules">Deferred Message Schedules</string>
-    <string name="ua_debug_iaa_message_details">In-App Message Details</string>
-    <string name="ua_iaa_debug_data_key">Schedule Data</string>
-    <string name="ua_sdk_settings_category">SDK Features</string>
-    <string name="ua_iaa_debug_payload_key">Schedule Payload</string>
+    <string name="ua_debug_automations_title">In-App Automation</string>
+    <string name="ua_debug_automations_desc">View scheduled messages</string>
+    <string name="ua_debug_experiments_title">Experiments</string>
 
     <string name="ua_debug_feature_flags_title">Feature Flags</string>
-    <string name="ua_debug_feature_flags_description">View feature flags</string>
+    <string name="ua_debug_feature_flags_desc">View feature flags</string>
 
-    <string name="ua_debug_json_viewer_title">JSON Viewer</string>
+    <string name="ua_debug_pushes_title">Received Pushes</string>
+    <string name="ua_debug_pushes_desc">View a list of received push messages</string>
+
+    <string name="ua_debug_pref_centers_title">Preference Centers</string>
+    <string name="ua_debug_pref_centers_desc">View and launch Preference Centers</string>
+
+    <string name="ua_debug_contacts_title">Contacts</string>
+    <string name="ua_debug_contacts_desc">Register platforms to the contact</string>
+    <string name="ua_debug_contacts_named_user_title">Named User</string>
+    <string name="ua_debug_contacts_subscription_lists_title">Subscription Lists</string>
+    <string name="ua_debug_contacts_add_channel_title">Add Channel</string>
+    <string name="ua_debug_contacts_channel_open_title">Open Channel</string>
+    <string name="ua_debug_contacts_channel_sms_title">SMS Channel</string>
+    <string name="ua_debug_contacts_channel_email_title">Email Channel</string>
+    <string name="ua_debug_contacts_channel_email_property_title">Identifier</string>
+
+    <string name="ua_debug_app_info_title">App Info</string>
+    <string name="ua_debug_app_info_desc">View application info</string>
+
+    //
+    // Device info screens
+    //
+
+    <string name="ua_debug_named_user_title">Named User</string>
+    <string name="ua_debug_attributes_title">Attributes</string>
+    <string name="ua_debug_tags_title">Tags</string>
+    <string name="ua_debug_tag_groups_title">Tag Groups</string>
+    <string name="ua_debug_associated_identifiers_title">Associated Identifiers</string>
+
 </resources>

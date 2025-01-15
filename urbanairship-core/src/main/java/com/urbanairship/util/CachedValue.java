@@ -12,6 +12,8 @@ import androidx.core.util.Predicate;
  * Caches a value in memory with an expiration.
  *
  * @param <T>
+ *
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class CachedValue<T> {

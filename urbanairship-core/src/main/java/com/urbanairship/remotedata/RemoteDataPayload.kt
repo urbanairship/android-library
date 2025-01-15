@@ -16,8 +16,11 @@ public data class RemoteDataPayload(
     val data: JsonMap,
     val remoteDataInfo: RemoteDataInfo? = null
 ) {
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
+        /** @hide */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @JvmStatic
         public fun emptyPayload(type: String): RemoteDataPayload {
             return RemoteDataPayload(type, 0, JsonMap.EMPTY_MAP, null)

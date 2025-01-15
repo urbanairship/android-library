@@ -20,7 +20,6 @@ import com.urbanairship.android.layout.property.hasPagerNext
 import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.util.DelicateLayoutApi
-import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.widget.TappableView
 import java.lang.Integer.max
 import java.lang.Integer.min
@@ -97,19 +96,18 @@ internal abstract class ButtonModel<T, I: Button>(
         // Dismiss the keyboard, if it's open.
         listener?.dismissSoftKeyboard()
 
-        val submitEvent =
-            LayoutEvent.SubmitForm(buttonIdentifier = viewInfo.identifier, onSubmitted = {
-                // After submitting, handle the rest of the behaviors.
-                if (viewInfo.clickBehaviors.hasCancelOrDismiss) {
-                    handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
-                }
-                if (viewInfo.clickBehaviors.hasPagerNext) {
-                    handlePagerNext(context, fallback = viewInfo.clickBehaviors.pagerNextFallback)
-                }
-                if (viewInfo.clickBehaviors.hasPagerPrevious) {
-                    handlePagerPrevious()
-                }
-            })
+        val submitEvent = LayoutEvent.SubmitForm(buttonIdentifier = viewInfo.identifier) {
+            // After submitting, handle the rest of the behaviors.
+            if (viewInfo.clickBehaviors.hasCancelOrDismiss) {
+                handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
+            }
+            if (viewInfo.clickBehaviors.hasPagerNext) {
+                handlePagerNext(context, fallback = viewInfo.clickBehaviors.pagerNextFallback)
+            }
+            if (viewInfo.clickBehaviors.hasPagerPrevious) {
+                handlePagerPrevious()
+            }
+        }
         modelScope.launch {
             environment.eventHandler.broadcast(submitEvent)
         }
@@ -126,7 +124,8 @@ internal abstract class ButtonModel<T, I: Button>(
             }
         }
 
-        @OptIn(DelicateLayoutApi::class) val hasNext = pagerState.value.hasNext
+        @OptIn(DelicateLayoutApi::class)
+        val hasNext = pagerState.value.hasNext
 
         when {
             !hasNext && fallback == PagerNextFallback.FIRST -> pagerState.update { state ->
@@ -157,7 +156,8 @@ internal abstract class ButtonModel<T, I: Button>(
                 reportingDescription(context),
                 isCancel,
                 environment.displayTimer.time
-            ), layoutState.reportingContext(buttonId = viewInfo.identifier)
+            ),
+            layoutState.reportingContext(buttonId = viewInfo.identifier)
         )
         modelScope.launch {
             environment.eventHandler.broadcast(LayoutEvent.Finish)

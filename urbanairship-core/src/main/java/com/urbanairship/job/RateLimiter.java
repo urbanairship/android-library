@@ -18,6 +18,7 @@ import androidx.annotation.VisibleForTesting;
 
 /**
  * Rate limit tracker.
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class RateLimiter {

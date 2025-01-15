@@ -5,19 +5,19 @@ package com.urbanairship.debug
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.PreferenceDataStore
-import com.urbanairship.messagecenter.BuildConfig
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.debug.DebugModuleFactory
+import com.urbanairship.remotedata.RemoteData
 
 /**
  * Debug module factory implementation.
- * @suppress
+ * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-class DebugModuleFactoryImpl : DebugModuleFactory {
+public class DebugModuleFactoryImpl : DebugModuleFactory {
 
-    override fun build(context: Context, dataStore: PreferenceDataStore): Module {
-        return Module.singleComponent(DebugManager(context, dataStore), 0)
+    public override fun build(context: Context, dataStore: PreferenceDataStore, remoteData: RemoteData): Module {
+        return Module.singleComponent(DebugManager(context, dataStore, remoteData), 0)
     }
 
     override val airshipVersion: String

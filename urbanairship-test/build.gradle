@@ -38,4 +38,5 @@ dependencies {
     annotationProcessor(libs.androidx.room.compiler)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.mockk)
 }

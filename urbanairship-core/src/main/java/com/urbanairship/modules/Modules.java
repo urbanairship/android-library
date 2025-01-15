@@ -12,6 +12,7 @@ import com.urbanairship.UALog;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.AirshipEventFeed;
 import com.urbanairship.analytics.Analytics;
+import com.urbanairship.audience.AudienceEvaluator;
 import com.urbanairship.cache.AirshipCache;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
@@ -104,15 +105,16 @@ public class Modules {
             @NonNull DeferredResolver deferredResolver,
             @NonNull AirshipEventFeed eventFeed,
             @NonNull ApplicationMetrics metrics,
-            @NonNull AirshipCache cache
-    ) {
+            @NonNull AirshipCache cache,
+            @NonNull AudienceEvaluator audienceEvaluator
+            ) {
         try {
             AutomationModuleFactory moduleFactory = createFactory(AUTOMATION_MODULE_FACTORY, AutomationModuleFactory.class);
             if (moduleFactory != null) {
                 return moduleFactory.build(context, dataStore, runtimeConfig, privacyManager,
                         airshipChannel, pushManager, analytics, remoteData, experimentManager,
                         meteredUsage, deferredResolver,
-                        eventFeed, metrics, cache);
+                        eventFeed, metrics, cache, audienceEvaluator);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Automation module");
@@ -121,12 +123,15 @@ public class Modules {
     }
 
     @Nullable
-    public static Module debug(@NonNull Context context,
-                               @NonNull PreferenceDataStore dataStore) {
+    public static Module debug(
+            @NonNull Context context,
+            @NonNull PreferenceDataStore dataStore,
+            @NonNull RemoteData remoteData
+    ) {
         try {
             DebugModuleFactory moduleFactory = createFactory(DEBUG_MODULE_FACTORY, DebugModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore);
+                return moduleFactory.build(context, dataStore, remoteData);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Debug module");

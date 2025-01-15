@@ -2,6 +2,7 @@
 package com.urbanairship.channel
 
 import android.net.Uri
+import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -18,12 +19,15 @@ import com.urbanairship.util.UAHttpStatusUtil
 
 /**
  * A high level abstraction for performing Channel requests.
+ *
+ * @hide
  */
-internal class ChannelApiClient @VisibleForTesting constructor(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class ChannelApiClient @VisibleForTesting constructor(
     private val runtimeConfig: AirshipRuntimeConfig,
     private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
 ) {
-    suspend fun createChannel(channelPayload: ChannelRegistrationPayload): RequestResult<Channel> {
+    internal suspend fun createChannel(channelPayload: ChannelRegistrationPayload): RequestResult<Channel> {
         UALog.d { "Creating channel with payload: $channelPayload" }
 
         val builder = runtimeConfig.deviceUrl.appendEncodedPath(CHANNEL_API_PATH)
@@ -53,7 +57,7 @@ internal class ChannelApiClient @VisibleForTesting constructor(
         }
     }
 
-    suspend fun updateChannel(channelId: String, channelPayload: ChannelRegistrationPayload): RequestResult<Channel> {
+    internal suspend fun updateChannel(channelId: String, channelPayload: ChannelRegistrationPayload): RequestResult<Channel> {
         UALog.d { "Updating channel $channelId with payload: $channelPayload" }
 
         val url = createLocation(channelId)
@@ -81,7 +85,7 @@ internal class ChannelApiClient @VisibleForTesting constructor(
             .build()
     }
 
-    companion object {
+    internal companion object {
         private const val CHANNEL_API_PATH = "api/channels/"
 
         /**

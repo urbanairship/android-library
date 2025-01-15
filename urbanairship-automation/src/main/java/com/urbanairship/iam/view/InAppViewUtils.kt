@@ -263,6 +263,8 @@ internal object InAppViewUtils {
      *
      * @param group The view group.
      * @return The largest child Z value in the view group.
+     *
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     fun getLargestChildZValue(group: ViewGroup): Float {

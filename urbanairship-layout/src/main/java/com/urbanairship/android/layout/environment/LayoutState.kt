@@ -57,6 +57,7 @@ internal sealed class State {
         val durations: List<Int?> = emptyList(),
         val progress: Int = 0,
         val isMediaPaused: Boolean = false,
+        val wasMediaPaused: Boolean = false,
         val isStoryPaused: Boolean = false,
         val isTouchExplorationEnabled: Boolean = false
     ) : State() {
@@ -96,7 +97,8 @@ internal sealed class State {
             copy(durations = durations)
 
         fun copyWithMediaPaused(isMediaPaused: Boolean) =
-            copy(isMediaPaused = isMediaPaused)
+            copy(isMediaPaused = isMediaPaused,
+                 wasMediaPaused = this.isMediaPaused && !isMediaPaused)
 
         fun copyWithStoryPaused(isStoryPaused: Boolean) =
             copy(isStoryPaused = isStoryPaused)

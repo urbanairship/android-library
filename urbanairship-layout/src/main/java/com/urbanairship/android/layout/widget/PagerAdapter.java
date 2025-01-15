@@ -22,6 +22,7 @@ import com.urbanairship.android.layout.util.LayoutUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PagerAdapter extends RecyclerView.Adapter<PagerAdapter.ViewHolder> {
     @NonNull

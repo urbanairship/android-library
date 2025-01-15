@@ -59,6 +59,11 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
      */
     public val audience: AutomationAudience? = null,
     /**
+     * compound audience, if both `audience` and `compoundAudience` is defined they
+     * will both be evaluated to determine if the message should be displayed
+     */
+    public val compoundAudience: AutomationCompoundAudience? = null,
+    /**
      * An AutomationDelay instance.
      */
     public val delay: AutomationDelay? = null,
@@ -106,6 +111,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private var startDate: ULong? = schedule.startDate
         private var endDate: ULong? = schedule.endDate
         private var audience: AutomationAudience? = schedule.audience
+        private var compoundAudience: AutomationCompoundAudience? = schedule.compoundAudience
         private var delay: AutomationDelay? = schedule.delay
         private var interval: ULong? = schedule.interval
         private var data: ScheduleData = schedule.data
@@ -189,6 +195,15 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         }
 
         /**
+         * Set the compound audience.
+         * @param audience The compoundAudience audience.
+         * @return The builder object.
+         */
+        public fun setCompoundAudience(audience: AutomationCompoundAudience?): Builder = apply {
+            this.compoundAudience = audience
+        }
+
+        /**
          * Set the delay.
          * @param delay The delay.
          * @return The builder object.
@@ -238,6 +253,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 startDate = startDate,
                 endDate = endDate,
                 audience = audience,
+                compoundAudience = compoundAudience,
                 delay = delay,
                 interval = interval,
                 data = data,
@@ -275,6 +291,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             startDate = startDate,
             endDate = endDate ?: this.endDate,
             audience = audience,
+            compoundAudience = compoundAudience,
             delay = delay,
             interval = interval,
             data = data,
@@ -375,6 +392,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private const val START = "start"
         private const val END = "end"
         private const val AUDIENCE = "audience"
+        private const val COMPOUND_AUDIENCE = "compound_audience"
         private const val DELAY = "delay"
         private const val INTERVAL = "interval"
         private const val CAMPAIGNS = "campaigns"
@@ -414,7 +432,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 limit = content.get(LIMIT)?.getInt(0)?.toUInt(),
                 startDate = parseDate(content.get(START)),
                 endDate = parseDate(content.get(END)),
-                audience = content.get(AUDIENCE)?.let(AutomationAudience.Companion::fromJson),
+                audience = content.get(AUDIENCE)?.let(AutomationAudience::fromJson),
+                compoundAudience = content.get(COMPOUND_AUDIENCE)?.let(AutomationCompoundAudience::fromJson),
                 delay = content.get(DELAY)?.let(AutomationDelay.Companion::fromJson),
                 interval = content.optionalField(INTERVAL),
                 campaigns = content.get(CAMPAIGNS),
@@ -447,6 +466,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(START, startDate?.toLong()?.let(DateUtils::createIso8601TimeStamp))
         .putOpt(END, endDate?.toLong()?.let(DateUtils::createIso8601TimeStamp))
         .putOpt(AUDIENCE, audience)
+        .putOpt(COMPOUND_AUDIENCE, compoundAudience)
         .putOpt(DELAY, delay)
         .putOpt(INTERVAL, interval?.toLong())
         .putOpt(CAMPAIGNS, campaigns)
@@ -479,6 +499,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         if (limit != other.limit) return false
         if (startDate != other.startDate) return false
         if (audience != other.audience) return false
+        if (compoundAudience != other.compoundAudience) return false
         if (delay != other.delay) return false
         if (interval != other.interval) return false
         if (data != other.data) return false
@@ -497,9 +518,10 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(identifier, triggers, group, priority, limit, startDate, audience, delay,
-            interval, data, bypassHoldoutGroups, editGracePeriodDays, frequencyConstraintIds, messageType,
-            campaigns, reportingContext, productId, minSDKVersion, created, queue, metadata, endDate)
+        return Objects.hash(identifier, triggers, group, priority, limit, startDate, audience,
+            compoundAudience, delay, interval, data, bypassHoldoutGroups, editGracePeriodDays,
+            frequencyConstraintIds, messageType, campaigns, reportingContext, productId,
+            minSDKVersion, created, queue, metadata, endDate)
     }
 }
 

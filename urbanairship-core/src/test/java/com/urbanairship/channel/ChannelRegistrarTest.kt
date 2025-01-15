@@ -4,16 +4,16 @@ import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import app.cash.turbine.test
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestClock
 import com.urbanairship.http.RequestResult
+import java.util.UUID
+import app.cash.turbine.test
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import java.util.UUID
 import io.mockk.slot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -48,8 +48,16 @@ public class ChannelRegistrarTest {
 
     private val emptyPayload = ChannelRegistrationPayload.Builder().build()
 
+    private var createOption: ChannelGenerationMethod = ChannelGenerationMethod.Automatic
+
     private val registrar = ChannelRegistrar(
-        preferenceDataStore, mockClient, testActivityMonitor, testClock
+        preferenceDataStore, mockClient, testActivityMonitor,
+        channelCreateOption = object : AirshipChannelCreateOption {
+            override fun get(): ChannelGenerationMethod {
+                return createOption
+            }
+        },
+        clock = testClock
     )
 
     @Before
@@ -65,6 +73,50 @@ public class ChannelRegistrarTest {
     @Test
     public fun testCreateChannel(): TestResult = runTest {
         assertNull(registrar.channelId)
+        coEvery {
+            mockClient.createChannel(emptyPayload)
+        } returns RequestResult(200, Channel("some id", "some://location"), null, null)
+
+        assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
+
+        assertEquals("some id", registrar.channelId)
+        registrar.channelIdFlow.test {
+            assertEquals("some id", this.awaitItem())
+        }
+    }
+
+    @Test
+    public fun testRestoreChannel(): TestResult = runTest {
+        assertNull(registrar.channelId)
+
+        val restoreChannelId = UUID.randomUUID().toString()
+        createOption = ChannelGenerationMethod.Restore(restoreChannelId)
+
+        // Update
+        coEvery {
+            mockClient.updateChannel(any(), any())
+        } answers {
+            assertEquals(restoreChannelId, firstArg())
+            RequestResult(200, Channel("some id", "some://location"), null, null)
+        }
+
+        assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
+
+        assertEquals(restoreChannelId, registrar.channelId)
+        registrar.channelIdFlow.test {
+            assertEquals(restoreChannelId, this.awaitItem())
+        }
+
+        coVerify(exactly = 0) { mockClient.createChannel(any()) }
+        coVerify(exactly = 1) { mockClient.updateChannel(any(), any()) }
+    }
+
+    @Test
+    public fun testRestoreFallbackToRegularOnInvalidChannelId(): TestResult = runTest {
+        assertNull(registrar.channelId)
+
+        createOption = ChannelGenerationMethod.Restore("invalid")
+
         coEvery {
             mockClient.createChannel(emptyPayload)
         } returns RequestResult(200, Channel("some id", "some://location"), null, null)

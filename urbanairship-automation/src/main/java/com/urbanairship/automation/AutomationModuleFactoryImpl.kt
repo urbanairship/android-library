@@ -10,6 +10,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.GlobalActivityMonitor
+import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.automation.action.ActionAutomationExecutor
 import com.urbanairship.automation.action.ActionAutomationPreparer
 import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolver
@@ -73,7 +74,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
         metrics: ApplicationMetrics,
-        cache: AirshipCache
+        cache: AirshipCache,
+        audienceEvaluator: AudienceEvaluator
     ): Module {
         val assetManager = AssetCacheManager(context)
         val eventRecorder = InAppEventRecorder(analytics, meteredUsage)
@@ -132,6 +134,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                     cache = cache
                 ),
                 queueConfigSupplier = { runtimeConfig.remoteConfig.iaaConfig?.retryingQueue },
+                audienceEvaluator = audienceEvaluator
             ),
             scheduleConditionsChangedNotifier = scheduleConditionNotifier,
             eventsFeed = AutomationEventFeed(

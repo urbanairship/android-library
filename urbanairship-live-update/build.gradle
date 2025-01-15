@@ -1,7 +1,7 @@
 plugins {
     id 'airship-module'
-    id 'kotlin-android'
-    id 'kotlin-kapt'
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 description = "Airship Android Live Update extension."
@@ -9,9 +9,8 @@ description = "Airship Android Live Update extension."
 android {
     namespace 'com.urbanairship.liveupdate'
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-        freeCompilerArgs = ["-Xexplicit-api=strict", "-Xjvm-default=all-compatibility"]
+    room {
+        schemaDirectory("$projectDir/schemas")
     }
 }
 
@@ -24,7 +23,7 @@ dependencies {
     // AndroidX
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
 
     // Tests
     testImplementation project(':urbanairship-test')

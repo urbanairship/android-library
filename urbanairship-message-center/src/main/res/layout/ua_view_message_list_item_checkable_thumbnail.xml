@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/UrbanAirship.MessageCenter.Item.Thumbnail"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipToPadding="false"
+    android:clipChildren="false">
+
+    <!-- We're using paddingStart to position the indicator,
+           so we don't want to also set paddingEnd on this FrameLayout. -->
+    <FrameLayout
+        android:id="@+id/unread_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/message_item_unread_indicator_offset"
+        android:paddingStart="@dimen/message_item_unread_indicator_offset"
+        android:visibility="visible"
+        android:clipToPadding="false"
+        android:clipChildren="false"
+        tools:ignore="RtlSymmetry">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/thumbnail"
+            style="@style/UrbanAirship.MessageCenter.Item.Thumbnail.Image"
+            android:layout_width="@dimen/message_item_thumbnail_width"
+            android:layout_height="@dimen/message_item_thumbnail_height"
+            tools:src="@drawable/ua_message_item_thumbnail_placeholder" />
+
+        <!-- The message list item blocks descendant focus,
+            so we don't need a content description for this ImageView. -->
+        <ImageView
+            android:id="@+id/unread_indicator"
+            android:layout_width="@dimen/message_item_unread_indicator_size"
+            android:layout_height="@dimen/message_item_unread_indicator_size"
+            android:layout_gravity="top|start"
+            android:translationX="@dimen/message_item_unread_indicator_offset_negative"
+            android:translationY="@dimen/message_item_unread_indicator_offset_negative"
+            android:visibility="gone"
+            tools:visibility="visible"
+            android:src="@drawable/ua_message_item_unread_indicator"
+            android:importantForAccessibility="no"
+            android:contentDescription="@null"/>
+    </FrameLayout>
+
+    <!-- The message list item blocks descendant focus, so we're duplicating parent state for
+        this CheckBox and don't want it to be clickable/focusable individually. -->
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/checkable"
+        style="@style/UrbanAirship.MessageCenter.Item.CheckBox"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:translationX="@dimen/message_item_unread_indicator_offset_half"
+        android:translationY="@dimen/message_item_unread_indicator_offset_half"
+        android:duplicateParentState="true"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:layout_gravity="center"
+        android:alpha="0"
+        tools:checked="true"/>
+</FrameLayout>

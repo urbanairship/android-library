@@ -13,18 +13,26 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.content.ContextCompat;
+import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory;
+import kotlinx.coroutines.CoroutineDispatcher;
+import kotlinx.coroutines.ExecutorsKt;
 
 /**
  * Message database
+ * @hide
  */
 @Database(
-    version = 5,
-    entities = { MessageEntity.class }
+    version = 7,
+    entities = { MessageEntity.class },
+    autoMigrations = {
+            @AutoMigration(from = 5, to = 6),
+            @AutoMigration(from = 6, to = 7)
+    }
 )
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class MessageDatabase extends RoomDatabase {
@@ -54,6 +62,7 @@ public abstract class MessageDatabase extends RoomDatabase {
     static final Migration MIGRATION_3_5 = new MessageDatabaseMultiMigration(3, 5);
     static final Migration MIGRATION_4_5 = new MessageDatabaseMultiMigration(4, 5);
 
+    @NonNull
     public static MessageDatabase createDatabase(@NonNull Context context, @NonNull AirshipConfigOptions config) {
         String name = config.appKey + "_" + DB_NAME;
         File urbanAirshipNoBackupDirectory = new File(ContextCompat.getNoBackupFilesDir(context), DB_DIR);
@@ -68,10 +77,13 @@ public abstract class MessageDatabase extends RoomDatabase {
             .build();
     }
 
+    @NonNull
     @VisibleForTesting
-    public static MessageDatabase createInMemoryDatabase(@NonNull Context context) {
+    public static MessageDatabase createInMemoryDatabase(@NonNull Context context, @NonNull CoroutineDispatcher dispatcher) {
         return Room.inMemoryDatabaseBuilder(context, MessageDatabase.class)
                    .allowMainThreadQueries()
+                   .setTransactionExecutor(ExecutorsKt.asExecutor(dispatcher))
+                   .setQueryExecutor(ExecutorsKt.asExecutor(dispatcher))
                    .build();
     }
 }

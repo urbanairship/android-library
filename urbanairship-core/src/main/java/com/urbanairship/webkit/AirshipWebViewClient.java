@@ -248,6 +248,8 @@ public class AirshipWebViewClient extends WebViewClient {
      * @param webView The web view.
      * @param url The url being loaded.
      * @return <code>true</code> if the url was loaded, otherwise <code>false</code>.
+     *
+     * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     private boolean interceptUrl(@NonNull final WebView webView, @Nullable String url) {

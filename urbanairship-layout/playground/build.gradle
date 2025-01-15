@@ -73,6 +73,7 @@ android {
             includeAndroidResources = true
         }
     }
+
     namespace 'com.urbanairship.android.layout.playground'
 }
 

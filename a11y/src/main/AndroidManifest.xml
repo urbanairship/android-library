@@ -5,11 +5,11 @@
     <dist:module dist:instant="true" />
 
     <!-- Optional: Needed if using location in Airship. -->
-    <!-- Use "android.permission.ACCESS_COARSE_LOCATION" instead if GPS access is not necessary -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
-        android:name="com.urbanairship.sample.SampleApplication"
+        android:name="com.urbanairship.sample.A11yApplication"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_config"
         android:icon="@mipmap/ic_launcher"
@@ -20,7 +20,7 @@
         <!-- Autopilot calls takeOff without the need to override the Application -->
         <meta-data
             android:name="com.urbanairship.autopilot"
-            android:value="com.urbanairship.sample.SampleAutopilot" />
+            android:value="com.urbanairship.sample.A11yAutopilot" />
 
         <!-- Optional: Enable local storage on UAWebView -->
         <meta-data
@@ -30,7 +30,7 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustPan"
             android:exported="true">
 

@@ -4,13 +4,15 @@ package com.urbanairship.featureflag
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.audience.AudienceSelector
+import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.ValueMatcher
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -40,25 +42,81 @@ public class FeatureFlagInfoTest {
 
         assert(testFlag.controlOptions?.controlType == ControlOptions.Type.Flag)
         assert(testFlag.controlOptions?.reportingMetadata == jsonMapOf("reporting" to "superseded"))
-        assertNotNull(testFlag.controlOptions?.audience)
+        assertNotNull(testFlag.controlOptions?.compoundAudience)
+    }
+
+    @Test
+    public fun testFeatureFlagWithCompoundAudience() {
+        val json = generateFeatureFlagPayload(
+            compoundAudience = jsonMapOf(
+                "selector" to jsonMapOf(
+                    "type" to "atomic",
+                    "audience" to jsonMapOf(
+                        "new_user" to true
+                    )
+                )
+            )
+        )
+        val featureFlags = json
+            .require("feature_flags")
+            .optList()
+            .map { it.optMap() }
+            .map { FeatureFlagInfo.fromJson(it) }
+
+        assert(featureFlags.size == 1)
+
+        val testFlag = featureFlags.first()!!
+        assert(testFlag.id == "27f26d85-0550-4df5-85f0-7022fa7a5925")
+        assert(1684868854000 == testFlag.created)
+        assert(1684868855000 == testFlag.lastUpdated)
+        assert("cool_flag" == testFlag.name)
+        assert(jsonMapOf("flag_id" to "27f26d85-0550-4df5-85f0-7022fa7a5925") == testFlag.reportingContext)
+        assertNotNull(testFlag.audience)
+
+        val compoundAudience = FeatureFlagCompoundAudience(
+            selector = CompoundAudienceSelector.Atomic(AudienceSelector.newBuilder().setNewUser(true).build())
+        )
+        assertEquals(testFlag.compoundAudienceSelector, compoundAudience)
+        assertNotNull(testFlag.timeCriteria)
+        assert(testFlag.payload is FeatureFlagPayload.StaticPayload)
+
+        if (testFlag.payload is FeatureFlagPayload.StaticPayload) {
+            if ( testFlag.payload.variables is FeatureFlagVariables.Variant) {
+                assertEquals(testFlag.payload.variables.variantVariables.first().compoundAudienceSelector, compoundAudience)
+                assertNull(testFlag.payload.variables.variantVariables.get(1).compoundAudienceSelector)
+            } else {
+                fail()
+            }
+        } else {
+            fail()
+        }
+
+        assert(testFlag.controlOptions?.controlType == ControlOptions.Type.Flag)
+        assert(testFlag.controlOptions?.reportingMetadata == jsonMapOf("reporting" to "superseded"))
+        assertNotNull(testFlag.controlOptions?.compoundAudience)
     }
 
     @Test
     public fun testDecodeControlOptions() {
         val json = """
             {
-              "audience_selector":{
-                 "app_version":{
-                    "value":{
-                       "version_matches":"1.6.0+"
-                    }
+              "compound_audience":{
+                "selector": {
+                     "type": "atomic",
+                     "audience": {
+                         "app_version":{
+                            "value":{
+                               "version_matches":"1.6.0+"
+                            }
+                         }
+                     }
                  }
              },
              "reporting_metadata": {
                "reporting": "superseded"
              },
              "type": "variables",
-             "variables": {
+             "data": {
                "variable": "variables_override"
              }
            }
@@ -66,7 +124,7 @@ public class FeatureFlagInfoTest {
 
         val decoded = ControlOptions.fromJson(JsonValue.parseString(json))
 
-        assertNotNull(decoded.audience)
+        assertNotNull(decoded.compoundAudience)
         assertEquals(jsonMapOf("reporting" to "superseded"), decoded.reportingMetadata)
         assertEquals(
             ControlOptions.Type.Variables(jsonMapOf("variable" to "variables_override")),
@@ -74,7 +132,7 @@ public class FeatureFlagInfoTest {
         )
     }
 
-    private fun generateFeatureFlagPayload(): JsonMap {
+    private fun generateFeatureFlagPayload(compoundAudience: JsonMap? = null): JsonMap {
         return jsonMapOf(
             "feature_flags" to jsonListOf(
                 jsonMapOf(
@@ -102,6 +160,7 @@ public class FeatureFlagInfoTest {
                             ),
                         )
                     ),
+                    "compound_audience" to compoundAudience,
                     "time_criteria" to jsonMapOf(
                         "start_timestamp" to 123,
                         "end_timestamp" to 321
@@ -129,6 +188,7 @@ public class FeatureFlagInfoTest {
                                         )
                                     )
                                 ),
+                                "compound_audience" to compoundAudience,
                                 "data" to jsonMapOf(
                                     "arbitrary_key_1" to "some_value",
                                     "arbitrary_key_2" to "some_other_value"
@@ -173,9 +233,14 @@ public class FeatureFlagInfoTest {
                         )
                     ),
                     "control" to jsonMapOf(
-                        "audience_selector" to jsonMapOf(
-                            "app_version" to jsonMapOf(
-                                "value" to jsonMapOf("version_matches" to "1")
+                        "compound_audience" to jsonMapOf(
+                            "selector" to jsonMapOf(
+                                "audience" to jsonMapOf(
+                                    "app_version" to jsonMapOf(
+                                        "value" to jsonMapOf("version_matches" to "1")
+                                    ),
+                                ),
+                                "type" to "atomic"
                             ),
                         ),
                         "reporting_metadata" to jsonMapOf(

@@ -101,6 +101,7 @@ internal class SerialAccessAutomationStore(private val store: AutomationStoreInt
     override suspend fun deleteTriggers(scheduleID: String, triggerIDs: Set<String>) = queue.run { store.deleteTriggers(scheduleID, triggerIDs) }
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Database(entities = [ScheduleEntity::class, TriggerEntity::class], version = 3)
 internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterface {
@@ -394,6 +395,7 @@ internal class ScheduleEntity(
     }
 }
 
+/** @hide */
 @Entity(tableName = "automation_trigger_data")
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @TypeConverters(JsonTypeConverters::class)

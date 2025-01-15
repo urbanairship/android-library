@@ -1,20 +1,27 @@
 package com.urbanairship.automation.engine
 
 import android.net.Uri
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.UAirship
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.Event
+import com.urbanairship.audience.AudienceEvaluator
+import com.urbanairship.audience.AirshipDeviceAudienceResult
 import com.urbanairship.audience.AudienceSelector
+import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.automation.AutomationAudience
+import com.urbanairship.automation.AutomationCompoundAudience
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolver
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.DeferredScheduleResult
-import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
+import com.urbanairship.cache.AirshipCache
+import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.deferred.DeferredResolver
@@ -38,7 +45,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.verify
+import io.mockk.spyk
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
@@ -76,6 +83,17 @@ public class AutomationPreparerTest {
     private val triggerContext = DeferredTriggerContext("some type", 10.0, JsonValue.NULL)
     private val audienceResolver: AdditionalAudienceCheckerResolver = mockk()
     private val analytics: Analytics = mockk()
+    private val audienceEvaluator: AudienceEvaluator = spyk(
+        AudienceEvaluator(
+            cache = AirshipCache(
+                context = ApplicationProvider.getApplicationContext(),
+                runtimeConfig = TestAirshipRuntimeConfig(),
+                isPersistent = false,
+                appVersion = "1",
+                sdkVersion = "1"
+            )
+        )
+    )
 
     @Before
     public fun setup() {
@@ -100,7 +118,8 @@ public class AutomationPreparerTest {
             experiments = experimentManager,
             remoteDataAccess = remoteDataAccess,
             deviceInfoProviderFactory = { deviceInfoProvider },
-            additionalAudienceResolver = audienceResolver
+            additionalAudienceResolver = audienceResolver,
+            audienceEvaluator = audienceEvaluator
         )
     }
 
@@ -145,6 +164,10 @@ public class AutomationPreparerTest {
             audience = AutomationAudience(
                 audienceSelector = audienceSelector,
                 missBehavior = AutomationAudience.MissBehavior.SKIP
+            ),
+            compoundAudience = AutomationCompoundAudience(
+                selector = CompoundAudienceSelector.Atomic(audienceSelector),
+                missBehavior = AutomationAudience.MissBehavior.CANCEL
             )
         )
 
@@ -156,15 +179,81 @@ public class AutomationPreparerTest {
         coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
 
-        coEvery { audienceSelector.evaluate(any(), any()) } answers {
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
             assertEquals(0L, args[0])
-            false
+            AirshipDeviceAudienceResult.miss
         }
 
-        assertEquals(SchedulePrepareResult.Skip, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
+        assertEquals(SchedulePrepareResult.Cancel, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
 
-        coVerify { audienceSelector.evaluate(any(), any()) }
+        coVerify { audienceSelector.evaluate(any(), any(), any()) }
+        coVerify { audienceEvaluator
+            .evaluate(CompoundAudienceSelector.combine(
+                compoundAudienceSelector = schedule.compoundAudience?.selector,
+                deviceAudience = schedule.audience?.audienceSelector
+            ), schedule.created.toLong(), deviceInfoProvider) }
+
+    }
+
+    @Test
+    public fun testCompoundAudienceCheckFirst(): TestResult = runTest {
+        val schedule = makeSchedule(
+            audience = AutomationAudience(
+                audienceSelector = audienceSelector,
+                missBehavior = AutomationAudience.MissBehavior.SKIP
+            ),
+            compoundAudience = AutomationCompoundAudience(
+                selector = CompoundAudienceSelector.Atomic(audienceSelector),
+                missBehavior = AutomationAudience.MissBehavior.CANCEL
+            )
+        )
+
+        coEvery { remoteDataAccess.contactIdFor(any()) } answers {
+            assertEquals(schedule, firstArg())
+            null
+        }
+
+        coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
+
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
+            val args = args
+            assertEquals(0L, args[0])
+            AirshipDeviceAudienceResult.miss
+        }
+
+        assertEquals(SchedulePrepareResult.Cancel, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
+
+        coVerify { audienceSelector.evaluate(any(), any(), any()) }
+    }
+
+    @Test
+    public fun testCompoundAudienceCheck(): TestResult = runTest {
+        val schedule = makeSchedule(
+            compoundAudience = AutomationCompoundAudience(
+                selector = CompoundAudienceSelector.Atomic(audienceSelector),
+                missBehavior = AutomationAudience.MissBehavior.CANCEL
+            )
+        )
+
+        coEvery { remoteDataAccess.contactIdFor(any()) } answers {
+            assertEquals(schedule, firstArg())
+            null
+        }
+
+        coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
+
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
+            val args = args
+            assertEquals(0L, args[0])
+            AirshipDeviceAudienceResult.miss
+        }
+
+        assertEquals(SchedulePrepareResult.Cancel, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
+
+        coVerify { audienceSelector.evaluate(any(), any(), any()) }
     }
 
     @Test
@@ -184,15 +273,15 @@ public class AutomationPreparerTest {
         coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
 
-        coEvery { audienceSelector.evaluate(any(), any()) } answers {
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
             assertEquals(0L, args[0])
-            false
+            AirshipDeviceAudienceResult.miss
         }
 
         assertEquals(SchedulePrepareResult.Penalize, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
 
-        coVerify { audienceSelector.evaluate(any(), any()) }
+        coVerify { audienceSelector.evaluate(any(), any(), any()) }
     }
 
     @Test
@@ -206,8 +295,8 @@ public class AutomationPreparerTest {
         coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
 
-        coEvery { audienceSelector.evaluate(any(), any()) } answers {
-            true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
+            AirshipDeviceAudienceResult.match
         }
 
         coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("stable contact id", null)
@@ -257,15 +346,15 @@ public class AutomationPreparerTest {
         coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
 
-        coEvery { audienceSelector.evaluate(any(), any()) } answers {
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
             assertEquals(0L, args[0])
-            false
+            AirshipDeviceAudienceResult.miss
         }
 
         assertEquals(SchedulePrepareResult.Cancel, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
 
-        coVerify { audienceSelector.evaluate(any(), any()) }
+        coVerify { audienceSelector.evaluate(any(), any(), any()) }
     }
 
     @Test
@@ -286,14 +375,14 @@ public class AutomationPreparerTest {
         coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
         coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
 
-        coEvery { audienceSelector.evaluate(any(), any()) } coAnswers {
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } coAnswers {
             assertEquals("contact id", (secondArg() as DeviceInfoProvider).getStableContactInfo().contactId)
-            false
+            AirshipDeviceAudienceResult.miss
         }
 
         assertEquals(SchedulePrepareResult.Penalize, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
 
-        coVerify { audienceSelector.evaluate(any(), any()) }
+        coVerify { audienceSelector.evaluate(any(), any(), any()) }
     }
 
     @Test
@@ -311,7 +400,7 @@ public class AutomationPreparerTest {
         coEvery { remoteDataAccess.contactIdFor(any()) } returns "contact id"
         coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
-        coEvery { audienceSelector.evaluate(any(), any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
 
         mockExperimentsManager()
 
@@ -365,7 +454,7 @@ public class AutomationPreparerTest {
 
         coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
-        coEvery { audienceSelector.evaluate(any(), any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
         coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
 
         mockExperimentsManager()
@@ -389,7 +478,7 @@ public class AutomationPreparerTest {
 
         coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
-        coEvery { audienceSelector.evaluate(any(), any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
         coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
 
         mockExperimentsManager()
@@ -438,7 +527,7 @@ public class AutomationPreparerTest {
 
         coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
-        coEvery { audienceSelector.evaluate(any(), any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
         coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
         coEvery { deviceInfoProvider.getChannelId() } returns "channel-id"
         coEvery { deviceInfoProvider.locale } returns Locale.US
@@ -511,7 +600,7 @@ public class AutomationPreparerTest {
 
         coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
-        coEvery { audienceSelector.evaluate(any(), any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
         coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
         coEvery { deviceInfoProvider.getChannelId() } returns "channel-id"
         coEvery { deviceInfoProvider.locale } returns Locale.US
@@ -596,7 +685,7 @@ public class AutomationPreparerTest {
 
         coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
-        coEvery { audienceSelector.evaluate(any(), any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
         coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
         coEvery { deviceInfoProvider.getChannelId() } returns "channel-id"
         coEvery { deviceInfoProvider.locale } returns Locale.US
@@ -633,7 +722,7 @@ public class AutomationPreparerTest {
 
         coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
-        coEvery { audienceSelector.evaluate(any(), any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
         coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
         coEvery { deviceInfoProvider.getChannelId() } returns "channel-id"
         coEvery { deviceInfoProvider.locale } returns Locale.US
@@ -686,7 +775,7 @@ public class AutomationPreparerTest {
 
         coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
-        coEvery { audienceSelector.evaluate(any(), any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
         coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
         coEvery { deviceInfoProvider.getChannelId() } returns "channel-id"
         coEvery { deviceInfoProvider.locale } returns Locale.US
@@ -742,7 +831,7 @@ public class AutomationPreparerTest {
 
         coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
-        coEvery { audienceSelector.evaluate(any(), any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
         coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
         coEvery { deviceInfoProvider.getChannelId() } returns "channel-id"
         coEvery { deviceInfoProvider.locale } returns Locale.US
@@ -783,7 +872,7 @@ public class AutomationPreparerTest {
 
         coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
         coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
-        coEvery { audienceSelector.evaluate(any(), any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
         coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
         coEvery { deviceInfoProvider.getChannelId() } returns "channel-id"
         coEvery { deviceInfoProvider.locale } returns Locale.US
@@ -811,6 +900,7 @@ public class AutomationPreparerTest {
     private fun makeSchedule(
         constraints: List<String>? = null,
         audience: AutomationAudience? = null,
+        compoundAudience: AutomationCompoundAudience? = null,
         campaigns: JsonValue? = null,
         displayContent: InAppMessageDisplayContent? = null,
         data: AutomationSchedule.ScheduleData? = null,
@@ -832,6 +922,7 @@ public class AutomationPreparerTest {
             created = 0U,
             frequencyConstraintIds = constraints,
             audience = audience,
+            compoundAudience = compoundAudience,
             campaigns = campaigns,
             messageType = messageType,
             bypassHoldoutGroups = bypassHoldoutGroup

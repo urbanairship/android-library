@@ -34,6 +34,7 @@ public data class RemoteConfig @JvmOverloads constructor(
         IAA_CONFIG to iaaConfig
     ).toJsonValue()
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val AIRSHIP_CONFIG_KEY = "airship_config"
@@ -98,6 +99,7 @@ public data class RemoteAirshipConfig @JvmOverloads constructor(
         meteredUsageUrl = jsonValue.optMap().optionalField(METERED_USAGE_URL_KEY)
     )
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val REMOTE_DATA_URL_KEY = "remote_data_url"
@@ -106,11 +108,14 @@ public data class RemoteAirshipConfig @JvmOverloads constructor(
         private const val ANALYTICS_URL_KEY = "analytics_url"
         private const val METERED_USAGE_URL_KEY = "metered_usage_url"
 
+        /** @hide */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @JvmStatic
         public fun fromJson(json: JsonValue): RemoteAirshipConfig = RemoteAirshipConfig(json)
     }
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class ContactConfig @JvmOverloads constructor(
     public val foregroundIntervalMs: Long? = null,
@@ -122,11 +127,14 @@ public data class ContactConfig @JvmOverloads constructor(
         CHANNEL_REGISTRATION_MAX_RESOLVE_AGE_MS_KEY to channelRegistrationMaxResolveAgeMs
     ).toJsonValue()
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val FOREGROUND_INTERVAL_MS_KEY = "foreground_resolve_interval_ms"
         private const val CHANNEL_REGISTRATION_MAX_RESOLVE_AGE_MS_KEY = "max_cra_resolve_age_ms"
 
+        /** @hide */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @JvmStatic
         public fun fromJson(json: JsonValue): ContactConfig = ContactConfig(
             foregroundIntervalMs = json.optMap().optionalField(FOREGROUND_INTERVAL_MS_KEY),
@@ -135,6 +143,7 @@ public data class ContactConfig @JvmOverloads constructor(
     }
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class MeteredUsageConfig internal constructor(
     public val isEnabled: Boolean,
@@ -148,6 +157,7 @@ public data class MeteredUsageConfig internal constructor(
         INTERVAL_MS_KEY to intervalMs
     ).toJsonValue()
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val IS_ENABLED_KEY = "enabled"
@@ -173,6 +183,7 @@ public data class MeteredUsageConfig internal constructor(
     }
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class IAAConfig (
     public val retryingQueue: RetryingQueueConfig? = null,
@@ -202,6 +213,7 @@ public data class IAAConfig (
     ).toJsonValue()
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class RetryingQueueConfig (
     public val maxConcurrentOperations: Int?,
@@ -237,6 +249,7 @@ public data class RetryingQueueConfig (
     ).toJsonValue()
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class AdditionalAudienceCheckConfig(
     public val isEnabled: Boolean,

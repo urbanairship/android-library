@@ -2,6 +2,7 @@ package com.urbanairship.json;
 
 import com.urbanairship.UALog;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.room.TypeConverter;
 
@@ -11,8 +12,9 @@ import androidx.room.TypeConverter;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class JsonTypeConverters {
+    @Nullable
     @TypeConverter
-    public JsonValue jsonValueFromString(String value) {
+    public JsonValue jsonValueFromString(@Nullable String value) {
         if (value == null) {
             return null;
         }
@@ -25,13 +27,15 @@ public class JsonTypeConverters {
         }
     }
 
+    @Nullable
     @TypeConverter
-    public String jsonValueToString(JsonValue value) {
+    public String jsonValueToString(@Nullable JsonValue value) {
         return value == null ? null : value.toString();
     }
 
+    @Nullable
     @TypeConverter
-    public JsonMap jsonMapFromString(String value) {
+    public JsonMap jsonMapFromString(@Nullable String value) {
         if (value == null) {
             return null;
         }
@@ -44,18 +48,21 @@ public class JsonTypeConverters {
         }
     }
 
+    @Nullable
     @TypeConverter
-    public String jsonMapToString(JsonMap map) {
+    public String jsonMapToString(@Nullable JsonMap map) {
         return map == null ? null : map.toJsonValue().toString();
     }
 
+    @Nullable
     @TypeConverter
-    public String jsonPredicateToString(JsonPredicate predicate) {
+    public String jsonPredicateToString(@Nullable JsonPredicate predicate) {
         return predicate == null ? null : predicate.toJsonValue().toString();
     }
 
+    @Nullable
     @TypeConverter
-    public JsonPredicate jsonPredicateFromString(String value) {
+    public JsonPredicate jsonPredicateFromString(@Nullable String value) {
         if (value == null) {
             return null;
         }

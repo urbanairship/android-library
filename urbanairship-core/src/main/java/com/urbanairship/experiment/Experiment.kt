@@ -3,11 +3,13 @@ package com.urbanairship.experiment
 import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.audience.AudienceSelector
+import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalFieldConverted
 import com.urbanairship.json.requireField
@@ -32,6 +34,7 @@ public enum class ResolutionType(public val jsonValue: String) {
     DEFERRED("deferred"),
     STATIC("static");
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         public fun from(value: String): ResolutionType? {
@@ -50,6 +53,7 @@ public class ExperimentResult(
     public val allEvaluatedExperimentsMetadata: List<JsonMap>
 ) : JsonSerializable {
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val KEY_CHANNEL_ID = "channelId"
@@ -146,6 +150,28 @@ public class MessageInfo(
     }
 }
 
+internal data class ExperimentCompoundAudience(
+    val selector: CompoundAudienceSelector
+) : JsonSerializable {
+
+    companion object {
+        private const val SELECTOR = "selector"
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): ExperimentCompoundAudience {
+            val container = value.requireMap()
+
+            return ExperimentCompoundAudience(
+                selector = CompoundAudienceSelector.fromJson(container.requireField(SELECTOR))
+            )
+        }
+    }
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        SELECTOR to selector
+    ).toJsonValue()
+}
+
 internal data class Experiment(
     val id: String,
     val type: ExperimentType,
@@ -154,6 +180,7 @@ internal data class Experiment(
     val lastUpdated: Long,
     val reportingMetadata: JsonMap,
     val audience: AudienceSelector,
+    val compoundAudienceSelector: ExperimentCompoundAudience? = null,
     val exclusions: List<MessageCriteria>,
     val timeCriteria: TimeCriteria?
 ) {
@@ -168,6 +195,7 @@ internal data class Experiment(
         private const val KEY_REPORTING_METADATA = "reporting_metadata"
         private const val KEY_RESOLUTION_TYPE = "type"
         private const val KEY_AUDIENCE_SELECTOR = "audience_selector"
+        private const val KEY_COMPOUND_AUDIENCE_SELECTOR = "compound_audience"
         private const val KEY_MESSAGE_EXCLUSION = "message_exclusions"
         private const val KEY_TIME_CRITERIA = "time_criteria"
 
@@ -187,6 +215,10 @@ internal data class Experiment(
                     ?: return null
                 val audience = AudienceSelector.fromJson(definition.require(KEY_AUDIENCE_SELECTOR))
 
+                val compoundAudience = definition
+                    .get(KEY_COMPOUND_AUDIENCE_SELECTOR)
+                    ?.let(ExperimentCompoundAudience::fromJson)
+
                 val exclusions = definition
                     .opt(KEY_MESSAGE_EXCLUSION)
                     .optList()
@@ -201,6 +233,7 @@ internal data class Experiment(
                     lastUpdated = DateUtils.parseIso8601(json.requireField(KEY_LAST_UPDATED)),
                     reportingMetadata = definition.require(KEY_REPORTING_METADATA).optMap(),
                     audience = audience,
+                    compoundAudienceSelector = compoundAudience,
                     exclusions = exclusions,
                     timeCriteria = TimeCriteria.fromJson(definition.opt(KEY_TIME_CRITERIA).optMap())
                 )

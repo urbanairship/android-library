@@ -5,8 +5,6 @@ package com.urbanairship.audience
 import androidx.annotation.RestrictTo
 import androidx.core.os.LocaleListCompat
 import androidx.core.util.ObjectsCompat
-import com.urbanairship.AirshipDispatchers
-import com.urbanairship.PendingResult
 import com.urbanairship.UALog
 import com.urbanairship.actions.FetchDeviceInfoAction
 import com.urbanairship.json.JsonException
@@ -20,9 +18,6 @@ import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.util.UAStringUtil
 import com.urbanairship.util.VersionUtils
 import java.util.Arrays
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 /**
  * Audience selector.
@@ -40,9 +35,11 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
     public val missBehavior: MissBehavior
     public var tagSelector: DeviceTagSelector? = null
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val languageTags: List<String>
 
+    /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val testDevices: List<String>
 
@@ -254,8 +251,11 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
          */
         PENALIZE("penalize");
 
+        /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public companion object {
+            /** @hide */
+            @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
             public fun parse(input: String): MissBehavior? {
                 return entries.firstOrNull { it.value == input }
             }
@@ -504,21 +504,26 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
 
     public suspend fun evaluate(
         newEvaluationDate: Long,
-        infoProvider: DeviceInfoProvider
-    ): Boolean {
+        infoProvider: DeviceInfoProvider,
+        hashChecker: HashChecker,
+    ): AirshipDeviceAudienceResult {
 
-        if (!checkDeviceType(infoProvider)) { return false }
-        if (!checkTestDevice(infoProvider)) { return false }
-        if (!checkNotificationOptInStatus(infoProvider)) { return false }
-        if (!checkLocale(infoProvider)) { return false }
-        if (!checkTags(infoProvider)) { return false }
-        if (!checkAnalytics(infoProvider)) { return false }
-        if (!checkPermissions(infoProvider)) { return false }
-        if (!checkVersion(infoProvider)) { return false }
-        if (!checkNewUser(infoProvider, newEvaluationDate)) { return false }
-        if (!checkHash(infoProvider)) { return false }
+        if (!checkDeviceType(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkTestDevice(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkNotificationOptInStatus(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkLocale(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkTags(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkAnalytics(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkPermissions(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkVersion(infoProvider)) { return AirshipDeviceAudienceResult.miss }
+        if (!checkNewUser(infoProvider, newEvaluationDate)) { return AirshipDeviceAudienceResult.miss }
 
-        return true
+        val result = hashChecker.evaluate(hashSelector, infoProvider)
+        if (!result.isMatch) {
+            UALog.v { "Hash condition not met for audience: $this" }
+        }
+
+        return result
     }
 
     private fun checkDeviceType(infoProvider: DeviceInfoProvider): Boolean {
@@ -606,7 +611,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         val permissions = infoProvider.getPermissionStatuses()
 
         if (locationOptIn != null) {
-            val locationPermission = permissions[Permission.LOCATION] ?: return false
+            val locationPermission = permissions[Permission.LOCATION] ?: PermissionStatus.NOT_DETERMINED
             val current = PermissionStatus.GRANTED == locationPermission
             if (current != locationOptIn) {
                 return false

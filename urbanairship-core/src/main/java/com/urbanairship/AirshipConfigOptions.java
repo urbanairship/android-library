@@ -6,6 +6,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
+import com.urbanairship.channel.AirshipChannelCreateOption;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
@@ -326,6 +327,16 @@ public class AirshipConfigOptions {
     public final boolean channelCaptureEnabled;
 
     /**
+     * Defines the procedure for creating a new channel.
+     * Implement the interface carefully to avoid potential issues such as having multiple devices
+     * with the same channel id or unpredicted Airship setup time..
+     * When the method is set to {@link com.urbanairship.channel.ChannelGenerationMethod.Restore},
+     * the user must provide a unique channel ID.
+     */
+    @Nullable
+    public final AirshipChannelCreateOption channelCreateOption;
+
+    /**
      * Flag indicating if the data collection opt-in is enabled.
      * <p>
      * The flag defaults to false
@@ -487,6 +498,7 @@ public class AirshipConfigOptions {
         this.initialConfigUrl = builder.initialConfigUrl;
         this.isPromptForPermissionOnUserNotificationsEnabled = builder.isPromptForPermissionOnUserNotificationsEnabled;
         this.autoPauseInAppAutomationOnLaunch = builder.autoPauseInAppAutomationOnLaunch;
+        this.channelCreateOption = builder.channelCreateOption;
     }
 
     private static <T> List<T> copyOrEmpty(@Nullable List<T> list) {
@@ -704,6 +716,7 @@ public class AirshipConfigOptions {
         private boolean isPromptForPermissionOnUserNotificationsEnabled = true;
 
         private boolean autoPauseInAppAutomationOnLaunch = false;
+        private AirshipChannelCreateOption channelCreateOption = null;
 
         /**
          * Apply the options from the default properties file {@code airshipconfig.properties}.
@@ -1676,6 +1689,18 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setResetEnabledFeatures(boolean resetEnabledFeatures) {
             this.resetEnabledFeatures = resetEnabledFeatures;
+            return this;
+        }
+
+        /**
+         * Set the Airship channel create option
+         *
+         * @param option {@link com.urbanairship.channel.AirshipChannelCreateOption} define channel creation type.
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setAirshipChannelCreateOption(@Nullable AirshipChannelCreateOption option) {
+            this.channelCreateOption = option;
             return this;
         }
 

@@ -1,6 +1,5 @@
-#logo {
-    background-image: url('../images/docs_logo.svg');
-    background-size: 230px 33px;
-    padding-top: 12px;
-    height: 48px;
+:root {
+  --dokka-logo-image-url: url('../images/logo-icon.svg);
+  --dokka-logo-height: 48px;
+  --dokka-logo-width: 48px;
 }

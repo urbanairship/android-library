@@ -389,6 +389,35 @@ public class JsonPredicateTest extends BaseTestCase {
         assertEquals(predicate, JsonPredicate.parse(predicate.toJsonValue()));
     }
 
+    @Test
+    public void testJSONPredicateNotNoArray() throws JsonException {
+        String json =
+        "{" +
+        "   \"not\": {" +
+        "     \"value\":{" +
+        "        \"equals\":\"bar\"" +
+        "     },\n" +
+        "     \"scope\":[" +
+        "        \"foo\"" +
+        "     ]" +
+        "  }" +
+        "}";
+
+        JsonMatcher stringMatcher = JsonMatcher.newBuilder()
+                                               .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrap("bar")))
+                                               .setScope("foo")
+                                               .build();
+
+        JsonPredicate expected =
+                JsonPredicate.newBuilder()
+                             .setPredicateType(JsonPredicate.NOT_PREDICATE_TYPE)
+                             .addMatcher(stringMatcher)
+                             .build();
+
+        JsonPredicate actual = JsonPredicate.parse(JsonValue.parseString(json));
+        assertEquals(expected, actual);
+    }
+
     /**
      * Test parsing a JsonMatcher directly produces a JsonPredicate.
      */

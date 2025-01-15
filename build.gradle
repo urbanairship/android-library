@@ -1,15 +1,15 @@
 buildscript {
     ext {
         // Airship Version - major.minor.patch
-        airshipVersion = '18.6.0'
+        airshipVersion = '19.0.0'
 
         // Airship Version Qualifier beta, release, etc...
         // airshipVersionQualifier = "alpha"
 
         // Android SDK Versions
         minSdkVersion = 21
-        compileSdkVersion = 34
-        targetSdkVersion = 34
+        compileSdkVersion = 35
+        targetSdkVersion = 35
 
         // Looking for dependency versions?
         // See: ./gradle/libs.versions.toml
@@ -23,18 +23,61 @@ buildscript {
 }
 
 plugins {
-    id 'airship-doclava'
-    id 'airship-dokka'
     id 'airship-publish'
+    id 'org.jetbrains.dokka'
 
     alias(libs.plugins.benmanes.versions)
     alias(libs.plugins.spotless)
 }
 
-tasks.register('packageDocs') {
-    dependsOn(packageJavadoc, packageKDoc)
+dependencies {
+    dokkaPlugin(libs.dokka.android)
+
+    dokka(project(":urbanairship-adm"))
+    dokka(project(":urbanairship-automation"))
+    dokka(project(":urbanairship-automation-compose"))
+    dokka(project(":urbanairship-core"))
+    dokka(project(":urbanairship-fcm"))
+    dokka(project(":urbanairship-hms"))
+    dokka(project(":urbanairship-live-update"))
+    dokka(project(":urbanairship-message-center"))
+    dokka(project(":urbanairship-preference-center"))
+    dokka(project(":urbanairship-feature-flag"))
+}
+
+dokka {
+    moduleName.set("Airship Android SDK")
+
+    dokkaPublications.html {
+        suppressInheritedMembers.set(false)
+        outputDirectory.set(rootProject.layout.buildDirectory.dir("docs/kdoc"))
+    }
+
+    pluginsConfiguration.html {
+        customAssets.from("$rootDir/docs/dokka/logo-icon.svg")
+        footerMessage.set("©${Year.now().value} Airship")
+    }
+}
+
+tasks.register("packageKDoc", Tar) {
+    dependsOn("dokkaGenerate")
     group = JavaBasePlugin.DOCUMENTATION_GROUP
-    description = "Generate Javadoc and KDoc archives for release"
+    description = "Generates documentation in KDoc format"
+
+    into("./") {
+        from("build/docs/kdoc")
+    }
+
+    archiveFileName.set("${rootProject.property("airshipVersion")}-kdoc.tar.gz")
+    destinationDirectory.set(file("build/docs"))
+    archiveExtension.set("tar.gz")
+    compression = Compression.GZIP
+}
+
+tasks.register("packageDocs") {
+    dependsOn("packageKDoc")
+    group = JavaBasePlugin.DOCUMENTATION_GROUP
+    description = "Generate KDoc archives for release"
 }
 
 tasks.register('getVersion') {

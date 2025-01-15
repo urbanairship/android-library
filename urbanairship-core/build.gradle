@@ -1,11 +1,15 @@
 plugins {
     id 'airship-module'
-    id 'kotlin-android'
     id 'kotlin-allopen'
-    id 'kotlin-kapt'
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 description = "Airship Android Core SDK"
+
+airshipModule {
+    published = true
+}
 
 android {
     defaultConfig {
@@ -15,14 +19,8 @@ android {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-        freeCompilerArgs = ["-Xexplicit-api=strict"]
+    room {
+        schemaDirectory("$projectDir/schemas")
     }
 
     namespace 'com.urbanairship'
@@ -42,7 +40,7 @@ dependencies {
 
     // AndroidX
     implementation(libs.androidx.room.ktx)
-    kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.runtime)
 
     implementation(libs.glide)

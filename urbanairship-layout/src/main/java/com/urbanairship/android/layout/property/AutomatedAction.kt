@@ -44,3 +44,9 @@ internal data class AutomatedAction(
  */
 internal val List<AutomatedAction>.earliestNavigationAction: AutomatedAction?
     get() = firstOrNull { it.behaviors?.hasStoryNavigationBehavior ?: false }
+
+/**
+ * Returns true if the automated action has pause or resume behaviors
+ */
+internal val List<AutomatedAction>.hasPagerPauseOrResumeAction: Boolean
+    get() = any { it.behaviors?.hasPagerPause == true || it.behaviors?.hasPagerResume == true }

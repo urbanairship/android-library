@@ -8,7 +8,10 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.json.JsonValue
 
-/** Thomas listener. */
+/**
+ * Thomas listener.
+ * @hide
+ */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface ThomasListenerInterface {
 

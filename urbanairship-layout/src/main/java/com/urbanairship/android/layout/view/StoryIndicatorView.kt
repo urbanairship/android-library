@@ -9,17 +9,15 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.Background
-import com.google.android.material.progressindicator.LinearProgressIndicator
-import com.google.android.material.progressindicator.LinearProgressIndicator.INDICATOR_DIRECTION_START_TO_END
 import com.urbanairship.android.layout.model.StoryIndicatorModel
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.util.UAStringUtil.namedStringResource
+import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.progressindicator.LinearProgressIndicator.INDICATOR_DIRECTION_START_TO_END
 
 internal class StoryIndicatorView(
     context: Context,
@@ -61,7 +59,6 @@ internal class StoryIndicatorView(
 
                 val animated = progress > lastProgress
                 lastProgress = progress
-
                 setProgress(size, pageIndex, progress, animated, announcePage)
             }
 
@@ -163,7 +160,6 @@ internal class StoryIndicatorView(
                 }
             }
         }
-
 
         // Announce the page change at the parent view level
         if (announcePage) {

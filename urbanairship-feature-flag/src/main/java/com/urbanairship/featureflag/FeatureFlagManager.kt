@@ -13,7 +13,8 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.annotation.OpenForTesting
-import com.urbanairship.audience.AudienceSelector
+import com.urbanairship.audience.AudienceEvaluator
+import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.json.JsonMap
@@ -226,10 +227,17 @@ public class FeatureFlagManager internal constructor(
         val deviceInfoProvider = infoProviderFactory()
 
         for ((index, info) in flags.withIndex()) {
-            val isLocallyEligible = audienceEvaluator.evaluateOptional(info.audience, info.created, deviceInfoProvider)
+            val isLocallyEligible = audienceEvaluator.evaluate(
+                compoundAudience = CompoundAudienceSelector.combine(
+                    compoundAudienceSelector = info.compoundAudienceSelector?.selector,
+                    deviceAudience = info.audience
+                ),
+                newEvaluationDate = info.created,
+                infoProvider = deviceInfoProvider)
+
             val isLast = index == flags.lastIndex
 
-            if (!isLocallyEligible && !isLast) {
+            if (!isLocallyEligible.isMatch && !isLast) {
                 continue
             }
 
@@ -237,7 +245,7 @@ public class FeatureFlagManager internal constructor(
                 is FeatureFlagPayload.StaticPayload -> {
                     resolveStatic(
                         flagInfo = info,
-                        isLocallyEligible = isLocallyEligible,
+                        isLocallyEligible = isLocallyEligible.isMatch,
                         staticPayload = payload,
                         deviceInfoProvider = deviceInfoProvider
                     )
@@ -245,7 +253,7 @@ public class FeatureFlagManager internal constructor(
                 is FeatureFlagPayload.DeferredPayload -> {
                     resolveDeferred(
                         flagInfo = info,
-                        isLocallyEligible = isLocallyEligible,
+                        isLocallyEligible = isLocallyEligible.isMatch,
                         deferredPayload = payload,
                         deviceInfoProvider = deviceInfoProvider
                     )
@@ -273,13 +281,17 @@ public class FeatureFlagManager internal constructor(
             return flag
         }
 
-        if (!audienceEvaluator.evaluateOptional(control.audience, info.created, deviceInfoProvider)) {
+        if (!audienceEvaluator.evaluate(
+                compoundAudience = control.compoundAudience?.selector,
+                newEvaluationDate = info.created,
+                infoProvider = deviceInfoProvider)
+            .isMatch) {
             return flag
         }
 
         val updated = when (val type = control.controlType) {
             ControlOptions.Type.Flag -> original.copyWith(isEligible = false)
-            is ControlOptions.Type.Variables -> original.copyWith(variables = type.variables)
+            is ControlOptions.Type.Variables -> original.copyWith(variables = type.data)
         }
 
         updated.reportingInfo?.apply {
@@ -402,22 +414,19 @@ private suspend fun FeatureFlagVariables.evaluate(
 
         is FeatureFlagVariables.Variant -> {
             val match = this.variantVariables.firstOrNull {
-                audienceEvaluator.evaluateOptional(
-                    it.selector, newEvaluationDate, deviceInfoProvider
+                val audience = CompoundAudienceSelector.combine(
+                    compoundAudienceSelector = it.compoundAudienceSelector?.selector,
+                    deviceAudience = it.selector
                 )
+
+                audienceEvaluator.evaluate(
+                    audience, newEvaluationDate, deviceInfoProvider
+                ).isMatch
             }
 
             VariableResult(match?.data, match?.reportingMetadata)
         }
     }
-}
-
-private suspend fun AudienceEvaluator.evaluateOptional(
-    audienceSelector: AudienceSelector?,
-    newEvaluationDate: Long,
-    infoProvider: DeviceInfoProvider
-): Boolean {
-    return audienceSelector?.let { this.evaluate(audienceSelector, newEvaluationDate, infoProvider) } ?: true
 }
 
 private data class VariableResult(val data: JsonMap?, val reportingMetadata: JsonMap?)

@@ -13,6 +13,7 @@ internal data class ContactIdUpdate(
     fun toContactInfo(): StableContactInfo = StableContactInfo(contactId, namedUserId)
 }
 
+/** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class StableContactInfo(
     public val contactId: String,

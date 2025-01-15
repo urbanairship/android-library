@@ -21,7 +21,6 @@ import com.urbanairship.preferencecenter.data.Condition
 import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status
 import com.urbanairship.preferencecenter.data.IconDisplay
 import com.urbanairship.preferencecenter.data.Item
-import com.urbanairship.preferencecenter.data.Item.ContactManagement.RegistrationOptions
 import com.urbanairship.preferencecenter.data.Item.ContactSubscriptionGroup.Component
 import com.urbanairship.preferencecenter.data.Options
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
@@ -31,7 +30,6 @@ import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Effect
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State.Content.ContactChannelState
 import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
-import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import io.mockk.Runs
@@ -302,8 +300,8 @@ public class PreferenceCenterViewModelTest {
             }
             coVerify {
                 contact.namedUserIdFlow
-                channel.fetchSubscriptionLists()
-                contact.fetchSubscriptionLists()
+                channel.subscriptions
+                contact.subscriptions
                 contact.channelContacts
             }
             confirmVerified(channel, contact)
@@ -346,10 +344,10 @@ public class PreferenceCenterViewModelTest {
             }
             coVerify {
                 contact.namedUserIdFlow
-                contact.fetchSubscriptionLists()
+                contact.subscriptions
                 contact.channelContacts
             }
-            coVerify(exactly = 0) { channel.fetchSubscriptionLists() }
+            coVerify(exactly = 0) { channel.subscriptions }
             confirmVerified(channel, contact)
         }
     }
@@ -371,10 +369,10 @@ public class PreferenceCenterViewModelTest {
             }
             coVerify {
                 contact.namedUserIdFlow
-                channel.fetchSubscriptionLists()
+                channel.subscriptions
                 contact.channelContacts
             }
-            coVerify(exactly = 0) { contact.fetchSubscriptionLists() }
+            coVerify(exactly = 0) { contact.subscriptions }
             confirmVerified(channel, contact)
         }
     }
@@ -396,8 +394,8 @@ public class PreferenceCenterViewModelTest {
             }
             coVerify {
                 contact.namedUserIdFlow
-                channel.fetchSubscriptionLists()
-                contact.fetchSubscriptionLists()
+                channel.subscriptions
+                contact.subscriptions
             }
             verify(exactly = 0) { contact.channelContacts }
             confirmVerified(channel, contact)
@@ -437,7 +435,7 @@ public class PreferenceCenterViewModelTest {
 
             coVerifyOrder {
                 contact.namedUserIdFlow
-                channel.fetchSubscriptionLists()
+                channel.subscriptions
 
                 channel.editSubscriptionLists()
                 editor.mutate(item.subscriptionId, true)
@@ -479,7 +477,7 @@ public class PreferenceCenterViewModelTest {
             }
 
             coVerifyOrder {
-                channel.fetchSubscriptionLists()
+                channel.subscriptions
                 channel.editSubscriptionLists()
                 editor.mutate(item.subscriptionId, false)
                 editor.apply()
@@ -526,14 +524,14 @@ public class PreferenceCenterViewModelTest {
 
             coVerifyOrder {
                 contact.namedUserIdFlow
-                contact.fetchSubscriptionLists()
+                contact.subscriptions
 
                 contact.editSubscriptionLists()
                 editor.mutate(item.subscriptionId, item.scopes, true)
                 editor.apply()
             }
             coVerify(exactly = 0) {
-                channel.fetchSubscriptionLists()
+                channel.subscriptions
                 channel.editSubscriptionLists()
             }
             confirmVerified(channel, contact, editor)
@@ -585,14 +583,14 @@ public class PreferenceCenterViewModelTest {
 
             coVerifyOrder {
                 contact.namedUserIdFlow
-                contact.fetchSubscriptionLists()
+                contact.subscriptions
 
                 contact.editSubscriptionLists()
                 editor.mutate(item.subscriptionId, item.scopes, false)
                 editor.apply()
             }
             coVerify(exactly = 0) {
-                channel.fetchSubscriptionLists()
+                channel.subscriptions
                 channel.editSubscriptionLists()
             }
             confirmVerified(channel, contact, editor)
@@ -638,14 +636,14 @@ public class PreferenceCenterViewModelTest {
 
             coVerifyOrder {
                 contact.namedUserIdFlow
-                contact.fetchSubscriptionLists()
+                contact.subscriptions
 
                 contact.editSubscriptionLists()
                 editor.mutate(item.subscriptionId, component.scopes, true)
                 editor.apply()
             }
             coVerify(exactly = 0) {
-                channel.fetchSubscriptionLists()
+                channel.subscriptions
                 channel.editSubscriptionLists()
             }
             confirmVerified(channel, contact, editor)
@@ -701,14 +699,14 @@ public class PreferenceCenterViewModelTest {
 
             coVerifyOrder {
                 contact.namedUserIdFlow
-                contact.fetchSubscriptionLists()
+                contact.subscriptions
 
                 contact.editSubscriptionLists()
                 editor.mutate(item.subscriptionId, unsubscribeScopes, false)
                 editor.apply()
             }
             coVerify(exactly = 0) {
-                channel.fetchSubscriptionLists()
+                channel.subscriptions
                 channel.editSubscriptionLists()
             }
             confirmVerified(channel, contact, editor)
@@ -1196,8 +1194,8 @@ public class PreferenceCenterViewModelTest {
         }
         coVerifyAll {
             contact.namedUserIdFlow
-            contact.fetchSubscriptionLists()
-            channel.fetchSubscriptionLists()
+            contact.subscriptions
+            channel.subscriptions
             contact.channelContacts
         }
         confirmVerified(contact, channel)
@@ -1230,14 +1228,18 @@ public class PreferenceCenterViewModelTest {
             mockk(relaxUnitFun = true)
         } else {
             mockk<AirshipChannel> {
-                coEvery { fetchSubscriptionLists() } returns Result.success(channelSubscriptions)
+                coEvery { subscriptions } answers {
+                    flowOf(Result.success(channelSubscriptions))
+                }
             }.also(mockChannel::invoke)
         }
         contact = if (mockContact == null) {
             mockk(relaxUnitFun = true)
         } else {
             mockk<Contact>(relaxed = true) {
-                coEvery { fetchSubscriptionLists() } returns Result.success(contactSubscriptions)
+                coEvery { subscriptions } answers {
+                    flowOf(Result.success(contactSubscriptions))
+                }
                 every { this@mockk.namedUserIdFlow } returns namedUserIdFlow
                 every { channelContacts } answers {
                     flowOf(Result.success(contactChannels))
