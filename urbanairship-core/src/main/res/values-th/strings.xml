@@ -91,4 +91,10 @@
     <string name="ua_play">เล่น</string>
     <string name="ua_pause">หยุดชั่วคราว</string>
     <string name="ua_stop">หยุด</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">ปิด</string>
+    <string name="ua_icon_button_checkmark">ยืนยัน</string>
+    <string name="ua_icon_button_forward_arrow">ถัดไป</string>
+    <string name="ua_icon_button_backward_arrow">ก่อนหน้า</string>
 </resources>

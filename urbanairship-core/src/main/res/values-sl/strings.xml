@@ -94,4 +94,10 @@
     <string name="ua_play">Predvajaj</string>
     <string name="ua_pause">Pavziraj</string>
     <string name="ua_stop">Ustavi</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Zapri</string>
+    <string name="ua_icon_button_checkmark">Potrdi</string>
+    <string name="ua_icon_button_forward_arrow">Naprej</string>
+    <string name="ua_icon_button_backward_arrow">Nazaj</string>
 </resources>

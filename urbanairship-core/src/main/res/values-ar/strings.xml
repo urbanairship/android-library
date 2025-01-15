@@ -96,4 +96,10 @@
     <string name="ua_play">تشغيل</string>
     <string name="ua_pause">إيقاف مؤقت</string>
     <string name="ua_stop">إيقاف</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">إغلاق</string>
+    <string name="ua_icon_button_checkmark">تحقق</string>
+    <string name="ua_icon_button_forward_arrow">التالي</string>
+    <string name="ua_icon_button_backward_arrow">السابق</string>
 </resources>

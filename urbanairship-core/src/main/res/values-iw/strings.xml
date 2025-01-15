@@ -94,4 +94,10 @@
     <string name="ua_play">לנגן</string>
     <string name="ua_pause">עצור</string>
     <string name="ua_stop">עצור</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">סגור</string>
+    <string name="ua_icon_button_checkmark">אמת</string>
+    <string name="ua_icon_button_forward_arrow">הבא</string>
+    <string name="ua_icon_button_backward_arrow">הקודם</string>
 </resources>

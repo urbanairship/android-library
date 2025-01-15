@@ -92,4 +92,10 @@
     <string name="ua_play">चलाएं</string>
     <string name="ua_pause">विराम</string>
     <string name="ua_stop">रोकें</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">बंद करें</string>
+    <string name="ua_icon_button_checkmark">पुष्टि करें</string>
+    <string name="ua_icon_button_forward_arrow">अगला</string>
+    <string name="ua_icon_button_backward_arrow">पिछला</string>
 </resources>

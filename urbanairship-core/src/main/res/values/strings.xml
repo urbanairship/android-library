@@ -105,4 +105,10 @@
     <string name="ua_play">Play</string>
     <string name="ua_pause">Pause</string>
     <string name="ua_stop">Stop</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Close</string>
+    <string name="ua_icon_button_checkmark">Validate</string>
+    <string name="ua_icon_button_forward_arrow">Next</string>
+    <string name="ua_icon_button_backward_arrow">Previous</string>
 </resources>

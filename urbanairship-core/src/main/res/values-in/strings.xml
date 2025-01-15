@@ -91,4 +91,10 @@
     <string name="ua_play">Main</string>
     <string name="ua_pause">Jeda</string>
     <string name="ua_stop">Berhenti</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Tutup</string>
+    <string name="ua_icon_button_checkmark">Validasi</string>
+    <string name="ua_icon_button_forward_arrow">Berikutnya</string>
+    <string name="ua_icon_button_backward_arrow">Sebelumnya</string>
 </resources>

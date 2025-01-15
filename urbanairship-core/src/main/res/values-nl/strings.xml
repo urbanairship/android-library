@@ -92,4 +92,10 @@
     <string name="ua_play">Spelen</string>
     <string name="ua_pause">Pauze</string>
     <string name="ua_stop">Stoppen</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Sluiten</string>
+    <string name="ua_icon_button_checkmark">Bevestigen</string>
+    <string name="ua_icon_button_forward_arrow">Volgende</string>
+    <string name="ua_icon_button_backward_arrow">Vorige</string>
 </resources>

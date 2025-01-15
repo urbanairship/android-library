@@ -93,4 +93,10 @@
     <string name="ua_play">Reproduzir</string>
     <string name="ua_pause">Pausar</string>
     <string name="ua_stop">Parar</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Fechar</string>
+    <string name="ua_icon_button_checkmark">Validar</string>
+    <string name="ua_icon_button_forward_arrow">Seguinte</string>
+    <string name="ua_icon_button_backward_arrow">Anterior</string>
 </resources>
