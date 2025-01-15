@@ -4,4 +4,20 @@
     <string name="ua_preference_center_empty">غير قادر على تحميل الرسالة. الرجاء معاودة المحاولة في وقت لاحق.</string>
     <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
     <string name="ua_preference_center_item_error">فشل التحديث. الرجاء معاودة المحاولة في وقت لاحق.</string>
+
+    <!-- Preference Center subscription item accessibility description. -->
+    <string name="ua_preference_center_subscription_item_description"><xliff:g id="title" example="Today's Deals">%1$s</xliff:g>. <xliff:g id="description" example="Notify me about the best deals of the day">%2$s</xliff:g>. <xliff:g id="state" example="Subscribed">%3$s</xliff:g>.</string>
+    <string name="ua_preference_center_subscribed_description">مشترك</string>
+    <string name="ua_preference_center_unsubscribed_description">غير مشترك</string>
+
+    <!-- Preference Center subscription item accessibility click action. -->
+    <string name="ua_preference_center_action_subscribe">اشتراك</string>
+    <string name="ua_preference_center_action_unsubscribe">إلغاء الاشتراك</string>
+
+    <!-- Contact channel management -->
+    <string name="ua_preference_center_contact_management_pending">في انتظار التحقق</string>
+    <string name="ua_preference_center_contact_management_sms_description">رقم الهاتف</string>
+    <string name="ua_preference_center_contact_management_email_description">عنوان البريد الإلكتروني</string>
+    <string name="ua_preference_center_contact_management_resend_description">إعادة إرسال التحقق</string>
+    <string name="ua_preference_center_contact_management_redacted_description">منقح</string>
 </resources>

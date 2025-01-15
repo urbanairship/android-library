@@ -92,4 +92,10 @@
     <string name="ua_play">Spill av</string>
     <string name="ua_pause">Pause</string>
     <string name="ua_stop">Stopp</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Lukk</string>
+    <string name="ua_icon_button_checkmark">Bekreft</string>
+    <string name="ua_icon_button_forward_arrow">Neste</string>
+    <string name="ua_icon_button_backward_arrow">Forrige</string>
 </resources>

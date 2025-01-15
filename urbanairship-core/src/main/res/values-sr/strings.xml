@@ -93,4 +93,10 @@
     <string name="ua_play">Репродукуј</string>
     <string name="ua_pause">Пауза</string>
     <string name="ua_stop">Заустави</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Затвори</string>
+    <string name="ua_icon_button_checkmark">Потврди</string>
+    <string name="ua_icon_button_forward_arrow">Следеће</string>
+    <string name="ua_icon_button_backward_arrow">Претходно</string>
 </resources>

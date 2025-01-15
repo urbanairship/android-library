@@ -92,4 +92,10 @@
     <string name="ua_play">پخش</string>
     <string name="ua_pause">توقف موقت</string>
     <string name="ua_stop">توقف</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">بستن</string>
+    <string name="ua_icon_button_checkmark">تایید</string>
+    <string name="ua_icon_button_forward_arrow">بعدی</string>
+    <string name="ua_icon_button_backward_arrow">قبلی</string>
 </resources>

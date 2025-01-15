@@ -16,7 +16,7 @@ ktlint = '1.1.1'
 
 # Kotlin
 kotlin = '1.9.23'
-kotlinx-coroutines = '1.7.3'
+kotlinx-coroutines = '1.8.1'
 kotlinx-serialization = '1.6.3'
 
 # Compose

@@ -4,4 +4,20 @@
     <string name="ua_preference_center_empty">No es poden carregar les preferències. Si us plau, intenteu-ho més tard.</string>
     <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
     <string name="ua_preference_center_item_error">No s\'ha pogut actualitzar. Si us plau, intenteu-ho més tard.</string>
+
+    <!-- Preference Center subscription item accessibility description. -->
+    <string name="ua_preference_center_subscription_item_description"><xliff:g id="title" example="Today's Deals">%1$s</xliff:g>. <xliff:g id="description" example="Notify me about the best deals of the day">%2$s</xliff:g>. <xliff:g id="state" example="Subscribed">%3$s</xliff:g>.</string>
+    <string name="ua_preference_center_subscribed_description">subscrit</string>
+    <string name="ua_preference_center_unsubscribed_description">no subscrit</string>
+
+    <!-- Preference Center subscription item accessibility click action. -->
+    <string name="ua_preference_center_action_subscribe">subscriure\'s</string>
+    <string name="ua_preference_center_action_unsubscribe">cancel·lar la subscripció</string>
+
+    <!-- Contact channel management -->
+    <string name="ua_preference_center_contact_management_pending">Pendent de verificació</string>
+    <string name="ua_preference_center_contact_management_sms_description">Número de telèfon</string>
+    <string name="ua_preference_center_contact_management_email_description">Adreça de correu electrònic</string>
+    <string name="ua_preference_center_contact_management_resend_description">Tornar a enviar la verificació</string>
+    <string name="ua_preference_center_contact_management_redacted_description">redactat</string>
 </resources>

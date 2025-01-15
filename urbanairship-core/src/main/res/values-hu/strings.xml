@@ -92,4 +92,10 @@
     <string name="ua_play">Lejátszás</string>
     <string name="ua_pause">Szünet</string>
     <string name="ua_stop">Leállítás</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Bezárás</string>
+    <string name="ua_icon_button_checkmark">Megerősítés</string>
+    <string name="ua_icon_button_forward_arrow">Következő</string>
+    <string name="ua_icon_button_backward_arrow">Előző</string>
 </resources>

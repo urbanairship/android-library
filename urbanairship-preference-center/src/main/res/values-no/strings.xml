@@ -4,4 +4,20 @@
     <string name="ua_preference_center_empty">Kan ikke laste inn meldingen. Prøv igjen senere.</string>
     <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
     <string name="ua_preference_center_item_error">Oppdatering mislyktes. Prøv igjen senere.</string>
+
+    <!-- Preference Center subscription item accessibility description. -->
+    <string name="ua_preference_center_subscription_item_description"><xliff:g id="title" example="Today's Deals">%1$s</xliff:g>. <xliff:g id="description" example="Notify me about the best deals of the day">%2$s</xliff:g>. <xliff:g id="state" example="Subscribed">%3$s</xliff:g>.</string>
+    <string name="ua_preference_center_subscribed_description">abonnert</string>
+    <string name="ua_preference_center_unsubscribed_description">ikke abonnert</string>
+
+    <!-- Preference Center subscription item accessibility click action. -->
+    <string name="ua_preference_center_action_subscribe">abonner</string>
+    <string name="ua_preference_center_action_unsubscribe">avslutt abonnement</string>
+
+    <!-- Contact channel management -->
+    <string name="ua_preference_center_contact_management_pending">Venter på bekreftelse</string>
+    <string name="ua_preference_center_contact_management_sms_description">Telefonnummer</string>
+    <string name="ua_preference_center_contact_management_email_description">E-postadresse</string>
+    <string name="ua_preference_center_contact_management_resend_description">Send bekreftelse på nytt</string>
+    <string name="ua_preference_center_contact_management_redacted_description">redigert</string>
 </resources>

@@ -93,4 +93,10 @@
     <string name="ua_play">Atskaņot</string>
     <string name="ua_pause">Pauze</string>
     <string name="ua_stop">Apturēt</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Aizvērt</string>
+    <string name="ua_icon_button_checkmark">Apstiprināt</string>
+    <string name="ua_icon_button_forward_arrow">Nākamais</string>
+    <string name="ua_icon_button_backward_arrow">Iepriekšējais</string>
 </resources>

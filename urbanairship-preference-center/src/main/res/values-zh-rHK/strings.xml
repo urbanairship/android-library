@@ -4,4 +4,20 @@
     <string name="ua_preference_center_empty">無法加載首選項。請稍後再試。</string>
     <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
     <string name="ua_preference_center_item_error">更新失敗。請稍後再試。</string>
+
+    <!-- Preference Center subscription item accessibility description. -->
+    <string name="ua_preference_center_subscription_item_description"><xliff:g id="title" example="Today's Deals">%1$s</xliff:g>。 <xliff:g id="description" example="Notify me about the best deals of the day">%2$s</xliff:g>。 <xliff:g id="state" example="Subscribed">%3$s</xliff:g>。</string>
+    <string name="ua_preference_center_subscribed_description">已訂閱</string>
+    <string name="ua_preference_center_unsubscribed_description">未訂閱</string>
+
+    <!-- Preference Center subscription item accessibility click action. -->
+    <string name="ua_preference_center_action_subscribe">訂閱</string>
+    <string name="ua_preference_center_action_unsubscribe">取消訂閱</string>
+
+    <!-- Contact channel management -->
+    <string name="ua_preference_center_contact_management_pending">等待驗證</string>
+    <string name="ua_preference_center_contact_management_sms_description">電話號碼</string>
+    <string name="ua_preference_center_contact_management_email_description">電郵地址</string>
+    <string name="ua_preference_center_contact_management_resend_description">重新發送驗證</string>
+    <string name="ua_preference_center_contact_management_redacted_description">已編輯</string>
 </resources>

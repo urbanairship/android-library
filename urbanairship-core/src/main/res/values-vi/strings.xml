@@ -91,4 +91,10 @@
     <string name="ua_play">Phát</string>
     <string name="ua_pause">Tạm dừng</string>
     <string name="ua_stop">Dừng</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Đóng</string>
+    <string name="ua_icon_button_checkmark">Xác nhận</string>
+    <string name="ua_icon_button_forward_arrow">Tiếp theo</string>
+    <string name="ua_icon_button_backward_arrow">Trước</string>
 </resources>

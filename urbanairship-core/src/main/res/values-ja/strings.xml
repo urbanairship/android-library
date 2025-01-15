@@ -91,4 +91,10 @@
     <string name="ua_play">再生</string>
     <string name="ua_pause">一時停止</string>
     <string name="ua_stop">停止</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">閉じる</string>
+    <string name="ua_icon_button_checkmark">確認</string>
+    <string name="ua_icon_button_forward_arrow">次へ</string>
+    <string name="ua_icon_button_backward_arrow">前へ</string>
 </resources>

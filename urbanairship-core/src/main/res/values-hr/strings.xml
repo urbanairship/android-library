@@ -93,4 +93,10 @@
     <string name="ua_play">Pokreni</string>
     <string name="ua_pause">Pauziraj</string>
     <string name="ua_stop">Zaustavi</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Zatvori</string>
+    <string name="ua_icon_button_checkmark">Potvrdi</string>
+    <string name="ua_icon_button_forward_arrow">Sljedeće</string>
+    <string name="ua_icon_button_backward_arrow">Prethodno</string>
 </resources>

@@ -92,4 +92,10 @@
     <string name="ua_play">Toista</string>
     <string name="ua_pause">Tauko</string>
     <string name="ua_stop">Pysäytä</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Sulje</string>
+    <string name="ua_icon_button_checkmark">Vahvista</string>
+    <string name="ua_icon_button_forward_arrow">Seuraava</string>
+    <string name="ua_icon_button_backward_arrow">Edellinen</string>
 </resources>

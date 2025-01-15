@@ -4,4 +4,20 @@
     <string name="ua_preference_center_empty">환경 설정을 로드할 수 없습니다. 나중에 다시 시도해주십시오.</string>
     <string name="ua_preference_center_error_retry">@string/ua_retry_button</string>
     <string name="ua_preference_center_item_error">업데이트가 실패. 나중에 다시 시도 해주십시오.</string>
+
+    <!-- Preference Center subscription item accessibility description. -->
+    <string name="ua_preference_center_subscription_item_description"><xliff:g id="title" example="Today's Deals">%1$s</xliff:g>. <xliff:g id="description" example="Notify me about the best deals of the day">%2$s</xliff:g>. <xliff:g id="state" example="Subscribed">%3$s</xliff:g>.</string>
+    <string name="ua_preference_center_subscribed_description">구독 중</string>
+    <string name="ua_preference_center_unsubscribed_description">구독 해제됨</string>
+
+    <!-- Preference Center subscription item accessibility click action. -->
+    <string name="ua_preference_center_action_subscribe">구독하기</string>
+    <string name="ua_preference_center_action_unsubscribe">구독 취소</string>
+
+    <!-- Contact channel management -->
+    <string name="ua_preference_center_contact_management_pending">인증 대기 중</string>
+    <string name="ua_preference_center_contact_management_sms_description">전화번호</string>
+    <string name="ua_preference_center_contact_management_email_description">이메일 주소</string>
+    <string name="ua_preference_center_contact_management_resend_description">인증 다시 보내기</string>
+    <string name="ua_preference_center_contact_management_redacted_description">수정됨</string>
 </resources>

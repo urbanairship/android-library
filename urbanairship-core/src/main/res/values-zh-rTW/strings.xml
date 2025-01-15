@@ -94,4 +94,10 @@
     <string name="ua_play">播放</string>
     <string name="ua_pause">暫停</string>
     <string name="ua_stop">停止</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">關閉</string>
+    <string name="ua_icon_button_checkmark">確認</string>
+    <string name="ua_icon_button_forward_arrow">下一個</string>
+    <string name="ua_icon_button_backward_arrow">上一個</string>
 </resources>

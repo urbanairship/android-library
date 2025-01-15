@@ -92,4 +92,10 @@
     <string name="ua_play">Esita</string>
     <string name="ua_pause">Paus</string>
     <string name="ua_stop">Peata</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Sulge</string>
+    <string name="ua_icon_button_checkmark">Kinnita</string>
+    <string name="ua_icon_button_forward_arrow">Järgmine</string>
+    <string name="ua_icon_button_backward_arrow">Eelmine</string>
 </resources>

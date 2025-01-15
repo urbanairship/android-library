@@ -93,4 +93,10 @@
     <string name="ua_play">Lancer</string>
     <string name="ua_pause">Mettre en pause</string>
     <string name="ua_stop">Arrêter</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Fermer</string>
+    <string name="ua_icon_button_checkmark">Valider</string>
+    <string name="ua_icon_button_forward_arrow">Suivant</string>
+    <string name="ua_icon_button_backward_arrow">Précédent</string>
 </resources>

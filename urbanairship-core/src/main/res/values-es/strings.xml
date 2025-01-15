@@ -93,4 +93,10 @@
     <string name="ua_play">Reproducir</string>
     <string name="ua_pause">Pausar</string>
     <string name="ua_stop">Detener</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Cerrar</string>
+    <string name="ua_icon_button_checkmark">Validar</string>
+    <string name="ua_icon_button_forward_arrow">Siguiente</string>
+    <string name="ua_icon_button_backward_arrow">Anterior</string>
 </resources>
