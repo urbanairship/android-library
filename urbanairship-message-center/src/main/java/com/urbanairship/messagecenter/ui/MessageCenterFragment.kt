@@ -59,6 +59,8 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
          * @return `true` if the message display was handled, or `false` to display the message in the default message view.
          */
         public fun onShowMessage(message: Message): Boolean
+        /** Called when the loaded message is closed. */
+        public fun onCloseMessage()
         /** Called when a message is loaded in the message view. */
         public fun onMessageLoaded(message: Message)
         /** Called when a message fails to load. */
@@ -193,6 +195,7 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
             updatePaneAccessibility(false)
             slidingPaneLayout.close()
         }
+        listener?.onCloseMessage()
     }
 
     private fun updateTwoPaneLayout() {
