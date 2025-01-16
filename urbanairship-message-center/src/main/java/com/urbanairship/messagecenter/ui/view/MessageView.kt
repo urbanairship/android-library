@@ -127,7 +127,7 @@ public class MessageView @JvmOverloads constructor(
                 message = state.message
                 views.webView.loadMessage(state.message)
             }
-            MessageViewState.Empty -> {
+            is MessageViewState.Empty -> {
                 message = null
                 views.showEmpty()
             }
@@ -135,7 +135,7 @@ public class MessageView @JvmOverloads constructor(
                 message = null
                 views.showError(state.error)
             }
-            MessageViewState.Loading -> {
+            is MessageViewState.Loading -> {
                 message = null
                 views.showProgress()
             }
@@ -145,6 +145,7 @@ public class MessageView @JvmOverloads constructor(
     private val lifecycleObserver = object : DefaultLifecycleObserver {
         override fun onResume(owner: LifecycleOwner) {
             views.webView.onResume()
+            views.webView.resumeTimers()
         }
 
         override fun onPause(owner: LifecycleOwner) {
