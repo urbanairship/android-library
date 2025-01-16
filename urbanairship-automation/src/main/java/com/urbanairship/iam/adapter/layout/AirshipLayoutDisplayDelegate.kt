@@ -65,7 +65,7 @@ internal class AirshipLayoutDisplayDelegate(
             embeddedViewManager = EmbeddedViewManager
         )
 
-        return withContext(Dispatchers.Main) {
+        return withContext(Dispatchers.Main.immediate) {
             suspendCancellableCoroutine {
                 continuation = it
                 request.display(context)

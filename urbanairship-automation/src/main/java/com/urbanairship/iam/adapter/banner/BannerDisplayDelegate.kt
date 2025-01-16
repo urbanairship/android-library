@@ -96,7 +96,7 @@ internal class BannerDisplayDelegate(
 
         activityMonitor.addActivityListener(listener)
 
-        return withContext(Dispatchers.Main) {
+        return withContext(Dispatchers.Main.immediate) {
             suspendCancellableCoroutine {
                 continuation = it
                 display(context)
