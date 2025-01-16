@@ -63,7 +63,7 @@ internal class HtmlDisplayDelegate(
             .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             .putExtra(InAppMessageActivity.EXTRA_DISPLAY_ARGS_LOADER, loader)
 
-        return withContext(Dispatchers.Main) {
+        return withContext(Dispatchers.Main.immediate) {
             suspendCancellableCoroutine {
                 continuation = it
                 context.startActivity(intent)
