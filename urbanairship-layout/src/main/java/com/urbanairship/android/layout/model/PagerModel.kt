@@ -18,7 +18,9 @@ import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.GestureLocation
+import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.PagerGesture
+import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.earliestNavigationAction
 import com.urbanairship.android.layout.property.firstPagerNextOrNull
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
@@ -33,8 +35,6 @@ import com.urbanairship.android.layout.util.pagerGestures
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
-import java.lang.Integer.max
-import java.lang.Integer.min
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -42,6 +42,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.lang.Integer.max
+import java.lang.Integer.min
 
 internal class PagerModel(
     viewInfo: PagerInfo,
@@ -58,7 +60,9 @@ internal class PagerModel(
         val identifier: String,
         val displayActions: Map<String, JsonValue>?,
         val automatedActions: List<AutomatedAction>?,
-        val accessibilityActions: List<AccessibilityAction>?
+        val accessibilityActions: List<AccessibilityAction>?,
+        val stateActions: List<StateAction>?,
+        val branching: PagerControllerBranching.PageBranching?
     )
 
     interface Listener : BaseModel.Listener {

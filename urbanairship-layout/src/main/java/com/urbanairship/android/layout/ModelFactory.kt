@@ -353,7 +353,9 @@ internal class ThomasModelFactory : ModelFactory {
                             identifier = itemInfo.identifier,
                             displayActions = itemInfo.displayActions,
                             automatedActions = itemInfo.automatedActions,
-                            accessibilityActions = itemInfo.accessibilityActions
+                            accessibilityActions = itemInfo.accessibilityActions,
+                            stateActions = itemInfo.stateActions,
+                            branching = itemInfo.branching
                         )
                     } ?: throw ModelFactoryException("PagerItemInfo expected")
                 },
@@ -404,7 +406,8 @@ internal class ThomasModelFactory : ModelFactory {
                 pagerState = environment.layoutState.pager
                     ?: throw ModelFactoryException("Required pager state was null for PagerController!"),
                 environment = environment,
-                properties = properties
+                properties = properties,
+                branching = info.branching
             )
             is CheckboxControllerInfo -> CheckboxController(
                 viewInfo = info,
