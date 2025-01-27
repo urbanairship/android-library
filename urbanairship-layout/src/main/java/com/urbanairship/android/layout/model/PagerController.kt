@@ -36,6 +36,13 @@ internal class PagerController(
             pagerState.changes.map { it.reportingContext() }.distinctUntilChanged()
                 .collect(::reportPageView)
         }
+
+        branching?.let {
+            pagerState.update { state ->
+                // TODO
+                state
+            }
+        }
     }
 
     override fun onCreateView(

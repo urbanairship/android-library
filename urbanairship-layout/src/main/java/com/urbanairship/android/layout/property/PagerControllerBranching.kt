@@ -1,7 +1,7 @@
 package com.urbanairship.android.layout.property
 
+import com.urbanairship.android.layout.property.PagerControllerBranching.Completion
 import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -67,7 +67,7 @@ internal data class PagerControllerBranching(
 
                 return Completion(
                     predicate = content.get(WHEN_STATE_MATCHES)?.let(JsonPredicate::parse),
-                    stateActions = content.get(STATE_ACTIONS)?.requireList()?.map(StateAction::fromJson)
+                    stateActions = content.optionalList(STATE_ACTIONS)?.map(StateAction::fromJson)
                 )
             }
         }
@@ -109,10 +109,8 @@ internal data class PageBranching(
             val content = json.requireMap()
 
             return PageBranching(
-                nextPageSelectors = content.get(NEXT_PAGE)
-                    ?.requireMap()
-                    ?.get(SELECTORS)
-                    ?.requireList()
+                nextPageSelectors = content.optionalMap(NEXT_PAGE)
+                    ?.requireList(SELECTORS)
                     ?.map(PageSelector::from),
                 previousPageControl = content.get(PREVIOUS_PAGE_DISABLED)?.let(PreviousPageControl::from)
             )
