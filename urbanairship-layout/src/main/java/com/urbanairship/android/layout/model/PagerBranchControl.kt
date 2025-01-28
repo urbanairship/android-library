@@ -86,26 +86,25 @@ internal class PagerBranchControl(
         updateCanGoBack()
     }
 
-    /*
-    func resolve(request: PageRequest) -> Bool {
-        self.updateState()
+    fun resolve(request: PageRequest): Boolean {
+        updateState()
 
-        switch request {
-        case .next:
-            return true
-        case .first:
-            history.removeAll()
-            return true
-        case .back:
-            guard canGoBack else {
-                return false
+        when (request) {
+            PageRequest.NEXT -> return true
+            PageRequest.FIRST -> {
+                history.clear()
+                return true
             }
-
-            _ = history.popLast()
-            return true
+            PageRequest.BACK -> {
+                if (canGoBack.value) {
+                    history.removeLastOrNull()
+                    return true
+                } else {
+                    return false
+                }
+            }
         }
     }
-     */
 
     private fun updateCanGoBack() {
         val payload = generatePayload() ?: return

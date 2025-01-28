@@ -19,7 +19,6 @@ import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.GestureLocation
 import com.urbanairship.android.layout.property.PageBranching
-import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.earliestNavigationAction
@@ -86,7 +85,20 @@ internal class PagerModel(
     private var accessibilityListener: AccessibilityManager.TouchExplorationStateChangeListener? =
         null
 
+    private var branchControl: PagerBranchControl? = null
+
     init {
+        @OptIn(DelicateLayoutApi::class)
+        pagerState.value.branching?.let {
+            branchControl = PagerBranchControl(
+                availablePages = items,
+                controllerBranching = it,
+                viewState = environment.layoutState.layout,
+                formState = environment.layoutState.form,
+                actionsRunner = { environment.actionsRunner }
+            )
+        }
+
         // Update pager state with our page identifiers
         pagerState.update { state ->
             state.copyWithPageIds(pageIds = items.map { it.identifier })
@@ -486,3 +498,9 @@ internal val List<ButtonClickBehaviorType>.pagerNextFallback: PagerNextFallback
             else -> PagerNextFallback.NONE
         }
     } ?: PagerNextFallback.NONE
+
+internal enum class PageRequest {
+    NEXT,
+    BACK,
+    FIRST
+}

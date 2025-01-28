@@ -233,7 +233,10 @@ internal class ThomasModelFactory : ModelFactory {
             is CheckboxControllerInfo -> SharedState(
                 State.Checkbox(info.identifier, info.minSelection, info.maxSelection)
             )
-            is PagerControllerInfo -> SharedState(State.Pager(info.identifier))
+            is PagerControllerInfo -> SharedState(State.Pager(
+                identifier = info.identifier,
+                branching = info.branching)
+            )
             is StateControllerInfo -> SharedState(State.Layout())
             else -> null
         }

@@ -2,6 +2,7 @@ package com.urbanairship.android.layout.environment
 
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.property.AttributeValue
+import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.FormInfo
@@ -59,7 +60,8 @@ internal sealed class State {
         val isMediaPaused: Boolean = false,
         val wasMediaPaused: Boolean = false,
         val isStoryPaused: Boolean = false,
-        val isTouchExplorationEnabled: Boolean = false
+        val isTouchExplorationEnabled: Boolean = false,
+        val branching: PagerControllerBranching?
     ) : State() {
         val hasNext
             get() = pageIndex < pageIds.size - 1
