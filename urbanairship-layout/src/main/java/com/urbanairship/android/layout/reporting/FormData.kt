@@ -32,7 +32,7 @@ public sealed class FormData<T>(
         override fun toJsonValue(): JsonValue = JsonValue.wrap(value)
     }
 
-    protected open val formData: JsonMap
+    internal open val formData: JsonMap
         get() = jsonMapOf(
             KEY_TYPE to type,
             KEY_VALUE to JsonValue.wrapOpt(value)

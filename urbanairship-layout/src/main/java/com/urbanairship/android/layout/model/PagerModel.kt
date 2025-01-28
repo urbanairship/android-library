@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.GestureLocation
+import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.StateAction
@@ -62,7 +63,7 @@ internal class PagerModel(
         val automatedActions: List<AutomatedAction>?,
         val accessibilityActions: List<AccessibilityAction>?,
         val stateActions: List<StateAction>?,
-        val branching: PagerControllerBranching.PageBranching?
+        val branching: PageBranching?
     )
 
     interface Listener : BaseModel.Listener {
