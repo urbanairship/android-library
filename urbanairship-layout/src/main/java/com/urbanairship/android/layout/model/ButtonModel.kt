@@ -118,25 +118,15 @@ internal abstract class ButtonModel<T, I: Button>(
             "Pager state is required for Buttons with pager click behaviors!"
         }
 
-        fun pagerNext() {
-            pagerState.update { state ->
-                state.copyWithPageIndex(min(state.pageIndex + 1, state.pageIds.size - 1))
-            }
-        }
-
         @OptIn(DelicateLayoutApi::class)
-        val hasNext = pagerState.value.hasNext
-
-        when {
-            !hasNext && fallback == PagerNextFallback.FIRST -> pagerState.update { state ->
-                state.copyWithPageIndexAndResetProgress(0)
+        if (pagerState.value.hasNext) {
+           pagerState.update { it.copyWithPageRequest(PageRequest.NEXT) }
+        } else {
+            when(fallback) {
+                PagerNextFallback.NONE -> {}
+                PagerNextFallback.DISMISS -> handleDismiss(context, isCancel = false)
+                PagerNextFallback.FIRST -> pagerState.update { it.copyWithPageRequest(PageRequest.FIRST) }
             }
-
-            !hasNext && fallback == PagerNextFallback.DISMISS -> handleDismiss(
-                context, isCancel = false
-            )
-
-            else -> pagerNext()
         }
     }
 
@@ -144,9 +134,7 @@ internal abstract class ButtonModel<T, I: Button>(
         checkNotNull(pagerState) {
             "Pager state is required for Buttons with pager click behaviors!"
         }
-        pagerState.update { state ->
-            state.copyWithPageIndex(max(state.pageIndex - 1, 0))
-        }
+        pagerState.update { it.copyWithPageRequest(PageRequest.BACK) }
     }
 
     private suspend fun handleDismiss(context: Context, isCancel: Boolean) {

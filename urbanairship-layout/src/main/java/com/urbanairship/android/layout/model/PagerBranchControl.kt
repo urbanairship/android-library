@@ -46,7 +46,6 @@ internal class PagerBranchControl(
 
     init {
         scope.launch { listenForUpdates() }
-        //TODO: call updateState() ??
     }
 
     private suspend fun listenForUpdates() {
@@ -67,22 +66,34 @@ internal class PagerBranchControl(
     }
 
     fun addToHistory(id: String) {
-        val page = availablePages.firstOrNull { it.identifier == id } ?: return
-        if (history.contains(page)) {
-            return
-        }
+        scope.launch {
+            clearHistoryAfter(id)
+            val page = availablePages.firstOrNull { it.identifier == id } ?: return@launch
+            if (history.contains(page)) {
+                return@launch
+            }
 
-        history.add(page)
-        updateCanGoBack()
+            history.add(page)
+            updateCanGoBack()
+        }
     }
 
-    fun clearHistoryAfter(id: String) {
-        val index = history.indexOfFirst { it.identifier == id }
-        if (index < 0) {
+    fun removeFromHistory(id: String) {
+        scope.launch {
+            val page = availablePages.firstOrNull { it.identifier == id } ?: return@launch
+
+            if (history.remove(page)) {
+                updateCanGoBack()
+            }
+        }
+    }
+
+    private fun clearHistoryAfter(id: String) {
+        val index = history.indexOfFirst { it.identifier == id } + 1
+        if (index < 1 || index >= history.size) {
             return
         }
 
-        //TODO: test
         history.subList(index, history.size).clear()
         updateCanGoBack()
     }
@@ -112,7 +123,7 @@ internal class PagerBranchControl(
 
         _canGoBackState.update {
             val result = history.lastOrNull() ?: return@update false
-            result.branching?.canGoBack(payload) != false
+            history.size > 1 && result.branching?.canGoBack(payload) != false
         }
     }
 

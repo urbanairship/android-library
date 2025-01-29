@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.environment
 
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.model.PageRequest
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.reporting.AttributeName
@@ -10,6 +11,7 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.json.JsonValue
 import kotlin.collections.set
+import kotlin.math.max
 
 internal class LayoutState(
     val pager: SharedState<State.Pager>?,
@@ -61,15 +63,14 @@ internal sealed class State {
         val wasMediaPaused: Boolean = false,
         val isStoryPaused: Boolean = false,
         val isTouchExplorationEnabled: Boolean = false,
-        val branching: PagerControllerBranching?
+        val branching: PagerControllerBranching?,
+        val canGoBack: Boolean = pageIndex > 0
     ) : State() {
+
         val hasNext
             get() = pageIndex < pageIds.size - 1
-        //TODO: canGoBack from branching
-        val hasPrevious
-            get() = pageIndex > 0
 
-        fun copyWithPageIndex(index: Int) =
+        private fun copyWithPageIndex(index: Int) =
             if (index == pageIndex) {
                 copy()
             } else {
@@ -77,18 +78,29 @@ internal sealed class State {
                     pageIndex = index,
                     lastPageIndex = pageIndex,
                     completed = completed || (index == pageIds.size - 1),
-                    progress = 0
+                    progress = 0,
+                    canGoBack = index > 0
                 )
             }
 
-        fun copyWithPageIndexAndResetProgress(index: Int) =
-            if (index == pageIndex) {
-                copy(
-                    progress = 0
-                )
-            } else {
-                copyWithPageIndex(index)
+        fun copyWithPageRequest(request: PageRequest): Pager {
+            val nextIndex = when(request)
+            {
+                PageRequest.NEXT -> pageIndex + 1
+                PageRequest.BACK -> if (canGoBack) {
+                    max(pageIndex - 1, 0)
+                } else {
+                    -1
+                }
+                PageRequest.FIRST -> 0
             }
+
+            return if (pageIndex >= 0 && pageIndex < pageIds.size) {
+                copyWithPageIndex(nextIndex)
+            } else {
+                copy(progress = 0)
+            }
+        }
 
         fun copyWithPageIds(pageIds: List<String>) =
             copy(

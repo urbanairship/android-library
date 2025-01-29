@@ -136,11 +136,13 @@ internal class PagerModel(
             }.collect {
                 // Clear any automated actions scheduled for the previous page.
                 clearAutomatedActions(it.lastPageIndex)
+                it.previousPageId?.let { branchControl?.removeFromHistory(it) }
 
                 // Handle any actions defined for the current page.
                 val currentPage = it.currentPageId?.let { id -> _allPages.value.firstOrNull { it.identifier == id } } ?: return@collect
                 handlePageActions(currentPage.displayActions, currentPage.automatedActions)
 
+                it.currentPageId?.let { branchControl?.addToHistory(it) }
                 // Check if the current page has any automated pause/resume actions
                 val hasPauseOrResumeAction = currentPage.automatedActions?.hasPagerPauseOrResumeAction == true
 
@@ -167,13 +169,24 @@ internal class PagerModel(
             control.pages.collect { updated -> _allPages.update { updated } }
         }
 
-        //TODO: map canGoBack
+        modelScope.launch {
+            control.canGoBack.collect { value -> pagerState.update { it.copy(canGoBack = value) }}
+        }
 
         modelScope.launch {
             control.isComplete.collect { complete ->
                 pagerState.update { it.copy(completed = complete) }
             }
         }
+    }
+
+    private fun resolve(request: PageRequest): Boolean {
+        if (branchControl?.resolve(request) == false) {
+            return false
+        }
+
+        pagerState.update { it.copyWithPageRequest(request) }
+        return true
     }
 
     override fun onCreateView(
@@ -200,9 +213,9 @@ internal class PagerModel(
         // the page swipe if it was triggered by the user.
         viewScope.launch {
             view.pagerScrolls().collect { (position, isInternalScroll) ->
-                //TODO: check if branch control allows going back
-                pagerState.update { state ->
-                    state.copyWithPageIndex(position)
+                val request = makePageRequest(position) ?: return@collect
+                if (!resolve(request)) {
+                    return@collect
                 }
 
                 if (!isInternalScroll) {
@@ -261,6 +274,19 @@ internal class PagerModel(
 
     /** Returns a stable viewId for the pager item view at the given adapter `position`.  */
     fun getPageViewId(position: Int): Int = pageViewIds.getOrPut(position) { View.generateViewId() }
+
+    private fun makePageRequest(toPosition: Int): PageRequest? {
+        @OptIn(DelicateLayoutApi::class)
+        val current = pagerState.value.pageIndex
+
+        return if (toPosition > current) {
+            PageRequest.NEXT
+        } else if (toPosition < current) {
+            PageRequest.BACK
+        } else {
+            null
+        }
+    }
 
     private fun reportPageSwipe(pagerState: State.Pager) {
         val currentPage = pagerState.currentPageId ?: return
@@ -431,25 +457,19 @@ internal class PagerModel(
 
     private fun handlePagerNext(fallback: PagerNextFallback) {
         @OptIn(DelicateLayoutApi::class)
-        val hasNext = pagerState.value.hasNext
-
-        when {
-            //TODO: wire up with branching resolve
-            !hasNext && fallback == PagerNextFallback.FIRST -> pagerState.update { state ->
-                state.copyWithPageIndexAndResetProgress(0)
-            }
-
-            !hasNext && fallback == PagerNextFallback.DISMISS -> handleDismiss()
-            else -> pagerState.update { state ->
-                state.copyWithPageIndex(min(state.pageIndex + 1, state.pageIds.size - 1))
+        if (pagerState.value.hasNext) {
+            resolve(PageRequest.NEXT)
+        } else {
+            when(fallback) {
+                PagerNextFallback.NONE -> {}
+                PagerNextFallback.DISMISS -> handleDismiss()
+                PagerNextFallback.FIRST -> resolve(PageRequest.FIRST)
             }
         }
     }
 
     private fun handlePagerPrevious() {
-        pagerState.update { state ->
-            state.copyWithPageIndex(max(state.pageIndex - 1, 0))
-        }
+        resolve(PageRequest.BACK)
     }
 
     private fun handleDismiss() {

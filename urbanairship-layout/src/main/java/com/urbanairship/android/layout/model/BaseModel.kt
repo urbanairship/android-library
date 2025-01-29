@@ -268,7 +268,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
 
         val isEnabled =
-            (hasPagerNextBehavior && state.hasNext) || (hasPagerPrevBehavior && state.hasPrevious)
+            (hasPagerNextBehavior && state.hasNext) || (hasPagerPrevBehavior && state.canGoBack)
 
         listener?.setEnabled(isEnabled)
     }
