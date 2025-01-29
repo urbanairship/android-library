@@ -136,7 +136,9 @@ internal class PagerModel(
             }.collect {
                 // Clear any automated actions scheduled for the previous page.
                 clearAutomatedActions(it.lastPageIndex)
-                it.previousPageId?.let { branchControl?.removeFromHistory(it) }
+                if (it.lastPageIndex > it.pageIndex) {
+                    it.previousPageId?.let { branchControl?.removeFromHistory(it) }
+                }
 
                 // Handle any actions defined for the current page.
                 val currentPage = it.currentPageId?.let { id -> _allPages.value.firstOrNull { it.identifier == id } } ?: return@collect
