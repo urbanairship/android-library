@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.StateAction
+import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -117,13 +118,20 @@ internal class PagerBranchControl(
 
     private fun generatePayload(): JsonSerializable? {
         val viewState = viewState?.value?.state ?: return null
-        val formState = formState?.value?.data?.values?.firstOrNull() ?: return null
+//        val formState = formState?.value?.data?.values?.firstOrNull() ?: return null
+        val formState = formState?.value?.data?.values?.firstOrNull() ?: FormData.Form(
+            identifier = "current",
+            responseType = null,
+            children = emptySet()
+        )
 
         return viewState
             .toMutableMap()
-            .put("\$forms", jsonMapOf(
-                "current" to formState.formData.toJsonValue()
-            ).toJsonValue())
+            .apply {
+                put("\$forms", jsonMapOf(
+                    "current" to formState.formData.toJsonValue()).toJsonValue()
+                )
+            }
             .let(JsonValue::wrap)
     }
 
@@ -181,7 +189,7 @@ internal class PagerBranchControl(
 
 private fun PageBranching.nextPageId(payload: JsonSerializable): String? {
     return nextPageSelectors
-        ?.first { it.predicate?.apply(payload) != false }
+        ?.firstOrNull { it.predicate?.apply(payload) != false }
         ?.pageId
 }
 

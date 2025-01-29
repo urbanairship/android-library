@@ -44,10 +44,13 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.lang.Integer.max
 import java.lang.Integer.min
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.update
 
 internal class PagerModel(
     viewInfo: PagerInfo,
-    val items: List<Item>,
+    private val availablePages: List<Item>,
     private val pagerState: SharedState<State.Pager>,
     environment: ModelEnvironment,
     properties: ModelProperties
@@ -66,7 +69,7 @@ internal class PagerModel(
     )
 
     interface Listener : BaseModel.Listener {
-
+        fun onDataUpdated()
         fun scrollTo(position: Int)
     }
 
@@ -75,7 +78,9 @@ internal class PagerModel(
     /** Stable viewId for the recycler view.  */
     val recyclerViewId = View.generateViewId()
 
-    val pages = items.map { it.view }
+    private val _allPages = MutableStateFlow<List<Item>>(emptyList())
+    var pages: List<AnyModel> = emptyList()
+        private set
 
     private val pageViewIds = mutableMapOf<Int, Int>()
 
@@ -85,62 +90,89 @@ internal class PagerModel(
     private var accessibilityListener: AccessibilityManager.TouchExplorationStateChangeListener? =
         null
 
-    private var branchControl: PagerBranchControl? = null
+    private val branchControl: PagerBranchControl?
 
     init {
-        @OptIn(DelicateLayoutApi::class)
-        pagerState.value.branching?.let {
-            branchControl = PagerBranchControl(
-                availablePages = items,
-                controllerBranching = it,
-                viewState = environment.layoutState.layout,
-                formState = environment.layoutState.form,
-                actionsRunner = { environment.actionsRunner }
-            )
+        modelScope.launch {
+            _allPages.collect { items ->
+                pages = items.map { it.view }
+                // Update pager state with our page identifiers
+                pagerState.update { state ->
+                    state.copy(
+                        pageIds = items.map { it.identifier },
+                        durations = items.map { it.automatedActions?.earliestNavigationAction?.delay },
+                    )
+                }
+
+                listener?.onDataUpdated()
+            }
         }
 
-        // Update pager state with our page identifiers
-        pagerState.update { state ->
-            state.copyWithPageIds(pageIds = items.map { it.identifier })
-                .copyWithDurations(durations = items.map { it.automatedActions?.earliestNavigationAction?.delay })
+        @OptIn(DelicateLayoutApi::class)
+        val branching = pagerState.value.branching
+        if (branching != null) {
+            branchControl = PagerBranchControl(
+                availablePages = availablePages,
+                controllerBranching = branching,
+                viewState = environment.layoutState.layout,
+                formState = environment.layoutState.form,
+                actionsRunner = ::runStateActions
+            )
+            wireBranchControlFlows(branchControl)
+        } else {
+            branchControl = null
+            _allPages.update { availablePages }
         }
+
 
         // Listen for page changes (or the initial page display)
         // and run any actions for the current page.
         modelScope.launch {
-
             pagerState.changes.filter {
-                    // If current and last are both 0, we're initializing the pager.
-                    // Otherwise, we only want to act on changes to the pageIndex.
+                // If current and last are both 0, we're initializing the pager.
+                // Otherwise, we only want to act on changes to the pageIndex.
 
-                    (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex) && it.progress == 0
-                }.collect {
-                    // Clear any automated actions scheduled for the previous page.
-                    clearAutomatedActions(it.lastPageIndex)
+                (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex) && it.progress == 0
+            }.collect {
+                // Clear any automated actions scheduled for the previous page.
+                clearAutomatedActions(it.lastPageIndex)
 
-                    // Handle any actions defined for the current page.
-                    items[it.pageIndex].run {
-                        handlePageActions(displayActions, automatedActions)
+                // Handle any actions defined for the current page.
+                val currentPage = it.currentPageId?.let { id -> _allPages.value.firstOrNull { it.identifier == id } } ?: return@collect
+                handlePageActions(currentPage.displayActions, currentPage.automatedActions)
 
-                        // Check if the current page has any automated pause/resume actions
-                        val hasPauseOrResumeAction = automatedActions?.hasPagerPauseOrResumeAction == true
+                // Check if the current page has any automated pause/resume actions
+                val hasPauseOrResumeAction = currentPage.automatedActions?.hasPagerPauseOrResumeAction == true
 
-                        if (it.isTouchExplorationEnabled) {
-                            // Always pause for accessibility
-                            pauseStory()
-                        } else if (it.isMediaPaused) {
-                            // Media not ready, pause until ready
-                            pauseStory()
-                        } else {
-                            // Resume if either:
-                            // - Media just became ready (wasMediaPaused)
-                            // - OR no automated pause/resume actions exist
-                            if (it.wasMediaPaused || !hasPauseOrResumeAction) {
-                                resumeStory()
-                            }
-                        }
+                if (it.isTouchExplorationEnabled) {
+                    // Always pause for accessibility
+                    pauseStory()
+                } else if (it.isMediaPaused) {
+                    // Media not` ready, pause until ready
+                    pauseStory()
+                } else {
+                    // Resume if either:
+                    // - Media just became ready (wasMediaPaused)
+                    // - OR no automated pause/resume actions exist
+                    if (it.wasMediaPaused || !hasPauseOrResumeAction) {
+                        resumeStory()
                     }
                 }
+            }
+        }
+    }
+
+    private fun wireBranchControlFlows(control: PagerBranchControl) {
+        modelScope.launch {
+            control.pages.collect { updated -> _allPages.update { updated } }
+        }
+
+        //TODO: map canGoBack
+
+        modelScope.launch {
+            control.isComplete.collect { complete ->
+                pagerState.update { it.copy(completed = complete) }
+            }
         }
     }
 
@@ -168,6 +200,7 @@ internal class PagerModel(
         // the page swipe if it was triggered by the user.
         viewScope.launch {
             view.pagerScrolls().collect { (position, isInternalScroll) ->
+                //TODO: check if branch control allows going back
                 pagerState.update { state ->
                     state.copyWithPageIndex(position)
                 }
@@ -204,10 +237,10 @@ internal class PagerModel(
 
         viewScope.launch {
             pagerState.changes
-                .map { it to items[it.pageIndex] }
+                .map { state ->  state to _allPages.value.firstOrNull { it.identifier == state.currentPageId } }
                 .distinctUntilChanged()
                 .collect { (state, currentItem) ->
-                    view.setAccessibilityActions(currentItem.accessibilityActions) { action ->
+                    view.setAccessibilityActions(currentItem?.accessibilityActions) { action ->
                         handleAccessibilityAction(action, state)
                     }
                 }
@@ -230,14 +263,17 @@ internal class PagerModel(
     fun getPageViewId(position: Int): Int = pageViewIds.getOrPut(position) { View.generateViewId() }
 
     private fun reportPageSwipe(pagerState: State.Pager) {
+        val currentPage = pagerState.currentPageId ?: return
+        val previousPage = pagerState.previousPageId ?: return
+
         val pagerContext = pagerState.reportingContext()
         report(
             ReportingEvent.PageSwipe(
                 pagerContext,
                 pagerState.lastPageIndex,
-                items[pagerState.lastPageIndex].identifier,
+                previousPage,
                 pagerState.pageIndex,
-                items[pagerState.pageIndex].identifier
+                currentPage
             ), layoutState.reportingContext(pagerContext = pagerContext)
         )
     }
@@ -398,6 +434,7 @@ internal class PagerModel(
         val hasNext = pagerState.value.hasNext
 
         when {
+            //TODO: wire up with branching resolve
             !hasNext && fallback == PagerNextFallback.FIRST -> pagerState.update { state ->
                 state.copyWithPageIndexAndResetProgress(0)
             }

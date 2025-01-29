@@ -349,7 +349,7 @@ internal class ThomasModelFactory : ModelFactory {
             )
             is PagerInfo -> PagerModel(
                 viewInfo = info,
-                items = children.map { (model, itemInfo) ->
+                availablePages = children.map { (model, itemInfo) ->
                     (itemInfo as? PagerItemInfo)?.let {
                         PagerModel.Item(
                             view = model,

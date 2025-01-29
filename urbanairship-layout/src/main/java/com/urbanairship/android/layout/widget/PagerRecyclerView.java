@@ -48,6 +48,10 @@ public class PagerRecyclerView extends RecyclerView {
         configure();
     }
 
+    public void refresh() {
+        adapter.setItems(model.getPages());
+    }
+
     public void configure() {
         setHorizontalScrollBarEnabled(false);
 

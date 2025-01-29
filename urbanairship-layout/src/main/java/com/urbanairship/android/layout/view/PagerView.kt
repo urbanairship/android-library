@@ -101,6 +101,10 @@ internal class PagerView(
             }
         }
 
+        override fun onDataUpdated() {
+            view.refresh()
+        }
+
         override fun setVisibility(visible: Boolean) {
             this@PagerView.isVisible = visible
         }

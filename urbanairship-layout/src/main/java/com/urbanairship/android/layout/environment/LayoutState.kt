@@ -65,6 +65,7 @@ internal sealed class State {
     ) : State() {
         val hasNext
             get() = pageIndex < pageIds.size - 1
+        //TODO: canGoBack from branching
         val hasPrevious
             get() = pageIndex > 0
 
@@ -110,6 +111,24 @@ internal sealed class State {
 
         fun reportingContext(): PagerData =
             PagerData(identifier, pageIndex, pageIds.getOrElse(pageIndex) { "NULL!" }, pageIds.size, completed)
+
+        val currentPageId: String?
+            get() {
+                if (pageIndex < 0 || pageIndex >= pageIds.size) {
+                    return null
+                }
+
+                return pageIds[pageIndex]
+            }
+
+        val previousPageId: String?
+            get() {
+                if (lastPageIndex < 0 || lastPageIndex >= pageIds.size) {
+                    return null
+                }
+
+                return pageIds[lastPageIndex]
+            }
     }
 
     internal data class Form(
