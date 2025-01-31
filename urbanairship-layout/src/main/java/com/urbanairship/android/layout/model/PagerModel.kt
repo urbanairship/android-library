@@ -142,6 +142,7 @@ internal class PagerModel(
 
                 // Handle any actions defined for the current page.
                 val currentPage = it.currentPageId?.let { id -> _allPages.value.firstOrNull { it.identifier == id } } ?: return@collect
+                runStateActions(currentPage.stateActions)
                 handlePageActions(currentPage.displayActions, currentPage.automatedActions)
 
                 it.currentPageId?.let { branchControl?.addToHistory(it) }
