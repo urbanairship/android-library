@@ -177,6 +177,10 @@ internal class PagerBranchControl(
     }
 
     private fun evaluateCompletion(payload: JsonSerializable) {
+        if (_isComplete.value) {
+            return //once complete always complete
+        }
+
         val matched = controllerBranching.completions
             .firstOrNull { it.predicate?.apply(payload) != false }
 

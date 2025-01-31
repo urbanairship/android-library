@@ -77,7 +77,11 @@ internal sealed class State {
                 copy(
                     pageIndex = index,
                     lastPageIndex = pageIndex,
-                    completed = completed || (index == pageIds.size - 1),
+                    completed = if (branching == null) { // we want to evaluate complete for pagers with no branching
+                        completed || (index == pageIds.size - 1)
+                    } else {
+                        completed
+                    },
                     progress = 0,
                     canGoBack = index > 0
                 )
@@ -101,15 +105,6 @@ internal sealed class State {
                 copy(progress = 0)
             }
         }
-
-        fun copyWithPageIds(pageIds: List<String>) =
-            copy(
-                pageIds = pageIds,
-                completed = pageIds.size <= 1
-            )
-
-        fun copyWithDurations(durations: List<Int?>) =
-            copy(durations = durations)
 
         fun copyWithMediaPaused(isMediaPaused: Boolean) =
             copy(isMediaPaused = isMediaPaused,
