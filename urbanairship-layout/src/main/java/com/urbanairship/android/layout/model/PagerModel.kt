@@ -42,11 +42,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.lang.Integer.max
-import java.lang.Integer.min
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.update
 
 internal class PagerModel(
     viewInfo: PagerInfo,
@@ -78,7 +73,7 @@ internal class PagerModel(
     /** Stable viewId for the recycler view.  */
     val recyclerViewId = View.generateViewId()
 
-    private val _allPages = MutableStateFlow<List<Item>>(emptyList())
+    private var _allPages: List<Item> = emptyList()
     var pages: List<AnyModel> = emptyList()
         private set
 
@@ -93,21 +88,6 @@ internal class PagerModel(
     private val branchControl: PagerBranchControl?
 
     init {
-        modelScope.launch {
-            _allPages.collect { items ->
-                pages = items.map { it.view }
-                // Update pager state with our page identifiers
-                pagerState.update { state ->
-                    state.copy(
-                        pageIds = items.map { it.identifier },
-                        durations = items.map { it.automatedActions?.earliestNavigationAction?.delay },
-                    )
-                }
-
-                listener?.onDataUpdated()
-            }
-        }
-
         @OptIn(DelicateLayoutApi::class)
         val branching = pagerState.value.branching
         if (branching != null) {
@@ -116,12 +96,13 @@ internal class PagerModel(
                 controllerBranching = branching,
                 viewState = environment.layoutState.layout,
                 formState = environment.layoutState.form,
-                actionsRunner = ::runStateActions
+                onBranchUpdated = ::onPagesDataUpdated,
+                actionsRunner = ::runStateActions,
             )
             wireBranchControlFlows(branchControl)
         } else {
             branchControl = null
-            _allPages.update { availablePages }
+            onPagesDataUpdated(availablePages)
         }
 
 
@@ -141,7 +122,7 @@ internal class PagerModel(
                 }
 
                 // Handle any actions defined for the current page.
-                val currentPage = it.currentPageId?.let { id -> _allPages.value.firstOrNull { it.identifier == id } } ?: return@collect
+                val currentPage = it.currentPageId?.let { id -> _allPages.firstOrNull { it.identifier == id } } ?: return@collect
                 runStateActions(currentPage.stateActions)
                 handlePageActions(currentPage.displayActions, currentPage.automatedActions)
 
@@ -167,11 +148,22 @@ internal class PagerModel(
         }
     }
 
-    private fun wireBranchControlFlows(control: PagerBranchControl) {
-        modelScope.launch {
-            control.pages.collect { updated -> _allPages.update { updated } }
+    private fun onPagesDataUpdated(updated: List<Item>) {
+        pages = updated.map { it.view }
+        // Update pager state with our page identifiers
+        pagerState.update { state ->
+            state.copy(
+                pageIds = updated.map { it.identifier },
+                durations = updated.map { it.automatedActions?.earliestNavigationAction?.delay },
+            )
         }
 
+        viewScope.launch {
+            listener?.onDataUpdated()
+        }
+    }
+
+    private fun wireBranchControlFlows(control: PagerBranchControl) {
         modelScope.launch {
             control.canGoBack.collect { value -> pagerState.update { it.copy(canGoBack = value) }}
         }
@@ -253,7 +245,7 @@ internal class PagerModel(
 
         viewScope.launch {
             pagerState.changes
-                .map { state ->  state to _allPages.value.firstOrNull { it.identifier == state.currentPageId } }
+                .map { state ->  state to _allPages.firstOrNull { it.identifier == state.currentPageId } }
                 .distinctUntilChanged()
                 .collect { (state, currentItem) ->
                     view.setAccessibilityActions(currentItem?.accessibilityActions) { action ->

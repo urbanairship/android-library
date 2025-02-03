@@ -28,15 +28,12 @@ internal class PagerBranchControl(
     private val controllerBranching: PagerControllerBranching,
     private val viewState: SharedState<State.Layout>?,
     private val formState: SharedState<State.Form>?,
+    private val onBranchUpdated: (List<PagerModel.Item>) -> Unit,
     private val actionsRunner: (List<StateAction>) -> Unit,
-    dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
+    private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.newSerialDispatcher() + SupervisorJob())
 ) {
 
-    private val scope = CoroutineScope(dispatcher + SupervisorJob())
     private val history = mutableListOf<PagerModel.Item>()
-
-    private val _pages = MutableStateFlow(listOf<PagerModel.Item>())
-    val pages = _pages.asStateFlow()
 
     private val _canGoBackState = MutableStateFlow(true)
     val canGoBack = _canGoBackState.asStateFlow()
@@ -151,7 +148,7 @@ internal class PagerBranchControl(
             history.add(availablePages.first())
         }
 
-        _pages.update { history.dropLast(1) + buildPathFrom(history.last(), payload) }
+        onBranchUpdated(history.dropLast(1) + buildPathFrom(history.last(), payload))
     }
 
     private fun buildPathFrom(page: PagerModel.Item, payload: JsonSerializable): List<PagerModel.Item> {

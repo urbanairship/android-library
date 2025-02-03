@@ -19,10 +19,9 @@ import com.urbanairship.android.layout.property.hasFormSubmit
 import com.urbanairship.android.layout.property.hasPagerNext
 import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
-import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.android.layout.widget.TappableView
-import java.lang.Integer.max
-import java.lang.Integer.min
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 internal abstract class ButtonModel<T, I: Button>(
@@ -65,6 +64,7 @@ internal abstract class ButtonModel<T, I: Button>(
                     handleViewEvent(EventHandler.Type.TAP)
                 }
 
+                delay(1L)
                 evaluateClickBehaviors(view.context ?: UAirship.getApplicationContext())
             }
         }
@@ -118,8 +118,7 @@ internal abstract class ButtonModel<T, I: Button>(
             "Pager state is required for Buttons with pager click behaviors!"
         }
 
-        @OptIn(DelicateLayoutApi::class)
-        if (pagerState.value.hasNext) {
+        if (pagerState.changes.first().hasNext) {
            pagerState.update { it.copyWithPageRequest(PageRequest.NEXT) }
         } else {
             when(fallback) {
