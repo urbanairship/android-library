@@ -20,7 +20,7 @@ public class EmailRegistrationOptionsTest {
            "properties": {
               "cool": "prop"
            }
-        }  
+        }
         """
 
         val fromJson = ThomasEmailRegistrationOptions.fromJson(JsonValue.parseString(json))
@@ -40,7 +40,7 @@ public class EmailRegistrationOptionsTest {
         {
            "type": "commercial",
            "commercial_opted_in": false
-        }  
+        }
         """
 
         val fromJson = ThomasEmailRegistrationOptions.fromJson(JsonValue.parseString(json))
@@ -60,7 +60,7 @@ public class EmailRegistrationOptionsTest {
            "properties": {
               "cool": "prop"
            }
-        }  
+        }
         """
 
         val fromJson = ThomasEmailRegistrationOptions.fromJson(JsonValue.parseString(json))
@@ -78,7 +78,7 @@ public class EmailRegistrationOptionsTest {
         val json = """
         {
            "type": "transactional"
-        }  
+        }
         """
 
         val fromJson = ThomasEmailRegistrationOptions.fromJson(JsonValue.parseString(json))
@@ -97,7 +97,7 @@ public class EmailRegistrationOptionsTest {
            "properties": {
               "cool": "prop"
            }
-        }  
+        }
         """
 
         val fromJson = ThomasEmailRegistrationOptions.fromJson(JsonValue.parseString(json))
@@ -115,7 +115,7 @@ public class EmailRegistrationOptionsTest {
         val json = """
         {
            "type": "double_opt_in"
-        }  
+        }
         """
 
         val fromJson = ThomasEmailRegistrationOptions.fromJson(JsonValue.parseString(json))
