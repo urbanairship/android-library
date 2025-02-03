@@ -13,6 +13,7 @@ import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.Accessible
+import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.info.View
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EnableBehaviorType
@@ -209,7 +210,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         environment.eventHandler.broadcast(event)
     }
 
-    protected fun registerChannels(channels: List<FormData.ChannelRegistration>) =
+    protected fun registerChannels(channels: List<ThomasChannelRegistration>) =
         environment.channelRegistrar.register(channels)
 
     protected fun updateAttributes(attributes: Map<AttributeName, AttributeValue>) =

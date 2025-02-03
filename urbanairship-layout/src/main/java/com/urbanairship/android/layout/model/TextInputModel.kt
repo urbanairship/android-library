@@ -7,8 +7,8 @@ import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.environment.inputData
-import com.urbanairship.android.layout.info.EmailRegistrationOptions
 import com.urbanairship.android.layout.info.TextInputInfo
+import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormInputType
@@ -97,7 +97,7 @@ internal class TextInputModel(
         }
     }
 
-    private fun channelRegistration(address: String?): FormData.ChannelRegistration? {
+    private fun channelRegistration(address: String?): ThomasChannelRegistration? {
         if (address.isNullOrEmpty()) {
             return null
         }
@@ -105,7 +105,7 @@ internal class TextInputModel(
         return when (viewInfo.inputType) {
             FormInputType.EMAIL -> {
                 viewInfo.emailRegistrationOptions?.let {
-                    FormData.ChannelRegistration.Email(address, it)
+                    ThomasChannelRegistration.Email(address, it)
                 }
             }
             FormInputType.NUMBER -> null

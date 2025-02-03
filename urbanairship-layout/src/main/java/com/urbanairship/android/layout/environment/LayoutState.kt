@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.environment
 
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
@@ -175,8 +176,8 @@ internal sealed class State {
             return map
         }
 
-        private fun channels(): List<FormData.ChannelRegistration> {
-            val list = mutableListOf<FormData.ChannelRegistration>()
+        private fun channels(): List<ThomasChannelRegistration> {
+            val list = mutableListOf<ThomasChannelRegistration>()
             for (d in data) {
                 val registration = d.value.channelRegistration
                 val isValid = d.value.isValid

@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.event;
 
+import com.urbanairship.android.layout.info.ThomasChannelRegistration;
 import com.urbanairship.android.layout.reporting.AttributeName;
 import com.urbanairship.android.layout.reporting.FormData;
 import com.urbanairship.android.layout.reporting.FormInfo;
@@ -233,13 +234,13 @@ public abstract class ReportingEvent {
         private final Map<AttributeName, JsonValue> attributes;
 
         @NonNull
-        private final List<FormData.ChannelRegistration> channels;
+        private final List<ThomasChannelRegistration> channels;
 
         public FormResult(
                 @NonNull FormData.BaseForm formData,
                 @NonNull FormInfo formInfo,
                 @NonNull Map<AttributeName, JsonValue> attributes,
-                @NonNull List<FormData.ChannelRegistration> channels
+                @NonNull List<ThomasChannelRegistration> channels
         ) {
             super(ReportType.FORM_RESULT);
             this.formData = formData;
@@ -274,7 +275,7 @@ public abstract class ReportingEvent {
         }
 
         @NonNull
-        public List<FormData.ChannelRegistration> getChannels() {
+        public List<ThomasChannelRegistration> getChannels() {
             return channels;
         }
     }

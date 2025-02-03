@@ -517,9 +517,9 @@ internal class TextInputInfo(
     }
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
 
-    val emailRegistrationOptions: EmailRegistrationOptions? = json.get("email_registration")?.let {
+    val emailRegistrationOptions: ThomasEmailRegistrationOptions? = json.get("email_registration")?.let {
         if (inputType == FormInputType.EMAIL) {
-            EmailRegistrationOptions.fromJson(it)
+            ThomasEmailRegistrationOptions.fromJson(it)
         } else {
             null
         }

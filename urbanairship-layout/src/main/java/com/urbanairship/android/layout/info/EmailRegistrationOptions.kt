@@ -2,48 +2,54 @@
 
 package com.urbanairship.android.layout.info
 
-import com.urbanairship.android.layout.info.EmailRegistrationOptions.Type.COMMERCIAL
-import com.urbanairship.android.layout.info.EmailRegistrationOptions.Type.DOUBLE_OPT_IN
-import com.urbanairship.android.layout.info.EmailRegistrationOptions.Type.TRANSACTIONAL
+import com.urbanairship.android.layout.info.ThomasEmailRegistrationOptions.Type.COMMERCIAL
+import com.urbanairship.android.layout.info.ThomasEmailRegistrationOptions.Type.DOUBLE_OPT_IN
+import com.urbanairship.android.layout.info.ThomasEmailRegistrationOptions.Type.TRANSACTIONAL
+import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 
-public sealed class EmailRegistrationOptions {
+public sealed class ThomasChannelRegistration {
+    public data class Email(val address: String, val options: ThomasEmailRegistrationOptions): ThomasChannelRegistration()
+}
+
+public sealed class ThomasEmailRegistrationOptions {
     public enum class Type {
         DOUBLE_OPT_IN,
         COMMERCIAL,
-        TRANSACTIONAL;
-
-        public companion object {
-            public fun fromString(value: String): Type? = when (value.lowercase()) {
-                "double_opt_in" -> DOUBLE_OPT_IN
-                "commercial" -> COMMERCIAL
-                "transactional" -> TRANSACTIONAL
-                else -> null
-            }
-        }
+        TRANSACTIONAL
     }
 
     public abstract val type: Type
 
-    public data class Commercial(public val properties: JsonValue?, public val optedIn: Boolean) : EmailRegistrationOptions() {
+    public data class Commercial(public val properties: JsonMap?, public val optedIn: Boolean) : ThomasEmailRegistrationOptions() {
         override val type: Type = COMMERCIAL
     }
 
-    public data class Transactional(public val properties: JsonValue?) : EmailRegistrationOptions() {
+    public data class Transactional(public val properties: JsonMap?) : ThomasEmailRegistrationOptions() {
         override val type: Type = TRANSACTIONAL
     }
 
-    public data class DoubleOptIn(public val properties: JsonValue?): EmailRegistrationOptions() {
+    public data class DoubleOptIn(public val properties: JsonMap?): ThomasEmailRegistrationOptions() {
         override val type: Type = DOUBLE_OPT_IN
     }
 
     public companion object {
-        public fun fromJson(value: JsonValue): EmailRegistrationOptions {
+
+        private  fun parseType(value: String): Type = when (value.lowercase()) {
+            "double_opt_in" -> DOUBLE_OPT_IN
+            "commercial" -> COMMERCIAL
+            "transactional" -> TRANSACTIONAL
+            else -> throw JsonException("Invalid email registration type: $value")
+        }
+
+        public fun fromJson(value: JsonValue): ThomasEmailRegistrationOptions {
             val map = value.requireMap()
 
-            val type = requireNotNull(Type.fromString(map.requireField("type")))
-            val properties = map.opt("properties")
+            val type = parseType(map.requireField("type"))
+            val properties: JsonMap? = map.optionalField("properties")
 
             when(type) {
                 DOUBLE_OPT_IN -> {
