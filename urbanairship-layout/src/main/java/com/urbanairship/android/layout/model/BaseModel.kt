@@ -22,6 +22,7 @@ import com.urbanairship.android.layout.property.hasFormBehaviors
 import com.urbanairship.android.layout.property.hasPagerBehaviors
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
+import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.resolveContentDescription
@@ -207,6 +208,9 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     protected fun broadcast(event: LayoutEvent) = modelScope.launch {
         environment.eventHandler.broadcast(event)
     }
+
+    protected fun registerChannels(channels: List<FormData.ChannelRegistration>) =
+        environment.channelRegistrar.register(channels)
 
     protected fun updateAttributes(attributes: Map<AttributeName, AttributeValue>) =
         environment.attributeHandler.update(attributes)

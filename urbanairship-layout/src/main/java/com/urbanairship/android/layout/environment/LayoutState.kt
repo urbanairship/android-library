@@ -149,7 +149,7 @@ internal sealed class State {
         }
 
         fun formResult(): ReportingEvent.FormResult =
-            ReportingEvent.FormResult(formData(), reportingContext(), attributes())
+            ReportingEvent.FormResult(formData(), reportingContext(), attributes(), channels())
 
         fun reportingContext(): FormInfo =
             FormInfo(identifier, formType.value, formResponseType, isSubmitted)
@@ -167,11 +167,24 @@ internal sealed class State {
             for (d in data) {
                 val attributeName = d.value.attributeName
                 val attributeValue = d.value.attributeValue
-                if (attributeName != null && attributeValue != null) {
+                val isValid = d.value.isValid
+                if (attributeName != null && attributeValue != null && isValid) {
                     map[attributeName] = attributeValue
                 }
             }
             return map
+        }
+
+        private fun channels(): List<FormData.ChannelRegistration> {
+            val list = mutableListOf<FormData.ChannelRegistration>()
+            for (d in data) {
+                val registration = d.value.channelRegistration
+                val isValid = d.value.isValid
+                if (registration != null && isValid) {
+                    list.add(registration)
+                }
+            }
+            return list
         }
     }
 

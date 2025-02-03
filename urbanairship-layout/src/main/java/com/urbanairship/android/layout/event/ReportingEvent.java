@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
 import com.urbanairship.json.JsonValue;
 
+import java.util.List;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
@@ -231,11 +232,20 @@ public abstract class ReportingEvent {
         @NonNull
         private final Map<AttributeName, JsonValue> attributes;
 
-        public FormResult(@NonNull FormData.BaseForm formData, @NonNull FormInfo formInfo, @NonNull Map<AttributeName, JsonValue> attributes) {
+        @NonNull
+        private final List<FormData.ChannelRegistration> channels;
+
+        public FormResult(
+                @NonNull FormData.BaseForm formData,
+                @NonNull FormInfo formInfo,
+                @NonNull Map<AttributeName, JsonValue> attributes,
+                @NonNull List<FormData.ChannelRegistration> channels
+        ) {
             super(ReportType.FORM_RESULT);
             this.formData = formData;
             this.formInfo = formInfo;
             this.attributes = attributes;
+            this.channels = channels;
         }
 
         @NonNull
@@ -254,6 +264,7 @@ public abstract class ReportingEvent {
                     "formData=" + formData +
                     ", formInfo=" + formInfo +
                     ", attributes=" + attributes +
+                    ", channels=" + channels +
                     '}';
         }
 
@@ -262,6 +273,10 @@ public abstract class ReportingEvent {
             return attributes;
         }
 
+        @NonNull
+        public List<FormData.ChannelRegistration> getChannels() {
+            return channels;
+        }
     }
 
     public static class FormDisplay extends ReportingEvent {

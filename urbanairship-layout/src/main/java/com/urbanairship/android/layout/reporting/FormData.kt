@@ -1,10 +1,9 @@
 package com.urbanairship.android.layout.reporting
 
-import android.view.textservice.TextInfo
-import androidx.annotation.RestrictTo
-import com.urbanairship.android.layout.info.TextInputInfo
+import com.urbanairship.android.layout.info.EmailRegistrationOptions
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.FormInputType
+import com.urbanairship.channel.ChannelRegistrationPayload
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -13,11 +12,17 @@ import com.urbanairship.json.jsonMapOf
 public sealed class FormData<T>(
     internal val type: Type,
 ) {
+
+    public sealed class ChannelRegistration {
+        public data class Email(val address: String, val options: EmailRegistrationOptions): ChannelRegistration()
+    }
+
     public abstract val identifier: String
     public abstract val value: T?
     public abstract val isValid: Boolean
     public abstract val attributeName: AttributeName?
     public abstract val attributeValue: AttributeValue?
+    public abstract val channelRegistration: ChannelRegistration?
 
     public enum class Type(private val value: String) : JsonSerializable {
         FORM("form"),
@@ -49,6 +54,7 @@ public sealed class FormData<T>(
         override val isValid: Boolean,
         override val attributeName: AttributeName? = null,
         override val attributeValue: AttributeValue? = null,
+        override val channelRegistration: ChannelRegistration? = null
     ) : FormData<Boolean>(Type.TOGGLE)
 
     public data class CheckboxController(
@@ -57,6 +63,7 @@ public sealed class FormData<T>(
         override val isValid: Boolean,
         override val attributeName: AttributeName? = null,
         override val attributeValue: AttributeValue? = null,
+        override val channelRegistration: ChannelRegistration? = null
     ) : FormData<Set<JsonValue>>(Type.MULTIPLE_CHOICE)
 
     public data class RadioInputController(
@@ -65,17 +72,10 @@ public sealed class FormData<T>(
         override val isValid: Boolean,
         override val attributeName: AttributeName? = null,
         override val attributeValue: AttributeValue? = null,
+        override val channelRegistration: ChannelRegistration? = null
     ) : FormData<JsonValue>(
         Type.SINGLE_CHOICE,
     )
-
-    public data class EmailInput(
-        override val identifier: String,
-        override val value: String?,
-        override val isValid: Boolean,
-        override val attributeName: AttributeName? = null,
-        override val attributeValue: AttributeValue? = null,
-    ) : FormData<String>(Type.EMAIL)
 
     public data class TextInput(
         val textInput: FormInputType,
@@ -84,6 +84,7 @@ public sealed class FormData<T>(
         override val isValid: Boolean,
         override val attributeName: AttributeName? = null,
         override val attributeValue: AttributeValue? = null,
+        override val channelRegistration: ChannelRegistration? = null
     ) : FormData<String>(if (textInput == FormInputType.EMAIL) Type.EMAIL else Type.TEXT)
 
     public data class Score(
@@ -92,6 +93,7 @@ public sealed class FormData<T>(
         override val isValid: Boolean,
         override val attributeName: AttributeName? = null,
         override val attributeValue: AttributeValue? = null,
+        override val channelRegistration: ChannelRegistration? = null
     ) : FormData<Int>(Type.SCORE)
 
     public sealed class BaseForm(
@@ -101,6 +103,7 @@ public sealed class FormData<T>(
         override val isValid: Boolean = value.all { it.isValid },
         override val attributeName: AttributeName? = null,
         override val attributeValue: AttributeValue? = null,
+        override val channelRegistration: ChannelRegistration? = null
     ) : FormData<Set<FormData<*>>>(type), JsonSerializable {
         protected abstract val responseType: String?
 

@@ -3,11 +3,15 @@ package com.urbanairship.android.layout.environment
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.info.EmailRegistrationOptions
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.DisplayTimer
+import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.channel.AttributeEditor
+import com.urbanairship.util.Clock
+import java.util.Date
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,6 +32,8 @@ internal class ModelEnvironment(
     val displayTimer: DisplayTimer,
     val modelScope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob()),
     val attributeHandler: AttributeHandler = AttributeHandler(),
+    val channelRegistrar: ChannelRegistrar = ChannelRegistrar(),
+
     val eventHandler: LayoutEventHandler = LayoutEventHandler(modelScope),
 ) {
     val layoutEvents: Flow<LayoutEvent> = eventHandler.layoutEvents
@@ -74,6 +80,49 @@ internal sealed class LayoutEvent {
     ) : LayoutEvent()
 
     object Finish : LayoutEvent()
+}
+
+internal class ChannelRegistrar(
+    private val clock: Clock = Clock.DEFAULT_CLOCK
+) {
+    fun register(channels: List<FormData.ChannelRegistration>) {
+        channels.forEach { channelRegistration ->
+            when(channelRegistration) {
+                is FormData.ChannelRegistration.Email -> {
+                    registerEmail(channelRegistration)
+                }
+            }
+        }
+    }
+
+    private fun registerEmail(channelRegistration: FormData.ChannelRegistration.Email) {
+        val now = Date(clock.currentTimeMillis())
+
+        val options = when(channelRegistration.options) {
+            is EmailRegistrationOptions.Commercial -> {
+                com.urbanairship.contacts.EmailRegistrationOptions.commercialOptions(
+                    transactionalOptedIn = now,
+                    commercialOptedIn = if (channelRegistration.options.optedIn) { now } else { null },
+                    properties = channelRegistration.options.properties?.map
+                )
+            }
+            is EmailRegistrationOptions.DoubleOptIn -> {
+                com.urbanairship.contacts.EmailRegistrationOptions.options(
+                    properties = channelRegistration.options.properties?.map,
+                    doubleOptIn = true
+                )
+            }
+            is EmailRegistrationOptions.Transactional -> {
+                com.urbanairship.contacts.EmailRegistrationOptions.options(
+                    transactionalOptedIn = now,
+                    properties = channelRegistration.options.properties?.map,
+                    doubleOptIn = false
+                )
+            }
+        }
+
+        UAirship.shared().contact.registerEmail(channelRegistration.address, options)
+    }
 }
 
 internal class AttributeHandler(
