@@ -10,6 +10,7 @@ import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -124,13 +125,13 @@ internal class PagerBranchControl(
         }
     }
 
+    @OptIn(DelicateLayoutApi::class)
     private fun generatePayload(): JsonSerializable? {
         val viewState = viewState?.value?.state ?: return null
-//        val formState = formState?.value?.data?.values?.firstOrNull() ?: return null
-        val formState = formState?.value?.data?.values?.firstOrNull() ?: FormData.Form(
+        val formState = FormData.Form(
             identifier = "current",
             responseType = null,
-            children = emptySet()
+            children = formState?.value?.data?.values?.toSet() ?: emptySet()
         )
 
         return viewState

@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 
 internal class PagerModel(
     viewInfo: PagerInfo,
-    private val availablePages: List<Item>,
+    availablePages: List<Item>,
     private val pagerState: SharedState<State.Pager>,
     environment: ModelEnvironment,
     properties: ModelProperties
