@@ -39,7 +39,7 @@ internal class ButtonLayoutModel(
 
     override fun onCreateView(
         context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?
-    ) = ButtonLayoutView(context, this, viewEnvironment).apply {
+    ) = ButtonLayoutView(context, this, viewEnvironment, itemProperties).apply {
         id = viewId
     }
 }
