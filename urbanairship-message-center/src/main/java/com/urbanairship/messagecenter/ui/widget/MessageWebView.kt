@@ -23,8 +23,12 @@ import java.util.Locale
 import java.util.TimeZone
 import kotlinx.coroutines.runBlocking
 
-/** Base WebView configured for Airship Message Center content. */
-internal class MessageWebView @JvmOverloads constructor(
+/**
+ * Base WebView configured for Airship Message Center content.
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public open class MessageWebView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0,
@@ -36,7 +40,7 @@ internal class MessageWebView @JvmOverloads constructor(
      *
      * @param message The message that will be displayed.
      */
-    fun loadMessage(message: Message) {
+    public open fun loadMessage(message: Message) {
         UALog.v { "Loading message: ${message.id}" }
         val user = MessageCenter.shared().user
 
@@ -54,8 +58,12 @@ internal class MessageWebView @JvmOverloads constructor(
     }
 }
 
-/** A `WebViewClient` that enables the Airship Native Bridge for Message Center. */
-internal open class MessageWebViewClient : AirshipWebViewClient() {
+/**
+ * A `WebViewClient` that enables the Airship Native Bridge for Message Center.
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public open class MessageWebViewClient : AirshipWebViewClient() {
 
     /**
      * @hide

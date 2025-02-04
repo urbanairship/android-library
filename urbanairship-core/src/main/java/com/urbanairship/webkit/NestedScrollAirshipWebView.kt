@@ -28,10 +28,13 @@ import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
 import android.view.MotionEvent.ACTION_UP
 import androidx.annotation.CallSuper
+import androidx.annotation.RestrictTo
 import androidx.core.view.NestedScrollingChild
 import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat
 
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public open class NestedScrollAirshipWebView @JvmOverloads public constructor(
     context: Context,
     attrs: AttributeSet? = null,
