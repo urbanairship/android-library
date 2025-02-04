@@ -20,6 +20,7 @@ import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel.Item
+import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Margin
@@ -70,7 +71,7 @@ internal class ContainerLayoutView(
     }
 
     private fun addItem(constraintBuilder: ConstraintSetBuilder, item: Item) {
-        val itemView = item.model.createView(context, viewEnvironment, null)
+        val itemView = item.model.createView(context, viewEnvironment, ItemProperties(item.info.size))
 
         val frameId = View.generateViewId()
         val frame: ViewGroup = FrameLayout(context).apply {

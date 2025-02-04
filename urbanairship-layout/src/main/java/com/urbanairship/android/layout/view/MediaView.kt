@@ -17,7 +17,6 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.core.view.doOnAttach
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
@@ -25,8 +24,6 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.MediaModel
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
@@ -40,7 +37,6 @@ import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
-import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.widget.CropImageView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.android.layout.widget.TouchAwareWebView
@@ -64,7 +60,7 @@ internal class MediaView(
     context: Context,
     model: MediaModel,
     private val viewEnvironment: ViewEnvironment,
-    private val itemProperties: ItemProperties?
+    private val itemProperties: ItemProperties?,
 ) : FrameLayout(context, null), BaseView, TappableView {
 
     private val activityListener = object : SimpleActivityListener() {
@@ -242,7 +238,7 @@ internal class MediaView(
 
     private fun calculateFallbackSize(dimension: Dimension?, maxSize: Int): Int {
         return when (dimension?.type) {
-            Size.DimensionType.AUTO ->  0
+            Size.DimensionType.AUTO ->  maxSize
             Size.DimensionType.PERCENT -> (dimension.float * maxSize).toInt()
             Size.DimensionType.ABSOLUTE -> dpToPx(context, dimension.int).toInt()
             null -> maxSize
