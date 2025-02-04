@@ -108,22 +108,37 @@ public open class MessageFragment @JvmOverloads constructor(
             }
         }
 
-        messageId?.let { viewModel.loadMessage(it) } ?: UALog.i {
-            "MessageFragment started without a message ID. " +
-                    "Call loadMessage(messageId) to load a message."
+        if (savedInstanceState == null) {
+            messageId?.let { viewModel.loadMessage(it) } ?: UALog.i {
+                "MessageFragment started without a message ID. " + "Call loadMessage(messageId) to load a message."
+            }
         }
     }
 
     override fun onResume() {
         super.onResume()
+        messageView?.resumeWebView()
 
         refreshSubscription = viewModel.subscribeForMessageUpdates()
     }
 
     override fun onPause() {
         super.onPause()
+        messageView?.pauseWebView()
 
         refreshSubscription?.cancel()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        messageView?.saveWebViewState(outState)
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        savedInstanceState?.let { inState ->
+            messageView?.restoreWebViewState(inState)
+        }
     }
 
     /** Loads the message with the given [messageId]. */

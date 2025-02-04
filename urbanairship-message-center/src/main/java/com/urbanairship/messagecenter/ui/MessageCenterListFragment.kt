@@ -73,6 +73,8 @@ public open class MessageCenterListFragment @JvmOverloads constructor(
 
         // Listen for touch exploration changes
         a11yManager.addTouchExplorationStateChangeListener(::updateTouchExplorationEnabled)
+
+        updateTouchExplorationEnabled()
     }
 
     override fun onStop() {

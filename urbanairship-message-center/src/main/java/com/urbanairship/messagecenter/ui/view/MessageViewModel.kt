@@ -75,11 +75,12 @@ public class MessageViewModel(
 
     /** Loads the message with the given [messageId]. */
     public fun loadMessage(messageId: String) {
-        UALog.v { "Loading message: $messageId" }
-
         if (messageId == currentMessage?.id) {
+            UALog.v { "Message already loaded: $messageId" }
             return
         }
+
+        UALog.v { "Loading message: $messageId" }
 
         _states.value = MessageViewState.Loading
 
