@@ -30,7 +30,6 @@ internal class ThomasChannelRegistrar(
         val options = when(channelRegistration.options) {
             is ThomasEmailRegistrationOptions.Commercial -> {
                 com.urbanairship.contacts.EmailRegistrationOptions.commercialOptions(
-                    transactionalOptedIn = now,
                     commercialOptedIn = if (channelRegistration.options.optedIn) { now } else { null },
                     properties = channelRegistration.options.properties
                 )
@@ -43,7 +42,6 @@ internal class ThomasChannelRegistrar(
             }
             is ThomasEmailRegistrationOptions.Transactional -> {
                 com.urbanairship.contacts.EmailRegistrationOptions.options(
-                    transactionalOptedIn = now,
                     properties = channelRegistration.options.properties,
                     doubleOptIn = false
                 )
