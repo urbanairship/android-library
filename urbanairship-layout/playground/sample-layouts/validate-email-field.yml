@@ -154,6 +154,8 @@ view:
                           hex: "#a8323a"
                           alpha: 1
                     input_type: email
+                    email_registration:
+                        type: double_opt_in
                     required: true
                     on_error:
                       state_actions:

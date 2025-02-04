@@ -13,9 +13,12 @@ import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasActionRunner
+import com.urbanairship.android.layout.environment.ThomasChannelRegistrar
 import com.urbanairship.android.layout.environment.inputData
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormControllerInfo
+import com.urbanairship.android.layout.info.ThomasChannelRegistration
+import com.urbanairship.android.layout.info.ThomasEmailRegistrationOptions
 import com.urbanairship.android.layout.property.FormBehaviorType
 import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.ViewType
@@ -58,6 +61,9 @@ public class FormControllerTest {
     private val mockAttributeHandler: AttributeHandler = mockk {
         every { update(any()) } returns Unit
     }
+    private val mockChannelRegistrar: ThomasChannelRegistrar = mockk {
+        every { register(any()) } returns Unit
+    }
     private val mockDisplayTimer: DisplayTimer = mockk {
         every { time } returns System.currentTimeMillis()
     }
@@ -71,6 +77,7 @@ public class FormControllerTest {
         every { eventHandler } returns testEventHandler
         every { layoutEvents } returns testEventHandler.layoutEvents
         every { modelScope } returns testScope
+        every { channelRegistrar } returns mockChannelRegistrar
     }
 
     private val mockView: AnyModel = mockk(relaxed = true)
@@ -168,7 +175,8 @@ public class FormControllerTest {
                         value = TEXT_INPUT_VALUE,
                         isValid = true,
                         attributeName = ATTR_NAME,
-                        attributeValue = ATTR_VALUE
+                        attributeValue = ATTR_VALUE,
+                        channelRegistration = CHANNEL_REGISTRATION,
                     )
                 )
             }
@@ -185,11 +193,14 @@ public class FormControllerTest {
             // Verify submit logic was called
             coVerify { event.onSubmitted }
             coVerify { mockAttributeHandler.update(eq(ATTRIBUTES)) }
+            coVerify { mockChannelRegistrar.register(eq(listOf(CHANNEL_REGISTRATION))) }
+
             coVerify { mockReporter.report(any<ReportingEvent.FormResult>(), any()) }
 
             ensureAllEventsConsumed()
         }
     }
+
 
     @Test
     public fun testChildFormInit(): TestResult = runTest {
@@ -364,6 +375,11 @@ public class FormControllerTest {
         private val ATTR_NAME = AttributeName(CHANNEL_ID, null)
         private val ATTR_VALUE = jsonMapOf("foo" to "bar").toJsonValue()
         private val ATTRIBUTES = mapOf(ATTR_NAME to ATTR_VALUE)
+        private val CHANNEL_REGISTRATION = ThomasChannelRegistration.Email(
+            "some@email.com",
+            ThomasEmailRegistrationOptions.DoubleOptIn(null)
+        )
+
 
         private val DEFAULT_PROPERTIES = ModelProperties(pagerPageId = null)
     }
