@@ -159,7 +159,7 @@ class IncomingPushRunnable implements Runnable {
                 return;
             }
 
-            Predicate<PushMessage> displayForegroundPredicate = airship.getPushManager().getForegroundNotificationDisplayPredicate();
+            Predicate<PushMessage> displayForegroundPredicate = airship.getPushManager().getForegroundDisplayPredicate();
             if (displayForegroundPredicate != null && !displayForegroundPredicate.apply(message)) {
                 UALog.i("Foreground notification display predicate prevented the display of message: %s", message);
                 postProcessPushFinished(airship, message, false);
@@ -253,7 +253,7 @@ class IncomingPushRunnable implements Runnable {
     @Nullable
     private NotificationProvider getNotificationProvider(UAirship airship) {
         if (message.isAirshipPush()) {
-            return airship.getPushManager().getNotificationProvider();
+            return airship.getPushManager().notificationProvider;
         }
 
         return null;
@@ -291,8 +291,7 @@ class IncomingPushRunnable implements Runnable {
         }
 
         if (channelId != null) {
-            return airship.getPushManager()
-                          .getNotificationChannelRegistry()
+            return airship.getPushManager().notificationChannelRegistry
                           .getNotificationChannelSync(channelId);
         } else {
             return null;

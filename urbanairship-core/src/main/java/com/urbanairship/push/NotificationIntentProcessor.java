@@ -120,7 +120,7 @@ class NotificationIntentProcessor {
             airship.getAnalytics().setConversionMetadata(notificationInfo.getMessage().getMetadata());
         }
 
-        NotificationListener listener = airship.getPushManager().getNotificationListener();
+        NotificationListener listener = airship.getPushManager().notificationListener;
 
         if (actionButtonInfo != null) {
             // Add the interactive notification event
@@ -167,7 +167,7 @@ class NotificationIntentProcessor {
             }
         }
 
-        NotificationListener listener = airship.getPushManager().getNotificationListener();
+        NotificationListener listener = airship.getPushManager().notificationListener;
         if (listener != null) {
             listener.onNotificationDismissed(notificationInfo);
         }

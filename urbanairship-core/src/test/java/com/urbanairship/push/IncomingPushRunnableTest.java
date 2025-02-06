@@ -98,12 +98,12 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isPushAvailable()).thenReturn(true);
 
         mockChannelRegistry = mock(NotificationChannelRegistry.class);
-        when(pushManager.getNotificationChannelRegistry()).thenReturn(mockChannelRegistry);
+        when(pushManager.notificationChannelRegistry).thenReturn(mockChannelRegistry);
 
         notificationProvider = new TestNotificationProvider();
         accengageNotificationProvider = new TestNotificationProvider();
 
-        when(pushManager.getNotificationProvider()).thenAnswer(new Answer<Object>() {
+        when(pushManager.notificationProvider).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) {
                 return notificationProvider;
@@ -292,7 +292,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
-        when(pushManager.getForegroundNotificationDisplayPredicate()).thenReturn(new Predicate<PushMessage>() {
+        when(pushManager.getForegroundDisplayPredicate()).thenReturn(new Predicate<PushMessage>() {
             @Override
             public boolean apply(PushMessage object) {
                 return false;

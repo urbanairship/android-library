@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-internal class PushNotificationStatusObserver @JvmOverloads constructor(
+public class PushNotificationStatusObserver @JvmOverloads constructor(
     initialValue: PushNotificationStatus,
     listenerDispatcher: CoroutineDispatcher = Dispatchers.Main
 ) {
@@ -19,9 +19,9 @@ internal class PushNotificationStatusObserver @JvmOverloads constructor(
     private val listenerScope = CoroutineScope(listenerDispatcher + SupervisorJob())
 
     private val _pushNotificationStatusFlow: MutableStateFlow<PushNotificationStatus> = MutableStateFlow(initialValue)
-    val pushNotificationStatusFlow: StateFlow<PushNotificationStatus> = _pushNotificationStatusFlow
+    public val pushNotificationStatusFlow: StateFlow<PushNotificationStatus> = _pushNotificationStatusFlow
 
-    val changeListeners: MutableList<PushNotificationStatusListener> = CopyOnWriteArrayList()
+    public val changeListeners: MutableList<PushNotificationStatusListener> = CopyOnWriteArrayList()
 
     // Used to skip the initial value for listeners
     private var initialStateSkipped = false
@@ -37,7 +37,7 @@ internal class PushNotificationStatusObserver @JvmOverloads constructor(
         }
     }
 
-    fun update(status: PushNotificationStatus) {
+    public fun update(status: PushNotificationStatus) {
         _pushNotificationStatusFlow.tryEmit(status)
     }
 }

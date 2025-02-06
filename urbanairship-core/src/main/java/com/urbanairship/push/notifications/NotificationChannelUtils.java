@@ -39,7 +39,7 @@ public class NotificationChannelUtils {
             return channelId;
         }
 
-        if (UAirship.shared().getPushManager().getNotificationChannelRegistry().getNotificationChannelSync(channelId) == null) {
+        if (UAirship.shared().getPushManager().notificationChannelRegistry.getNotificationChannelSync(channelId) == null) {
             UALog.e("Notification channel %s does not exist. Falling back to %s", channelId, defaultChannel);
             return defaultChannel;
         }

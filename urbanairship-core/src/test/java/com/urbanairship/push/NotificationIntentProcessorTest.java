@@ -60,7 +60,7 @@ public class NotificationIntentProcessorTest extends BaseTestCase {
         notificationListener = mock(NotificationListener.class);
 
         PushManager pushManager = mock(PushManager.class);
-        when(pushManager.getNotificationListener()).thenReturn(notificationListener);
+        when(pushManager.notificationListener).thenReturn(notificationListener);
 
         TestApplication.getApplication().setAnalytics(analytics);
         TestApplication.getApplication().setPushManager(pushManager);
