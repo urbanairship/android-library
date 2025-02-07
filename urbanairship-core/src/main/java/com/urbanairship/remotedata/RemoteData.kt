@@ -337,10 +337,16 @@ public class RemoteData @VisibleForTesting internal constructor(
     }
 
     public fun status(source: RemoteDataSource): Status {
-        return providers
+        return statusFlow(source)?.value ?: Status.OUT_OF_DATE
+    }
+
+    public fun statusFlow(source: RemoteDataSource): StateFlow<Status>? {
+        val provider = providers
             .firstOrNull { it.source == source }
-            ?.status(changeToken, localeManager.locale, randomValue)
-            ?: Status.OUT_OF_DATE
+            ?: return null
+
+        provider.status(changeToken, localeManager.locale, randomValue)
+        return provider.statusUpdates
     }
 
     /**

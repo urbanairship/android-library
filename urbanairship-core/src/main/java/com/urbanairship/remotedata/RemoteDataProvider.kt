@@ -18,6 +18,10 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 
 internal abstract class RemoteDataProvider(
@@ -38,6 +42,9 @@ internal abstract class RemoteDataProvider(
     set(value) {
         preferenceDataStore.put(enabledKey, value)
     }
+
+    private val _statusUpdates = MutableStateFlow(RemoteData.Status.OUT_OF_DATE)
+    public val statusUpdates: StateFlow<RemoteData.Status> = _statusUpdates.asStateFlow()
 
     private var lastRefreshState: LastRefreshState?
         get() {
@@ -99,14 +106,15 @@ internal abstract class RemoteDataProvider(
 
         val refreshState = this.lastRefreshState
 
-        val shouldRefresh = this.status(
+        val currentState = this.status(
             refreshState = refreshState,
             changeToken = changeToken,
             locale = locale,
             randomValue = randomValue
-        ) != RemoteData.Status.UP_TO_DATE
+        )
+        notifyNewStatus(currentState)
 
-        if (!shouldRefresh) {
+        if (currentState == RemoteData.Status.UP_TO_DATE) {
             return RefreshResult.SKIPPED
         }
 
@@ -159,7 +167,13 @@ internal abstract class RemoteDataProvider(
     ): RequestResult<RemoteDataApiClient.Result>
 
     fun status(token: String, locale: Locale, randomValue: Int): RemoteData.Status {
-        return status(lastRefreshState, token, locale, randomValue)
+        val result = status(lastRefreshState, token, locale, randomValue)
+        notifyNewStatus(result)
+        return result
+    }
+
+    private fun notifyNewStatus(state: RemoteData.Status) {
+        _statusUpdates.update { state }
     }
 
     private fun status(
