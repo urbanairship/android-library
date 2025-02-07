@@ -2,6 +2,13 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.7.0 February 6, 2025
+Minor release that updates AndroidX libraries. A `compileSdk` of 35+ is required.
+
+### Changes
+- Updated several AndroidX dependencies
+- Updated to Kotlin 2.x
+
 ## Version 18.6.0 December 19, 2024
 Minor release that updates how Feature Flags are resolved, improves Scene rendering on Android 15,
 and fixes potential exceptions related to PermissionsManager and PermissionDelegates.

@@ -20,6 +20,7 @@ buildscript {
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    alias(libs.plugins.compose.compiler)
 }
 
 group = "com.urbanairship.android"
@@ -53,10 +54,6 @@ android {
     buildFeatures {
         viewBinding true
         compose true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     compileOptions {

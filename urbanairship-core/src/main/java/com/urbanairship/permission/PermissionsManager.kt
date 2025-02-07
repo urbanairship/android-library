@@ -154,7 +154,7 @@ public class PermissionsManager internal constructor(
         callback: Consumer<PermissionStatus>
     ) {
         checkPermissionStatus(permission).addResultCallback {
-            callback.accept(it)
+            callback.accept(it ?: PermissionStatus.NOT_DETERMINED)
         }
     }
 
@@ -164,8 +164,8 @@ public class PermissionsManager internal constructor(
      * @param permission The permission.
      * @return A pending result.
      */
-    public fun checkPermissionStatus(permission: Permission): PendingResult<PermissionStatus?> {
-        val pendingResult = PendingResult<PermissionStatus?>()
+    public fun checkPermissionStatus(permission: Permission): PendingResult<PermissionStatus> {
+        val pendingResult = PendingResult<PermissionStatus>()
         permissionsScope.launch {
             pendingResult.result = suspendingCheckPermissionStatus(permission)
         }

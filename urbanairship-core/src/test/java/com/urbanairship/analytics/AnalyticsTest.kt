@@ -556,11 +556,11 @@ public class AnalyticsTest {
         every { mockChannel.id } returns "channel"
 
         every { mockPermissionsManager.configuredPermissions } returns setOf(Permission.LOCATION, Permission.DISPLAY_NOTIFICATIONS)
-        every { mockPermissionsManager.checkPermissionStatus(Permission.LOCATION) } returns PendingResult<PermissionStatus?>().apply {
+        every { mockPermissionsManager.checkPermissionStatus(Permission.LOCATION) } returns PendingResult<PermissionStatus>().apply {
             this.result = PermissionStatus.NOT_DETERMINED
         }
 
-        every { mockPermissionsManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) } returns PendingResult<PermissionStatus?>().apply {
+        every { mockPermissionsManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) } returns PendingResult<PermissionStatus>().apply {
             this.result = PermissionStatus.GRANTED
         }
 
