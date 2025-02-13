@@ -98,12 +98,12 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isPushAvailable()).thenReturn(true);
 
         mockChannelRegistry = mock(NotificationChannelRegistry.class);
-        when(pushManager.notificationChannelRegistry).thenReturn(mockChannelRegistry);
+        when(pushManager.getNotificationChannelRegistry()).thenReturn(mockChannelRegistry);
 
         notificationProvider = new TestNotificationProvider();
         accengageNotificationProvider = new TestNotificationProvider();
 
-        when(pushManager.notificationProvider).thenAnswer(new Answer<Object>() {
+        when(pushManager.getNotificationProvider()).thenAnswer(new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) {
                 return notificationProvider;

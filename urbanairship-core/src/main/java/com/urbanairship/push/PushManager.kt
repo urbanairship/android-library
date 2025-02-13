@@ -17,10 +17,6 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.R
-import com.urbanairship.UALog.d
-import com.urbanairship.UALog.e
-import com.urbanairship.UALog.i
-import com.urbanairship.UALog.w
 import com.urbanairship.UAirship
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.Analytics.AnalyticsHeaderDelegate
@@ -91,25 +87,10 @@ public open class PushManager @VisibleForTesting internal constructor(
      *
      * @see com.urbanairship.push.notifications.CustomLayoutNotificationProvider
      */
-    @JvmField
     public var notificationProvider: NotificationProvider? =
         AirshipNotificationProvider(context, config.configOptions)
     private val actionGroupMap: MutableMap<String, NotificationActionButtonGroup> = HashMap()
-
-    /**
-     * Returns the shared notification channel registry.
-     *
-     * @return The NotificationChannelRegistry
-     */
-    @JvmField
-    public val notificationChannelRegistry: NotificationChannelRegistry
-
-    /**
-     * Sets the notification listener.
-     *
-     * @param notificationListener The listener.
-     */
-    @JvmField
+    public var notificationChannelRegistry: NotificationChannelRegistry
     public var notificationListener: NotificationListener? = null
     private val pushTokenListeners: MutableList<PushTokenListener> = CopyOnWriteArrayList()
     private val pushListeners: MutableList<PushListener> = CopyOnWriteArrayList()
@@ -269,7 +250,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
     private fun shouldRequestNotificationPermission(): Boolean {
         return privacyManager.isEnabled(PrivacyManager.Feature.PUSH) &&
-                activityMonitor.isAppForegrounded && isAirshipReady && getUserNotificationsEnabled()
+                activityMonitor.isAppForegrounded && isAirshipReady && userNotificationsEnabled
                 && preferenceDataStore.getBoolean(
             REQUEST_PERMISSION_KEY, true
         ) && config.configOptions.isPromptForPermissionOnUserNotificationsEnabled
@@ -356,11 +337,11 @@ public open class PushManager @VisibleForTesting internal constructor(
                     return builder
                 }
 
-                if (getPushToken() == null) {
+                if (pushToken == null) {
                     performPushRegistration(false)
                 }
 
-                val pushToken: String? = getPushToken()
+                val pushToken: String? = pushToken
                 builder.setPushAddress(pushToken)
                 val provider: PushProvider? = pushProvider
 
@@ -440,6 +421,28 @@ public open class PushManager @VisibleForTesting internal constructor(
         get() = privacyManager.isEnabled(PrivacyManager.Feature.PUSH)
 
     /**
+     * Enables user notifications on Airship and tries to prompt for the notification permission.
+     *
+     * @note This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
+     *
+     * @param consumer A consumer that will be passed the success of the permission prompt.
+     */
+    public fun enableUserNotifications(consumer: Consumer<Boolean?>) {
+        enableUserNotifications(PermissionPromptFallback.None, consumer)
+    }
+
+    public var userNotificationsEnabled: Boolean
+
+    /**
+     * Determines whether user-facing push notifications are enabled.
+     *
+     * @return `true` if user push is enabled, `false` otherwise.
+     */
+    get() {
+        return preferenceDataStore.getBoolean(USER_NOTIFICATIONS_ENABLED_KEY, false)
+    }
+
+    /**
      * Enables or disables user notifications.
      *
      *
@@ -452,8 +455,8 @@ public open class PushManager @VisibleForTesting internal constructor(
      *
      * @param enabled A boolean indicating whether user push is enabled.
      */
-    public fun setUserNotificationsEnabled(enabled: Boolean) {
-        if (getUserNotificationsEnabled() != enabled) {
+    set(enabled) {
+        if (userNotificationsEnabled != enabled) {
             preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled)
             if (enabled) {
                 preferenceDataStore.put(REQUEST_PERMISSION_KEY, true)
@@ -465,16 +468,6 @@ public open class PushManager @VisibleForTesting internal constructor(
         }
     }
 
-    /**
-     * Enables user notifications on Airship and tries to prompt for the notification permission.
-     *
-     * @note This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
-     *
-     * @param consumer A consumer that will be passed the success of the permission prompt.
-     */
-    public fun enableUserNotifications(consumer: Consumer<Boolean?>) {
-        enableUserNotifications(PermissionPromptFallback.None, consumer)
-    }
 
     /**
      * Enables user notifications on Airship and tries to prompt for the notification permission.
@@ -495,15 +488,6 @@ public open class PushManager @VisibleForTesting internal constructor(
                 consumer.accept(result!!.permissionStatus == PermissionStatus.GRANTED)
                 updateStatusObserver()
             })
-    }
-
-    /**
-     * Determines whether user-facing push notifications are enabled.
-     *
-     * @return `true` if user push is enabled, `false` otherwise.
-     */
-    public fun getUserNotificationsEnabled(): Boolean {
-        return preferenceDataStore.getBoolean(USER_NOTIFICATIONS_ENABLED_KEY, false)
     }
 
     @get:Deprecated(
@@ -661,9 +645,8 @@ public open class PushManager @VisibleForTesting internal constructor(
          * @return `true` if push is available, `false` otherwise.
          */
         get() {
-            return privacyManager.isEnabled(PrivacyManager.Feature.PUSH) && !UAStringUtil.isEmpty(
-                getPushToken()
-            )
+            return privacyManager.isEnabled(PrivacyManager.Feature.PUSH) &&
+                    !UAStringUtil.isEmpty(pushToken)
         }
 
     public val isOptIn: Boolean
@@ -682,7 +665,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      * @return `true` if notifications are opted in, otherwise `false`.
      */
     public fun areNotificationsOptedIn(): Boolean {
-        return getUserNotificationsEnabled() && notificationManager.areNotificationsEnabled()
+        return userNotificationsEnabled && notificationManager.areNotificationsEnabled()
     }
 
     public var lastReceivedMetadata: String?
@@ -913,9 +896,11 @@ public open class PushManager @VisibleForTesting internal constructor(
      *
      * @return The push token.
      */
-    public fun getPushToken(): String? {
-        return preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
-    }
+    public val pushToken: String?
+
+        get() {
+            return preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
+        }
 
     /**
      * Clear the push token.
@@ -994,7 +979,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      */
     public fun performPushRegistration(updateChannelOnChange: Boolean): JobResult {
         shouldDispatchUpdateTokenJob = false
-        val currentToken: String? = getPushToken()
+        val currentToken: String? = pushToken
         val provider: PushProvider? = pushProvider
 
         if (provider == null) {
@@ -1084,10 +1069,10 @@ public open class PushManager @VisibleForTesting internal constructor(
          */
         get() {
             return PushNotificationStatus(
-                getUserNotificationsEnabled(),
+                userNotificationsEnabled,
                 notificationManager.areNotificationsEnabled(),
                 privacyManager.isEnabled(PrivacyManager.Feature.PUSH),
-                !UAStringUtil.isEmpty(getPushToken())
+                !UAStringUtil.isEmpty(pushToken)
             )
         }
 

@@ -53,6 +53,7 @@ import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
@@ -638,7 +639,7 @@ public class PushManagerTest extends BaseTestCase {
         pushManager.setUserNotificationsEnabled(true);
         pushManager.setUserNotificationsEnabled(false);
         pushManager.setUserNotificationsEnabled(true);
-        verify(mockPermissionManager, times(1)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+        verify(mockPermissionManager, times(1)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), anyBoolean(), any(), any());
     }
 
     @Test
@@ -677,11 +678,11 @@ public class PushManagerTest extends BaseTestCase {
         pushManager.setUserNotificationsEnabled(true);
         clearInvocations(mockPermissionManager);
 
-        verify(mockPermissionManager, times(0)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+        verify(mockPermissionManager, times(0)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), anyBoolean(), any(), any());
 
         pushManager.onAirshipReady(UAirship.shared());
 
-        verify(mockPermissionManager, times(1)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+        verify(mockPermissionManager, times(1)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), anyBoolean(), any(), any());
     }
 
     @Test
@@ -692,21 +693,21 @@ public class PushManagerTest extends BaseTestCase {
         activityMonitor.foreground();
         pushManager.onAirshipReady(UAirship.shared());
 
-        verify(mockPermissionManager, times(0)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+        verify(mockPermissionManager, times(0)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), anyBoolean(), any(), any());
 
         pushManager.setUserNotificationsEnabled(true);
 
-        verify(mockPermissionManager, times(1)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+        verify(mockPermissionManager, times(1)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), anyBoolean(), any(), any());
 
         activityMonitor.background();
         activityMonitor.foreground();
 
-        verify(mockPermissionManager, times(1)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+        verify(mockPermissionManager, times(1)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), anyBoolean(), any(), any());
 
         pushManager.setUserNotificationsEnabled(false);
         pushManager.setUserNotificationsEnabled(true);
 
-        verify(mockPermissionManager, times(2)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), any());
+        verify(mockPermissionManager, times(2)).requestPermission(eq(Permission.DISPLAY_NOTIFICATIONS), anyBoolean(), any(), any());
     }
 
     @Test

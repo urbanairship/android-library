@@ -253,7 +253,7 @@ class IncomingPushRunnable implements Runnable {
     @Nullable
     private NotificationProvider getNotificationProvider(UAirship airship) {
         if (message.isAirshipPush()) {
-            return airship.getPushManager().notificationProvider;
+            return airship.getPushManager().getNotificationProvider();
         }
 
         return null;
@@ -291,7 +291,7 @@ class IncomingPushRunnable implements Runnable {
         }
 
         if (channelId != null) {
-            return airship.getPushManager().notificationChannelRegistry
+            return airship.getPushManager().getNotificationChannelRegistry()
                           .getNotificationChannelSync(channelId);
         } else {
             return null;
