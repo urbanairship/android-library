@@ -73,7 +73,7 @@ public class A11yAutopilot extends Autopilot {
         AirshipListener airshipListener = new AirshipListener();
         airship.getPushManager().addPushListener(airshipListener);
         airship.getPushManager().addPushTokenListener(airshipListener);
-        airship.getPushManager().notificationListener = airshipListener;
+        airship.getPushManager().setNotificationListener(airshipListener);
         airship.getChannel().addChannelListener(airshipListener);
     }
 
