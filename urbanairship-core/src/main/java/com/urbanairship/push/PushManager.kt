@@ -17,6 +17,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.R
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.Analytics.AnalyticsHeaderDelegate
@@ -590,7 +591,7 @@ public open class PushManager @VisibleForTesting internal constructor(
                 quietTimeInterval =
                     QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL))
             } catch (e: JsonException) {
-                e("Failed to parse quiet time interval")
+                UALog.e("Failed to parse quiet time interval")
                 return false
             }
 
@@ -614,7 +615,7 @@ public open class PushManager @VisibleForTesting internal constructor(
                 quietTimeInterval =
                     QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL))
             } catch (e: JsonException) {
-                e("Failed to parse quiet time interval")
+                UALog.e("Failed to parse quiet time interval")
                 return null
             }
 
@@ -824,7 +825,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      */
     public fun addNotificationActionButtonGroup(id: String, group: NotificationActionButtonGroup) {
         if (id.startsWith(UA_NOTIFICATION_BUTTON_GROUP_PREFIX)) {
-            e(
+            UALog.e(
                 "Unable to add any notification button groups that starts with the reserved Airship prefix %s",
                 UA_NOTIFICATION_BUTTON_GROUP_PREFIX
             )
@@ -868,7 +869,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      */
     public fun removeNotificationActionButtonGroup(id: String) {
         if (id.startsWith(UA_NOTIFICATION_BUTTON_GROUP_PREFIX)) {
-            e(
+            UALog.e(
                 "Unable to remove any reserved Airship actions groups that begin with %s",
                 UA_NOTIFICATION_BUTTON_GROUP_PREFIX
             )
@@ -942,7 +943,7 @@ public open class PushManager @VisibleForTesting internal constructor(
                     )
                 ).list
             } catch (e: JsonException) {
-                d(e, "Unable to parse canonical Ids.")
+                UALog.d(e, "Unable to parse canonical Ids.")
             }
 
             var canonicalIds: MutableList<JsonValue?> =
@@ -983,12 +984,12 @@ public open class PushManager @VisibleForTesting internal constructor(
         val provider: PushProvider? = pushProvider
 
         if (provider == null) {
-            i("PushManager - Push registration failed. Missing push provider.")
+            UALog.i("PushManager - Push registration failed. Missing push provider.")
             return JobResult.SUCCESS
         }
 
         if (!provider.isAvailable(context)) {
-            w("PushManager - Push registration failed. Push provider unavailable: %s", provider)
+            UALog.w("PushManager - Push registration failed. Push provider unavailable: %s", provider)
             return JobResult.RETRY
         }
 
@@ -996,14 +997,14 @@ public open class PushManager @VisibleForTesting internal constructor(
         try {
             token = provider.getRegistrationToken(context)
         } catch (e: PushProviderUnavailableException) {
-            d(
+            UALog.d(
                 "Push registration failed, provider unavailable. Error: %s. Will retry.",
                 e.message,
                 e
             )
             return JobResult.RETRY
         } catch (e: RegistrationException) {
-            d("Push registration failed. Error: %S, Recoverable %s.", e.isRecoverable, e.message, e)
+            UALog.d("Push registration failed. Error: %S, Recoverable %s.", e.isRecoverable, e.message, e)
             clearPushToken()
 
             if (e.isRecoverable) {
@@ -1014,7 +1015,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         }
 
         if (token != null && !UAStringUtil.equals(token, currentToken)) {
-            i("PushManager - Push registration updated.")
+            UALog.i("PushManager - Push registration updated.")
 
             preferenceDataStore.put(PUSH_DELIVERY_TYPE, provider.deliveryType)
             preferenceDataStore.put(PUSH_TOKEN_KEY, token)
