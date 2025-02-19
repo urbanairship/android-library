@@ -323,7 +323,7 @@ internal class MediaView(
         wv.setBackgroundColor(Color.TRANSPARENT)
 
         wv.settings.apply {
-            if (model.viewInfo.mediaType == MediaType.VIDEO) {
+            if (model.viewInfo.mediaType == MediaType.VIDEO && model.viewInfo.video?.autoplay == true) {
                 mediaPlaybackRequiresUserGesture = false
             }
 
