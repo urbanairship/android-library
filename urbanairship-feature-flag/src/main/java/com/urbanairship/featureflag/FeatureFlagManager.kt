@@ -19,10 +19,18 @@ import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.json.JsonMap
 import com.urbanairship.remotedata.RemoteData
-import java.lang.IllegalStateException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+
+/**
+ * Feature flag remote data statuses
+ */
+public enum class FeatureFlagRemoteDataStatus {
+    UP_TO_DATE, STALE, OUT_OF_DATE;
+}
 
 /**
  * Airship Feature Flags manager.
@@ -111,6 +119,15 @@ public class FeatureFlagManager internal constructor(
 
         return result
     }
+
+    /**
+     * Gets the status updates using the given mapping.
+     * @return Flow with status updates
+     */
+    public val statusUpdates: Flow<FeatureFlagRemoteDataStatus>
+        get() {
+            return remoteData.statusUpdates ?: flowOf(FeatureFlagRemoteDataStatus.OUT_OF_DATE)
+        }
 
     private suspend fun resolveFlag(name: String): Result<FeatureFlag> {
         val flagInfoResult = remoteDataFeatureFlagInfo(name)

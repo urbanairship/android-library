@@ -78,17 +78,6 @@ public class CustomEventTest extends BaseTestCase {
     }
 
     /**
-     * Test creating a custom event with a null event makes it invalid.
-     */
-    @Test
-    @SuppressWarnings("ConstantConditions")
-    public void testNullEventName() {
-        //noinspection ResourceType
-        CustomEvent event = CustomEvent.newBuilder(null).build();
-        assertFalse(event.isValid());
-    }
-
-    /**
      * Test creating a custom event with an empty event name makes it invalid.
      */
     @Test

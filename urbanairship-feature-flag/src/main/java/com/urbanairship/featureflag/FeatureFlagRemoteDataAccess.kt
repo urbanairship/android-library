@@ -5,6 +5,8 @@ import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Clock
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 internal class FeatureFlagRemoteDataAccess(
     private val remoteData: RemoteData,
@@ -19,6 +21,13 @@ internal class FeatureFlagRemoteDataAccess(
     val status: RemoteData.Status
         get() {
             return remoteData.status(RemoteDataSource.APP)
+        }
+
+    val statusUpdates: Flow<FeatureFlagRemoteDataStatus>?
+        get() {
+            return remoteData
+                .statusFlow(RemoteDataSource.APP)
+                ?.map { it.toFeatureFlagStatus() }
         }
 
     suspend fun bestEffortRefresh() {
@@ -56,3 +65,11 @@ internal data class RemoteDataFeatureFlagInfo(
     val flagInfoList: List<FeatureFlagInfo>,
     val remoteDataInfo: RemoteDataInfo?
 )
+
+private fun RemoteData.Status.toFeatureFlagStatus(): FeatureFlagRemoteDataStatus {
+    return when(this) {
+        RemoteData.Status.UP_TO_DATE -> FeatureFlagRemoteDataStatus.UP_TO_DATE
+        RemoteData.Status.STALE -> FeatureFlagRemoteDataStatus.STALE
+        RemoteData.Status.OUT_OF_DATE -> FeatureFlagRemoteDataStatus.OUT_OF_DATE
+    }
+}

@@ -5,6 +5,7 @@ import android.R
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.graphics.Color
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -44,12 +45,12 @@ import com.urbanairship.app.FilteredActivityListener
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
+import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import org.intellij.lang.annotations.Language
-import java.lang.ref.WeakReference
 
 /**
  * Media view.
@@ -319,10 +320,11 @@ internal class MediaView(
             gravity = Gravity.CENTER
         }
         frameLayout.addView(progressBar, progressBarLayoutParams)
+        wv.setBackgroundColor(Color.TRANSPARENT)
 
         wv.settings.apply {
-            if (model.viewInfo.mediaType == MediaType.VIDEO) {
-                mediaPlaybackRequiresUserGesture = true
+            if (model.viewInfo.mediaType == MediaType.VIDEO && model.viewInfo.video?.autoplay == true) {
+                mediaPlaybackRequiresUserGesture = false
             }
 
             javaScriptEnabled = true

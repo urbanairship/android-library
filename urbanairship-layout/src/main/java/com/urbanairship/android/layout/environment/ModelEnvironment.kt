@@ -28,6 +28,8 @@ internal class ModelEnvironment(
     val displayTimer: DisplayTimer,
     val modelScope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob()),
     val attributeHandler: AttributeHandler = AttributeHandler(),
+    val channelRegistrar: ThomasChannelRegistrar = ThomasChannelRegistrar(),
+
     val eventHandler: LayoutEventHandler = LayoutEventHandler(modelScope),
 ) {
     val layoutEvents: Flow<LayoutEvent> = eventHandler.layoutEvents

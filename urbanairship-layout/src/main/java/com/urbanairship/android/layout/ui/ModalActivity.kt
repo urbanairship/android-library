@@ -116,7 +116,7 @@ public class ModalActivity : AppCompatActivity() {
                 if (presentation.isDismissOnTouchOutside) {
                     setOnClickOutsideListener {
                         reportDismissFromOutside()
-                        finish()
+                        finishAfterTransition()
                     }
                 }
             }
@@ -176,7 +176,7 @@ public class ModalActivity : AppCompatActivity() {
     private fun observeLayoutEvents(events: Flow<LayoutEvent>) = lifecycleScope.launch {
         events
             .filterIsInstance<LayoutEvent.Finish>()
-            .collect { finish() }
+            .collect { finishAfterTransition() }
     }
 
     private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) =

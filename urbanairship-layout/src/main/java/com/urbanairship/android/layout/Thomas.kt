@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout
 
+import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.RestrictTo
@@ -18,6 +19,7 @@ import com.urbanairship.android.layout.util.ImageCache
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.json.JsonMap
 import com.urbanairship.webkit.AirshipWebViewClient
+import com.google.android.material.internal.ContextUtils.getActivity
 
 /**
  * Entry point and related helper methods for rendering layouts based on our internal DSL.
@@ -77,7 +79,7 @@ public object Thomas {
                             ModalActivity.EXTRA_DISPLAY_ARGS_LOADER,
                             DisplayArgsLoader.newLoader(args)
                         )
-                    context.startActivity(intent)
+                    context.startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(getActivity(context)).toBundle())
                 }
             }
             is BannerPresentation -> {

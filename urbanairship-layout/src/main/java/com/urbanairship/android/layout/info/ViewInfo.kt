@@ -517,6 +517,14 @@ internal class TextInputInfo(
     }
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
 
+    val emailRegistrationOptions: ThomasEmailRegistrationOptions? = json.get("email_registration")?.let {
+        if (inputType == FormInputType.EMAIL) {
+            ThomasEmailRegistrationOptions.fromJson(it)
+        } else {
+            null
+        }
+    }
+
     internal class ViewOverrides(json: JsonMap) {
         val iconEnd = json.optionalList("icon_end")?.map { iconEnd ->
             ViewPropertyOverride(iconEnd) { value -> IconEnd.fromJson(value.optMap()) }

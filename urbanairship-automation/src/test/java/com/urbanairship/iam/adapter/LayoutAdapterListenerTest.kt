@@ -65,7 +65,8 @@ public class LayoutAdapterListenerTest {
             responseType = null,
             children = emptySet()
             ), FormInfo("form id", "", null, true),
-            mapOf()
+            mapOf(),
+            emptyList()
         )
 
         listener.onFormResult(form.formData, defaultLayoutData)

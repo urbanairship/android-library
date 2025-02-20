@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.environment
 
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
@@ -149,7 +150,7 @@ internal sealed class State {
         }
 
         fun formResult(): ReportingEvent.FormResult =
-            ReportingEvent.FormResult(formData(), reportingContext(), attributes())
+            ReportingEvent.FormResult(formData(), reportingContext(), attributes(), channels())
 
         fun reportingContext(): FormInfo =
             FormInfo(identifier, formType.value, formResponseType, isSubmitted)
@@ -167,11 +168,24 @@ internal sealed class State {
             for (d in data) {
                 val attributeName = d.value.attributeName
                 val attributeValue = d.value.attributeValue
-                if (attributeName != null && attributeValue != null) {
+                val isValid = d.value.isValid
+                if (attributeName != null && attributeValue != null && isValid) {
                     map[attributeName] = attributeValue
                 }
             }
             return map
+        }
+
+        private fun channels(): List<ThomasChannelRegistration> {
+            val list = mutableListOf<ThomasChannelRegistration>()
+            for (d in data) {
+                val registration = d.value.channelRegistration
+                val isValid = d.value.isValid
+                if (registration != null && isValid) {
+                    list.add(registration)
+                }
+            }
+            return list
         }
     }
 
