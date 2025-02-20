@@ -7,7 +7,6 @@ import com.urbanairship.images.ImageLoader.ImageLoadedCallback;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.Px;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -22,15 +21,13 @@ public final class ImageRequestOptions {
     private final String url;
     @Nullable
     private final ImageLoadedCallback callback;
-    private final int zeroWidthFallback;
-    private final int zeroHeightFallback;
+    private final ImageSizeResolver imageSizeResolver;
 
     private ImageRequestOptions(@NonNull Builder builder) {
         this.url = builder.url;
         this.placeHolder = builder.placeHolder;
         this.callback = builder.callback;
-        this.zeroWidthFallback = builder.zeroWidthFallback;
-        this.zeroHeightFallback = builder.zeroHeightFallback;
+        this.imageSizeResolver = builder.imageSizeResolver;
     }
 
     /**
@@ -61,20 +58,9 @@ public final class ImageRequestOptions {
         return callback;
     }
 
-    /**
-     * Gets the fallback width to be used if the {@code ImageView} has a width of zero during image loading.
-     * @return The fallback width.
-     */
-    public int getZeroWidthFallback() {
-        return zeroWidthFallback;
-    }
-
-    /**
-     * Gets the fallback height to be used if the {@code ImageView} has a height of zero during image loading.
-     * @return The fallback height.
-     */
-    public int getZeroHeightFallback() {
-        return zeroHeightFallback;
+    @Nullable
+    public ImageSizeResolver getImageSizeResolver() {
+        return imageSizeResolver;
     }
 
     /**
@@ -96,10 +82,8 @@ public final class ImageRequestOptions {
         private int placeHolder;
         private final String url;
         private ImageLoadedCallback callback;
-        @Px
-        private int zeroWidthFallback = -1;
-        @Px
-        private int zeroHeightFallback = -1;
+
+        private ImageSizeResolver imageSizeResolver;
 
         private Builder(@Nullable String url) {
             this.url = url;
@@ -126,14 +110,9 @@ public final class ImageRequestOptions {
             return this;
         }
 
-        /**
-         * Sets fallback dimensions to be used if the target {@code ImageView} reports a width or height of zero
-         * during image loading, due to not being measured yet or if dimensions are set to {@code WRAP_CONTENT}.
-         */
         @NonNull
-        public Builder setFallbackDimensions(@Px int width, @Px int height) {
-            this.zeroWidthFallback = width;
-            this.zeroHeightFallback = height;
+        public Builder setImageSizeResolver(ImageSizeResolver imageSizeResolver) {
+            this.imageSizeResolver = imageSizeResolver;
             return this;
         }
 

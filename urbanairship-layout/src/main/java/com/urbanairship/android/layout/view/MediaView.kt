@@ -28,13 +28,10 @@ import com.urbanairship.android.layout.model.MediaModel
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
-import com.urbanairship.android.layout.property.Size
-import com.urbanairship.android.layout.property.Size.Dimension
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.util.LayoutUtils
-import com.urbanairship.android.layout.util.ResourceUtils
-import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
+import com.urbanairship.android.layout.util.ThomasImageSizeResolver
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
@@ -156,10 +153,8 @@ internal class MediaView(
     }
 
     private fun configureImageView(model: MediaModel) {
-        var url = model.viewInfo.url
-        viewEnvironment.imageCache()[url]?.let { cachedImage ->
-            url = cachedImage
-        }
+        val cached = viewEnvironment.imageCache().get(model.viewInfo.url)
+        val url = cached?.path ?: model.viewInfo.url
 
         if (url.endsWith(".svg")) {
             // Load SVGs in a webview because they won't work in an ImageView
@@ -201,18 +196,8 @@ internal class MediaView(
             var isLoaded = false
 
             fun loadImage(url: String) {
-                val fallbackWidth = calculateFallbackSize(
-                    dimension = itemProperties?.size?.width,
-                    maxSize = ResourceUtils.getDisplayWidthPixels(context)
-                )
-
-                val fallbackHeight = calculateFallbackSize(
-                    dimension = itemProperties?.size?.height,
-                    maxSize = ResourceUtils.getDisplayHeightPixels(context)
-                )
-
                 val options = ImageRequestOptions.newBuilder(url)
-                    .setFallbackDimensions(fallbackWidth, fallbackHeight)
+                    .setImageSizeResolver(ThomasImageSizeResolver(itemProperties?.size, cached?.size))
                     .setImageLoadedCallback { success ->
                         if (success) {
                             isLoaded = true
@@ -237,14 +222,6 @@ internal class MediaView(
         }
     }
 
-    private fun calculateFallbackSize(dimension: Dimension?, maxSize: Int): Int {
-        return when (dimension?.type) {
-            Size.DimensionType.AUTO ->  maxSize
-            Size.DimensionType.PERCENT -> (dimension.float * maxSize).toInt()
-            Size.DimensionType.ABSOLUTE -> dpToPx(context, dimension.int).toInt()
-            null -> maxSize
-        }
-    }
 
     /**
      * Helper method to load a video (or SVG) in the WebView.
