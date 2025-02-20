@@ -121,13 +121,16 @@ public class FeatureFlagManager internal constructor(
     }
 
     /**
-     * Gets the status updates using the given mapping.
-     * @return Flow with status updates
+     * Gets the status updates
      */
     public val statusUpdates: Flow<FeatureFlagRemoteDataStatus>
-        get() {
-            return remoteData.statusUpdates ?: flowOf(FeatureFlagRemoteDataStatus.OUT_OF_DATE)
-        }
+        get() = remoteData.statusUpdates ?: flowOf(FeatureFlagRemoteDataStatus.OUT_OF_DATE)
+
+    /**
+     * Gets the current data status
+     */
+    public val status: FeatureFlagRemoteDataStatus
+        get() = remoteData.status
 
     private suspend fun resolveFlag(name: String): Result<FeatureFlag> {
         val flagInfoResult = remoteDataFeatureFlagInfo(name)
@@ -152,7 +155,7 @@ public class FeatureFlagManager internal constructor(
                 remoteData.bestEffortRefresh()
 
                 // If we are not up-to-date, then skip
-                if (remoteData.status != RemoteData.Status.UP_TO_DATE) {
+                if (remoteData.status != FeatureFlagRemoteDataStatus.UP_TO_DATE) {
                     return Result.failure(mapError(name, e))
                 }
 
@@ -169,11 +172,11 @@ public class FeatureFlagManager internal constructor(
 
     private suspend fun remoteDataFeatureFlagInfo(name: String): Result<RemoteDataFeatureFlagInfo> {
         return when (remoteData.status) {
-            RemoteData.Status.UP_TO_DATE -> {
+            FeatureFlagRemoteDataStatus.UP_TO_DATE -> {
                 Result.success(remoteData.fetchFlagRemoteInfo(name))
             }
 
-            RemoteData.Status.STALE, RemoteData.Status.OUT_OF_DATE -> {
+            FeatureFlagRemoteDataStatus.STALE, FeatureFlagRemoteDataStatus.OUT_OF_DATE -> {
                 val remoteDataInfo = remoteData.fetchFlagRemoteInfo(name)
                 val disallowStale = remoteDataInfo.flagInfoList.firstOrNull {
                     it.evaluationOptions?.disallowStaleValues == true
@@ -183,11 +186,11 @@ public class FeatureFlagManager internal constructor(
                     remoteData.bestEffortRefresh()
 
                     when (remoteData.status) {
-                        RemoteData.Status.UP_TO_DATE ->
+                        FeatureFlagRemoteDataStatus.UP_TO_DATE ->
                             Result.success(remoteData.fetchFlagRemoteInfo(name))
-                        RemoteData.Status.STALE ->
+                        FeatureFlagRemoteDataStatus.STALE ->
                             Result.failure(FeatureFlagEvaluationException.StaleNotAllowed())
-                        RemoteData.Status.OUT_OF_DATE ->
+                        FeatureFlagRemoteDataStatus.OUT_OF_DATE ->
                             Result.failure(FeatureFlagEvaluationException.OutOfDate())
                     }
                 } else {
