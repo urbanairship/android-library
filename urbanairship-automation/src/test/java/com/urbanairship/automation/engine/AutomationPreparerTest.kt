@@ -540,7 +540,7 @@ public class AutomationPreparerTest {
 
             assertEquals(request.uri, Uri.parse("https://sample.url"))
             assertEquals(request.channelId, "channel-id")
-            assertNull(request.contactId) //TODO: is that correct. do we ignore contact id for deferred?
+            assertEquals(request.contactId, "contact id")
             assertEquals(request.triggerContext, triggerContext)
 
             return@answers DeferredResult.Success(
@@ -613,7 +613,7 @@ public class AutomationPreparerTest {
 
             assertEquals(request.uri, Uri.parse("https://sample.url"))
             assertEquals(request.channelId, "channel-id")
-            assertNull(request.contactId) //TODO: is that correct. do we ignore contact id for deferred?
+            assertEquals(request.contactId, "contact id")
             assertEquals(request.triggerContext, triggerContext)
 
             return@answers DeferredResult.Success(

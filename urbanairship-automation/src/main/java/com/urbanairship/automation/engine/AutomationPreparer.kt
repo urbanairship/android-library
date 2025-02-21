@@ -190,6 +190,7 @@ internal class AutomationPreparer internal constructor(
         return DeferredRequest(
             uri = deferred.url,
             channelId = deviceInfoProvider.getChannelId(),
+            contactId = deviceInfoProvider.getStableContactInfo().contactId,
             triggerContext = triggerContext,
             locale = deviceInfoProvider.locale,
             notificationOptIn = deviceInfoProvider.isNotificationsOptedIn,
