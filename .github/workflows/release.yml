@@ -89,7 +89,7 @@ jobs:
           prerelease: false
           
       - name: Upload java doc assets
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: packaged-docs-${{ steps.get_version.outputs.VERSION }}
           retention-days: 1
