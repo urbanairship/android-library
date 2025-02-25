@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.7.1 February 25, 2025
+Patch release to fix a casting exception with Embedded Content.
+
+### Changes
+- Fixed exception due to a bad cast when using Embedded Content.
+
 ## Version 18.7.0 February 6, 2025
 Minor release that updates AndroidX libraries. A `compileSdk` of 35+ is required.
 
