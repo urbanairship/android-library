@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 18.6.1 February 25, 2025
+Patch release to fix a casting exception with Embedded Content.
+
+### Changes
+- Fixed exception due to a bad cast when using Embedded Content.
+
 ## Version 18.6.0 December 19, 2024
 Minor release that updates how Feature Flags are resolved, improves Scene rendering on Android 15,
 and fixes potential exceptions related to PermissionsManager and PermissionDelegates.
