@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 internal class PagerController(
     viewInfo: PagerControllerInfo,
     val view: AnyModel,
-    val branching: PagerControllerBranching?,
+    val branching: PagerControllerBranching? = null,
     private val pagerState: SharedState<State.Pager>,
     environment: ModelEnvironment,
     properties: ModelProperties

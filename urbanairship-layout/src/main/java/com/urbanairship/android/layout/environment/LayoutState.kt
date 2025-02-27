@@ -63,14 +63,14 @@ internal sealed class State {
         val wasMediaPaused: Boolean = false,
         val isStoryPaused: Boolean = false,
         val isTouchExplorationEnabled: Boolean = false,
-        val branching: PagerControllerBranching?,
+        val branching: PagerControllerBranching? = null,
         val canGoBack: Boolean = pageIndex > 0
     ) : State() {
 
         val hasNext
             get() = pageIndex < pageIds.size - 1
 
-        private fun copyWithPageIndex(index: Int) =
+        internal fun copyWithPageIndex(index: Int) =
             if (index == pageIndex) {
                 copy()
             } else {

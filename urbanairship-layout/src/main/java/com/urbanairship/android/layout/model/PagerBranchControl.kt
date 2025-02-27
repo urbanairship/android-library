@@ -138,7 +138,9 @@ internal class PagerBranchControl(
             .toMutableMap()
             .apply {
                 put("\$forms", jsonMapOf(
-                    "current" to formState.formData.toJsonValue()).toJsonValue()
+                    "current" to jsonMapOf(
+                        "data" to formState.formData.toJsonValue()).toJsonValue()
+                    ).toJsonValue()
                 )
             }
             .let(JsonValue::wrap)
