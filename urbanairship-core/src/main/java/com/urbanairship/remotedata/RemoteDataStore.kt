@@ -85,9 +85,9 @@ public class RemoteDataStore(
 
             for (payload in payloads) {
                 // Generate a path for the data and write it to disk.
-                val dataPath = generateDataFilePath()
+                val dataPath = dataFileManager.generateDataFilePath()
                 try {
-                    dataFileManager.writeData(dataPath, payload.data)
+                    dataFileManager.save(dataPath, payload.data)
                 } catch (e: Exception) {
                     UALog.e(e, "RemoteDataStore - Unable to save remote data payload.")
                     db.endTransaction()
@@ -166,7 +166,7 @@ public class RemoteDataStore(
      * @return Number of payloads deleted.
      */
     public fun deletePayloads(): Int {
-        dataFileManager.deleteData()
+        dataFileManager.deleteAll()
         return delete(TABLE_NAME, null, null)
     }
 
@@ -184,7 +184,7 @@ public class RemoteDataStore(
             try {
                 // Load json data from disk
                 val dataPath = cursor.getString(cursor.getColumnIndex(COLUMN_NAME_DATA))
-                val data = dataFileManager.readData(dataPath).getOrThrow()
+                val data = dataFileManager.load(dataPath).getOrThrow()
 
                 val payload = RemoteDataPayload(
                     cursor.getString(cursor.getColumnIndex(COLUMN_NAME_TYPE)),
@@ -218,10 +218,6 @@ public class RemoteDataStore(
             // Can happen during migration
             return null
         }
-    }
-
-    private fun generateDataFilePath(): String {
-        return UUID.randomUUID().toString() + ".json"
     }
 
     private fun migrateV2ToV3(db: SQLiteDatabase) {
@@ -259,8 +255,8 @@ public class RemoteDataStore(
                     val dataJson = JsonValue.parseString(data).optMap()
 
                     // Generate a path for the data and write it to disk.
-                    val dataPath = generateDataFilePath()
-                    dataFileManager.writeData(dataPath, dataJson).getOrThrow()
+                    val dataPath = dataFileManager.generateDataFilePath()
+                    dataFileManager.save(dataPath, dataJson).getOrThrow()
 
                     val value = ContentValues().apply {
                         put(COLUMN_NAME_ID, id)
@@ -277,6 +273,7 @@ public class RemoteDataStore(
             } finally {
                 cursor.close()
             }
+
             // Drop the original table and rename the temp table
             db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
             db.execSQL("ALTER TABLE $tempTableName RENAME TO $TABLE_NAME")
@@ -318,14 +315,16 @@ public class RemoteDataStore(
     }
 }
 
+/**
+ * Manages remote data json files stored on disk.
+ * @hide
+ */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class RemoteDataFileManager(
-    private val context: Context
+    private val context: Context,
+    private val dataDirectory: File = File(context.filesDir, DATA_DIRECTORY)
 ) {
-    private val dataDirectory
-        get() = File(context.filesDir, DATA_DIRECTORY)
-
-    internal fun readData(filename: String): Result<JsonMap> {
+    internal fun load(filename: String): Result<JsonMap> {
         val file = File(dataDirectory, filename)
         return try {
             if (!file.exists()) error("File does not exist: $filename")
@@ -339,7 +338,7 @@ public class RemoteDataFileManager(
         }
     }
 
-    internal fun writeData(filename: String, data: JsonMap): Result<Unit> {
+    internal fun save(filename: String, data: JsonMap): Result<Unit> {
         val file = File(dataDirectory, filename)
         return try {
             // Create dirs, if needed
@@ -353,8 +352,10 @@ public class RemoteDataFileManager(
         }
     }
 
-    internal fun deleteData() {
-        dataDirectory.deleteRecursively()
+    internal fun deleteAll(): Boolean = dataDirectory.deleteRecursively()
+
+    internal fun generateDataFilePath(): String {
+        return UUID.randomUUID().toString() + ".json"
     }
 
     internal companion object {
