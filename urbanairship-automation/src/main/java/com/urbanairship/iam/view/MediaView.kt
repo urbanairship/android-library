@@ -87,17 +87,11 @@ internal class MediaView @JvmOverloads constructor(
                 imageView.adjustViewBounds = true
                 imageView.contentDescription = mediaInfo.description
                 val url = cachedMediaUrl ?: mediaInfo.url
-
-                val fallbackWidth = ResourceUtils.getDisplayWidthPixels(context)
-                val fallbackHeight = ResourceUtils.getDisplayHeightPixels(context)
-
                 imageView.doOnPreDraw {
                     UAirship.shared().imageLoader.load(
                         context,
                         imageView,
-                        ImageRequestOptions.newBuilder(url)
-                            .setFallbackDimensions(fallbackWidth, fallbackHeight)
-                            .build()
+                        ImageRequestOptions.newBuilder(url).build()
                     )
                 }
 

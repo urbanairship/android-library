@@ -2,6 +2,42 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 19.2.0 February 20, 2025
+Minor release that includes improvements for Scenes and Feature Flags.
+
+### Changes
+- Added a fade transition for Scenes
+- Added support for email registration in Scenes
+- Fixed issues with autoplay videos in Scenes
+- Improved image download and scaling logic
+- Fixed an issue with image pre-caching when unable to successfully download an image
+- Expose rule refresh status for Feature Flags
+
+## Version 19.1.0 February 4, 2025
+Minor release that fixes an issue with embedded view sizing in scrolling views, improves Message Center accessibility, and replaces usages of `Random` with `SecureRandom`.
+Apps that make use of Embedded Content or Message Center should update.
+
+### Changes
+- Fixed an issue with embedded sizing in scrolling views
+- Improved Message Center Accessibility
+- Replaced usage of `Random` with `SecureRandom`
+- Made `MessageWebView` and `MessageWebViewClient` both `public` and `open` for subclassing
+- Exposed Message Center `ViewModel` state via `LiveData`, in addition to Kotlin `Flow`s
+- Added `PendingResult` based methods to `Inbox`, for getting read and unread message counts and listing all message IDs
+
+## Version 19.0.0 January 16, 2025
+Major release that adds support for Android 15 (API 35) and updates Message Center and Preference Center to use Material 3.
+Breaking changes in Message Center are included in this release. See the [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-18-19.md) for more info.
+
+### Changes
+- The Airship SDK now requires `compileSdk` version 35 (Android 15) or higher, and `minSdk` version 23 (Android 6) or higher.
+- Migrated Message Center APIs to Kotlin, using asynchronous access patterns. New suspend functions and Flows have been added for Kotlin, and Java APIs have been updated to use `PendingResult` or callbacks.
+- Rewrote the provided Message Center UI to follow modern Android UI conventions, use Material 3 theming, and support edge-to-edge mode for Android 15.
+- Updated Preference Center to use Material 3 theming and support edge-to-edge mode for Android 15.
+- Added `Feature.FEATURE_FLAGS` to `PrivacyManager` to control enablement of feature flags.
+- Added support for wrapping score views in Scenes.
+- Added support for Feature Flag experimentation.
+
 ## Version 18.6.0 December 19, 2024
 Minor release that updates how Feature Flags are resolved, improves Scene rendering on Android 15,
 and fixes potential exceptions related to PermissionsManager and PermissionDelegates.

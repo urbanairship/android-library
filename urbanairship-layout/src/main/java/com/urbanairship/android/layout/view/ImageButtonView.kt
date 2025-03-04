@@ -16,13 +16,15 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.ImageButtonModel
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.MediaFit
+import com.urbanairship.android.layout.property.Size
+import com.urbanairship.android.layout.property.Size.Dimension
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.LayoutUtils
-import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
+import com.urbanairship.android.layout.util.ThomasImageSizeResolver
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.widget.CropImageButton
@@ -33,8 +35,9 @@ import kotlinx.coroutines.flow.Flow
 internal class ImageButtonView(
     context: Context,
     model: ImageButtonModel,
-    viewEnvironment: ViewEnvironment
-) : FrameLayout(context), BaseView, TappableView {
+    viewEnvironment: ViewEnvironment,
+    private val itemProperties: ItemProperties?,
+    ) : FrameLayout(context), BaseView, TappableView {
 
     private var visibilityChangeListener: BaseView.VisibilityChangeListener? = null
 
@@ -44,10 +47,8 @@ internal class ImageButtonView(
 
         when (val image = model.viewInfo.image) {
             is Image.Url -> {
-                var url = image.url
-                viewEnvironment.imageCache()[url]?.let { cachedImage ->
-                    url = cachedImage
-                }
+                val cached = viewEnvironment.imageCache().get(image.url)
+                val url = cached?.path ?: image.url
 
                 doOnAttach {
                     val parentLayoutParams = layoutParams
@@ -65,17 +66,16 @@ internal class ImageButtonView(
 
                     var isLoaded = false
 
-                    // Falling back to the screen dimensions keeps the image as large as possible,
-                    // while still allowing for sampling to occur.
-                    val fallbackWidth = ResourceUtils.getDisplayWidthPixels(context)
-                    val fallbackHeight = ResourceUtils.getDisplayHeightPixels(context)
                     fun loadImage(url: String) = UAirship.shared().imageLoader.load(context,
                         button,
-                        ImageRequestOptions.newBuilder(url).setImageLoadedCallback { success ->
-                            if (success) {
-                                isLoaded = true
+                        ImageRequestOptions.newBuilder(url)
+                            .setImageSizeResolver(ThomasImageSizeResolver(itemProperties?.size, cached?.size))
+                            .setImageLoadedCallback { success ->
+                                if (success) {
+                                    isLoaded = true
+                                }
                             }
-                        }.setFallbackDimensions(fallbackWidth, fallbackHeight).build()
+                            .build()
                     )
 
                     loadImage(url)

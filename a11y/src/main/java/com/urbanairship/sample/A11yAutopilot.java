@@ -10,7 +10,6 @@ import android.net.Uri;
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Autopilot;
 import com.urbanairship.UAirship;
-import com.urbanairship.automation.InAppAutomation;
 import com.urbanairship.messagecenter.MessageCenter;
 
 import androidx.annotation.NonNull;

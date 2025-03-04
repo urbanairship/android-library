@@ -18,9 +18,9 @@ internal class FeatureFlagRemoteDataAccess(
         private val MAX_TIMEOUT_MILLIS: Long = TimeUnit.SECONDS.toMillis(15)
     }
 
-    val status: RemoteData.Status
+    val status: FeatureFlagRemoteDataStatus
         get() {
-            return remoteData.status(RemoteDataSource.APP)
+            return remoteData.status(RemoteDataSource.APP).toFeatureFlagStatus()
         }
 
     val statusUpdates: Flow<FeatureFlagRemoteDataStatus>?

@@ -109,7 +109,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(emptyList())
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createMissingFlag(
@@ -135,7 +135,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val result = featureFlags.flag("test-ff")
         assertTrue(result.isFailure)
@@ -156,7 +156,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -187,7 +187,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -240,7 +240,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -295,7 +295,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -327,7 +327,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -360,7 +360,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -398,7 +398,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -459,7 +459,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -499,7 +499,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -539,7 +539,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -568,7 +568,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -600,7 +600,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createMissingFlag("test-ff")
@@ -627,7 +627,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(listOf(flagInfo))
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val result = featureFlags.flag("test-ff")
         assertTrue(result.isFailure)
@@ -669,7 +669,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(flags)
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -712,7 +712,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(flags)
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -760,7 +760,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(flags)
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -830,7 +830,7 @@ public class FeatureFlagManagerTest {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
         } returns generateRemoteData(flags)
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         val flag = featureFlags.flag("test-ff").getOrThrow()
         val expected = FeatureFlag.createFlag(
@@ -858,7 +858,7 @@ public class FeatureFlagManagerTest {
 
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
 
-        every { remoteDataAccess.status } returns RemoteData.Status.STALE
+        every { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.STALE
 
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
@@ -890,7 +890,7 @@ public class FeatureFlagManagerTest {
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
         coEvery { remoteDataAccess.bestEffortRefresh() } just runs
 
-        every { remoteDataAccess.status } returns RemoteData.Status.STALE
+        every { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.STALE
 
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
@@ -943,7 +943,7 @@ public class FeatureFlagManagerTest {
 
         coEvery { remoteDataAccess.bestEffortRefresh() } just runs
 
-        every { remoteDataAccess.status } returns RemoteData.Status.STALE
+        every { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.STALE
 
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
@@ -964,7 +964,7 @@ public class FeatureFlagManagerTest {
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
         coEvery { remoteDataAccess.bestEffortRefresh() } just runs
 
-        every { remoteDataAccess.status } returns RemoteData.Status.OUT_OF_DATE
+        every { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.OUT_OF_DATE
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("non-existing")
         } returns payload
@@ -985,7 +985,7 @@ public class FeatureFlagManagerTest {
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
         coEvery { remoteDataAccess.bestEffortRefresh() } just runs
 
-        every { remoteDataAccess.status } returnsMany  listOf(RemoteData.Status.OUT_OF_DATE, RemoteData.Status.UP_TO_DATE)
+        every { remoteDataAccess.status } returnsMany  listOf(FeatureFlagRemoteDataStatus.OUT_OF_DATE, FeatureFlagRemoteDataStatus.UP_TO_DATE)
 
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("non-existing")
@@ -1007,7 +1007,7 @@ public class FeatureFlagManagerTest {
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
         coEvery { remoteDataAccess.bestEffortRefresh() } just runs
 
-        every { remoteDataAccess.status } returnsMany listOf(RemoteData.Status.OUT_OF_DATE, RemoteData.Status.STALE)
+        every { remoteDataAccess.status } returnsMany listOf(FeatureFlagRemoteDataStatus.OUT_OF_DATE, FeatureFlagRemoteDataStatus.STALE)
 
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("non-existing")
@@ -1028,7 +1028,7 @@ public class FeatureFlagManagerTest {
         coEvery { remoteDataAccess.notifyOutOfDate(any()) } just runs
         coEvery { remoteDataAccess.bestEffortRefresh() } just runs
 
-        every { remoteDataAccess.status } returns RemoteData.Status.STALE
+        every { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.STALE
 
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("non-existing")
@@ -1046,7 +1046,7 @@ public class FeatureFlagManagerTest {
     public fun testUpToDateNoFlag(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
-        every { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        every { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("non-existing")
@@ -1091,7 +1091,7 @@ public class FeatureFlagManagerTest {
             generateRemoteData(listOf(flag))
         }
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         assertEquals(FeatureFlag.createFlag(
             name = "mismatched",
@@ -1144,7 +1144,7 @@ public class FeatureFlagManagerTest {
             generateRemoteData(listOf(flag))
         }
 
-        coEvery { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        coEvery { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
 
         assertEquals(FeatureFlag.createFlag(
             name = "mismatched",
@@ -1188,7 +1188,7 @@ public class FeatureFlagManagerTest {
     public fun testErrorWithResultCache(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
-        every { remoteDataAccess.status } returns RemoteData.Status.STALE
+        every { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.STALE
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("some-flag")
         } returns payload
@@ -1208,7 +1208,7 @@ public class FeatureFlagManagerTest {
     public fun testDoesNotExistWithResultCache(): TestResult = runTest {
         val payload = generateRemoteData(listOf())
 
-        every { remoteDataAccess.status } returns RemoteData.Status.UP_TO_DATE
+        every { remoteDataAccess.status } returns FeatureFlagRemoteDataStatus.UP_TO_DATE
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("some-flag")
         } returns payload

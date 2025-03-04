@@ -1,6 +1,7 @@
 package com.urbanairship.messagecenter.ui.view
 
 import android.content.Context
+import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
 import android.webkit.WebView
@@ -108,26 +109,19 @@ public class MessageView @JvmOverloads constructor(
         }
     }
 
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-
-        findViewTreeLifecycleOwner()?.lifecycle?.run {
-            // Remove any previously attached observer
-            removeObserver(lifecycleObserver)
-            // Add the observer
-            addObserver(lifecycleObserver)
-        } ?: UALog.w("MessageView must be hosted in a view that has a LifecycleOwner!")
-    }
-
     /** Renders the given [state] to the view. */
     @MainThread
     public fun render(state: MessageViewState) {
         when (state) {
             is MessageViewState.Content -> {
-                message = state.message
-                views.webView.loadMessage(state.message)
+                if (message != state.message) {
+                    message = state.message
+                    views.webView.loadMessage(state.message)
+                } else {
+                    UALog.v("Message already displayed: ${state.message.id}")
+                }
             }
-            MessageViewState.Empty -> {
+            is MessageViewState.Empty -> {
                 message = null
                 views.showEmpty()
             }
@@ -135,23 +129,33 @@ public class MessageView @JvmOverloads constructor(
                 message = null
                 views.showError(state.error)
             }
-            MessageViewState.Loading -> {
+            is MessageViewState.Loading -> {
                 message = null
                 views.showProgress()
             }
         }
     }
 
-    private val lifecycleObserver = object : DefaultLifecycleObserver {
-        override fun onResume(owner: LifecycleOwner) {
-            views.webView.onResume()
-        }
+    /** Pauses the WebView. */
+    public fun pauseWebView(): Unit = with (views.webView) {
+        onPause()
+        pauseTimers()
+    }
 
-        override fun onPause(owner: LifecycleOwner) {
-            views.webView.onPause()
-            // Also pause javascript timers
-            views.webView.pauseTimers()
-        }
+    /** Resumes the WebView. */
+    public fun resumeWebView(): Unit = with (views.webView) {
+        onResume()
+        resumeTimers()
+    }
+
+    /** Saves WebView state. */
+    public fun saveWebViewState(outState: Bundle) {
+        views.webView.saveState(outState)
+    }
+
+    /** Restores WebView state. */
+    public fun restoreWebViewState(inState: Bundle) {
+        views.webView.restoreState(inState)
     }
 
     private data class Views(

@@ -28,7 +28,7 @@ internal class ImageButtonModel(
 
     override fun onCreateView(
         context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?
-    ) = ImageButtonView(context, this, viewEnvironment).apply {
+    ) = ImageButtonView(context, this, viewEnvironment, itemProperties).apply {
         id = viewId
     }
 }

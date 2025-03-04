@@ -2,9 +2,11 @@ package com.urbanairship.messagecenter.ui.view
 
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
@@ -46,9 +48,10 @@ public class MessageViewModel(
      */
     public val states: StateFlow<MessageViewState> = _states.asStateFlow()
 
-    /** The currently loaded message ID, if we have one. */
-    private val currentMessageId: String?
-        get() = (_states.value as? MessageViewState.Content)?.message?.id
+    /**
+     * A `LiveData` of MessageView [States][MessageViewState] (data consumed by the view in order to display the message).
+     */
+    public val statesLiveData: LiveData<MessageViewState> = _states.asLiveData()
 
     /**
      * The currently loaded [Message], if we have one.
@@ -72,11 +75,12 @@ public class MessageViewModel(
 
     /** Loads the message with the given [messageId]. */
     public fun loadMessage(messageId: String) {
-        UALog.v { "Loading message: $messageId" }
-
         if (messageId == currentMessage?.id) {
+            UALog.v { "Message already loaded: $messageId" }
             return
         }
+
+        UALog.v { "Loading message: $messageId" }
 
         _states.value = MessageViewState.Loading
 

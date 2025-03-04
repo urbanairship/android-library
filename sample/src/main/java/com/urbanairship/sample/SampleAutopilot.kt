@@ -9,19 +9,10 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.Autopilot
-import com.urbanairship.UALog
 import com.urbanairship.UAirship
-import com.urbanairship.analytics.CustomEvent
-import com.urbanairship.analytics.EventType
 import com.urbanairship.liveupdate.LiveUpdateManager
 import com.urbanairship.messagecenter.MessageCenter
-import com.urbanairship.push.pushNotificationStatusFlow
 import com.urbanairship.sample.glance.SampleAppWidgetLiveUpdate
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
 
 /**
  * Autopilot that enables user notifications on first run.

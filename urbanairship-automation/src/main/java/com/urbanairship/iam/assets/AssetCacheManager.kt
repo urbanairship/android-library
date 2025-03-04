@@ -57,19 +57,14 @@ internal class AssetCacheManager(
                     if (!isActive) break
                     if (cache.isCached(asset)) break
 
-                    try {
-                        cache.cacheUri(asset)?.let { cacheURI ->
-                            val tempURI = downloader.downloadAsset(asset.toUri())
-                            if (tempURI == null) {
-                                UALog.e { "Failed to download asset for $identifier! $asset" }
-                            } else {
-                                fileManager.moveAsset(tempURI, cacheURI)
-                                cache.generateAndStoreMetadata(asset)
-                            }
+                    cache.cacheUri(asset)?.let { cacheURI ->
+                        val tempURI = downloader.downloadAsset(asset.toUri())
+                        if (tempURI == null) {
+                            throw IllegalStateException("Failed to download asset for $identifier! $asset")
+                        } else {
+                            fileManager.moveAsset(tempURI, cacheURI)
+                            cache.generateAndStoreMetadata(asset)
                         }
-                    } catch (e: Exception) {
-                        // Log a warning and continue with the next asset
-                        UALog.w(e) { "Failed to cache asset for $identifier! $asset" }
                     }
                 }
 

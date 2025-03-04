@@ -27,7 +27,7 @@ jobs:
       # Download pre-packaged docs artifacts if they were published by the release workflow.
       - name: Download pre-packaged docs artifacts
         id: download_docs
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         continue-on-error: true
         with:
           name: packaged-docs-${{ inputs.version }}
@@ -69,12 +69,11 @@ jobs:
 
       - name: Upload packaged docs artifacts
         if: ${{ steps.download_docs.outcome == 'failure' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: packaged-docs-${{ inputs.version }}
           retention-days: 1
           path: |
-#            build/docs/${{ inputs.version }}.tar.gz
             build/docs/${{ inputs.version }}-kdoc.tar.gz
 
   upload-docs:
@@ -91,7 +90,7 @@ jobs:
 
       - name: Download packaged docs artifacts
         id: download_docs
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: packaged-docs-${{ inputs.version }}
           path: build/docs
@@ -109,5 +108,4 @@ jobs:
         env:
             VERSION: ${{ inputs.version }}
         run: |
-#          gsutil cp build/docs/$VERSION.tar.gz gs://ua-web-ci-prod-docs-transfer/libraries/android/$VERSION.tar.gz
           gsutil cp build/docs/$VERSION-kdoc.tar.gz gs://ua-web-ci-prod-docs-transfer/libraries/android-kotlin/$VERSION.tar.gz

@@ -97,12 +97,13 @@ public class ConstrainedViewDelegate {
         if (view == null) {
             return measuredMaxSize;
         }
+
         int constrainedDimension = measuredMaxSize;
         if (min != null) {
             int minSize = Integer.MIN_VALUE;
             switch (min.getType()) {
                 case PERCENT:
-                    minSize = (int) (specSize * min.getFloat());
+                    minSize = specSize > 0 ? (int) (specSize * min.getFloat()) : minSize;
                     break;
                 case ABSOLUTE:
                     minSize = (int) dpToPx(view.getContext(), min.getInt());
@@ -116,7 +117,7 @@ public class ConstrainedViewDelegate {
             int maxSize = Integer.MAX_VALUE;
             switch (max.getType()) {
                 case PERCENT:
-                    maxSize = (int) (specSize * max.getFloat());
+                    maxSize = specSize > 0 ? (int) (specSize * max.getFloat()) : maxSize;
                     break;
                 case ABSOLUTE:
                     maxSize = (int) dpToPx(view.getContext(), max.getInt());
