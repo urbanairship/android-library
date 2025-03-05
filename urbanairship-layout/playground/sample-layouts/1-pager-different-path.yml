@@ -325,29 +325,6 @@ view:
                 top: 16
                 bottom: 16
               view:
-                type: label
-                event_handlers:
-                - type: tap
-                  state_actions:
-                  - type: set
-                    key: next_page
-                    value: page-5
-                text_appearance:
-                  font_size: 10
-                  color:
-                    default:
-                      hex: "#333333"
-                  alignment: center
-                text: 'Unlock page 5'
-            - size:
-                height: auto
-                width: auto
-              margin:
-                start: 16
-                end: 16
-                top: 16
-                bottom: 16
-              view:
                 type: label_button
                 identifier: button1
                 background_color:
