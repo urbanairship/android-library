@@ -5,6 +5,7 @@ package com.urbanairship.automation.remotedata
 import android.content.Context
 import com.urbanairship.UALog
 import com.urbanairship.automation.AutomationSchedule
+import com.urbanairship.automation.InAppAutomationRemoteDataStatus
 import com.urbanairship.automation.limits.FrequencyConstraint
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.json.JsonException
@@ -17,12 +18,17 @@ import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Network
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
 /**
  * Remote data access for automation
  */
 internal interface AutomationRemoteDataAccessInterface {
+
+    val status: InAppAutomationRemoteDataStatus
+    val statusUpdates: Flow<InAppAutomationRemoteDataStatus>
+
     val updatesFlow: Flow<InAppRemoteData>
     fun isCurrent(schedule: AutomationSchedule): Boolean
     fun requiredUpdate(schedule: AutomationSchedule): Boolean
@@ -45,6 +51,23 @@ internal class AutomationRemoteDataAccess(
     override val updatesFlow: Flow<InAppRemoteData> = remoteData
         .payloadFlow(REMOTE_DATA_TYPES)
         .map(InAppRemoteData.Companion::fromPayloads)
+
+    override val status: InAppAutomationRemoteDataStatus
+        get() {
+            return RemoteDataSource.entries
+                .map(remoteData::status)
+                .map { it.toInAppDataSource() }
+                .let(InAppAutomationRemoteDataStatus::reduce)
+        }
+
+    override val statusUpdates: Flow<InAppAutomationRemoteDataStatus>
+        get() {
+            return RemoteDataSource.entries
+                .mapNotNull(remoteData::statusFlow)
+                .map { flow -> flow.map { it.toInAppDataSource() } }
+                .let { flows -> combine(flows) { it.toList() } }
+                .map(InAppAutomationRemoteDataStatus::reduce)
+        }
 
     override fun isCurrent(schedule: AutomationSchedule): Boolean {
         if (!isRemote(schedule)) {
@@ -236,5 +259,13 @@ internal class InAppRemoteData(
                 remoteDataInfo = payload.remoteDataInfo
             )
         }
+    }
+}
+
+private fun RemoteData.Status.toInAppDataSource(): InAppAutomationRemoteDataStatus {
+    return when(this) {
+        RemoteData.Status.UP_TO_DATE -> InAppAutomationRemoteDataStatus.UP_TO_DATE
+        RemoteData.Status.STALE -> InAppAutomationRemoteDataStatus.STALE
+        RemoteData.Status.OUT_OF_DATE -> InAppAutomationRemoteDataStatus.OUT_OF_DATE
     }
 }

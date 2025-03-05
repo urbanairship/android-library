@@ -17,6 +17,7 @@ import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ButtonLayoutModel
 import com.urbanairship.android.layout.model.ButtonModel
+import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.TapEffect
@@ -34,7 +35,8 @@ import kotlinx.coroutines.launch
 internal class ButtonLayoutView(
     context: Context,
     val model: ButtonLayoutModel,
-    viewEnvironment: ViewEnvironment
+    viewEnvironment: ViewEnvironment,
+    val itemProperties: ItemProperties?
 ) : FrameLayout(context), BaseView, TappableView {
 
     private val isButtonForAccessibility: Boolean
@@ -44,7 +46,7 @@ internal class ButtonLayoutView(
         null -> true /// defaults to button
     }
 
-    private val view = model.view.createView(context, viewEnvironment, null)
+    private val view = model.view.createView(context, viewEnvironment, itemProperties)
 
     private val rippleAnimationDuration =
         resources.getInteger(android.R.integer.config_shortAnimTime).milliseconds

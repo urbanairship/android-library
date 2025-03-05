@@ -11,6 +11,7 @@ import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.iam.InAppMessagingInterface
 import com.urbanairship.iam.legacy.LegacyInAppMessagingInterface
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Provides a control interface for creating, canceling and executing in-app automations.
@@ -45,6 +46,16 @@ internal constructor(
                 engine.setExecutionPaused(value)
             }
         }
+
+    /**
+     * Status for in-app automation data
+     */
+    public val status: InAppAutomationRemoteDataStatus = remoteDataSubscriber.status
+
+    /**
+     * Flow of status updates of the in-app automation data
+     */
+    public val statusUpdates: Flow<InAppAutomationRemoteDataStatus> = remoteDataSubscriber.statusUpdates
 
     /**
      * Creates the provided schedules or updates them if they already exist.
@@ -140,6 +151,25 @@ internal constructor(
         @JvmStatic
         public fun shared(): InAppAutomation {
             return UAirship.shared().requireComponent(InAppAutomationComponent::class.java).automation
+        }
+    }
+}
+
+/**
+ * InAppAutomation remote data status
+ */
+public enum class InAppAutomationRemoteDataStatus {
+    UP_TO_DATE, STALE, OUT_OF_DATE;
+
+    internal companion object {
+        fun reduce(statuses: List<InAppAutomationRemoteDataStatus>): InAppAutomationRemoteDataStatus {
+            return if (statuses.contains(OUT_OF_DATE)) {
+                OUT_OF_DATE
+            } else if (statuses.contains(STALE)) {
+                STALE
+            } else {
+                UP_TO_DATE
+            }
         }
     }
 }

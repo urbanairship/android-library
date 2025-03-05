@@ -5,6 +5,7 @@ import android.R
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.graphics.Color
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -17,7 +18,6 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.core.view.doOnAttach
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
@@ -25,22 +25,16 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.MediaModel
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
-import com.urbanairship.android.layout.property.Size
-import com.urbanairship.android.layout.property.Size.Dimension
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.util.LayoutUtils
-import com.urbanairship.android.layout.util.ResourceUtils
-import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
+import com.urbanairship.android.layout.util.ThomasImageSizeResolver
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
-import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.widget.CropImageView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.android.layout.widget.TouchAwareWebView
@@ -48,12 +42,12 @@ import com.urbanairship.app.FilteredActivityListener
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
+import java.lang.ref.WeakReference
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import org.intellij.lang.annotations.Language
-import java.lang.ref.WeakReference
 
 /**
  * Media view.
@@ -64,7 +58,7 @@ internal class MediaView(
     context: Context,
     model: MediaModel,
     private val viewEnvironment: ViewEnvironment,
-    private val itemProperties: ItemProperties?
+    private val itemProperties: ItemProperties?,
 ) : FrameLayout(context, null), BaseView, TappableView {
 
     private val activityListener = object : SimpleActivityListener() {
@@ -159,10 +153,8 @@ internal class MediaView(
     }
 
     private fun configureImageView(model: MediaModel) {
-        var url = model.viewInfo.url
-        viewEnvironment.imageCache()[url]?.let { cachedImage ->
-            url = cachedImage
-        }
+        val cached = viewEnvironment.imageCache().get(model.viewInfo.url)
+        val url = cached?.path ?: model.viewInfo.url
 
         if (url.endsWith(".svg")) {
             // Load SVGs in a webview because they won't work in an ImageView
@@ -204,18 +196,8 @@ internal class MediaView(
             var isLoaded = false
 
             fun loadImage(url: String) {
-                val fallbackWidth = calculateFallbackSize(
-                    dimension = itemProperties?.size?.width,
-                    maxSize = ResourceUtils.getDisplayWidthPixels(context)
-                )
-
-                val fallbackHeight = calculateFallbackSize(
-                    dimension = itemProperties?.size?.height,
-                    maxSize = ResourceUtils.getDisplayHeightPixels(context)
-                )
-
                 val options = ImageRequestOptions.newBuilder(url)
-                    .setFallbackDimensions(fallbackWidth, fallbackHeight)
+                    .setImageSizeResolver(ThomasImageSizeResolver(itemProperties?.size, cached?.size))
                     .setImageLoadedCallback { success ->
                         if (success) {
                             isLoaded = true
@@ -240,14 +222,6 @@ internal class MediaView(
         }
     }
 
-    private fun calculateFallbackSize(dimension: Dimension?, maxSize: Int): Int {
-        return when (dimension?.type) {
-            Size.DimensionType.AUTO ->  0
-            Size.DimensionType.PERCENT -> (dimension.float * maxSize).toInt()
-            Size.DimensionType.ABSOLUTE -> dpToPx(context, dimension.int).toInt()
-            null -> maxSize
-        }
-    }
 
     /**
      * Helper method to load a video (or SVG) in the WebView.
@@ -323,10 +297,11 @@ internal class MediaView(
             gravity = Gravity.CENTER
         }
         frameLayout.addView(progressBar, progressBarLayoutParams)
+        wv.setBackgroundColor(Color.TRANSPARENT)
 
         wv.settings.apply {
-            if (model.viewInfo.mediaType == MediaType.VIDEO) {
-                mediaPlaybackRequiresUserGesture = true
+            if (model.viewInfo.mediaType == MediaType.VIDEO && model.viewInfo.video?.autoplay == true) {
+                mediaPlaybackRequiresUserGesture = false
             }
 
             javaScriptEnabled = true

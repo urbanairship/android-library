@@ -7,6 +7,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.automation.AutomationSchedule
+import com.urbanairship.automation.InAppAutomationRemoteDataStatus
 import com.urbanairship.automation.engine.AutomationEngineInterface
 import com.urbanairship.automation.isNewSchedule
 import com.urbanairship.automation.limits.FrequencyConstraint
@@ -16,6 +17,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -59,6 +61,12 @@ internal class AutomationRemoteDataSubscriber (
     fun unsubscribe() {
         subscriptionState.compareAndSet(expect = true, update = false)
     }
+
+    val status: InAppAutomationRemoteDataStatus
+        get() = remoteDataAccess.status
+
+    val statusUpdates: Flow<InAppAutomationRemoteDataStatus>
+        get() = remoteDataAccess.statusUpdates
 
     private suspend fun processAutomations(data: InAppRemoteData) {
         val currentSchedules = engine.getSchedules()

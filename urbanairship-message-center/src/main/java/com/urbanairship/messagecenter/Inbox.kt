@@ -346,16 +346,56 @@ public class Inbox @VisibleForTesting internal constructor(
 
 
     /** The total message count. */
+    @JvmSynthetic
     public suspend fun getCount(): Int = messageDao.getMessageCount()
 
+    /** A [PendingResult] of the total message count. */
+    public fun getCountPendingResult(): PendingResult<Int> {
+        val result = PendingResult<Int>()
+        scope.launch {
+            result.result = messageDao.getMessageCount()
+        }
+        return result
+    }
+
     /** All the message IDs in the [Inbox]. */
+    @JvmSynthetic
     public suspend fun getMessageIds(): Set<String> = messageDao.getMessageIds().toSet()
 
+    /** A [PendingResult] of all the message IDs in the [Inbox]. */
+    public fun getMessageIdsPendingResult(): PendingResult<Set<String>> {
+        val result = PendingResult<Set<String>>()
+        scope.launch {
+            result.result = messageDao.getMessageIds().toSet()
+        }
+        return result
+    }
+
     /** The number of read messages currently in the [Inbox]. */
+    @JvmSynthetic
     public suspend fun getReadCount(): Int = messageDao.getReadMessageCount()
 
+    /** A [PendingResult] of the read message count. */
+    public fun getReadCountPendingResult(): PendingResult<Int> {
+        val result = PendingResult<Int>()
+        scope.launch {
+            result.result = messageDao.getReadMessageCount()
+        }
+        return result
+    }
+
     /** The number of unread messages currently in the [Inbox]. */
+    @JvmSynthetic
     public suspend fun getUnreadCount(): Int = messageDao.getUnreadMessageCount()
+
+    /** A [PendingResult] of the unread message count. */
+    public fun getUnreadCountPendingResult(): PendingResult<Int> {
+        val result = PendingResult<Int>()
+        scope.launch {
+            result.result = messageDao.getUnreadMessageCount()
+        }
+        return result
+    }
 
     /**
      * Filters a collection of messages according to the supplied predicate

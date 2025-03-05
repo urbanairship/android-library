@@ -2,9 +2,11 @@ package com.urbanairship.messagecenter.ui.view
 
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
@@ -47,6 +49,9 @@ public class MessageListViewModel(
 
     /** A `Flow` of Message List [States][MessageListState] (data consumed by the view in order to display the message list). */
     public val states: StateFlow<MessageListState> = _states.asStateFlow()
+
+    /** A `LiveData` of Message  List [States][MessageListState] (data consumed by the view in order to display the message list). */
+    public val statesLiveData: LiveData<MessageListState> = _states.asLiveData()
 
     private var refreshJob: Job? = null
     private var getMessagesJob: Job? = null

@@ -28,7 +28,7 @@ import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.util.Clock
-import java.util.Random
+import java.security.SecureRandom
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.Lock
@@ -227,7 +227,7 @@ public class RemoteData @VisibleForTesting internal constructor(
         get() {
             var randomValue = preferenceDataStore.getInt(RANDOM_VALUE_KEY, -1)
             if (randomValue == -1) {
-                val random = Random()
+                val random = SecureRandom()
                 randomValue = random.nextInt(MAX_RANDOM_VALUE + 1)
                 preferenceDataStore.put(RANDOM_VALUE_KEY, randomValue)
             }
@@ -337,10 +337,16 @@ public class RemoteData @VisibleForTesting internal constructor(
     }
 
     public fun status(source: RemoteDataSource): Status {
-        return providers
+        return statusFlow(source)?.value ?: Status.OUT_OF_DATE
+    }
+
+    public fun statusFlow(source: RemoteDataSource): StateFlow<Status>? {
+        val provider = providers
             .firstOrNull { it.source == source }
-            ?.status(changeToken, localeManager.locale, randomValue)
-            ?: Status.OUT_OF_DATE
+            ?: return null
+
+        provider.status(changeToken, localeManager.locale, randomValue)
+        return provider.statusUpdates
     }
 
     /**

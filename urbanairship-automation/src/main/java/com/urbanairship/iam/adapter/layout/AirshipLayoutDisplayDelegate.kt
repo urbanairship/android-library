@@ -7,6 +7,8 @@ import com.urbanairship.Predicate
 import com.urbanairship.analytics.Event.Priority
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.display.DisplayException
+import com.urbanairship.android.layout.util.CachedImage
+import com.urbanairship.android.layout.util.ImageCache
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.embedded.EmbeddedViewManager
 import com.urbanairship.iam.InAppMessageWebViewClient
@@ -61,7 +63,20 @@ internal class AirshipLayoutDisplayDelegate(
             webViewClientFactory = { InAppMessageWebViewClient( NativeBridge(actionRunner), messageExtras) },
             priority = priority,
             extras = extras,
-            imageCache = { url -> assets?.cacheUri(url)?.path },
+            imageCache = { url ->
+                assets?.cacheUri(url)?.path?.let {
+                    val size = assets.getMediaSize(url)
+
+                    CachedImage(
+                        path = it,
+                        size =  if (size.width > 0 && size.height > 0) {
+                            size
+                        } else {
+                            null
+                        }
+                    )
+                }
+            },
             embeddedViewManager = EmbeddedViewManager
         )
 

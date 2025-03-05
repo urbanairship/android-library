@@ -19,10 +19,18 @@ import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.json.JsonMap
 import com.urbanairship.remotedata.RemoteData
-import java.lang.IllegalStateException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+
+/**
+ * Feature flag remote data statuses
+ */
+public enum class FeatureFlagRemoteDataStatus {
+    UP_TO_DATE, STALE, OUT_OF_DATE;
+}
 
 /**
  * Airship Feature Flags manager.
@@ -112,6 +120,18 @@ public class FeatureFlagManager internal constructor(
         return result
     }
 
+    /**
+     * Gets the status updates
+     */
+    public val statusUpdates: Flow<FeatureFlagRemoteDataStatus>
+        get() = remoteData.statusUpdates ?: flowOf(FeatureFlagRemoteDataStatus.OUT_OF_DATE)
+
+    /**
+     * Gets the current data status
+     */
+    public val status: FeatureFlagRemoteDataStatus
+        get() = remoteData.status
+
     private suspend fun resolveFlag(name: String): Result<FeatureFlag> {
         val flagInfoResult = remoteDataFeatureFlagInfo(name)
         val remoteDataInfo = flagInfoResult.getOrNull()
@@ -135,7 +155,7 @@ public class FeatureFlagManager internal constructor(
                 remoteData.bestEffortRefresh()
 
                 // If we are not up-to-date, then skip
-                if (remoteData.status != RemoteData.Status.UP_TO_DATE) {
+                if (remoteData.status != FeatureFlagRemoteDataStatus.UP_TO_DATE) {
                     return Result.failure(mapError(name, e))
                 }
 
@@ -152,11 +172,11 @@ public class FeatureFlagManager internal constructor(
 
     private suspend fun remoteDataFeatureFlagInfo(name: String): Result<RemoteDataFeatureFlagInfo> {
         return when (remoteData.status) {
-            RemoteData.Status.UP_TO_DATE -> {
+            FeatureFlagRemoteDataStatus.UP_TO_DATE -> {
                 Result.success(remoteData.fetchFlagRemoteInfo(name))
             }
 
-            RemoteData.Status.STALE, RemoteData.Status.OUT_OF_DATE -> {
+            FeatureFlagRemoteDataStatus.STALE, FeatureFlagRemoteDataStatus.OUT_OF_DATE -> {
                 val remoteDataInfo = remoteData.fetchFlagRemoteInfo(name)
                 val disallowStale = remoteDataInfo.flagInfoList.firstOrNull {
                     it.evaluationOptions?.disallowStaleValues == true
@@ -166,11 +186,11 @@ public class FeatureFlagManager internal constructor(
                     remoteData.bestEffortRefresh()
 
                     when (remoteData.status) {
-                        RemoteData.Status.UP_TO_DATE ->
+                        FeatureFlagRemoteDataStatus.UP_TO_DATE ->
                             Result.success(remoteData.fetchFlagRemoteInfo(name))
-                        RemoteData.Status.STALE ->
+                        FeatureFlagRemoteDataStatus.STALE ->
                             Result.failure(FeatureFlagEvaluationException.StaleNotAllowed())
-                        RemoteData.Status.OUT_OF_DATE ->
+                        FeatureFlagRemoteDataStatus.OUT_OF_DATE ->
                             Result.failure(FeatureFlagEvaluationException.OutOfDate())
                     }
                 } else {

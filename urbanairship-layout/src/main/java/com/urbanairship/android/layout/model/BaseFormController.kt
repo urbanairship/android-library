@@ -129,6 +129,7 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                                 )
                             )
                             updateAttributes(result.attributes)
+                            registerChannels(result.channels)
                             // Mark the form state as submitted.
                             submitted
                         }
