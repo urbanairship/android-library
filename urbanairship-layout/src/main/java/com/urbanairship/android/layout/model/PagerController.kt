@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.PagerControllerInfo
+import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.reporting.PagerData
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 internal class PagerController(
     viewInfo: PagerControllerInfo,
     val view: AnyModel,
+    val branching: PagerControllerBranching? = null,
     private val pagerState: SharedState<State.Pager>,
     environment: ModelEnvironment,
     properties: ModelProperties

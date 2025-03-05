@@ -34,12 +34,12 @@ internal class PagerIndicatorView(
         }
 
         model.listener = object : PagerIndicatorModel.Listener {
-            private var isInitialized = false
+            private var itemsCount = 0
 
             override fun onUpdate(size: Int, position: Int) {
-                if (!isInitialized) {
-                    isInitialized = true
+                if (size != itemsCount) {
                     setCount(size)
+                    itemsCount = size
                 }
                 setPosition(position)
             }
@@ -64,6 +64,8 @@ internal class PagerIndicatorView(
      * @param count The number of dots to display.
      */
     fun setCount(count: Int) {
+        removeAllViews()
+
         val bindings = model.viewInfo.bindings
         val checked = bindings.selected
         val unchecked = bindings.unselected

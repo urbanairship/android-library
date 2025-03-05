@@ -233,7 +233,10 @@ internal class ThomasModelFactory : ModelFactory {
             is CheckboxControllerInfo -> SharedState(
                 State.Checkbox(info.identifier, info.minSelection, info.maxSelection)
             )
-            is PagerControllerInfo -> SharedState(State.Pager(info.identifier))
+            is PagerControllerInfo -> SharedState(State.Pager(
+                identifier = info.identifier,
+                branching = info.branching)
+            )
             is StateControllerInfo -> SharedState(State.Layout())
             else -> null
         }
@@ -346,14 +349,16 @@ internal class ThomasModelFactory : ModelFactory {
             )
             is PagerInfo -> PagerModel(
                 viewInfo = info,
-                items = children.map { (model, itemInfo) ->
+                availablePages = children.map { (model, itemInfo) ->
                     (itemInfo as? PagerItemInfo)?.let {
                         PagerModel.Item(
                             view = model,
                             identifier = itemInfo.identifier,
                             displayActions = itemInfo.displayActions,
                             automatedActions = itemInfo.automatedActions,
-                            accessibilityActions = itemInfo.accessibilityActions
+                            accessibilityActions = itemInfo.accessibilityActions,
+                            stateActions = itemInfo.stateActions,
+                            branching = itemInfo.branching
                         )
                     } ?: throw ModelFactoryException("PagerItemInfo expected")
                 },
@@ -404,7 +409,8 @@ internal class ThomasModelFactory : ModelFactory {
                 pagerState = environment.layoutState.pager
                     ?: throw ModelFactoryException("Required pager state was null for PagerController!"),
                 environment = environment,
-                properties = properties
+                properties = properties,
+                branching = info.branching
             )
             is CheckboxControllerInfo -> CheckboxController(
                 viewInfo = info,

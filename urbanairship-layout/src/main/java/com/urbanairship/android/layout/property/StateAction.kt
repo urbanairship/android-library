@@ -28,13 +28,20 @@ internal sealed class StateAction(val type: Type) {
 
         companion object {
             fun from(value: String): Type {
-                return values().firstOrNull { it.value == value }
+                return entries.firstOrNull { it.value == value }
                     ?: throw JsonException("Unknown StateAction type: '$value'")
             }
         }
     }
 
     companion object {
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): StateAction {
+            val content = value.requireMap()
+            return fromJson(content)
+        }
+
         fun fromJson(json: JsonMap): StateAction {
             return when (Type.from(json.requireField("type"))) {
                 Type.CLEAR_STATE -> ClearState

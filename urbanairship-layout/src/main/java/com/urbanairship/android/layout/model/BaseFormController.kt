@@ -192,7 +192,7 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
         val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
 
         val isEnabled =
-            isParentEnabled && (hasPagerNextBehavior && hasPagerPrevBehavior && (state.hasNext || state.hasPrevious)) || (hasPagerNextBehavior && state.hasNext) || (hasPagerPrevBehavior && state.hasPrevious)
+            isParentEnabled && (hasPagerNextBehavior && hasPagerPrevBehavior && (state.hasNext || state.canGoBack)) || (hasPagerNextBehavior && state.hasNext) || (hasPagerPrevBehavior && state.canGoBack)
 
         formState.update {
             it.copy(isEnabled = isEnabled)

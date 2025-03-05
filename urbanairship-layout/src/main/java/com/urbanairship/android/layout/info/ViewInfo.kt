@@ -18,6 +18,8 @@ import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.MarkdownOptions
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
+import com.urbanairship.android.layout.property.PageBranching
+import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.ScoreStyle
@@ -687,6 +689,8 @@ internal class PagerItemInfo(
         ?.let { AutomatedAction.fromList(it) }
     val accessibilityActions = json.optionalList("accessibility_actions")
         ?.let { AccessibilityAction.fromList(it) }
+    val stateActions = json.optionalList("state_actions")?.map(StateAction::fromJson)
+    val branching = json.get("branching")?.let(PageBranching::from)
 }
 
 internal class PagerIndicatorInfo(
@@ -739,6 +743,8 @@ internal class NpsFormControllerInfo(json: JsonMap) : FormInfo(json) {
 internal class PagerControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json) {
     override val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
+
+    val branching = json.get("branching")?.let(PagerControllerBranching::from)
 }
 
 internal class CheckboxControllerInfo(

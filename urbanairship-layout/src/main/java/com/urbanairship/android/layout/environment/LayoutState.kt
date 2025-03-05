@@ -1,8 +1,10 @@
 package com.urbanairship.android.layout.environment
 
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.model.PageRequest
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
+import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.FormInfo
@@ -10,6 +12,7 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.json.JsonValue
 import kotlin.collections.set
+import kotlin.math.max
 
 internal class LayoutState(
     val pager: SharedState<State.Pager>?,
@@ -60,42 +63,49 @@ internal sealed class State {
         val isMediaPaused: Boolean = false,
         val wasMediaPaused: Boolean = false,
         val isStoryPaused: Boolean = false,
-        val isTouchExplorationEnabled: Boolean = false
+        val isTouchExplorationEnabled: Boolean = false,
+        val branching: PagerControllerBranching? = null,
+        val canGoBack: Boolean = pageIndex > 0
     ) : State() {
+
         val hasNext
             get() = pageIndex < pageIds.size - 1
-        val hasPrevious
-            get() = pageIndex > 0
 
-        fun copyWithPageIndex(index: Int) =
+        internal fun copyWithPageIndex(index: Int) =
             if (index == pageIndex) {
                 copy()
             } else {
                 copy(
                     pageIndex = index,
                     lastPageIndex = pageIndex,
-                    completed = completed || (index == pageIds.size - 1),
-                    progress = 0
+                    completed = if (branching == null) { // we want to evaluate complete for pagers with no branching
+                        completed || (index == pageIds.size - 1)
+                    } else {
+                        completed
+                    },
+                    progress = 0,
+                    canGoBack = index > 0
                 )
             }
 
-        fun copyWithPageIndexAndResetProgress(index: Int) =
-            if (index == pageIndex) {
-                copy(
-                    progress = 0
-                )
+        fun copyWithPageRequest(request: PageRequest): Pager {
+            val nextIndex = when(request)
+            {
+                PageRequest.NEXT -> pageIndex + 1
+                PageRequest.BACK -> if (canGoBack) {
+                    max(pageIndex - 1, 0)
+                } else {
+                    -1
+                }
+                PageRequest.FIRST -> 0
+            }
+
+            return if (pageIndex >= 0 && pageIndex < pageIds.size) {
+                copyWithPageIndex(nextIndex)
             } else {
-                copyWithPageIndex(index)
+                copy(progress = 0)
             }
-
-        fun copyWithPageIds(pageIds: List<String>) =
-            copy(
-                pageIds = pageIds,
-                completed = pageIds.size <= 1
-            )
-
-        fun copyWithDurations(durations: List<Int?>) =
-            copy(durations = durations)
+        }
 
         fun copyWithMediaPaused(isMediaPaused: Boolean) =
             copy(isMediaPaused = isMediaPaused,
@@ -109,6 +119,24 @@ internal sealed class State {
 
         fun reportingContext(): PagerData =
             PagerData(identifier, pageIndex, pageIds.getOrElse(pageIndex) { "NULL!" }, pageIds.size, completed)
+
+        val currentPageId: String?
+            get() {
+                if (pageIndex < 0 || pageIndex >= pageIds.size) {
+                    return null
+                }
+
+                return pageIds[pageIndex]
+            }
+
+        val previousPageId: String?
+            get() {
+                if (lastPageIndex < 0 || lastPageIndex >= pageIds.size) {
+                    return null
+                }
+
+                return pageIds[lastPageIndex]
+            }
     }
 
     internal data class Form(
