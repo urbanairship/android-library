@@ -105,7 +105,6 @@ internal class PagerModel(
             onPagesDataUpdated(availablePages)
         }
 
-
         // Listen for page changes (or the initial page display)
         // and run any actions for the current page.
         modelScope.launch {
@@ -149,6 +148,7 @@ internal class PagerModel(
     }
 
     private fun onPagesDataUpdated(updated: List<Item>) {
+        _allPages = updated
         pages = updated.map { it.view }
         // Update pager state with our page identifiers
         pagerState.update { state ->
