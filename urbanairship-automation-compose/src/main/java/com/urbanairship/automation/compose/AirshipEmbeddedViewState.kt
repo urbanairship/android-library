@@ -41,7 +41,7 @@ public fun rememberAirshipEmbeddedViewState(
     return rememberAirshipEmbeddedViewState(embeddedId, comparator, EmbeddedViewManager)
 }
 
-/** State holder for [EmbeddedViewContent]. */
+/** State holder for [AirshipEmbeddedView] content. */
 @Stable
 public class AirshipEmbeddedViewState(
     public val embeddedId: String

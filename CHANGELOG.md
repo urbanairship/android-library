@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 19.3.0 March 6, 2025
+Minor release that fixes an issue with modal Scenes and adds support for hoisting `AirshipEmbeddedViewGroup` composable state.
+Apps that make use of Scenes should update to this version or greater.
+
+### Changes
+- Fix a potential crash when displaying a modal Scene
+- Added support for hoisting `AirshipEmbeddedViewGroup` composable state
+
 ## Version 19.2.0 February 20, 2025
 Minor release that includes improvements for Scenes and Feature Flags.
 
