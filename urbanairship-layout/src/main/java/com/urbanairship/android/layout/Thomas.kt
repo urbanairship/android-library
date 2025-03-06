@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout
 
 import android.app.ActivityOptions
+import android.app.ActivityOptions.makeSceneTransitionAnimation
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.RestrictTo
@@ -79,7 +80,15 @@ public object Thomas {
                             ModalActivity.EXTRA_DISPLAY_ARGS_LOADER,
                             DisplayArgsLoader.newLoader(args)
                         )
-                    context.startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(getActivity(context)).toBundle())
+                    val activityContext = activityMonitor.resumedActivities.lastOrNull()
+                    if (activityContext != null) {
+                        activityContext.startActivity(
+                            intent,
+                            makeSceneTransitionAnimation(activityContext).toBundle()
+                        )
+                    } else {
+                        context.startActivity(intent)
+                    }
                 }
             }
             is BannerPresentation -> {
