@@ -14,10 +14,8 @@
         <item name="android:windowActivityTransitions">true</item>
         <item name="android:windowEnterTransition">@transition/fade</item>
         <item name="android:windowExitTransition">@transition/fade</item>
-        <item name="android:windowSharedElementEnterTransition">
-            @transition/fade</item>
-        <item name="android:windowSharedElementExitTransition">
-            @transition/fade</item>
+        <item name="android:windowSharedElementEnterTransition">@transition/fade</item>
+        <item name="android:windowSharedElementExitTransition">@transition/fade</item>
     </style>
 
     <style name="UrbanAirship.Layout.ModalActivity" parent="UrbanAirship.Layout.ModalActivityBase" />

@@ -50,9 +50,7 @@ public class ModalActivity : AppCompatActivity() {
         ViewModelProvider(this)[LayoutViewModel::class.java]
     }
 
-    // TODO(API35): Replace the hardcoded version with VANILLA_ICE_CREAM
-    //   once we've updated the SDK to target API 35.
-    private val isAtLeastApi35 = Build.VERSION.SDK_INT >= 35
+    private val isAtLeastApi35 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM
 
     private lateinit var loader: DisplayArgsLoader
     private lateinit var externalListener: ThomasListenerInterface
