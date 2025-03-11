@@ -159,7 +159,7 @@ class IncomingPushRunnable implements Runnable {
                 return;
             }
 
-            Predicate<PushMessage> displayForegroundPredicate = airship.getPushManager().getForegroundDisplayPredicate();
+            Predicate<PushMessage> displayForegroundPredicate = airship.getPushManager().getForegroundNotificationDisplayPredicate();
             if (displayForegroundPredicate != null && !displayForegroundPredicate.apply(message)) {
                 UALog.i("Foreground notification display predicate prevented the display of message: %s", message);
                 postProcessPushFinished(airship, message, false);

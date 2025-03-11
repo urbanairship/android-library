@@ -121,10 +121,10 @@ public open class PushManager @VisibleForTesting internal constructor(
     /**
      * Sets a predicate that determines if a notification should be presented in the foreground or not.
      *
-     * @param foregroundDisplayPredicate The display predicate.
+     * @param foregroundNotificationDisplayPredicate The display predicate.
      */
     @Volatile
-    public var foregroundDisplayPredicate: Predicate<PushMessage>? = null
+    public var foregroundNotificationDisplayPredicate: Predicate<PushMessage>? = null
 
     public val statusObserver: PushNotificationStatusObserver
 

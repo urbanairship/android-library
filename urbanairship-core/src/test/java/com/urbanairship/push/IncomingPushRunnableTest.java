@@ -292,7 +292,7 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         when(pushManager.isPushEnabled()).thenReturn(true);
         when(pushManager.isOptIn()).thenReturn(true);
         when(pushManager.isUniqueCanonicalId("testPushID")).thenReturn(true);
-        when(pushManager.getForegroundDisplayPredicate()).thenReturn(new Predicate<PushMessage>() {
+        when(pushManager.getForegroundNotificationDisplayPredicate()).thenReturn(new Predicate<PushMessage>() {
             @Override
             public boolean apply(PushMessage object) {
                 return false;
