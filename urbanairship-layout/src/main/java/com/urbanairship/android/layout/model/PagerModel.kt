@@ -94,8 +94,7 @@ internal class PagerModel(
             branchControl = PagerBranchControl(
                 availablePages = availablePages,
                 controllerBranching = branching,
-                viewState = environment.layoutState.layout,
-                formState = environment.layoutState.form,
+                thomasState = environment.layoutState.thomasState,
                 onBranchUpdated = ::onPagesDataUpdated,
                 actionsRunner = ::runStateActions,
             )

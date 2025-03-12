@@ -6,6 +6,7 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.StateAction
@@ -18,7 +19,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
@@ -27,8 +30,7 @@ import kotlinx.coroutines.launch
 internal class PagerBranchControl(
     private val availablePages: List<PagerModel.Item>,
     private val controllerBranching: PagerControllerBranching,
-    private val viewState: SharedState<State.Layout>?,
-    private val formState: SharedState<State.Form>?,
+    private val thomasState: StateFlow<ThomasState>,
     private val onBranchUpdated: (List<PagerModel.Item>) -> Unit,
     private val actionsRunner: (List<StateAction>) -> Unit,
     private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.newSerialDispatcher() + SupervisorJob())
@@ -43,24 +45,17 @@ internal class PagerBranchControl(
     val isComplete = _isComplete.asStateFlow()
 
     init {
-        scope.launch { listenForUpdates() }
-    }
-
-    private suspend fun listenForUpdates() {
-        val stateFlow = viewState?.changes ?: return
-        val formFlow = formState?.changes ?: return
-
-        combine(stateFlow, formFlow) { state, form -> Pair(state, form) }
-            .distinctUntilChanged()
-            .collect { updateState() }
+        scope.launch {
+            thomasState.collect { updateState() }
+        }
     }
 
     private fun updateState() {
-        val payload = generatePayload() ?: return
+        val payload = thomasState.value
 
         reEvaluatePath(payload)
         evaluateCompletion(payload)
-        updateCanGoBack()
+        updateCanGoBack(payload)
     }
 
     fun addToHistory(id: String) {
@@ -116,34 +111,13 @@ internal class PagerBranchControl(
         }
     }
 
-    private fun updateCanGoBack() {
-        val payload = generatePayload() ?: return
+    private fun updateCanGoBack(payload: JsonSerializable? = null) {
+        val payload = payload ?: thomasState.value
 
         _canGoBackState.update {
             val result = history.lastOrNull() ?: return@update false
             history.size > 1 && result.branching?.canGoBack(payload) != false
         }
-    }
-
-    @OptIn(DelicateLayoutApi::class)
-    private fun generatePayload(): JsonSerializable? {
-        val viewState = viewState?.value?.state ?: return null
-        val formState = FormData.Form(
-            identifier = "current",
-            responseType = null,
-            children = formState?.value?.data?.values?.toSet() ?: emptySet()
-        )
-
-        return viewState
-            .toMutableMap()
-            .apply {
-                put("\$forms", jsonMapOf(
-                    "current" to jsonMapOf(
-                        "data" to formState.formData.toJsonValue()).toJsonValue()
-                    ).toJsonValue()
-                )
-            }
-            .let(JsonValue::wrap)
     }
 
     private fun reEvaluatePath(payload: JsonSerializable) {

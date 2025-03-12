@@ -1,10 +1,12 @@
 package com.urbanairship.android.layout.environment
 
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.event.ReportingEvent
-import com.urbanairship.android.layout.model.PageRequest
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
+import com.urbanairship.android.layout.model.PageRequest
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.PagerControllerBranching
+import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.FormInfo
@@ -13,6 +15,7 @@ import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.json.JsonValue
 import kotlin.collections.set
 import kotlin.math.max
+import kotlinx.coroutines.flow.StateFlow
 
 internal class LayoutState(
     val pager: SharedState<State.Pager>?,
@@ -20,7 +23,8 @@ internal class LayoutState(
     val parentForm: SharedState<State.Form>?,
     val checkbox: SharedState<State.Checkbox>?,
     val radio: SharedState<State.Radio>?,
-    val layout: SharedState<State.Layout>?,
+    val layout: SharedState<State.Layout>,
+    val thomasState: StateFlow<ThomasState>
 ) {
     fun reportingContext(
         formContext: FormInfo? = null,
@@ -35,7 +39,40 @@ internal class LayoutState(
 
     companion object {
         @JvmField
-        val EMPTY = LayoutState(null, null, null, null, null, null)
+        val EMPTY = LayoutState(null, null, null, null, null,
+            layout = SharedState(State.Layout.DEFAULT),
+            thomasState = makeThomasState(null, null)
+        )
+    }
+
+    fun processStateActions(
+        actions: List<StateAction>?,
+        formValue: Any? = null // JsonSerializable
+    ) {
+        actions?.forEach { action ->
+            when (action) {
+                is StateAction.SetFormValue -> layout.let { state ->
+                    UALog.v("StateAction: SetFormValue ${action.key} = ${JsonValue.wrapOpt(formValue)}")
+                    state.update {
+                        it.copy(state = it.state + (action.key to JsonValue.wrapOpt(formValue)))
+                    }
+                }
+
+                is StateAction.SetState -> layout.let { state ->
+                    UALog.v("StateAction: SetState ${action.key} = ${action.value}")
+                    state.update {
+                        it.copy(state = it.state + (action.key to action.value))
+                    }
+                }
+
+                StateAction.ClearState -> layout.let { state ->
+                    UALog.v("StateAction: ClearState")
+                    state.update {
+                        it.copy(state = emptyMap())
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -215,6 +252,14 @@ internal sealed class State {
             }
             return list
         }
+
+        companion object {
+            val DEFAULT = Form(
+                identifier = "",
+                formType = FormType.Form,
+                formResponseType = ""
+            )
+        }
     }
 
     internal data class Checkbox(
@@ -234,7 +279,11 @@ internal sealed class State {
 
     internal data class Layout(
         val state: Map<String, JsonValue?> = emptyMap()
-    ) : State()
+    ) : State() {
+        companion object {
+            val DEFAULT = Layout(emptyMap())
+        }
+    }
 }
 
 @Suppress("UNCHECKED_CAST")

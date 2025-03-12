@@ -5,11 +5,11 @@ import android.content.Context
 import android.view.View.OnAttachStateChangeListener
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Provider
-import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.Accessible
@@ -23,13 +23,12 @@ import com.urbanairship.android.layout.property.hasFormBehaviors
 import com.urbanairship.android.layout.property.hasPagerBehaviors
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
-import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.resolveContentDescription
-import com.urbanairship.android.layout.util.resolveOptional
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.TappableView
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.toJsonMap
 import com.urbanairship.util.PlatformUtils
@@ -55,7 +54,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
     internal interface Listener {
 
-        fun onStateUpdated(state: State.Layout) {}
+        fun onStateUpdated(state: ThomasState) {}
         fun setBackground(old: Background?, new: Background)
         fun setVisibility(visible: Boolean)
         fun setEnabled(enabled: Boolean)
@@ -147,7 +146,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         }
 
         viewScope.launch {
-            layoutState.layout?.changes?.collect {
+            layoutState.thomasState.collect {
                 updateBackground(it)
                 updateVisibility(it)
                 listener?.onStateUpdated(it)
@@ -216,7 +215,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     protected fun updateAttributes(attributes: Map<AttributeName, AttributeValue>) =
         environment.attributeHandler.update(attributes)
 
-    private fun updateBackground(state: State.Layout? = null) {
+    private fun updateBackground(state: ThomasState? = null) {
         val background = if (state != null) {
             Background(
                 color = state.resolveOptional(
@@ -236,11 +235,11 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         }
     }
 
-    private fun updateVisibility(state: State.Layout) {
+    private fun updateVisibility(state: JsonSerializable) {
         val visibility = viewInfo.visibility ?: return
 
         val matcher = visibility.invertWhenStateMatcher
-        val match = matcher.apply(state.state.toJsonMap())
+        val match = matcher.apply(state)
 
         val isVisible = if (match) {
             !visibility.default
@@ -289,30 +288,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     fun runStateActions(
         actions: List<StateAction>?,
         formValue: Any? = null
-    ) = actions?.forEach { action ->
-        when (action) {
-            is StateAction.SetFormValue -> layoutState.layout?.let { state ->
-                UALog.v("StateAction: SetFormValue ${action.key} = ${JsonValue.wrapOpt(formValue)}")
-                state.update {
-                    it.copy(state = it.state + (action.key to JsonValue.wrapOpt(formValue)))
-                }
-            } ?: UALog.w("StateAction: SetFormValue skipped. Missing State Controller!")
-
-            is StateAction.SetState -> layoutState.layout?.let { state ->
-                UALog.v("StateAction: SetState ${action.key} = ${action.value}")
-                state.update {
-                    it.copy(state = it.state + (action.key to action.value))
-                }
-            } ?: UALog.w("StateAction: SetState skipped. Missing State Controller!")
-
-            StateAction.ClearState -> layoutState.layout?.let { state ->
-                UALog.v("StateAction: ClearState")
-                state.update {
-                    it.copy(state = emptyMap())
-                }
-            } ?: UALog.w("StateAction: ClearState skipped. Missing State Controller!")
-        }
-    }
+    ) = layoutState.processStateActions(actions, formValue)
 
     private companion object {
         private const val KEY_PLATFORM_OVERRIDE = "platform_action_overrides"

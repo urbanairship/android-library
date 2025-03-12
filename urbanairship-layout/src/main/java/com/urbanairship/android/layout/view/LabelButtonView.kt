@@ -7,7 +7,7 @@ import android.content.res.ColorStateList
 import android.text.TextUtils
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
-import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.LabelButtonModel
@@ -18,7 +18,6 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
-import com.urbanairship.android.layout.util.resolveRequired
 import com.urbanairship.android.layout.widget.TappableView
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.flow.Flow
@@ -55,7 +54,7 @@ internal class LabelButtonView(
                 this@LabelButtonView.isVisible = visible
             }
 
-            override fun onStateUpdated(state: State.Layout) {
+            override fun onStateUpdated(state: ThomasState) {
                 val text = state.resolveRequired(
                     overrides = model.viewInfo.label.viewOverrides?.text,
                     default = model.viewInfo.label.text

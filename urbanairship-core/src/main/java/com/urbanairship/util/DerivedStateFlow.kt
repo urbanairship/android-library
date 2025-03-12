@@ -1,7 +1,8 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.automation.utils
+package com.urbanairship.util
 
+import androidx.annotation.RestrictTo
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -14,7 +15,11 @@ import kotlinx.coroutines.flow.stateIn
  * https://github.com/Kotlin/kotlinx.coroutines/issues/2631
  */
 
-internal class DerivedStateFlow<T>(
+/**
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class DerivedStateFlow<T>(
     private val onValue: () -> T,
     private val updates: Flow<T>
 ) : StateFlow<T> {
@@ -33,7 +38,11 @@ internal class DerivedStateFlow<T>(
     }
 }
 
-internal fun <T1, T2, TR> combineStates(
+/**
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public fun <T1, T2, TR> combineStates(
     flow1: StateFlow<T1>,
     flow2: StateFlow<T2>,
     transform: (t1: T1, t2: T2) -> TR

@@ -10,7 +10,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.view.isVisible
-import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.TextInputModel
@@ -19,7 +19,6 @@ import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.util.isLayoutRtl
-import com.urbanairship.android.layout.util.resolveOptional
 import com.urbanairship.android.layout.widget.TappableView
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
@@ -72,7 +71,7 @@ internal class TextInputView(
                 LayoutUtils.updateBackground(this@TextInputView, old, new)
             }
 
-            override fun onStateUpdated(state: State.Layout) {
+            override fun onStateUpdated(state: ThomasState) {
                 val resolved = state.resolveOptional(
                     overrides = model.viewInfo.viewOverrides?.iconEnd,
                     default = model.viewInfo.iconEnd

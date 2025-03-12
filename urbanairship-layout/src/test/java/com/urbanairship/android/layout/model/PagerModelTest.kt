@@ -58,7 +58,7 @@ public class PagerModelTest {
         every { reporter } returns mockReporter
         every { actionsRunner } returns mockActionsRunner
         every { modelScope } returns testScope
-        every { layoutState } returns mockk {
+        every { layoutState } returns mockk(relaxed = true) {
             every { reportingContext(any(), any(), any()) } returns mockk()
         }
     }

@@ -8,7 +8,7 @@ import androidx.annotation.MainThread
 import com.urbanairship.Predicate
 import com.urbanairship.android.layout.util.UrlInfo
 import com.urbanairship.app.ActivityMonitor
-import com.urbanairship.automation.utils.DerivedStateFlow
+import com.urbanairship.util.DerivedStateFlow
 import com.urbanairship.automation.utils.NetworkMonitor
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface

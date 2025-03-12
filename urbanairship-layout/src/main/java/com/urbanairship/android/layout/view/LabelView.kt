@@ -6,16 +6,13 @@ import android.view.View
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
-import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.info.LabelInfo
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.LabelModel
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ifNotEmpty
-import com.urbanairship.android.layout.util.resolveRequired
 
 internal class LabelView(
     context: Context,
@@ -42,7 +39,7 @@ internal class LabelView(
                 this@LabelView.isVisible = visible
             }
 
-            override fun onStateUpdated(state: State.Layout) {
+            override fun onStateUpdated(state: ThomasState) {
                 val text = state.resolveRequired(
                     overrides = model.viewInfo.viewOverrides?.text,
                     default = model.viewInfo.text

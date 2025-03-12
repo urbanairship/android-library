@@ -5,6 +5,7 @@ import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.makeThomasState
 import com.urbanairship.android.layout.info.ButtonLayoutInfo
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.android.layout.info.CheckboxInfo
@@ -279,13 +280,19 @@ internal class ThomasModelFactory : ModelFactory {
         fun buildLayoutState(states: Map<Tag, SharedState<State>?>): LayoutState {
             val childForm = form.firstOrNull()
             val parentForm = form.getOrNull(1)
+
+            val formFlow = childForm?.let { states[it] as? SharedState<State.Form> }
+            val layoutFlow = layout?.let { states[it] as? SharedState<State.Layout> }
+                ?: LayoutState.EMPTY.layout
+
             return LayoutState(
-                form = childForm?.let { states[it] as? SharedState<State.Form> },
+                form = formFlow,
                 parentForm = parentForm?.let { states[it] as? SharedState<State.Form> },
                 pager = pager?.let { states[it] as? SharedState<State.Pager> },
                 checkbox = checkbox?.let { states[it] as? SharedState<State.Checkbox> },
                 radio = radio?.let { states[it] as? SharedState<State.Radio> },
-                layout = layout?.let { states[it] as? SharedState<State.Layout> },
+                layout = layoutFlow,
+                thomasState = makeThomasState(formFlow, layoutFlow)
             )
         }
 
