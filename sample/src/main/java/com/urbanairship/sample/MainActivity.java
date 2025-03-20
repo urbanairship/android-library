@@ -7,17 +7,15 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.urbanairship.PendingResult;
 import com.urbanairship.google.PlayServicesUtils;
-import com.urbanairship.messagecenter.InboxListener;
-import com.urbanairship.messagecenter.Message;
-import com.urbanairship.messagecenter.MessageCenter;
+import com.urbanairship.messagecenter.core.InboxListener;
+import com.urbanairship.messagecenter.core.Message;
+import com.urbanairship.messagecenter.core.MessageCenter;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.EdgeToEdge;
-import androidx.activity.SystemBarStyle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;

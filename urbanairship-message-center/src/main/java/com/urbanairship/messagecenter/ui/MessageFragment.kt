@@ -9,18 +9,15 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleCoroutineScope
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.urbanairship.UALog
-import com.urbanairship.messagecenter.Message
+import com.urbanairship.messagecenter.core.Message
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.view.MessageView
-import com.urbanairship.messagecenter.ui.view.MessageViewState
-import com.urbanairship.messagecenter.ui.view.MessageViewModel
-import com.urbanairship.messagecenter.ui.view.SubscriptionCancellation
+import com.urbanairship.messagecenter.core.ui.view.MessageViewState
+import com.urbanairship.messagecenter.core.ui.view.MessageViewModel
+import com.urbanairship.messagecenter.core.ui.view.SubscriptionCancellation
 import kotlinx.coroutines.launch
 
 /** Fragment that displays a Message Center [Message]. */
@@ -29,7 +26,7 @@ public open class MessageFragment @JvmOverloads constructor(
 ) : Fragment(contentLayoutId) {
 
     /** The current [Message] ID. */
-    public val messageId: String? by lazy { arguments?.getString(ARG_MESSAGE_ID) }
+    public val messageId: String? by lazy { arguments?.getString(com.urbanairship.messagecenter.ui.MessageFragment.Companion.ARG_MESSAGE_ID) }
 
     /** The currently displayed message, if a message is loaded. */
     public val currentMessage: Message?
@@ -46,7 +43,7 @@ public open class MessageFragment @JvmOverloads constructor(
     }
 
     /** Listener for `MessageFragment` events. */
-    public var listener: Listener? = null
+    public var listener: com.urbanairship.messagecenter.ui.MessageFragment.Listener? = null
 
     /** The message ViewModel. */
     protected val viewModel: MessageViewModel by viewModels { MessageViewModel.factory() }
@@ -177,8 +174,9 @@ public open class MessageFragment @JvmOverloads constructor(
          * @return messageFragment new MessageFragment
          */
         @JvmStatic
-        public fun newInstance(messageId: String): MessageFragment = MessageFragment().apply {
-            arguments = bundleOf(ARG_MESSAGE_ID to messageId)
+        public fun newInstance(messageId: String): com.urbanairship.messagecenter.ui.MessageFragment = com.urbanairship.messagecenter.ui.MessageFragment()
+            .apply {
+            arguments = bundleOf(com.urbanairship.messagecenter.ui.MessageFragment.Companion.ARG_MESSAGE_ID to messageId)
         }
     }
 }

@@ -11,7 +11,7 @@ import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.Autopilot
 import com.urbanairship.UAirship
 import com.urbanairship.liveupdate.LiveUpdateManager
-import com.urbanairship.messagecenter.MessageCenter
+import com.urbanairship.messagecenter.core.MessageCenter
 import com.urbanairship.sample.glance.SampleAppWidgetLiveUpdate
 
 /**
@@ -61,7 +61,6 @@ class SampleAutopilot : Autopilot() {
             val intent = Intent(Intent.ACTION_VIEW, uri)
                 .setPackage(UAirship.getPackageName())
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-
             UAirship.getApplicationContext().startActivity(intent)
             true
         }

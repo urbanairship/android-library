@@ -40,7 +40,8 @@ dependencies {
     dokka(project(":urbanairship-fcm"))
     dokka(project(":urbanairship-hms"))
     dokka(project(":urbanairship-live-update"))
-    dokka(project(":urbanairship-message-center"))
+    dokka(project(':urbanairship-message-center'))
+    dokka(project(':urbanairship-message-center-core'))
     dokka(project(":urbanairship-preference-center"))
     dokka(project(":urbanairship-feature-flag"))
 }

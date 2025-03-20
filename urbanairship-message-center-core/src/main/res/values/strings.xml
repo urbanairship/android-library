@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:x="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- Accessibility -->
+
+    <!-- TODO(m3-inbox): translate! -->
+    <string name="ua_enter_edit_mode">Edit list</string>
+    <string name="ua_leave_edit_mode">Stop editing list</string>
+    <string name="ua_announce_enter_edit_mode">Editing message list</string>
+    <string name="ua_announce_leave_edit_mode">Viewing message list</string>
+    <string name="ua_mark_unread">Mark unread</string>
+    <string name="ua_mark_all_read">Mark all read</string>
+    <string name="ua_delete_all">Delete all</string>
+    <string name="ua_description_mark_read">Mark message as read</string>
+    <string name="ua_description_mark_unread">Mark message as unread</string>
+    <string name="ua_description_mark_all_read">Mark all messages as read</string>
+    <string name="ua_description_delete_all">Delete all messages</string>
+    <string name="ua_description_delete">Delete message</string>
+    <string name="ua_description_message_list_pane">Message List</string>
+    <string name="ua_description_message_pane">Message Content</string>
+
+    <!-- Message Center List edit toolbar item with selected count. -->
+    <!-- Example: "Mark read (3)", "Delete (1)", ... -->
+    <string name="ua_edit_toolbar_item_title_with_count">
+        <x:g id="item_title" example="Mark read">%1$s</x:g> (<x:g id="selected_count" example="3">%2$d</x:g>)
+    </string>
+
+    <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
+    <plurals name="ua_mc_description_marked_read">
+        <item quantity="one">Marked <x:g id="count" example="1">%1$d</x:g> message as read</item>
+        <item quantity="other">Marked <x:g id="count" example="7">%1$d</x:g> messages as read</item>
+    </plurals>
+
+    <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
+    <plurals name="ua_mc_description_deleted">
+        <item quantity="one">Deleted <x:g id="count" example="1">%1$d</x:g> message</item>
+        <item quantity="other">Deleted <x:g id="count" example="7">%1$d</x:g> messages</item>
+    </plurals>
+
+    <!-- Message item content descriptions. Used on the Inbox (message list) screen. -->
+
+    <!-- Prepended to the content description for messages that are currently selected. -->
+    <string name="ua_mc_description_state_selected">Selected,</string>
+    <!-- Prepended to the content description for messages that are currently unread. -->
+    <string name="ua_mc_description_state_unread">Unread,</string>
+    <!-- Content description for message items in the message list. Dates will be formatted using
+    the DateFormat.LONG format in the current locale. -->
+    <string name="ua_mc_description_title_and_date">
+        <x:g id="title" example="This week\'s top deals">%1$s</x:g>, on <x:g id="sent_date" example="May 1st, 2021">%2$s</x:g>
+    </string>
+
+    <!-- Message item actions. Displayed in TalkBack Actions menu when screen reader is active. -->
+
+    <!-- Action that selects the focused message. -->
+    <string name="ua_mc_action_select">Select message</string>
+    <!-- Action that unselects the focused message. -->
+    <string name="ua_mc_action_unselect">Unselect message</string>
+    <!-- Custom message item tap action. Will be spoken as "Tap to read message" in EN-US. -->
+    <string name="ua_mc_action_click">Read message</string>
+
+</resources>

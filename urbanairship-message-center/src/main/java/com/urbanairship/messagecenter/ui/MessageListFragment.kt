@@ -11,15 +11,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
-import com.urbanairship.messagecenter.Message
+import com.urbanairship.messagecenter.core.Message
 import com.urbanairship.messagecenter.R
-import com.urbanairship.messagecenter.ui.view.MessageListAction
-import com.urbanairship.messagecenter.ui.view.MessageListAction.DeleteMessages
-import com.urbanairship.messagecenter.ui.view.MessageListAction.MarkMessagesRead
-import com.urbanairship.messagecenter.ui.view.MessageListAction.Refresh
-import com.urbanairship.messagecenter.ui.view.MessageListState
+import com.urbanairship.messagecenter.core.ui.view.MessageListAction
+import com.urbanairship.messagecenter.core.ui.view.MessageListAction.DeleteMessages
+import com.urbanairship.messagecenter.core.ui.view.MessageListAction.MarkMessagesRead
+import com.urbanairship.messagecenter.core.ui.view.MessageListAction.Refresh
+import com.urbanairship.messagecenter.core.ui.view.MessageListState
 import com.urbanairship.messagecenter.ui.view.MessageListView
-import com.urbanairship.messagecenter.ui.view.MessageListViewModel
+import com.urbanairship.messagecenter.core.ui.view.MessageListViewModel
 import kotlinx.coroutines.launch
 
 /** `Fragment` that displays the Message Center list and message view. */

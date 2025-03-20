@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+    This drawable is intended to be used with a 64dp x 64dp container.
+
+    If we had our min SDK set to 23+, we could use `android:width` and `android:height` to
+    have better control, but since we support 21+, we can't set explicit dimensions and need to
+    set the size on the container this will be applied to, then add insets to reduce the size of
+    the icon.
+    -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSurfaceVariant" />
+        </shape>
+    </item>
+
+    <item android:drawable="@drawable/ua_ic_thumbnail_placeholder_36"
+        android:gravity="center"
+        android:top="14dp"
+        android:bottom="14dp"
+        android:left="14dp"
+        android:right="14dp"/>
+</layer-list>

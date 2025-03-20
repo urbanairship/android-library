@@ -6,11 +6,7 @@ plugins {
     alias(libs.plugins.room)
 }
 
-description = "Airship Android SDK Message Center module"
-
-airshipModule {
-    published = true
-}
+description = "Core Airship Android SDK Message Center module"
 
 android {
     namespace 'com.urbanairship.messagecenter'
@@ -22,6 +18,7 @@ android {
 
 dependencies {
     api project(':urbanairship-core')
+    api project(':urbanairship-message-center-core')
 
     // Kotlin
     implementation(libs.kotlinx.coroutines.core)

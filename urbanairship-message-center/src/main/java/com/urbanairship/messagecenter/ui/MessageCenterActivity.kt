@@ -12,7 +12,7 @@ import androidx.fragment.app.commitNow
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
-import com.urbanairship.messagecenter.MessageCenter
+import com.urbanairship.messagecenter.core.MessageCenter
 
 /** `Activity` that displays the Message Center list and message view. */
 public open class MessageCenterActivity : FragmentActivity() {

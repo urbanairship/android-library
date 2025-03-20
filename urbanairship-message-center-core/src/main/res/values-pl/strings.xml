@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Accessibility -->
+    <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
+    <plurals name="ua_mc_description_marked_read">
+        <item quantity="one">Oznaczono 
+        <xliff:g example="1" id="count">%1$d</xliff:g>wiadomość jako przeczytaną</item>
+        <item quantity="few">Oznaczono 
+        <xliff:g example="7" id="count">%1$d</xliff:g>wiadomości jako przeczytane</item>
+        <item quantity="many">Oznaczono 
+        <xliff:g example="7" id="count">%1$d</xliff:g>wiadomości jako przeczytane</item>
+        <item quantity="other">Oznaczono 
+        <xliff:g example="7" id="count">%1$d</xliff:g>wiadomości jako przeczytane</item>
+    </plurals>
+    <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
+    <plurals name="ua_mc_description_deleted">
+        <item quantity="one">Usunięto 
+        <xliff:g example="1" id="count">%1$d</xliff:g>wiadomość</item>
+        <item quantity="few">Usunięto 
+        <xliff:g example="7" id="count">%1$d</xliff:g>wiadomości</item>
+        <item quantity="many">Usunięto 
+        <xliff:g example="7" id="count">%1$d</xliff:g>wiadomości</item>
+        <item quantity="other">Usunięto 
+        <xliff:g example="7" id="count">%1$d</xliff:g>wiadomości</item>
+    </plurals>
+    <!-- Message item content descriptions. Used on the Inbox (message list) screen. -->
+    <!-- Prepended to the content description for messages that are currently selected. -->
+    <string name="ua_mc_description_state_selected">Wybrano:</string>
+    <!-- Prepended to the content description for messages that are currently unread. -->
+    <string name="ua_mc_description_state_unread">Nieprzeczytane,</string>
+    <!-- Content description for message items in the message list. Dates will be formatted using
+    the DateFormat.LONG format in the current locale. -->
+    <string name="ua_mc_description_title_and_date">
+    <xliff:g example="This week\'s top deals" id="title">%1$s</xliff:g>, dnia 
+    <xliff:g example="May 1st, 2021" id="sent_date">%2$s</xliff:g></string>
+    <!-- Message item actions. Displayed in TalkBack Actions menu when screen reader is active. -->
+    <!-- Action that selects the focused message. -->
+    <string name="ua_mc_action_select">Wybierz wiadomość</string>
+    <!-- Action that unselects the focused message. -->
+    <string name="ua_mc_action_unselect">Odznacz wiadomość</string>
+    <!-- Custom message item tap action. Will be spoken as "Tap to read message" in EN-US. -->
+    <string name="ua_mc_action_click">Czytaj wiadomość</string>
+</resources>
