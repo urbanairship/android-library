@@ -21,6 +21,8 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.audience.AudienceOverridesProvider
+import com.urbanairship.channel.AirshipChannel.Extender.Blocking
+import com.urbanairship.channel.AirshipChannel.Extender.Suspending
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.AuthTokenProvider
 import com.urbanairship.job.JobDispatcher
@@ -42,7 +44,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
@@ -64,7 +65,6 @@ public class AirshipChannel internal constructor(
     private val localeManager: LocaleManager,
     private val channelManager: ChannelBatchUpdateManager,
     private val channelRegistrar: ChannelRegistrar,
-    private val audienceOverridesProvider: AudienceOverridesProvider,
     private val subscriptionsProvider: SubscriptionsProvider,
     private val activityMonitor: ActivityMonitor = GlobalActivityMonitor.shared(context),
     private val jobDispatcher: JobDispatcher = JobDispatcher.shared(context),
@@ -75,6 +75,7 @@ public class AirshipChannel internal constructor(
     private val airshipChannelListeners: MutableList<AirshipChannelListener> = CopyOnWriteArrayList()
     private val tagLock = ReentrantLock()
     private val scope = CoroutineScope(updateDispatcher + SupervisorJob())
+    private val channelRegistrationPayloadExtenders: MutableList<Extender> = CopyOnWriteArrayList()
 
     internal constructor(
         context: Context,
@@ -96,7 +97,6 @@ public class AirshipChannel internal constructor(
             dataStore, runtimeConfig, audienceOverridesProvider
         ),
         channelRegistrar = channelRegistrar,
-        audienceOverridesProvider = audienceOverridesProvider,
         subscriptionsProvider = SubscriptionsProvider(runtimeConfig,
             privacyManager,
             channelRegistrar.channelIdFlow.mapNotNull { it },
@@ -149,22 +149,20 @@ public class AirshipChannel internal constructor(
             }
         }
 
-        channelRegistrar.addChannelRegistrationPayloadExtender(
-            Extender.Blocking { extendPayload(it) }
-        )
+        channelRegistrar.payloadBuilder = {
+            this.buildCraPayload()
+        }
 
         _isChannelCreationDelayEnabled =
             channelRegistrar.channelId == null && runtimeConfig.configOptions.channelCreationDelayEnabled
 
-        privacyManager.addListener(object : PrivacyManager.Listener {
-            override fun onEnabledFeaturesChanged() {
-                if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
-                    tagLock.withLock { dataStore.remove(TAGS_KEY) }
-                    channelManager.clearPending()
-                }
-                updateRegistration()
+        privacyManager.addListener {
+            if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
+                tagLock.withLock { dataStore.remove(TAGS_KEY) }
+                channelManager.clearPending()
             }
-        })
+            updateRegistration()
+        }
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
             override fun onForeground(time: Long) {
@@ -213,7 +211,7 @@ public class AirshipChannel internal constructor(
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun addChannelRegistrationPayloadExtender(extender: Extender) {
-        channelRegistrar.addChannelRegistrationPayloadExtender(extender)
+        channelRegistrationPayloadExtenders.add(extender)
     }
 
     /**
@@ -221,7 +219,7 @@ public class AirshipChannel internal constructor(
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun removeChannelRegistrationPayloadExtender(extender: Extender) {
-        channelRegistrar.removeChannelRegistrationPayloadExtender(extender)
+        channelRegistrationPayloadExtenders.remove(extender)
     }
 
     private val isRegistrationAllowed: Boolean
@@ -517,17 +515,33 @@ public class AirshipChannel internal constructor(
         jobDispatcher.dispatch(jobInfo)
     }
 
-    private fun extendPayload(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder {
-        val shouldSetTags = channelTagRegistrationEnabled
-
-        builder.setTags(shouldSetTags, if (shouldSetTags) tags else null)
-            .setIsActive(activityMonitor.isAppForegrounded)
+    private suspend fun buildCraPayload(): ChannelRegistrationPayload {
+        var builder = ChannelRegistrationPayload.Builder()
 
         when (runtimeConfig.platform) {
             UAirship.ANDROID_PLATFORM -> builder.setDeviceType(ChannelRegistrationPayload.ANDROID_DEVICE_TYPE)
             UAirship.AMAZON_PLATFORM -> builder.setDeviceType(ChannelRegistrationPayload.AMAZON_DEVICE_TYPE)
             else -> throw IllegalStateException("Unable to get platform")
         }
+
+        if (!privacyManager.isAnyFeatureEnabled) {
+            return builder.setOptIn(false)
+                .setBackgroundEnabled(false)
+                .setTags(true, emptySet())
+                .build()
+        }
+
+        val shouldSetTags = channelTagRegistrationEnabled
+        builder.setTags(shouldSetTags, if (shouldSetTags) tags else null)
+            .setIsActive(activityMonitor.isAppForegrounded)
+
+        for (extender in channelRegistrationPayloadExtenders) {
+            builder = when (extender) {
+                is Suspending -> extender.extend(builder)
+                is Blocking -> extender.extend(builder)
+            }
+        }
+
         if (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
             UAirship.getPackageInfo()?.versionName?.let {
                 builder.setAppVersion(it)
@@ -569,7 +583,7 @@ public class AirshipChannel internal constructor(
             }
         }
 
-        return builder
+        return builder.build()
     }
 
     /**
