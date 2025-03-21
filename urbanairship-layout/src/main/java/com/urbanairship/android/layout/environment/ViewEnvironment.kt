@@ -20,6 +20,6 @@ public interface ViewEnvironment {
     public fun hostingActivityPredicate(): Predicate<Activity>
     public fun webChromeClientFactory(): Factory<WebChromeClient>
     public fun webViewClientFactory(): Factory<AirshipWebViewClient>
-    public fun imageCache(): ImageCache
+    public fun imageCache(): ImageCache?
     public val isIgnoringSafeAreas: Boolean
 }

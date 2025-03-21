@@ -35,6 +35,7 @@ import com.urbanairship.android.layout.property.ViewType.BUTTON_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.CHECKBOX
 import com.urbanairship.android.layout.property.ViewType.CHECKBOX_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.CONTAINER
+import com.urbanairship.android.layout.property.ViewType.CUSTOM_VIEW
 import com.urbanairship.android.layout.property.ViewType.EMPTY_VIEW
 import com.urbanairship.android.layout.property.ViewType.FORM_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.IMAGE_BUTTON
@@ -90,6 +91,7 @@ public sealed class ViewInfo : View {
                 LABEL_BUTTON -> LabelButtonInfo(json)
                 IMAGE_BUTTON -> ImageButtonInfo(json)
                 BUTTON_LAYOUT -> ButtonLayoutInfo(json)
+                CUSTOM_VIEW -> CustomViewInfo(json)
                 PAGER_CONTROLLER -> PagerControllerInfo(json)
                 PAGER -> PagerInfo(json)
                 PAGER_INDICATOR -> PagerIndicatorInfo(json)
@@ -583,6 +585,13 @@ internal class PagerInfo(json: JsonMap) : ViewGroupInfo<PagerItemInfo>(), View b
     val gestures = json.optionalList("gestures")?.let { PagerGesture.fromList(it) }
 
     override val children: List<PagerItemInfo> = items
+}
+
+internal class CustomViewInfo(
+    json: JsonMap
+): ViewInfo(), View by view(json) {
+    val name: String = json.requireField("name")
+    val data: JsonMap? = json.optionalField("keys")
 }
 
 internal enum class AutomatedAccessibilityActionType {

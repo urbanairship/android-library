@@ -18,10 +18,15 @@ import com.urbanairship.UALog
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.DefaultActionRunner
 import com.urbanairship.actions.run
+import com.urbanairship.android.layout.AirshipCustomViewManager
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.LayoutInfo
+import com.urbanairship.android.layout.playground.customviews.CustomAdView
+import com.urbanairship.android.layout.playground.customviews.CustomMapView
+import com.urbanairship.android.layout.playground.customviews.CustomWeatherView
+import com.urbanairship.android.layout.playground.customviews.CustomWeatherViewXml
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
 import com.urbanairship.android.layout.playground.embedded.EmbeddedActivity
 import com.urbanairship.android.layout.reporting.FormData
@@ -76,6 +81,18 @@ class MainActivity : AppCompatActivity() {
         if (0 != applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) {
             WebView.setWebContentsDebuggingEnabled(true)
         }
+
+        // Register custom XML views
+        AirshipCustomViewManager.register("weather_custom_view_xml") { data ->
+            CustomWeatherViewXml(this).apply {
+                bind(data)
+            }
+        }
+
+        // Register custom composable views
+        AirshipCustomViewManager.register("weather_custom_view", CustomWeatherView())
+        AirshipCustomViewManager.register("ad_custom_view", CustomAdView())
+        AirshipCustomViewManager.register("map_custom_view", CustomMapView())
     }
 
     override fun onResume() {

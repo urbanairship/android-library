@@ -44,6 +44,7 @@ public inline fun <reified T> JsonMap.requireField(key: String): T {
     val field = get(key) ?: throw JsonException("Missing required field: '$key'")
     return when (T::class) {
         String::class -> field.optString() as T
+        CharSequence::class -> field.optString() as T
         Boolean::class -> field.getBoolean(false) as T
         Long::class -> field.getLong(0) as T
         ULong::class -> field.getLong(0).toULong() as T
@@ -78,6 +79,7 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
     val field = get(key) ?: return null
     return when (T::class) {
         String::class -> field.optString() as T
+        CharSequence::class -> field.optString() as T
         Boolean::class -> field.getBoolean(false) as T
         Long::class -> field.getLong(0) as T
         ULong::class -> field.getLong(0).toULong() as T
