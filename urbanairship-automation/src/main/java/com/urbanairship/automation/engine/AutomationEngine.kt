@@ -395,6 +395,10 @@ internal class AutomationEngine(
     }
 
     private suspend fun processTriggeredSchedule(scheduleId: String) {
+        if (isExecutionPaused.value) {
+            isExecutionPaused.first { it }
+        }
+
         val data = store.getSchedule(scheduleId)
         if (data == null) {
             UALog.v { "Aborting processing schedule $scheduleId, no longer in database." }
